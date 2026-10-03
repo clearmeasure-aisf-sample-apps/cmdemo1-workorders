@@ -1,6 +1,7 @@
 # Release of the app (added by the demo-environment skill; replaces the bootcamp's deploy.yml and the publish jobs of
 # build.yml). After a green Build of master, it turns that build's packages into a release candidate:
-#   - the UI image <registry>/<slug>/<deployable>:<version> in the system's registry (Azure OIDC, id-<slug>-acr-push)
+#   - the UI image <registry>/<slug>/<deployable>:<version> in the system's registry (Azure OIDC, id-<slug>-acr-push),
+#     its tag write-locked
 #   - the database package and the acceptance-test package (Linux x64 only) in the Octopus built-in feed
 #   - a release <version> of the Octopus project <slug>-<deployable>; its lifecycle deploys it to the first environment
 # The version is the Build run's MAJOR.MINOR.run_number, the same number build.yml stamps into the packages.
@@ -105,6 +106,9 @@ jobs:
           az acr login --name "${{ vars.ACR_NAME }}"
           docker build --file Dockerfile --tag "$IMAGE" .
           docker push "$IMAGE"
+          # A released image never changes: lock its tag (role "ACR tag lock" of the seed).
+          az acr repository update --name "${{ vars.ACR_NAME }}" --image "${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}:${{ steps.version.outputs.version }}" \
+            --write-enabled false --delete-enabled false --output none
           echo "Pushed $IMAGE" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Sign in to Octopus
