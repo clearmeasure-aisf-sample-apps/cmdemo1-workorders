@@ -87,7 +87,7 @@ public class LogoutTests
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null, throwOnLookup: true));
+        ctx.Services.AddSingleton<IUserSession>(new StubFailingUserSession());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -243,16 +243,19 @@ public class LogoutTests
     }
 }
 
-public class StubUserSession(Employee? currentUser, bool throwOnLookup = false) : IUserSession
+public class StubUserSession(Employee? currentUser) : IUserSession
 {
     public Task<Employee?> GetCurrentUserAsync()
     {
-        if (throwOnLookup)
-        {
-            throw new InvalidOperationException("lookup failed");
-        }
-
         return Task.FromResult(currentUser);
+    }
+}
+
+public class StubFailingUserSession : IUserSession
+{
+    public Task<Employee?> GetCurrentUserAsync()
+    {
+        throw new InvalidOperationException("lookup failed");
     }
 }
 

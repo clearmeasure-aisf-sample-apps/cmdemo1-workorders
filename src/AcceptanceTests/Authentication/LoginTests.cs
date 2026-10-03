@@ -85,7 +85,7 @@ public class LoginTests : AcceptanceTestBase
     public async Task Should_ShowFullNameWithMiddleName_WhenEmployeeHasMiddleName()
     {
         var userName = $"middle_{Guid.NewGuid():N}";
-        using (var context = TestHost.NewDbContext())
+        await using (var context = TestHost.NewDbContext())
         {
             var employee = new Employee(userName, "First", "Last", $"{userName}@example.com")
             {
@@ -93,7 +93,7 @@ public class LoginTests : AcceptanceTestBase
             };
             employee.AddRole(new Role("admin", true, true));
             context.Add(employee);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
 
         await Page.GotoAsync("/login");
