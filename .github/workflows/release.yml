@@ -29,7 +29,11 @@ env:
 jobs:
   # A docs-only change skips the heavy Build jobs (build.yml, job changes), so that run has no packages to release.
   packages:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    # A push to master, or a Build of master started by hand: after a change to the Octopus deployment process (which a
+    # release snapshots), `gh workflow run Build --ref master` makes a new release without a code change.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-latest
     outputs:
       found: ${{ steps.find.outputs.found }}
