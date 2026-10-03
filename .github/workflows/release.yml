@@ -124,15 +124,17 @@ jobs:
           if (-not $source) { throw 'ChurchBulletin.AcceptanceTests package not found in the build artifact' }
           $work = Join-Path $env:RUNNER_TEMP 'acceptance-tests'
           Expand-Archive -LiteralPath $source.FullName -DestinationPath $work -Force
-          Get-ChildItem -Path $work -Recurse -Directory | Where-Object {
+          # -Force everywhere: on Linux, wildcards and Get-ChildItem skip dot-folders such as .playwright otherwise.
+          Get-ChildItem -Path $work -Recurse -Directory -Force | Where-Object {
               ($_.Parent.Name -eq 'node' -and $_.Parent.Parent.Name -eq '.playwright' -and $_.Name -ne 'linux-x64') -or
               ($_.Name -in @('CodeCoverage', 'BlazorDebugProxy') -and $_.Parent.FullName -eq $work)
           } | Remove-Item -Recurse -Force
           Remove-Item -Path (Join-Path $work '_rels'), (Join-Path $work 'package') -Recurse -Force -ErrorAction SilentlyContinue
-          Get-ChildItem -Path $work -Include '*.nuspec', '[Content_Types].xml' -Recurse | Remove-Item -Force
+          Get-ChildItem -Path $work -Include '*.nuspec', '[Content_Types].xml' -Recurse -Force | Remove-Item -Force
+          if (-not (Test-Path -LiteralPath (Join-Path $work '.playwright' 'node' 'linux-x64'))) { throw 'The Playwright driver for linux-x64 is missing from the acceptance-test package' }
           New-Item -ItemType Directory -Path ./octopus-packages -Force | Out-Null
           $target = "./octopus-packages/ChurchBulletin.AcceptanceTests.$version.zip"
-          Compress-Archive -Path (Join-Path $work '*') -DestinationPath $target -CompressionLevel Optimal
+          Compress-Archive -Path (Get-ChildItem -LiteralPath $work -Force).FullName -DestinationPath $target -CompressionLevel Optimal
           "Acceptance tests: $([Math]::Round($source.Length / 1MB)) MB -> $([Math]::Round((Get-Item $target).Length / 1MB)) MB" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Push the database and acceptance-test packages
