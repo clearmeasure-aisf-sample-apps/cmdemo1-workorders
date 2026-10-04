@@ -1,0 +1,23 @@
+// usage: node capture.mjs <baseUrl> <userName> <outPrefix>
+import { chromium } from 'playwright';
+const [base, user, prefix] = process.argv.slice(2);
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
+await p.goto(base + '/login', { waitUntil: 'networkidle', timeout: 120000 });
+const sel = p.getByTestId('User');
+await sel.locator(`option[value='${user}']`).waitFor({ state: 'attached', timeout: 120000 });
+await p.screenshot({ path: `${prefix}-1-login.png` });
+await sel.selectOption(user);
+await p.waitForTimeout(800);
+await p.screenshot({ path: `${prefix}-2-selected.png` });
+await p.getByTestId('LoginButton').click();
+const welcome = p.getByTestId('WelcomeText');
+await welcome.waitFor({ timeout: 60000 });
+await p.waitForLoadState('networkidle');
+await p.waitForTimeout(2500);
+console.log('WELCOME TEXT:', (await welcome.textContent()).replace(/\s+/g, ' ').trim());
+console.log('URL:', p.url());
+await p.screenshot({ path: `${prefix}-3-loggedin.png` });
+const box = await welcome.boundingBox();
+console.log('BOX', JSON.stringify(box));
+await b.close();
