@@ -110,7 +110,7 @@ The repository supports three common local development workflows. Pick the one t
      ```
   Important: use `--no-launch-profile` on Linux/macOS to avoid the Windows LocalDB connection string from launchSettings.json overriding your env vars.
 
-  Telemetry needs no connection string: it goes through OpenTelemetry only, and the OTLP exporter is on when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. In Azure the platform injects it where telemetry is turned on (the Container Apps environment's managed OpenTelemetry agent). Locally, run `src/ChurchBulletin.AppHost` to send telemetry to the Aspire dashboard, or set `OTEL_EXPORTER_OTLP_ENDPOINT` to any OTLP endpoint.
+  Telemetry is OpenTelemetry and needs no setting to run locally. In Azure the platform sets `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME`, and the Azure Monitor OpenTelemetry exporter sends traces, metrics and logs to Application Insights. Locally, running `src/ChurchBulletin.AppHost` sets `OTEL_EXPORTER_OTLP_ENDPOINT` and the OTLP exporter sends to the Aspire dashboard. Without either variable no exporter runs.
 
 - SQLite fallback (no Docker)
 

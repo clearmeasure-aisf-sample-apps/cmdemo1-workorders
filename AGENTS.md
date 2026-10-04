@@ -37,7 +37,7 @@ cd src/UI/Server && dotnet run --no-launch-profile --urls "https://localhost:717
 
 Key gotchas:
 - **Must use `--no-launch-profile`** to avoid the LocalDB connection string override from `launchSettings.json`.
-- **No telemetry connection string is needed.** Telemetry goes through OpenTelemetry only: the OTLP exporter is on when `OTEL_EXPORTER_OTLP_ENDPOINT` is set and off otherwise (the app starts either way). In Azure the platform injects it where telemetry is turned on (the Container Apps environment's managed OpenTelemetry agent); locally, running `src/ChurchBulletin.AppHost` sets it to the Aspire dashboard's OTLP endpoint (`ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL` in its `launchSettings.json`).
+- **No telemetry setting is needed to run locally.** Telemetry is OpenTelemetry (`src/ChurchBulletin.ServiceDefaults/Extensions.cs`). In Azure the platform sets `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME`, and the Azure Monitor OpenTelemetry exporter sends traces, metrics and logs to Application Insights. Locally, running `src/ChurchBulletin.AppHost` sets `OTEL_EXPORTER_OTLP_ENDPOINT` and the OTLP exporter sends to the Aspire dashboard. Without either variable no exporter runs and the app starts normally. No connection string or instrumentation key belongs in the repository.
 - **Must set `AI_OpenAI_*` vars to empty strings** to prevent the app from trying to connect to Azure OpenAI (it degrades gracefully).
 - The SQL Server Docker container must already be running (created by `PrivateBuild.ps1` or manually via `docker run`). The container name is `churchbulletin-mssql` and the password is `churchbulletin-mssql#1A`.
 

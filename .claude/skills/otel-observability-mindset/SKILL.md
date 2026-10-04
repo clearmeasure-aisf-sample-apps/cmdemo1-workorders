@@ -8,8 +8,8 @@ description: >-
   worker/endpoint, or a user-facing error path — and whenever the user asks
   about tracing, metrics, logging, telemetry, monitoring, health checks, or
   "how do we see this in production." The app already has real OpenTelemetry
-  wiring (ActivitySources, a Meter, Serilog-to-OTel bridge, OTLP exporter)
-  — use this skill so new code extends that wiring instead of
+  wiring (ActivitySources, a Meter, Serilog-to-OTel bridge, OTLP/Azure Monitor
+  exporters) — use this skill so new code extends that wiring instead of
   reinventing it or silently falling outside it.
 ---
 
@@ -43,10 +43,12 @@ registering anything new in `ServiceDefaults`.
   — including the OpenTelemetry logging bridge — via `writeToProviders:
   true`. Don't add a second logging pipeline; use `ILogger` + `LogContext`
   scopes and let Serilog fan it out.
-- **Exporters**: OTLP is the only exporter, enabled purely by config
-  presence (`OTEL_EXPORTER_OTLP_ENDPOINT`, injected by the platform's managed
-  OpenTelemetry agent in Azure or by the Aspire AppHost locally); the app
-  needs no telemetry connection string. In
+- **Exporters**: OTLP and Azure Monitor are both wired and enabled purely by
+  config presence — either, both, or neither. `APPLICATIONINSIGHTS_CONNECTION_STRING`
+  (set by the platform in Azure, together with `OTEL_SERVICE_NAME`) turns on the
+  Azure Monitor OpenTelemetry exporter, which sends traces, metrics and logs to
+  Application Insights; `OTEL_EXPORTER_OTLP_ENDPOINT` (set by the Aspire AppHost
+  locally) turns on the OTLP exporter for the Aspire dashboard. In
   Development, `LocalTelemetryFileWriter` also runs (alongside any configured
   exporters, not just as a fallback) so telemetry is always visible locally.
   New code never needs to touch exporter selection.
