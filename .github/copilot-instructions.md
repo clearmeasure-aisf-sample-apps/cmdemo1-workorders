@@ -42,6 +42,8 @@ This file provides standards for GitHub Copilot to follow when generating code f
 - Small focused methods, nullable reference types
 - XML docs on public APIs
 
+**Telemetry:** OpenTelemetry, wired in `src/ChurchBulletin.ServiceDefaults/Extensions.cs`. In Azure the platform sets `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME`, and the Azure Monitor OpenTelemetry exporter sends traces, metrics and logs to Application Insights. Locally, running `src/ChurchBulletin.AppHost` sets `OTEL_EXPORTER_OTLP_ENDPOINT` and the OTLP exporter sends to the Aspire dashboard. No connection string or instrumentation key in the repository.
+
 ---
 
 ## Project Overview
@@ -156,7 +158,7 @@ All branches must be created inside a folder matching the username of the accoun
 | McpServer | ModelContextProtocol 1.0.0, Lamar.Microsoft.DependencyInjection 15.0.1, MediatR 12.4.1 |
 | Worker | ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30 |
 | AppHost | Aspire.AppHost.Sdk 13.1.2 |
-| ServiceDefaults | OpenTelemetry 1.12.0, Microsoft.Extensions.ServiceDiscovery 9.5.0 |
+| ServiceDefaults | Azure.Monitor.OpenTelemetry.AspNetCore 1.6.0, OpenTelemetry 1.12.0, Microsoft.Extensions.ServiceDiscovery 9.5.0 |
 | UnitTests | NUnit 4.3.2, Shouldly 4.3.0, bunit 1.40.0, AutoBogus.Conventions 2.13.1 |
 | IntegrationTests | NUnit 4.3.2, Shouldly 4.3.0, Microsoft.EntityFrameworkCore 10.0.0 |
 | AcceptanceTests | NUnit 4.3.2, microsoft.playwright.nunit 1.54.0, Azure.AI.OpenAI 2.1.0, ModelContextProtocol 1.0.0 |

@@ -36,6 +36,8 @@ dotnet test src/AcceptanceTests --configuration Debug --filter "FullyQualifiedNa
 
 **Run locally:** `cd src/UI/Server && dotnet run` → `https://localhost:7174` (health: `/_healthcheck`)
 
+**Telemetry:** OpenTelemetry, wired in `src/ChurchBulletin.ServiceDefaults/Extensions.cs`. In Azure the platform sets `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME`, and the Azure Monitor OpenTelemetry exporter sends traces, metrics and logs to Application Insights. Locally, running `src/ChurchBulletin.AppHost` sets `OTEL_EXPORTER_OTLP_ENDPOINT` and the OTLP exporter sends to the Aspire dashboard. No connection string or instrumentation key in the repository.
+
 ## Onion Architecture (Strict)
 
 Dependency flow is inward only. Violations will break the build.
@@ -133,7 +135,7 @@ DbUp scripts in `src/Database/scripts/Update/`, numbered sequentially (`###_Desc
 
 **AppHost** — Aspire.AppHost.Sdk 13.1.2
 
-**ServiceDefaults** — OpenTelemetry.Exporter.OpenTelemetryProtocol 1.12.0, OpenTelemetry.Extensions.Hosting 1.12.0, Microsoft.Extensions.Http.Resilience 9.9.0, Microsoft.Extensions.ServiceDiscovery 9.5.0
+**ServiceDefaults** — Azure.Monitor.OpenTelemetry.AspNetCore 1.6.0, OpenTelemetry.Exporter.OpenTelemetryProtocol 1.12.0, OpenTelemetry.Extensions.Hosting 1.12.0, Microsoft.Extensions.Http.Resilience 9.9.0, Microsoft.Extensions.ServiceDiscovery 9.5.0
 
 **UnitTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, Shouldly 4.3.0, bunit 1.40.0, AutoBogus.Conventions 2.13.1, MediatR 12.4.1, coverlet.msbuild 6.0.4, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
 
