@@ -150,6 +150,7 @@ Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, 
 | Route | Method | Description |
 |-------|--------|-------------|
 | `/api/tools/hash` | POST | SHA-256 of `text` (UTF-8); optional MD5/SHA-1 via `includeMd5`/`includeSha1` flags |
+| `/api/tools/base64` | POST | Base64 encode/decode of `text` (UTF-8); `mode` `encode` (default) or `decode` |
 | `/api/tools/guid-generator` | POST | Generate 1–100 UUIDs; optional `count` query param |
 | `/api/tools/random` | POST | Random integer in `[min, max]` |
 | `/api/tools/timestamp-converter` | GET | Convert Unix timestamps to/from ISO-8601 |
