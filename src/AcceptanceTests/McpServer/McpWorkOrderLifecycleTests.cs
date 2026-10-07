@@ -1,10 +1,11 @@
+using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
-[TestFixture]
+[TestFixture, NonParallelizable]
 public class McpWorkOrderLifecycleTests : AcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;
@@ -34,12 +35,10 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
     [Test]
     public async Task ShouldCompleteFullLifecycleViaDirectToolCalls()
     {
-
         var bus = TestHost.GetRequiredService<IBus>();
         var employees = await bus.Send(new EmployeeGetAllQuery());
-        var creator = employees.First(e => e.Roles.Any(r => r.CanCreateWorkOrder));
-        var assignee = employees.First(e =>
-            e.Roles.Any(r => r.CanFulfillWorkOrder) && e.UserName != creator.UserName);
+        var creator = employees.Single(e => e.UserName == "tlovejoy");
+        var assignee = employees.Single(e => e.UserName == "gwillie");
 
         // Step 1: Create a draft work order
         var createResult = await _helper!.CallToolDirectly("create-work-order",
@@ -66,7 +65,12 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
             });
 
         assignResult.ShouldContain("Assigned");
-        assignResult.ShouldContain(assignee.GetFullName());
+        using (var assignDocument = JsonDocument.Parse(assignResult))
+        {
+            var assigned = assignDocument.RootElement;
+            assigned.GetProperty("Assignee").GetString().ShouldBe(assignee.GetFullName());
+            assigned.GetProperty("AssigneeUsername").GetString().ShouldBe(assignee.UserName);
+        }
 
         // Step 3: Begin work (Assigned -> InProgress)
         var beginResult = await _helper.CallToolDirectly("execute-work-order-command",
@@ -100,8 +104,11 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
 
         getResult.ShouldContain("Complete");
         getResult.ShouldContain("Lifecycle test work order");
-        getResult.ShouldContain(creator.GetFullName());
-        getResult.ShouldContain(assignee.GetFullName());
+        using var getDocument = JsonDocument.Parse(getResult);
+        var detail = getDocument.RootElement;
+        detail.GetProperty("Creator").GetString().ShouldBe(creator.GetFullName());
+        detail.GetProperty("CreatorUsername").GetString().ShouldBe(creator.UserName);
+        detail.GetProperty("Assignee").GetString().ShouldBe(assignee.GetFullName());
+        detail.GetProperty("AssigneeUsername").GetString().ShouldBe(assignee.UserName);
     }
-
 }
