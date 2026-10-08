@@ -14,7 +14,7 @@
             <div class="counter-display">
                 <div class="counter-icon">🔢</div>
                 <div data-testid="@Elements.CounterValue" class="counter-value">@_currentCount</div>
-                <div class="counter-label">Activities Completed</div>
+                <div data-testid="@Elements.CounterLabel" class="counter-label">@(_currentCount == 1 ? "Activity Completed" : "Activities Completed")</div>
             </div>
 
             <div class="counter-actions">
@@ -53,7 +53,8 @@
         DecrementButton,
         ResetButton,
         CounterSubtitle,
-        CounterHint
+        CounterHint,
+        CounterLabel
     }
 
     private int _currentCount;

@@ -99,6 +99,45 @@ public class CounterPageTests
             .ShouldBeTrue();
     }
 
+    [Test]
+    public async Task Should_DisplayActivitiesCompletedLabel_WhenCountIsZero()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<Counter>();
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.CounterLabel)}']")
+            .TextContent
+            .ShouldBe("Activities Completed");
+    }
+
+    [Test]
+    public async Task Should_DisplayActivityCompletedLabel_WhenCountIsOne()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<Counter>();
+
+        await component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']").ClickAsync(new());
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.CounterLabel)}']")
+            .TextContent
+            .ShouldBe("Activity Completed");
+    }
+
+    [Test]
+    public async Task Should_DisplayActivitiesCompletedLabel_WhenCountIsTwo()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<Counter>();
+
+        var increment = component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']");
+        await increment.ClickAsync(new());
+        await increment.ClickAsync(new());
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.CounterLabel)}']")
+            .TextContent
+            .ShouldBe("Activities Completed");
+    }
+
     private static BunitContext CreateContext()
     {
         var ctx = new BunitContext();
