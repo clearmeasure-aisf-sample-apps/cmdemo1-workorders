@@ -27,6 +27,6 @@ public class BuildInfoLinkTests
         var rel = link.GetAttribute("rel");
         rel.ShouldNotBeNull();
         rel.ShouldContain("noopener");
-        link.GetAttribute("title").ShouldBe("View what this version was built from");
+        link.GetAttribute("title").ShouldBe("View the version, commit and build of this deployment");
     }
 }
