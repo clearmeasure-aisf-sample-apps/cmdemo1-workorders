@@ -58,11 +58,11 @@ public class CounterPageTests
         var component = ctx.Render<Counter>();
 
         var increment = component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']");
-        increment.Click();
-        increment.Click();
-        increment.Click();
+        await increment.ClickAsync(new());
+        await increment.ClickAsync(new());
+        await increment.ClickAsync(new());
 
-        component.Find($"[data-testid='{nameof(Counter.Elements.DecrementButton)}']").Click();
+        await component.Find($"[data-testid='{nameof(Counter.Elements.DecrementButton)}']").ClickAsync(new());
 
         component.Find($"[data-testid='{nameof(Counter.Elements.CounterValue)}']")
             .TextContent
@@ -78,7 +78,7 @@ public class CounterPageTests
         var decrement = component.Find($"[data-testid='{nameof(Counter.Elements.DecrementButton)}']");
         decrement.HasAttribute("disabled").ShouldBeTrue();
 
-        decrement.Click();
+        await decrement.ClickAsync(new());
 
         component.Find($"[data-testid='{nameof(Counter.Elements.CounterValue)}']")
             .TextContent
@@ -91,8 +91,8 @@ public class CounterPageTests
         await using var ctx = CreateContext();
         var component = ctx.Render<Counter>();
 
-        component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']").Click();
-        component.Find($"[data-testid='{nameof(Counter.Elements.ResetButton)}']").Click();
+        await component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']").ClickAsync(new());
+        await component.Find($"[data-testid='{nameof(Counter.Elements.ResetButton)}']").ClickAsync(new());
 
         component.Find($"[data-testid='{nameof(Counter.Elements.DecrementButton)}']")
             .HasAttribute("disabled")
