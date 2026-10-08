@@ -57,6 +57,48 @@ public class WorkOrderSearchTests
     }
 
     [Test]
+    public async Task ResultsHeader_ZeroResults_ShowsPluralWorkOrders()
+    {
+        await using var ctx = CreateContext(new StubBus([]));
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.Find(".results-header").TextContent.Trim()
+            .ShouldContain("Search Results (0 work orders)");
+    }
+
+    [Test]
+    public async Task ResultsHeader_OneResult_ShowsSingularWorkOrder()
+    {
+        var rows = new[]
+        {
+            new WorkOrder { Number = "WO-001", Title = "Only one", Status = WorkOrderStatus.Draft },
+        };
+        await using var ctx = CreateContext(new StubBus(rows));
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.Find(".results-header").TextContent.Trim()
+            .ShouldContain("Search Results (1 work order)");
+    }
+
+    [Test]
+    public async Task ResultsHeader_TwoResults_ShowsPluralWorkOrders()
+    {
+        var rows = new[]
+        {
+            new WorkOrder { Number = "WO-001", Title = "First", Status = WorkOrderStatus.Draft },
+            new WorkOrder { Number = "WO-002", Title = "Second", Status = WorkOrderStatus.Assigned },
+        };
+        await using var ctx = CreateContext(new StubBus(rows));
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.Find(".results-header").TextContent.Trim()
+            .ShouldContain("Search Results (2 work orders)");
+    }
+
+    [Test]
     public async Task ShouldLoadDropDownsInitiallyOnLoad()
     {
         await using var ctx = CreateContext();
