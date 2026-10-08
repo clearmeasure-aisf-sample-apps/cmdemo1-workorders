@@ -50,4 +50,60 @@ public class CounterPageTests
         var button = component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']");
         button.GetAttribute("title").ShouldBe("Increase the count by one");
     }
+
+    [Test]
+    public async Task Should_DecrementCount_WhenRemoveActivityClickedAfterIncrements()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<Counter>();
+
+        var increment = component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']");
+        increment.Click();
+        increment.Click();
+        increment.Click();
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.DecrementButton)}']").Click();
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.CounterValue)}']")
+            .TextContent
+            .ShouldBe("2");
+    }
+
+    [Test]
+    public async Task Should_DisableDecrementButton_WhenCountIsZero()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<Counter>();
+
+        var decrement = component.Find($"[data-testid='{nameof(Counter.Elements.DecrementButton)}']");
+        decrement.HasAttribute("disabled").ShouldBeTrue();
+
+        decrement.Click();
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.CounterValue)}']")
+            .TextContent
+            .ShouldBe("0");
+    }
+
+    [Test]
+    public async Task Should_DisableDecrementButton_AfterReset()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<Counter>();
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.IncrementButton)}']").Click();
+        component.Find($"[data-testid='{nameof(Counter.Elements.ResetButton)}']").Click();
+
+        component.Find($"[data-testid='{nameof(Counter.Elements.DecrementButton)}']")
+            .HasAttribute("disabled")
+            .ShouldBeTrue();
+    }
+
+    private static BunitContext CreateContext()
+    {
+        var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        return ctx;
+    }
 }
