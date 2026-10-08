@@ -173,6 +173,28 @@ Also available as `/api/v1.0/features/flags`.
 
 Pattern: no `IBus`, no query, no handler — pure static data. API-key middleware guards automatically. Rate-limited by `ApiRateLimiting.PolicyName`.
 
+## Build Facts
+
+What the deployed process was built from and how good that build is (the demo-environment kit's CAP-079); anonymous,
+no DB access, no MediatR, outside `/api`:
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/_build` | GET | `build-facts.json` of the content root. `Access-Control-Allow-Origin: *`, `Cache-Control: public, max-age=300` |
+
+**Endpoint:** `src/UI/Server/BuildFacts/` (`AddBuildFacts`, `MapBuildFacts` in `ServerApplication`). The answer always has
+`version`, `commit`, `commitUrl`, `builtAt`, `buildUrl`, `code` (lines of code per language), `tests`, `coverage`,
+`complexity`, `crap`, `analysis`, each null when the build could not tell. Without the file (a local run) it has the
+version of the assembly and nulls.
+
+**Script:** `scripts/Write-BuildFacts.ps1` writes the file: the code from the checkout (`git ls-files`, non-blank
+lines), the rest from the Build run's artifacts (`test-results-linux`, `test-results-acceptance`,
+`code-coverage-linux`, `crap-metrics-linux`, `qodana-report`); a missing artifact is a null section, never a failed
+release. The Release workflow (the kit's `release.yml`, step "Stamp the build facts into the image's files") runs it
+with `-OutputPath built/build-facts.json` before `docker build`, so the image carries the file at its content root
+(`/app/build-facts.json`; the Dockerfile copies `built/` to `/app`).
+Locally: `pwsh -NoProfile -File scripts/Write-BuildFacts.ps1`.
+
 ## DI and Service Wiring
 
 Lamar container configured in `src/UI/Server/UIServiceRegistry.cs`. Assembly scanning auto-registers MediatR handlers and services. The `IBus` interface wraps MediatR's `IMediator`.
