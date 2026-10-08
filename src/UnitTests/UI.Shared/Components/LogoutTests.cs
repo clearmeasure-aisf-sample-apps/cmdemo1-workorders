@@ -136,7 +136,7 @@ public class LogoutTests
         var component = ctx.Render<Logout>();
 
         var logoutButton = component.Find($"[data-testid='{nameof(Logout.Elements.LogoutLink)}']");
-        logoutButton.GetAttribute("title").ShouldBe("Sign out of the application");
+        logoutButton.GetAttribute("title").ShouldBe("Sign out of the work order application");
     }
 
     [Test]
