@@ -24,7 +24,9 @@ public class BuildInfoLinkTests
         link.TextContent.ShouldContain("Build info");
         link.GetAttribute("href").ShouldBe("/_build");
         link.GetAttribute("target").ShouldBe("_blank");
-        link.GetAttribute("rel").ShouldContain("noopener");
+        var rel = link.GetAttribute("rel");
+        rel.ShouldNotBeNull();
+        rel.ShouldContain("noopener");
         link.GetAttribute("title").ShouldBe("View what this version was built from");
     }
 }
