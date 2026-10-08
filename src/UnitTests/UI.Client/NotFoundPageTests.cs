@@ -25,4 +25,19 @@ public class NotFoundPageTests
         link.GetAttribute("href").ShouldBe("/");
         link.GetAttribute("data-testid").ShouldBe(nameof(NotFound.Elements.NotFoundHomeLink));
     }
+
+    [Test]
+    public void Should_RenderAlertIcon_WithExpectedClassesAriaHiddenAndTestId()
+    {
+        using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var component = ctx.Render<NotFound>();
+
+        var icon = component.Find($"[data-testid='{nameof(NotFound.Elements.NotFoundIcon)}']");
+        icon.GetAttribute("class").ShouldBe("bi bi-exclamation-triangle");
+        icon.GetAttribute("aria-hidden").ShouldBe("true");
+        icon.GetAttribute("data-testid").ShouldBe(nameof(NotFound.Elements.NotFoundIcon));
+    }
 }
