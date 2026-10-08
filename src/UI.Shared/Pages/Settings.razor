@@ -21,6 +21,7 @@
                            @onchange="OnDarkModeChanged" />
                     <div class="settings-switch-labels">
                         <label class="form-check-label" for="dark-mode-switch">Dark mode</label>
+                        <p data-testid="@nameof(Elements.DarkModeStatus)">@(Theme.IsDarkMode ? "Dark mode is on." : "Dark mode is off.")</p>
                         <p class="settings-helper" id="dark-mode-help">
                             Applies to the whole app on this device. The choice is saved in this browser until changed again.
                             If no saved choice exists, the site follows the device light or dark setting until a choice is made here.

@@ -67,6 +67,41 @@ public class SettingsTests
         module.VerifyInvoke("setTheme");
     }
 
+    [Test]
+    public async Task Settings_DarkModeStatus_WhenThemeIsLight_ShouldShowOff()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule(ThemePreferenceService.ThemeJsModulePath);
+        module.Setup<string>("getTheme").SetResult("light");
+        module.SetupVoid("syncDomFromTheme", _ => true).SetVoidResult();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Settings>());
+
+        var status = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeStatus)}']");
+        status.TextContent.ShouldBe("Dark mode is off.");
+    }
+
+    [Test]
+    public async Task Settings_DarkModeStatus_WhenToggledOn_ShouldShowOn()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule(ThemePreferenceService.ThemeJsModulePath);
+        module.Setup<string>("getTheme").SetResult("light");
+        module.SetupVoid("syncDomFromTheme", _ => true).SetVoidResult();
+        module.SetupVoid("setTheme", _ => true).SetVoidResult();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Settings>());
+
+        var sw = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeSwitch)}']");
+        await sw.ChangeAsync(new() { Value = true });
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var status = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeStatus)}']");
+            status.TextContent.ShouldBe("Dark mode is on.");
+        });
+    }
+
     private static BunitContext CreateContext()
     {
         var ctx = new BunitContext();
