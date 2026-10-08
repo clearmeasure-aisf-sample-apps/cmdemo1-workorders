@@ -1,5 +1,9 @@
 using Bunit;
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.UI.Client.Pages;
+using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
+using Microsoft.Extensions.DependencyInjection;
+using Palermo.BlazorMvc;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Client;
@@ -11,6 +15,8 @@ public class NotFoundPageTests
     public void Should_RenderHomeLink_WithExpectedTextHrefAndTestId()
     {
         using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var component = ctx.Render<NotFound>();
 
