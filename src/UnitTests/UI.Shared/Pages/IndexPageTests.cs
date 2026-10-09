@@ -55,5 +55,6 @@ public class IndexPageTests
 
         var heading = component.Find($"[data-testid='{nameof(IndexPage.Elements.HomeHeadingTooltip)}']");
         heading.GetAttribute("title").ShouldBe("Work order home");
+        heading.TextContent.ShouldBe("2nd Church of");
     }
 }
