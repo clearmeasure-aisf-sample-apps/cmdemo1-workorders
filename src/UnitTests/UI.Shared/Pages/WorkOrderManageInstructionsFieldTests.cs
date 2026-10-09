@@ -50,6 +50,20 @@ public class WorkOrderManageInstructionsFieldTests
     }
 
     [Test]
+    public async Task WorkOrderManage_ShouldShowRisksLabelForInstructionsField()
+    {
+        await using var ctx = CreateNewModeContext();
+
+        var component = ctx.Render<WorkOrderManage>();
+
+        await component.WaitForElementAsync($"[data-testid='{WorkOrderManage.Elements.Instructions}']");
+
+        var markup = component.Markup;
+        markup.ShouldContain(">Risks:</label>");
+        markup.ShouldNotContain(">Instructions:</label>");
+    }
+
+    [Test]
     public async Task WorkOrderManage_ShouldDisableInstructionsWhenReadOnly()
     {
         await using var ctx = new BunitContext();
