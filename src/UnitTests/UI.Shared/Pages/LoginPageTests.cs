@@ -153,7 +153,7 @@ public class LoginPageTests
         var component = ctx.Render<Login>();
 
         var subtitle = component.Find(".login-subtitle");
-        subtitle.TextContent.ShouldBe("First Church of Springfield");
+        subtitle.TextContent.ShouldBe("2nd Church of");
     }
 
     [Test]
@@ -492,9 +492,9 @@ public class LoginPageTests
 
         var footerDiv = component.FindAll("div.text-center")
             .First(d => d.QuerySelector("small.text-muted")?.TextContent
-                .Contains("First Church of Springfield") == true);
+                .Contains("2nd Church of") == true);
         footerDiv.QuerySelector("small.text-muted")!.TextContent
-            .ShouldBe("First Church of Springfield · " + DateTime.Now.Year);
+            .ShouldBe("2nd Church of · " + DateTime.Now.Year);
     }
 
     [Test]
