@@ -7,6 +7,27 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared;
 public class NavRailCssTests
 {
     [Test]
+    public void ShouldKeepNavRailBreakpointAlignedAcrossCssAndJs()
+    {
+        var breakpoint = MainLayout.NavRailBreakpointMediaQuery;
+        breakpoint.ShouldBe("(max-width: 768px)");
+
+        var cssPath = Path.GetFullPath(Path.Combine(
+            TestContext.CurrentContext.TestDirectory,
+            "..", "..", "..", "..", "UI.Shared", "MainLayout.razor.css"));
+        var jsPath = Path.GetFullPath(Path.Combine(
+            TestContext.CurrentContext.TestDirectory,
+            "..", "..", "..", "..", "UI.Shared", "wwwroot", "js", "mainLayoutNav.js"));
+
+        File.Exists(cssPath).ShouldBeTrue($"Expected scoped stylesheet at {cssPath}");
+        File.Exists(jsPath).ShouldBeTrue($"Expected nav layout script at {jsPath}");
+
+        File.ReadAllText(cssPath).ShouldContain($"@media {breakpoint}");
+        File.ReadAllText(jsPath).ShouldContain("matchMedia(mediaQuery)");
+        File.ReadAllText(jsPath).ShouldContain("MainLayout.NavRailBreakpointMediaQuery");
+    }
+
+    [Test]
     public void ShouldCollapseAppContainer_WhenWideViewportAndNavHidden()
     {
         NavRailCss.AppContainerClass(isNarrowViewport: false, navVisible: false)
