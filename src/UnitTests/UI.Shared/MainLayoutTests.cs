@@ -22,6 +22,20 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared;
 public class MainLayoutTests
 {
     [Test]
+    public async Task ShouldRenderSidebarBrandAsSoundPhysiciansWorkOrderSystem()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var brandText = layout.Find(".brand-text");
+        brandText.QuerySelector("h4")!.TextContent.Trim().ShouldBe("SoundPhysicians Work Order System");
+        brandText.TextContent.ShouldNotContain("First Church");
+        brandText.TextContent.ShouldNotContain("Springfield");
+    }
+
+    [Test]
     public async Task ShouldRenderNavRailToggleWithExpandedStateByDefault()
     {
         await using var ctx = CreateContext();
