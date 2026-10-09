@@ -15,7 +15,7 @@ public class LoginLinkBlinkStyleTests
         trough.Success.ShouldBeTrue("Expected a 50% keyframe declaring opacity");
 
         var opacity = double.Parse(trough.Groups["opacity"].Value);
-        opacity.ShouldBeGreaterThanOrEqualTo(0.5);
+        opacity.ShouldBeGreaterThanOrEqualTo(0.55);
         opacity.ShouldBeLessThanOrEqualTo(0.6);
     }
 
