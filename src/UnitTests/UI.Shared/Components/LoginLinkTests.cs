@@ -21,6 +21,6 @@ public class LoginLinkTests
         var component = ctx.Render<LoginLink>();
 
         var link = component.Find($"[data-testid='{nameof(LoginLink.Elements.LoginLink)}']");
-        link.GetAttribute("title").ShouldBe("Sign in to manage work orders");
+        link.GetAttribute("title").ShouldBe("Sign in to manage your work orders");
     }
 }
