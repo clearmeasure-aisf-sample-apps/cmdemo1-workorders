@@ -1,4 +1,4 @@
-# Board Columns
+# Board Columns (reviewed)
 
 The project board columns, in order:
 
