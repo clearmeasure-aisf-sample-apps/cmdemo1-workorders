@@ -1,4 +1,4 @@
-# Support
+# Customer Support
 
 If you encounter a problem with this application, follow these steps to report it effectively.
 
