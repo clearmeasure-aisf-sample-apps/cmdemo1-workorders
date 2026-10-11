@@ -1,4 +1,4 @@
-# CRAP Score Audit (crap4dotnet)
+# CRAP Score Audit (crap4dotnet) (reviewed)
 
 Scripts live in `scripts/crap/`. This is a build-tooling script set, not an agent skill.
 
