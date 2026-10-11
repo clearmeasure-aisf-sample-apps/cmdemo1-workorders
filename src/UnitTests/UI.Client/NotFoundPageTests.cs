@@ -21,7 +21,7 @@ public class NotFoundPageTests
         var component = ctx.Render<NotFound>();
 
         var link = component.Find($"[data-testid='{nameof(NotFound.Elements.NotFoundHomeLink)}']");
-        link.TextContent.ShouldBe("Back to the home page");
+        link.TextContent.ShouldBe("Return to the home page");
         link.GetAttribute("href").ShouldBe("/");
         link.GetAttribute("data-testid").ShouldBe(nameof(NotFound.Elements.NotFoundHomeLink));
     }
