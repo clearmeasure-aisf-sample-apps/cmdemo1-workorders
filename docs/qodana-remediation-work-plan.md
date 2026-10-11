@@ -1,4 +1,4 @@
-# Qodana Remediation Work Plan
+# Qodana Remediation Work Plan (reviewed)
 
 **Tracking issue:** [#8839](https://github.com/ClearMeasureLabs/bootcamp-palermo-workorders/issues/8839)  
 **Source run:** [Build 32329753510](https://github.com/ClearMeasureLabs/bootcamp-palermo-workorders/actions/runs/32329753510) (`cursor/crap-metrics-artifacts-b36a`, Qodana Community .NET 2026.2.672)  
