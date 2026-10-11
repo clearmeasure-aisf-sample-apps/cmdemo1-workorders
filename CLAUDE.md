@@ -153,6 +153,7 @@ Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, 
 | `/api/tools/base64` | POST | Base64 encode/decode of `text` (UTF-8); `mode` `encode` (default) or `decode` |
 | `/api/tools/guid-generator` | POST | Generate 1–100 UUIDs; optional `count` query param |
 | `/api/tools/random` | POST | Random integer in `[min, max]` |
+| `/api/tools/slugify` | POST | Convert `text` to URL slug (lowercase; non-alphanumeric runs become single `-`) |
 | `/api/tools/timestamp-converter` | GET | Convert Unix timestamps to/from ISO-8601 |
 
 All routes also available under the versioned prefix `/api/v1.0/tools/`.
