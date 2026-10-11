@@ -1,4 +1,4 @@
-# Operations Glossary
+# Operations Glossary (reviewed)
 
 - **Health check** — the endpoint the monitor polls to decide whether the app is up.
 - **Production incident** — a work item raised automatically when the health check fails.
