@@ -135,7 +135,7 @@ public class LoginPageTests
         var component = ctx.Render<Login>();
 
         var heading = component.Find("h3");
-        heading.TextContent.ShouldBe("Welcome to the Church Portal");
+        heading.TextContent.ShouldBe("Welcome to the Church Workers Portal");
     }
 
     [Test]
