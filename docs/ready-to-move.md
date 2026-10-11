@@ -1,4 +1,4 @@
-# Ready To Move
+# Ready To Move (reviewed)
 
 The `Ready To Move` label advances a work item one column on the project board. It is consumed when the move happens, so the label is automatically removed after the item is moved.
 
