@@ -1,4 +1,4 @@
-# AI Workers
+# AI Workers (reviewed)
 
 The factory can dispatch work to the following AI workers; which ones are enabled is determined by configuration.
 
