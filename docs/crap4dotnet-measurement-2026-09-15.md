@@ -1,4 +1,4 @@
-# crap4dotnet — Plan and One-Time Baseline Measurement
+# crap4dotnet — Plan and One-Time Baseline Measurement (reviewed)
 
 **Date:** 2026-09-15
 **Commit measured:** `1747660` (master head at time of measurement)
