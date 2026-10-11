@@ -1,4 +1,4 @@
-# Release Cadence
+# Release Cadence (reviewed)
 
 Releases are cut from `master` after validation in UAT passes.
 
