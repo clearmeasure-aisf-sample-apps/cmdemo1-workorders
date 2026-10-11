@@ -1,4 +1,4 @@
-# CI: single merge gate (`build-result`)
+# CI: single merge gate (`build-result`) (reviewed)
 
 ## Decision
 
