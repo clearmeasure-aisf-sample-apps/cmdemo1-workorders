@@ -1,4 +1,4 @@
-# Qodana Gating Scope (#9519)
+# Qodana Gating Scope (#9519) (reviewed)
 
 Records the decision on which Qodana inspection severities gate the build, and where.
 
