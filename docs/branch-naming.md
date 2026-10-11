@@ -1,4 +1,4 @@
-# Branch Naming Convention for Automated Agents
+# Branch Naming Convention for Automated Agents (reviewed)
 
 ## Canonical agent pattern
 
