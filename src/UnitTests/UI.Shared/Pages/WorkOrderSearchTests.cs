@@ -53,7 +53,7 @@ public class WorkOrderSearchTests
         var component = ctx.Render<WorkOrderSearch>();
 
         var heading = component.Find($"[data-testid='{WorkOrderSearch.Elements.SearchHeadingTooltip}']");
-        heading.GetAttribute("title").ShouldBe("Search all work orders");
+        heading.GetAttribute("title").ShouldBe("Search every work order");
     }
 
     [Test]
