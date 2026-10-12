@@ -56,4 +56,18 @@ public class IndexPageTests
         var heading = component.Find($"[data-testid='{nameof(IndexPage.Elements.HomeHeadingTooltip)}']");
         heading.GetAttribute("title").ShouldBe("Work order home");
     }
+
+    [Test]
+    public async Task ShouldDisplayServeInvitation()
+    {
+        await using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.AddAuthorization();
+
+        var component = ctx.Render<IndexPage>();
+
+        component.Markup.ShouldContain("Come pitch in and serve at the church!");
+        component.Markup.ShouldNotContain("Come pitch in to work at the church!");
+    }
 }
