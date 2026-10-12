@@ -8,3 +8,4 @@
 - **Auto Merge** — a label that lets the AI Factory merge a pull request as soon as Functional Testing passes.
 - **AI Factory** — the automation that moves work items across the board and opens pull requests.
 - **Functional Testing** — the board column where the change is validated against the work item before merge.
+- **Technical Design** — the board column where the change is designed and its scope is fixed before development starts.
