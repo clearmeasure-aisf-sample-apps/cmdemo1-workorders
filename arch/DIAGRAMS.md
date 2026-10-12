@@ -1,6 +1,6 @@
 Diagram versioning & rendering policy
 
-This repository stores PlantUML sources (arch/*.puml) alongside their rendered images (arch/*.png, arch/*.svg). A CI job (./github/workflows/render-diagrams.yml) validates that the rendered images are up-to-date with the sources on pull requests.
+This repository stores PlantUML sources (arch/*.puml) alongside their rendered images (arch/*.png, arch/*.svg). A CI job (.github/workflows/render-diagrams.yml) validates that the rendered images are up-to-date with the sources on pull requests.
 
 Guidelines
 - When you modify any arch/*.puml file, re-run the renderer locally and commit the generated PNG + SVG images.
