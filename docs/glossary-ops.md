@@ -7,6 +7,7 @@
 - **Release candidate** — a versioned build published from master that UX Testing environments deploy.
 - **Auto Merge** — a label that lets the AI Factory merge a pull request as soon as Functional Testing passes.
 - **AI Factory** — the automation that moves work items across the board and opens pull requests.
+- **Plant manager** — the supervising AI session that answers the questions factory workers raise about their work items.
 - **Release Queue** — the board column where the merged change waits for the release candidate that carries it.
 - **Functional Testing** — the board column where the change is validated against the work item before merge.
 - **Development** — the board column where the change is implemented on a branch and a pull request is opened.
