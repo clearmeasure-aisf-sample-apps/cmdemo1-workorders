@@ -6,3 +6,4 @@ The factory can dispatch work to the following AI workers; which ones are enable
 - GitHub Copilot agent
 - Claude managed agent
 - IBM Bob
+- Claude Code cloud session
