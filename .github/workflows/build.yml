@@ -141,8 +141,16 @@ jobs:
           AI_OpenAI_Model: ${{ vars.AI_OPENAI_MODEL }}
         run: |
           Write-Host "Running CI Build"
-          . ./build.ps1
-          Build
+          . ./build.ps1 ; Build
+
+      # The private build's word: which command built this (build.ps1 writes it). The Release adds it to the build facts.
+      - name: Upload the private build's word
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: private-build
+          path: private-build.json
+          if-no-files-found: error
 
       - name: Enforce CRAP (production)
         shell: pwsh

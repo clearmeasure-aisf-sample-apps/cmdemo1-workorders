@@ -234,6 +234,13 @@ Function Build {
 	else {
 		Log-Message -Message "BUILD SUCCEEDED - Build time: $elapsed" -Type "INFO"
 	}
+
+	# The private build says which command it is, for the build facts of what the integration build releases
+	# (the kit's .github/private-build/add-private-build.ps1 reads it; build.yml keeps the file as an artifact).
+	# Only the command as a developer types it says so: a variant (-UseSqlite, a named database) does not.
+	if ($env:GITHUB_ACTIONS -eq 'true' -and -not $UseSqlite -and [string]::IsNullOrEmpty($databaseServer) -and [string]::IsNullOrEmpty($databaseName)) {
+		@{ command = '. ./build.ps1 ; Build' } | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $PSScriptRoot 'private-build.json') -Encoding utf8
+	}
 }
 
 Function Invoke-CIBuild {
