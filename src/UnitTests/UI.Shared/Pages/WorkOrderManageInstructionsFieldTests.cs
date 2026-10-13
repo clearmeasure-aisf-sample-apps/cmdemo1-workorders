@@ -50,7 +50,7 @@ public class WorkOrderManageInstructionsFieldTests
     }
 
     [Test]
-    public async Task WorkOrderManage_ShouldShowRisksLabelForInstructionsField()
+    public async Task WorkOrderManage_ShouldShowInstructionsLabelForInstructionsField()
     {
         await using var ctx = CreateNewModeContext();
 
@@ -59,8 +59,8 @@ public class WorkOrderManageInstructionsFieldTests
         await component.WaitForElementAsync($"[data-testid='{WorkOrderManage.Elements.Instructions}']");
 
         var markup = component.Markup;
-        markup.ShouldContain(">Risks:</label>");
-        markup.ShouldNotContain(">Instructions:</label>");
+        markup.ShouldContain(">Instructions:</label>");
+        markup.ShouldNotContain(">Risks:</label>");
     }
 
     [Test]
