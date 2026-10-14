@@ -68,20 +68,20 @@ public class BuildingsTests : AcceptanceTestBase
         wo3.ChangeStatus(WorkOrderStatus.InProgress);
 
         // Update the work orders in the database
-        await using (var ctx_wo1 = TestHost.NewDbContext())
+        await using (var ctxWo1 = TestHost.NewDbContext())
         {
-            ctx_wo1.Update(wo1);
-            await ctx_wo1.SaveChangesAsync();
+            ctxWo1.Update(wo1);
+            await ctxWo1.SaveChangesAsync();
         }
-        await using (var ctx_wo2 = TestHost.NewDbContext())
+        await using (var ctxWo2 = TestHost.NewDbContext())
         {
-            ctx_wo2.Update(wo2);
-            await ctx_wo2.SaveChangesAsync();
+            ctxWo2.Update(wo2);
+            await ctxWo2.SaveChangesAsync();
         }
-        await using (var ctx_wo3 = TestHost.NewDbContext())
+        await using (var ctxWo3 = TestHost.NewDbContext())
         {
-            ctx_wo3.Update(wo3);
-            await ctx_wo3.SaveChangesAsync();
+            ctxWo3.Update(wo3);
+            await ctxWo3.SaveChangesAsync();
         }
 
         // Navigate to Buildings page
@@ -147,15 +147,15 @@ public class BuildingsTests : AcceptanceTestBase
         wo2.ChangeStatus(WorkOrderStatus.Assigned);
 
         // Update in database
-        await using (var ctx_wo1 = TestHost.NewDbContext())
+        await using (var ctxWo1 = TestHost.NewDbContext())
         {
-            ctx_wo1.Update(wo1);
-            await ctx_wo1.SaveChangesAsync();
+            ctxWo1.Update(wo1);
+            await ctxWo1.SaveChangesAsync();
         }
-        await using (var ctx_wo2 = TestHost.NewDbContext())
+        await using (var ctxWo2 = TestHost.NewDbContext())
         {
-            ctx_wo2.Update(wo2);
-            await ctx_wo2.SaveChangesAsync();
+            ctxWo2.Update(wo2);
+            await ctxWo2.SaveChangesAsync();
         }
 
         // Navigate to Buildings page
@@ -215,15 +215,15 @@ public class BuildingsTests : AcceptanceTestBase
         wo2.ChangeStatus(WorkOrderStatus.Draft); // Not completed
 
         // Update in database
-        await using (var ctx_wo1 = TestHost.NewDbContext())
+        await using (var ctxWo1 = TestHost.NewDbContext())
         {
-            ctx_wo1.Update(wo1);
-            await ctx_wo1.SaveChangesAsync();
+            ctxWo1.Update(wo1);
+            await ctxWo1.SaveChangesAsync();
         }
-        await using (var ctx_wo2 = TestHost.NewDbContext())
+        await using (var ctxWo2 = TestHost.NewDbContext())
         {
-            ctx_wo2.Update(wo2);
-            await ctx_wo2.SaveChangesAsync();
+            ctxWo2.Update(wo2);
+            await ctxWo2.SaveChangesAsync();
         }
 
         // Navigate to Buildings page
