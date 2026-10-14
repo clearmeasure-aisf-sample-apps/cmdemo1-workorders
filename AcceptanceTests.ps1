@@ -9,11 +9,11 @@ param (
     [switch]$Headful,
 
     [Parameter(Mandatory=$false)]
-    [ValidateRange(0, 4)]
+    [ValidateRange(0, 6)]
     [int]$ShardNumber = 0,
 
     [Parameter(Mandatory=$false)]
-    [int]$ShardCount = 4
+    [int]$ShardCount = 6
 )
 
 . .\build.ps1
@@ -35,7 +35,7 @@ if (-not [string]::IsNullOrEmpty($databaseName)) {
 if ($ShardNumber -gt 0) {
     $buildArgs["ShardNumber"] = $ShardNumber
 }
-if ($ShardCount -ne 4) {
+if ($ShardCount -ne 6) {
     $buildArgs["ShardCount"] = $ShardCount
 }
 Invoke-AcceptanceTests @buildArgs

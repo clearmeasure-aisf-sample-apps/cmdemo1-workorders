@@ -644,7 +644,7 @@ jobs:
           retention-days: 2
 
   acceptance-tests:
-    name: Acceptance Tests [shard ${{ matrix.shard }}/4]
+    name: Acceptance Tests [shard ${{ matrix.shard }}/6]
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -658,7 +658,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     env:
       BUILD_CONFIGURATION: Release
 
@@ -688,7 +688,7 @@ jobs:
           version="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           echo "BUILD_BUILDNUMBER=$version" >> $GITHUB_ENV
 
-      - name: Run Acceptance Tests (Shard ${{ matrix.shard }}/4)
+      - name: Run Acceptance Tests (Shard ${{ matrix.shard }}/6)
         shell: pwsh
         env:
           BUILD_BUILDNUMBER: ${{ env.BUILD_BUILDNUMBER }}
@@ -696,19 +696,19 @@ jobs:
           AI_OpenAI_Url: ${{ vars.AI_OPENAI_URL }}
           AI_OpenAI_Model: ${{ vars.AI_OPENAI_MODEL }}
         run: |
-          Write-Host "Running Acceptance Tests Shard ${{ matrix.shard }}/4"
+          Write-Host "Running Acceptance Tests Shard ${{ matrix.shard }}/6"
           . ./build.ps1
           Invoke-AcceptanceTests -ShardNumber ${{ matrix.shard }}
 
-      - name: Test Reporter (Shard ${{ matrix.shard }}/4)
+      - name: Test Reporter (Shard ${{ matrix.shard }}/6)
         uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
-          name: Acceptance Test Results [shard ${{ matrix.shard }}/4]
+          name: Acceptance Test Results [shard ${{ matrix.shard }}/6]
           path: 'build/test/**/*.trx'
           reporter: dotnet-trx
 
-      - name: Upload Test Results (Shard ${{ matrix.shard }}/4)
+      - name: Upload Test Results (Shard ${{ matrix.shard }}/6)
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -717,7 +717,7 @@ jobs:
           retention-days: 2
 
   acceptance-tests-arm:
-    name: Acceptance Tests (ARM SQLite) [shard ${{ matrix.shard }}/4]
+    name: Acceptance Tests (ARM SQLite) [shard ${{ matrix.shard }}/6]
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04-arm
@@ -731,7 +731,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     env:
       BUILD_CONFIGURATION: Release
       DATABASE_ENGINE: SQLite
@@ -762,7 +762,7 @@ jobs:
           version="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           echo "BUILD_BUILDNUMBER=$version" >> $GITHUB_ENV
 
-      - name: Run Acceptance Tests (ARM SQLite, Shard ${{ matrix.shard }}/4)
+      - name: Run Acceptance Tests (ARM SQLite, Shard ${{ matrix.shard }}/6)
         shell: pwsh
         env:
           BUILD_BUILDNUMBER: ${{ env.BUILD_BUILDNUMBER }}
@@ -771,19 +771,19 @@ jobs:
           AI_OpenAI_Model: ${{ vars.AI_OPENAI_MODEL }}
           ConnectionStrings__SqlConnectionString: "Data Source=ChurchBulletin.db"
         run: |
-          Write-Host "Running Acceptance Tests with SQLite on ARM Shard ${{ matrix.shard }}/4"
+          Write-Host "Running Acceptance Tests with SQLite on ARM Shard ${{ matrix.shard }}/6"
           . ./build.ps1
           Invoke-AcceptanceTests -ShardNumber ${{ matrix.shard }} -UseSqlite
 
-      - name: Test Reporter (Shard ${{ matrix.shard }}/4)
+      - name: Test Reporter (Shard ${{ matrix.shard }}/6)
         uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
-          name: ARM Acceptance Test Results [shard ${{ matrix.shard }}/4]
+          name: ARM Acceptance Test Results [shard ${{ matrix.shard }}/6]
           path: 'build/test/**/*.trx'
           reporter: dotnet-trx
 
-      - name: Upload Test Results (Shard ${{ matrix.shard }}/4)
+      - name: Upload Test Results (Shard ${{ matrix.shard }}/6)
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -828,45 +828,33 @@ jobs:
 
           $dll = "src/AcceptanceTests/bin/Release/net10.0/ClearMeasure.Bootcamp.AcceptanceTests.dll"
 
-          # Get filters from the single source of truth
-          $shard1Filter = Get-ShardTestFilter -ShardNumber 1
-          $shard2Filter = Get-ShardTestFilter -ShardNumber 2
-          $shard3Filter = Get-ShardTestFilter -ShardNumber 3
-          $shard4Filter = Get-ShardTestFilter -ShardNumber 4
+          $shardNumbers = 1..6
 
           # Get test lists using vstest with ListTestsTargetPath
           & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:unfiltered.txt" 2>&1 | Out-Null
           $unfiltered = @(Get-Content unfiltered.txt | Where-Object {$_})
           $unfilteredCount = $unfiltered.Count
 
-          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard1.txt" "/TestCaseFilter:$shard1Filter" 2>&1 | Out-Null
-          $shard1 = @(Get-Content shard1.txt | Where-Object {$_})
-          $shard1Count = $shard1.Count
-
-          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard2.txt" "/TestCaseFilter:$shard2Filter" 2>&1 | Out-Null
-          $shard2 = @(Get-Content shard2.txt | Where-Object {$_})
-          $shard2Count = $shard2.Count
-
-          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard3.txt" "/TestCaseFilter:$shard3Filter" 2>&1 | Out-Null
-          $shard3 = @(Get-Content shard3.txt | Where-Object {$_})
-          $shard3Count = $shard3.Count
-
-          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard4.txt" "/TestCaseFilter:$shard4Filter" 2>&1 | Out-Null
-          $shard4 = @(Get-Content shard4.txt | Where-Object {$_})
-          $shard4Count = $shard4.Count
+          # Get filters from the single source of truth and list each shard's tests
+          $shards = @{}
+          foreach ($n in $shardNumbers) {
+            $filter = Get-ShardTestFilter -ShardNumber $n
+            & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard$n.txt" "/TestCaseFilter:$filter" 2>&1 | Out-Null
+            $shards[$n] = @(Get-Content "shard$n.txt" | Where-Object {$_})
+          }
 
           # Report counts
+          $totalAcrossShards = 0
           Write-Host "Test coverage report:"
           Write-Host "  Unfiltered: $unfilteredCount"
-          Write-Host "  Shard 1:    $shard1Count"
-          Write-Host "  Shard 2:    $shard2Count"
-          Write-Host "  Shard 3:    $shard3Count"
-          Write-Host "  Shard 4:    $shard4Count"
-          Write-Host "  Sum:        $($shard1Count + $shard2Count + $shard3Count + $shard4Count)"
+          foreach ($n in $shardNumbers) {
+            Write-Host "  Shard ${n}:    $($shards[$n].Count)"
+            $totalAcrossShards += $shards[$n].Count
+          }
+          Write-Host "  Sum:        $totalAcrossShards"
           Write-Host ""
 
           # Validate totals match
-          $totalAcrossShards = $shard1Count + $shard2Count + $shard3Count + $shard4Count
           if ($totalAcrossShards -ne $unfilteredCount) {
             Write-Host "ERROR: Shard totals ($totalAcrossShards) do not equal unfiltered total ($unfilteredCount)"
             exit 1
@@ -874,10 +862,9 @@ jobs:
           Write-Host "✓ Shard totals equal unfiltered total"
 
           # Check for overlaps (every pair)
-          $shards = @{ 1 = $shard1; 2 = $shard2; 3 = $shard3; 4 = $shard4 }
           $overlapErrors = @()
-          foreach ($a in 1..3) {
-            foreach ($b in ($a + 1)..4) {
+          foreach ($a in 1..5) {
+            foreach ($b in ($a + 1)..6) {
               $n = @($shards[$a] | Where-Object {$shards[$b] -contains $_}).Count
               if ($n -gt 0) { $overlapErrors += "S$a∩S$b=$n" }
             }
@@ -889,7 +876,7 @@ jobs:
           Write-Host "✓ No overlaps between any pair of shards"
 
           # Check for missing tests
-          $allShardTests = @($shard1 + $shard2 + $shard3 + $shard4)
+          $allShardTests = @($shardNumbers | ForEach-Object { $shards[$_] })
           $missing = @($unfiltered | Where-Object {$allShardTests -notcontains $_}).Count
           if ($missing -gt 0) {
             Write-Host "ERROR: $missing tests missing from all shards"
