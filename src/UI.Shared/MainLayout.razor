@@ -94,33 +94,37 @@
 
         <footer class="site-footer" data-testid="@nameof(Elements.CopyrightFooter)">
             <div class="site-footer-inner">
-                <span class="site-footer-line">
-                    © @CopyrightYear
-                    <a class="site-footer-link"
-                       href="https://clearmeasure.com/"
-                       target="_blank"
-                       rel="noopener noreferrer">ClearMeasure Labs</a>
-                </span>
-                <span class="site-footer-note" data-testid="@nameof(Elements.FooterNote)">
-                    Submit a new work order any time — requests are typically reviewed within one business day. Thank you for serving!
-                </span>
-                <span class="site-footer-note" data-testid="@nameof(Elements.SoftwareVersion)">
-                    @AppVersion
-                    @if (_gitSha != "unknown" && _gitSha.Length >= 7)
-                    {
-                        <span> · </span>
-                        <a data-testid="@nameof(Elements.GitSha)"
-                           href="https://github.com/ClearMeasureLabs/bootcamp-palermo-workorders/commit/@_gitSha"
+                <div class="footer-left">
+                    <span class="site-footer-line">
+                        © @CopyrightYear
+                        <a class="site-footer-link"
+                           href="https://clearmeasure.com/"
                            target="_blank"
-                           rel="noopener noreferrer">@_gitSha[..7]</a>
-                    }
-                    else
-                    {
+                           rel="noopener noreferrer">ClearMeasure Labs</a>
+                    </span>
+                </div>
+                <div class="footer-right">
+                    <span class="site-footer-note" data-testid="@nameof(Elements.SoftwareVersion)">
+                        @AppVersion
+                        @if (_gitSha != "unknown" && _gitSha.Length >= 7)
+                        {
+                            <span> · </span>
+                            <a data-testid="@nameof(Elements.GitSha)"
+                               href="https://github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/@_gitSha"
+                               target="_blank"
+                               rel="noopener noreferrer">@_gitSha[..7]</a>
+                        }
+                        else
+                        {
+                            <span> · </span>
+                            <span data-testid="@nameof(Elements.GitSha)">unknown</span>
+                        }
                         <span> · </span>
-                        <span data-testid="@nameof(Elements.GitSha)">unknown</span>
-                    }
-                    <span> · </span>
-                    <span data-testid="@nameof(Elements.EnvironmentName)">@_environmentName</span>
+                        <span data-testid="@nameof(Elements.EnvironmentName)">@_environmentName</span>
+                    </span>
+                </div>
+                <span class="site-footer-note" data-testid="@nameof(Elements.FooterNote)">
+                    Requests are typically reviewed within one business day.
                 </span>
             </div>
         </footer>
