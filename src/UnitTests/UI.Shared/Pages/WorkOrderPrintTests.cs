@@ -121,6 +121,29 @@ public class WorkOrderPrintTests
         c.FindAll(Id(WorkOrderPrint.Elements.Title)).Count.ShouldBe(0);
     }
 
+    [TestCase("DOESNOTEXIST")]
+    [TestCase(" ")]
+    public async Task ShouldShowNotFoundWhenLookupThrows(string number)
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        ctx.Services.AddSingleton<IBus>(new ThrowingBus());
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, number));
+
+        c.Find(Id(WorkOrderPrint.Elements.NotFound)).TextContent.ShouldBe("Work order not found");
+    }
+
+    private class ThrowingBus() : Bus(null!)
+    {
+        public override Task Publish(INotification notification) => Task.CompletedTask;
+
+        public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request) =>
+            throw new InvalidOperationException();
+    }
+
     private class StubBus(WorkOrder? result, WorkOrderAttachment[]? attachments = null) : Bus(null!)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;

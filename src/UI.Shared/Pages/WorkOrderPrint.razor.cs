@@ -19,13 +19,27 @@ public partial class WorkOrderPrint : AppComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        _workOrder = string.IsNullOrWhiteSpace(Number)
-            ? null
-            : await Bus.Send(new WorkOrderByNumberQuery(Number));
+        _workOrder = string.IsNullOrWhiteSpace(Number) ? null : await FindAsync(Number);
         _attachments = _workOrder == null
             ? []
             : await Bus.Send(new WorkOrderAttachmentsQuery(_workOrder.Id));
         _loaded = true;
+    }
+
+    /// <summary>
+    /// The browser's remoting bus throws when the server answers an unknown number with no work order,
+    /// so a failed lookup is shown as "not found" rather than an unhandled error.
+    /// </summary>
+    private async Task<WorkOrder?> FindAsync(string number)
+    {
+        try
+        {
+            return await Bus.Send(new WorkOrderByNumberQuery(number));
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     private async Task PrintAsync() => await Js.InvokeVoidAsync("window.print");
