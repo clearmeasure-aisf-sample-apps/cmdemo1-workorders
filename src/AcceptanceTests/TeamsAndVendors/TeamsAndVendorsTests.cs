@@ -171,11 +171,12 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
     private void AssignWorkOrderToEmployee(WorkOrder workOrder, Employee employee)
     {
-        var wo = TestHost.NewDbContext().Set<WorkOrder>().Single(w => w.Number == workOrder.Number);
+        using var readContext = TestHost.NewDbContext();
+        var wo = readContext.Set<WorkOrder>().Single(w => w.Number == workOrder.Number);
         wo.Assignee = employee;
         wo.ChangeStatus(WorkOrderStatus.Assigned);
-        using var context = TestHost.NewDbContext();
-        context.Update(wo);
-        context.SaveChanges();
+        using var writeContext = TestHost.NewDbContext();
+        writeContext.Update(wo);
+        writeContext.SaveChanges();
     }
 }
