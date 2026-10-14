@@ -78,9 +78,15 @@ public class WorkOrderManageCopyButtonTests
 
         var component = ctx.Render<WorkOrderManage>();
 
-        var copyButton = component.Find(
-            $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']", false);
-        copyButton.ShouldBeNull();
+        try
+        {
+            component.Find($"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
+            Assert.Fail("Expected no copy button for new work order, but one was found");
+        }
+        catch (ElementNotFoundException)
+        {
+            // Expected: button should not be present
+        }
     }
 
     private class StubWorkOrderManageBus : Bus
