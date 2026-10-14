@@ -58,11 +58,11 @@ public class McpEndpointResolverTests
     }
 
     [Test]
-    public void ShouldRewriteUnspecifiedIpv6BindAddressToLoopback()
+    public void ShouldRewriteUnspecifiedIpv6BindAddressToIpv4Loopback()
     {
         var server = new StubServer(["http://[::]:8080"]);
 
-        McpEndpointResolver.ResolveMcpUrl(server).ShouldBe("http://[::1]:8080/mcp");
+        McpEndpointResolver.ResolveMcpUrl(server).ShouldBe("http://127.0.0.1:8080/mcp");
     }
 
     [Test]

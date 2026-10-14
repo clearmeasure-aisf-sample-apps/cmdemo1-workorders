@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Sockets;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 
@@ -52,9 +51,9 @@ internal static class McpEndpointResolver
             return address.TrimEnd('/');
         }
 
-        var loopbackHost = ip.AddressFamily == AddressFamily.InterNetworkV6
-            ? IPAddress.IPv6Loopback.ToString()
-            : IPAddress.Loopback.ToString();
+        // IPv4 loopback for both: a socket bound to [::] is dual-stack and accepts IPv4, while a container
+        // host may have no IPv6 loopback at all (Azure Container Apps: "Cannot assign requested address ([::1]:8080)").
+        var loopbackHost = IPAddress.Loopback.ToString();
 
         var builder = new UriBuilder(uri) { Host = loopbackHost };
         return builder.Uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
