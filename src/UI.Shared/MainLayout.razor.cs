@@ -1,10 +1,9 @@
 using System.Reflection;
+using System.Security.Claims;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
-using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
@@ -71,7 +70,7 @@ public partial class MainLayout : IAsyncDisposable
     private string _gitSha = "unknown";
     private string _environmentName = "unknown";
     private bool _notificationsPanelOpen;
-    private global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? _notificationsPanelData;
+    private NotificationsPanel? _notificationsPanelData;
 
     private string AppContainerClass => NavRailCss.AppContainerClass(_isNarrowViewport, _navVisible);
 
@@ -192,9 +191,7 @@ public partial class MainLayout : IAsyncDisposable
     private async Task OpenNotificationsPanelAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var currentUserName = authState.User?.FindFirst("preferred_username")?.Value ??
-                             authState.User?.FindFirst("name")?.Value ??
-                             authState.User?.Identity?.Name;
+        var currentUserName = ResolveUserName(authState.User);
 
         if (string.IsNullOrWhiteSpace(currentUserName))
         {
@@ -212,6 +209,9 @@ public partial class MainLayout : IAsyncDisposable
             // Silently fail - panel won't open
         }
     }
+
+    private static string? ResolveUserName(ClaimsPrincipal user) =>
+        (user.FindFirst("preferred_username") ?? user.FindFirst("name"))?.Value ?? user.Identity?.Name;
 
     private async Task CloseNotificationsPanelAsync()
     {

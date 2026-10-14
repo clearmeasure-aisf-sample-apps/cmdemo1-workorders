@@ -145,9 +145,6 @@ public class NotificationsPanelTests : AcceptanceTestBase
         var bellButton = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsButton));
 
         // For a fresh user with no assigned work orders, badge should not be visible
-        var badges = Page.Locator($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']");
-        var badgeCount = await badges.CountAsync();
-
         await bellButton.ClickAsync();
 
         // Panel should show empty messages

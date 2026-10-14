@@ -21,7 +21,6 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     [Inject]
     private IJSRuntime Js { get; set; } = null!;
 
-    private ElementReference PanelRef { get; set; }
     private DotNetObjectReference<NotificationsPanel>? _dotNetRef;
     private IJSObjectReference? _jsModule;
 

@@ -672,7 +672,87 @@ public class MainLayoutTests
         badges.Count.ShouldBe(0);
     }
 
+    [Test]
+    public async Task NotificationsBell_ShouldOpenPanelAndShowBadge_WhenUserHasOverdueWork()
+    {
+        var order = new WorkOrder { Number = "WO-9", Title = "Late", Status = WorkOrderStatus.Assigned };
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([order], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
+
+        layout.WaitForAssertion(() => layout.Find(".notifications-panel").ShouldNotBeNull());
+        bus.LastUserName.ShouldBe("hsimpson");
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("1");
+    }
+
+    [Test]
+    public async Task NotificationsBell_ShouldNotOpenPanel_WhenUserNameIsMissing()
+    {
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));
+        await using var ctx = CreateContext(bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
+
+        layout.FindAll(".notifications-panel").Count.ShouldBe(0);
+        bus.LastUserName.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task NotificationsBell_ShouldNotOpenPanel_WhenQueryFails()
+    {
+        var bus = new NotificationsStubBus(null);
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
+
+        layout.FindAll(".notifications-panel").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task NotificationsPanel_ShouldClose_WhenEscapeIsInvoked()
+    {
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
+        var panel = layout.WaitForElement(".notifications-panel");
+        panel.ShouldNotBeNull();
+
+        var panelComponent = layout.FindComponent<NotificationsPanel>();
+        await layout.InvokeAsync(() => panelComponent.Instance.HandleEscapeKey());
+
+        layout.WaitForAssertion(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
+            .GetAttribute("aria-expanded").ShouldBe("false");
+    }
+
+    private sealed class NotificationsStubBus(ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? result) : StubBus
+    {
+        public string? LastUserName { get; private set; }
+
+        public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        {
+            if (request is not ClearMeasure.Bootcamp.Core.Queries.NotificationsPanelQuery query)
+            {
+                return base.Send(request);
+            }
+
+            LastUserName = query.UserName;
+            if (result is null)
+            {
+                throw new InvalidOperationException("boom");
+            }
+
+            return Task.FromResult((TResponse)(object)result);
+        }
+    }
+
     private static BunitContext CreateContext(
+        IBus? bus = null,
         string? authenticateAsUser = null,
         string? gitSha = null,
         string? environmentName = null,
@@ -688,7 +768,7 @@ public class MainLayoutTests
         }
 
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton(bus ?? new StubBus());
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession());
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();

@@ -198,4 +198,97 @@ public class NotificationsPanelTests
         component.Markup.ShouldContain("Status Changed");
         component.Markup.ShouldContain("Assigned to");
     }
+
+    private static WorkOrder BuildOrder(DateOnly? dueDate) => new()
+    {
+        Id = Guid.NewGuid(),
+        Number = "WO-DUE",
+        Title = "Due Test",
+        Creator = new Employee("creator_user", "Creator", "User", "creator@example.com"),
+        Status = WorkOrderStatus.Assigned,
+        DueDate = dueDate
+    };
+
+    [TestCase(-3, "overdue", "Overdue")]
+    [TestCase(0, "due-today", "Due today")]
+    [TestCase(1, "upcoming", "Due tomorrow")]
+    public void ShouldRenderDueUrgencyAndText(int offsetDays, string urgency, string text)
+    {
+        using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var due = DateOnly.FromDateTime(DateTime.Today).AddDays(offsetDays);
+        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([BuildOrder(due)], [], []);
+
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, data));
+
+        var span = component.Find(".card-due-date");
+        span.GetAttribute("data-due-urgency").ShouldBe(urgency);
+        span.TextContent.Trim().ShouldBe(text);
+    }
+
+    [Test]
+    public void ShouldRenderMonthDay_WhenDueMoreThanOneDayAway()
+    {
+        using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var due = DateOnly.FromDateTime(DateTime.Today).AddDays(5);
+        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([BuildOrder(due)], [], []);
+
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, data));
+
+        var span = component.Find(".card-due-date");
+        span.GetAttribute("data-due-urgency").ShouldBe("upcoming");
+        span.TextContent.Trim().ShouldBe(due.ToString("M/d"));
+    }
+
+    [Test]
+    public void ShouldRenderNoDueDate_WhenDueDateIsNull()
+    {
+        using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([BuildOrder(null)], [], []);
+
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, data));
+
+        var span = component.Find(".card-due-date");
+        span.GetAttribute("data-due-urgency").ShouldBe("none");
+        span.TextContent.Trim().ShouldBe("No due date");
+    }
+
+    [Test]
+    public async Task HandleEscapeKey_ShouldInvokeOnClose()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var closed = 0;
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []))
+            .Add(c => c.OnClose, EventCallback.Factory.Create(this, () => closed++)));
+
+        await component.InvokeAsync(() => component.Instance.HandleEscapeKey());
+
+        closed.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task Dispose_ShouldCleanUpEscapeHandler_AfterOpening()
+    {
+        var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+        component.WaitForAssertion(() => ctx.JSInterop.Invocations.Any(i => i.Identifier == "setupEscapeHandler").ShouldBeTrue());
+
+        await ctx.DisposeAsync();
+
+        ctx.JSInterop.Invocations.Any(i => i.Identifier == "cleanupEscapeHandler").ShouldBeTrue();
+    }
 }
