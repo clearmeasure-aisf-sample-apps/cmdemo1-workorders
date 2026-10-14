@@ -1,5 +1,6 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
@@ -30,6 +31,12 @@ public partial class WorkOrderSearch : AppComponentBase
     private bool _savedViewsOpen;
     private ElementReference _savedViewsButton;
     private string? _currentUserName;
+    private SavedSearchView[] _userViews = [];
+    private bool _saveFormOpen;
+    private bool _focusSaveInput;
+    private string _newViewName = string.Empty;
+    private string? _saveViewError;
+    private ElementReference _saveViewNameInput;
     private WorkOrderSearchSummary? _summary;
     private WorkOrderSearchUrlState _state = WorkOrderSearchUrlState.Default;
     private WorkOrderSearchUrlState? _lastUrlState;
@@ -82,6 +89,7 @@ public partial class WorkOrderSearch : AppComponentBase
         UserOptions = employees.Select(e => new SelectListItem(e.UserName, e.GetFullName())).ToList();
         BuildingOptions = (await Bus.Send(new WorkOrderBuildingsQuery())).ToList();
         _currentUserName = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity?.Name;
+        await LoadUserViewsAsync();
         _currentUser = await UserSession.GetCurrentUserAsync();
         _canCreate = _currentUser?.CanCreateWorkOrder() == true;
         await LoadSummaryAsync();
@@ -192,13 +200,93 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private async Task HandleSavedViewsKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key != "Escape" || !_savedViewsOpen)
+        if (e.Key != "Escape" || (!_savedViewsOpen && !_saveFormOpen))
         {
             return;
         }
 
-        _savedViewsOpen = false;
+        CloseSavedViews();
         await _savedViewsButton.FocusAsync();
+    }
+
+    private void ToggleSavedViews()
+    {
+        if (_savedViewsOpen)
+        {
+            CloseSavedViews();
+            return;
+        }
+
+        _savedViewsOpen = true;
+    }
+
+    private void CloseSavedViews()
+    {
+        _savedViewsOpen = false;
+        _saveFormOpen = false;
+        _saveViewError = null;
+        _newViewName = string.Empty;
+    }
+
+    private async Task LoadUserViewsAsync()
+    {
+        if (_currentUserName is null)
+        {
+            return;
+        }
+
+        _userViews = await Bus.Send(new SavedSearchViewsQuery(_currentUserName));
+    }
+
+    private void OpenSaveForm()
+    {
+        _saveFormOpen = true;
+        _saveViewError = null;
+        _newViewName = string.Empty;
+        _focusSaveInput = true;
+    }
+
+    private async Task CancelSaveForm()
+    {
+        _saveFormOpen = false;
+        _saveViewError = null;
+        _newViewName = string.Empty;
+        await _savedViewsButton.FocusAsync();
+    }
+
+    private async Task HandleSaveView()
+    {
+        var query = (_state with { Page = 1 }).ToQueryString();
+        var error = SavedSearchView.ValidateNew(_newViewName, query, _userViews.Select(v => v.Name).ToArray());
+        if (error is not null || _currentUserName is null)
+        {
+            _saveViewError = error ?? "Sign in to save a view.";
+            return;
+        }
+
+        var result = await Bus.Send(new SaveSearchViewCommand(_currentUserName, _newViewName.Trim(), query));
+        if (!result.Succeeded)
+        {
+            _saveViewError = result.Error ?? "The view could not be saved.";
+            return;
+        }
+
+        await LoadUserViewsAsync();
+        CloseSavedViews();
+    }
+
+    private async Task HandleDeleteView(SavedSearchView view)
+    {
+        if (_currentUserName is null)
+        {
+            return;
+        }
+
+        var result = await Bus.Send(new DeleteSearchViewCommand(_currentUserName, view.Id));
+        if (result.Succeeded)
+        {
+            await LoadUserViewsAsync();
+        }
     }
 
     private async Task LoadSummaryAsync()
@@ -406,6 +494,12 @@ public partial class WorkOrderSearch : AppComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (_focusSaveInput && _saveFormOpen)
+        {
+            _focusSaveInput = false;
+            await _saveViewNameInput.FocusAsync();
+        }
+
         if (Model.Results.Length == 0 || _state.View == SearchView.Board)
         {
             return;

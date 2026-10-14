@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using MediatR;
@@ -20,6 +21,14 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
     public WorkOrder[] RecentWorkOrders { get; init; } = [];
 
     public WorkOrderSpecificationQuery? LastSpecification { get; private set; }
+
+    public List<SavedSearchView> SavedViews { get; } = [];
+
+    public SaveSearchViewCommand? LastSaveCommand { get; private set; }
+
+    public DeleteSearchViewCommand? LastDeleteCommand { get; private set; }
+
+    public SavedSearchViewResult SaveResult { get; set; } = SavedSearchViewResult.Success;
 
     public override Task Publish(INotification notification)
     {
@@ -74,6 +83,29 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             SummaryRequestCount++;
             LastSummaryUserName = summaryQuery.UserName;
             return Task.FromResult<TResponse>((TResponse)(object)Summary);
+        }
+
+        if (request is SavedSearchViewsQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)SavedViews.ToArray());
+        }
+
+        if (request is SaveSearchViewCommand save)
+        {
+            LastSaveCommand = save;
+            if (SaveResult.Succeeded)
+            {
+                SavedViews.Add(new SavedSearchView { Name = save.Name, Query = save.Query });
+            }
+
+            return Task.FromResult<TResponse>((TResponse)(object)SaveResult);
+        }
+
+        if (request is DeleteSearchViewCommand delete)
+        {
+            LastDeleteCommand = delete;
+            SavedViews.RemoveAll(v => v.Id == delete.Id);
+            return Task.FromResult<TResponse>((TResponse)(object)SavedSearchViewResult.Success);
         }
 
         if (request is RecentWorkOrdersQuery)

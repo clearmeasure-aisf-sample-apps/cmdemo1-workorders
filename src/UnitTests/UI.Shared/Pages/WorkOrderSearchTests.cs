@@ -2,6 +2,7 @@ using Bunit;
 using Bunit.TestDoubles;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
@@ -890,6 +891,128 @@ public class WorkOrderSearchTests
 
         await component.Find(".menu-anchor").KeyDownAsync(new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Escape" });
 
+        component.Find("#saved-views-menu").HasAttribute("hidden").ShouldBeTrue();
+    }
+
+    private static string TestId(WorkOrderSearch.Elements element, string suffix = "") => $"[data-testid='{element}{suffix}']";
+
+    [Test]
+    public async Task SavedViewsMenu_ListsBuiltInViewsThenUserViews()
+    {
+        var bus = new StubBus();
+        bus.SavedViews.Add(new SavedSearchView { Name = "High priority", Query = "Priority=High" });
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+
+        var links = component.FindAll("#saved-views-menu a[role='menuitem']");
+        links.Select(a => a.TextContent.Trim()).ShouldBe(
+            ["Open work orders", "Assigned to me", "Overdue", "Completed in last 30 days", "High priority"]);
+        component.Find(TestId(WorkOrderSearch.Elements.UserSavedViewLink, "High priority")).GetAttribute("href")
+            .ShouldBe("workorder/search?Priority=High");
+        bus.SummaryRequestCount.ShouldBeGreaterThan(0);
+    }
+
+    [Test]
+    public async Task SaveCurrentView_SendsCommandWithCurrentQueryString()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        var nav = ctx.Services.GetRequiredService<NavigationManager>();
+        nav.NavigateTo("workorder/search?Priority=High&OverdueOnly=true");
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.SaveCurrentViewButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewNameInput)).InputAsync(new ChangeEventArgs { Value = "  Urgent  " });
+        await component.Find("form.save-view-form").SubmitAsync();
+
+        bus.LastSaveCommand.ShouldNotBeNull();
+        bus.LastSaveCommand.UserName.ShouldBe(CurrentUsername);
+        bus.LastSaveCommand.Name.ShouldBe("Urgent");
+        bus.LastSaveCommand.Query.ShouldBe("Priority=High&OverdueOnly=true");
+        component.FindAll("form.save-view-form").Count.ShouldBe(0);
+        component.Find("#saved-views-menu").HasAttribute("hidden").ShouldBeTrue();
+        component.FindAll(TestId(WorkOrderSearch.Elements.UserSavedViewLink, "Urgent")).Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task SaveCurrentView_EmptyName_ShowsAlertAndSendsNothing()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.SaveCurrentViewButton)).ClickAsync(new());
+        await component.Find("form.save-view-form").SubmitAsync();
+
+        var alert = component.Find(TestId(WorkOrderSearch.Elements.SavedViewError));
+        alert.GetAttribute("role").ShouldBe("alert");
+        alert.TextContent.ShouldBe("Enter a name for the view.");
+        bus.LastSaveCommand.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task SaveCurrentView_ServerError_IsDisplayed()
+    {
+        var bus = new StubBus { SaveResult = SavedSearchViewResult.Failure("A view named 'Mine' already exists.") };
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.SaveCurrentViewButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewNameInput)).InputAsync(new ChangeEventArgs { Value = "Mine" });
+        await component.Find("form.save-view-form").SubmitAsync();
+
+        bus.LastSaveCommand.ShouldNotBeNull();
+        component.Find(TestId(WorkOrderSearch.Elements.SavedViewError)).TextContent.ShouldBe("A view named 'Mine' already exists.");
+        component.FindAll("form.save-view-form").Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task DeleteSavedView_SendsCommandWithViewId()
+    {
+        var bus = new StubBus();
+        var view = new SavedSearchView { Name = "Old", Query = "OverdueOnly=true" };
+        bus.SavedViews.Add(view);
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.UserSavedViewDeleteButton, "Old")).ClickAsync(new());
+
+        bus.LastDeleteCommand.ShouldNotBeNull();
+        bus.LastDeleteCommand.Id.ShouldBe(view.Id);
+        bus.LastDeleteCommand.UserName.ShouldBe(CurrentUsername);
+        component.FindAll(TestId(WorkOrderSearch.Elements.UserSavedViewLink, "Old")).Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task SavedViewsMenu_IsKeyboardReachable_AndEscapeClosesSaveForm()
+    {
+        var bus = new StubBus();
+        bus.SavedViews.Add(new SavedSearchView { Name = "Mine", Query = "Priority=Low" });
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+
+        var items = component.FindAll("#saved-views-menu [role='menuitem']");
+        items.Count.ShouldBe(7);
+        items.ShouldAllBe(i => i.TagName == "A" || i.TagName == "BUTTON");
+        component.Find(TestId(WorkOrderSearch.Elements.UserSavedViewDeleteButton, "Mine")).GetAttribute("aria-label")
+            .ShouldBe("Delete saved view Mine");
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SaveCurrentViewButton)).ClickAsync(new());
+        var input = component.Find(TestId(WorkOrderSearch.Elements.SavedViewNameInput));
+        component.Find($"label[for='{input.Id}']").TextContent.ShouldBe("View name");
+        input.GetAttribute("maxlength").ShouldBe("100");
+
+        await component.Find(".menu-anchor").KeyDownAsync(new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Escape" });
+
+        component.FindAll("form.save-view-form").Count.ShouldBe(0);
         component.Find("#saved-views-menu").HasAttribute("hidden").ShouldBeTrue();
     }
 

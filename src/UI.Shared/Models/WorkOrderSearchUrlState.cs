@@ -108,6 +108,18 @@ public sealed record WorkOrderSearchUrlState
         return parts.Length == 0 ? SearchPath : $"{SearchPath}?{string.Join("&", parts)}";
     }
 
+    /// <summary>The query string of <see cref="ToRelativeUri"/> without the leading <c>?</c>, or an empty string.</summary>
+    public string ToQueryString()
+    {
+        var uri = ToRelativeUri();
+        var index = uri.IndexOf('?');
+        return index < 0 ? string.Empty : uri[(index + 1)..];
+    }
+
+    /// <summary>The search page URL, relative to the app base, for a stored query string.</summary>
+    public static string RelativeUriForQuery(string query) =>
+        string.IsNullOrEmpty(query) ? SearchPath : $"{SearchPath}?{query.TrimStart('?')}";
+
     /// <summary>The filter set a summary card applies; it replaces every other filter.</summary>
     public static WorkOrderSearchUrlState ForCard(SummaryCard card) => card switch
     {
