@@ -78,15 +78,7 @@ public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
         await Page.GotoAsync("/workorder/manage?mode=new");
         await WaitForNewWorkOrderFormReadyAsync();
 
-        try
-        {
-            var copyButton = Page.GetByTestId(nameof(WorkOrderManage.Elements.CopyWorkOrderNumber));
-            await Expect(copyButton).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 1000 });
-            Assert.Fail("Expected no copy button for new work order");
-        }
-        catch (TimeoutException)
-        {
-            // Expected: button should not be present
-        }
+        var copyButton = Page.GetByTestId(nameof(WorkOrderManage.Elements.CopyWorkOrderNumber));
+        await Expect(copyButton).ToHaveCountAsync(0);
     }
 }
