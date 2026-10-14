@@ -57,7 +57,7 @@ public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider t
             .Select(WorkOrderQueryFilters.CountRow(ChurchTimeZone.Today(time), time, CompletedWindowDays));
         var buildings = rows
             .GroupBy(r => r.Building)
-            .Select(g => new { Key = g.Key, Anchor = g.Min(r => r.Number) });
+            .Select(g => new { g.Key, Anchor = g.Min(r => r.Number) });
 
         return rows
             .Join(buildings, r => r.Building, b => b.Key,

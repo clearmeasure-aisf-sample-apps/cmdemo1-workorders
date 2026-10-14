@@ -76,13 +76,13 @@ internal static class WorkOrderQueryFilters
     /// The building a work order is grouped under: trimmed by the database exactly as the <c>Building</c>
     /// filter trims it; null, empty and blank become "" (the <c>NoBuilding</c> filter).
     /// </summary>
-    internal static readonly Expression<Func<WorkOrder, string>> BuildingKey = wo => (wo.Building ?? "").Trim();
+    private static readonly Expression<Func<WorkOrder, string>> BuildingKey = wo => (wo.Building ?? "").Trim();
 
     /// <summary>
     /// The room a work order is grouped under: trimmed by the database exactly as the <c>Room</c>
     /// filter trims it; null, empty and blank become "" (the <c>NoRoom</c> filter).
     /// </summary>
-    internal static readonly Expression<Func<WorkOrder, string>> RoomKey = wo => (wo.RoomNumber ?? "").Trim();
+    private static readonly Expression<Func<WorkOrder, string>> RoomKey = wo => (wo.RoomNumber ?? "").Trim();
 
     /// <summary>
     /// Projects a work order to its building and room keys and 1/0 flags for the open, overdue and
@@ -225,7 +225,9 @@ internal static class WorkOrderQueryFilters
 internal sealed class WorkOrderCountRow
 {
     public string? Number { get; set; }
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- setter required: assigned by Expression.Bind in CountRow
     public string Building { get; set; } = "";
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- setter required: assigned by Expression.Bind in CountRow
     public string Room { get; set; } = "";
     public int Open { get; set; }
     public int Overdue { get; set; }
