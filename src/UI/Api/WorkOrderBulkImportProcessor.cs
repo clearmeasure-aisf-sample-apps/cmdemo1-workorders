@@ -71,6 +71,11 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
                 "Title, Description, and CreatorUsername are required on each data row.");
         }
 
+        if (row.Error != null)
+        {
+            return new WorkOrderBulkImportRowResult(row.LineNumber, false, null, row.Error);
+        }
+
         var creatorResult = await ResolveCreatorAsync(row, creatorsByUsername, cancellationToken);
         if (creatorResult.Error != null)
         {
@@ -117,7 +122,10 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
             Creator = creator,
             Status = WorkOrderStatus.Draft,
             Number = numberGenerator.GenerateNumber(),
-            RoomNumber = row.RoomNumber
+            RoomNumber = row.RoomNumber,
+            Building = row.Building,
+            Priority = row.Priority ?? WorkOrderPriority.Medium,
+            DueDate = row.DueDate
         };
 
         try
