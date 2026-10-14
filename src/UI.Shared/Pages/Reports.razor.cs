@@ -38,9 +38,10 @@ public partial class Reports : AppComponentBase
         }
 
         var csv = WorkOrderReportsExporter.ToCsv(Data);
-        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
         var fileName = $"reports-{DateOnly.FromDateTime(Clock.GetUtcNow().DateTime):yyyyMMdd}.csv";
 
-        await Js.InvokeVoidAsync("searchExport.download", fileName, bytes);
+        var module = await Js.InvokeAsync<IJSObjectReference>("import",
+            "./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js");
+        await module.InvokeVoidAsync("downloadCsv", fileName, csv);
     }
 }

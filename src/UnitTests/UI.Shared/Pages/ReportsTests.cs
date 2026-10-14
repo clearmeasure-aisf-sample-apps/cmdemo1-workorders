@@ -137,6 +137,21 @@ public class ReportsTests
     }
 
     [Test]
+    public async Task Reports_ExportButton_ShouldInvokeCsvDownloadModule()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js");
+        module.SetupVoid("downloadCsv", _ => true).SetVoidResult();
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Reports>());
+
+        await component.Find($"[data-testid='{nameof(Reports.Elements.ExportButton)}']").ClickAsync(new());
+
+        var invocation = module.VerifyInvoke("downloadCsv");
+        invocation.Arguments[0]!.ToString()!.ShouldEndWith(".csv");
+        invocation.Arguments[1]!.ToString()!.ShouldContain("Overdue Count,1");
+    }
+
+    [Test]
     public async Task Reports_WithoutData_ShouldDisableExportButton()
     {
         await using var ctx = CreateContext();

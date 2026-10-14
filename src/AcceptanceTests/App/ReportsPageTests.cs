@@ -152,7 +152,7 @@ public class ReportsPageTests : AcceptanceTestBase
 
         WorkOrder[] orders =
         [
-            new WorkOrder
+            new()
             {
                 Creator = creator,
                 Number = $"R{tag}1",
@@ -163,7 +163,7 @@ public class ReportsPageTests : AcceptanceTestBase
                 CreatedDate = now.AddDays(-5),
                 DueDate = DateOnly.FromDateTime(now.AddDays(-1))
             },
-            new WorkOrder
+            new()
             {
                 Creator = creator,
                 Number = $"R{tag}2",
@@ -173,7 +173,7 @@ public class ReportsPageTests : AcceptanceTestBase
                 Building = "Kitchen",
                 CreatedDate = now.AddDays(-10)
             },
-            new WorkOrder
+            new()
             {
                 Creator = creator,
                 Number = $"R{tag}3",
@@ -183,7 +183,7 @@ public class ReportsPageTests : AcceptanceTestBase
                 Building = "Sanctuary",
                 CreatedDate = now.AddDays(-3)
             },
-            new WorkOrder
+            new()
             {
                 Creator = creator,
                 Number = $"R{tag}4",
@@ -194,7 +194,7 @@ public class ReportsPageTests : AcceptanceTestBase
                 CreatedDate = now.AddDays(-12),
                 CompletedDate = now.AddDays(-5)
             },
-            new WorkOrder
+            new()
             {
                 Creator = creator,
                 Number = $"R{tag}5",
