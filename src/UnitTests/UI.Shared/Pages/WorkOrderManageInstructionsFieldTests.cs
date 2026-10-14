@@ -59,8 +59,8 @@ public class WorkOrderManageInstructionsFieldTests
         await component.WaitForElementAsync($"[data-testid='{WorkOrderManage.Elements.Instructions}']");
 
         var markup = component.Markup;
-        markup.ShouldContain(">Risks:</label>");
-        markup.ShouldNotContain(">Instructions:</label>");
+        markup.ShouldContain(">Risks</label>");
+        markup.ShouldNotContain(">Instructions</label>");
     }
 
     [Test]

@@ -1,3 +1,5 @@
+@using ClearMeasure.Bootcamp.Core.Services.Impl
+
 <PageTitle>@(Model.Mode == EditMode.New ? "New Work Order" : $"Work Order {Model.WorkOrderNumber}") - Kalahari Church Work Order System</PageTitle>
 
 <div class="work-order-container">
@@ -16,14 +18,14 @@
         <div class="form-container">
             <div class="form-grid">
                 <div class="form-group">
-                    <label class="form-label">Creator:</label>
+                    <label class="form-label">Creator</label>
                     <div>
                         <span class="value">@Model.CreatorFullName</span>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="AssignedToUserName" class="form-label">Assigned To:</label>
+                    <label for="AssignedToUserName" class="form-label">Assigned To</label>
                     <div>
                         @if (!Model.IsReadOnly)
                         {
@@ -45,7 +47,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="Title" class="form-label">Title:</label>
+                    <label for="Title" class="form-label">Title <span class="required-indicator">*</span></label>
                     <div>
                         <InputText data-testid="@Elements.Title" id="Title" @bind-Value="Model.Title" class="form-control input-text" disabled="@Model.IsReadOnly"/>
                         <button type="button" data-testid="@Elements.SpeakTitle" class="btn btn-sm btn-outline-secondary" aria-label="Speak title" title="Speak title" @onclick="SpeakTitleAsync">&#x1F50A;</button>
@@ -57,7 +59,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="Description" class="form-label">Description:</label>
+                    <label for="Description" class="form-label">Description <span class="required-indicator">*</span></label>
                     <div>
                         <InputTextArea data-testid="@Elements.Description" id="Description" @bind-Value="Model.Description" class="form-control input-textarea" maxlength="@WorkOrder.DescriptionMaxLength" disabled="@Model.IsReadOnly"/>
                         <button type="button" data-testid="@Elements.SpeakDescription" class="btn btn-sm btn-outline-secondary" aria-label="Speak description" title="Speak description" @onclick="SpeakDescriptionAsync">&#x1F50A;</button>
@@ -74,14 +76,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="Instructions" class="form-label">Risks:</label>
+                    <label for="Instructions" class="form-label">Risks</label>
                     <div>
                         <InputTextArea data-testid="@Elements.Instructions" id="Instructions" @bind-Value="Model.Instructions" class="form-control input-textarea" maxlength="@WorkOrder.InstructionsMaxLength" disabled="@Model.IsReadOnly"/>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="RoomNumber" class="form-label">Room:</label>
+                    <label for="RoomNumber" class="form-label">Room</label>
                     <div>
                         <InputTextArea data-testid="@Elements.RoomNumber" id="RoomNumber" @bind-Value="Model.RoomNumber" class="form-control input-textarea input-room" maxlength="@WorkOrder.RoomNumberMaxLength" disabled="@Model.IsReadOnly"/>
                     </div>
@@ -89,19 +91,25 @@
             </div>
 
             <div class="readonly-info">
-                <span class="label">Created Date:</span>
-                <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
+                <div class="form-group">
+                    <label class="form-label">Created Date</label>
+                    <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
+                </div>
 
-                <span class="label">Assigned Date:</span>
-                <span data-testid="@Elements.AssignedDate" class="value">@Model.AssignedDate</span>
+                <div class="form-group">
+                    <label class="form-label">Assigned Date</label>
+                    <span data-testid="@Elements.AssignedDate" class="value">@Model.AssignedDate</span>
+                </div>
 
-                <span class="label">Completed Date:</span>
-                <span data-testid="@Elements.CompletedDate" class="value">@Model.CompletedDate</span>
+                <div class="form-group">
+                    <label class="form-label">Completed Date</label>
+                    <span data-testid="@Elements.CompletedDate" class="value">@Model.CompletedDate</span>
+                </div>
 
-                <div class="due-date-field">
+                <div class="due-date-field form-group">
                     @if (!Model.IsReadOnly)
                     {
-                        <label for="DueDate" class="label">Due Date</label>
+                        <label for="DueDate" class="form-label">Due Date</label>
                         <InputDate TValue="DateOnly?" data-testid="@Elements.DueDate" id="DueDate"
                                    @bind-Value="Model.DueDateInput"
                                    class="@($"form-control input-date {CurrentDueDateCssClass}")" />
@@ -112,7 +120,7 @@
                     }
                     else
                     {
-                        <span class="label">Due Date</span>
+                        <label class="form-label">Due Date</label>
                         <span data-testid="@Elements.DueDateDisplay" class="value @CurrentDueDateCssClass">@Model.DueDateDisplay@if (!string.IsNullOrEmpty(CurrentDueDateUrgencyText))
                             {
                                 <span class="visually-hidden">@CurrentDueDateUrgencyText</span>
@@ -165,11 +173,12 @@
             else
             {
                 <div class="action-buttons">
-                    @foreach (var command in ValidCommands)
+                    @foreach (var command in SortedValidCommands)
                     {
                         var buttonTestId = Elements.CommandButton + command.TransitionVerbPresentTense;
-                        var buttonClass = "btn btn-primary";
-                        <button data-testid="@buttonTestId" type="submit" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
+                        var buttonStyle = CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, ValidCommandNames);
+                        var buttonClass = "btn " + buttonStyle;
+                        <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLower()}")" type="submit" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
                             @command.TransitionVerbPresentTense
                         </button>
                     }

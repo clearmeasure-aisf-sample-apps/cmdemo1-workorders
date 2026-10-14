@@ -110,7 +110,7 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber)))
             .ToHaveTextAsync(seededNumbers.LovejoyDraft);
         var creator = Page.Locator(".form-group")
-            .Filter(new LocatorFilterOptions { HasText = "Creator:" })
+            .Filter(new LocatorFilterOptions { HasText = "Creator" })
             .Locator(".value");
         await Expect(creator).ToHaveTextAsync("Timothy Lovejoy Jr");
     }
