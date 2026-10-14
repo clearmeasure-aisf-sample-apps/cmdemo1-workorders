@@ -139,6 +139,38 @@ public class WorkOrderManageSubmitTests
         bus.CommandCount.ShouldBe(1);
     }
 
+    [Test]
+    public async Task ShouldSendPriorityAndBuilding_WhenSaved()
+    {
+        await using var ctx = new BunitContext();
+        var user = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+        user.AddRole(new Role("creator", true, false));
+        var bus = new StubSubmitBus();
+        RegisterServices(ctx, bus, user);
+
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo(navigationManager.GetUriWithQueryParameter("Mode", "New"));
+
+        var component = ctx.Render<WorkOrderManage>();
+        await component.WaitForAssertionAsync(() =>
+            component.Find($"[data-testid='{WorkOrderManage.Elements.Priority}']").ShouldNotBeNull());
+        component.Find($"[data-testid='{WorkOrderManage.Elements.Priority}']").GetAttribute("value")
+            .ShouldBe(nameof(WorkOrderPriority.Medium));
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Title}']").ChangeAsync(new() { Value = "Organ" });
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Description}']").ChangeAsync(new() { Value = "Tune it" });
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Priority}']").ChangeAsync(new() { Value = nameof(WorkOrderPriority.High) });
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Building}']").ChangeAsync(new() { Value = "  Sanctuary " });
+
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.CommandButton}Save']").ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var command = bus.LastCommand.ShouldBeOfType<SaveDraftCommand>();
+            command.WorkOrder.Priority.ShouldBe(WorkOrderPriority.High);
+            command.WorkOrder.Building.ShouldBe("Sanctuary");
+        });
+    }
+
     private static void RegisterServices(BunitContext ctx, IBus bus, Employee user)
     {
         ctx.Services.AddSingleton(bus);

@@ -47,7 +47,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchAssignee(employee1);
         var orders = await repository.Handle(specification);
@@ -84,7 +84,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchCreator(creator1);
         var orders = await repository.Handle(specification);
@@ -125,7 +125,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchStatus(WorkOrderStatus.Assigned);
         specification.MatchCreator(employee2);
@@ -168,7 +168,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchStatus(WorkOrderStatus.Assigned);
         var orders = await repository.Handle(specification);
@@ -194,7 +194,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var orders = await repository.Handle(new WorkOrderSpecificationQuery());
 
         orders.Length.ShouldBe(2);
@@ -230,7 +230,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
 
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchCreator(creator);
@@ -282,7 +282,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchOverdueOnly(true);
         var orders = await repository.Handle(specification);
@@ -316,7 +316,7 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var repository = new WorkOrderSearchHandler(dataContext);
+        var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchCreator(creator);
         var result = await repository.Handle(specification);
@@ -324,5 +324,56 @@ public class WorkOrderSpecificationHandlerTests
         result.Length.ShouldBe(3);
         result.Select(o => o.Number).Distinct().Count().ShouldBe(3);
         result.Select(o => o.Number).ShouldBe(["38173BA", "38173BB", "38173BC"], ignoreOrder: true);
+    }
+    [Test]
+    public async Task ShouldOrderByCreatedDateDescendingThenNumber()
+    {
+        new DatabaseTests().Clean();
+
+        var creator = new Employee("order", "Order", "Creator", "order@example.com");
+        var oldest = new WorkOrder { Creator = creator, Number = "AAA0001", CreatedDate = new DateTime(2026, 1, 1) };
+        var newestB = new WorkOrder { Creator = creator, Number = "BBB0002", CreatedDate = new DateTime(2026, 3, 1) };
+        var newestA = new WorkOrder { Creator = creator, Number = "AAA0002", CreatedDate = new DateTime(2026, 3, 1) };
+        var middle = new WorkOrder { Creator = creator, Number = "CCC0003", CreatedDate = new DateTime(2026, 2, 1) };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.AddRange(oldest, newestB, newestA, middle);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var orders = await handler.Handle(new WorkOrderSpecificationQuery());
+
+        orders.Select(o => o.Number).ShouldBe(["AAA0002", "BBB0002", "CCC0003", "AAA0001"]);
+    }
+
+    [Test]
+    public async Task ShouldMatchSearchTextCaseInsensitively()
+    {
+        new DatabaseTests().Clean();
+
+        var creator = new Employee("ned", "Ned", "Flanders", "ned@example.com");
+        var assignee = new Employee("willie", "Groundskeeper", "Willie", "willie@example.com");
+        var byTitle = new WorkOrder { Creator = creator, Number = "SRCH001", Title = "Tune the ORGAN", RoomNumber = "Choir loft" };
+        var byAssignee = new WorkOrder { Creator = creator, Assignee = assignee, Number = "SRCH002", Title = "Mow", RoomNumber = "Grounds" };
+        var none = new WorkOrder { Creator = creator, Number = "SRCH003", Title = "Paint", RoomNumber = "Hall" };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.AddRange(creator, assignee);
+            context.AddRange(byTitle, byAssignee, none);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var organ = new WorkOrderSpecificationQuery();
+        organ.MatchSearchText("organ");
+        var willie = new WorkOrderSpecificationQuery();
+        willie.MatchSearchText("WILL");
+
+        (await handler.Handle(organ)).Select(o => o.Number).ShouldBe(["SRCH001"]);
+        (await handler.Handle(willie)).Select(o => o.Number).ShouldBe(["SRCH002"]);
     }
 }

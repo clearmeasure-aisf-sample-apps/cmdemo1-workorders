@@ -1,9 +1,15 @@
+using System.Linq.Expressions;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
+/// <summary>
+/// Composable work-order filters shared by the search handlers. Every filter is a small method so
+/// the chain stays readable and each predicate translates on SQL Server, SQLite and in memory.
+/// "Open" means Draft, Assigned or In Progress; "today" is the church's calendar date.
+/// </summary>
 internal static class WorkOrderQueryFilters
 {
     public static IQueryable<WorkOrder> Apply(
@@ -11,49 +17,124 @@ internal static class WorkOrderQueryFilters
         Employee? assignee,
         Employee? creator,
         WorkOrderStatus? status,
-        bool overdueOnly = false)
-    {
-        if (assignee != null)
-        {
-            query = query.Where(wo => wo.Assignee == assignee);
-        }
-
-        if (creator != null)
-        {
-            query = query.Where(wo => wo.Creator == creator);
-        }
-
-        if (status != null)
-        {
-            query = query.Where(wo => wo.Status == status);
-        }
-
-        if (overdueOnly)
-        {
-            query = ApplyOverdueFilter(query);
-        }
-
-        return query;
-    }
-
-    private static IQueryable<WorkOrder> ApplyOverdueFilter(IQueryable<WorkOrder> query)
-    {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
-        var draft = WorkOrderStatus.Draft;
-        var assigned = WorkOrderStatus.Assigned;
-        var inProgress = WorkOrderStatus.InProgress;
-        return query.Where(wo =>
-            wo.DueDate < today &&
-            (wo.Status == draft || wo.Status == assigned || wo.Status == inProgress));
-    }
+        bool overdueOnly = false) =>
+        ApplyOverdue(ApplyBasics(query, assignee, creator, status), overdueOnly, ChurchTimeZone.Today(TimeProvider.System));
 
     public static IQueryable<WorkOrder> Apply(
         IQueryable<WorkOrder> query,
         WorkOrderSearchSpecification specification) =>
-        Apply(query, specification.Assignee, specification.Creator, specification.Status);
+        ApplyBasics(query, specification.Assignee, specification.Creator, specification.Status);
 
     public static IQueryable<WorkOrder> Apply(
         IQueryable<WorkOrder> query,
         WorkOrderSpecificationQuery specification) =>
-        Apply(query, specification.Assignee, specification.Creator, specification.Status, specification.OverdueOnly);
+        Apply(query, specification, TimeProvider.System);
+
+    public static IQueryable<WorkOrder> Apply(
+        IQueryable<WorkOrder> query,
+        WorkOrderSpecificationQuery specification,
+        TimeProvider time)
+    {
+        query = ApplyBasics(query, specification.Assignee, specification.Creator, specification.Status);
+        query = ApplyOverdue(query, specification.OverdueOnly, ChurchTimeZone.Today(time));
+        query = ApplyPriority(query, specification.Priority);
+        query = ApplyBuilding(query, specification.Building);
+        query = ApplyOpen(query, specification.OpenOnly);
+        query = ApplyCompletedWithin(query, specification.CompletedWithinDays, time);
+        return ApplySearchText(query, specification.SearchText);
+    }
+
+    /// <summary>Open work orders: Draft, Assigned or In Progress.</summary>
+    public static IQueryable<WorkOrder> OpenOnly(IQueryable<WorkOrder> query)
+    {
+        var draft = WorkOrderStatus.Draft;
+        var assigned = WorkOrderStatus.Assigned;
+        var inProgress = WorkOrderStatus.InProgress;
+        return query.Where(wo => wo.Status == draft || wo.Status == assigned || wo.Status == inProgress);
+    }
+
+    /// <summary>Open work orders whose due date is before <paramref name="today"/>.</summary>
+    public static IQueryable<WorkOrder> Overdue(IQueryable<WorkOrder> query, DateOnly today) =>
+        OpenOnly(query).Where(wo => wo.DueDate < today);
+
+    /// <summary>Completed work orders whose completion is within the last <paramref name="days"/> days.</summary>
+    public static IQueryable<WorkOrder> CompletedWithin(IQueryable<WorkOrder> query, int days, TimeProvider time)
+    {
+        var complete = WorkOrderStatus.Complete;
+        var since = time.GetUtcNow().DateTime.AddDays(-days);
+        return query.Where(wo => wo.Status == complete && wo.CompletedDate >= since);
+    }
+
+    private static IQueryable<WorkOrder> ApplyBasics(
+        IQueryable<WorkOrder> query,
+        Employee? assignee,
+        Employee? creator,
+        WorkOrderStatus? status) =>
+        ApplyStatus(ApplyCreator(ApplyAssignee(query, assignee), creator), status);
+
+    private static IQueryable<WorkOrder> ApplyAssignee(IQueryable<WorkOrder> query, Employee? assignee) =>
+        assignee == null ? query : query.Where(wo => wo.Assignee == assignee);
+
+    private static IQueryable<WorkOrder> ApplyCreator(IQueryable<WorkOrder> query, Employee? creator) =>
+        creator == null ? query : query.Where(wo => wo.Creator == creator);
+
+    private static IQueryable<WorkOrder> ApplyStatus(IQueryable<WorkOrder> query, WorkOrderStatus? status) =>
+        status == null ? query : query.Where(wo => wo.Status == status);
+
+    private static IQueryable<WorkOrder> ApplyOverdue(IQueryable<WorkOrder> query, bool overdueOnly, DateOnly today) =>
+        overdueOnly ? Overdue(query, today) : query;
+
+    private static IQueryable<WorkOrder> ApplyPriority(IQueryable<WorkOrder> query, WorkOrderPriority? priority) =>
+        priority == null ? query : query.Where(wo => wo.Priority == priority);
+
+    private static IQueryable<WorkOrder> ApplyBuilding(IQueryable<WorkOrder> query, string? building)
+    {
+        if (string.IsNullOrWhiteSpace(building))
+        {
+            return query;
+        }
+
+        var trimmed = building.Trim();
+        return query.Where(wo => wo.Building != null && wo.Building.Trim() == trimmed);
+    }
+
+    private static IQueryable<WorkOrder> ApplyOpen(IQueryable<WorkOrder> query, bool openOnly) =>
+        openOnly ? OpenOnly(query) : query;
+
+    private static IQueryable<WorkOrder> ApplyCompletedWithin(IQueryable<WorkOrder> query, int? days, TimeProvider time) =>
+        days == null ? query : CompletedWithin(query, days.Value, time);
+
+    private static IQueryable<WorkOrder> ApplySearchText(IQueryable<WorkOrder> query, string? searchText)
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return query;
+        }
+
+        var q = searchText.Trim().ToLower();
+        return query.Where(OrElse(NumberTitleOrRoomContains(q), CreatorOrAssigneeNameContains(q)));
+    }
+
+    private static Expression<Func<WorkOrder, bool>> NumberTitleOrRoomContains(string q) =>
+        wo => (wo.Number != null && wo.Number.ToLower().Contains(q)) ||
+              (wo.Title != null && wo.Title.ToLower().Contains(q)) ||
+              (wo.RoomNumber != null && wo.RoomNumber.ToLower().Contains(q));
+
+    private static Expression<Func<WorkOrder, bool>> CreatorOrAssigneeNameContains(string q) =>
+        wo => (wo.Creator != null && (wo.Creator.FirstName.ToLower().Contains(q) || wo.Creator.LastName.ToLower().Contains(q))) ||
+              (wo.Assignee != null && (wo.Assignee.FirstName.ToLower().Contains(q) || wo.Assignee.LastName.ToLower().Contains(q)));
+
+    private static Expression<Func<WorkOrder, bool>> OrElse(
+        Expression<Func<WorkOrder, bool>> left,
+        Expression<Func<WorkOrder, bool>> right)
+    {
+        var parameter = left.Parameters[0];
+        var rightBody = new ParameterReplacer(right.Parameters[0], parameter).Visit(right.Body);
+        return Expression.Lambda<Func<WorkOrder, bool>>(Expression.OrElse(left.Body, rightBody), parameter);
+    }
+
+    private sealed class ParameterReplacer(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
+    {
+        protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : node;
+    }
 }

@@ -83,6 +83,25 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="@Elements.Priority" class="form-label">Priority</label>
+                    <div>
+                        <InputSelect data-testid="@Elements.Priority" id="@Elements.Priority" @bind-Value="Model.Priority" class="form-control input-select" disabled="@Model.IsReadOnly">
+                            @foreach (var priority in Enum.GetValues<WorkOrderPriority>())
+                            {
+                                <option value="@priority">@priority</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="@Elements.Building" class="form-label">Building</label>
+                    <div>
+                        <InputText data-testid="@Elements.Building" id="@Elements.Building" @bind-Value="Model.Building" class="form-control input-text" maxlength="@WorkOrder.BuildingMaxLength" disabled="@Model.IsReadOnly"/>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="RoomNumber" class="form-label">Room</label>
                     <div>
                         <InputTextArea data-testid="@Elements.RoomNumber" id="RoomNumber" @bind-Value="Model.RoomNumber" class="form-control input-textarea input-room" maxlength="@WorkOrder.RoomNumberMaxLength" disabled="@Model.IsReadOnly"/>
@@ -221,6 +240,8 @@
         DictateDescription,
         DescriptionCharCount,
         RequiredFieldsNote,
-        ManageHeadingTooltip
+        ManageHeadingTooltip,
+        Priority,
+        Building
     }
 }

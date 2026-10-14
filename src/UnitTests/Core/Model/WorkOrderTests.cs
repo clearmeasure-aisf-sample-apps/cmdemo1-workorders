@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Model;
 
@@ -18,6 +19,15 @@ public class WorkOrderTests
         Assert.That(workOrder.Creator, Is.EqualTo(null));
         Assert.That(workOrder.Assignee, Is.EqualTo(null));
         Assert.That(workOrder.DueDate, Is.Null);
+    }
+
+    [Test]
+    public void ShouldDefaultPriorityToMedium()
+    {
+        var workOrder = new WorkOrder();
+
+        workOrder.Priority.ShouldBe(WorkOrderPriority.Medium);
+        workOrder.Building.ShouldBeNull();
     }
 
     [Test]

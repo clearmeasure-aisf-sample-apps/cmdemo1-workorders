@@ -447,4 +447,28 @@ public class WorkOrderMappingTests
 
         Should.Throw<DbUpdateException>(() => secondContext.SaveChanges());
     }
+    [Test]
+    public void ShouldPersistPriorityAndBuilding()
+    {
+        new DatabaseTests().Clean();
+
+        var creator = new Employee("prio", "Prio", "Creator", "prio@example.com");
+        var high = new WorkOrder { Number = "PRI0001", Title = "High", Creator = creator, Priority = WorkOrderPriority.High, Building = "Sanctuary" };
+        var defaulted = new WorkOrder { Number = "PRI0002", Title = "Default", Creator = creator };
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.AddRange(high, defaulted);
+            context.SaveChanges();
+        }
+
+        using var readContext = TestHost.GetRequiredService<DbContext>();
+        var rehydratedHigh = readContext.Set<WorkOrder>().Single(wo => wo.Id == high.Id);
+        var rehydratedDefault = readContext.Set<WorkOrder>().Single(wo => wo.Id == defaulted.Id);
+
+        rehydratedHigh.Priority.ShouldBe(WorkOrderPriority.High);
+        rehydratedHigh.Building.ShouldBe("Sanctuary");
+        rehydratedDefault.Priority.ShouldBe(WorkOrderPriority.Medium);
+        rehydratedDefault.Building.ShouldBeNull();
+    }
 }

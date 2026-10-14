@@ -51,6 +51,44 @@ public class RemotableRequestTests
         AssertRemotable(command);
     }
 
+    [Test]
+    public void ShouldRoundTripSpecificationQueryWithNewFilters()
+    {
+        var query = new WorkOrderSpecificationQuery();
+        query.MatchPriority(WorkOrderPriority.High);
+        query.MatchBuilding("Sanctuary");
+        query.MatchOpenOnly(true);
+        query.MatchCompletedWithinDays(30);
+        query.MatchSearchText("organ");
+
+        var rehydrated = SimulateRemoteObject(query);
+
+        rehydrated.Priority.ShouldBe(WorkOrderPriority.High);
+        rehydrated.Building.ShouldBe("Sanctuary");
+        rehydrated.OpenOnly.ShouldBeTrue();
+        rehydrated.CompletedWithinDays.ShouldBe(30);
+        rehydrated.SearchText.ShouldBe("organ");
+        rehydrated.ShouldBe(query);
+    }
+
+    [Test]
+    public void ShouldRoundTripSearchSummaryQuery()
+    {
+        AssertRemotable(new WorkOrderSearchSummaryQuery("tlovejoy"));
+        AssertRemotable(new WorkOrderSearchSummaryQuery(null));
+        AssertRemotable(new WorkOrderBuildingsQuery());
+        var summary = new WorkOrderSearchSummary
+        {
+            OpenCount = 24, OpenedLast7Days = 3, AssignedToMeCount = 2, AssignedToMeTotal = 4,
+            AssignedToMeDueToday = 1, OverdueCount = 3, CompletedLast30Days = 41, AverageDaysToClose = 2.4,
+            CreatedByMeCount = 7, InProgressCount = 5
+        };
+
+        var rehydrated = SimulateRemoteObject(summary);
+
+        ObjectMother.AssertAllProperties(summary, rehydrated);
+    }
+
     public static object AssertRemotable(object theObject)
     {
         var rehydratedQuery = SimulateRemoteObject(theObject);
