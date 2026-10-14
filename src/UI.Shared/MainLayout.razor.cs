@@ -22,7 +22,10 @@ public partial class MainLayout : IAsyncDisposable
         SoftwareVersion,
         DarkModeToggle,
         GitSha,
-        EnvironmentName
+        EnvironmentName,
+        BrandSubtitle,
+        HelpLink,
+        NotificationsButton
     }
 
     /// <summary>

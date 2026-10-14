@@ -9,6 +9,12 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 {
     public int SendCallCount { get; private set; }
 
+    public WorkOrderSearchSummary Summary { get; set; } = new();
+
+    public int SummaryRequestCount { get; private set; }
+
+    public string[] Buildings { get; set; } = ["Kitchen", "Sanctuary"];
+
     public override Task Publish(INotification notification)
     {
         return Task.CompletedTask;
@@ -54,6 +60,17 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
         {
             var counts = WorkOrderStatus.GetAllItems().ToDictionary(s => s.Key, _ => 0);
             return Task.FromResult<TResponse>((TResponse)(object)counts);
+        }
+
+        if (request is WorkOrderSearchSummaryQuery)
+        {
+            SummaryRequestCount++;
+            return Task.FromResult<TResponse>((TResponse)(object)Summary);
+        }
+
+        if (request is WorkOrderBuildingsQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)Buildings);
         }
 
         throw new NotImplementedException();

@@ -202,7 +202,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await context.SaveChangesAsync();
 
         // Act
-        await Click(nameof(NavMenu.Elements.AllAssignedWorkOrders));
+        await Click(nameof(NavMenu.Elements.Search));
+        await Page.WaitForURLAsync("**/workorder/search");
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Status={status.Key}");
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "StatusFiltered");
 

@@ -38,6 +38,37 @@ public class MainLayoutTests
     }
 
     [Test]
+    public async Task ShouldRenderBrandSubtitle()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var subtitle = layout.Find($"[data-testid='{nameof(MainLayout.Elements.BrandSubtitle)}']");
+        subtitle.TextContent.Trim().ShouldBe("Springfield · Facilities");
+        subtitle.Closest(".brand-text").ShouldBeNull();
+        layout.Find(".church-brand").QuerySelector(".brand-mark").ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ShouldRenderBreadcrumbsInsteadOfAdministrationTitle()
+    {
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson");
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        layout.Markup.ShouldNotContain("Work Order Administration");
+        layout.FindAll(".header-title h3").Count.ShouldBe(0);
+        var breadcrumbs = layout.Find("nav[aria-label='Breadcrumb']");
+        breadcrumbs.TextContent.ShouldContain("Dashboard");
+        layout.Find("[role='search']").ShouldNotBeNull();
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.HelpLink)}']").GetAttribute("aria-label").ShouldBe("Help");
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").GetAttribute("aria-disabled").ShouldBe("true");
+    }
+
+    [Test]
     public async Task ShouldRenderNavRailToggleWithExpandedStateByDefault()
     {
         await using var ctx = CreateContext();

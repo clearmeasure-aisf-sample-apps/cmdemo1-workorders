@@ -166,7 +166,7 @@ public class LoginTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         await Expect(Page.Locator("#login-link-blink")).ToHaveCountAsync(0);
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
     }
 
     [Test, Retry(2)]
@@ -189,7 +189,7 @@ public class LoginTests : AcceptanceTestBase
 
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
         await Expect(Page.Locator(".login-link-blink")).ToHaveCountAsync(0);
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToBeVisibleAsync();
     }
 
@@ -197,7 +197,7 @@ public class LoginTests : AcceptanceTestBase
     public async Task Should_RestoreBlinkingLogin_WhenLoggedOut()
     {
         await LoginAsCurrentUser();
-        await Click(nameof(Logout.Elements.LogoutLink));
+        await LogoutViaUserMenu();
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
 
         var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
@@ -216,6 +216,7 @@ public class LoginTests : AcceptanceTestBase
         var logoutLink = Page.GetByTestId(nameof(Logout.Elements.LogoutLink));
         if (await logoutLink.CountAsync() > 0)
         {
+            await OpenUserMenu();
             await logoutLink.ClickAsync();
             await Page.WaitForURLAsync("**/");
         }
@@ -269,7 +270,7 @@ public class LoginTests : AcceptanceTestBase
 
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome tlovejoy!");
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
     }
 
     [Test, Retry(2)]
@@ -282,7 +283,7 @@ public class LoginTests : AcceptanceTestBase
 
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
         await Expect(Page.GetByTestId(nameof(NavMenu.Elements.NewWorkOrder))).ToBeVisibleAsync();
     }
@@ -297,7 +298,7 @@ public class LoginTests : AcceptanceTestBase
 
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
     }
 
@@ -313,7 +314,7 @@ public class LoginTests : AcceptanceTestBase
 
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
     }
 
@@ -322,7 +323,7 @@ public class LoginTests : AcceptanceTestBase
     {
         await LoginAsLovejoyViaShortcutAsync();
 
-        await Click(nameof(Logout.Elements.LogoutLink));
+        await LogoutViaUserMenu();
         await Page.WaitForURLAsync("**/login");
 
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
@@ -347,7 +348,7 @@ public class LoginTests : AcceptanceTestBase
         tagName.ShouldBe("button");
         await Expect(logoutControl).ToHaveAttributeAsync("type", "button");
 
-        await Click(nameof(Logout.Elements.LogoutLink));
+        await LogoutViaUserMenu();
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToHaveCountAsync(0);
         (await GetPersistedUsernameAsync()).ShouldBeNull();
@@ -357,7 +358,7 @@ public class LoginTests : AcceptanceTestBase
     public async Task Should_RemainAnonymous_WhenHardNavigatingHomeAfterHealthcheckAfterLogout()
     {
         await LoginAsLovejoyViaShortcutAsync();
-        await Click(nameof(Logout.Elements.LogoutLink));
+        await LogoutViaUserMenu();
         await Page.WaitForURLAsync("**/login");
         (await GetPersistedUsernameAsync()).ShouldBeNull();
 
@@ -375,7 +376,7 @@ public class LoginTests : AcceptanceTestBase
     public async Task Should_PersistGwillie_NotTlovejoy_WhenSwitchingUserAfterLogout()
     {
         await LoginAsLovejoyViaShortcutAsync();
-        await Click(nameof(Logout.Elements.LogoutLink));
+        await LogoutViaUserMenu();
         await Page.WaitForURLAsync("**/login");
         (await GetPersistedUsernameAsync()).ShouldBeNull();
 
@@ -448,6 +449,7 @@ public class LoginTests : AcceptanceTestBase
         var logoutLink = Page.GetByTestId(nameof(Logout.Elements.LogoutLink));
         if (await logoutLink.CountAsync() > 0)
         {
+            await OpenUserMenu();
             await logoutLink.ClickAsync();
             await Page.WaitForURLAsync("**/");
         }

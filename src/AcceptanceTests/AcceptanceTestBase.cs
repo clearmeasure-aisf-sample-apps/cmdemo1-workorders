@@ -242,7 +242,33 @@ public abstract class AcceptanceTestBase
         // Assert: Should be redirected to home and see welcome message
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
-        await welcomeTextLocator.DblClickAsync(); // causes the browser to finish DOM loading - HACK
+        // HACK: a double click finishes DOM loading. WelcomeText is visually hidden inside the user menu
+        // trigger (#251), so the trigger takes the clicks: the first opens the menu, the second closes it.
+        await Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle)).DblClickAsync();
+    }
+
+    /// <summary>
+    /// Opens the user menu in the top bar (#251: Logout lives inside it) and waits for the Logout item.
+    /// </summary>
+    protected async Task OpenUserMenu()
+    {
+        var toggle = Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle));
+        await Expect(toggle).ToBeVisibleAsync();
+        if (await toggle.GetAttributeAsync("aria-expanded") != "true")
+        {
+            await Click(nameof(Logout.Elements.UserMenuToggle));
+        }
+
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+    }
+
+    /// <summary>
+    /// Signs out through the user menu: opens it, then clicks Logout.
+    /// </summary>
+    protected async Task LogoutViaUserMenu()
+    {
+        await OpenUserMenu();
+        await Click(nameof(Logout.Elements.LogoutLink));
     }
 
     /// <summary>

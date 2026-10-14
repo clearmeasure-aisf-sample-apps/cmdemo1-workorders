@@ -102,7 +102,7 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.AssignedDate)))
             .Not.ToBeEmptyAsync();
 
-        await Click(nameof(Logout.Elements.LogoutLink));
+        await LogoutViaUserMenu();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
 
