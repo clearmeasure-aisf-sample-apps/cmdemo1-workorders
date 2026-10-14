@@ -57,5 +57,5 @@ public static class WorkOrderCsvExporter
     }
 
     private static string GuardFormula(string text) =>
-        text.Length > 0 && "=+-@".Contains(text[0]) ? "'" + text : text;
+        text.Length > 0 && "=+-@\t\r".Contains(text[0]) ? "'" + text : text;
 }

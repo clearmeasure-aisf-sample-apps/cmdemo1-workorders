@@ -33,6 +33,7 @@ public partial class WorkOrderSearch : AppComponentBase
     private WorkOrderSearchSummary? _summary;
     private WorkOrderSearchUrlState _state = WorkOrderSearchUrlState.Default;
     private WorkOrderSearchUrlState? _lastUrlState;
+    private int _searchVersion;
 
     [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
@@ -138,6 +139,11 @@ public partial class WorkOrderSearch : AppComponentBase
     {
         SearchState.AssignedToMe = state.AssignedToMe;
         await ApplyStateAsync(state);
+        if (_state != state)
+        {
+            return;
+        }
+
         _lastUrlState = state;
         Navigation.NavigateTo(state.ToRelativeUri(), replace: true);
     }
@@ -200,7 +206,13 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private async Task SearchWorkOrders()
     {
+        var version = ++_searchVersion;
         var workOrders = await Bus.Send(await BuildSpecificationAsync());
+        if (version != _searchVersion)
+        {
+            return;
+        }
+
         _rawResults = workOrders.Select(MapSearchRow).ToArray();
         Model.Results = WorkOrderSearchSorter.Sort(_rawResults, _state.Sort, _state.Descending);
         StateHasChanged();

@@ -1109,6 +1109,52 @@ public class WorkOrderSearchTests
         component.FindAll("[data-testid='BulkActionBar']").Count.ShouldBe(0);
     }
 
+    [Test]
+    public async Task ShouldKeepLatestFilters_WhenEarlierSearchCompletesLast()
+    {
+        var bus = new StubHeldSearchBus();
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        var component = ctx.Render<WorkOrderSearch>();
+
+        _ = component.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").ChangeAsync(new() { Value = "tlovejoy" });
+        component.WaitForAssertion(() => bus.Held.Count.ShouldBe(1));
+        _ = component.Find($"#{WorkOrderSearch.Elements.StatusSelect}").ChangeAsync(new() { Value = WorkOrderStatus.Assigned.Key });
+        component.WaitForAssertion(() => bus.Held.Count.ShouldBe(2));
+
+        bus.Held[1].SetResult([new WorkOrder { Number = "NEWEST1", Title = "Newest", Status = WorkOrderStatus.Assigned }]);
+        component.WaitForAssertion(() => component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}NEWEST1']").Count.ShouldBe(1));
+        bus.Held[0].SetResult([new WorkOrder { Number = "STALE01", Title = "Stale", Status = WorkOrderStatus.Draft }]);
+
+        component.WaitForAssertion(() =>
+        {
+            navigation.Uri.ShouldContain("Creator=");
+            navigation.Uri.ShouldContain("Status=");
+            component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}NEWEST1']").Count.ShouldBe(1);
+            component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}STALE01']").Count.ShouldBe(0);
+        });
+    }
+
+    private sealed class StubHeldSearchBus : StubBus
+    {
+        private bool _initialSearchDone;
+
+        public List<TaskCompletionSource<WorkOrder[]>> Held { get; } = [];
+
+        public override async Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        {
+            if (request is not WorkOrderSpecificationQuery || !_initialSearchDone)
+            {
+                _initialSearchDone |= request is WorkOrderSpecificationQuery;
+                return await base.Send(request);
+            }
+
+            var pending = new TaskCompletionSource<WorkOrder[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Held.Add(pending);
+            return (TResponse)(object)await pending.Task;
+        }
+    }
+
     private static WorkOrder[] ManyOrders(int count) =>
         Enumerable.Range(1, count)
             .Select(i => new WorkOrder { Number = $"WO-{i:000}", Title = $"Order {i}", Status = WorkOrderStatus.Draft })

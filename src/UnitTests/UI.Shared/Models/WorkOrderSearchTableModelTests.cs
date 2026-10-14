@@ -209,6 +209,8 @@ public class WorkOrderCsvExporterTests
     [TestCase("-2", "'-2")]
     [TestCase("@cmd", "'@cmd")]
     [TestCase("=1,2", "\"'=1,2\"")]
+    [TestCase("\t=1+1", "'\t=1+1")]
+    [TestCase("\r=1+1", "\"'\r=1+1\"")]
     public void Escape_QuotesAndGuardsFormulas(string? value, string expected)
     {
         WorkOrderCsvExporter.Escape(value).ShouldBe(expected);
