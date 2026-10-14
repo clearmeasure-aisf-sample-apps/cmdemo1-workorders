@@ -387,7 +387,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             _clipboardModule ??= await Js.InvokeAsync<IJSObjectReference>("import",
                 "./_content/ClearMeasure.Bootcamp.UI.Shared/js/clipboard.js");
 
-            await _clipboardModule.InvokeAsync("copyToClipboard", Model.WorkOrderNumber);
+            await _clipboardModule.InvokeAsync<object>("copyToClipboard", Model.WorkOrderNumber);
             _copyButtonShowSuccess = true;
             await InvokeAsync(StateHasChanged);
 
