@@ -96,11 +96,9 @@ public class ReportsPageTests : AcceptanceTestBase
         var tag = TestData.Tag();
         var userName = TestData.UserName("rpavg");
         var employee = new Employee(userName, "Reports", "Average", TestData.Email(userName));
-
-        await using (var seed = TestHost.NewDbContext())
-        {
-            seed.Add(employee);
-            seed.Add(new WorkOrder
+        WorkOrder[] orders =
+        [
+            new()
             {
                 Creator = employee,
                 Number = TestData.Number("R"),
@@ -108,8 +106,8 @@ public class ReportsPageTests : AcceptanceTestBase
                 Status = WorkOrderStatus.Complete,
                 CreatedDate = now.AddDays(-10),
                 CompletedDate = now.AddDays(-3)
-            });
-            seed.Add(new WorkOrder
+            },
+            new()
             {
                 Creator = employee,
                 Number = TestData.Number("R"),
@@ -117,23 +115,48 @@ public class ReportsPageTests : AcceptanceTestBase
                 Status = WorkOrderStatus.Complete,
                 CreatedDate = now.AddDays(-8),
                 CompletedDate = now.AddDays(-2)
-            });
+            }
+        ];
+
+        await using (var seed = TestHost.NewDbContext())
+        {
+            seed.Add(employee);
+            seed.AddRange(orders.Cast<object>());
             await seed.SaveChangesAsync();
         }
 
-        await using var ctx = TestHost.NewDbContext();
-        var reportsData = await new WorkOrderReportsQueryHandler(ctx, clock).Handle(new WorkOrderReportsQuery());
-        var searchSummary = await new WorkOrderSearchSummaryQueryHandler(ctx, clock)
-            .Handle(new WorkOrderSearchSummaryQuery(userName));
+        try
+        {
+            await using var ctx = TestHost.NewDbContext();
+            var reportsData = await new WorkOrderReportsQueryHandler(ctx, clock).Handle(new WorkOrderReportsQuery());
+            var searchSummary = await new WorkOrderSearchSummaryQueryHandler(ctx, clock)
+                .Handle(new WorkOrderSearchSummaryQuery(userName));
 
-        // 7 and 6 days to close average to 6.5 on both pages
-        reportsData.AverageDaysToClose.ShouldNotBeNull();
-        searchSummary.AverageDaysToClose.ShouldNotBeNull();
-        reportsData.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
-        searchSummary.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
-        reportsData.AverageDaysToClose.ShouldBe(searchSummary.AverageDaysToClose);
-        reportsData.CompletedLast30Days.ShouldBe(2);
-        searchSummary.CompletedLast30Days.ShouldBe(2);
+            // 7 and 6 days to close average to 6.5 on both pages
+            reportsData.AverageDaysToClose.ShouldNotBeNull();
+            searchSummary.AverageDaysToClose.ShouldNotBeNull();
+            reportsData.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
+            searchSummary.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
+            reportsData.AverageDaysToClose.ShouldBe(searchSummary.AverageDaysToClose);
+            reportsData.CompletedLast30Days.ShouldBe(2);
+            searchSummary.CompletedLast30Days.ShouldBe(2);
+        }
+        finally
+        {
+            // Dates later than now must not outlive this test: unscoped pages (search, recent activity)
+            // sort newest first, so these rows would push every other test's rows off the first page.
+            await using var cleanup = TestHost.NewDbContext();
+            foreach (var order in orders)
+            {
+                var stored = await cleanup.Set<WorkOrder>().FindAsync(order.Id);
+                if (stored != null)
+                {
+                    cleanup.Remove(stored);
+                }
+            }
+
+            await cleanup.SaveChangesAsync();
+        }
     }
 
     [Test, Retry(2)]

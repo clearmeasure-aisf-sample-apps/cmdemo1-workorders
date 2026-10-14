@@ -273,32 +273,28 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var creator = Faker<Employee>();
         var workOrder = Faker<WorkOrder>();
         workOrder.Creator = creator;
+        workOrder.Title = $"[{TestTag}] details";
 
         await using var context = TestHost.NewDbContext();
         context.Add(creator);
         context.Add(workOrder);
         await context.SaveChangesAsync();
 
-        // Act
+        // Act: search scoped to this test's own row, then open it
         await Click(nameof(NavMenu.Elements.Search));
+        await Page.WaitForURLAsync("**/workorder/search");
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "SearchPageLoaded");
 
-        var workOrderTable = Page.Locator(".grid-data");
-        await Expect(workOrderTable).ToBeVisibleAsync();
+        var workOrderLink = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrder.Number);
+        await Expect(workOrderLink).ToBeVisibleAsync();
+        await workOrderLink.ClickAsync();
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await TakeScreenshotAsync(2, "WorkOrderDetailsPage");
 
-        var firstWorkOrderLink = workOrderTable.Locator($"tbody tr [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
-        var workOrderNumber = (await firstWorkOrderLink.GetAttributeAsync("data-testid"))?[nameof(WorkOrderSearch.Elements.WorkOrderLink).Length..];
-
-        if (!string.IsNullOrEmpty(workOrderNumber))
-        {
-            await firstWorkOrderLink.ClickAsync();
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await TakeScreenshotAsync(2, "WorkOrderDetailsPage");
-
-            // Assert
-            await Expect(Page).ToHaveURLAsync(new Regex($"/workorder/manage/{Regex.Escape(workOrderNumber)}"));
-        }
+        // Assert
+        await Expect(Page).ToHaveURLAsync(new Regex($"/workorder/manage/{Regex.Escape(workOrder.Number!)}"));
     }
 
     [Test, Retry(2)]
@@ -656,9 +652,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         otherOrder.Creator = otherEmployee;
         otherOrder.Assignee = otherEmployee;
         otherOrder.Title = $"[{TestTag}] other order";
-        // Results are paged newest first (#251): make both orders the newest so the full list shows them on page 1.
-        myOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
-        otherOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
 
         await using var context = TestHost.NewDbContext();
         context.Attach(CurrentUser);
