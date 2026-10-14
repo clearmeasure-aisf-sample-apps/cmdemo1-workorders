@@ -104,7 +104,7 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
             .ToHaveValueAsync(string.Empty);
 
         var creator = RequiredString(live, "Creator");
-        var creatorGroup = Page.Locator(".form-group").Filter(new LocatorFilterOptions { HasText = "Creator:" });
+        var creatorGroup = Page.Locator(".form-group").Filter(new LocatorFilterOptions { HasText = "Creator" });
         await Expect(creatorGroup.GetByText(creator, new LocatorGetByTextOptions { Exact = true }))
             .ToBeVisibleAsync();
 

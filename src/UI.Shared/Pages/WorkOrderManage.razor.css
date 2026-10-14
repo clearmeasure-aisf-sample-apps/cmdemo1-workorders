@@ -340,6 +340,12 @@
     margin-bottom: 0.5rem;
 }
 
+.required-indicator {
+    color: #e53e3e;
+    font-weight: 600;
+    margin-left: 0.25rem;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .work-order-page {
