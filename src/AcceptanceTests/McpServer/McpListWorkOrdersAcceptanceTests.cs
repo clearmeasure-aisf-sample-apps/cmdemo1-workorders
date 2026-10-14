@@ -106,6 +106,9 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         (await context.Set<Employee>().AnyAsync(employee => employee.UserName == "not-a-person"))
             .ShouldBeFalse();
 
+        // The unfiltered result is paged (#251); search for the number so its row is on the page.
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={seededNumbers.LovejoyDraft}");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(WorkOrderSearch.Elements.WorkOrderLink) + seededNumbers.LovejoyDraft);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber)))
             .ToHaveTextAsync(seededNumbers.LovejoyDraft);
