@@ -16,3 +16,10 @@ export function setIndeterminate(element, value) {
 		element.indeterminate = value;
 	}
 }
+
+export function focusById(id) {
+	const element = document.getElementById(id);
+	if (element) {
+		element.focus();
+	}
+}

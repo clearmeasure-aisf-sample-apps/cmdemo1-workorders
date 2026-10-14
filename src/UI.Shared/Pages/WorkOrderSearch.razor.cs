@@ -305,12 +305,17 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private void ToggleRowMenu(string number) => _openRowMenu = _openRowMenu == number ? null : number;
 
-    private void HandleRowMenuKeyDown(KeyboardEventArgs e)
+    private async Task HandleRowMenuKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Escape")
+        if (e.Key != "Escape" || _openRowMenu == null)
         {
-            _openRowMenu = null;
+            return;
         }
+
+        var trigger = $"row-menu-{_openRowMenu}";
+        _openRowMenu = null;
+        var module = await ExportModuleAsync();
+        await module.InvokeVoidAsync("focusById", trigger);
     }
 
     private async Task HandleBulkAssign(string assigneeUserName)

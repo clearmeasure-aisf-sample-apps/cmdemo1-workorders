@@ -36,8 +36,8 @@ alwaysApply: true
 
 | Concern | Location |
 |--------|----------|
-| Domain models | `src/Core/Model/` (WorkOrder, Employee, WorkOrderStatus, Role, etc.) |
-| Queries (CQRS) | `src/Core/Queries/` (e.g. WorkOrderByNumberQuery, EmployeeByUserNameQuery) |
+| Domain models | `src/Core/Model/` (WorkOrder, Employee, WorkOrderStatus, WorkOrderPriority, Role, etc.) |
+| Queries (CQRS) | `src/Core/Queries/` (e.g. WorkOrderByNumberQuery, EmployeeByUserNameQuery, WorkOrderSpecificationQuery, WorkOrderSearchSummaryQuery, WorkOrderBuildingsQuery) |
 | State commands | `src/Core/Model/StateCommands/`, `src/Core/Services/IStateCommand.cs` |
 | Bus/MediatR | `src/Core/IBus.cs`; handlers in DataAccess and UI |
 | EF context & mappings | `src/DataAccess/Mappings/` (DataContext, *Map.cs) |
@@ -54,7 +54,7 @@ alwaysApply: true
 
 ## Domain Snapshot
 
-- **WorkOrder:** Number, Title, Description, RoomNumber, Assignee (Employee), Status, Creator (Employee), AssignedDate, CreatedDate, CompletedDate.
+- **WorkOrder:** Number (unique), Title, Description, RoomNumber, Building (optional), Priority (WorkOrderPriority: Low, Medium, High; default Medium), DueDate, Assignee (Employee), Status, Creator (Employee), AssignedDate, CreatedDate, CompletedDate.
 - **Employee:** UserName, FirstName, LastName, EmailAddress, Roles.
 - **WorkOrderStatus:** Draft, Assigned, InProgress, Complete, Cancelled.
 - **Role:** Name, CanCreateWorkOrder, CanFulfillWorkOrder.

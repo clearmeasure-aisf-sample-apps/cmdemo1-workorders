@@ -142,3 +142,55 @@
     font-weight: 700;
     letter-spacing: 0.02em;
 }
+
+/* 769–1023px icon rail: labels are visually hidden (title and accessible name kept), badges become dots */
+@media (min-width: 769px) and (max-width: 1023px) {
+    .nav-scrollable {
+        padding: 0 0.5rem;
+    }
+
+    .nav-section {
+        height: 1px;
+        margin: 0.75rem 0.5rem;
+        padding: 0;
+        overflow: hidden;
+        color: transparent;
+        background: var(--sidebar-border);
+    }
+
+    .nav-item ::deep .nav-link {
+        justify-content: center;
+        padding: 0.6rem 0;
+        gap: 0;
+    }
+
+    .nav-item ::deep .nav-link.active::before {
+        left: -0.5rem;
+    }
+
+    .nav-item ::deep .nav-icon {
+        font-size: 1.1rem;
+    }
+
+    .nav-item ::deep .nav-text,
+    .nav-item ::deep .nav-tag {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .nav-item ::deep .nav-badge {
+        position: absolute;
+        top: 6px;
+        right: 10px;
+        min-width: 0;
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        font-size: 0;
+        overflow: hidden;
+    }
+}

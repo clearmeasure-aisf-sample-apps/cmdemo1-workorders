@@ -274,6 +274,73 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         }
     }
 
+    [Test, Retry(2)]
+    public async Task ShouldReachFiltersChipsRowsAndBulkBarByKeyboard()
+    {
+        var creator = await SeedCreatorAsync("keys");
+        var order = await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
+        await Expect(Rows()).ToHaveCountAsync(1);
+        await Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}").FocusAsync();
+
+        await TabUntilFocusedAsync($"[data-testid='{WorkOrderSearch.Elements.ActiveFilterChip}Creator']");
+        (await FocusedOutlineWidthAsync()).ShouldBeGreaterThan(0);
+
+        await TabUntilFocusedAsync($"[data-testid='{WorkOrderSearch.Elements.RowCheckbox}{order.Number}']");
+        (await FocusedOutlineWidthAsync()).ShouldBeGreaterThan(0);
+        await Page.Keyboard.PressAsync("Space");
+        await Expect(Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkActionBar))).ToBeVisibleAsync();
+
+        await TabUntilFocusedAsync($"[data-testid='{WorkOrderBulkActionBar.Elements.BulkAssignSelect}']");
+        (await FocusedOutlineWidthAsync()).ShouldBeGreaterThan(0);
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldShowControlsAt38PxAnd12PxCardRadius()
+    {
+        await OpenSearchAsync();
+
+        var select = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
+        (await select.EvaluateAsync<double>("e => e.getBoundingClientRect().height")).ShouldBe(38, 0.5);
+        (await Page.GetByTestId(nameof(WorkOrderSearch.Elements.ExportButton))
+            .EvaluateAsync<double>("e => e.getBoundingClientRect().height")).ShouldBe(38, 0.5);
+        (await select.EvaluateAsync<string>("e => getComputedStyle(e).borderTopLeftRadius")).ShouldBe("8px");
+        (await Page.Locator(".filters-card").EvaluateAsync<string>("e => getComputedStyle(e).borderTopLeftRadius")).ShouldBe("12px");
+        (await Page.Locator(".summary-card").First.EvaluateAsync<string>("e => getComputedStyle(e).borderTopLeftRadius")).ShouldBe("12px");
+        (await Page.Locator(".search-heading h1").EvaluateAsync<string>("e => getComputedStyle(e).fontSize")).ShouldBe("26px");
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldFocusGlobalSearch_WhenCtrlKPressed()
+    {
+        await OpenSearchAsync();
+        await Page.Locator("main").ClickAsync(new LocatorClickOptions { Position = new Position { X = 5, Y = 5 } });
+
+        await Page.Keyboard.PressAsync("Control+k");
+
+        await Expect(Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchInput))).ToBeFocusedAsync();
+    }
+
+    private async Task TabUntilFocusedAsync(string selector, int maxTabs = 60)
+    {
+        for (var i = 0; i < maxTabs; i++)
+        {
+            if (await Page.EvaluateAsync<bool>("s => document.activeElement?.matches(s) === true", selector))
+            {
+                return;
+            }
+
+            await Page.Keyboard.PressAsync("Tab");
+        }
+
+        Assert.Fail($"{selector} was not reached within {maxTabs} Tab presses");
+    }
+
+    private async Task<double> FocusedOutlineWidthAsync() =>
+        await Page.EvaluateAsync<double>("() => parseFloat(getComputedStyle(document.activeElement).outlineWidth) || 0");
+
     private ILocator RowCheckbox(WorkOrder order) =>
         Page.GetByTestId($"{WorkOrderSearch.Elements.RowCheckbox}{order.Number}");
 

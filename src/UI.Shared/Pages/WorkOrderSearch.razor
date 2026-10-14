@@ -259,7 +259,7 @@
                                 </td>
                                 <td class="col-actions">
                                     <div class="menu-anchor" @onkeydown="e => HandleRowMenuKeyDown(e)">
-                                        <button type="button" class="row-menu-button" data-testid="@($"{Elements.RowMenu}{number}")"
+                                        <button type="button" class="row-menu-button" id="@($"row-menu-{number}")" data-testid="@($"{Elements.RowMenu}{number}")"
                                                 aria-haspopup="menu" aria-expanded="@(_openRowMenu == number ? "true" : "false")"
                                                 aria-label="@($"Actions for {order.DisplayNumber}")" @onclick="() => ToggleRowMenu(number)">
                                             <i class="bi bi-three-dots" aria-hidden="true"></i>

@@ -367,6 +367,51 @@
     }
 }
 
+/* 769–1023px: the sidebar collapses to an icon rail; labels stay in the accessibility tree */
+@media (min-width: 769px) and (max-width: 1023px) {
+    .modern-sidebar {
+        width: 72px;
+    }
+
+    .main-container {
+        margin-left: 72px;
+    }
+
+    .sidebar-header {
+        margin: 0 0.5rem;
+        padding: 1rem 0;
+    }
+
+    .church-brand {
+        justify-content: center;
+    }
+
+    .brand-block {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .sidebar-footer {
+        margin: 0 0.5rem;
+        padding: 0.75rem 0;
+        align-items: center;
+    }
+
+    .sidebar-footer ::deep a,
+    .health-check-link {
+        font-size: 0 !important;
+        padding: 0.5rem !important;
+    }
+
+    .sidebar-footer ::deep a i {
+        font-size: 1rem;
+    }
+}
+
 /* Narrow viewport: the sidebar becomes an overlay with a backdrop (MainLayout.NavRailBreakpointMediaQuery) */
 @media (max-width: 768px) {
     .modern-sidebar {

@@ -479,7 +479,7 @@
 
 .grid-data {
     width: 100%;
-    min-width: 980px;
+    min-width: 900px;
     border-collapse: collapse;
     font-size: var(--font-size-body);
     color: var(--color-text);
@@ -557,30 +557,30 @@
 }
 
 .col-status {
-    width: 150px;
+    width: 130px;
     white-space: nowrap;
 }
 
 .col-priority {
-    width: 110px;
+    width: 100px;
     white-space: nowrap;
 }
 
 .col-assignee {
-    width: 190px;
+    width: 170px;
 }
 
 .col-room {
-    width: 130px;
+    width: 110px;
     overflow-wrap: anywhere;
 }
 
 .col-due {
-    width: 150px;
+    width: 140px;
 }
 
 .col-actions {
-    width: 52px;
+    width: 44px;
     text-align: right;
 }
 
@@ -736,9 +736,10 @@
     display: inline-block;
 }
 
+/* #991b1b keeps 5.7:1 on the fill; #b91c1c would be 4.47:1 */
 .due-date-overdue {
     background-color: #fecaca;
-    color: #b91c1c;
+    color: #991b1b;
     font-weight: 700;
     padding: 0.15rem 0.45rem;
     border-radius: 4px;
