@@ -19,7 +19,6 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         var today = ChurchTimeZone.Today(time);
         var currentMonthStart = new DateOnly(today.Year, today.Month, 1);
         var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
-
         var lastMonthStart = currentMonthStart.AddMonths(-1);
         var lastMonthEnd = currentMonthStart.AddDays(-1);
 
@@ -37,12 +36,9 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
 
     private async Task<MonthSlaData> ComputeMonthSla(DateOnly monthStart, DateOnly monthEnd, CancellationToken cancellationToken)
     {
-        var complete = WorkOrderStatus.Complete;
-
         var orders = await context.Set<WorkOrder>()
             .AsNoTracking()
-            .Where(wo => wo.Status == complete && wo.DueDate != null)
-            .Where(wo => wo.CompletedDate.HasValue)
+            .Where(wo => wo.Status == WorkOrderStatus.Complete && wo.DueDate != null && wo.CompletedDate.HasValue)
             .ToListAsync(cancellationToken);
 
         var monthOrders = orders
@@ -70,7 +66,7 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
 
     private sealed class MonthSlaData
     {
-        public decimal? Percentage { get; set; }
-        public int TotalCount { get; set; }
+        public decimal? Percentage { get; init; }
+        public int TotalCount { get; init; }
     }
 }

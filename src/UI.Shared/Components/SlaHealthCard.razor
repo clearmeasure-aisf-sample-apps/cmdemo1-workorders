@@ -4,11 +4,11 @@
 @inherits AppComponentBase
 
 <div class="sla-health-card" data-testid="@Elements.SlaHealthCard">
-    @if (Health == null)
+    @if (_health == null)
     {
         <div class="sla-health-loading">Loading...</div>
     }
-    else if (Health.CurrentMonthPercentage is null)
+    else if (_health.CurrentMonthPercentage is null)
     {
         <div class="sla-health-no-data">No data</div>
     }
@@ -17,25 +17,25 @@
         <div class="sla-health-content">
             <div class="sla-health-header">
                 <h3 class="sla-health-title">This Month</h3>
-                @if (!string.IsNullOrEmpty(TrendText))
+                @if (!string.IsNullOrEmpty(_trendText))
                 {
-                    <span class="sla-health-trend" title="@TrendText">@TrendText</span>
+                    <span class="sla-health-trend" title="@_trendText">@_trendText</span>
                 }
             </div>
-            <div class="sla-health-value">@Health.CurrentMonthPercentage?.ToString("F0")%</div>
+            <div class="sla-health-value">@_health.CurrentMonthPercentage?.ToString("F0")%</div>
             <div class="sla-health-progress">
-                <div class="sla-health-bar" role="progressbar" aria-valuenow="@((int?)Health.CurrentMonthPercentage)" aria-valuemin="0" aria-valuemax="100"
-                     style="width: @($"{Health.CurrentMonthPercentage:F0}%")">
+                <div class="sla-health-bar" role="progressbar" aria-valuenow="@((int?)_health.CurrentMonthPercentage)" aria-valuemin="0" aria-valuemax="100"
+                     style="width: @($"{_health.CurrentMonthPercentage:F0}%")">
                 </div>
             </div>
-            <div class="sla-health-subtitle">@Health.CurrentMonthOrderCount work order@(Health.CurrentMonthOrderCount == 1 ? "" : "s")</div>
+            <div class="sla-health-subtitle">@_health.CurrentMonthOrderCount work order@(_health.CurrentMonthOrderCount == 1 ? "" : "s")</div>
         </div>
     }
 </div>
 
 @code {
-    private SlaHealth? Health;
-    private string? TrendText;
+    private SlaHealth? _health;
+    private string? _trendText;
 
     public enum Elements
     {
@@ -54,8 +54,8 @@
 
     private async Task LoadHealthAsync()
     {
-        Health = await Bus.Send(new SlaHealthQuery());
-        TrendText = SlaHealth.TrendText(Health?.CurrentMonthPercentage, Health?.LastMonthPercentage);
+        _health = await Bus.Send(new SlaHealthQuery());
+        _trendText = SlaHealth.TrendText(_health?.CurrentMonthPercentage, _health?.LastMonthPercentage);
         await InvokeAsync(StateHasChanged);
     }
 }
