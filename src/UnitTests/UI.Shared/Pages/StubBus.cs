@@ -75,7 +75,7 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return Task.FromResult<TResponse>((TResponse)(object)new[] { "Kitchen", "Sanctuary" });
         }
 
-        if (request is EmployeeWorkLoadQuery workLoad)
+        if (request is EmployeeWorkLoadQuery)
         {
             var load = new EmployeeWorkLoad { AssignedAndOpen = 5, InProgress = 2, Overdue = 1, CompletedLast30Days = 10 };
             return Task.FromResult<TResponse>((TResponse)(object)load);

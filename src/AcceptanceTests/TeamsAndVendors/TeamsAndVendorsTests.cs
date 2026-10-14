@@ -174,10 +174,8 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         var wo = TestHost.NewDbContext().Set<WorkOrder>().Single(w => w.Number == workOrder.Number);
         wo.Assignee = employee;
         wo.ChangeStatus(WorkOrderStatus.Assigned);
-        using (var context = TestHost.NewDbContext())
-        {
-            context.Update(wo);
-            context.SaveChanges();
-        }
+        using var context = TestHost.NewDbContext();
+        context.Update(wo);
+        context.SaveChanges();
     }
 }

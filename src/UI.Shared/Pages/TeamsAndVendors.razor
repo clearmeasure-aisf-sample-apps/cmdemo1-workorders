@@ -1,6 +1,4 @@
-@using ClearMeasure.Bootcamp.Core.Model
 @using ClearMeasure.Bootcamp.Core.Queries
-@using ClearMeasure.Bootcamp.UI.Shared.Models
 
 <PageTitle>Teams & Vendors - Kalahari Church Work Order System</PageTitle>
 
@@ -126,9 +124,6 @@
     private List<TeamTableRow>? _tableData;
     private SortColumn _sortColumn = SortColumn.Name;
     private bool _sortAscending = true;
-
-    [Inject]
-    private NavigationManager Navigation { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

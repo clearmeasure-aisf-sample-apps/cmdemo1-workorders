@@ -24,7 +24,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() => component.Markup.ShouldContain("HOMER SIMPSON"));
+        await component.WaitForAssertionAsync(() => component.Markup.ShouldContain("HOMER SIMPSON"));
         bus.EmployeeWorkLoadQueriesSent.ShouldContain(q => q.EmployeeUserName == "hsimpson");
     }
 
@@ -36,7 +36,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() => component.Markup.ShouldContain("No assignable employees found"));
+        await component.WaitForAssertionAsync(() => component.Markup.ShouldContain("No assignable employees found"));
     }
 
     [Test]
@@ -47,7 +47,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             component.Markup.ShouldContain("Name");
             component.Markup.ShouldContain("Role");
@@ -66,7 +66,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var nameCell = component.Find($"[data-testid='{TeamsAndVendors.Elements.TableRowName}hsimpson']");
             nameCell.TextContent.ShouldContain("HOMER SIMPSON");
@@ -82,7 +82,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var roleCell = component.Find($"[data-testid='{TeamsAndVendors.Elements.TableRowRole}hsimpson']");
             roleCell.TextContent.ShouldNotBeNullOrEmpty();
@@ -97,7 +97,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var openCell = component.Find($"[data-testid='{TeamsAndVendors.Elements.TableRowAssignedOpen}hsimpson']");
             openCell.TextContent.ShouldBe("5");
@@ -121,15 +121,15 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var nameCell = component.Find($"[data-testid='{TeamsAndVendors.Elements.TableRowName}hsimpson']");
             var link = nameCell.QuerySelector("a");
             link.ShouldNotBeNull();
-            var href = link!.GetAttribute("href");
+            var href = link.GetAttribute("href");
             href.ShouldNotBeNull();
-            href!.ShouldContain("workorder/search");
-            href!.ShouldContain("Assignee=hsimpson");
+            href.ShouldContain("workorder/search");
+            href.ShouldContain("Assignee=hsimpson");
         });
     }
 
@@ -141,7 +141,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var nameHeaders = component.FindAll("button.sort-header");
             nameHeaders.Count.ShouldBeGreaterThan(0);
@@ -151,7 +151,7 @@ public class TeamsAndVendorsTests
         var nameHeader1 = component.FindAll("button.sort-header")[0];
         await nameHeader1.ClickAsync();
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var rows = component.FindAll("tbody tr");
             rows.Count.ShouldBeGreaterThan(0);
@@ -166,7 +166,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var rows = component.FindAll("tbody tr");
             rows.Count.ShouldBeGreaterThan(0);
@@ -183,7 +183,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var headers = component.FindAll("button.sort-header");
             headers.Count.ShouldBeGreaterThanOrEqualTo(2);
@@ -192,7 +192,7 @@ public class TeamsAndVendorsTests
         var openLoadHeader = component.FindAll("button.sort-header")[1];
         await openLoadHeader.ClickAsync();
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var rows = component.FindAll("tbody tr");
             rows.Count.ShouldBeGreaterThan(0);
@@ -207,7 +207,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             var nameHeader = component.FindAll("button.sort-header")[0];
             nameHeader.ClassList.ShouldContain("active-sort");
@@ -229,7 +229,7 @@ public class TeamsAndVendorsTests
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             component.Markup.ShouldNotContain("Cannot Assign");
         });
@@ -260,7 +260,6 @@ public class StubBusTeamsAndVendors : StubBus
 {
     public List<EmployeeWorkLoadQuery> EmployeeWorkLoadQueriesSent { get; } = new();
 
-    private Employee[]? _employeesToReturn;
     private bool _employeesInitialized;
 
     public Employee[] EmployeesToReturn
@@ -278,18 +277,18 @@ public class StubBusTeamsAndVendors : StubBus
                 var emp3 = new Employee("nflanders", "Ned", "Flanders", "ned@flanders.com");
                 emp3.AddRole(new Role { Name = "Worker", CanCreateWorkOrder = false, CanFulfillWorkOrder = true });
 
-                _employeesToReturn = [emp1, emp2, emp3];
+                field = [emp1, emp2, emp3];
                 _employeesInitialized = true;
             }
 
-            return _employeesToReturn ?? Array.Empty<Employee>();
+            return field;
         }
         set
         {
-            _employeesToReturn = value;
+            field = value;
             _employeesInitialized = true;
         }
-    }
+    } = [];
 
     public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
     {
