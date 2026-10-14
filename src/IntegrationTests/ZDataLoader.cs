@@ -94,7 +94,7 @@ public class ZDataLoader
             Description = "Select, transport, and install the Christmas tree in the sanctuary. Ensure proper placement and safety for the Christmas concert and services.",
             CreatedDate = new DateTime(2024, 12, 1, 10, 0, 0),
             AssignedDate = new DateTime(2024, 12, 1, 11, 0, 0),
-            CompletedDate = new DateTime(2024, 12, 3, 15, 0, 0),
+            CompletedDate = new DateTime(2024, 12, 5, 15, 0, 0),
             RoomNumber = "Sanctuary"
         };
         db.Add(christmasOrder5);
