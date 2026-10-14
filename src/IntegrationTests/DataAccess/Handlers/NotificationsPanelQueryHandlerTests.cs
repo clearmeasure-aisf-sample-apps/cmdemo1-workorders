@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Microsoft.EntityFrameworkCore;
@@ -47,9 +48,11 @@ public class NotificationsPanelQueryHandlerTests
     {
         new DatabaseTests().Clean();
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var time = TestHost.GetRequiredService<TimeProvider>();
+        var today = ChurchTimeZone.Today(time);
         var yesterday = today.AddDays(-1);
         var tomorrow = today.AddDays(1);
+        var now = time.GetUtcNow().DateTime;
 
         var assignee = new Employee("notif_test_user", "Test", "User", "test@example.com");
 
@@ -65,7 +68,7 @@ public class NotificationsPanelQueryHandlerTests
                 Assignee = assignee,
                 Status = WorkOrderStatus.Assigned,
                 DueDate = yesterday,
-                AssignedDate = DateTime.UtcNow.AddDays(-10)
+                AssignedDate = now.AddDays(-10)
             };
 
             var dueToday = new WorkOrder
@@ -76,7 +79,7 @@ public class NotificationsPanelQueryHandlerTests
                 Assignee = assignee,
                 Status = WorkOrderStatus.InProgress,
                 DueDate = today,
-                AssignedDate = DateTime.UtcNow.AddDays(-5)
+                AssignedDate = now.AddDays(-5)
             };
 
             var futureDue = new WorkOrder
@@ -87,7 +90,7 @@ public class NotificationsPanelQueryHandlerTests
                 Assignee = assignee,
                 Status = WorkOrderStatus.Assigned,
                 DueDate = tomorrow,
-                AssignedDate = DateTime.UtcNow.AddDays(-3)
+                AssignedDate = now.AddDays(-3)
             };
 
             var complete = new WorkOrder
@@ -98,7 +101,7 @@ public class NotificationsPanelQueryHandlerTests
                 Assignee = assignee,
                 Status = WorkOrderStatus.Complete,
                 DueDate = yesterday,
-                CompletedDate = DateTime.UtcNow
+                CompletedDate = now
             };
 
             context.Add(overdueOrder);
@@ -109,7 +112,6 @@ public class NotificationsPanelQueryHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var time = TestHost.GetRequiredService<TimeProvider>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
 
         var result = await handler.Handle(new NotificationsPanelQuery("notif_test_user"));
@@ -124,7 +126,10 @@ public class NotificationsPanelQueryHandlerTests
     {
         new DatabaseTests().Clean();
 
-        var now = DateTime.UtcNow;
+        var time = TestHost.GetRequiredService<TimeProvider>();
+        var now = time.GetUtcNow().DateTime;
+        var today = ChurchTimeZone.Today(time);
+        var futureDate = today.AddDays(10);
 
         var assignee = new Employee("notif_new_user", "New", "User", "new@example.com");
 
@@ -139,6 +144,7 @@ public class NotificationsPanelQueryHandlerTests
                 Creator = assignee,
                 Assignee = assignee,
                 Status = WorkOrderStatus.Assigned,
+                DueDate = futureDate,
                 AssignedDate = now.AddDays(-3)
             };
 
@@ -149,6 +155,7 @@ public class NotificationsPanelQueryHandlerTests
                 Creator = assignee,
                 Assignee = assignee,
                 Status = WorkOrderStatus.InProgress,
+                DueDate = futureDate,
                 AssignedDate = now.AddDays(-10)
             };
 
@@ -158,7 +165,8 @@ public class NotificationsPanelQueryHandlerTests
                 Title = "Not Assigned",
                 Creator = assignee,
                 Assignee = null,
-                Status = WorkOrderStatus.Draft
+                Status = WorkOrderStatus.Draft,
+                DueDate = futureDate
             };
 
             context.Add(recentlyAssigned);
@@ -168,7 +176,6 @@ public class NotificationsPanelQueryHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var time = TestHost.GetRequiredService<TimeProvider>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
 
         var result = await handler.Handle(new NotificationsPanelQuery("notif_new_user"));
@@ -182,7 +189,10 @@ public class NotificationsPanelQueryHandlerTests
     {
         new DatabaseTests().Clean();
 
-        var now = DateTime.UtcNow;
+        var time = TestHost.GetRequiredService<TimeProvider>();
+        var now = time.GetUtcNow().DateTime;
+        var today = ChurchTimeZone.Today(time);
+        var futureDate = today.AddDays(30);
 
         var creator = new Employee("notif_creator", "Creator", "User", "creator@example.com");
         var otherUser = new Employee("notif_other", "Other", "User", "other@example.com");
@@ -199,6 +209,7 @@ public class NotificationsPanelQueryHandlerTests
                 Creator = creator,
                 Assignee = otherUser,
                 Status = WorkOrderStatus.Assigned,
+                DueDate = futureDate,
                 AssignedDate = now.AddDays(-2)
             };
 
@@ -209,6 +220,7 @@ public class NotificationsPanelQueryHandlerTests
                 Creator = creator,
                 Assignee = otherUser,
                 Status = WorkOrderStatus.Complete,
+                DueDate = futureDate,
                 CompletedDate = now.AddDays(-1)
             };
 
@@ -219,6 +231,7 @@ public class NotificationsPanelQueryHandlerTests
                 Creator = creator,
                 Assignee = otherUser,
                 Status = WorkOrderStatus.InProgress,
+                DueDate = futureDate,
                 AssignedDate = now.AddDays(-10)
             };
 
@@ -228,7 +241,8 @@ public class NotificationsPanelQueryHandlerTests
                 Title = "Draft Order",
                 Creator = creator,
                 Assignee = null,
-                Status = WorkOrderStatus.Draft
+                Status = WorkOrderStatus.Draft,
+                DueDate = futureDate
             };
 
             context.Add(recentlyAssigned);
@@ -239,7 +253,6 @@ public class NotificationsPanelQueryHandlerTests
         }
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var time = TestHost.GetRequiredService<TimeProvider>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
 
         var result = await handler.Handle(new NotificationsPanelQuery("notif_creator"));
