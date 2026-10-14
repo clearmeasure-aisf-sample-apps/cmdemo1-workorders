@@ -23,7 +23,8 @@
       - the Build run kept no word: the build has no private build that says so;
       - the word is no JSON object with a "command" of 1 to 200 printable characters on one line;
       - the Build workflow of this commit (-Workflow, .github/workflows/build.yml) does not run that command: the
-        integration build would then have a definition of the build of its own.
+        integration build would then have a definition of the build of its own. A run: may split the command over
+        lines (continuations, a folded block): it is compared as the shell gets it.
     What it writes: "build": { "command", "ranBy": "integration", "run": <-Run, the address of the Build run> }.
     "ranBy" is "integration" because the word is an artifact of the integration build's run; the run's address is
     the Release's own knowledge, not the word's.
@@ -61,14 +62,50 @@ function Read-PrivateBuildCommand {
 }
 
 function Test-WorkflowRunsCommand {
-    # True when a "run:" of the Build workflow holds the command, on its own line or in a block: the integration
-    # build runs what a developer runs. Spaces are compared as one.
+    # True when a "run:" of the Build workflow runs the command: the integration build runs what a developer runs.
+    # A run's value is read as the shell gets it, in logical lines: a plain value and its continuation lines, a
+    # literal block (|) line by line, a folded block (>) as one line; in every case a line that ends with a
+    # continuation (\ for bash, ` for pwsh) is joined with the next. Spaces are compared as one; a shell comment
+    # (#) and a YAML comment run nothing.
     param([AllowNull()] [string] $WorkflowText, [Parameter(Mandatory)] [string] $Command)
     $plain = { param([string] $Line) ($Line -replace '\s+', ' ').Trim() }
     $wanted = & $plain $Command
-    foreach ($line in @("$WorkflowText" -split '\r?\n')) {
-        $text = & $plain ($line -replace '^\s*(-\s*)?run:\s*', '' -replace '^\s*[|>][+-]?\s*$', '')
-        if ($text -and $line -notmatch '^\s*#' -and $text.Contains($wanted)) { return $true }
+    $lines = @("$WorkflowText" -split '\r?\n')
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $key = [regex]::Match($lines[$i], '^(\s*)(?:-\s+)?run:(?:\s+(.*))?$')
+        if (-not $key.Success) { continue }
+        $indent = $key.Groups[1].Length
+        $value = $key.Groups[2].Value.Trim()
+        # The lines of the value: those after the key that are indented further, and the blank ones between them.
+        $body = [Collections.Generic.List[string]]::new()
+        while ($i + 1 -lt $lines.Count -and ($lines[$i + 1] -match '^\s*$' -or ($lines[$i + 1] -replace '^(\s*).*$', '$1').Length -gt $indent)) {
+            $i++
+            $body.Add($lines[$i])
+        }
+        $physical = if ($value -match '^>[+-]?$') {
+            @((@($body | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' '))
+        }
+        elseif ($value -match '^\|[+-]?$') { @($body) }
+        else {
+            # A plain or quoted value: YAML folds its continuation lines into one.
+            $folded = (@($value) + @($body | ForEach-Object { $_.Trim() } | Where-Object { $_ })) -join ' '
+            @($folded -replace '^\s*([''"])(.*)\1\s*$', '$2')
+        }
+        $logical = [Collections.Generic.List[string]]::new()
+        $pending = ''
+        foreach ($line in $physical) {
+            $part = "$line".Trim()
+            # A shell comment ends at its line, a continuation character in it included.
+            if (-not $pending -and $part.StartsWith('#')) { continue }
+            if ($part -match '^(.*?)\s*[\\`]$') { $pending = "$pending $($Matches[1])"; continue }
+            $logical.Add("$pending $part")
+            $pending = ''
+        }
+        if ($pending) { $logical.Add($pending) }
+        foreach ($line in $logical) {
+            $text = & $plain $line
+            if ($text -and -not $text.StartsWith('#') -and $text.Contains($wanted)) { return $true }
+        }
     }
     return $false
 }
