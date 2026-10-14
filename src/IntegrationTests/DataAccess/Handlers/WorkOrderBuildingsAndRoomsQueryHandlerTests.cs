@@ -182,7 +182,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "DRAFT001",
+                Number = "B001",
                 Title = "Draft Order",
                 Building = building,
                 RoomNumber = room,
@@ -192,7 +192,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "ASSIGN001",
+                Number = "B002",
                 Title = "Assigned Order",
                 Building = building,
                 RoomNumber = room,
@@ -202,7 +202,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "INPROG001",
+                Number = "B003",
                 Title = "In Progress Order",
                 Building = building,
                 RoomNumber = room,
@@ -212,7 +212,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "COMPLETE001",
+                Number = "B004",
                 Title = "Completed Order",
                 Building = building,
                 RoomNumber = room,
@@ -223,7 +223,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "CANCEL001",
+                Number = "B005",
                 Title = "Cancelled Order",
                 Building = building,
                 RoomNumber = room,
@@ -254,7 +254,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "OVER_DRAFT001",
+                Number = "B006",
                 Title = "Overdue Draft",
                 Building = building,
                 RoomNumber = room,
@@ -265,7 +265,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "OVER_ASSIGN001",
+                Number = "B007",
                 Title = "Overdue Assigned",
                 Building = building,
                 RoomNumber = room,
@@ -276,7 +276,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "OVER_INPROG001",
+                Number = "B008",
                 Title = "Overdue InProgress",
                 Building = building,
                 RoomNumber = room,
@@ -287,7 +287,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "FUTURE001",
+                Number = "B009",
                 Title = "Future Due Date",
                 Building = building,
                 RoomNumber = room,
@@ -298,7 +298,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "COMPLETE_LATE001",
+                Number = "B010",
                 Title = "Completed Late",
                 Building = building,
                 RoomNumber = room,
@@ -330,7 +330,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "COMP_RECENT001",
+                Number = "B011",
                 Title = "Recently Completed",
                 Building = building,
                 RoomNumber = room,
@@ -342,7 +342,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "COMP_BOUNDARY001",
+                Number = "B012",
                 Title = "Boundary Completed",
                 Building = building,
                 RoomNumber = room,
@@ -354,7 +354,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "COMP_OLD001",
+                Number = "B013",
                 Title = "Old Completed",
                 Building = building,
                 RoomNumber = room,
@@ -366,7 +366,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
             new()
             {
                 Creator = creator,
-                Number = "COMP_NODATE001",
+                Number = "B014",
                 Title = "No Completed Date",
                 Building = building,
                 RoomNumber = room,
