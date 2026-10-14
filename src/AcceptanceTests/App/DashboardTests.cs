@@ -120,15 +120,15 @@ public class DashboardTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldFillContentArea_WhenSignedOut_At1000Px()
     {
-        await Page.SetViewportSizeAsync(1000, 800);
+        await SetViewportAndSettleAsync(1000, 800);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(IndexPage.Elements.SignInPrompt))).ToBeVisibleAsync();
 
         var content = await ContentBoxAsync();
-        var container = await Page.Locator(".dashboard-container").BoundingBoxAsync();
+        var header = await Page.Locator(".page-header").BoundingBoxAsync();
 
-        ((double)container!.X).ShouldBe(content.Left, 1);
-        ((double)container.Width).ShouldBe(content.Width, 1);
+        ((double)header!.X).ShouldBe(content.Left, 1);
+        ((double)header.Width).ShouldBe(content.Width, 1);
     }
 
     [TestCase(1000)]
@@ -136,19 +136,36 @@ public class DashboardTests : AcceptanceTestBase
     [Retry(2)]
     public async Task ShouldAlignHeaderWithSearchPage_WhenSignedIn(int width)
     {
+        await SetViewportAndSettleAsync(width, 800);
         await OpenDashboardAsync();
-        await Page.SetViewportSizeAsync(width, 800);
+        await WaitForLayoutSettledAsync();
         var content = await ContentBoxAsync();
         var dashboardHeader = await Page.Locator(".page-header").BoundingBoxAsync();
 
         await Page.GetByTestId(nameof(IndexPage.Elements.QuickLinkWorkOrders)).ClickAsync();
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await WaitForLayoutSettledAsync();
         var searchHeader = await Page.Locator(".page-header").BoundingBoxAsync();
 
         dashboardHeader!.X.ShouldBe(searchHeader!.X, 1);
         dashboardHeader.Width.ShouldBe(searchHeader.Width, 1);
         ((double)dashboardHeader.Width).ShouldBe(content.Width, 1);
+    }
+
+    private async Task SetViewportAndSettleAsync(int width, int height)
+    {
+        await Page.SetViewportSizeAsync(width, height);
+        await Page.WaitForFunctionAsync(
+            "([w, h]) => window.innerWidth === w && window.innerHeight === h" +
+            " && document.getAnimations().every(a => !(a instanceof CSSTransition) || a.playState !== 'running')",
+            new object[] { width, height });
+    }
+
+    private async Task WaitForLayoutSettledAsync()
+    {
+        await Page.WaitForFunctionAsync(
+            "() => document.getAnimations().every(a => !(a instanceof CSSTransition) || a.playState !== 'running')");
     }
 
     private async Task<(double Left, double Width)> ContentBoxAsync()
