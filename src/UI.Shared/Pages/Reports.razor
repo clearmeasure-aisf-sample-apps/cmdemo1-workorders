@@ -36,7 +36,7 @@
                     }
                     @foreach (var label in statusLabels)
                     {
-                        var count = Data.CountByStatus.ContainsKey(label) ? Data.CountByStatus[label] : 0;
+                        var count = Data.CountByStatus.GetValueOrDefault(label);
                         var percentage = maxCount > 0 ? (count * 100) / maxCount : 0;
                         <div class="bar-item">
                             <div class="bar-label">@label</div>
@@ -63,7 +63,7 @@
                     }
                     @foreach (var label in priorityLabels)
                     {
-                        var count = Data.CountByPriority.ContainsKey(label) ? Data.CountByPriority[label] : 0;
+                        var count = Data.CountByPriority.GetValueOrDefault(label);
                         var percentage = maxPriorityCount > 0 ? (count * 100) / maxPriorityCount : 0;
                         <div class="bar-item">
                             <div class="bar-label">@label</div>
@@ -141,7 +141,7 @@
                             var maxWeeklyCount = Data.CompletedPerWeek.Any() ? Data.CompletedPerWeek.Max(w => w.Count) : 1;
                             if (maxWeeklyCount == 0) maxWeeklyCount = 1;
                         }
-                        @foreach (var (week, i) in Data.CompletedPerWeek.Select((w, idx) => (w, idx)))
+                        @foreach (var week in Data.CompletedPerWeek)
                         {
                             var percentage = maxWeeklyCount > 0 ? (week.Count * 100) / maxWeeklyCount : 0;
                             <div class="weekly-bar">

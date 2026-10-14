@@ -1,7 +1,6 @@
-using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Microsoft.EntityFrameworkCore;
@@ -208,7 +207,7 @@ public class ReportsPageTests : AcceptanceTestBase
         };
 
         context.Add(creator);
-        context.AddRange(orders);
+        context.AddRange(orders.Cast<object>());
         await context.SaveChangesAsync();
     }
 }

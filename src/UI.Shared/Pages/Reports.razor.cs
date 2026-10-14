@@ -8,9 +8,9 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 public partial class Reports : AppComponentBase
 {
     [Inject] private TimeProvider Clock { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
+    [Inject] private IJSRuntime Js { get; set; } = null!;
 
-    public WorkOrderReportsData? Data { get; private set; }
+    private WorkOrderReportsData? Data { get; set; }
 
     public enum Elements
     {
@@ -41,6 +41,6 @@ public partial class Reports : AppComponentBase
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
         var fileName = $"reports-{DateOnly.FromDateTime(Clock.GetUtcNow().DateTime):yyyyMMdd}.csv";
 
-        await JS.InvokeVoidAsync("searchExport.download", fileName, bytes);
+        await Js.InvokeVoidAsync("searchExport.download", fileName, bytes);
     }
 }

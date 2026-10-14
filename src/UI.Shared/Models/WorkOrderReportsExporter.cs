@@ -10,67 +10,69 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 /// </summary>
 public static class WorkOrderReportsExporter
 {
+    private static readonly string[] StatusOrder = ["Draft", "Assigned", "InProgress"];
+    private static readonly string[] PriorityOrder = ["High", "Medium", "Low"];
+
     /// <summary>The CSV text for the reports <paramref name="data"/>, lines separated by CRLF.</summary>
     public static string ToCsv(WorkOrderReportsData data)
     {
         var csv = new StringBuilder();
-
-        // Open by Status section
-        AppendLine(csv, ["Category", "Status", "Count"]);
-        foreach (var status in GetSortedStatuses(data.CountByStatus))
-        {
-            AppendLine(csv, ["Open by Status", status, data.CountByStatus[status].ToString()]);
-        }
-
-        csv.Append("\r\n");
-
-        // Open by Priority section
-        AppendLine(csv, ["Category", "Priority", "Count"]);
-        foreach (var priority in GetSortedPriorities(data.CountByPriority))
-        {
-            AppendLine(csv, ["Open by Priority", priority, data.CountByPriority[priority].ToString()]);
-        }
-
-        csv.Append("\r\n");
-
-        // Open by Building section
-        AppendLine(csv, ["Category", "Building", "Count"]);
-        foreach (var building in data.CountByBuilding.OrderByDescending(kvp => kvp.Value).Take(10))
-        {
-            AppendLine(csv, ["Open by Building", building.Key, building.Value.ToString()]);
-        }
-
-        csv.Append("\r\n");
-
-        // Completed per week section
-        AppendLine(csv, ["Week Ending", "Completed"]);
-        foreach (var week in data.CompletedPerWeek)
-        {
-            AppendLine(csv, [week.WeekEndingDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), week.Count.ToString()]);
-        }
-
-        csv.Append("\r\n");
-
-        // Summary metrics
-        AppendLine(csv, ["Metric", "Value"]);
-        AppendLine(csv, ["Completed (30 days)", data.CompletedLast30Days.ToString()]);
-        AppendLine(csv, ["Average Days to Close", data.AverageDaysToClose?.ToString("0.0", CultureInfo.InvariantCulture) ?? "N/A"]);
-        AppendLine(csv, ["Overdue Count", data.OverdueCount.ToString()]);
-
+        AppendOrderedCounts(csv, "Status", "Open by Status", StatusOrder, data.CountByStatus);
+        AppendOrderedCounts(csv, "Priority", "Open by Priority", PriorityOrder, data.CountByPriority);
+        AppendBuildings(csv, data.CountByBuilding);
+        AppendWeeks(csv, data.CompletedPerWeek);
+        AppendSummary(csv, data);
         return csv.ToString();
     }
 
-    private static IEnumerable<string> GetSortedStatuses(Dictionary<string, int> countByStatus)
+    private static void AppendOrderedCounts(StringBuilder csv, string heading, string category,
+        string[] order, Dictionary<string, int> counts)
     {
-        var order = new[] { "Draft", "Assigned", "InProgress" };
-        return order.Where(s => countByStatus.ContainsKey(s));
+        AppendLine(csv, ["Category", heading, "Count"]);
+        foreach (var key in order)
+        {
+            if (counts.TryGetValue(key, out var count))
+            {
+                AppendLine(csv, [category, key, count.ToString(CultureInfo.InvariantCulture)]);
+            }
+        }
+
+        csv.Append("\r\n");
     }
 
-    private static IEnumerable<string> GetSortedPriorities(Dictionary<string, int> countByPriority)
+    private static void AppendBuildings(StringBuilder csv, Dictionary<string, int> countByBuilding)
     {
-        var order = new[] { "High", "Medium", "Low" };
-        return order.Where(p => countByPriority.ContainsKey(p));
+        AppendLine(csv, ["Category", "Building", "Count"]);
+        foreach (var building in countByBuilding.OrderByDescending(kvp => kvp.Value).Take(10))
+        {
+            AppendLine(csv, ["Open by Building", building.Key, building.Value.ToString(CultureInfo.InvariantCulture)]);
+        }
+
+        csv.Append("\r\n");
     }
+
+    private static void AppendWeeks(StringBuilder csv, List<WorkOrderReportsData.WeeklyCount> weeks)
+    {
+        AppendLine(csv, ["Week Ending", "Completed"]);
+        foreach (var week in weeks)
+        {
+            AppendLine(csv, [week.WeekEndingDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                week.Count.ToString(CultureInfo.InvariantCulture)]);
+        }
+
+        csv.Append("\r\n");
+    }
+
+    private static void AppendSummary(StringBuilder csv, WorkOrderReportsData data)
+    {
+        AppendLine(csv, ["Metric", "Value"]);
+        AppendLine(csv, ["Completed (30 days)", data.CompletedLast30Days.ToString(CultureInfo.InvariantCulture)]);
+        AppendLine(csv, ["Average Days to Close", FormatAverage(data.AverageDaysToClose)]);
+        AppendLine(csv, ["Overdue Count", data.OverdueCount.ToString(CultureInfo.InvariantCulture)]);
+    }
+
+    private static string FormatAverage(double? average) =>
+        average?.ToString("0.0", CultureInfo.InvariantCulture) ?? "N/A";
 
     private static void AppendLine(StringBuilder csv, IEnumerable<string> cells)
     {

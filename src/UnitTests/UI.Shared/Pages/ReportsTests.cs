@@ -23,7 +23,7 @@ public class ReportsTests
         var bus = new StubBus();
         ctx.Services.AddSingleton<IBus>(bus);
 
-        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Reports>());
+        ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Reports>());
 
         bus.SendCallCount.ShouldBe(1);
     }
@@ -210,11 +210,8 @@ public class ReportsTests
         return ctx;
     }
 
-    private class StubBusReturningNull : Bus
+    private class StubBusReturningNull() : Bus(null!)
     {
-        public StubBusReturningNull() : base(null!)
-        {
-        }
 
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
