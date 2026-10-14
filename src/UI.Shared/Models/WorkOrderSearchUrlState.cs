@@ -61,7 +61,11 @@ public sealed record WorkOrderSearchUrlState
 
     private bool HasPeopleFilter => HasText(Creator) || HasText(Assignee) || AssignedToMe;
 
-    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasText(Building) || NoBuilding || HasText(Room) || NoRoom || HasText(Q);
+    private bool HasBuildingFilter => HasText(Building) || NoBuilding;
+
+    private bool HasRoomFilter => HasText(Room) || NoRoom;
+
+    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasBuildingFilter || HasRoomFilter || HasText(Q);
 
     private bool HasFlagFilter => OverdueOnly || OpenOnly || CompletedWithinDays.HasValue;
 
