@@ -27,7 +27,11 @@ public static class StatusPillPresenter
     public static StatusPill Present(WorkOrder workOrder, bool isOverdue) =>
         isOverdue
             ? new StatusPill("Overdue", $"{Base} {Base}--overdue", $", status {workOrder.Status.FriendlyName}")
-            : new StatusPill(workOrder.Status.FriendlyName, $"{Base} {Base}--{Modifier(workOrder.Status)}", null);
+            : ForStatus(workOrder.Status);
+
+    /// <summary>The pill for a stored status, as shown when the work order is not overdue.</summary>
+    public static StatusPill ForStatus(WorkOrderStatus status) =>
+        new(status.FriendlyName, $"{Base} {Base}--{Modifier(status)}", null);
 
     private static string Modifier(WorkOrderStatus status) =>
         Modifiers.GetValueOrDefault(status.Key, "draft");

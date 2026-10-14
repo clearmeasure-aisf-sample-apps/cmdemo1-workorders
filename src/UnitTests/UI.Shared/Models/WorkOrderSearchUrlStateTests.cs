@@ -30,7 +30,7 @@ public class WorkOrderSearchUrlStateTests
         {
             Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key, OverdueOnly = true,
             Priority = WorkOrderPriority.High, Building = "Fellowship Hall", OpenOnly = true, CompletedWithinDays = 30,
-            Q = "organ & pipes", Sort = "Priority", Descending = true, Page = 3
+            Q = "organ & pipes", Sort = "Priority", Descending = true, Page = 3, View = SearchView.Board
         };
 
         var uri = state.ToRelativeUri();
@@ -40,6 +40,52 @@ public class WorkOrderSearchUrlStateTests
         uri.ShouldContain("Building=Fellowship%20Hall");
         uri.ShouldContain("Q=organ%20%26%20pipes");
         uri.ShouldContain("Dir=desc");
+        uri.ShouldEndWith("View=Board");
+    }
+
+    [Test]
+    public void View_Board_RoundTripsAsViewEqualsBoard()
+    {
+        var state = new WorkOrderSearchUrlState { View = SearchView.Board };
+
+        var uri = state.ToRelativeUri();
+
+        uri.ShouldBe("workorder/search?View=Board");
+        WorkOrderSearchUrlState.FromQuery(ParseQuery(uri)).ShouldBe(state);
+    }
+
+    [Test]
+    public void View_Table_WritesNoViewParameter()
+    {
+        new WorkOrderSearchUrlState { View = SearchView.Table }.ToRelativeUri().ShouldBe("workorder/search");
+        WorkOrderSearchUrlState.Default.View.ShouldBe(SearchView.Table);
+        WorkOrderSearchUrlState.Default.ToRelativeUri().ShouldBe("workorder/search");
+    }
+
+    [Test]
+    public void View_ParsesCaseInsensitively()
+    {
+        var state = WorkOrderSearchUrlState.FromQuery(new Dictionary<string, string?> { ["view"] = "board" });
+
+        state.View.ShouldBe(SearchView.Board);
+    }
+
+    [TestCase("Kanban")]
+    [TestCase("1")]
+    [TestCase("0")]
+    [TestCase("7")]
+    public void View_InvalidValue_IsTableAndNotWritten(string value)
+    {
+        var state = WorkOrderSearchUrlState.FromQuery(new Dictionary<string, string?> { ["View"] = value });
+
+        state.View.ShouldBe(SearchView.Table);
+        state.ToRelativeUri().ShouldBe("workorder/search");
+    }
+
+    [Test]
+    public void HasAnyFilter_OnlyViewSet_IsFalse()
+    {
+        new WorkOrderSearchUrlState { View = SearchView.Board }.HasAnyFilter.ShouldBeFalse();
     }
 
     [Test]
