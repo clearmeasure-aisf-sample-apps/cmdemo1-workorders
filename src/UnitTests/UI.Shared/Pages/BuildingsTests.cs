@@ -201,63 +201,23 @@ public class BuildingsTests
 /// </summary>
 public class StubBusBuildings : StubBus
 {
-    private bool _buildingsInitialized;
-
-    public BuildingRoomData[] BuildingsToReturn
-    {
-        get
+    public BuildingRoomData[] BuildingsToReturn { get; init; } =
+    [
+        new BuildingRoomData
         {
-            if (!_buildingsInitialized)
-            {
-                field =
-                [
-                    new BuildingRoomData
-                    {
-                        BuildingName = "Main Building",
-                        Rooms =
-                        [
-                            new RoomData
-                            {
-                                RoomName = "Room 101",
-                                OpenCount = 5,
-                                OverdueCount = 2,
-                                CompletedLast30DaysCount = 8
-                            },
-                            new RoomData
-                            {
-                                RoomName = "Room 102",
-                                OpenCount = 3,
-                                OverdueCount = 1,
-                                CompletedLast30DaysCount = 6
-                            }
-                        ]
-                    },
-                    new BuildingRoomData
-                    {
-                        BuildingName = "Annex",
-                        Rooms =
-                        [
-                            new RoomData
-                            {
-                                RoomName = "Room 201",
-                                OpenCount = 2,
-                                OverdueCount = 0,
-                                CompletedLast30DaysCount = 4
-                            }
-                        ]
-                    }
-                ];
-                _buildingsInitialized = true;
-            }
-
-            return field;
-        }
-        set
+            BuildingName = "Main Building",
+            Rooms =
+            [
+                new RoomData { RoomName = "Room 101", OpenCount = 5, OverdueCount = 2, CompletedLast30DaysCount = 8 },
+                new RoomData { RoomName = "Room 102", OpenCount = 3, OverdueCount = 1, CompletedLast30DaysCount = 6 }
+            ]
+        },
+        new BuildingRoomData
         {
-            field = value;
-            _buildingsInitialized = true;
+            BuildingName = "Annex",
+            Rooms = [new RoomData { RoomName = "Room 201", OpenCount = 2, OverdueCount = 0, CompletedLast30DaysCount = 4 }]
         }
-    } = [];
+    ];
 
     public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
     {

@@ -15,6 +15,8 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
     : IRequestHandler<WorkOrderBuildingsAndRoomsQuery, BuildingRoomData[]>
 {
     private const int CompletedWindowDays = 30;
+    private const string NoBuildingLabel = "No building";
+    private const string NoRoomLabel = "No room";
 
     private sealed record OrderRow(string BuildingName, string RoomName, WorkOrderStatus Status, DateOnly? DueDate, DateTime? CompletedDate);
 
@@ -33,30 +35,36 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
                 wo.CompletedDate))
             .ToListAsync(cancellationToken);
 
-        var buildingRoomGroups = allOrders
+        return allOrders
             .GroupBy(wo => wo.BuildingName)
-            .OrderBy(g => g.Key == string.Empty ? 0 : 1)
-            .ThenBy(g => g.Key == string.Empty ? "No building" : g.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(buildingGroup => new BuildingRoomData
-            {
-                BuildingName = buildingGroup.Key == string.Empty ? "No building" : buildingGroup.Key,
-                Rooms = buildingGroup
-                    .GroupBy(wo => wo.RoomName)
-                    .OrderBy(g => g.Key == string.Empty ? 0 : 1)
-                    .ThenBy(g => g.Key == string.Empty ? "No room" : g.Key, StringComparer.OrdinalIgnoreCase)
-                    .Select(roomGroup => new RoomData
-                    {
-                        RoomName = roomGroup.Key == string.Empty ? "No room" : roomGroup.Key,
-                        OpenCount = CountOpen(roomGroup),
-                        OverdueCount = CountOverdue(roomGroup, today),
-                        CompletedLast30DaysCount = CountCompletedWithin(roomGroup, time.GetUtcNow().UtcDateTime, CompletedWindowDays)
-                    })
-                    .ToArray()
-            })
+            .OrderBy(g => EmptyFirst(g.Key))
+            .ThenBy(g => Label(g.Key, NoBuildingLabel), StringComparer.OrdinalIgnoreCase)
+            .Select(g => ToBuilding(g, today))
             .ToArray();
-
-        return buildingRoomGroups;
     }
+
+    private BuildingRoomData ToBuilding(IGrouping<string, OrderRow> buildingGroup, DateOnly today) => new()
+    {
+        BuildingName = Label(buildingGroup.Key, NoBuildingLabel),
+        Rooms = buildingGroup
+            .GroupBy(wo => wo.RoomName)
+            .OrderBy(g => EmptyFirst(g.Key))
+            .ThenBy(g => Label(g.Key, NoRoomLabel), StringComparer.OrdinalIgnoreCase)
+            .Select(g => ToRoom(g, today))
+            .ToArray()
+    };
+
+    private RoomData ToRoom(IGrouping<string, OrderRow> roomGroup, DateOnly today) => new()
+    {
+        RoomName = Label(roomGroup.Key, NoRoomLabel),
+        OpenCount = CountOpen(roomGroup),
+        OverdueCount = CountOverdue(roomGroup, today),
+        CompletedLast30DaysCount = CountCompletedWithin(roomGroup, time.GetUtcNow().UtcDateTime, CompletedWindowDays)
+    };
+
+    private static int EmptyFirst(string key) => key == string.Empty ? 0 : 1;
+
+    private static string Label(string key, string emptyLabel) => key == string.Empty ? emptyLabel : key;
 
     private static int CountOpen(IEnumerable<OrderRow> orders)
     {
