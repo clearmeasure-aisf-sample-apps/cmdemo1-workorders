@@ -68,7 +68,7 @@ public class WorkOrderTools
             new JsonSerializerOptions { WriteIndented = true });
     }
 
-    [McpServerTool(Name = "create-work-order"), Description("Creates a new draft work order. Requires a title, description, and the username of the creator. Optionally accepts a room number, due date (yyyy-MM-dd), and instructions.")]
+    [McpServerTool(Name = "create-work-order"), Description("Creates a new draft work order. Requires a title, description, and the username of the creator. Optionally accepts a room number, due date (yyyy-MM-dd), and instructions. Priority values: Low, Medium (default), High (case-insensitive). Building is a short name (max 100 characters).")]
     public static async Task<string> CreateWorkOrder(
         IBus bus,
         IWorkOrderNumberGenerator numberGenerator,
@@ -77,7 +77,9 @@ public class WorkOrderTools
         [Description("Username of the employee creating the work order")] string creatorUsername,
         [Description("Optional room number or location for the work order")] string? roomNumber = null,
         [Description("Optional due date as yyyy-MM-dd")] string? dueDate = null,
-        [Description("Optional instructions for the work order")] string? instructions = null)
+        [Description("Optional instructions for the work order")] string? instructions = null,
+        [Description("Optional priority: Low, Medium (default), High; case-insensitive")] string? priority = null,
+        [Description("Optional building name; max 100 characters")] string? building = null)
     {
         try
         {
@@ -92,6 +94,18 @@ public class WorkOrderTools
                 return dueDateError!;
             }
 
+            var (parsedPriority, priorityError) = ParseAndValidatePriority(priority);
+            if (priorityError != null)
+            {
+                return priorityError;
+            }
+
+            var (trimmedBuilding, buildingError) = ValidateBuilding(building);
+            if (buildingError != null)
+            {
+                return buildingError;
+            }
+
             var workOrder = new WorkOrder
             {
                 Title = title,
@@ -101,7 +115,9 @@ public class WorkOrderTools
                 Status = WorkOrderStatus.Draft,
                 Number = numberGenerator.GenerateNumber(),
                 RoomNumber = roomNumber,
-                DueDate = parsedDueDate
+                DueDate = parsedDueDate,
+                Priority = parsedPriority,
+                Building = trimmedBuilding
             };
 
             var command = new SaveDraftCommand(workOrder, creator);
@@ -157,7 +173,8 @@ public class WorkOrderTools
     [McpServerTool(Name = "save-work-order"), Description(
         "Saves title, description, instructions, room, and due date on an existing draft work order without changing status. " +
         "Requires the work order number and executing username (the creator). " +
-        "Optional patches: omit a field to leave it unchanged; empty description/instructions/room persists empty; empty due date clears.")]
+        "Optional patches: omit a field to leave it unchanged; empty description/instructions/room persists empty; empty due date clears. " +
+        "Use update-work-order to change priority, building, room, and due date together on existing work orders.")]
     public static async Task<string> SaveWorkOrder(
         IBus bus,
         [Description("The work order number")] string workOrderNumber,
@@ -192,6 +209,50 @@ public class WorkOrderTools
         }
 
         ApplySavePatches(workOrder, title, description, instructions, roomNumber, dueDate);
+
+        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser));
+        return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
+            new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    [McpServerTool(Name = "update-work-order"), Description(
+        "Updates priority, building, room, and/or due date on an existing draft work order. " +
+        "Requires the work order number and executing username (the creator). " +
+        "Omitted fields are unchanged; empty building/room/due date clears those fields; empty priority is an error. " +
+        "Priority values: Low, Medium, High (case-insensitive). Building: max 100 characters.")]
+    public static async Task<string> UpdateWorkOrder(
+        IBus bus,
+        [Description("The work order number")] string workOrderNumber,
+        [Description("Username of the employee executing the update (must be the creator)")] string executingUsername,
+        [Description("Optional priority: Low, Medium, High; case-insensitive")] string? priority = null,
+        [Description("Optional building name; max 100 characters; empty clears")] string? building = null,
+        [Description("Optional room number; empty clears")] string? roomNumber = null,
+        [Description("Optional due date as yyyy-MM-dd; empty clears")] string? dueDate = null)
+    {
+        if (string.IsNullOrWhiteSpace(workOrderNumber))
+        {
+            return "Work order number is required.";
+        }
+
+        var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
+        if (workOrder == null)
+        {
+            return $"No work order found with number '{workOrderNumber}'.";
+        }
+
+        var executingUser = await FindEmployeeByUsername(bus, executingUsername);
+        if (executingUser == null)
+        {
+            return $"Employee with username '{executingUsername}' not found.";
+        }
+
+        var validationError = ValidateUpdate(workOrder, executingUser, priority, building, dueDate);
+        if (validationError != null)
+        {
+            return validationError;
+        }
+
+        ApplyUpdatePatches(workOrder, priority, building, roomNumber, dueDate);
 
         var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser));
         return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
@@ -363,6 +424,109 @@ public class WorkOrderTools
         }
     }
 
+    internal static (WorkOrderPriority, string?) ParseAndValidatePriority(string? priorityStr)
+    {
+        if (string.IsNullOrWhiteSpace(priorityStr))
+        {
+            return (WorkOrderPriority.Medium, null);
+        }
+
+        var trimmed = priorityStr.Trim();
+        if (Enum.TryParse<WorkOrderPriority>(trimmed, ignoreCase: true, out var parsed))
+        {
+            if (Enum.IsDefined(parsed))
+            {
+                return (parsed, null);
+            }
+        }
+
+        return (WorkOrderPriority.Medium, $"Invalid priority '{priorityStr}'. Valid values are: Low, Medium, High.");
+    }
+
+    internal static (string?, string?) ValidateBuilding(string? building)
+    {
+        if (string.IsNullOrWhiteSpace(building))
+        {
+            return (null, null);
+        }
+
+        var trimmed = building.Trim();
+        if (trimmed.Length > WorkOrder.BuildingMaxLength)
+        {
+            return (null, $"Building cannot exceed {WorkOrder.BuildingMaxLength} characters.");
+        }
+
+        return (trimmed, null);
+    }
+
+    private static string? ValidateUpdate(
+        WorkOrder workOrder,
+        Employee executingUser,
+        string? priority,
+        string? building,
+        string? dueDate)
+    {
+        if (!new SaveDraftCommand(workOrder, executingUser).IsValid())
+        {
+            return FormatInvalidSaveCommand(workOrder);
+        }
+
+        if (IsBlankPatch(priority))
+        {
+            return "Priority cannot be cleared; omit it to leave unchanged.";
+        }
+
+        var (_, priorityError) = ParseAndValidatePriority(priority);
+        if (priorityError != null)
+        {
+            return priorityError;
+        }
+
+        var (_, buildingError) = ValidateBuilding(building);
+        if (buildingError != null)
+        {
+            return buildingError;
+        }
+
+        if (IsInvalidDueDatePatch(dueDate))
+        {
+            return $"Invalid due date '{dueDate}'. Use yyyy-MM-dd.";
+        }
+
+        return null;
+    }
+
+    private static void ApplyUpdatePatches(
+        WorkOrder workOrder,
+        string? priority,
+        string? building,
+        string? roomNumber,
+        string? dueDate)
+    {
+        ApplyPriorityPatch(workOrder, priority);
+        ApplyBuildingPatch(workOrder, building);
+        ApplyRoomNumberPatch(workOrder, roomNumber);
+        ApplyDueDatePatch(workOrder, dueDate);
+    }
+
+    private static void ApplyPriorityPatch(WorkOrder workOrder, string? priority)
+    {
+        if (priority != null)
+        {
+            var (parsed, _) = ParseAndValidatePriority(priority);
+            workOrder.Priority = parsed;
+        }
+    }
+
+    private static void ApplyBuildingPatch(WorkOrder workOrder, string? building)
+    {
+        if (building != null)
+        {
+            var (trimmed, _) = ValidateBuilding(building);
+            workOrder.Building = trimmed;
+        }
+    }
+
     private static object FormatWorkOrderSummary(WorkOrder wo) => new
     {
         wo.Number,
@@ -370,7 +534,9 @@ public class WorkOrderTools
         Status = wo.Status.FriendlyName,
         Creator = wo.Creator?.GetFullName(),
         Assignee = wo.Assignee?.GetFullName(),
-        DueDate = wo.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+        DueDate = wo.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        Priority = wo.Priority.ToString(),
+        wo.Building
     };
 
     internal static object FormatWorkOrderDetail(WorkOrder wo) => new
@@ -388,6 +554,8 @@ public class WorkOrderTools
         wo.CreatedDate,
         wo.AssignedDate,
         wo.CompletedDate,
-        DueDate = wo.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+        DueDate = wo.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        Priority = wo.Priority.ToString(),
+        wo.Building
     };
 }

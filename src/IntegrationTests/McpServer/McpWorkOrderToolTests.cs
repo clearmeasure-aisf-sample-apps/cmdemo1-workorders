@@ -196,7 +196,9 @@ public class McpWorkOrderToolTests
             RoomNumber = "101",
             DueDate = new DateOnly(2026, 9, 12),
             Status = WorkOrderStatus.Draft,
-            CreatedDate = createdDate
+            CreatedDate = createdDate,
+            Priority = WorkOrderPriority.High,
+            Building = "Main Hall"
         };
 
         await using var context = TestHost.GetRequiredService<DbContext>();
@@ -223,6 +225,8 @@ public class McpWorkOrderToolTests
         detail.GetProperty("CreatedDate").GetDateTime().ShouldBe(createdDate);
         detail.GetProperty("AssignedDate").ValueKind.ShouldBe(JsonValueKind.Null);
         detail.GetProperty("CompletedDate").ValueKind.ShouldBe(JsonValueKind.Null);
+        detail.GetProperty("Priority").GetString().ShouldBe("High");
+        detail.GetProperty("Building").GetString().ShouldBe("Main Hall");
     }
 
     [Test]
@@ -288,10 +292,10 @@ public class McpWorkOrderToolTests
     }
 
     [Test]
-    public void ShouldKeepWorkOrderToolArgumentListsUnchanged()
+    public void ShouldKeepWorkOrderToolArgumentListsBackwardCompatible()
     {
         ParameterNames(nameof(WorkOrderTools.CreateWorkOrder)).ShouldBe(
-            ["bus", "numberGenerator", "title", "description", "creatorUsername", "roomNumber", "dueDate", "instructions"]);
+            ["bus", "numberGenerator", "title", "description", "creatorUsername", "roomNumber", "dueDate", "instructions", "priority", "building"]);
         ParameterNames(nameof(WorkOrderTools.SaveWorkOrder)).ShouldBe(
             ["bus", "workOrderNumber", "executingUsername", "title", "description", "instructions", "roomNumber", "dueDate"]);
         ParameterNames(nameof(WorkOrderTools.CreateDatedWorkOrders)).ShouldBe(
