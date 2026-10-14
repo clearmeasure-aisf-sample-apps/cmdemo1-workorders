@@ -1,3 +1,5 @@
+using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Shouldly;
@@ -92,5 +94,90 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         var firstRow = rows.First;
         await Expect(firstRow).ToBeVisibleAsync();
+    }
+
+    [Test]
+    public async Task ShouldMatchOpenCountBetweenTeamsPageAndSearchPage()
+    {
+        await LoginAsCurrentUser();
+
+        // Create test work orders: 2 assigned open, 1 completed
+        var wo1 = await CreateAndSaveNewWorkOrder();
+        var wo2 = await CreateAndSaveNewWorkOrder();
+        var wo3 = await CreateAndSaveNewWorkOrder();
+
+        // Assign wo1 and wo2 to current user (status Assigned = open)
+        AssignWorkOrderToEmployee(wo1, CurrentUser);
+        AssignWorkOrderToEmployee(wo2, CurrentUser);
+
+        // Mark wo3 as complete (not open)
+        var wo3Full = await Bus.Send(new WorkOrderByNumberQuery(wo3.Number!)) ?? throw new InvalidOperationException();
+        wo3Full.ChangeStatus(WorkOrderStatus.Complete);
+        using (var context = TestHost.NewDbContext())
+        {
+            context.Update(wo3Full);
+            await context.SaveChangesAsync();
+        }
+
+        // Read open count from Teams & Vendors page
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var openCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowAssignedOpen}{CurrentUser.UserName}");
+        var openCountText = await openCountCell.InnerTextAsync();
+        var teamsOpenCount = int.Parse(openCountText);
+
+        // Navigate to search page and count results with same assignee filter
+        var searchUrl = $"/workorder/search?Assignee={Uri.EscapeDataString(CurrentUser.UserName)}";
+        await Page.GotoAsync(searchUrl);
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Count rows in the search results table (open work orders only - no status filter means default to open)
+        var searchResultRows = Page.Locator(".grid-data tbody tr");
+        var searchOpenCount = await searchResultRows.CountAsync();
+
+        // Counts should match
+        teamsOpenCount.ShouldBe(searchOpenCount);
+        teamsOpenCount.ShouldBe(2); // wo1 and wo2 are open
+    }
+
+    [Test]
+    public async Task ShouldDisplayZeroCountsForEmployeeWithNoWorkOrders()
+    {
+        await LoginAsCurrentUser();
+
+        // Ensure current user has no work orders assigned
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var openCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowAssignedOpen}{CurrentUser.UserName}");
+        var openCountText = await openCountCell.InnerTextAsync();
+
+        var inProgressCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowInProgress}{CurrentUser.UserName}");
+        var inProgressCountText = await inProgressCountCell.InnerTextAsync();
+
+        var overdueCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowOverdue}{CurrentUser.UserName}");
+        var overdueCountText = await overdueCountCell.InnerTextAsync();
+
+        var completedCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowCompleted}{CurrentUser.UserName}");
+        var completedCountText = await completedCountCell.InnerTextAsync();
+
+        // All counts should be 0
+        int.Parse(openCountText).ShouldBe(0);
+        int.Parse(inProgressCountText).ShouldBe(0);
+        int.Parse(overdueCountText).ShouldBe(0);
+        int.Parse(completedCountText).ShouldBe(0);
+    }
+
+    private void AssignWorkOrderToEmployee(WorkOrder workOrder, Employee employee)
+    {
+        var wo = TestHost.NewDbContext().Set<WorkOrder>().Single(w => w.Number == workOrder.Number);
+        wo.Assignee = employee;
+        wo.ChangeStatus(WorkOrderStatus.Assigned);
+        using (var context = TestHost.NewDbContext())
+        {
+            context.Update(wo);
+            context.SaveChanges();
+        }
     }
 }
