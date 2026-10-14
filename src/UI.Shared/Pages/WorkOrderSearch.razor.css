@@ -125,6 +125,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
+    table-layout: fixed;
 }
 
 .grid-data thead th {
@@ -149,6 +150,9 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 0;
+    display: block;
+    width: 100%;
+    text-align: left;
 }
 
 .sort-btn:hover {
@@ -157,6 +161,71 @@
 
 .sort-btn.sort-active {
     color: #7b68ee;
+}
+
+.muted-cell {
+    color: #999;
+}
+
+.grid-data th:nth-child(1),
+.grid-data td:nth-child(1) {
+    width: 15%;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.grid-data th:nth-child(2),
+.grid-data td:nth-child(2),
+.grid-data th:nth-child(3),
+.grid-data td:nth-child(3) {
+    width: 11%;
+}
+
+.grid-data th:nth-child(4),
+.grid-data td:nth-child(4) {
+    width: 14%;
+}
+
+.grid-data th:nth-child(5),
+.grid-data td:nth-child(5) {
+    width: auto;
+    overflow-wrap: break-word;
+}
+
+.grid-data th:nth-child(6),
+.grid-data td:nth-child(6) {
+    width: 10%;
+    white-space: nowrap;
+}
+
+.grid-data th:nth-child(7),
+.grid-data td:nth-child(7) {
+    width: 11%;
+}
+
+.grid-data td,
+.grid-data thead th {
+    box-sizing: border-box;
+    padding: 1rem 0.5rem;
+}
+
+.grid-data thead th {
+    vertical-align: middle;
+    line-height: 1.25rem;
+}
+
+.grid-data thead .sort-btn {
+    padding: 0;
+    line-height: 1.25rem;
+}
+
+.grid-data td {
+    height: 4.5rem;
+    line-height: 1.5rem;
+}
+
+.grid-data td a {
+    padding: 0.25rem 0;
 }
 
 .due-date-today {
@@ -455,4 +524,16 @@
     align-items: center;
     gap: 0.5rem;
     padding-top: 0.5rem;
+}
+
+.grid-data th:nth-child(1) {
+    text-align: right;
+}
+
+.grid-data td .status-badge {
+    white-space: nowrap;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
