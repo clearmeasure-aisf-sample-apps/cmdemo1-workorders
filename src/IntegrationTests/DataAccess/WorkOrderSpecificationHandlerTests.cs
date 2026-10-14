@@ -454,7 +454,7 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchNoRoom(true);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["NR002", "NOROOM003", "NOROOM004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["NR002", "NR003", "NR004"], ignoreOrder: true);
     }
 
     [Test]
@@ -480,7 +480,7 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchNoBuilding(true);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["NB002", "NOBLD003", "NOBLD004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["NB002", "NB003", "NB004"], ignoreOrder: true);
     }
 
     [Test]
@@ -506,7 +506,7 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchRoom("101");
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["CB001", "COMBO003"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["CB001", "CB003"], ignoreOrder: true);
     }
 
     [Test]
@@ -533,6 +533,6 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchOpenOnly(true);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["RO001", "ROOMOPEN004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["RO001", "RO004"], ignoreOrder: true);
     }
 }
