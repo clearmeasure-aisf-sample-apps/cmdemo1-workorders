@@ -26,6 +26,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public const int BuildingMaxLength = 100;
 
+    /// <summary>
+    /// Maximum length of <see cref="Title"/> accepted by persistence and the work-order form.
+    /// </summary>
+    public const int TitleMaxLength = 300;
+
     public string? Title { get; set; } = "";
 
     public string? Description
