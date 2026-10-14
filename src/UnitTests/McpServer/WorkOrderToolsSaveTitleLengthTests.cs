@@ -56,14 +56,14 @@ public class WorkOrderToolsSaveTitleLengthTests
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
-            object? response = request switch
+            object response = request switch
             {
                 WorkOrderByNumberQuery => _workOrder,
                 EmployeeByUserNameQuery => _creator,
                 SaveDraftCommand command => Record(command),
                 _ => throw new NotSupportedException(request.GetType().Name)
             };
-            return Task.FromResult((TResponse)response!);
+            return Task.FromResult((TResponse)response);
         }
 
         public Task<object?> Send(object request) => throw new NotSupportedException();
