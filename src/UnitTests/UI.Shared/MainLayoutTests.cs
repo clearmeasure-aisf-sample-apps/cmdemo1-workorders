@@ -22,7 +22,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared;
 public class MainLayoutTests
 {
     [Test]
-    public async Task ShouldRenderSidebarBrandAsSoundPhysiciansWorkOrderSystem()
+    public async Task ShouldRenderSidebarBrandAsKalahariChurchWorkOrderSystem()
     {
         await using var ctx = CreateContext();
 
@@ -30,7 +30,9 @@ public class MainLayoutTests
         var layout = component.FindComponent<MainLayout>();
 
         var brandText = layout.Find(".brand-text");
-        brandText.QuerySelector("h4")!.TextContent.Trim().ShouldBe("SoundPhysicians Work Order System");
+        brandText.QuerySelector("h4")!.TextContent.Trim().ShouldBe("Kalahari Church Work Order System");
+        brandText.TextContent.ShouldNotContain("SoundPhysicians");
+        layout.Markup.ShouldNotContain("Church Bulletin");
         brandText.TextContent.ShouldNotContain("First Church");
         brandText.TextContent.ShouldNotContain("Springfield");
     }
