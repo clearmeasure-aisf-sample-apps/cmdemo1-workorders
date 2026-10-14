@@ -203,7 +203,7 @@ public class StubBusBuildings : StubBus
 {
     public BuildingRoomData[] BuildingsToReturn { get; init; } =
     [
-        new BuildingRoomData
+        new()
         {
             BuildingName = "Main Building",
             Rooms =
@@ -212,7 +212,7 @@ public class StubBusBuildings : StubBus
                 new RoomData { RoomName = "Room 102", OpenCount = 3, OverdueCount = 1, CompletedLast30DaysCount = 6 }
             ]
         },
-        new BuildingRoomData
+        new()
         {
             BuildingName = "Annex",
             Rooms = [new RoomData { RoomName = "Room 201", OpenCount = 2, OverdueCount = 0, CompletedLast30DaysCount = 4 }]
