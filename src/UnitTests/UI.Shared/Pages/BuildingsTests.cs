@@ -31,7 +31,7 @@ public class BuildingsTests
     [Test]
     public async Task Buildings_WhenNoBuildingsExist_ShouldShowEmptyState()
     {
-        var bus = new StubBusBuildings { BuildingsToReturn = Array.Empty<BuildingRoomData>() };
+        var bus = new StubBusBuildings { BuildingsToReturn = Array.Empty<BuildingSummary>() };
         await using var ctx = CreateContext(bus);
 
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Buildings>());
@@ -150,17 +150,18 @@ public class BuildingsTests
         {
             BuildingsToReturn =
             [
-                new BuildingRoomData
+                new BuildingSummary
                 {
-                    BuildingName = "No building",
+                    Building = "",
                     Rooms =
                     [
-                        new RoomData
+                        new RoomSummary
                         {
-                            RoomName = "No room",
+                            Room = "",
                             OpenCount = 5,
                             OverdueCount = 2,
-                            CompletedLast30DaysCount = 8
+                            CompletedLast30Days = 8,
+                            TotalCount = 15
                         }
                     ]
                 }
@@ -201,27 +202,27 @@ public class BuildingsTests
 /// </summary>
 public class StubBusBuildings : StubBus
 {
-    public BuildingRoomData[] BuildingsToReturn { get; init; } =
+    public BuildingSummary[] BuildingsToReturn { get; init; } =
     [
         new()
         {
-            BuildingName = "Main Building",
+            Building = "Main Building",
             Rooms =
             [
-                new RoomData { RoomName = "Room 101", OpenCount = 5, OverdueCount = 2, CompletedLast30DaysCount = 8 },
-                new RoomData { RoomName = "Room 102", OpenCount = 3, OverdueCount = 1, CompletedLast30DaysCount = 6 }
+                new RoomSummary { Room = "Room 101", OpenCount = 5, OverdueCount = 2, CompletedLast30Days = 8, TotalCount = 15 },
+                new RoomSummary { Room = "Room 102", OpenCount = 3, OverdueCount = 1, CompletedLast30Days = 6, TotalCount = 10 }
             ]
         },
         new()
         {
-            BuildingName = "Annex",
-            Rooms = [new RoomData { RoomName = "Room 201", OpenCount = 2, OverdueCount = 0, CompletedLast30DaysCount = 4 }]
+            Building = "Annex",
+            Rooms = [new RoomSummary { Room = "Room 201", OpenCount = 2, OverdueCount = 0, CompletedLast30Days = 4, TotalCount = 6 }]
         }
     ];
 
     public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
     {
-        if (request is WorkOrderBuildingsAndRoomsQuery)
+        if (request is BuildingRoomSummaryQuery)
         {
             return Task.FromResult<TResponse>((TResponse)(object)BuildingsToReturn);
         }

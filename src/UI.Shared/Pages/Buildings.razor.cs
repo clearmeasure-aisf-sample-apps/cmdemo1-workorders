@@ -8,10 +8,10 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 [Authorize]
 public partial class Buildings : AppComponentBase
 {
-    private BuildingRoomData[]? _data;
+    private BuildingSummary[]? _data;
 
     protected override async Task OnInitializedAsync()
     {
-        _data = await Bus.Send(new WorkOrderBuildingsAndRoomsQuery());
+        _data = await Bus.Send(new BuildingRoomSummaryQuery());
     }
 }
