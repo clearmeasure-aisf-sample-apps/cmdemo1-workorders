@@ -39,4 +39,22 @@ public class WorkOrderSearchResultRow
     public string? DueDateUrgencyText { get; init; }
     public DueDateUrgency Urgency { get; init; }
     public string StatusBadgeCssClass { get; init; } = string.Empty;
+
+    /// <summary>Number shown in the table, for example "WO-38173BA"; the stored number stays unprefixed.</summary>
+    public string DisplayNumber => "WO-" + Number;
+
+    /// <summary>Status pill text and style; "Overdue" for open work orders past their due date.</summary>
+    public StatusPill StatusPill => StatusPillPresenter.Present(WorkOrder, Urgency == DueDateUrgency.Overdue);
+
+    /// <summary>"priority--high", "priority--medium" or "priority--low".</summary>
+    public string PriorityCssClass => "priority--" + WorkOrder.Priority.ToString().ToLowerInvariant();
+
+    /// <summary>Initials of the assignee for the avatar.</summary>
+    public string AssigneeInitials => UserDisplay.Initials(Assignee);
+
+    /// <summary>One of six avatar colours, stable for a given assignee.</summary>
+    public string AvatarCssClass => "avatar--" + AvatarIndex(Assignee?.UserName);
+
+    private static int AvatarIndex(string? userName) =>
+        (userName ?? string.Empty).Aggregate(0, (hash, c) => (hash * 31 + c) % 6);
 }

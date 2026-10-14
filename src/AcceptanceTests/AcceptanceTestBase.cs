@@ -429,11 +429,7 @@ public abstract class AcceptanceTestBase
 
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var linkTestId = nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number;
-        await Page.GetByTestId(linkTestId).WaitForAsync(new LocatorWaitForOptions
-        {
-            State = WaitForSelectorState.Visible,
-            Timeout = 60_000
-        });
+        await WaitForWorkOrderLinkAsync(order.Number!, linkTestId);
         await Click(linkTestId);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
@@ -441,6 +437,25 @@ public abstract class AcceptanceTestBase
         await Expect(woNumberLocator).ToHaveTextAsync(order.Number!);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         return order;
+    }
+
+    /// <summary>
+    /// Waits for the work order's link on the search page. Results are paged (25 newest first, #251):
+    /// when parallel tests have pushed the row off page 1, search for its number instead.
+    /// </summary>
+    private async Task WaitForWorkOrderLinkAsync(string number, string linkTestId)
+    {
+        var link = Page.GetByTestId(linkTestId);
+        try
+        {
+            await link.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 20_000 });
+        }
+        catch (TimeoutException)
+        {
+            await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={Uri.EscapeDataString(number)}");
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await link.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60_000 });
+        }
     }
 
     protected async Task<WorkOrder> AssignExistingWorkOrder(WorkOrder order, string username)

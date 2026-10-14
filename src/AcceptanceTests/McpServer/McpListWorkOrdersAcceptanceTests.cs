@@ -243,12 +243,49 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
     private static string FormatSet(IEnumerable<string> numbers) =>
         string.Join(", ", numbers.OrderBy(number => number));
 
+    /// <summary>
+    /// Every work order number in the portal's filtered result, across all pages (25 rows each),
+    /// read from the link test ids (the link text carries a "WO-" display prefix). Ends on page 1.
+    /// </summary>
     private async Task<HashSet<string>> VisibleSearchNumbers()
     {
-        var workOrderLinks = Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']");
-        return (await workOrderLinks.AllTextContentsAsync())
-            .Select(number => number.Trim())
-            .ToHashSet();
+        var numbers = new HashSet<string>();
+        var next = Page.GetByTestId(nameof(WorkOrderSearch.Elements.PageNextButton));
+        numbers.UnionWith(await NumbersOnCurrentPage());
+        while (await next.IsEnabledAsync())
+        {
+            var firstLink = await FirstLinkTestId();
+            await next.ClickAsync();
+            await Expect(Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First)
+                .Not.ToHaveAttributeAsync("data-testid", firstLink!);
+            numbers.UnionWith(await NumbersOnCurrentPage());
+        }
+
+        var firstPage = Page.GetByTestId($"{WorkOrderSearch.Elements.PageButton}1");
+        if (await firstPage.GetAttributeAsync("aria-current") != "page")
+        {
+            await firstPage.ClickAsync();
+            await Expect(firstPage).ToHaveAttributeAsync("aria-current", "page");
+        }
+
+        return numbers;
+    }
+
+    private async Task<string?> FirstLinkTestId() =>
+        await Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First.GetAttributeAsync("data-testid");
+
+    private async Task<IEnumerable<string>> NumbersOnCurrentPage()
+    {
+        var links = Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']");
+        var prefixLength = nameof(WorkOrderSearch.Elements.WorkOrderLink).Length;
+        var numbers = new List<string>();
+        for (var index = 0; index < await links.CountAsync(); index++)
+        {
+            var testId = await links.Nth(index).GetAttributeAsync("data-testid");
+            numbers.Add(testId![prefixLength..]);
+        }
+
+        return numbers;
     }
 
     private async Task LoginAsTlovejoyAsync()

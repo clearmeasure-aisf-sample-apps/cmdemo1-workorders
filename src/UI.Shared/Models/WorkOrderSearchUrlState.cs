@@ -71,7 +71,7 @@ public sealed record WorkOrderSearchUrlState
             OpenOnly = Flag(values, nameof(OpenOnly)),
             CompletedWithinDays = ParseDays(Text(values, nameof(CompletedWithinDays))),
             Q = Text(values, nameof(Q)),
-            Sort = Text(values, nameof(Sort)),
+            Sort = ParseSort(Text(values, nameof(Sort))),
             Descending = string.Equals(Text(values, "Dir"), "desc", StringComparison.OrdinalIgnoreCase),
             Page = ParsePage(Text(values, nameof(Page)))
         };
@@ -148,6 +148,9 @@ public sealed record WorkOrderSearchUrlState
         int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var days) && days is >= 1 and <= 3650
             ? days
             : null;
+
+    private static string? ParseSort(string? value) =>
+        SortColumns.All.FirstOrDefault(column => string.Equals(column, value, StringComparison.OrdinalIgnoreCase));
 
     private static int ParsePage(string? value) =>
         int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var page) && page > 1 ? page : 1;

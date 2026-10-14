@@ -148,7 +148,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var workOrderRows = workOrderTable.Locator("tbody tr");
         var rowCount = await workOrderRows.CountAsync();
         rowCount.ShouldBeGreaterThanOrEqualTo(1);
-        await Expect(workOrderRows.First.Locator("td:nth-child(2)")).ToContainTextAsync(creator.GetFullName());
+        await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.ActiveFilterChip}Creator")).ToContainTextAsync(creator.GetFullName());
     }
 
     [Test, Retry(2)]
@@ -183,7 +183,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var workOrderRows = workOrderTable.Locator("tbody tr");
         var rowCount = await workOrderRows.CountAsync();
         rowCount.ShouldBeGreaterThanOrEqualTo(1);
-        await Expect(workOrderRows.First.Locator("td:nth-child(3)")).ToContainTextAsync(assignee.GetFullName());
+        await Expect(FirstRowCell(WorkOrderSearch.Elements.AssigneeCell)).ToContainTextAsync(assignee.GetFullName());
     }
 
     [Test, Retry(2)]
@@ -217,7 +217,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         var workOrderRows = workOrderTable.Locator("tbody tr");
         await Expect(workOrderRows).ToHaveCountAsync(await workOrderRows.CountAsync());
-        await Expect(workOrderRows.First.Locator("td:nth-child(4)")).ToContainTextAsync(status.FriendlyName);
+        await Expect(FirstRowCell(WorkOrderSearch.Elements.StatusCell)).ToContainTextAsync(status.FriendlyName);
     }
 
     [Test, Retry(2)]
@@ -287,8 +287,8 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable).ToBeVisibleAsync();
 
-        var firstWorkOrderLink = workOrderTable.Locator("tbody tr").First.Locator("td").First.Locator("a");
-        var workOrderNumber = await firstWorkOrderLink.TextContentAsync();
+        var firstWorkOrderLink = workOrderTable.Locator($"tbody tr [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
+        var workOrderNumber = (await firstWorkOrderLink.GetAttributeAsync("data-testid"))?[nameof(WorkOrderSearch.Elements.WorkOrderLink).Length..];
 
         if (!string.IsNullOrEmpty(workOrderNumber))
         {
@@ -509,7 +509,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(3, "SortedAscending");
 
         await Expect(statusSortBtn).ToHaveTextAsync("Status ▲");
-        var firstCell = Page.Locator(".grid-data tbody tr").First.Locator("td:nth-child(4)");
+        var firstCell = FirstRowCell(WorkOrderSearch.Elements.StatusCell);
         await Expect(firstCell).ToContainTextAsync(WorkOrderStatus.Assigned.FriendlyName);
 
         await statusSortBtn.ClickAsync();
@@ -549,7 +549,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(1, "SortedAscending");
 
         await Expect(titleSortBtn).ToHaveTextAsync("Title ▲");
-        var firstTitleCell = Page.Locator(".grid-data tbody tr").First.Locator("td:nth-child(5)");
+        var firstTitleCell = FirstRowCell(WorkOrderSearch.Elements.TitleCell);
         await Expect(firstTitleCell).ToContainTextAsync("Alpha");
 
         await titleSortBtn.ClickAsync();
@@ -589,7 +589,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(1, "SortedAscending");
 
         await Expect(roomSortBtn).ToHaveTextAsync("Room ▲");
-        var firstRoomCell = Page.Locator(".grid-data tbody tr").First.Locator("td:nth-child(7)");
+        var firstRoomCell = FirstRowCell(WorkOrderSearch.Elements.RoomCell);
         await Expect(firstRoomCell).ToContainTextAsync("Atrium");
 
         await roomSortBtn.ClickAsync();
@@ -709,7 +709,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(1, "ToggleChecked");
 
         // Navigate away to a work order detail and back
-        var workOrderLink = Page.Locator(".grid-data tbody tr").First.Locator("td").First.Locator("a");
+        var workOrderLink = Page.Locator($".grid-data tbody tr [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
         await workOrderLink.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(2, "WorkOrderDetail");
@@ -760,14 +760,14 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(3, "SortedAscending");
 
         await Expect(dueDateSortBtn).ToHaveTextAsync("Due Date ▲");
-        var firstRow = Page.Locator(".grid-data tbody tr").First;
-        await Expect(firstRow.Locator("td:nth-child(6)")).ToContainTextAsync("Jan");
+        var firstDueDate = FirstRowCell(WorkOrderSearch.Elements.DueDateCell);
+        await Expect(firstDueDate).ToContainTextAsync("Jan");
 
         await dueDateSortBtn.ClickAsync();
         await TakeScreenshotAsync(4, "SortedDescending");
 
         await Expect(dueDateSortBtn).ToHaveTextAsync("Due Date ▼");
-        await Expect(firstRow.Locator("td:nth-child(6)")).ToContainTextAsync("Dec");
+        await Expect(firstDueDate).ToContainTextAsync("Dec");
     }
 
     [Test, Retry(2)]
@@ -816,4 +816,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var onlyRow = tableRows.First;
         await Expect(onlyRow).ToHaveClassAsync(new Regex("overdue-row"));
     }
+
+    private ILocator FirstRowCell(WorkOrderSearch.Elements cell) =>
+        Page.Locator(".grid-data tbody tr").First.Locator($"[data-testid^='{cell}']");
 }

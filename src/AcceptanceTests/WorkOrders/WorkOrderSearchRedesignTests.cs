@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -93,13 +95,12 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(card.Locator(".summary-card-value")).ToHaveTextAsync("2");
 
         await card.ClickAsync();
+        await Page.WaitForURLAsync(new Regex("AssignedToMe=true&OpenOnly=true"));
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-        Page.Url.ShouldContain("AssignedToMe=true");
-        Page.Url.ShouldContain("OpenOnly=true");
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}")).ToBeCheckedAsync();
         await Expect(Chip("OpenOnly")).ToHaveTextAsync("Not closed");
         await Expect(Rows()).ToHaveCountAsync(2);
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill))).ToHaveTextAsync("2 of 2");
     }
 
     [Test, Retry(2)]
@@ -138,6 +139,143 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(Chip("Q")).ToHaveTextAsync($"Search: {order.Number}");
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number)).ToHaveCountAsync(1);
     }
+
+    [Test, Retry(2)]
+    public async Task ShouldBulkAssignSelectedDrafts()
+    {
+        var fixer = await SeedCreatorAsync("fixer");
+        var first = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
+        var second = await SeedOrderAsync(CurrentUser, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, CurrentUser.UserName);
+        await Expect(Rows()).ToHaveCountAsync(2);
+        await RowCheckbox(first).CheckAsync();
+        await RowCheckbox(second).CheckAsync();
+        await Expect(Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkSelectedCount))).ToHaveTextAsync("2 selected");
+
+        await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkAssignSelect)).SelectOptionAsync(fixer.UserName);
+        await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkAssignButton)).ClickAsync();
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BulkOutcome))).ToHaveTextAsync("2 updated, 0 skipped");
+        foreach (var order in new[] { first, second })
+        {
+            await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.StatusCell}{order.Number}").Locator(".status-badge"))
+                .ToHaveTextAsync(WorkOrderStatus.Assigned.FriendlyName);
+            await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.AssigneeCell}{order.Number}")).ToContainTextAsync(fixer.GetFullName());
+            var saved = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
+            saved!.Status.ShouldBe(WorkOrderStatus.Assigned);
+            saved.Assignee!.UserName.ShouldBe(fixer.UserName);
+        }
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldBulkChangeStatus_AndReportSkipped()
+    {
+        var assignee = await SeedCreatorAsync("worker");
+        var assignedOne = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Medium, WorkOrderStatus.Assigned, null, assignee);
+        var assignedTwo = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Medium, WorkOrderStatus.Assigned, null, assignee);
+        var draft = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Low, WorkOrderStatus.Draft, null);
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, CurrentUser.UserName);
+        await Expect(Rows()).ToHaveCountAsync(3);
+        await Page.Locator($"#{WorkOrderSearch.Elements.SelectAllCheckbox}").CheckAsync();
+        await Expect(Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkSelectedCount))).ToHaveTextAsync("3 selected");
+
+        await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkChangeStatusSelect)).SelectOptionAsync("Cancel");
+        await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkChangeStatusButton)).ClickAsync();
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BulkOutcome))).ToHaveTextAsync("2 updated, 1 skipped");
+        (await Bus.Send(new WorkOrderByNumberQuery(assignedOne.Number!)))!.Status.ShouldBe(WorkOrderStatus.Cancelled);
+        (await Bus.Send(new WorkOrderByNumberQuery(assignedTwo.Number!)))!.Status.ShouldBe(WorkOrderStatus.Cancelled);
+        (await Bus.Send(new WorkOrderByNumberQuery(draft.Number!)))!.Status.ShouldBe(WorkOrderStatus.Draft);
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldPageThroughResults()
+    {
+        var creator = await SeedCreatorAsync("pages");
+        for (var i = 0; i < 30; i++)
+        {
+            await SeedOrderAsync(creator, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
+        }
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
+        var pill = Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill));
+        await Expect(pill).ToHaveTextAsync("25 of 30");
+        await Expect(Rows()).ToHaveCountAsync(25);
+
+        await Page.GetByTestId(nameof(WorkOrderSearch.Elements.PageNextButton)).ClickAsync();
+
+        await Expect(pill).ToHaveTextAsync("5 of 30");
+        await Expect(Rows()).ToHaveCountAsync(5);
+        await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.PageButton}2")).ToHaveAttributeAsync("aria-current", "page");
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsRangeText))).ToContainTextAsync("Showing 26–30 of 30 work orders");
+        await Page.WaitForURLAsync(new Regex("Page=2"));
+
+        await Page.GetByTestId(nameof(WorkOrderSearch.Elements.PagePrevButton)).ClickAsync();
+        await Expect(pill).ToHaveTextAsync("25 of 30");
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldSortByPriority_WhenHeaderClicked()
+    {
+        var creator = await SeedCreatorAsync("prio");
+        await SeedOrderAsync(creator, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
+        await SeedOrderAsync(creator, WorkOrderPriority.Low, WorkOrderStatus.Draft, null);
+        await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
+        var sort = Page.Locator($"#{WorkOrderSearch.Elements.SortByPriorityButton}");
+        var firstPriority = Rows().First.Locator($"[data-testid^='{WorkOrderSearch.Elements.PriorityCell}']");
+
+        await sort.ClickAsync();
+        await Expect(sort).ToHaveTextAsync("Priority ▲");
+        await Expect(firstPriority).ToHaveTextAsync("Low");
+        await Expect(Page.Locator("th[aria-sort='ascending']")).ToHaveCountAsync(1);
+
+        await sort.ClickAsync();
+        await Expect(sort).ToHaveTextAsync("Priority ▼");
+        await Expect(firstPriority).ToHaveTextAsync("High");
+        await Page.WaitForURLAsync(new Regex("Sort=Priority&Dir=desc"));
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldShowStatusPillColours()
+    {
+        var creator = await SeedCreatorAsync("pills");
+        var expected = new Dictionary<WorkOrderStatus, (string Color, string Background)>
+        {
+            [WorkOrderStatus.Assigned] = ("rgb(29, 78, 216)", "rgb(219, 234, 254)"),
+            [WorkOrderStatus.InProgress] = ("rgb(180, 83, 9)", "rgb(254, 243, 199)"),
+            [WorkOrderStatus.Draft] = ("rgb(71, 85, 105)", "rgb(241, 245, 249)"),
+            [WorkOrderStatus.Complete] = ("rgb(4, 120, 87)", "rgb(209, 250, 229)")
+        };
+        var orders = new Dictionary<WorkOrderStatus, WorkOrder>();
+        foreach (var status in expected.Keys)
+        {
+            orders[status] = await SeedOrderAsync(creator, WorkOrderPriority.Medium, status, null);
+        }
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
+
+        foreach (var (status, colours) in expected)
+        {
+            var pill = Page.GetByTestId($"{WorkOrderSearch.Elements.StatusCell}{orders[status].Number}").Locator(".status-badge");
+            await Expect(pill).ToHaveTextAsync(status.FriendlyName);
+            (await pill.EvaluateAsync<string>("e => getComputedStyle(e).color")).ShouldBe(colours.Color);
+            (await pill.EvaluateAsync<string>("e => getComputedStyle(e).backgroundColor")).ShouldBe(colours.Background);
+        }
+    }
+
+    private ILocator RowCheckbox(WorkOrder order) =>
+        Page.GetByTestId($"{WorkOrderSearch.Elements.RowCheckbox}{order.Number}");
 
     private ILocator Rows() => Page.Locator(".grid-data tbody tr");
 

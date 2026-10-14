@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 
@@ -17,9 +18,14 @@ public partial class WorkOrderSearch : AppComponentBase
 {
     private static readonly string[] PriorityOptions = Enum.GetNames<WorkOrderPriority>();
 
-    private string? _sortColumn;
-    private bool _sortAscending = true;
     private bool _assignedToMe;
+    private Employee? _currentUser;
+    private WorkOrderSearchResultRow[] _rawResults = [];
+    private readonly WorkOrderRowSelection _selection = new();
+    private string? _openRowMenu;
+    private string? _bulkOutcome;
+    private ElementReference _selectAllCheckbox;
+    private IJSObjectReference? _exportModule;
     private bool _canCreate;
     private bool _savedViewsOpen;
     private ElementReference _savedViewsButton;
@@ -33,6 +39,8 @@ public partial class WorkOrderSearch : AppComponentBase
     [Inject] private WorkOrderSearchState SearchState { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Inject] private IUserSession UserSession { get; set; } = null!;
+    [Inject] private WorkOrderBulkActionService BulkActions { get; set; } = null!;
+    [Inject] private IJSRuntime Js { get; set; } = null!;
 
     [SupplyParameterFromQuery] public string? Creator { get; set; }
     [SupplyParameterFromQuery] public string? Assignee { get; set; }
@@ -69,7 +77,8 @@ public partial class WorkOrderSearch : AppComponentBase
         UserOptions = employees.Select(e => new SelectListItem(e.UserName, e.GetFullName())).ToList();
         BuildingOptions = (await Bus.Send(new WorkOrderBuildingsQuery())).ToList();
         _currentUserName = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity?.Name;
-        _canCreate = (await UserSession.GetCurrentUserAsync())?.CanCreateWorkOrder() == true;
+        _currentUser = await UserSession.GetCurrentUserAsync();
+        _canCreate = _currentUser?.CanCreateWorkOrder() == true;
         await LoadSummaryAsync();
     }
 
@@ -112,6 +121,8 @@ public partial class WorkOrderSearch : AppComponentBase
     private async Task ApplyStateAsync(WorkOrderSearchUrlState state)
     {
         _state = state;
+        _selection.Clear();
+        _openRowMenu = null;
         _assignedToMe = state.AssignedToMe;
         Model.Filters.Creator = state.Creator;
         Model.Filters.Assignee = state.AssignedToMe ? _currentUserName : state.Assignee;
@@ -190,8 +201,8 @@ public partial class WorkOrderSearch : AppComponentBase
     private async Task SearchWorkOrders()
     {
         var workOrders = await Bus.Send(await BuildSpecificationAsync());
-        Model.Results = workOrders.Select(MapSearchRow).ToArray();
-        ApplySort();
+        _rawResults = workOrders.Select(MapSearchRow).ToArray();
+        Model.Results = WorkOrderSearchSorter.Sort(_rawResults, _state.Sort, _state.Descending);
         StateHasChanged();
     }
 
@@ -213,57 +224,145 @@ public partial class WorkOrderSearch : AppComponentBase
     private async Task<Employee?> FindEmployeeAsync(string? userName) =>
         string.IsNullOrWhiteSpace(userName) ? null : await Bus.Send(new EmployeeByUserNameQuery(userName));
 
-    private void SortBy(string column)
+    private SearchResultPage CurrentPage => WorkOrderSearchPager.GetPage(Model.Results, _state.Page);
+
+    private string[] PageNumbers => CurrentPage.Rows.Select(r => r.Number).ToArray();
+
+    private IReadOnlyList<string> BulkStatusOptions => _currentUser == null
+        ? []
+        : WorkOrderBulkActionService.ChangeStatusOptions(SelectedRows.Select(r => r.WorkOrder), _currentUser);
+
+    private IEnumerable<WorkOrderSearchResultRow> SelectedRows => Model.Results.Where(r => _selection.IsSelected(r.Number));
+
+    private static readonly (string Value, string Text)[] SortOptions = BuildSortOptions();
+
+    private string SortValue => _state.Sort == null ? string.Empty : $"{_state.Sort}:{(_state.Descending ? "desc" : "asc")}";
+
+    private static (string Value, string Text)[] BuildSortOptions()
     {
-        if (column == _sortColumn)
-            _sortAscending = !_sortAscending;
-        else
+        var labels = new Dictionary<string, string>
         {
-            _sortColumn = column;
-            _sortAscending = true;
+            [SortColumns.Number] = "Work order", [SortColumns.Title] = "Title", [SortColumns.Status] = "Status",
+            [SortColumns.Priority] = "Priority", [SortColumns.Assignee] = "Assignee", [SortColumns.Room] = "Room",
+            [SortColumns.DueDate] = "Due date"
+        };
+        var options = new List<(string, string)> { (string.Empty, "Sort: Newest") };
+        foreach (var column in SortColumns.All)
+        {
+            options.Add(($"{column}:asc", $"Sort: {labels[column]} ↑"));
+            options.Add(($"{column}:desc", $"Sort: {labels[column]} ↓"));
         }
 
-        ApplySort();
-        StateHasChanged();
+        return options.ToArray();
     }
 
-    private void ApplySort()
+    /// <summary>Applies a sort or page change without a new search and records it in the URL.</summary>
+    private void CommitView(WorkOrderSearchUrlState state)
     {
-        if (_sortColumn == null) return;
-        if (_sortColumn == "Status") ApplySortByStatus();
-        else if (_sortColumn == "DueDate") ApplySortByDueDate();
-        else if (_sortColumn == "Title") ApplySortByTitle();
-        else if (_sortColumn == "Room") ApplySortByRoom();
+        _state = state;
+        _lastUrlState = state;
+        _selection.Clear();
+        _openRowMenu = null;
+        Model.Results = WorkOrderSearchSorter.Sort(_rawResults, state.Sort, state.Descending);
+        Navigation.NavigateTo(state.ToRelativeUri(), replace: true);
     }
 
-    private void ApplySortByStatus()
+    private void HandleSortBy(string column) =>
+        CommitView(_state with { Sort = column, Descending = _state.Sort == column && !_state.Descending, Page = 1 });
+
+    private void HandleSortSelected(ChangeEventArgs e)
     {
-        Model.Results = _sortAscending
-            ? Model.Results.OrderBy(r => r.Status.FriendlyName).ToArray()
-            : Model.Results.OrderByDescending(r => r.Status.FriendlyName).ToArray();
+        var (column, descending) = WorkOrderSearchSorter.ParseOption(e.Value?.ToString());
+        CommitView(_state with { Sort = column, Descending = descending, Page = 1 });
     }
 
-    private void ApplySortByDueDate()
+    private void HandlePageSelected(int page) => CommitView(_state with { Page = page });
+
+    private string AriaSort(string column) =>
+        _state.Sort != column ? "none" : _state.Descending ? "descending" : "ascending";
+
+    private string RowClass(WorkOrderSearchResultRow row)
     {
-        Model.Results = _sortAscending
-            ? Model.Results.OrderBy(r => r.WorkOrder.DueDate.HasValue ? 0 : 1)
-                           .ThenBy(r => r.WorkOrder.DueDate).ToArray()
-            : Model.Results.OrderBy(r => r.WorkOrder.DueDate.HasValue ? 0 : 1)
-                           .ThenByDescending(r => r.WorkOrder.DueDate).ToArray();
+        var classes = new List<string>();
+        AddClassIf(classes, row.WorkOrder.IsOverdue(), "overdue-row");
+        AddClassIf(classes, _selection.IsSelected(row.Number), "row-selected");
+        return string.Join(" ", classes);
     }
 
-    private void ApplySortByTitle()
+    private static void AddClassIf(List<string> classes, bool condition, string cssClass)
     {
-        Model.Results = _sortAscending
-            ? Model.Results.OrderBy(r => r.Title, StringComparer.CurrentCultureIgnoreCase).ToArray()
-            : Model.Results.OrderByDescending(r => r.Title, StringComparer.CurrentCultureIgnoreCase).ToArray();
+        if (condition)
+        {
+            classes.Add(cssClass);
+        }
     }
 
-    private void ApplySortByRoom()
+    private void HandleRowToggled(string number) => _selection.Toggle(number);
+
+    private void HandleSelectAllChanged() => _selection.TogglePage(PageNumbers);
+
+    private void HandleClearSelection() => _selection.Clear();
+
+    private void ToggleRowMenu(string number) => _openRowMenu = _openRowMenu == number ? null : number;
+
+    private void HandleRowMenuKeyDown(KeyboardEventArgs e)
     {
-        Model.Results = _sortAscending
-            ? Model.Results.OrderBy(r => r.WorkOrder.RoomNumber, StringComparer.CurrentCultureIgnoreCase).ToArray()
-            : Model.Results.OrderByDescending(r => r.WorkOrder.RoomNumber, StringComparer.CurrentCultureIgnoreCase).ToArray();
+        if (e.Key == "Escape")
+        {
+            _openRowMenu = null;
+        }
+    }
+
+    private async Task HandleBulkAssign(string assigneeUserName)
+    {
+        var outcome = await BulkActions.AssignAsync(_selection.Numbers.ToArray(), assigneeUserName, _currentUser!);
+        await AfterBulkActionAsync(outcome);
+    }
+
+    private async Task HandleBulkChangeStatus(string verb)
+    {
+        var outcome = await BulkActions.ChangeStatusAsync(_selection.Numbers.ToArray(), verb, _currentUser!);
+        await AfterBulkActionAsync(outcome);
+    }
+
+    private async Task AfterBulkActionAsync(BulkActionOutcome outcome)
+    {
+        _bulkOutcome = outcome.Text;
+        _selection.Clear();
+        await SearchWorkOrders();
+        await LoadSummaryAsync();
+    }
+
+    private Task ExportAllAsync() => DownloadCsvAsync(Model.Results);
+
+    private Task ExportSelectedAsync() => DownloadCsvAsync(SelectedRows);
+
+    private async Task DownloadCsvAsync(IEnumerable<WorkOrderSearchResultRow> rows)
+    {
+        var module = await ExportModuleAsync();
+        await module.InvokeVoidAsync("downloadCsv",
+            WorkOrderCsvExporter.FileName(ChurchTimeZone.Today(Clock)), WorkOrderCsvExporter.ToCsv(rows));
+    }
+
+    private async Task<IJSObjectReference> ExportModuleAsync() =>
+        _exportModule ??= await Js.InvokeAsync<IJSObjectReference>("import",
+            "./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Model.Results.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            var module = await ExportModuleAsync();
+            await module.InvokeVoidAsync("setIndeterminate", _selectAllCheckbox, _selection.IsIndeterminate(PageNumbers));
+        }
+        catch (JSDisconnectedException)
+        {
+        }
     }
 
     private WorkOrderSearchResultRow MapSearchRow(WorkOrder workOrder)
