@@ -428,21 +428,20 @@ Function Get-ShardTestFilter {
 		return ""
 	}
 
+	# Shard 1: App and AIAgents namespaces
+	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents."
+
+	# Shard 2: McpServer, Api, Extensions, NServiceBus, plus specific WorkOrder classes
+	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|(FullyQualifiedName~WorkOrderAssignTests|FullyQualifiedName~WorkOrderBeginTests|FullyQualifiedName~WorkOrderCancelTests|FullyQualifiedName~WorkOrderCompleteTests|FullyQualifiedName~WorkOrderAttachmentTests|FullyQualifiedName~WorkOrderDueDateTests)"
+
+	# Shard 3: TRUE COMPLEMENT - Everything NOT in Shard 1 or 2
+	$shard1Or2 = "($shard1Filter|$shard2Filter)"
+	$shard3Filter = "!($shard1Or2)"
+
 	switch ($ShardNumber) {
-		1 {
-			# Shard 1: App (10 classes, 49 tests) + AIAgents (3 classes, 6 tests) = 55 tests
-			return "Namespace==ClearMeasure.Bootcamp.AcceptanceTests.App|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.AIAgents"
-		}
-		2 {
-			# Shard 2: McpServer (10 classes, 36 tests) + Api (5 classes, 13 tests) + Extensions (1 class, 6 tests)
-			# + NServiceBus (1 class, 2 tests) + 6 WorkOrders classes (12 tests) = 69 tests
-			return "Namespace==ClearMeasure.Bootcamp.AcceptanceTests.McpServer|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Api|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Extensions|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus|(FullyQualifiedName~WorkOrderAssignTests|FullyQualifiedName~WorkOrderBeginTests|FullyQualifiedName~WorkOrderCancelTests|FullyQualifiedName~WorkOrderCompleteTests|FullyQualifiedName~WorkOrderAttachmentTests|FullyQualifiedName~WorkOrderDueDateTests)"
-		}
-		3 {
-			# Shard 3: COMPLEMENT - Everything NOT in Shard 1 or 2
-			# WorkOrders remaining (10 classes, 50 tests) + Authentication (2 classes, 26 tests) = 76 tests
-			return "(Namespace==ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Authentication)&(FullyQualifiedName!~WorkOrderAssignTests&FullyQualifiedName!~WorkOrderBeginTests&FullyQualifiedName!~WorkOrderCancelTests&FullyQualifiedName!~WorkOrderCompleteTests&FullyQualifiedName!~WorkOrderAttachmentTests&FullyQualifiedName!~WorkOrderDueDateTests)"
-		}
+		1 { return $shard1Filter }
+		2 { return $shard2Filter }
+		3 { return $shard3Filter }
 		default {
 			throw "Invalid shard number: $ShardNumber"
 		}
