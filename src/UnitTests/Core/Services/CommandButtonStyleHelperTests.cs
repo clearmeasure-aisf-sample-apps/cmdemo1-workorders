@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;
 
 public class CommandButtonStyleHelperTests
 {
-    private static readonly string[] AllValidCommandNames = { "Save", "Assign", "Begin", "Complete", "Cancel", "Reassign" };
+    private static readonly string[] AllValidCommandNames = ["Save", "Assign", "Begin", "Complete", "Cancel", "Reassign"];
 
     [Test]
     public void GetButtonStyle_SaveCommand_ReturnsBtnOutlineSecondary()
@@ -35,7 +35,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_AssignCommandWhenValid_ReturnsBtnPrimary()
     {
-        var validCommands = new[] { "Save", "Assign", "Cancel" };
+        string[] validCommands = ["Save", "Assign", "Cancel"];
 
         var style = CommandButtonStyleHelper.GetButtonStyle("Assign", validCommands);
 
@@ -45,7 +45,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_AssignCommandWhenNotValid_ReturnsBtnOutlineSecondary()
     {
-        var validCommands = new[] { "Save", "Begin" };
+        string[] validCommands = ["Save", "Begin"];
 
         var style = CommandButtonStyleHelper.GetButtonStyle("Assign", validCommands);
 
@@ -55,7 +55,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_BeginCommandWhenValid_ReturnsBtnPrimary()
     {
-        var validCommands = new[] { "Save", "Begin", "Reassign", "Cancel" };
+        string[] validCommands = ["Save", "Begin", "Reassign", "Cancel"];
 
         var style = CommandButtonStyleHelper.GetButtonStyle("Begin", validCommands);
 
@@ -65,7 +65,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_BeginCommandWhenNotValid_ReturnsBtnOutlineSecondary()
     {
-        var validCommands = new[] { "Save", "Assign", "Cancel" };
+        string[] validCommands = ["Save", "Assign", "Cancel"];
 
         var style = CommandButtonStyleHelper.GetButtonStyle("Begin", validCommands);
 
@@ -75,7 +75,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_CompleteCommandWhenValid_ReturnsBtnPrimary()
     {
-        var validCommands = new[] { "Save", "Complete", "Reassign", "Cancel" };
+        string[] validCommands = ["Save", "Complete", "Reassign", "Cancel"];
 
         var style = CommandButtonStyleHelper.GetButtonStyle("Complete", validCommands);
 
@@ -85,7 +85,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_CompleteCommandWhenNotValid_ReturnsBtnOutlineSecondary()
     {
-        var validCommands = new[] { "Save", "Begin", "Cancel" };
+        string[] validCommands = ["Save", "Begin", "Cancel"];
 
         var style = CommandButtonStyleHelper.GetButtonStyle("Complete", validCommands);
 
@@ -95,7 +95,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_DraftState_AssignIsPrimary()
     {
-        var draftStateCommands = new[] { "Save", "Assign", "Cancel" };
+        string[] draftStateCommands = ["Save", "Assign", "Cancel"];
 
         var saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", draftStateCommands);
         var assignStyle = CommandButtonStyleHelper.GetButtonStyle("Assign", draftStateCommands);
@@ -109,7 +109,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_AssignedState_BeginIsPrimary()
     {
-        var assignedStateCommands = new[] { "Save", "Begin", "Reassign", "Cancel" };
+        string[] assignedStateCommands = ["Save", "Begin", "Reassign", "Cancel"];
 
         var saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", assignedStateCommands);
         var beginStyle = CommandButtonStyleHelper.GetButtonStyle("Begin", assignedStateCommands);
@@ -125,7 +125,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_InProgressState_CompleteIsPrimary()
     {
-        var inProgressStateCommands = new[] { "Save", "Complete", "Reassign" };
+        string[] inProgressStateCommands = ["Save", "Complete", "Reassign"];
 
         var saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", inProgressStateCommands);
         var completeStyle = CommandButtonStyleHelper.GetButtonStyle("Complete", inProgressStateCommands);
@@ -139,12 +139,12 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_OnlyOnePrimaryButtonPerState()
     {
-        var states = new[]
-        {
-            new[] { "Save", "Assign", "Cancel" },
-            new[] { "Save", "Begin", "Reassign", "Cancel" },
-            new[] { "Save", "Complete", "Reassign" }
-        };
+        string[][] states =
+        [
+            ["Save", "Assign", "Cancel"],
+            ["Save", "Begin", "Reassign", "Cancel"],
+            ["Save", "Complete", "Reassign"]
+        ];
 
         foreach (var stateCommands in states)
         {

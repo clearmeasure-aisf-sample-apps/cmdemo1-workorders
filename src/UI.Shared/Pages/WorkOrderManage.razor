@@ -168,7 +168,7 @@
                     @foreach (var command in SortedValidCommands)
                     {
                         var buttonTestId = Elements.CommandButton + command.TransitionVerbPresentTense;
-                        var buttonStyle = CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, ValidCommands.Select(c => c.TransitionVerbPresentTense));
+                        var buttonStyle = CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, ValidCommandNames);
                         var buttonClass = "btn " + buttonStyle;
                         <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLower()}")" type="submit" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
                             @command.TransitionVerbPresentTense

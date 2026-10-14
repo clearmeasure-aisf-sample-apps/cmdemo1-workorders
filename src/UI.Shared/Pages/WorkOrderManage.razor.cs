@@ -49,16 +49,25 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private List<SelectListItem> UserOptions { get; set; } = new();
     private IEnumerable<IStateCommand> ValidCommands { get; set; } = new List<IStateCommand>();
     private string? SelectedCommand { get; set; }
+    private List<string>? _validCommandNames;
+
+    private List<string> ValidCommandNames
+    {
+        get
+        {
+            _validCommandNames ??= ValidCommands.Select(c => c.TransitionVerbPresentTense).ToList();
+            return _validCommandNames;
+        }
+    }
 
     private IEnumerable<IStateCommand> SortedValidCommands
     {
         get
         {
-            var commandNames = ValidCommands.Select(c => c.TransitionVerbPresentTense).ToList();
             return ValidCommands
                 .OrderBy(c =>
                 {
-                    var style = CommandButtonStyleHelper.GetButtonStyle(c.TransitionVerbPresentTense, commandNames);
+                    var style = CommandButtonStyleHelper.GetButtonStyle(c.TransitionVerbPresentTense, ValidCommandNames);
                     // Sort order: secondary first (0), danger (1), primary last (2)
                     return style switch
                     {
@@ -129,6 +138,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         var commandList = new StateCommandList();
         Model.IsReadOnly = !commandList.GetValidStateCommands(workOrder, currentUser).Any();
         ValidCommands = commandList.GetValidStateCommands(workOrder, currentUser);
+        _validCommandNames = null;  // Reset cache when commands change
         _workOrder = workOrder;
 
         if (workOrder.Id != Guid.Empty)
