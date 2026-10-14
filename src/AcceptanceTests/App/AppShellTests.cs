@@ -26,7 +26,7 @@ public class AppShellTests : AcceptanceTestBase
         background.ShouldContain("rgb(17, 26, 46)");
         await Expect(Page.Locator("h2.nav-section")).ToHaveTextAsync(["Workspace", "My Queue", "Administration"]);
         await Expect(rail.GetByText("Menu", new() { Exact = true })).ToHaveCountAsync(0);
-        await Expect(Page.GetByTestId(nameof(MainLayout.Elements.BrandSubtitle))).ToHaveTextAsync("Springfield · Facilities");
+        await Expect(Page.GetByTestId(nameof(MainLayout.Elements.BrandSubtitle))).ToHaveTextAsync("Kalahari Church · Facilities");
     }
 
     [Test, Retry(2)]
