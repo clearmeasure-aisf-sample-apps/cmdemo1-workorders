@@ -417,10 +417,10 @@ Function AcceptanceTests {
 Function Get-ShardTestFilter {
 	param (
 		[Parameter(Mandatory = $true)]
-		[ValidateRange(0, 3)]
+		[ValidateRange(0, 4)]
 		[int]$ShardNumber,
 		[Parameter(Mandatory = $false)]
-		[int]$ShardCount = 3
+		[int]$ShardCount = 4
 	)
 
 	if ($ShardNumber -eq 0) {
@@ -428,21 +428,28 @@ Function Get-ShardTestFilter {
 		return ""
 	}
 
-	# REBALANCED SHARDING (measured counts from 189 total tests as of this change):
-	# Shard 1: App, AIAgents, Extensions, NServiceBus, Api, WorkOrderDueDateTests, WorkOrderDictationTests, WorkOrderSaveDraftTests = 81 tests (the shard that finished fastest)
-	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests"
+	# FOUR-WAY SHARDING (189 tests total; split by test class, NonParallelizable fixtures stay whole in one shard).
+	# Estimated test time uses measured x64 cost per test (App/AIAgents/Extensions/NServiceBus/Api/DueDate/Dictation/SaveDraft
+	# ~4.6 s, Authentication+McpServer ~6.6 s, other WorkOrders ~7 s); these figures already include fixture start, so each
+	# shard is estimated at about 4.6-4.7 min wall time (about 280 s) plus job overhead.
+	# Shard 1: WorkOrderSearchTests (22), WorkOrderSearchRedesignTests (13), WorkOrderSpeechTests (5) = 40 tests (~280 s)
+	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchRedesignTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSpeechTests"
 
-	# Shard 2: Authentication, McpServer = 51 tests
-	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer."
+	# Shard 2: Authentication (25) + McpServer Http/Save/Server/ServerLlm/ChatConversation (16) = 41 tests (~271 s)
+	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpHttpServerAcceptanceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpSaveWorkOrderAcceptanceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerAcceptanceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerLlmAcceptanceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpChatConversationTests"
 
-	# Shard 3: EXPLICIT EXCLUSION CHAIN - Remaining WorkOrders classes = 57 tests
-	# Excludes all namespaces/classes in Shards 1 and 2
-	$shard3Filter = "FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Api.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests"
+	# Shard 3: App (46, includes NonParallelizable NeedsRebootHealthCheckTests) + McpServer CreateInstructions/GetInstructions/ListWorkOrders/LifecycleLlm/Lifecycle (10; ListWorkOrders and Lifecycle are NonParallelizable) = 56 tests (~278 s)
+	$shard3Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpCreateWorkOrderInstructionsAcceptanceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpGetWorkOrderInstructionsAcceptanceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpListWorkOrdersAcceptanceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleLlmTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleTests"
+
+	# Shard 4: EXPLICIT EXCLUSION CHAIN - everything not in Shards 1-3 = 52 tests (~280 s):
+	# AIAgents (4), Api (8), Extensions (5), NServiceBus (1), WorkOrderDueDate/Dictation/SaveDraft (17) and the remaining WorkOrders classes (17)
+	$shard4Filter = "FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchRedesignTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSpeechTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpHttpServerAcceptanceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpSaveWorkOrderAcceptanceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerAcceptanceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerLlmAcceptanceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpChatConversationTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpCreateWorkOrderInstructionsAcceptanceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpGetWorkOrderInstructionsAcceptanceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpListWorkOrdersAcceptanceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleLlmTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleTests"
 
 	switch ($ShardNumber) {
 		1 { return $shard1Filter }
 		2 { return $shard2Filter }
 		3 { return $shard3Filter }
+		4 { return $shard4Filter }
 		default {
 			throw "Invalid shard number: $ShardNumber"
 		}
@@ -460,11 +467,11 @@ Function Invoke-AcceptanceTests {
 		[switch]$UseSqlite,
 
 		[Parameter(Mandatory = $false)]
-		[ValidateRange(0, 3)]
+		[ValidateRange(0, 4)]
 		[int]$ShardNumber = 0,
 
 		[Parameter(Mandatory = $false)]
-		[int]$ShardCount = 3
+		[int]$ShardCount = 4
 	)
 
 	$projectConfig = "Release"
