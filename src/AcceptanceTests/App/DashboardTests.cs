@@ -69,9 +69,10 @@ public class DashboardTests : AcceptanceTestBase
         var order = await SeedOrderAsync(creator, WorkOrderStatus.Complete, CurrentUser, DateTime.UtcNow);
 
         await OpenDashboardAsync();
-        var first = Page.Locator($"[data-testid^='{nameof(IndexPage.Elements.RecentActivityItem)}']").First;
-        await Expect(first).ToHaveAttributeAsync("data-testid", nameof(IndexPage.Elements.RecentActivityItem) + order.Number);
-        await Expect(first.Locator(".activity-meta")).ToContainTextAsync("Completed");
+        var item = Page.GetByTestId(nameof(IndexPage.Elements.RecentActivity))
+            .GetByTestId(nameof(IndexPage.Elements.RecentActivityItem) + order.Number);
+        await Expect(item).ToBeVisibleAsync();
+        await Expect(item.Locator(".activity-meta")).ToContainTextAsync("Completed");
 
         await Page.GetByTestId(nameof(IndexPage.Elements.RecentActivityLink) + order.Number).ClickAsync();
         await Page.WaitForURLAsync($"**/workorder/manage/{order.Number}?mode=Edit");
