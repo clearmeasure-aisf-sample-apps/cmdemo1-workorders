@@ -56,7 +56,7 @@ public static class WorkOrderFilterChips
     private static void AddPeople(List<FilterChip> chips, WorkOrderSearchUrlState state, Func<string, string> employeeName)
     {
         AddIf(chips, state.Creator != null, FilterChipKey.Creator, () => $"Creator: {employeeName(state.Creator!)}");
-        AddIf(chips, state.Assignee != null && !state.AssignedToMe, FilterChipKey.Assignee,
+        AddIf(chips, state is { Assignee: not null, AssignedToMe: false }, FilterChipKey.Assignee,
             () => $"Assignee: {employeeName(state.Assignee!)}");
     }
 

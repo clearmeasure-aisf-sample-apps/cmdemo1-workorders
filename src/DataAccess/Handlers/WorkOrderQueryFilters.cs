@@ -27,11 +27,6 @@ internal static class WorkOrderQueryFilters
 
     public static IQueryable<WorkOrder> Apply(
         IQueryable<WorkOrder> query,
-        WorkOrderSpecificationQuery specification) =>
-        Apply(query, specification, TimeProvider.System);
-
-    public static IQueryable<WorkOrder> Apply(
-        IQueryable<WorkOrder> query,
         WorkOrderSpecificationQuery specification,
         TimeProvider time)
     {

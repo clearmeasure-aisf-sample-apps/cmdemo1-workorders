@@ -123,12 +123,12 @@
             </div>
             <div class="filter-switches">
                 <label class="switch" for="@Elements.AssignedToMeCheckbox">
-                    <input type="checkbox" role="switch" id="@Elements.AssignedToMeCheckbox" class="switch-input"
+                    <input type="checkbox" role="@SwitchRole" id="@Elements.AssignedToMeCheckbox" class="switch-input"
                            @bind="_assignedToMe" @bind:after="HandleAssignedToMeChanged"/>
                     <span class="switch-label">Assigned to me</span>
                 </label>
                 <label class="switch" for="@Elements.OverdueOnlyToggle">
-                    <input type="checkbox" role="switch" id="@Elements.OverdueOnlyToggle" class="switch-input"
+                    <input type="checkbox" role="@SwitchRole" id="@Elements.OverdueOnlyToggle" class="switch-input"
                            @bind="Model.Filters.OverdueOnly" @bind:after="HandleFiltersChanged"/>
                     <span class="switch-label">Overdue only</span>
                 </label>
@@ -365,6 +365,9 @@
         SavedViewsButton,
         NewWorkOrderButton
     }
+
+    // ARIA 1.1 role; bound from a constant because the HTML inspector does not know the value.
+    private const string SwitchRole = "switch";
 
     public WorkOrderSearchModel Model { get; set; } = new();
 

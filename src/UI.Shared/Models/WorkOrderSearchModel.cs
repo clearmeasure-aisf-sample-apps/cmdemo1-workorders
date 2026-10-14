@@ -38,7 +38,6 @@ public class WorkOrderSearchResultRow
     public string DueDateCssClass { get; init; } = string.Empty;
     public string? DueDateUrgencyText { get; init; }
     public DueDateUrgency Urgency { get; init; }
-    public string StatusBadgeCssClass { get; init; } = string.Empty;
 
     /// <summary>Number shown in the table, for example "WO-38173BA"; the stored number stays unprefixed.</summary>
     public string DisplayNumber => "WO-" + Number;
