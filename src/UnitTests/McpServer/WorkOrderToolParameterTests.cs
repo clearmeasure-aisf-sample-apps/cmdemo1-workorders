@@ -93,10 +93,10 @@ public class WorkOrderToolParameterTests
     {
         var (_, error) = WorkOrderTools.ParseAndValidatePriority("Urgent");
 
-        error.ShouldContain("Invalid priority");
-        error.ShouldContain("Low");
-        error.ShouldContain("Medium");
-        error.ShouldContain("High");
+        error!.ShouldContain("Invalid priority");
+        error!.ShouldContain("Low");
+        error!.ShouldContain("Medium");
+        error!.ShouldContain("High");
     }
 
     [Test]
@@ -104,7 +104,7 @@ public class WorkOrderToolParameterTests
     {
         var (_, error) = WorkOrderTools.ParseAndValidatePriority("2");
 
-        error.ShouldContain("Invalid priority");
+        error!.ShouldContain("Invalid priority");
     }
 
     [Test]
@@ -168,8 +168,8 @@ public class WorkOrderToolParameterTests
         var tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
         var (_, error) = WorkOrderTools.ValidateBuilding(tooLong);
 
-        error.ShouldContain("Building cannot exceed");
-        error.ShouldContain("100");
+        error!.ShouldContain("Building cannot exceed");
+        error!.ShouldContain("100");
     }
 
     [Test]
