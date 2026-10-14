@@ -139,7 +139,7 @@ public class LoginPageTests
     }
 
     [Test]
-    public async Task ShouldDisplayFirstChurchOfSpringfieldSubtitle()
+    public async Task ShouldDisplayKalahariChurchSubtitle()
     {
         await using var ctx = new BunitContext();
 
@@ -153,7 +153,7 @@ public class LoginPageTests
         var component = ctx.Render<Login>();
 
         var subtitle = component.Find(".login-subtitle");
-        subtitle.TextContent.ShouldBe("First Church of Springfield");
+        subtitle.TextContent.ShouldBe("Kalahari Church");
     }
 
     [Test]
@@ -382,7 +382,7 @@ public class LoginPageTests
 
         var component = ctx.Render<Login>();
 
-        var link = component.Find("a[href='mailto:office@firstchurchofshelbyville.org']");
+        var link = component.Find("a[href='mailto:office@kalaharichurch.example']");
         link.TextContent.ShouldBe("Forgot your login?");
     }
 
@@ -400,8 +400,8 @@ public class LoginPageTests
 
         var component = ctx.Render<Login>();
 
-        var link = component.Find("a[href='mailto:office@firstchurchofshelbyville.org']");
-        link.GetAttribute("href").ShouldBe("mailto:office@firstchurchofshelbyville.org");
+        var link = component.Find("a[href='mailto:office@kalaharichurch.example']");
+        link.GetAttribute("href").ShouldBe("mailto:office@kalaharichurch.example");
     }
 
     [Test]
@@ -418,7 +418,7 @@ public class LoginPageTests
 
         var component = ctx.Render<Login>();
 
-        var link = component.Find("small > a[href='mailto:office@firstchurchofshelbyville.org']");
+        var link = component.Find("small > a[href='mailto:office@kalaharichurch.example']");
         link.ShouldNotBeNull();
     }
 
@@ -492,9 +492,9 @@ public class LoginPageTests
 
         var footerDiv = component.FindAll("div.text-center")
             .First(d => d.QuerySelector("small.text-muted")?.TextContent
-                .Contains("First Church of Springfield") == true);
+                .Contains("Kalahari Church") == true);
         footerDiv.QuerySelector("small.text-muted")!.TextContent
-            .ShouldBe("First Church of Springfield · " + DateTime.Now.Year);
+            .ShouldBe("Kalahari Church · " + DateTime.Now.Year);
     }
 
     [Test]
