@@ -23,6 +23,7 @@ public sealed class WorkOrderSpecificationQueryValidator : AbstractValidator<Wor
     {
         RuleFor(x => x.SearchText).MaximumLength(SearchTextMaxLength);
         RuleFor(x => x.Building).MaximumLength(WorkOrder.BuildingMaxLength);
+        RuleFor(x => x.Room).MaximumLength(WorkOrder.RoomNumberMaxLength);
         RuleFor(x => x.Priority).IsInEnum();
         RuleFor(x => x.CompletedWithinDays)
             .InclusiveBetween(1, CompletedWithinDaysMax)

@@ -39,8 +39,8 @@ public sealed record WorkOrderSearchUrlState
     public bool OverdueOnly { get; init; }
     public WorkOrderPriority? Priority { get; init; }
     public string? Building { get; init; }
-    public bool NoBuilding { get; init; }
     public string? Room { get; init; }
+    public bool NoBuilding { get; init; }
     public bool NoRoom { get; init; }
     public bool AssignedToMe { get; init; }
     public bool OpenOnly { get; init; }
@@ -57,15 +57,13 @@ public sealed record WorkOrderSearchUrlState
     public static WorkOrderSearchUrlState Default { get; } = new();
 
     /// <summary>True when any filter (not sort or page) is set.</summary>
-    public bool HasAnyFilter => HasPeopleFilter || HasAttributeFilter || HasFlagFilter;
+    public bool HasAnyFilter => HasPeopleFilter || HasAttributeFilter || HasLocationFilter || HasFlagFilter;
 
     private bool HasPeopleFilter => HasText(Creator) || HasText(Assignee) || AssignedToMe;
 
-    private bool HasBuildingFilter => HasText(Building) || NoBuilding;
+    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasText(Q);
 
-    private bool HasRoomFilter => HasText(Room) || NoRoom;
-
-    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasBuildingFilter || HasRoomFilter || HasText(Q);
+    private bool HasLocationFilter => HasText(Building) || HasText(Room) || NoBuilding || NoRoom;
 
     private bool HasFlagFilter => OverdueOnly || OpenOnly || CompletedWithinDays.HasValue;
 
@@ -84,8 +82,8 @@ public sealed record WorkOrderSearchUrlState
             OverdueOnly = Flag(values, nameof(OverdueOnly)),
             Priority = ParsePriority(Text(values, nameof(Priority))),
             Building = Text(values, nameof(Building)),
-            NoBuilding = Flag(values, nameof(NoBuilding)),
             Room = Text(values, nameof(Room)),
+            NoBuilding = Flag(values, nameof(NoBuilding)),
             NoRoom = Flag(values, nameof(NoRoom)),
             AssignedToMe = Flag(values, nameof(AssignedToMe)),
             OpenOnly = Flag(values, nameof(OpenOnly)),
@@ -129,10 +127,10 @@ public sealed record WorkOrderSearchUrlState
         yield return Pair(nameof(Assignee), AssignedToMe ? null : Assignee);
         yield return Pair(nameof(Status), Status);
         yield return Pair(nameof(Priority), Priority?.ToString());
-        yield return Pair(nameof(Building), NoBuilding ? null : Building);
-        yield return Pair(nameof(NoBuilding), FlagText(NoBuilding));
-        yield return Pair(nameof(Room), NoRoom ? null : Room);
-        yield return Pair(nameof(NoRoom), FlagText(NoRoom));
+        yield return Pair(nameof(Building), Building);
+        yield return Pair(nameof(NoBuilding), HasText(Building) ? null : FlagText(NoBuilding));
+        yield return Pair(nameof(Room), Room);
+        yield return Pair(nameof(NoRoom), HasText(Room) ? null : FlagText(NoRoom));
         yield return Pair(nameof(AssignedToMe), FlagText(AssignedToMe));
         yield return Pair(nameof(OpenOnly), FlagText(OpenOnly));
         yield return Pair(nameof(OverdueOnly), FlagText(OverdueOnly));
