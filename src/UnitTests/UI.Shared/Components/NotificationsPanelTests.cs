@@ -295,7 +295,7 @@ public class NotificationsPanelTests
     [Test]
     public async Task ShouldInvokeOnClose_WhenEntryIsClicked()
     {
-        using var ctx = new BunitContext();
+        await using var ctx = new BunitContext();
         SetupJsInterop(ctx);
         var closed = false;
         var workOrder = new WorkOrder { Number = "WO-1", Title = "Fix", Status = WorkOrderStatus.Assigned };
