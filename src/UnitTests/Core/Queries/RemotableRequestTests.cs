@@ -91,6 +91,35 @@ public class RemotableRequestTests
     }
 
     [Test]
+    public void ShouldRoundTripBuildingRoomSummaryQueryAndResult()
+    {
+        AssertRemotable(new BuildingRoomSummaryQuery());
+        BuildingSummary[] summary =
+        [
+            new()
+            {
+                Building = "Sanctuary",
+                Rooms =
+                [
+                    new RoomSummary { Room = "101", OpenCount = 3, OverdueCount = 1, CompletedLast30Days = 2, TotalCount = 7 },
+                    new RoomSummary { Room = "", OpenCount = 1, TotalCount = 1 }
+                ]
+            },
+            new() { Building = "", Rooms = [new RoomSummary { Room = "", CompletedLast30Days = 4, TotalCount = 5 }] }
+        ];
+
+        var rehydrated = SimulateRemoteObject(summary);
+
+        rehydrated.Length.ShouldBe(2);
+        rehydrated[0].Building.ShouldBe("Sanctuary");
+        rehydrated[0].Rooms.Length.ShouldBe(2);
+        ObjectMother.AssertAllProperties(summary[0].Rooms[0], rehydrated[0].Rooms[0]);
+        ObjectMother.AssertAllProperties(summary[0].Rooms[1], rehydrated[0].Rooms[1]);
+        rehydrated[1].Building.ShouldBe("");
+        ObjectMother.AssertAllProperties(summary[1].Rooms[0], rehydrated[1].Rooms.Single());
+    }
+
+    [Test]
     public void ShouldRoundTripReportsQueryAndData()
     {
         AssertRemotable(new WorkOrderReportsQuery());

@@ -41,25 +41,76 @@ internal static class WorkOrderQueryFilters
     }
 
     /// <summary>Open work orders: Draft, Assigned or In Progress.</summary>
-    public static IQueryable<WorkOrder> OpenOnly(IQueryable<WorkOrder> query)
+    public static IQueryable<WorkOrder> OpenOnly(IQueryable<WorkOrder> query) => query.Where(IsOpen());
+
+    /// <summary>Open work orders whose due date is before <paramref name="today"/>.</summary>
+    public static IQueryable<WorkOrder> Overdue(IQueryable<WorkOrder> query, DateOnly today) =>
+        query.Where(IsOverdue(today));
+
+    /// <summary>Completed work orders whose completion is within the last <paramref name="days"/> days.</summary>
+    public static IQueryable<WorkOrder> CompletedWithin(IQueryable<WorkOrder> query, int days, TimeProvider time) =>
+        query.Where(IsCompletedWithin(days, time));
+
+    /// <summary>Predicate of an open work order: Draft, Assigned or In Progress.</summary>
+    public static Expression<Func<WorkOrder, bool>> IsOpen()
     {
         var draft = WorkOrderStatus.Draft;
         var assigned = WorkOrderStatus.Assigned;
         var inProgress = WorkOrderStatus.InProgress;
-        return query.Where(wo => wo.Status == draft || wo.Status == assigned || wo.Status == inProgress);
+        return wo => wo.Status == draft || wo.Status == assigned || wo.Status == inProgress;
     }
 
-    /// <summary>Open work orders whose due date is before <paramref name="today"/>.</summary>
-    public static IQueryable<WorkOrder> Overdue(IQueryable<WorkOrder> query, DateOnly today) =>
-        OpenOnly(query).Where(wo => wo.DueDate < today);
+    /// <summary>Predicate of an open work order whose due date is before <paramref name="today"/>.</summary>
+    public static Expression<Func<WorkOrder, bool>> IsOverdue(DateOnly today) =>
+        AndAlso(IsOpen(), wo => wo.DueDate < today);
 
-    /// <summary>Completed work orders whose completion is within the last <paramref name="days"/> days.</summary>
-    public static IQueryable<WorkOrder> CompletedWithin(IQueryable<WorkOrder> query, int days, TimeProvider time)
+    /// <summary>Predicate of a work order completed within the last <paramref name="days"/> days.</summary>
+    public static Expression<Func<WorkOrder, bool>> IsCompletedWithin(int days, TimeProvider time)
     {
         var complete = WorkOrderStatus.Complete;
         var since = time.GetUtcNow().DateTime.AddDays(-days);
-        return query.Where(wo => wo.Status == complete && wo.CompletedDate >= since);
+        return wo => wo.Status == complete && wo.CompletedDate >= since;
     }
+
+    /// <summary>
+    /// The building a work order is grouped under: trimmed by the database exactly as the <c>Building</c>
+    /// filter trims it; null, empty and blank become "" (the <c>NoBuilding</c> filter).
+    /// </summary>
+    private static readonly Expression<Func<WorkOrder, string>> BuildingKey = wo => (wo.Building ?? "").Trim();
+
+    /// <summary>
+    /// The room a work order is grouped under: trimmed by the database exactly as the <c>Room</c>
+    /// filter trims it; null, empty and blank become "" (the <c>NoRoom</c> filter).
+    /// </summary>
+    private static readonly Expression<Func<WorkOrder, string>> RoomKey = wo => (wo.RoomNumber ?? "").Trim();
+
+    /// <summary>
+    /// Projects a work order to its building and room keys and 1/0 flags for the open, overdue and
+    /// completed-within predicates, built from the same expressions as the filters (no copied predicate).
+    /// </summary>
+    internal static Expression<Func<WorkOrder, WorkOrderCountRow>> CountRow(DateOnly today, TimeProvider time, int completedDays)
+    {
+        var wo = Expression.Parameter(typeof(WorkOrder), "wo");
+        Expression<Func<WorkOrder, string?>> number = o => o.Number;
+        var body = Expression.MemberInit(
+            Expression.New(typeof(WorkOrderCountRow)),
+            Bind(nameof(WorkOrderCountRow.Number), Rebind(number, wo)),
+            Bind(nameof(WorkOrderCountRow.Building), Rebind(BuildingKey, wo)),
+            Bind(nameof(WorkOrderCountRow.Room), Rebind(RoomKey, wo)),
+            Bind(nameof(WorkOrderCountRow.Open), OneOrZero(Rebind(IsOpen(), wo))),
+            Bind(nameof(WorkOrderCountRow.Overdue), OneOrZero(Rebind(IsOverdue(today), wo))),
+            Bind(nameof(WorkOrderCountRow.Completed), OneOrZero(Rebind(IsCompletedWithin(completedDays, time), wo))));
+        return Expression.Lambda<Func<WorkOrder, WorkOrderCountRow>>(body, wo);
+    }
+
+    private static MemberAssignment Bind(string member, Expression value) =>
+        Expression.Bind(typeof(WorkOrderCountRow).GetProperty(member)!, value);
+
+    private static ConditionalExpression OneOrZero(Expression predicate) =>
+        Expression.Condition(predicate, Expression.Constant(1), Expression.Constant(0));
+
+    private static Expression Rebind<T>(Expression<Func<WorkOrder, T>> expression, ParameterExpression parameter) =>
+        new ParameterReplacer(expression.Parameters[0], parameter).Visit(expression.Body);
 
     private static IQueryable<WorkOrder> ApplyBasics(
         IQueryable<WorkOrder> query,
@@ -143,15 +194,42 @@ internal static class WorkOrderQueryFilters
 
     private static Expression<Func<WorkOrder, bool>> OrElse(
         Expression<Func<WorkOrder, bool>> left,
-        Expression<Func<WorkOrder, bool>> right)
+        Expression<Func<WorkOrder, bool>> right) =>
+        Combine(left, right, Expression.OrElse);
+
+    private static Expression<Func<WorkOrder, bool>> AndAlso(
+        Expression<Func<WorkOrder, bool>> left,
+        Expression<Func<WorkOrder, bool>> right) =>
+        Combine(left, right, Expression.AndAlso);
+
+    private static Expression<Func<WorkOrder, bool>> Combine(
+        Expression<Func<WorkOrder, bool>> left,
+        Expression<Func<WorkOrder, bool>> right,
+        Func<Expression, Expression, BinaryExpression> combine)
     {
         var parameter = left.Parameters[0];
-        var rightBody = new ParameterReplacer(right.Parameters[0], parameter).Visit(right.Body);
-        return Expression.Lambda<Func<WorkOrder, bool>>(Expression.OrElse(left.Body, rightBody), parameter);
+        return Expression.Lambda<Func<WorkOrder, bool>>(combine(left.Body, Rebind(right, parameter)), parameter);
     }
 
     private sealed class ParameterReplacer(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
     {
         protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : node;
     }
+}
+
+/// <summary>
+/// One work order reduced to its building and room keys and 1/0 flags, the input of the database-side
+/// grouping of <see cref="BuildingRoomSummaryQueryHandler"/>.
+/// </summary>
+// ReSharper disable PropertyCanBeMadeInitOnly.Global -- bound by an expression-tree MemberInit translated by EF Core
+internal sealed class WorkOrderCountRow
+{
+    public string? Number { get; set; }
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- setter required: assigned by Expression.Bind in CountRow
+    public string Building { get; set; } = "";
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- setter required: assigned by Expression.Bind in CountRow
+    public string Room { get; set; } = "";
+    public int Open { get; set; }
+    public int Overdue { get; set; }
+    public int Completed { get; set; }
 }
