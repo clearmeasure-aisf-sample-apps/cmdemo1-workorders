@@ -129,6 +129,53 @@ public class WorkOrderQueryFiltersTests
         Numbers(WorkOrderQueryFilters.Apply(orders, query, lateEveningUtc)).ShouldBe(["1"]);
     }
 
+    [Test]
+    public void ShouldAgreeWithFilters_WhenPredicatesUsedAsExpressions()
+    {
+        var lateEveningUtc = new FixedClock(new DateTimeOffset(2026, 10, 14, 3, 0, 0, TimeSpan.Zero));
+        var today = new DateOnly(2026, 10, 13);
+        var now = lateEveningUtc.GetUtcNow().DateTime;
+        var orders = new[]
+        {
+            new WorkOrder { Number = "1", Status = WorkOrderStatus.Draft, DueDate = today.AddDays(-1) },
+            new WorkOrder { Number = "2", Status = WorkOrderStatus.Assigned, DueDate = today },
+            new WorkOrder { Number = "3", Status = WorkOrderStatus.InProgress },
+            new WorkOrder { Number = "4", Status = WorkOrderStatus.Complete, CompletedDate = now.AddDays(-30), DueDate = today.AddDays(-9) },
+            new WorkOrder { Number = "5", Status = WorkOrderStatus.Complete, CompletedDate = now.AddDays(-30).AddSeconds(-1) },
+            new WorkOrder { Number = "6", Status = WorkOrderStatus.Cancelled, DueDate = today.AddDays(-9) }
+        }.AsQueryable();
+
+        Numbers(orders.Where(WorkOrderQueryFilters.IsOpen())).ShouldBe(Numbers(WorkOrderQueryFilters.OpenOnly(orders)));
+        Numbers(orders.Where(WorkOrderQueryFilters.IsOpen())).ShouldBe(["1", "2", "3"]);
+        Numbers(orders.Where(WorkOrderQueryFilters.IsOverdue(today))).ShouldBe(Numbers(WorkOrderQueryFilters.Overdue(orders, today)));
+        Numbers(orders.Where(WorkOrderQueryFilters.IsOverdue(today))).ShouldBe(["1"]);
+        Numbers(orders.Where(WorkOrderQueryFilters.IsCompletedWithin(30, lateEveningUtc)))
+            .ShouldBe(Numbers(WorkOrderQueryFilters.CompletedWithin(orders, 30, lateEveningUtc)));
+        Numbers(orders.Where(WorkOrderQueryFilters.IsCompletedWithin(30, lateEveningUtc))).ShouldBe(["4"]);
+    }
+
+    [Test]
+    public void ShouldProjectKeysAndFlags_WhenCountRowApplied()
+    {
+        var today = new DateOnly(2026, 10, 13);
+        var now = Clock.GetUtcNow().DateTime;
+        var orders = new[]
+        {
+            new WorkOrder { Number = "1", Building = " Hall ", RoomNumber = "101 ", Status = WorkOrderStatus.Assigned, DueDate = today.AddDays(-1) },
+            new WorkOrder { Number = "2", Building = null, RoomNumber = "  ", Status = WorkOrderStatus.Complete, CompletedDate = now.AddDays(-1) },
+            new WorkOrder { Number = "3", Building = "", RoomNumber = null, Status = WorkOrderStatus.Cancelled, DueDate = today.AddDays(-1) }
+        }.AsQueryable();
+
+        var rows = orders.Select(WorkOrderQueryFilters.CountRow(today, Clock, 30)).ToArray();
+
+        rows.Select(r => (r.Number, r.Building, r.Room, r.Open, r.Overdue, r.Completed)).ShouldBe(
+        [
+            ("1", "Hall", "101", 1, 1, 0),
+            ("2", "", "", 0, 0, 1),
+            ("3", "", "", 0, 0, 0)
+        ]);
+    }
+
     private static WorkOrderSpecificationQuery Search(string text)
     {
         var query = new WorkOrderSpecificationQuery();
