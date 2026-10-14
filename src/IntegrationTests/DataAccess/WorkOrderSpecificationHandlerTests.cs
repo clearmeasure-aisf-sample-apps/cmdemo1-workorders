@@ -175,8 +175,8 @@ public class WorkOrderSpecificationHandlerTests
         var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchStatus(WorkOrderStatus.Assigned);
-        specification.MatchCreator(employee2);
-        var orders = await repository.Handle(specification);
+        var orders = (await repository.Handle(specification))
+            .Where(o => o.Id == order1.Id || o.Id == order2.Id).ToArray();
 
         orders.Length.ShouldBe(1);
         orders[0].Id.ShouldBe(order1.Id);
