@@ -49,6 +49,9 @@ public partial class WorkOrderSearch : AppComponentBase
     [SupplyParameterFromQuery] public string? OverdueOnly { get; set; }
     [SupplyParameterFromQuery] public string? Priority { get; set; }
     [SupplyParameterFromQuery] public string? Building { get; set; }
+    [SupplyParameterFromQuery] public string? NoBuilding { get; set; }
+    [SupplyParameterFromQuery] public string? Room { get; set; }
+    [SupplyParameterFromQuery] public string? NoRoom { get; set; }
     [SupplyParameterFromQuery] public string? AssignedToMe { get; set; }
     [SupplyParameterFromQuery] public string? OpenOnly { get; set; }
     [SupplyParameterFromQuery] public string? CompletedWithinDays { get; set; }
@@ -104,6 +107,9 @@ public partial class WorkOrderSearch : AppComponentBase
         [nameof(OverdueOnly)] = OverdueOnly,
         [nameof(Priority)] = Priority,
         [nameof(Building)] = Building,
+        [nameof(NoBuilding)] = NoBuilding,
+        [nameof(Room)] = Room,
+        [nameof(NoRoom)] = NoRoom,
         [nameof(AssignedToMe)] = AssignedToMe,
         [nameof(OpenOnly)] = OpenOnly,
         [nameof(CompletedWithinDays)] = CompletedWithinDays,

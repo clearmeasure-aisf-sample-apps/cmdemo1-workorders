@@ -64,7 +64,12 @@
 
         <h2 class="nav-section" id="nav-section-admin">Administration</h2>
         <ul class="nav-list" aria-labelledby="nav-section-admin">
-            @Placeholder("bi-building", "Buildings & Rooms")
+            <li class="nav-item">
+                <NavLink data-testid="@Elements.BuildingsAndRooms" class="nav-link" href="admin/buildings" title="Buildings & Rooms">
+                    <i class="bi bi-building nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Buildings & Rooms</span>
+                </NavLink>
+            </li>
             <li class="nav-item">
                 <NavLink data-testid="@Elements.TeamsAndVendors" class="nav-link" href="admin/teams" title="Teams & Vendors">
                     <i class="bi bi-people-fill nav-icon" aria-hidden="true"></i>
@@ -101,7 +106,8 @@
         Overdue,
         NavBadge,
         Reports,
-        TeamsAndVendors
+        TeamsAndVendors,
+        BuildingsAndRooms
     }
 
     private RenderFragment QueueLink(Elements testId, string href, string icon, string label, int? count, bool danger) =>

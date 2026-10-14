@@ -39,6 +39,9 @@ public sealed record WorkOrderSearchUrlState
     public bool OverdueOnly { get; init; }
     public WorkOrderPriority? Priority { get; init; }
     public string? Building { get; init; }
+    public bool NoBuilding { get; init; }
+    public string? Room { get; init; }
+    public bool NoRoom { get; init; }
     public bool AssignedToMe { get; init; }
     public bool OpenOnly { get; init; }
     public int? CompletedWithinDays { get; init; }
@@ -58,7 +61,7 @@ public sealed record WorkOrderSearchUrlState
 
     private bool HasPeopleFilter => HasText(Creator) || HasText(Assignee) || AssignedToMe;
 
-    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasText(Building) || HasText(Q);
+    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasText(Building) || NoBuilding || HasText(Room) || NoRoom || HasText(Q);
 
     private bool HasFlagFilter => OverdueOnly || OpenOnly || CompletedWithinDays.HasValue;
 
@@ -77,6 +80,9 @@ public sealed record WorkOrderSearchUrlState
             OverdueOnly = Flag(values, nameof(OverdueOnly)),
             Priority = ParsePriority(Text(values, nameof(Priority))),
             Building = Text(values, nameof(Building)),
+            NoBuilding = Flag(values, nameof(NoBuilding)),
+            Room = Text(values, nameof(Room)),
+            NoRoom = Flag(values, nameof(NoRoom)),
             AssignedToMe = Flag(values, nameof(AssignedToMe)),
             OpenOnly = Flag(values, nameof(OpenOnly)),
             CompletedWithinDays = ParseDays(Text(values, nameof(CompletedWithinDays))),
@@ -119,7 +125,10 @@ public sealed record WorkOrderSearchUrlState
         yield return Pair(nameof(Assignee), AssignedToMe ? null : Assignee);
         yield return Pair(nameof(Status), Status);
         yield return Pair(nameof(Priority), Priority?.ToString());
-        yield return Pair(nameof(Building), Building);
+        yield return Pair(nameof(Building), NoBuilding ? null : Building);
+        yield return Pair(nameof(NoBuilding), FlagText(NoBuilding));
+        yield return Pair(nameof(Room), NoRoom ? null : Room);
+        yield return Pair(nameof(NoRoom), FlagText(NoRoom));
         yield return Pair(nameof(AssignedToMe), FlagText(AssignedToMe));
         yield return Pair(nameof(OpenOnly), FlagText(OpenOnly));
         yield return Pair(nameof(OverdueOnly), FlagText(OverdueOnly));
