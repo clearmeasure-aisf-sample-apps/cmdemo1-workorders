@@ -82,7 +82,7 @@
 .card-number {
     font-weight: 600;
     font-size: 13px;
-    color: var(--color-primary);
+    color: var(--color-text);
     text-transform: uppercase;
 }
 

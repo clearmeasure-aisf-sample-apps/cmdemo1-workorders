@@ -291,4 +291,22 @@ public class NotificationsPanelTests
 
         ctx.JSInterop.Invocations.Any(i => i.Identifier == "cleanupEscapeHandler").ShouldBeTrue();
     }
+
+    [Test]
+    public async Task ShouldInvokeOnClose_WhenEntryIsClicked()
+    {
+        using var ctx = new BunitContext();
+        SetupJsInterop(ctx);
+        var closed = false;
+        var workOrder = new WorkOrder { Number = "WO-1", Title = "Fix", Status = WorkOrderStatus.Assigned };
+
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [workOrder], []))
+            .Add(c => c.OnClose, () => closed = true));
+
+        await component.Find(".notification-card").ClickAsync(new());
+
+        closed.ShouldBeTrue();
+    }
 }

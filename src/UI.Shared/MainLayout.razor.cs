@@ -6,6 +6,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
@@ -57,6 +58,9 @@ public partial class MainLayout : IAsyncDisposable
     private new IBus Bus { get; set; } = null!;
 
     [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
     private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
 
     private ElementReference _navToggleButtonRef;
@@ -102,6 +106,8 @@ public partial class MainLayout : IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        Navigation.LocationChanged += OnLocationChanged;
+
         try
         {
             var response = await Http.GetAsync("/api/status/environment");
@@ -227,6 +233,9 @@ public partial class MainLayout : IAsyncDisposable
     private static string? ResolveUserName(ClaimsPrincipal user) =>
         (user.FindFirst("preferred_username") ?? user.FindFirst("name"))?.Value ?? user.Identity?.Name;
 
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        InvokeAsync(CloseNotificationsPanelAsync);
+
     private async Task CloseNotificationsPanelAsync()
     {
         _notificationsPanelOpen = false;
@@ -236,6 +245,7 @@ public partial class MainLayout : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Theme.OnChange -= OnThemeChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
 
         if (_navToggleHelper is not null)
         {

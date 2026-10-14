@@ -10,6 +10,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
@@ -743,6 +744,40 @@ public class MainLayoutTests
 
         var panelComponent = layout.FindComponent<NotificationsPanel>();
         await layout.InvokeAsync(() => panelComponent.Instance.HandleEscapeKey());
+
+        await layout.WaitForAssertionAsync(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
+            .GetAttribute("aria-expanded").ShouldBe("false");
+    }
+
+    [Test]
+    public async Task NotificationsPanel_ShouldClose_WhenLocationChanges()
+    {
+        var order = new WorkOrder { Number = "WO-9", Title = "Late", Status = WorkOrderStatus.Assigned };
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([order], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+        await layout.WaitForElementAsync(".notifications-panel");
+
+        await layout.InvokeAsync(() => ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("/workorder/manage/WO-9?mode=Edit"));
+
+        await layout.WaitForAssertionAsync(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
+            .GetAttribute("aria-expanded").ShouldBe("false");
+    }
+
+    [Test]
+    public async Task NotificationsPanel_ShouldClose_WhenEntryIsClicked()
+    {
+        var order = new WorkOrder { Number = "WO-9", Title = "Late", Status = WorkOrderStatus.Assigned };
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([order], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+        await layout.WaitForElementAsync(".notifications-panel");
+
+        await layout.Find(".notification-card").ClickAsync(new());
 
         await layout.WaitForAssertionAsync(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
