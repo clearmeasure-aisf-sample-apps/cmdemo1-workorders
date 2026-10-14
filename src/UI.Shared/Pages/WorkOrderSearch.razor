@@ -89,7 +89,7 @@
                 <table class="grid-data">
                     <thead>
                     <tr>
-                        <th>WO #</th>
+                        <th>Number</th>
                            <th>Creator</th>
                            <th>Assignee</th>
                            <th>
@@ -134,13 +134,13 @@
                                     </a>
                                 </td>
                                 <td>@order.Creator?.GetFullName()</td>
-                                <td>@order.Assignee?.GetFullName()</td>
+                                <td><span class="@(order.Assignee is null ? "muted-cell" : "")">@(order.Assignee?.GetFullName() ?? "Unassigned")</span></td>
                                 <td>
                                     <span class="status-badge @order.StatusBadgeCssClass">@order.Status</span>
                                 </td>
                                 <td>@order.Title</td>
                                 <td>
-                                    <span data-testid="@(Elements.DueDateCell + order.Number)" class="@order.DueDateCssClass">@order.DueDateDisplay@if (!string.IsNullOrEmpty(order.DueDateUrgencyText))
+                                    <span data-testid="@(Elements.DueDateCell + order.Number)" class="@(string.IsNullOrEmpty(order.DueDateDisplay) ? "muted-cell" : order.DueDateCssClass)">@(string.IsNullOrEmpty(order.DueDateDisplay) ? "–" : order.DueDateDisplay)@if (!string.IsNullOrEmpty(order.DueDateUrgencyText))
                                         {
                                             <span class="visually-hidden">@order.DueDateUrgencyText</span>
                                         }</span>

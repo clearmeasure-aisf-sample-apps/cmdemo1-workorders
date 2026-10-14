@@ -44,10 +44,10 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
-        // Empty <span> has no layout box; Playwright treats that as not visible. Assert attached + blank.
+        // Empty due date renders a muted en dash placeholder.
         var dueDateCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + order.Number);
         await Expect(dueDateCell).ToBeAttachedAsync();
-        await Expect(dueDateCell).ToHaveTextAsync(string.Empty);
+        await Expect(dueDateCell).ToHaveTextAsync("–");
 
         var rehydrated = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
         rehydrated.ShouldNotBeNull();
