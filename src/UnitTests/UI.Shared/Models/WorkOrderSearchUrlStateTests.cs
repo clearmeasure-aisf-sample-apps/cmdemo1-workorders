@@ -29,7 +29,7 @@ public class WorkOrderSearchUrlStateTests
         var state = new WorkOrderSearchUrlState
         {
             Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key, OverdueOnly = true,
-            Priority = WorkOrderPriority.High, Building = "Fellowship Hall", OpenOnly = true, CompletedWithinDays = 30,
+            Priority = WorkOrderPriority.High, Building = "Fellowship Hall", Room = "101", OpenOnly = true, CompletedWithinDays = 30,
             Q = "organ & pipes", Sort = "Priority", Descending = true, Page = 3, View = SearchView.Board
         };
 
@@ -38,6 +38,7 @@ public class WorkOrderSearchUrlStateTests
 
         parsed.ShouldBe(state);
         uri.ShouldContain("Building=Fellowship%20Hall");
+        uri.ShouldContain("Room=101");
         uri.ShouldContain("Q=organ%20%26%20pipes");
         uri.ShouldContain("Dir=desc");
         uri.ShouldEndWith("View=Board");
@@ -146,6 +147,9 @@ public class WorkOrderSearchUrlStateTests
     [TestCase("Status")]
     [TestCase("Priority")]
     [TestCase("Building")]
+    [TestCase("Room")]
+    [TestCase("NoBuilding")]
+    [TestCase("NoRoom")]
     [TestCase("Q")]
     [TestCase("AssignedToMe")]
     [TestCase("OpenOnly")]
@@ -158,7 +162,7 @@ public class WorkOrderSearchUrlStateTests
             "Status" => WorkOrderStatus.Draft.Key,
             "Priority" => "Low",
             "CompletedWithinDays" => "7",
-            "AssignedToMe" or "OpenOnly" or "OverdueOnly" => "true",
+            "AssignedToMe" or "OpenOnly" or "OverdueOnly" or "NoBuilding" or "NoRoom" => "true",
             _ => "x"
         };
 
@@ -180,6 +184,38 @@ public class WorkOrderSearchUrlStateTests
         WorkOrderSearchUrlState.ForCard(SummaryCard.Overdue).ToRelativeUri().ShouldBe("workorder/search?OverdueOnly=true");
         WorkOrderSearchUrlState.ForCard(SummaryCard.Completed).ToRelativeUri()
             .ShouldBe("workorder/search?Status=Complete&CompletedWithinDays=30");
+    }
+
+    [Test]
+    public void ToRelativeUri_Building_OmitsNoBuilding()
+    {
+        var state = new WorkOrderSearchUrlState { Building = "Kitchen", NoBuilding = true };
+
+        state.ToRelativeUri().ShouldBe("workorder/search?Building=Kitchen");
+    }
+
+    [Test]
+    public void ToRelativeUri_NoBuilding_WritesWhenNoBuildingText()
+    {
+        var state = new WorkOrderSearchUrlState { NoBuilding = true };
+
+        state.ToRelativeUri().ShouldBe("workorder/search?NoBuilding=true");
+    }
+
+    [Test]
+    public void ToRelativeUri_Room_OmitsNoRoom()
+    {
+        var state = new WorkOrderSearchUrlState { Room = "101", NoRoom = true };
+
+        state.ToRelativeUri().ShouldBe("workorder/search?Room=101");
+    }
+
+    [Test]
+    public void ToRelativeUri_NoRoom_WritesWhenNoRoomText()
+    {
+        var state = new WorkOrderSearchUrlState { NoRoom = true };
+
+        state.ToRelativeUri().ShouldBe("workorder/search?NoRoom=true");
     }
 
     private static Dictionary<string, string?> ParseQuery(string uri) =>

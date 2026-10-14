@@ -33,7 +33,8 @@ internal static class WorkOrderQueryFilters
         query = ApplyBasics(query, specification.Assignee, specification.Creator, specification.Status);
         query = ApplyOverdue(query, specification.OverdueOnly, ChurchTimeZone.Today(time));
         query = ApplyPriority(query, specification.Priority);
-        query = ApplyBuilding(query, specification.Building);
+        query = ApplyBuilding(query, specification.Building, specification.NoBuilding);
+        query = ApplyRoom(query, specification.Room, specification.NoRoom);
         query = ApplyOpen(query, specification.OpenOnly);
         query = ApplyCompletedWithin(query, specification.CompletedWithinDays, time);
         return ApplySearchText(query, specification.SearchText);
@@ -82,15 +83,36 @@ internal static class WorkOrderQueryFilters
     private static IQueryable<WorkOrder> ApplyPriority(IQueryable<WorkOrder> query, WorkOrderPriority? priority) =>
         priority == null ? query : query.Where(wo => wo.Priority == priority);
 
-    private static IQueryable<WorkOrder> ApplyBuilding(IQueryable<WorkOrder> query, string? building)
+    private static IQueryable<WorkOrder> ApplyBuilding(IQueryable<WorkOrder> query, string? building, bool noBuilding)
     {
-        if (string.IsNullOrWhiteSpace(building))
+        if (!string.IsNullOrWhiteSpace(building))
         {
-            return query;
+            var trimmed = building.Trim();
+            return query.Where(wo => wo.Building != null && wo.Building.Trim() == trimmed);
         }
 
-        var trimmed = building.Trim();
-        return query.Where(wo => wo.Building != null && wo.Building.Trim() == trimmed);
+        if (noBuilding)
+        {
+            return query.Where(wo => wo.Building == null || wo.Building.Trim() == "");
+        }
+
+        return query;
+    }
+
+    private static IQueryable<WorkOrder> ApplyRoom(IQueryable<WorkOrder> query, string? room, bool noRoom)
+    {
+        if (!string.IsNullOrWhiteSpace(room))
+        {
+            var trimmed = room.Trim();
+            return query.Where(wo => wo.RoomNumber != null && wo.RoomNumber.Trim() == trimmed);
+        }
+
+        if (noRoom)
+        {
+            return query.Where(wo => wo.RoomNumber == null || wo.RoomNumber.Trim() == "");
+        }
+
+        return query;
     }
 
     private static IQueryable<WorkOrder> ApplyOpen(IQueryable<WorkOrder> query, bool openOnly) =>
