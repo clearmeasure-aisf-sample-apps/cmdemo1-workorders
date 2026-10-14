@@ -45,6 +45,28 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private IEnumerable<IStateCommand> ValidCommands { get; set; } = new List<IStateCommand>();
     private string? SelectedCommand { get; set; }
 
+    private IEnumerable<IStateCommand> SortedValidCommands
+    {
+        get
+        {
+            var commandNames = ValidCommands.Select(c => c.TransitionVerbPresentTense).ToList();
+            return ValidCommands
+                .OrderBy(c =>
+                {
+                    var style = CommandButtonStyleHelper.GetButtonStyle(c.TransitionVerbPresentTense, commandNames);
+                    // Sort order: secondary first (0), danger (1), primary last (2)
+                    return style switch
+                    {
+                        "btn-outline-secondary" => 0,
+                        "btn-outline-danger" => 1,
+                        "btn-primary" => 2,
+                        _ => 0
+                    };
+                })
+                .ToList();
+        }
+    }
+
     [Parameter] public string? Id { get; set; }
 
     [SupplyParameterFromQuery] public string? Mode { get; set; }

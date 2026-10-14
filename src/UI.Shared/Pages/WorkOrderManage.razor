@@ -1,3 +1,5 @@
+@using ClearMeasure.Bootcamp.Core.Services.Impl
+
 <div class="work-order-container">
     <div class="work-order-header">
         <h2 title="Create or edit a work order" data-testid="@Elements.ManageHeadingTooltip">
@@ -163,11 +165,12 @@
             else
             {
                 <div class="action-buttons">
-                    @foreach (var command in ValidCommands)
+                    @foreach (var command in SortedValidCommands)
                     {
                         var buttonTestId = Elements.CommandButton + command.TransitionVerbPresentTense;
-                        var buttonClass = "btn btn-primary";
-                        <button data-testid="@buttonTestId" type="submit" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
+                        var buttonStyle = CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, ValidCommands.Select(c => c.TransitionVerbPresentTense));
+                        var buttonClass = "btn " + buttonStyle;
+                        <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLower()}")" type="submit" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
                             @command.TransitionVerbPresentTense
                         </button>
                     }
