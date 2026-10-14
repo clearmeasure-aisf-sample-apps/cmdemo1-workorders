@@ -66,7 +66,7 @@ Work order state transitions: Draft → Assigned → InProgress → Complete (al
 
 - **WorkOrder**: Number (unique, `IX_WorkOrder_Number`), Title, Description, RoomNumber, Building (optional), Priority (WorkOrderPriority), DueDate, Status (WorkOrderStatus), Creator/Assignee (Employee), AssignedDate, CreatedDate, CompletedDate. Methods: `ChangeStatus()`, `CanReassign()`
 - **WorkOrderPriority**: enum Low = 1, Medium = 2 (default), High = 3; stored as tinyint
-- **Work Order Search queries**: `WorkOrderSpecificationQuery` (creator, assignee, status, overdue, priority, building, open only, completed within N days, free text; newest first), `WorkOrderSearchSummaryQuery` (summary card and nav badge counts), `WorkOrderBuildingsQuery` (distinct buildings). The search page keeps its filters, sort, page and view (table, or a board with a column per status) in the URL (`WorkOrderSearchUrlState`)
+- **Work Order Search queries**: `WorkOrderSpecificationQuery` (creator, assignee, status, overdue, priority, building, open only, completed within N days, free text; newest first), `WorkOrderSearchSummaryQuery` (summary card and nav badge counts), `WorkOrderBuildingsQuery` (distinct buildings), `RecentWorkOrdersQuery` (dashboard recent activity: the last N work orders by their latest created, assigned or completed date). The search page keeps its filters, sort, page and view (table, or a board with a column per status) in the URL (`WorkOrderSearchUrlState`)
 - **Employee**: UserName, FirstName, LastName, EmailAddress, Roles. Methods: `CanCreateWorkOrder()`, `CanFulfillWorkOrder()`
 - **WorkOrderStatus**: Smart enum — Draft, Assigned, InProgress, Complete, Cancelled. Factory methods: `FromCode()`, `FromKey()`
 - **Role**: Name, CanCreateWorkOrder, CanFulfillWorkOrder

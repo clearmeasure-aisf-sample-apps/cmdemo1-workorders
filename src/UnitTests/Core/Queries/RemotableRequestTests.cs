@@ -22,6 +22,7 @@ public class RemotableRequestTests
         AssertRemotable(HealthStatus.Degraded);
         AssertRemotable(ObjectMother.Faker<WorkOrderSpecificationQuery>());
         AssertRemotable(WorkOrderStatus.Draft);
+        AssertRemotable(new RecentWorkOrdersQuery(10));
     }
 
     [Test]
