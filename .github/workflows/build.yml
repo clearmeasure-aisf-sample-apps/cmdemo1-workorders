@@ -224,6 +224,7 @@ jobs:
 
       # Package Everything as NuGet Packages
       - name: Create NuGet Packages
+        if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -235,16 +236,16 @@ jobs:
 
       # Upload packages as artifacts
       - name: Upload NuGet Package artifacts
+        if: (github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') && success()
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: churchbulletin-nuget-packages
           path: build/*.nupkg
           retention-days: 2
 
       - name: Upload build_version.txt artifact
+        if: (github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') && success()
         uses: actions/upload-artifact@v4
-        if: success()
         with:
           name: build-version
           path: build_version.txt
@@ -510,7 +511,7 @@ jobs:
   publish-github-packages:
     name: Publish to GitHub Packages
     needs: [changes, build-linux]
-    if: success() && needs.changes.outputs.code == 'true'
+    if: success() && needs.changes.outputs.code == 'true' && (github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
