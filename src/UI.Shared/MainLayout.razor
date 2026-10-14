@@ -92,9 +92,9 @@
                             aria-label="Notifications"
                             aria-expanded="@(_notificationsPanelOpen ? "true" : "false")">
                         <i class="bi bi-bell" aria-hidden="true"></i>
-                        @if (_badgeCount > 0)
+                        @if (BadgeCount > 0)
                         {
-                            <span class="badge-count" data-testid="@nameof(Elements.NotificationsBadge)">@_badgeCount</span>
+                            <span class="badge-count" data-testid="@nameof(Elements.NotificationsBadge)">@BadgeCount</span>
                         }
                     </button>
                     <AuthorizeView>
@@ -115,8 +115,7 @@
 
         <AuthorizeView>
             <Authorized>
-                <NotificationsPanel @ref="_notificationsPanelComponent"
-                                   IsOpen="@_notificationsPanelOpen"
+                <NotificationsPanel IsOpen="@_notificationsPanelOpen"
                                    Data="@_notificationsPanelData"
                                    BellButtonRef="_bellButtonRef"
                                    OnClose="CloseNotificationsPanelAsync"/>

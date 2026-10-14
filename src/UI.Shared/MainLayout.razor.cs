@@ -72,8 +72,6 @@ public partial class MainLayout : IAsyncDisposable
     private string _environmentName = "unknown";
     private bool _notificationsPanelOpen;
     private global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? _notificationsPanelData;
-    private global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel? _notificationsPanelComponent;
-    private int _badgeCount;
 
     private string AppContainerClass => NavRailCss.AppContainerClass(_isNarrowViewport, _navVisible);
 
@@ -85,6 +83,8 @@ public partial class MainLayout : IAsyncDisposable
     private string NavToggleAriaExpanded => _navVisible ? "true" : "false";
 
     private string DarkModeToggleTitle => Theme.IsDarkMode ? "Switch to light mode" : "Switch to dark mode";
+
+    private int BadgeCount => _notificationsPanelData?.OverdueAndDueToday?.Length ?? 0;
 
     [JSInvokable]
     public Task OnViewportChanged(bool isNarrow)
@@ -204,7 +204,6 @@ public partial class MainLayout : IAsyncDisposable
         try
         {
             _notificationsPanelData = await Bus.Send(new NotificationsPanelQuery(currentUserName));
-            _badgeCount = _notificationsPanelData?.OverdueAndDueToday?.Length ?? 0;
             _notificationsPanelOpen = true;
             await InvokeAsync(StateHasChanged);
         }

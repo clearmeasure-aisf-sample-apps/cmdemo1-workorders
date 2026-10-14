@@ -23,7 +23,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
         var yesterday = today.AddDays(-1);
         var dayBeforeYesterday = today.AddDays(-2);
         var tomorrow = today.AddDays(1);
-        var otherUser = new Employee("other_user", "Other", "User", "other@test.com");
+        var otherUser = new Employee($"other_user_{TestTag}", "Other", "User", $"other_{TestTag}@test.com");
 
         // Create work orders in various states assigned to CurrentUser
         var overdueAssigned = new WorkOrder

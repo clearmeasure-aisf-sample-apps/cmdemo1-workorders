@@ -1,11 +1,11 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Components;
 
-public partial class NotificationsPanel : ComponentBase
+public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
 {
     [Parameter]
     public bool IsOpen { get; set; }
@@ -19,28 +19,34 @@ public partial class NotificationsPanel : ComponentBase
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    [Inject]
+    private IJSRuntime Js { get; set; } = null!;
+
     private ElementReference PanelRef { get; set; }
+    private DotNetObjectReference<NotificationsPanel>? _dotNetRef;
+    private IJSObjectReference? _jsModule;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && IsOpen && PanelRef.Context != null)
+        if (IsOpen && _dotNetRef == null)
         {
             try
             {
-                await PanelRef.FocusAsync();
+                _jsModule ??= await Js.InvokeAsync<IJSObjectReference>("import",
+                    "./_content/ClearMeasure.Bootcamp.UI.Shared/js/notificationsPanel.js");
+                _dotNetRef = DotNetObjectReference.Create(this);
+                await _jsModule.InvokeVoidAsync("setupEscapeHandler", _dotNetRef);
             }
-            catch (InvalidOperationException)
+            catch (JSDisconnectedException)
             {
             }
         }
     }
 
-    private async Task HandleKeyDown(KeyboardEventArgs e)
+    [JSInvokable]
+    public async Task HandleEscapeKey()
     {
-        if (e.Key == "Escape")
-        {
-            await CloseAsync();
-        }
+        await CloseAsync();
     }
 
     private async Task CloseAsync()
@@ -53,6 +59,23 @@ public partial class NotificationsPanel : ComponentBase
         catch (InvalidOperationException)
         {
         }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        try
+        {
+            if (_jsModule is not null)
+            {
+                await _jsModule.InvokeVoidAsync("cleanupEscapeHandler");
+                await _jsModule.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+
+        _dotNetRef?.Dispose();
     }
 
     private static string GetDueUrgency(WorkOrder order)
