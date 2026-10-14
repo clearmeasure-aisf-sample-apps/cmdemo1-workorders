@@ -8,6 +8,7 @@ public class SidebarSlaHealthCardTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldRenderSlaHealthCard_InSidebar_AfterLogin()
     {
+        await Page.SetViewportSizeAsync(1280, 800);
         await LoginAsCurrentUser();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 

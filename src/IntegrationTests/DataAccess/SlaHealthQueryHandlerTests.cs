@@ -34,7 +34,7 @@ public class SlaHealthQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new SlaHealthQueryHandler(dataContext, TimeProvider.System);
-        var result = await handler.Handle(new SlaHealthQuery(), default);
+        var result = await handler.Handle(new SlaHealthQuery());
 
         result.CurrentMonthPercentage.ShouldBeNull();
     }
@@ -64,7 +64,7 @@ public class SlaHealthQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new SlaHealthQueryHandler(dataContext, TimeProvider.System);
-        var result = await handler.Handle(new SlaHealthQuery(), default);
+        var result = await handler.Handle(new SlaHealthQuery());
 
         result.CurrentMonthPercentage.ShouldBeNull();
     }
@@ -96,7 +96,7 @@ public class SlaHealthQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new SlaHealthQueryHandler(dataContext, TimeProvider.System);
-        var result = await handler.Handle(new SlaHealthQuery(), default);
+        var result = await handler.Handle(new SlaHealthQuery());
 
         result.CurrentMonthPercentage.ShouldBe(100m);
         result.CurrentMonthOrderCount.ShouldBe(1);
@@ -129,7 +129,7 @@ public class SlaHealthQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new SlaHealthQueryHandler(dataContext, TimeProvider.System);
-        var result = await handler.Handle(new SlaHealthQuery(), default);
+        var result = await handler.Handle(new SlaHealthQuery());
 
         result.CurrentMonthPercentage.ShouldBe(0m);
         result.CurrentMonthOrderCount.ShouldBe(1);
@@ -171,7 +171,7 @@ public class SlaHealthQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new SlaHealthQueryHandler(dataContext, TimeProvider.System);
-        var result = await handler.Handle(new SlaHealthQuery(), default);
+        var result = await handler.Handle(new SlaHealthQuery());
 
         result.CurrentMonthPercentage.ShouldBe(50m);
         result.CurrentMonthOrderCount.ShouldBe(2);
@@ -214,7 +214,7 @@ public class SlaHealthQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new SlaHealthQueryHandler(dataContext, TimeProvider.System);
-        var result = await handler.Handle(new SlaHealthQuery(), default);
+        var result = await handler.Handle(new SlaHealthQuery());
 
         result.CurrentMonthPercentage.ShouldBe(100m);
         result.CurrentMonthOrderCount.ShouldBe(1);
@@ -250,7 +250,7 @@ public class SlaHealthQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new SlaHealthQueryHandler(dataContext, TimeProvider.System);
-        var result = await handler.Handle(new SlaHealthQuery(), default);
+        var result = await handler.Handle(new SlaHealthQuery());
 
         // Should be counted in current month (when it was completed), and it's on time
         result.CurrentMonthPercentage.ShouldBe(100m);
