@@ -169,7 +169,7 @@
 
 .grid-data th:nth-child(1),
 .grid-data td:nth-child(1) {
-    width: 9%;
+    width: 15%;
     text-align: right;
     white-space: nowrap;
 }
@@ -178,12 +178,12 @@
 .grid-data td:nth-child(2),
 .grid-data th:nth-child(3),
 .grid-data td:nth-child(3) {
-    width: 14%;
+    width: 13%;
 }
 
 .grid-data th:nth-child(4),
 .grid-data td:nth-child(4) {
-    width: 14%;
+    width: 13%;
 }
 
 .grid-data th:nth-child(5),
@@ -194,13 +194,13 @@
 
 .grid-data th:nth-child(6),
 .grid-data td:nth-child(6) {
-    width: 14%;
+    width: 13%;
     white-space: nowrap;
 }
 
 .grid-data th:nth-child(7),
 .grid-data td:nth-child(7) {
-    width: 11%;
+    width: 10%;
 }
 
 .grid-data td,
@@ -224,7 +224,7 @@
 }
 
 .grid-data td a {
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0;
 }
 
 .due-date-today {
