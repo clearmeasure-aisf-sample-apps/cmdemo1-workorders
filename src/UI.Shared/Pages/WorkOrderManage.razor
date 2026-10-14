@@ -2,7 +2,7 @@
     <div class="work-order-header">
         <h2 title="Create or edit a work order" data-testid="@Elements.ManageHeadingTooltip">
             Work Order #<span data-testid="@Elements.WorkOrderNumber">@Model.WorkOrderNumber</span>
-            (<span data-testid="@Elements.Status">@Model.Status</span>)
+            <span class="status-badge @CurrentStatusBadgeCssClass" data-testid="@Elements.Status">@Model.Status</span>
         </h2>
         <p data-testid="@Elements.RequiredFieldsNote">Fields marked with * are required.</p>
     </div>

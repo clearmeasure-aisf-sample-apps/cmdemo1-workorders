@@ -281,6 +281,31 @@
     letter-spacing: 0.5px;
 }
 
+.status-badge--draft {
+    background-color: #bfdbfe;
+    color: #1e40af;
+}
+
+.status-badge--assigned {
+    background-color: #c7d2fe;
+    color: #3730a3;
+}
+
+.status-badge--in-progress {
+    background-color: #fed7aa;
+    color: #92400e;
+}
+
+.status-badge--complete {
+    background-color: #bbf7d0;
+    color: #065f46;
+}
+
+.status-badge--cancelled {
+    background-color: #fecaca;
+    color: #991b1b;
+}
+
 .empty-results {
     text-align: center;
     padding: 3rem;
@@ -416,6 +441,31 @@
 
 :global(html[data-theme="dark"]) .grid-data td {
     color: #e2e8f0;
+}
+
+:global(html[data-theme="dark"]) .status-badge--draft {
+    background-color: #1e3a8a;
+    color: #93c5fd;
+}
+
+:global(html[data-theme="dark"]) .status-badge--assigned {
+    background-color: #312e81;
+    color: #c7d2fe;
+}
+
+:global(html[data-theme="dark"]) .status-badge--in-progress {
+    background-color: #7c2d12;
+    color: #fed7aa;
+}
+
+:global(html[data-theme="dark"]) .status-badge--complete {
+    background-color: #064e3b;
+    color: #86efac;
+}
+
+:global(html[data-theme="dark"]) .status-badge--cancelled {
+    background-color: #7f1d1d;
+    color: #fca5a5;
 }
 
 .overdue-row {

@@ -134,7 +134,7 @@
                                 <td>@order.Creator?.GetFullName()</td>
                                 <td><span class="@(order.Assignee is null ? "muted-cell" : "")">@(order.Assignee?.GetFullName() ?? "Unassigned")</span></td>
                                 <td>
-                                    <span class="status-badge">@order.Status</span>
+                                    <span class="status-badge @order.StatusBadgeCssClass">@order.Status</span>
                                 </td>
                                 <td>@order.Title</td>
                                 <td>
