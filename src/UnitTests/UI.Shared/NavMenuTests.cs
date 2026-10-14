@@ -66,16 +66,18 @@ public class NavMenuTests
     }
 
     [Test]
-    public async Task ShouldRenderAdministrationPlaceholdersAsDisabled()
+    public async Task ShouldRenderBuildingsAndRoomsLink_AsEnabledNavLink()
     {
         await using var ctx = CreateContext(out _);
 
         var component = ctx.Render<NavMenu>();
 
-        var placeholders = component.FindAll("[aria-disabled='true']");
-        placeholders.Select(p => p.QuerySelector(".nav-text")!.TextContent.Trim())
-            .ShouldBe(["Buildings & Rooms"]);
-        placeholders.ShouldAllBe(p => p.TagName == "SPAN" && p.TextContent.Contains("Soon"));
+        var buildingsLink = component.Find($"[data-testid='{NavMenu.Elements.BuildingsAndRooms}']");
+        buildingsLink.TagName.ShouldBe("A");
+        buildingsLink.ClassList.ShouldContain("nav-link");
+        buildingsLink.GetAttribute("href").ShouldBe("admin/buildings");
+        buildingsLink.TextContent.ShouldContain("Buildings & Rooms");
+        buildingsLink.TextContent.ShouldNotContain("Soon");
     }
 
     [Test]
