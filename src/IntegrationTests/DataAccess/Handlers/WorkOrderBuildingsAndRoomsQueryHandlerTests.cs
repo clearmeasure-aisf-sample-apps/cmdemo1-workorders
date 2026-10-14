@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
 [TestFixture]
 public class WorkOrderBuildingsAndRoomsQueryHandlerTests
 {
-    private readonly DateOnly _testStartDate = new(2000, 1, 1);
+    private readonly DateOnly _testStartDate = ChurchTimeZone.Today(TestHost.GetRequiredService<TimeProvider>());
 
     [Test]
     public async Task ShouldReturnAllBuildingsAndRoomsWithCounts()
@@ -337,7 +338,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
                 CompletedDate = _testStartDate.AddDays(-5).ToDateTime(TimeOnly.MinValue),
                 DueDate = _testStartDate.AddDays(-10)
             },
-            // Completed 30 days ago (at boundary, should count with >= comparison)
+            // Completed 29 days ago (just inside the window)
             new()
             {
                 Creator = creator,

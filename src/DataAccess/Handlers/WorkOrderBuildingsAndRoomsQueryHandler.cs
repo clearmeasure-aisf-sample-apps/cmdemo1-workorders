@@ -16,6 +16,8 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
 {
     private const int CompletedWindowDays = 30;
 
+    private sealed record OrderRow(string BuildingName, string RoomName, WorkOrderStatus Status, DateOnly? DueDate, DateTime? CompletedDate);
+
     public async Task<BuildingRoomData[]> Handle(WorkOrderBuildingsAndRoomsQuery request,
         CancellationToken cancellationToken = default)
     {
@@ -23,14 +25,12 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
         var today = ChurchTimeZone.Today(time);
 
         var allOrders = await orders
-            .Select(wo => new
-            {
-                BuildingName = wo.Building ?? string.Empty,
-                RoomName = wo.RoomNumber ?? string.Empty,
+            .Select(wo => new OrderRow(
+                wo.Building ?? string.Empty,
+                wo.RoomNumber ?? string.Empty,
                 wo.Status,
                 wo.DueDate,
-                wo.CompletedDate
-            })
+                wo.CompletedDate))
             .ToListAsync(cancellationToken);
 
         var buildingRoomGroups = allOrders
@@ -49,7 +49,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
                         RoomName = roomGroup.Key == string.Empty ? "No room" : roomGroup.Key,
                         OpenCount = CountOpen(roomGroup),
                         OverdueCount = CountOverdue(roomGroup, today),
-                        CompletedLast30DaysCount = CountCompletedWithin(roomGroup, CompletedWindowDays)
+                        CompletedLast30DaysCount = CountCompletedWithin(roomGroup, time.GetUtcNow().UtcDateTime, CompletedWindowDays)
                     })
                     .ToArray()
             })
@@ -58,7 +58,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
         return buildingRoomGroups;
     }
 
-    private static int CountOpen(IEnumerable<dynamic> orders)
+    private static int CountOpen(IEnumerable<OrderRow> orders)
     {
         var draft = WorkOrderStatus.Draft;
         var assigned = WorkOrderStatus.Assigned;
@@ -66,7 +66,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
         return orders.Count(wo => wo.Status == draft || wo.Status == assigned || wo.Status == inProgress);
     }
 
-    private static int CountOverdue(IEnumerable<dynamic> orders, DateOnly today)
+    private static int CountOverdue(IEnumerable<OrderRow> orders, DateOnly today)
     {
         var draft = WorkOrderStatus.Draft;
         var assigned = WorkOrderStatus.Assigned;
@@ -76,10 +76,10 @@ public class WorkOrderBuildingsAndRoomsQueryHandler(DataContext context, TimePro
             wo.DueDate < today);
     }
 
-    private static int CountCompletedWithin(IEnumerable<dynamic> orders, int days)
+    private static int CountCompletedWithin(IEnumerable<OrderRow> orders, DateTime now, int days)
     {
         var complete = WorkOrderStatus.Complete;
-        var since = DateTime.UtcNow.AddDays(-days);
+        var since = now.AddDays(-days);
         return orders.Count(wo =>
             wo.Status == complete &&
             wo.CompletedDate.HasValue &&
