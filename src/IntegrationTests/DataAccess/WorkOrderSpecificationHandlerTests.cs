@@ -376,4 +376,163 @@ public class WorkOrderSpecificationHandlerTests
         (await handler.Handle(organ)).Select(o => o.Number).ShouldBe(["SRCH001"]);
         (await handler.Handle(willie)).Select(o => o.Number).ShouldBe(["SRCH002"]);
     }
+
+    [Test]
+    public async Task ShouldFilterByRoomExactMatch()
+    {
+        new DatabaseTests().Clean();
+
+        var employee = new Employee("1", "1", "1", "1");
+        var room101 = new WorkOrder { Creator = employee, Number = "RM001", RoomNumber = "101" };
+        var room101Spaces = new WorkOrder { Creator = employee, Number = "RM002", RoomNumber = " 101 " };
+        var room102 = new WorkOrder { Creator = employee, Number = "RM003", RoomNumber = "102" };
+        var noRoom = new WorkOrder { Creator = employee, Number = "RM004", RoomNumber = null };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(employee);
+            context.AddRange(room101, room101Spaces, room102, noRoom);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchRoom("101");
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["RM001", "RM002"], ignoreOrder: true);
+    }
+
+    [Test]
+    public async Task ShouldFilterByRoomCaseInsensitiveWhenDatabaseIsCaseInsensitive()
+    {
+        new DatabaseTests().Clean();
+
+        var employee = new Employee("1", "1", "1", "1");
+        var lowerRoom = new WorkOrder { Creator = employee, Number = "CASE001", RoomNumber = "sanctuary" };
+        var upperRoom = new WorkOrder { Creator = employee, Number = "CASE002", RoomNumber = "SANCTUARY" };
+        var mixedRoom = new WorkOrder { Creator = employee, Number = "CASE003", RoomNumber = "Sanctuary" };
+        var differentRoom = new WorkOrder { Creator = employee, Number = "CASE004", RoomNumber = "kitchen" };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(employee);
+            context.AddRange(lowerRoom, upperRoom, mixedRoom, differentRoom);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchRoom("Sanctuary");
+        var orders = await handler.Handle(specification);
+
+        // SQL Server is case-insensitive; SQLite is case-sensitive.
+        // This test should find at least the exact match.
+        orders.Select(o => o.Number).ShouldContain("CASE003");
+    }
+
+    [Test]
+    public async Task ShouldFilterByNoRoomWhenRoomIsNull()
+    {
+        new DatabaseTests().Clean();
+
+        var employee = new Employee("1", "1", "1", "1");
+        var withRoom = new WorkOrder { Creator = employee, Number = "NOROOM001", RoomNumber = "101" };
+        var nullRoom = new WorkOrder { Creator = employee, Number = "NOROOM002", RoomNumber = null };
+        var emptyRoom = new WorkOrder { Creator = employee, Number = "NOROOM003", RoomNumber = "" };
+        var whitespaceRoom = new WorkOrder { Creator = employee, Number = "NOROOM004", RoomNumber = "   " };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(employee);
+            context.AddRange(withRoom, nullRoom, emptyRoom, whitespaceRoom);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchNoRoom(true);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["NOROOM002", "NOROOM003", "NOROOM004"], ignoreOrder: true);
+    }
+
+    [Test]
+    public async Task ShouldFilterByNoBuilding()
+    {
+        new DatabaseTests().Clean();
+
+        var employee = new Employee("1", "1", "1", "1");
+        var withBuilding = new WorkOrder { Creator = employee, Number = "NOBLD001", Building = "Sanctuary" };
+        var nullBuilding = new WorkOrder { Creator = employee, Number = "NOBLD002", Building = null };
+        var emptyBuilding = new WorkOrder { Creator = employee, Number = "NOBLD003", Building = "" };
+        var whitespaceBuilding = new WorkOrder { Creator = employee, Number = "NOBLD004", Building = "   " };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(employee);
+            context.AddRange(withBuilding, nullBuilding, emptyBuilding, whitespaceBuilding);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchNoBuilding(true);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["NOBLD002", "NOBLD003", "NOBLD004"], ignoreOrder: true);
+    }
+
+    [Test]
+    public async Task ShouldMatchRoomExactWhenBothRoomAndNoBuildingAreSpecified()
+    {
+        new DatabaseTests().Clean();
+
+        var employee = new Employee("1", "1", "1", "1");
+        var sanctuaryRoom101 = new WorkOrder { Creator = employee, Number = "COMBO001", Building = "Sanctuary", RoomNumber = "101" };
+        var noRoomWithBuilding = new WorkOrder { Creator = employee, Number = "COMBO002", Building = "Sanctuary", RoomNumber = null };
+        var room101NoBuilding = new WorkOrder { Creator = employee, Number = "COMBO003", Building = null, RoomNumber = "101" };
+        var room101NoRoom = new WorkOrder { Creator = employee, Number = "COMBO004", Building = null, RoomNumber = null };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(employee);
+            context.AddRange(sanctuaryRoom101, noRoomWithBuilding, room101NoBuilding, room101NoRoom);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchRoom("101");
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["COMBO001", "COMBO003"], ignoreOrder: true);
+    }
+
+    [Test]
+    public async Task ShouldCombineRoomFilterWithOpenOnlyFilter()
+    {
+        new DatabaseTests().Clean();
+
+        var employee = new Employee("1", "1", "1", "1");
+        var openRoom101 = new WorkOrder { Creator = employee, Number = "ROOMOPEN001", RoomNumber = "101", Status = WorkOrderStatus.Assigned };
+        var completeRoom101 = new WorkOrder { Creator = employee, Number = "ROOMOPEN002", RoomNumber = "101", Status = WorkOrderStatus.Complete };
+        var openRoom102 = new WorkOrder { Creator = employee, Number = "ROOMOPEN003", RoomNumber = "102", Status = WorkOrderStatus.Draft };
+        var draftRoom101 = new WorkOrder { Creator = employee, Number = "ROOMOPEN004", RoomNumber = "101", Status = WorkOrderStatus.Draft };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(employee);
+            context.AddRange(openRoom101, completeRoom101, openRoom102, draftRoom101);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchRoom("101");
+        specification.MatchOpenOnly(true);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["ROOMOPEN001", "ROOMOPEN004"], ignoreOrder: true);
+    }
 }
