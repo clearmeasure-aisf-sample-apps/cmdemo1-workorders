@@ -796,7 +796,7 @@ public class MainLayoutTests
         bus.LastUserName.ShouldBeNull();
 
         await layout.InvokeAsync(() => ((BunitAuthenticationStateProvider)ctx.Services.GetRequiredService<AuthenticationStateProvider>())
-            .TriggerAuthenticationStateChanged("mflanders", [], [], null));
+            .TriggerAuthenticationStateChanged("mflanders"));
 
         await layout.WaitForAssertionAsync(() =>
             layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("2"));
