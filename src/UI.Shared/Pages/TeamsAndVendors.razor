@@ -63,7 +63,7 @@
                         @foreach (var row in _tableData)
                         {
                             var encodedName = Uri.EscapeDataString(row.Employee.UserName);
-                            var searchUrl = $"workorder/search?Assignee={encodedName}";
+                            var searchUrl = $"workorder/search?Assignee={encodedName}&OpenOnly=true";
                             <tr class="teams-table-row">
                                 <td class="col-name" data-testid="@($"{Elements.TableRowName}{row.Employee.UserName}")">
                                     <a href="@searchUrl" class="assignee-link">

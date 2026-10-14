@@ -128,11 +128,11 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         var teamsOpenCount = int.Parse(openCountText);
 
         // Navigate to search page and count results with same assignee filter
-        var searchUrl = $"/workorder/search?Assignee={Uri.EscapeDataString(CurrentUser.UserName)}";
+        var searchUrl = $"/workorder/search?Assignee={Uri.EscapeDataString(CurrentUser.UserName)}&OpenOnly=true";
         await Page.GotoAsync(searchUrl);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        // Count rows in the search results table (open work orders only - no status filter means default to open)
+        // Count rows in the search results table (OpenOnly=true restricts to Draft, Assigned and InProgress, matching the Teams open count)
         var searchResultRows = Page.Locator(".grid-data tbody tr");
         var searchOpenCount = await searchResultRows.CountAsync();
 

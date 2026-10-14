@@ -130,6 +130,7 @@ public class TeamsAndVendorsTests
             href.ShouldNotBeNull();
             href.ShouldContain("workorder/search");
             href.ShouldContain("Assignee=hsimpson");
+            href.ShouldContain("OpenOnly=true");
         });
     }
 
