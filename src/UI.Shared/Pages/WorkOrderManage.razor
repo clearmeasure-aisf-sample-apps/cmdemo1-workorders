@@ -89,16 +89,22 @@
             </div>
 
             <div class="readonly-info">
-                <span class="form-label">Created Date</span>
-                <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
+                <div class="form-group">
+                    <label class="form-label">Created Date</label>
+                    <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
+                </div>
 
-                <span class="form-label">Assigned Date</span>
-                <span data-testid="@Elements.AssignedDate" class="value">@Model.AssignedDate</span>
+                <div class="form-group">
+                    <label class="form-label">Assigned Date</label>
+                    <span data-testid="@Elements.AssignedDate" class="value">@Model.AssignedDate</span>
+                </div>
 
-                <span class="form-label">Completed Date</span>
-                <span data-testid="@Elements.CompletedDate" class="value">@Model.CompletedDate</span>
+                <div class="form-group">
+                    <label class="form-label">Completed Date</label>
+                    <span data-testid="@Elements.CompletedDate" class="value">@Model.CompletedDate</span>
+                </div>
 
-                <div class="due-date-field">
+                <div class="due-date-field form-group">
                     @if (!Model.IsReadOnly)
                     {
                         <label for="DueDate" class="form-label">Due Date</label>
@@ -112,7 +118,7 @@
                     }
                     else
                     {
-                        <span class="form-label">Due Date</span>
+                        <label class="form-label">Due Date</label>
                         <span data-testid="@Elements.DueDateDisplay" class="value @CurrentDueDateCssClass">@Model.DueDateDisplay@if (!string.IsNullOrEmpty(CurrentDueDateUrgencyText))
                             {
                                 <span class="visually-hidden">@CurrentDueDateUrgencyText</span>

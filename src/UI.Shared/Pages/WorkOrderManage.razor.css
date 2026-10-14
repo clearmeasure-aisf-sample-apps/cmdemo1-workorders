@@ -55,7 +55,8 @@
     align-items: start;
 }
 
-.form-label {
+.form-label,
+.work-order-page ::deep .form-label {
     font-weight: 600;
     color: #4a5568;
     font-size: 1rem;
@@ -117,40 +118,10 @@
 
 .readonly-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    padding: 2rem;
-    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-    border-radius: 15px;
-    border: 1px solid #e2e8f0;
+    gap: 2rem;
 }
 
-.readonly-info .form-label {
-    font-weight: 600;
-    color: #4a5568;
-    margin-bottom: 0.5rem;
-    display: block;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding-top: 0;
-}
 
-.readonly-info .value {
-    background: white;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    color: #2d3748;
-    font-weight: 500;
-    border: 1px solid #e2e8f0;
-    margin: 0;
-}
-
-.due-date-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
 
 /* InputDate renders the control, so it never receives this component's CSS
    isolation scope attribute. ::deep reaches it and the read-only span alike. */
@@ -372,12 +343,6 @@
     
     .form-label {
         padding-top: 0;
-    }
-    
-    .readonly-info {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 1.5rem;
     }
     
     .action-buttons {
