@@ -792,9 +792,7 @@ jobs:
     name: Acceptance Tests Coverage Check
     needs:
       - changes
-      - acceptance-tests
-      - acceptance-tests-arm
-    if: always() && !cancelled() && needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -807,12 +805,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/**/*.csproj') }}
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/AcceptanceTests/**/*.csproj') }}
           restore-keys: |
             nuget-${{ runner.os }}-${{ runner.arch }}-
 
-      - name: Restore solution
-        run: dotnet restore src/ChurchBulletin.sln
+      - name: Restore AcceptanceTests
+        run: dotnet restore src/AcceptanceTests/AcceptanceTests.csproj
 
       - name: Build AcceptanceTests
         run: dotnet build src/AcceptanceTests/AcceptanceTests.csproj --configuration Release --no-restore -v minimal
