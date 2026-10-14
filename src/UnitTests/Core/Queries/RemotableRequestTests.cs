@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -87,6 +87,30 @@ public class RemotableRequestTests
         var rehydrated = SimulateRemoteObject(summary);
 
         ObjectMother.AssertAllProperties(summary, rehydrated);
+    }
+
+    [Test]
+    public void ShouldRoundTripReportsQueryAndData()
+    {
+        AssertRemotable(new WorkOrderReportsQuery());
+        var data = new WorkOrderReportsData
+        {
+            CountByStatus = { ["Draft"] = 2, ["Assigned"] = 1 },
+            CountByPriority = { ["High"] = 3 },
+            CountByBuilding = { ["Sanctuary"] = 3 },
+            CompletedPerWeek = { new WorkOrderReportsData.WeeklyCount { WeekEndingDate = new DateOnly(2026, 10, 11), Count = 4 } },
+            AverageDaysToClose = 2.5, OverdueCount = 1, CompletedLast30Days = 9
+        };
+
+        var rehydrated = SimulateRemoteObject(data);
+
+        rehydrated.CountByStatus["Draft"].ShouldBe(2);
+        rehydrated.CountByBuilding["Sanctuary"].ShouldBe(3);
+        rehydrated.CompletedPerWeek.Single().WeekEndingDate.ShouldBe(new DateOnly(2026, 10, 11));
+        rehydrated.CompletedPerWeek.Single().Count.ShouldBe(4);
+        rehydrated.AverageDaysToClose.ShouldBe(2.5);
+        rehydrated.OverdueCount.ShouldBe(1);
+        rehydrated.CompletedLast30Days.ShouldBe(9);
     }
 
     public static object AssertRemotable(object theObject)

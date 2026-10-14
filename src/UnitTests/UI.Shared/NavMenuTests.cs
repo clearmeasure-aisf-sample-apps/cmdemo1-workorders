@@ -74,8 +74,23 @@ public class NavMenuTests
 
         var placeholders = component.FindAll("[aria-disabled='true']");
         placeholders.Select(p => p.QuerySelector(".nav-text")!.TextContent.Trim())
-            .ShouldBe(["Buildings & Rooms", "Reports"]);
+            .ShouldBe(["Buildings & Rooms"]);
         placeholders.ShouldAllBe(p => p.TagName == "SPAN" && p.TextContent.Contains("Soon"));
+    }
+
+    [Test]
+    public async Task ShouldRenderReportsLink_AsEnabledNavLink()
+    {
+        await using var ctx = CreateContext(out _);
+
+        var component = ctx.Render<NavMenu>();
+
+        var reportsLink = component.Find($"[data-testid='{NavMenu.Elements.Reports}']");
+        reportsLink.TagName.ShouldBe("A");
+        reportsLink.ClassList.ShouldContain("nav-link");
+        reportsLink.GetAttribute("href").ShouldBe("reports");
+        reportsLink.TextContent.ShouldContain("Reports");
+        reportsLink.TextContent.ShouldNotContain("Soon");
     }
 
     [Test]

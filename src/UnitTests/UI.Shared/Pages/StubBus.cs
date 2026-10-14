@@ -75,6 +75,30 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return Task.FromResult<TResponse>((TResponse)(object)new[] { "Kitchen", "Sanctuary" });
         }
 
+        if (request is WorkOrderReportsQuery)
+        {
+            var data = new WorkOrderReportsData
+            {
+                CountByStatus = new() { { "Draft", 2 }, { "Assigned", 3 }, { "InProgress", 1 } },
+                CountByPriority = new() { { "High", 2 }, { "Medium", 3 }, { "Low", 1 } },
+                CountByBuilding = new() { { "Sanctuary", 4 }, { "Kitchen", 2 } },
+                CompletedPerWeek =
+                [
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-49)), Count = 1 },
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-42)), Count = 2 },
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-35)), Count = 1 },
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-28)), Count = 3 },
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-21)), Count = 0 },
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-14)), Count = 2 },
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)), Count = 1 },
+                    new() { WeekEndingDate = DateOnly.FromDateTime(DateTime.UtcNow), Count = 2 }
+                ],
+                AverageDaysToClose = 2.5,
+                OverdueCount = 1
+            };
+            return Task.FromResult<TResponse>((TResponse)(object)data);
+        }
+
         if (request is EmployeeWorkLoadQuery)
         {
             var load = new EmployeeWorkLoad { AssignedAndOpen = 5, InProgress = 2, Overdue = 1, CompletedLast30Days = 10 };

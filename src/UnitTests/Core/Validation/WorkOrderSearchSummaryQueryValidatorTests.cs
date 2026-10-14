@@ -30,5 +30,6 @@ public class WorkOrderSearchSummaryQueryValidatorTests
     public void ShouldPass_ForBuildingsQuery()
     {
         new WorkOrderBuildingsQueryValidator().TestValidate(new WorkOrderBuildingsQuery()).IsValid.ShouldBeTrue();
+        new WorkOrderReportsQueryValidator().TestValidate(new WorkOrderReportsQuery()).IsValid.ShouldBeTrue();
     }
 }
