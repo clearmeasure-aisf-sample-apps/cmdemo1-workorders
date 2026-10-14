@@ -55,6 +55,28 @@ public class WorkOrderSummaryCardsTests
         component.Find("[data-testid='SummaryCardOverdue']").GetAttribute("aria-label")!.ShouldContain("Overdue: 0");
     }
 
+    [Test]
+    public async Task ShouldRenderLinks_WhenLinkToSearch()
+    {
+        await using var ctx = new BunitContext();
+
+        var component = ctx.Render<WorkOrderSummaryCards>(p => p
+            .Add(c => c.Summary, new WorkOrderSearchSummary())
+            .Add(c => c.LinkToSearch, true));
+
+        component.FindAll("a.summary-card").Count.ShouldBe(4);
+        component.FindAll("button.summary-card").Count.ShouldBe(0);
+        component.Find("[data-testid='SummaryCardAssignedToMe']").GetAttribute("href")
+            .ShouldBe("workorder/search?AssignedToMe=true&OpenOnly=true");
+        Href(component, "SummaryCardOpen").ShouldBe(WorkOrderSearchUrlState.ForCard(SummaryCard.Open).ToRelativeUri());
+        Href(component, "SummaryCardAssignedToMe").ShouldBe(WorkOrderSearchUrlState.ForCard(SummaryCard.AssignedToMe).ToRelativeUri());
+        Href(component, "SummaryCardOverdue").ShouldBe(WorkOrderSearchUrlState.ForCard(SummaryCard.Overdue).ToRelativeUri());
+        Href(component, "SummaryCardCompleted").ShouldBe(WorkOrderSearchUrlState.ForCard(SummaryCard.Completed).ToRelativeUri());
+    }
+
+    private static string? Href(IRenderedComponent<WorkOrderSummaryCards> component, string testId) =>
+        component.Find($"[data-testid='{testId}']").GetAttribute("href");
+
     private static string Text(IRenderedComponent<WorkOrderSummaryCards> component, string testId) =>
         System.Text.RegularExpressions.Regex.Replace(component.Find($"[data-testid='{testId}']").TextContent, @"\s+", " ").Trim();
 }

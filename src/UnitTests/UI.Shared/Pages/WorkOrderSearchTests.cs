@@ -6,6 +6,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
+using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
@@ -63,6 +64,22 @@ public class WorkOrderSearchTests
 
         var heading = component.Find($"[data-testid='{WorkOrderSearch.Elements.SearchHeadingTooltip}']");
         heading.GetAttribute("title").ShouldBe("Search every work order");
+    }
+
+    [Test]
+    public async Task ShouldRenderSharedPageHeader()
+    {
+        var creator = new Employee(CurrentUsername, "Jeffrey", "Palermo", "j@example.com");
+        creator.AddRole(new Role("creator", true, false));
+        await using var ctx = CreateContext(currentUser: creator);
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var header = component.FindComponent<PageHeader>();
+        header.Find($"h1[data-testid='{WorkOrderSearch.Elements.SearchHeadingTooltip}']").TextContent.ShouldBe("Work Order Search");
+        header.Find($"[data-testid='{WorkOrderSearch.Elements.SearchHint}']").ClassList.ShouldContain("page-subtitle");
+        header.FindAll($".page-actions [data-testid='{WorkOrderSearch.Elements.ExportButton}']").Count.ShouldBe(1);
+        header.FindAll($".page-actions [data-testid='{WorkOrderSearch.Elements.NewWorkOrderButton}']").Count.ShouldBe(1);
     }
 
     [Test]
