@@ -260,13 +260,14 @@ public class StubBusTeamsAndVendors : StubBus
 {
     public List<EmployeeWorkLoadQuery> EmployeeWorkLoadQueriesSent { get; } = new();
 
-    private Employee[] _employeesToReturn = Array.Empty<Employee>();
+    private Employee[]? _employeesToReturn;
+    private bool _employeesInitialized;
 
     public Employee[] EmployeesToReturn
     {
         get
         {
-            if (_employeesToReturn.Length == 0)
+            if (!_employeesInitialized)
             {
                 var emp1 = new Employee("hsimpson", "HOMER", "SIMPSON", "homer@springfield.com");
                 emp1.AddRole(new Role { Name = "Worker", CanCreateWorkOrder = false, CanFulfillWorkOrder = true });
@@ -278,11 +279,16 @@ public class StubBusTeamsAndVendors : StubBus
                 emp3.AddRole(new Role { Name = "Worker", CanCreateWorkOrder = false, CanFulfillWorkOrder = true });
 
                 _employeesToReturn = [emp1, emp2, emp3];
+                _employeesInitialized = true;
             }
 
-            return _employeesToReturn;
+            return _employeesToReturn ?? Array.Empty<Employee>();
         }
-        set => _employeesToReturn = value;
+        set
+        {
+            _employeesToReturn = value;
+            _employeesInitialized = true;
+        }
     }
 
     public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
