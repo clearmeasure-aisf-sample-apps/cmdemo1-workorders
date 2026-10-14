@@ -132,8 +132,14 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await Page.GotoAsync(searchUrl);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
+        // Results render asynchronously after the interactive circuit runs the search, so wait
+        // (web-first) for both assigned work orders before counting; CountAsync does not wait.
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + wo1.Number)).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + wo2.Number)).ToBeVisibleAsync();
+
         // Count rows in the search results table (OpenOnly=true restricts to Draft, Assigned and InProgress, matching the Teams open count)
         var searchResultRows = Page.Locator(".grid-data tbody tr");
+        await Expect(searchResultRows).ToHaveCountAsync(teamsOpenCount);
         var searchOpenCount = await searchResultRows.CountAsync();
 
         // Counts should match
