@@ -64,6 +64,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var rows = Page.Locator(".teams-table tbody tr");
+        await Expect(rows.First).ToBeVisibleAsync();
         var rowCount = await rows.CountAsync();
         rowCount.ShouldBeGreaterThan(0);
 
@@ -89,6 +90,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await Expect(headers.First).ToBeVisibleAsync();
 
         var rows = table.Locator("tbody tr");
+        await Expect(rows.First).ToBeVisibleAsync();
         var rowCount = await rows.CountAsync();
         rowCount.ShouldBeGreaterThan(0);
 
@@ -113,11 +115,9 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         // Mark wo3 as complete (not open)
         var wo3Full = await Bus.Send(new WorkOrderByNumberQuery(wo3.Number!)) ?? throw new InvalidOperationException();
         wo3Full.ChangeStatus(WorkOrderStatus.Complete);
-        using (var context = TestHost.NewDbContext())
-        {
-            context.Update(wo3Full);
-            await context.SaveChangesAsync();
-        }
+        await using var completeContext = TestHost.NewDbContext();
+        completeContext.Update(wo3Full);
+        await completeContext.SaveChangesAsync();
 
         // Read open count from Teams & Vendors page
         await Page.GotoAsync("/admin/teams");
@@ -173,7 +173,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
     {
         using var readContext = TestHost.NewDbContext();
         var wo = readContext.Set<WorkOrder>().Single(w => w.Number == workOrder.Number);
-        wo.Assignee = employee;
+        wo.Assignee = readContext.Set<Employee>().Single(e => e.UserName == employee.UserName);
         wo.ChangeStatus(WorkOrderStatus.Assigned);
         using var writeContext = TestHost.NewDbContext();
         writeContext.Update(wo);

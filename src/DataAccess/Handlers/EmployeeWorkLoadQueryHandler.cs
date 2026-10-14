@@ -22,23 +22,27 @@ public class EmployeeWorkLoadQueryHandler(DataContext context, TimeProvider time
         var today = ChurchTimeZone.Today(timeProvider);
         var thirtyDaysAgo = timeProvider.GetUtcNow().DateTime.AddDays(-30);
 
+        var open = workOrders.Where(IsOpen).ToList();
         var load = new EmployeeWorkLoad
         {
-            AssignedAndOpen = workOrders.Count(wo =>
-                wo.Status == WorkOrderStatus.Draft ||
-                wo.Status == WorkOrderStatus.Assigned ||
-                wo.Status == WorkOrderStatus.InProgress),
-            InProgress = workOrders.Count(wo => wo.Status == WorkOrderStatus.InProgress),
-            Overdue = workOrders.Count(wo =>
-                (wo.Status == WorkOrderStatus.Draft ||
-                 wo.Status == WorkOrderStatus.Assigned ||
-                 wo.Status == WorkOrderStatus.InProgress) &&
-                wo.DueDate < today),
-            CompletedLast30Days = workOrders.Count(wo =>
-                wo.Status == WorkOrderStatus.Complete &&
-                wo.CompletedDate >= thirtyDaysAgo)
+            AssignedAndOpen = open.Count,
+            InProgress = open.Count(wo => wo.Status == WorkOrderStatus.InProgress),
+            Overdue = open.Count(wo => wo.DueDate < today),
+            CompletedLast30Days = workOrders.Count(wo => IsCompletedSince(wo, thirtyDaysAgo))
         };
 
         return load;
+    }
+
+    private static bool IsOpen(WorkOrder workOrder)
+    {
+        return workOrder.Status == WorkOrderStatus.Draft ||
+               workOrder.Status == WorkOrderStatus.Assigned ||
+               workOrder.Status == WorkOrderStatus.InProgress;
+    }
+
+    private static bool IsCompletedSince(WorkOrder workOrder, DateTime since)
+    {
+        return workOrder.Status == WorkOrderStatus.Complete && workOrder.CompletedDate >= since;
     }
 }
