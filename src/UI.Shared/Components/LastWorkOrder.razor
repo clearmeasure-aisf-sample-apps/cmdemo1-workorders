@@ -4,7 +4,7 @@
 
 @if (WorkOrderLastChanged != null)
 {
-    <NavLink href="/workorder/manage/@(WorkOrderLastChanged?.Number)?mode=Edit"
+    <NavLink href="@($"/workorder/manage/{WorkOrderLastChanged?.Number}?mode=Edit")"
              class="nav-link"
              title="Most recently viewed work order"
              data-testid="@nameof(Elements.LastWorkOrderTooltip)">
