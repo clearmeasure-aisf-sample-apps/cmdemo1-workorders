@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
@@ -88,20 +89,51 @@ public class ReportsPageTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Reports_AverageDaysToClose_ShouldMatchSearchPage()
     {
-        // Verify that the Reports query result agrees with the Search page's summary KPI
-        await SeedData();
-        await LoginAsCurrentUser();
+        // Both queries share one clock that is later than every stored work order date, so their
+        // 30-day completion window holds only the two orders this test completes.
+        var clock = TestData.FutureClock();
+        var now = clock.GetUtcNow().UtcDateTime;
+        var tag = TestData.Tag();
+        var userName = TestData.UserName("rpavg");
+        var employee = new Employee(userName, "Reports", "Average", TestData.Email(userName));
 
-        // Get reports data
-        var reportsQuery = new WorkOrderReportsQuery();
-        var reportsData = await Bus.Send(reportsQuery);
+        await using (var seed = TestHost.NewDbContext())
+        {
+            seed.Add(employee);
+            seed.Add(new WorkOrder
+            {
+                Creator = employee,
+                Number = TestData.Number("R"),
+                Title = $"[{tag}] avg",
+                Status = WorkOrderStatus.Complete,
+                CreatedDate = now.AddDays(-10),
+                CompletedDate = now.AddDays(-3)
+            });
+            seed.Add(new WorkOrder
+            {
+                Creator = employee,
+                Number = TestData.Number("R"),
+                Title = $"[{tag}] avg",
+                Status = WorkOrderStatus.Complete,
+                CreatedDate = now.AddDays(-8),
+                CompletedDate = now.AddDays(-2)
+            });
+            await seed.SaveChangesAsync();
+        }
 
-        // Get search summary data
-        var searchQuery = new WorkOrderSearchSummaryQuery(CurrentUser.UserName);
-        var searchSummary = await Bus.Send(searchQuery);
+        await using var ctx = TestHost.NewDbContext();
+        var reportsData = await new WorkOrderReportsQueryHandler(ctx, clock).Handle(new WorkOrderReportsQuery());
+        var searchSummary = await new WorkOrderSearchSummaryQueryHandler(ctx, clock)
+            .Handle(new WorkOrderSearchSummaryQuery(userName));
 
-        // Both should have the same average days to close
+        // 7 and 6 days to close average to 6.5 on both pages
+        reportsData.AverageDaysToClose.ShouldNotBeNull();
+        searchSummary.AverageDaysToClose.ShouldNotBeNull();
+        reportsData.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
+        searchSummary.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
         reportsData.AverageDaysToClose.ShouldBe(searchSummary.AverageDaysToClose);
+        reportsData.CompletedLast30Days.ShouldBe(2);
+        searchSummary.CompletedLast30Days.ShouldBe(2);
     }
 
     [Test, Retry(2)]

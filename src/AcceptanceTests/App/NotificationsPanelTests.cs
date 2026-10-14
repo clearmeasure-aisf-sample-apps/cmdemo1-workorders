@@ -172,6 +172,8 @@ public class NotificationsPanelTests : AcceptanceTestBase
         await bellButton.ClickAsync();
         await Expect(Page.Locator(".notifications-panel")).ToBeVisibleAsync();
 
+        // The panel registers its Escape handler after its first render; wait for it before pressing the key
+        await Page.WaitForFunctionAsync("() => !!window.notificationsPanelKeydownHandler");
         await Page.Keyboard.PressAsync("Escape");
 
         await Expect(Page.Locator(".notifications-panel")).ToBeHiddenAsync();
