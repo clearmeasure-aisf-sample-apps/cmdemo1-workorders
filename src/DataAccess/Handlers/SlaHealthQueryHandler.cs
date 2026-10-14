@@ -51,8 +51,8 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         }
 
         var onTimeCount = monthOrders.Count(wo =>
-            wo.CompletedDate.HasValue && wo.DueDate.HasValue &&
-            DateOnly.FromDateTime(wo.CompletedDate.Value) <= wo.DueDate);
+            wo.CompletedDate is { } completedDate && wo.DueDate is { } dueDate &&
+            DateOnly.FromDateTime(completedDate) <= dueDate);
         var percentage = (decimal)onTimeCount / monthOrders.Count * 100;
 
         return new MonthSlaData { TotalCount = monthOrders.Count, Percentage = Math.Round(percentage, 0) };

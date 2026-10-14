@@ -7,5 +7,4 @@ namespace ClearMeasure.Bootcamp.Core.Queries;
 /// SLA = share of work orders completed within the month whose CompletedDate &lt;= DueDate.
 /// Orders without DueDate are excluded; months use ChurchTimeZone.
 /// </summary>
-/// <param name="UserName">Optional filter; currently unused, reserved for future multi-tenant scoping.</param>
-public record SlaHealthQuery(string? UserName = null) : IRequest<SlaHealth>, IRemotableRequest;
+public record SlaHealthQuery : IRequest<SlaHealth>, IRemotableRequest;
