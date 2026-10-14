@@ -40,6 +40,11 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private string? CurrentDueDateUrgencyText =>
         DueDateUrgencyCalculator.ScreenReaderText(CurrentDueDateUrgency);
 
+    private string CurrentStatusBadgeCssClass =>
+        _workOrder == null
+            ? string.Empty
+            : StatusBadgeCssClassMapper.CssClass(_workOrder.Status);
+
     public WorkOrderManageModel Model { get; set; } = new();
     private List<SelectListItem> UserOptions { get; set; } = new();
     private IEnumerable<IStateCommand> ValidCommands { get; set; } = new List<IStateCommand>();
