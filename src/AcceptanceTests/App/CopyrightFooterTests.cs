@@ -61,9 +61,7 @@ public class CopyrightFooterTests : AcceptanceTestBase
 
         var footerNote = Page.GetByTestId(nameof(MainLayout.Elements.FooterNote));
         await footerNote.WaitForAsync();
-        await Expect(footerNote).ToBeVisibleAsync();
-        await Expect(footerNote).ToContainTextAsync("Submit a new work order any time");
-        await Expect(footerNote).ToContainTextAsync("Thank you for serving!");
+        await Expect(footerNote).ToContainTextAsync("Requests are typically reviewed within one business day.");
     }
 
     [Test, Retry(2)]
@@ -92,7 +90,7 @@ public class CopyrightFooterTests : AcceptanceTestBase
         var href = await gitSha.GetAttributeAsync("href");
         if (href is not null)
         {
-            href.ShouldContain("github.com/ClearMeasureLabs/bootcamp-palermo-workorders/commit/");
+            href.ShouldContain("github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/");
         }
     }
 

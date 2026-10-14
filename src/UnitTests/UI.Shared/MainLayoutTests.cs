@@ -307,7 +307,7 @@ public class MainLayoutTests
         var layout = component.FindComponent<MainLayout>();
 
         var note = layout.Find($"[data-testid='{nameof(MainLayout.Elements.FooterNote)}']");
-        note.TextContent.Trim().ShouldBe("Submit a new work order any time — requests are typically reviewed within one business day. Thank you for serving!");
+        note.TextContent.Trim().ShouldBe("Requests are typically reviewed within one business day.");
 
         var footer = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}']");
         footer.QuerySelector($"[data-testid='{nameof(MainLayout.Elements.FooterNote)}']").ShouldNotBeNull();
@@ -527,7 +527,7 @@ public class MainLayoutTests
         anchor.TagName.ShouldBe("A");
         var href = anchor.GetAttribute("href");
         href.ShouldNotBeNull();
-        href.ShouldContain("github.com/ClearMeasureLabs/bootcamp-palermo-workorders/commit/abc1234def5678901");
+        href.ShouldContain("github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/abc1234def5678901");
     }
 
     [Test]
