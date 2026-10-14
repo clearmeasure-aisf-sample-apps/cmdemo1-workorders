@@ -37,7 +37,7 @@ alwaysApply: true
 | Concern | Location |
 |--------|----------|
 | Domain models | `src/Core/Model/` (WorkOrder, Employee, WorkOrderStatus, WorkOrderPriority, Role, etc.) |
-| Queries (CQRS) | `src/Core/Queries/` (e.g. WorkOrderByNumberQuery, EmployeeByUserNameQuery, WorkOrderSpecificationQuery, WorkOrderSearchSummaryQuery, WorkOrderBuildingsQuery) |
+| Queries (CQRS) | `src/Core/Queries/` (e.g. WorkOrderByNumberQuery, EmployeeByUserNameQuery, WorkOrderSpecificationQuery, WorkOrderSearchSummaryQuery, WorkOrderBuildingsQuery, RecentWorkOrdersQuery) |
 | State commands | `src/Core/Model/StateCommands/`, `src/Core/Services/IStateCommand.cs` |
 | Bus/MediatR | `src/Core/IBus.cs`; handlers in DataAccess and UI |
 | EF context & mappings | `src/DataAccess/Mappings/` (DataContext, *Map.cs) |

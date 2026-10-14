@@ -6,25 +6,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
+/// <summary>
+/// Counts work orders per status with the same status filter Work Order Search applies, so each
+/// count equals the search total for that status.
+/// </summary>
 public class WorkOrderCountByStatusQueryHandler(DataContext context) :
     IRequestHandler<WorkOrderCountByStatusQuery, Dictionary<string, int>>
 {
     public async Task<Dictionary<string, int>> Handle(WorkOrderCountByStatusQuery request,
         CancellationToken cancellationToken = default)
     {
-        // GroupBy on a value-converter property cannot be translated to SQL.
-        // Load statuses client-side and group in memory.
-        var statuses = await context.Set<WorkOrder>()
-            .AsNoTracking()
-            .Select(wo => wo.Status)
-            .ToListAsync(cancellationToken);
-
-        var result = WorkOrderStatus.GetAllItems()
-            .ToDictionary(s => s.Key, _ => 0);
-
-        foreach (var status in statuses)
+        var orders = context.Set<WorkOrder>().AsNoTracking();
+        var result = new Dictionary<string, int>();
+        foreach (var status in WorkOrderStatus.GetAllItems())
         {
-            result[status.Key]++;
+            result[status.Key] = await WorkOrderQueryFilters.Apply(orders, null, null, status)
+                .CountAsync(cancellationToken);
         }
 
         return result;

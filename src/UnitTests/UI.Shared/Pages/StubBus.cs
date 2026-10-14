@@ -13,6 +13,11 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
     public int SummaryRequestCount { get; private set; }
 
+    public string? LastSummaryUserName { get; private set; }
+
+    public Dictionary<string, int>? StatusCounts { get; init; }
+
+    public WorkOrder[] RecentWorkOrders { get; init; } = [];
 
     public WorkOrderSpecificationQuery? LastSpecification { get; private set; }
 
@@ -60,14 +65,20 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
         if (request is WorkOrderCountByStatusQuery)
         {
-            var counts = WorkOrderStatus.GetAllItems().ToDictionary(s => s.Key, _ => 0);
+            var counts = StatusCounts ?? WorkOrderStatus.GetAllItems().ToDictionary(s => s.Key, _ => 0);
             return Task.FromResult<TResponse>((TResponse)(object)counts);
         }
 
-        if (request is WorkOrderSearchSummaryQuery)
+        if (request is WorkOrderSearchSummaryQuery summaryQuery)
         {
             SummaryRequestCount++;
+            LastSummaryUserName = summaryQuery.UserName;
             return Task.FromResult<TResponse>((TResponse)(object)Summary);
+        }
+
+        if (request is RecentWorkOrdersQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)RecentWorkOrders);
         }
 
         if (request is WorkOrderBuildingsQuery)

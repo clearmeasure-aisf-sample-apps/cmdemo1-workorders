@@ -2,12 +2,11 @@
 
 <div class="search-page">
     <div class="search-container">
-        <header class="search-header">
-            <div class="search-heading">
-                <h1 title="Search every work order" data-testid="@Elements.SearchHeadingTooltip">Work Order Search</h1>
-                <p class="search-subtitle" data-testid="@Elements.SearchHint">Find, triage and track maintenance requests across all church facilities.</p>
-            </div>
-            <div class="search-actions">
+        <PageHeader Title="Work Order Search" TitleTooltip="Search every work order"
+                    TitleTestId="@nameof(Elements.SearchHeadingTooltip)"
+                    Subtitle="Find, triage and track maintenance requests across all church facilities."
+                    SubtitleTestId="@nameof(Elements.SearchHint)">
+            <Actions>
                 <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.ExportButton"
                         disabled="@(Model.Results.Length == 0)" title="Download the filtered work orders as CSV" @onclick="ExportAllAsync">
                     <i class="bi bi-download" aria-hidden="true"></i> Export
@@ -33,8 +32,8 @@
                         <i class="bi bi-plus-lg" aria-hidden="true"></i> New Work Order
                     </a>
                 }
-            </div>
-        </header>
+            </Actions>
+        </PageHeader>
 
         <WorkOrderSummaryCards Summary="_summary" OnCardSelected="HandleCardSelected"/>
 

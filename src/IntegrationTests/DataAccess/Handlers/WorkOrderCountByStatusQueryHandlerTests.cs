@@ -40,4 +40,36 @@ public class WorkOrderCountByStatusQueryHandlerTests
         result[WorkOrderStatus.Complete.Key].ShouldBe(0);
         result[WorkOrderStatus.Cancelled.Key].ShouldBe(0);
     }
+
+    [Test]
+    public async Task ShouldMatchSearchTotal_ForEachStatus()
+    {
+        new DatabaseTests().Clean();
+        var creator = new Employee("wocbs_search", "First", "Last", "search@test.com");
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.Add(new WorkOrder { Creator = creator, Number = "WOCBS-A", Status = WorkOrderStatus.Draft });
+            context.Add(new WorkOrder { Creator = creator, Number = "WOCBS-B", Status = WorkOrderStatus.Assigned });
+            context.Add(new WorkOrder { Creator = creator, Number = "WOCBS-C", Status = WorkOrderStatus.Assigned });
+            context.Add(new WorkOrder { Creator = creator, Number = "WOCBS-D", Status = WorkOrderStatus.InProgress });
+            context.Add(new WorkOrder { Creator = creator, Number = "WOCBS-E", Status = WorkOrderStatus.Complete });
+            context.Add(new WorkOrder { Creator = creator, Number = "WOCBS-F", Status = WorkOrderStatus.Cancelled });
+            context.Add(new WorkOrder { Creator = creator, Number = "WOCBS-G", Status = WorkOrderStatus.Cancelled });
+            await context.SaveChangesAsync();
+        }
+
+        var dataContext = TestHost.GetRequiredService<DataContext>();
+        var counts = await new WorkOrderCountByStatusQueryHandler(dataContext).Handle(new WorkOrderCountByStatusQuery());
+
+        foreach (var status in WorkOrderStatus.GetAllItems())
+        {
+            var specification = new WorkOrderSpecificationQuery();
+            specification.MatchStatus(status);
+            var found = await new WorkOrderSearchHandler(dataContext, TimeProvider.System).Handle(specification);
+            counts[status.Key].ShouldBe(found.Length, status.Key);
+        }
+
+        counts.Values.Sum().ShouldBe(7);
+    }
 }

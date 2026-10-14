@@ -309,7 +309,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         (await select.EvaluateAsync<string>("e => getComputedStyle(e).borderTopLeftRadius")).ShouldBe("8px");
         (await Page.Locator(".filters-card").EvaluateAsync<string>("e => getComputedStyle(e).borderTopLeftRadius")).ShouldBe("12px");
         (await Page.Locator(".summary-card").First.EvaluateAsync<string>("e => getComputedStyle(e).borderTopLeftRadius")).ShouldBe("12px");
-        (await Page.Locator(".search-heading h1").EvaluateAsync<string>("e => getComputedStyle(e).fontSize")).ShouldBe("26px");
+        (await Page.Locator(".page-heading h1").EvaluateAsync<string>("e => getComputedStyle(e).fontSize")).ShouldBe("26px");
     }
 
     [Test, Retry(2)]

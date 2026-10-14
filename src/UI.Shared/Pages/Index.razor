@@ -2,84 +2,92 @@
 
 <PageTitle>Kalahari Church Work Order System</PageTitle>
 
-<div class="greeting-banner" data-testid="@nameof(Elements.GreetingBanner)">
-    <i class="greeting-banner-emoji bi bi-building" aria-hidden="true" data-testid="@nameof(Elements.GreetingBannerEmoji)"></i>
-    <p>Welcome to the AI Software Factory! Have a blessed day.</p>
-</div>
+<div class="dashboard-page">
+    <div class="dashboard-container">
+        <PageHeader Title="Dashboard" TitleTooltip="Work order home" TitleTestId="@nameof(Elements.HomeHeadingTooltip)"
+                    Subtitle="Track and manage work orders in one place." SubtitleTestId="@nameof(Elements.HomeTagline)">
+            <Actions>
+                <AuthorizeView>
+                    <Authorized>
+                        @if (_canCreate)
+                        {
+                            <a class="btn-app btn-app--primary" data-testid="@nameof(Elements.QuickLinkNewRequest)" href="workorder/manage?mode=New">
+                                <i class="bi bi-plus-lg" aria-hidden="true"></i> New Request
+                            </a>
+                        }
+                        <a class="btn-app btn-app--secondary" data-testid="@nameof(Elements.QuickLinkWorkOrders)" href="workorder/search"
+                           aria-label="All Work Orders">
+                            <i class="bi bi-list-ul" aria-hidden="true"></i> Work Orders
+                        </a>
+                        <a class="btn-app btn-app--secondary" data-testid="@nameof(Elements.QuickLinkMyQueue)" href="@MyQueueHref">
+                            <i class="bi bi-person-check" aria-hidden="true"></i> My queue
+                        </a>
+                    </Authorized>
+                </AuthorizeView>
+            </Actions>
+        </PageHeader>
 
-<div class="church-hero">
-    <div class="church-header">
-        <i class="church-icon bi bi-building" aria-hidden="true"></i>
-        <h1 class="church-title" title="Work order home" data-testid="@nameof(Elements.HomeHeadingTooltip)">Kalahari Church</h1>
-        <div class="church-subtitle">Reverend Timothy Lovejoy Jr., Pastor</div>
-    </div>
+        <AuthorizeView>
+            <Authorized>
+                <WorkOrderSummaryCards Summary="_summary" LinkToSearch="true"/>
 
-    <div class="church-welcome">
-        <div class="welcome-message">
-            <p data-testid="@nameof(Elements.HomeTagline)">Track and manage work orders in one place.</p>
-            <p>Come pitch in and serve at the church!</p>
-            <p class="lovejoy-quote">"Remember, we're here to help our community... and keep the pews from falling apart."</p>
-            <p class="attribution">- Reverend Lovejoy</p>
-        </div>
-
-        <div class="church-illustration">
-            <div class="church-building">
-                <div class="church-steeple">
-                    <i class="cross bi bi-plus-lg" aria-hidden="true"></i>
-                </div>
-                <div class="church-main">
-                    <div class="church-door"></div>
-                    <div class="church-window left"></div>
-                    <div class="church-window right"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="church-info">
-        <div class="info-card">
-            <h3><i class="bi bi-tools" aria-hidden="true"></i> Work Orders</h3>
-            <p>Submit and manage maintenance requests for our sacred facilities</p>
-        </div>
-        <div class="info-card">
-            <h3><i class="bi bi-people" aria-hidden="true"></i> Volunteers</h3>
-            <p>Join our dedicated team of church workers and volunteers</p>
-        </div>
-        <div class="info-card">
-            <h3><i class="bi bi-calendar" aria-hidden="true"></i> Schedule</h3>
-            <p>Check upcoming services and maintenance schedules</p>
-        </div>
-    </div>
-
-    <AuthorizeView>
-        <Authorized>
-            <div class="status-dashboard" data-testid="@nameof(Elements.StatusDashboard)">
-                @foreach (var status in StatusItems)
+                @if (_statusCounts != null)
                 {
-                    var count = _statusCounts.GetValueOrDefault(status.Key);
-                    <div class="status-card" data-testid="@(nameof(Elements.StatusCard) + status.Key)">
-                        <div class="status-card-count" data-testid="@(nameof(Elements.StatusCardCount) + status.Key)">@count</div>
-                        <div class="status-card-label">@status.FriendlyName</div>
-                    </div>
+                    <section class="status-cards" data-testid="@nameof(Elements.StatusDashboard)" aria-label="Work orders by status">
+                        @foreach (var card in DashboardStatusCards.Build(_statusCounts))
+                        {
+                            <KpiCard TestId="@(nameof(Elements.StatusCard) + card.Status.Key)"
+                                     ValueTestId="@(nameof(Elements.StatusCardCount) + card.Status.Key)"
+                                     Label="@card.Status.FriendlyName" Count="card.Count" Tone="@card.Tone" Icon="@card.Icon"
+                                     Href="@StatusHref(card.Status)"/>
+                        }
+                    </section>
                 }
-            </div>
-        </Authorized>
-    </AuthorizeView>
 
-    <div class="church-footer">
-        <p>"Blessed are those who maintain the house of the Lord" - Kalahari Church Manual</p>
+                <section class="recent-activity" data-testid="@nameof(Elements.RecentActivity)" aria-labelledby="recent-activity-heading">
+                    <h2 id="recent-activity-heading" class="recent-activity-title">Recent activity</h2>
+                    @if (_recent.Length == 0)
+                    {
+                        <p class="recent-activity-empty" data-testid="@nameof(Elements.RecentActivityEmpty)">No work order activity yet.</p>
+                    }
+                    else
+                    {
+                        <ol class="activity-list">
+                            @foreach (var order in _recent)
+                            {
+                                <li class="activity-item" data-testid="@(nameof(Elements.RecentActivityItem) + order.Number)">
+                                    <a class="activity-number" data-testid="@(nameof(Elements.RecentActivityLink) + order.Number)"
+                                       href="/workorder/manage/@order.Number?mode=Edit">WO-@order.Number</a>
+                                    <span class="activity-title">@order.Title</span>
+                                    <span class="activity-meta">@ActivityText(order)</span>
+                                </li>
+                            }
+                        </ol>
+                    }
+                </section>
+            </Authorized>
+            <NotAuthorized>
+                <p class="sign-in-prompt" data-testid="@nameof(Elements.SignInPrompt)">Sign in to see your work orders.</p>
+            </NotAuthorized>
+        </AuthorizeView>
     </div>
 </div>
 
 @code {
     public enum Elements
     {
-        GreetingBanner,
-        GreetingBannerEmoji,
         HomeTagline,
         HomeHeadingTooltip,
         StatusDashboard,
         StatusCard,
-        StatusCardCount
+        StatusCardCount,
+        QuickLinkNewRequest,
+        QuickLinkWorkOrders,
+        QuickLinkMyQueue,
+        RecentActivity,
+        RecentActivityItem,
+        RecentActivityLink,
+        RecentActivityEmpty,
+        SignInPrompt
     }
 }
