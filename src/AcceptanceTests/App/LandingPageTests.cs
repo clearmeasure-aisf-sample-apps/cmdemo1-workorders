@@ -6,31 +6,16 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 public class LandingPageTests : AcceptanceTestBase
 {
     [Test, Retry(2)]
-    public async Task Should_DisplayChurchTitle_WithDarkGreyColor()
+    public async Task Should_ShowDashboardHeader_WithoutHero_WhenSignedOut()
     {
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        var titleElement = Page.Locator(".church-title");
-        await titleElement.WaitForAsync();
+        var heading = Page.Locator($"h1[data-testid='{nameof(IndexPage.Elements.HomeHeadingTooltip)}']");
+        await heading.WaitForAsync();
 
-        var titleColor = await titleElement.EvaluateAsync<string>("element => window.getComputedStyle(element).color");
-        
-        titleColor.ShouldBe("rgb(169, 169, 169)");
-    }
-
-    [Test, Retry(2)]
-    public async Task Should_DisplayGreetingBanner_WithExpectedText()
-    {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-        var banner = Page.GetByTestId(nameof(IndexPage.Elements.GreetingBanner));
-        await banner.WaitForAsync();
-
-        await Expect(banner).ToBeVisibleAsync();
-        await Expect(banner).ToContainTextAsync("Welcome to the AI Software Factory! Have a blessed day.");
-
-        var emoji = Page.GetByTestId(nameof(IndexPage.Elements.GreetingBannerEmoji));
-        await emoji.WaitForAsync();
-        await Expect(emoji).ToBeVisibleAsync();
+        var titleColor = await heading.EvaluateAsync<string>("element => window.getComputedStyle(element).color");
+        titleColor.ShouldBe("rgb(15, 23, 42)");
+        await Expect(Page.Locator(".church-hero, .church-illustration, .lovejoy-quote")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId(nameof(IndexPage.Elements.SignInPrompt))).ToBeVisibleAsync();
     }
 }
