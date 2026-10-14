@@ -338,7 +338,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
                 CompletedDate = _testStartDate.AddDays(-5).ToDateTime(TimeOnly.MinValue),
                 DueDate = _testStartDate.AddDays(-10)
             },
-            // Completed 29 days ago (just inside the window)
+            // Completed 20 days ago (inside the window)
             new()
             {
                 Creator = creator,
@@ -347,7 +347,7 @@ public class WorkOrderBuildingsAndRoomsQueryHandlerTests
                 Building = building,
                 RoomNumber = room,
                 Status = WorkOrderStatus.Complete,
-                CompletedDate = _testStartDate.AddDays(-30).ToDateTime(TimeOnly.MinValue),
+                CompletedDate = _testStartDate.AddDays(-20).ToDateTime(TimeOnly.MinValue),
                 DueDate = _testStartDate.AddDays(-35)
             },
             // Completed 31 days ago (outside window)
