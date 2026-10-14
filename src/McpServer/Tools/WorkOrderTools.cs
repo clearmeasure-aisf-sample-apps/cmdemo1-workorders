@@ -432,12 +432,11 @@ public class WorkOrderTools
         }
 
         var trimmed = priorityStr.Trim();
-        if (Enum.TryParse<WorkOrderPriority>(trimmed, ignoreCase: true, out var parsed))
+        var match = Enum.GetNames<WorkOrderPriority>()
+            .FirstOrDefault(n => string.Equals(n, trimmed, StringComparison.OrdinalIgnoreCase));
+        if (match != null)
         {
-            if (Enum.IsDefined(parsed))
-            {
-                return (parsed, null);
-            }
+            return (Enum.Parse<WorkOrderPriority>(match), null);
         }
 
         return (WorkOrderPriority.Medium, $"Invalid priority '{priorityStr}'. Valid values are: Low, Medium, High.");
