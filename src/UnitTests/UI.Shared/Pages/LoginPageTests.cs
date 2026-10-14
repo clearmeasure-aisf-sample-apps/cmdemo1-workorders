@@ -382,7 +382,7 @@ public class LoginPageTests
 
         var component = ctx.Render<Login>();
 
-        var link = component.Find("a[href='mailto:office@firstchurchofshelbyville.org']");
+        var link = component.Find("a[href='mailto:office@kalaharichurch.example']");
         link.TextContent.ShouldBe("Forgot your login?");
     }
 
@@ -400,8 +400,8 @@ public class LoginPageTests
 
         var component = ctx.Render<Login>();
 
-        var link = component.Find("a[href='mailto:office@firstchurchofshelbyville.org']");
-        link.GetAttribute("href").ShouldBe("mailto:office@firstchurchofshelbyville.org");
+        var link = component.Find("a[href='mailto:office@kalaharichurch.example']");
+        link.GetAttribute("href").ShouldBe("mailto:office@kalaharichurch.example");
     }
 
     [Test]
@@ -418,7 +418,7 @@ public class LoginPageTests
 
         var component = ctx.Render<Login>();
 
-        var link = component.Find("small > a[href='mailto:office@firstchurchofshelbyville.org']");
+        var link = component.Find("small > a[href='mailto:office@kalaharichurch.example']");
         link.ShouldNotBeNull();
     }
 
