@@ -139,7 +139,7 @@
             <div class="results-header">
                 <div class="results-title">
                     <h2 id="results-heading" class="card-title">Results</h2>
-                    <span class="count-pill" data-testid="@Elements.ResultsCountPill" aria-live="polite">@CurrentPage.CountText</span>
+                    <span class="count-pill" data-testid="@Elements.ResultsCountPill" aria-live="polite">@CountPillText</span>
                 </div>
                 <div class="results-tools">
                     <label for="@Elements.SortSelect" class="visually-hidden">Sort results</label>
@@ -150,11 +150,12 @@
                         }
                     </select>
                     <div class="view-switch" role="group" aria-label="View">
-                        <button type="button" class="view-switch-button is-active" data-testid="@Elements.TableViewButton" aria-pressed="true">
+                        <button type="button" class="@ViewButtonClass(SearchView.Table)" data-testid="@Elements.TableViewButton"
+                                aria-pressed="@ViewPressed(SearchView.Table)" @onclick="() => HandleViewSelected(SearchView.Table)">
                             <i class="bi bi-list-ul" aria-hidden="true"></i> Table
                         </button>
-                        <button type="button" class="view-switch-button" data-testid="@Elements.BoardViewButton" aria-pressed="false"
-                                aria-disabled="true" title="Board view coming later">
+                        <button type="button" class="@ViewButtonClass(SearchView.Board)" data-testid="@Elements.BoardViewButton"
+                                aria-pressed="@ViewPressed(SearchView.Board)" @onclick="() => HandleViewSelected(SearchView.Board)">
                             <i class="bi bi-kanban" aria-hidden="true"></i> Board
                         </button>
                     </div>
@@ -169,6 +170,55 @@
                     </div>
                     <p>No work orders found matching your search criteria.</p>
                     <p>Try adjusting your filters or create a new work order.</p>
+                </div>
+            }
+            else if (_state.View == SearchView.Board)
+            {
+                <div class="board-scroll">
+                    <div class="board" data-testid="@Elements.BoardView">
+                        @foreach (var column in BoardColumns)
+                        {
+                            var key = column.Status.Key;
+                            var headingId = $"board-column-{key}";
+                            <section class="board-column" data-testid="@($"{Elements.BoardColumn}{key}")" aria-labelledby="@headingId">
+                                <h3 id="@headingId" class="board-column-heading">
+                                    <span class="@column.Pill.CssClass">@column.Pill.Text</span>
+                                    <span class="board-column-count" data-testid="@($"{Elements.BoardColumnCount}{key}")">@column.Cards.Length</span>
+                                </h3>
+                                @if (column.Cards.Length == 0)
+                                {
+                                    <p class="board-column-empty" data-testid="@($"{Elements.BoardColumnEmpty}{key}")">No work orders</p>
+                                }
+                                else
+                                {
+                                    <ul class="board-cards">
+                                        @foreach (var card in column.Cards)
+                                        {
+                                            <li>
+                                                <a class="board-card" data-testid="@(Elements.BoardCard + card.Number)" href="/workorder/manage/@card.Number?mode=Edit">
+                                                    <span class="board-card-number">@card.DisplayNumber</span>
+                                                    <span class="board-card-title">@card.Title</span>
+                                                    <span class="board-card-meta">
+                                                        @PriorityView(card)
+                                                        <span class="board-card-assignee">@AvatarView(card)<span class="visually-hidden">@AssigneeText(card)</span></span>
+                                                        @if (string.IsNullOrWhiteSpace(card.WorkOrder.RoomNumber))
+                                                        {
+                                                            <span class="board-card-room muted-cell" aria-label="No room">–</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="board-card-room">@card.WorkOrder.RoomNumber</span>
+                                                        }
+                                                    </span>
+                                                    <span class="board-card-due">@DueDateView(card)</span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </section>
+                        }
+                    </div>
                 </div>
             }
             else
@@ -215,19 +265,16 @@
                                     }
                                 </td>
                                 <td class="col-priority" data-testid="@($"{Elements.PriorityCell}{number}")">
-                                    <span class="priority @order.PriorityCssClass">
-                                        <span class="priority-bars" aria-hidden="true"><i></i><i></i><i></i></span>
-                                        @order.WorkOrder.Priority
-                                    </span>
+                                    @PriorityView(order)
                                 </td>
                                 <td class="col-assignee" data-testid="@($"{Elements.AssigneeCell}{number}")">
                                     @if (order.Assignee is null)
                                     {
-                                        <span class="assignee assignee--none"><span class="avatar avatar--empty" aria-hidden="true"></span><span class="muted-cell">Unassigned</span></span>
+                                        <span class="assignee assignee--none">@AvatarView(order)<span class="muted-cell">Unassigned</span></span>
                                     }
                                     else
                                     {
-                                        <span class="assignee"><span class="avatar @order.AvatarCssClass" aria-hidden="true">@order.AssigneeInitials</span><span>@order.Assignee.GetFullName()</span></span>
+                                        <span class="assignee">@AvatarView(order)<span>@order.Assignee.GetFullName()</span></span>
                                     }
                                 </td>
                                 <td class="col-room" data-testid="@($"{Elements.RoomCell}{number}")">
@@ -241,21 +288,7 @@
                                     }
                                 </td>
                                 <td class="col-due">
-                                    <span data-testid="@(Elements.DueDateCell + number)" class="@(string.IsNullOrEmpty(order.DueDateDisplay) ? "muted-cell" : order.DueDateCssClass)">@(string.IsNullOrEmpty(order.DueDateDisplay) ? "–" : order.DueDateDisplay)@if (!string.IsNullOrEmpty(order.DueDateUrgencyText))
-                                        {
-                                            <span class="visually-hidden">@order.DueDateUrgencyText</span>
-                                        }</span>@if (string.IsNullOrEmpty(order.DueDateDisplay))
-                                    {
-                                        <span class="visually-hidden">No due date</span>
-                                    }
-                                    @{ var badgeText = DueDateUrgencyCalculator.BadgeText(order.Urgency, order.WorkOrder.DueDate); }
-                                    @if (badgeText is not null)
-                                    {
-                                        var badgeCss = string.IsNullOrEmpty(order.DueDateCssClass) ? "on-track" : order.DueDateCssClass;
-                                        <span class="urgency-badge @badgeCss"
-                                              data-testid="@(Elements.UrgencyBadge + number)"
-                                              aria-label="@badgeText">@badgeText</span>
-                                    }
+                                    @DueDateView(order)
                                 </td>
                                 <td class="col-actions">
                                     <div class="menu-anchor" @onkeydown="HandleRowMenuKeyDown">
@@ -282,36 +315,39 @@
                 </div>
             }
 
-            <div class="results-footer">
-                <span class="results-range" data-testid="@Elements.ResultsRangeText">@CurrentPage.RangeText · @_selection.Count selected</span>
-                @if (_selection.Count > 0)
-                {
-                    <WorkOrderBulkActionBar SelectedCount="_selection.Count"
-                                            UserOptions="UserOptions"
-                                            StatusOptions="BulkStatusOptions"
-                                            OnAssign="HandleBulkAssign"
-                                            OnChangeStatus="HandleBulkChangeStatus"
-                                            OnExportSelected="ExportSelectedAsync"
-                                            OnClearSelection="HandleClearSelection"/>
-                }
-                <nav aria-label="Pagination" class="pagination-nav">
-                    <button type="button" class="page-button" data-testid="@Elements.PagePrevButton" disabled="@(!CurrentPage.HasPrevious)"
-                            @onclick="() => HandlePageSelected(CurrentPage.Page - 1)">
-                        <i class="bi bi-chevron-left" aria-hidden="true"></i> Prev
-                    </button>
-                    @foreach (var pageNumber in CurrentPage.PageNumbers)
+            @if (_state.View == SearchView.Table)
+            {
+                <div class="results-footer">
+                    <span class="results-range" data-testid="@Elements.ResultsRangeText">@CurrentPage.RangeText · @_selection.Count selected</span>
+                    @if (_selection.Count > 0)
                     {
-                        var isCurrent = pageNumber == CurrentPage.Page;
-                        <button type="button" class="@(isCurrent ? "page-button page-number is-current" : "page-button page-number")"
-                                data-testid="@($"{Elements.PageButton}{pageNumber}")" aria-current="@(isCurrent ? "page" : null)"
-                                aria-label="@($"Page {pageNumber}")" @onclick="() => HandlePageSelected(pageNumber)">@pageNumber</button>
+                        <WorkOrderBulkActionBar SelectedCount="_selection.Count"
+                                                UserOptions="UserOptions"
+                                                StatusOptions="BulkStatusOptions"
+                                                OnAssign="HandleBulkAssign"
+                                                OnChangeStatus="HandleBulkChangeStatus"
+                                                OnExportSelected="ExportSelectedAsync"
+                                                OnClearSelection="HandleClearSelection"/>
                     }
-                    <button type="button" class="page-button" data-testid="@Elements.PageNextButton" disabled="@(!CurrentPage.HasNext)"
-                            @onclick="() => HandlePageSelected(CurrentPage.Page + 1)">
-                        Next <i class="bi bi-chevron-right" aria-hidden="true"></i>
-                    </button>
-                </nav>
-            </div>
+                    <nav aria-label="Pagination" class="pagination-nav">
+                        <button type="button" class="page-button" data-testid="@Elements.PagePrevButton" disabled="@(!CurrentPage.HasPrevious)"
+                                @onclick="() => HandlePageSelected(CurrentPage.Page - 1)">
+                            <i class="bi bi-chevron-left" aria-hidden="true"></i> Prev
+                        </button>
+                        @foreach (var pageNumber in CurrentPage.PageNumbers)
+                        {
+                            var isCurrent = pageNumber == CurrentPage.Page;
+                            <button type="button" class="@(isCurrent ? "page-button page-number is-current" : "page-button page-number")"
+                                    data-testid="@($"{Elements.PageButton}{pageNumber}")" aria-current="@(isCurrent ? "page" : null)"
+                                    aria-label="@($"Page {pageNumber}")" @onclick="() => HandlePageSelected(pageNumber)">@pageNumber</button>
+                        }
+                        <button type="button" class="page-button" data-testid="@Elements.PageNextButton" disabled="@(!CurrentPage.HasNext)"
+                                @onclick="() => HandlePageSelected(CurrentPage.Page + 1)">
+                            Next <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        </button>
+                    </nav>
+                </div>
+            }
             <p class="visually-hidden" aria-live="polite" data-testid="@Elements.BulkOutcome">@_bulkOutcome</p>
         </section>
     </div>
@@ -363,7 +399,12 @@
         ActiveFilterChip,
         ExportButton,
         SavedViewsButton,
-        NewWorkOrderButton
+        NewWorkOrderButton,
+        BoardView,
+        BoardColumn,
+        BoardColumnCount,
+        BoardColumnEmpty,
+        BoardCard
     }
 
     // ARIA 1.1 role; bound from a constant because the HTML inspector does not know the value.
@@ -377,6 +418,39 @@
                 @SortLabel(column, label)
             </button>
         </th>;
+
+    private static readonly RenderFragment<WorkOrderSearchResultRow> PriorityView = order =>
+        @<span class="priority @order.PriorityCssClass">
+            <span class="priority-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            @order.WorkOrder.Priority
+        </span>;
+
+    private static readonly RenderFragment<WorkOrderSearchResultRow> AvatarView = order =>
+        @<text>@if (order.Assignee is null)
+        {
+            <span class="avatar avatar--empty" aria-hidden="true"></span>
+        }
+        else
+        {
+            <span class="avatar @order.AvatarCssClass" aria-hidden="true">@order.AssigneeInitials</span>
+        }</text>;
+
+    private static readonly RenderFragment<WorkOrderSearchResultRow> DueDateView = order =>
+        @<text><span data-testid="@(Elements.DueDateCell + order.Number)" class="@(string.IsNullOrEmpty(order.DueDateDisplay) ? "muted-cell" : order.DueDateCssClass)">@(string.IsNullOrEmpty(order.DueDateDisplay) ? "–" : order.DueDateDisplay)@if (!string.IsNullOrEmpty(order.DueDateUrgencyText))
+            {
+                <span class="visually-hidden">@order.DueDateUrgencyText</span>
+            }</span>@if (string.IsNullOrEmpty(order.DueDateDisplay))
+        {
+            <span class="visually-hidden">No due date</span>
+        }
+        @if (DueDateUrgencyCalculator.BadgeText(order.Urgency, order.WorkOrder.DueDate) is { } badgeText)
+        {
+            var badgeCss = string.IsNullOrEmpty(order.DueDateCssClass) ? "on-track" : order.DueDateCssClass;
+            <span class="urgency-badge @badgeCss"
+                  data-testid="@(Elements.UrgencyBadge + order.Number)"
+                  aria-label="@badgeText">@badgeText</span>
+        }</text>;
+
     public List<SelectListItem> UserOptions { get; set; } = new();
     public List<SelectListItem> StatusOptions { get; set; } = new();
 }

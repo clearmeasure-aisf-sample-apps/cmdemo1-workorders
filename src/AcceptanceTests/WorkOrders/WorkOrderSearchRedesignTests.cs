@@ -323,6 +323,86 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchInput))).ToBeFocusedAsync();
     }
 
+    [Test, Retry(2)]
+    public async Task ShouldShowTableResultsAsBoardCards_WhenMoreThan25Match()
+    {
+        var creator = await SeedCreatorAsync("board");
+        var seeded = new Dictionary<WorkOrderStatus, List<string>>();
+        foreach (var status in WorkOrderStatus.GetAllItems())
+        {
+            seeded[status] = [];
+            for (var i = 0; i < 6; i++)
+            {
+                seeded[status].Add((await SeedOrderAsync(creator, WorkOrderPriority.Medium, status, null)).Number!);
+            }
+        }
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
+        var pill = Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill));
+        await Expect(pill).ToHaveTextAsync("25 of 30");
+        await Expect(Rows()).ToHaveCountAsync(25);
+        var tableNumbers = (await TestIdSuffixesAsync(TableLinks(), WorkOrderSearch.Elements.WorkOrderLink)).ToHashSet();
+        await Page.GetByTestId(nameof(WorkOrderSearch.Elements.PageNextButton)).ClickAsync();
+        await Expect(Rows()).ToHaveCountAsync(5);
+        tableNumbers.UnionWith(await TestIdSuffixesAsync(TableLinks(), WorkOrderSearch.Elements.WorkOrderLink));
+        tableNumbers.Count.ShouldBe(30);
+
+        var boardButton = Page.GetByTestId(nameof(WorkOrderSearch.Elements.BoardViewButton));
+        await boardButton.ClickAsync();
+
+        await Expect(boardButton).ToHaveAttributeAsync("aria-pressed", "true");
+        await Page.WaitForURLAsync(new Regex("View=Board"));
+        await Expect(pill).ToHaveTextAsync("30 of 30");
+        await Expect(Cards(Page.Locator("body"))).ToHaveCountAsync(30);
+        (await TestIdSuffixesAsync(Cards(Page.Locator("body")), WorkOrderSearch.Elements.BoardCard)).ToHashSet()
+            .SetEquals(tableNumbers).ShouldBeTrue();
+        foreach (var (status, numbers) in seeded)
+        {
+            (await TestIdSuffixesAsync(Cards(BoardColumn(status)), WorkOrderSearch.Elements.BoardCard)).Order()
+                .ShouldBe(numbers.Order());
+        }
+
+        await Page.ReloadAsync();
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BoardView))).ToBeVisibleAsync();
+        await Expect(Cards(Page.Locator("body"))).ToHaveCountAsync(30);
+
+        await SelectFilterAsync(WorkOrderSearch.Elements.StatusSelect, WorkOrderStatus.Draft.Key);
+        await Expect(Cards(BoardColumn(WorkOrderStatus.Draft))).ToHaveCountAsync(6);
+        await Expect(Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.BoardColumnEmpty}']")).ToHaveCountAsync(4);
+        Page.Url.ShouldContain("View=Board");
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldReachSwitchAndOpenBoardCardByKeyboard()
+    {
+        var creator = await SeedCreatorAsync("board_keys");
+        var order = await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
+
+        await OpenSearchAsync();
+        await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
+        await Expect(Rows()).ToHaveCountAsync(1);
+        await Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}").FocusAsync();
+
+        var boardButton = $"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']";
+        await TabUntilFocusedAsync(boardButton);
+        (await FocusedOutlineWidthAsync()).ShouldBeGreaterThan(0);
+        await Page.Keyboard.PressAsync("Enter");
+        await Expect(Page.Locator(boardButton)).ToHaveAttributeAsync("aria-pressed", "true");
+        await Expect(Cards(BoardColumn(WorkOrderStatus.Draft))).ToHaveCountAsync(1);
+
+        await TabUntilFocusedAsync($"[data-testid='{WorkOrderSearch.Elements.BoardCard}{order.Number}']");
+        (await FocusedOutlineWidthAsync()).ShouldBeGreaterThan(0);
+        await Page.Keyboard.PressAsync("Enter");
+        await Page.WaitForURLAsync($"**/workorder/manage/{order.Number}?mode=Edit");
+
+        await Page.GoBackAsync();
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BoardView))).ToBeVisibleAsync();
+        await Expect(Page.Locator(boardButton)).ToHaveAttributeAsync("aria-pressed", "true");
+    }
+
     private async Task TabUntilFocusedAsync(string selector, int maxTabs = 60)
     {
         for (var i = 0; i < maxTabs; i++)
@@ -345,6 +425,19 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         Page.GetByTestId($"{WorkOrderSearch.Elements.RowCheckbox}{order.Number}");
 
     private ILocator Rows() => Page.Locator(".grid-data tbody tr");
+
+    private ILocator TableLinks() => Page.Locator($".grid-data [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']");
+
+    private ILocator BoardColumn(WorkOrderStatus status) =>
+        Page.GetByTestId($"{WorkOrderSearch.Elements.BoardColumn}{status.Key}");
+
+    private static ILocator Cards(ILocator container) =>
+        container.Locator($"[data-testid^='{WorkOrderSearch.Elements.BoardCard}']");
+
+    private static async Task<string[]> TestIdSuffixesAsync(ILocator elements, WorkOrderSearch.Elements prefix) =>
+        (await elements.EvaluateAllAsync<string[]>("els => els.map(e => e.getAttribute('data-testid'))"))
+        .Select(testId => testId[prefix.ToString().Length..])
+        .ToArray();
 
     private ILocator Chip(string key) => Page.GetByTestId($"{WorkOrderSearch.Elements.ActiveFilterChip}{key}");
 

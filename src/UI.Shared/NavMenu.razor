@@ -65,7 +65,12 @@
         <h2 class="nav-section" id="nav-section-admin">Administration</h2>
         <ul class="nav-list" aria-labelledby="nav-section-admin">
             @Placeholder("bi-building", "Buildings & Rooms")
-            @Placeholder("bi-people-fill", "Teams & Vendors")
+            <li class="nav-item">
+                <NavLink data-testid="@Elements.TeamsAndVendors" class="nav-link" href="admin/teams" title="Teams & Vendors">
+                    <i class="bi bi-people-fill nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Teams & Vendors</span>
+                </NavLink>
+            </li>
             @Placeholder("bi-bar-chart-fill", "Reports")
             <li class="nav-item">
                 <NavLink data-testid="@Elements.Settings" class="nav-link" href="settings" title="Settings">
@@ -89,7 +94,8 @@
         NewWorkOrder,
         Dashboard,
         Overdue,
-        NavBadge
+        NavBadge,
+        TeamsAndVendors
     }
 
     private RenderFragment QueueLink(Elements testId, string href, string icon, string label, int? count, bool danger) =>
