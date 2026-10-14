@@ -65,7 +65,9 @@ public class MainLayoutTests
         breadcrumbs.TextContent.ShouldContain("Dashboard");
         layout.Find("[role='search']").ShouldNotBeNull();
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.HelpLink)}']").GetAttribute("aria-label").ShouldBe("Help");
-        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").GetAttribute("aria-disabled").ShouldBe("true");
+        var notifButton = layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']");
+        notifButton.ShouldNotBeNull();
+        notifButton.GetAttribute("aria-disabled").ShouldBeNull();
     }
 
     [Test]
@@ -643,6 +645,31 @@ public class MainLayoutTests
 
         var element = layout.Find($"[data-testid='{nameof(MainLayout.Elements.GitSha)}']");
         element.TextContent.Trim().ShouldBe("unknown");
+    }
+
+    [Test]
+    public async Task NotificationsButton_ShouldNotBeDisabled_WhenUserIsAuthenticated()
+    {
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson");
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var button = layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']");
+        button.GetAttribute("aria-disabled").ShouldBeNull();
+        button.GetAttribute("title").ShouldBe("Notifications");
+    }
+
+    [Test]
+    public async Task NotificationsBadge_ShouldNotRender_WhenCountIsZero()
+    {
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson");
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var badges = layout.FindAll($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']");
+        badges.Count.ShouldBe(0);
     }
 
     private static BunitContext CreateContext(

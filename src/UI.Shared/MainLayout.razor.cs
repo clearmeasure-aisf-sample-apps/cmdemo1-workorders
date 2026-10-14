@@ -1,7 +1,12 @@
 using System.Reflection;
 using System.Text.Json;
+using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
+using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
@@ -25,7 +30,8 @@ public partial class MainLayout : IAsyncDisposable
         EnvironmentName,
         BrandSubtitle,
         HelpLink,
-        NotificationsButton
+        NotificationsButton,
+        NotificationsBadge
     }
 
     /// <summary>
@@ -48,7 +54,14 @@ public partial class MainLayout : IAsyncDisposable
     [Inject]
     private HttpClient Http { get; set; } = null!;
 
+    [Inject]
+    private new IBus Bus { get; set; } = null!;
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
     private ElementReference _navToggleButtonRef;
+    private ElementReference _bellButtonRef;
     private DotNetObjectReference<MainLayout>? _dotNetRef;
     private IJSObjectReference? _jsModule;
     private IJSObjectReference? _navToggleHelper;
@@ -57,6 +70,10 @@ public partial class MainLayout : IAsyncDisposable
     private bool _navVisible = true;
     private string _gitSha = "unknown";
     private string _environmentName = "unknown";
+    private bool _notificationsPanelOpen;
+    private global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? _notificationsPanelData;
+    private global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel? _notificationsPanelComponent;
+    private int _badgeCount;
 
     private string AppContainerClass => NavRailCss.AppContainerClass(_isNarrowViewport, _navVisible);
 
@@ -170,6 +187,37 @@ public partial class MainLayout : IAsyncDisposable
             {
             }
         }
+    }
+
+    private async Task OpenNotificationsPanelAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUserName = authState.User?.FindFirst("preferred_username")?.Value ??
+                             authState.User?.FindFirst("name")?.Value ??
+                             authState.User?.Identity?.Name;
+
+        if (string.IsNullOrWhiteSpace(currentUserName))
+        {
+            return;
+        }
+
+        try
+        {
+            _notificationsPanelData = await Bus.Send(new NotificationsPanelQuery(currentUserName));
+            _badgeCount = _notificationsPanelData?.OverdueAndDueToday?.Length ?? 0;
+            _notificationsPanelOpen = true;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            // Silently fail - panel won't open
+        }
+    }
+
+    private async Task CloseNotificationsPanelAsync()
+    {
+        _notificationsPanelOpen = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()
