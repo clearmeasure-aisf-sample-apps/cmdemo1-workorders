@@ -146,23 +146,25 @@ public class BuildingsTests
     [Test]
     public async Task Buildings_NoBuildingLabel_UsesSpecialParameter()
     {
-        var bus = new StubBusBuildings();
-        bus.BuildingsToReturn = new[]
+        var bus = new StubBusBuildings
         {
-            new BuildingRoomData
-            {
-                BuildingName = "No building",
-                Rooms = new[]
+            BuildingsToReturn =
+            [
+                new BuildingRoomData
                 {
-                    new RoomData
-                    {
-                        RoomName = "No room",
-                        OpenCount = 5,
-                        OverdueCount = 2,
-                        CompletedLast30DaysCount = 8
-                    }
+                    BuildingName = "No building",
+                    Rooms =
+                    [
+                        new RoomData
+                        {
+                            RoomName = "No room",
+                            OpenCount = 5,
+                            OverdueCount = 2,
+                            CompletedLast30DaysCount = 8
+                        }
+                    ]
                 }
-            }
+            ]
         };
         await using var ctx = CreateContext(bus);
 
