@@ -10,6 +10,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 public partial class WorkOrderPrint : AppComponentBase
 {
     private WorkOrder? _workOrder;
+    private WorkOrderAttachment[] _attachments = [];
     private bool _loaded;
 
     [Parameter] public string? Number { get; set; }
@@ -22,6 +23,9 @@ public partial class WorkOrderPrint : AppComponentBase
         _workOrder = string.IsNullOrWhiteSpace(Number)
             ? null
             : await Bus.Send(new WorkOrderByNumberQuery(Number));
+        _attachments = _workOrder == null
+            ? []
+            : await Bus.Send(new WorkOrderAttachmentsQuery(_workOrder.Id)) ?? [];
         _loaded = true;
     }
 

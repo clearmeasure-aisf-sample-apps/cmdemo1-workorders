@@ -29,9 +29,8 @@ public class WorkOrderPrintTests
             Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
             Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
             CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
-            Attachments = [new WorkOrderAttachment { FileName = "roof.jpg" }]
         };
-        ctx.Services.AddSingleton<IBus>(new StubBus(wo));
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
         ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
@@ -88,7 +87,7 @@ public class WorkOrderPrintTests
         c.FindAll(Id(WorkOrderPrint.Elements.Title)).Count.ShouldBe(0);
     }
 
-    private class StubBus(WorkOrder? result) : Bus(null!)
+    private class StubBus(WorkOrder? result, WorkOrderAttachment[]? attachments = null) : Bus(null!)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
@@ -96,6 +95,8 @@ public class WorkOrderPrintTests
         {
             if (request is WorkOrderByNumberQuery)
                 return Task.FromResult((TResponse)(object)result!);
+            if (request is WorkOrderAttachmentsQuery)
+                return Task.FromResult((TResponse)(object)(attachments ?? []));
             throw new NotImplementedException(request.GetType().Name);
         }
     }

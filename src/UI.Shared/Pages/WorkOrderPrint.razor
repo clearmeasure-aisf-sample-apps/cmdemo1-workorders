@@ -34,14 +34,14 @@ else
         <dt>Instructions</dt><dd data-testid="@Elements.Instructions">@Or(_workOrder.Instructions)</dd>
     </dl>
     <h2>Attachments</h2>
-    @if (_workOrder.Attachments == null || _workOrder.Attachments.Count == 0)
+    @if (_attachments.Length == 0)
     {
         <p data-testid="@Elements.AttachmentsNone">None</p>
     }
     else
     {
         <ul data-testid="@Elements.Attachments">
-            @foreach (var attachment in _workOrder.Attachments)
+            @foreach (var attachment in _attachments)
             {
                 <li data-testid="@Elements.AttachmentFileName">@attachment.FileName</li>
             }
