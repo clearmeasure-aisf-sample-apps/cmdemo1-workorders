@@ -70,7 +70,7 @@ public class CounterTests : AcceptanceTestBase
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
-        await Expect(Page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("Counter.*Church Activity Tracker"));
+        await Expect(Page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("^Counter - Kalahari Church Work Order System$"));
     }
 
     [Test, Retry(2)]
