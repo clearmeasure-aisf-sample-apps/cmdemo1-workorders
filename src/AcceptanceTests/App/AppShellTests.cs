@@ -130,6 +130,7 @@ public class AppShellTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await Expect(Page.Locator(".grid-data")).ToBeVisibleAsync();
         var folder = Path.Combine(TestContext.CurrentContext.WorkDirectory, "screenshots");
         Directory.CreateDirectory(folder);
 

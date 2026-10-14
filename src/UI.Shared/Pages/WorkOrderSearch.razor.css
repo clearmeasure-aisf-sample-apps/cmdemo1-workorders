@@ -486,7 +486,7 @@
 }
 
 .grid-data thead th {
-    padding: 0.75rem 0.75rem;
+    padding: 0.75rem 0.6rem;
     background: var(--color-surface-2);
     border-bottom: 1px solid var(--color-border);
     color: var(--color-muted);
@@ -519,7 +519,7 @@
 }
 
 .grid-data td {
-    padding: 0.85rem 0.75rem;
+    padding: 0.85rem 0.6rem;
     border-bottom: 1px solid var(--color-border);
     vertical-align: middle;
     line-height: 1.4;
@@ -543,44 +543,45 @@
 }
 
 .col-select {
-    width: 44px;
+    width: 40px;
     padding-left: 1.25rem !important;
 }
 
 .col-number {
-    width: 120px;
+    width: 105px;
     white-space: nowrap;
 }
 
 .col-title {
-    overflow-wrap: anywhere;
+    min-width: 150px;
+    overflow-wrap: break-word;
 }
 
 .col-status {
-    width: 130px;
+    width: 125px;
     white-space: nowrap;
 }
 
 .col-priority {
-    width: 100px;
+    width: 95px;
     white-space: nowrap;
 }
 
 .col-assignee {
-    width: 170px;
+    width: 165px;
 }
 
 .col-room {
     width: 110px;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 .col-due {
-    width: 140px;
+    width: 115px;
 }
 
 .col-actions {
-    width: 44px;
+    width: 40px;
     text-align: right;
 }
 
