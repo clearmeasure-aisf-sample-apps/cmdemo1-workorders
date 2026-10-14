@@ -73,7 +73,7 @@ public class RecentWorkOrdersQueryHandlerTests
     {
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(creator);
-        context.AddRange(orders.Cast<object>());
+        context.AddRange(orders);
         await context.SaveChangesAsync();
     }
 }

@@ -209,6 +209,6 @@ public class IndexPageTests
 
         component.Instance.Handle(new WorkOrderChangedEvent(new StateCommandResult(new WorkOrder(), "Save", "saved")));
 
-        component.WaitForAssertion(() => bus.SummaryRequestCount.ShouldBe(2));
+        await component.WaitForAssertionAsync(() => bus.SummaryRequestCount.ShouldBe(2));
     }
 }

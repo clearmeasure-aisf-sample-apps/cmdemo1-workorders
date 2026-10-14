@@ -15,9 +15,9 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
     public string? LastSummaryUserName { get; private set; }
 
-    public Dictionary<string, int>? StatusCounts { get; set; }
+    public Dictionary<string, int>? StatusCounts { get; init; }
 
-    public WorkOrder[] RecentWorkOrders { get; set; } = [];
+    public WorkOrder[] RecentWorkOrders { get; init; } = [];
 
     public WorkOrderSpecificationQuery? LastSpecification { get; private set; }
 
