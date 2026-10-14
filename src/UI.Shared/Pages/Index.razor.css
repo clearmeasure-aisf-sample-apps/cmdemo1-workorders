@@ -97,12 +97,6 @@
     text-align: left;
 }
 
-.welcome-message h2 {
-    font-size: 2.2rem;
-    margin-bottom: 1rem;
-    color: #fff;
-}
-
 .welcome-message p {
     font-size: 1.2rem;
     margin-bottom: 1rem;
@@ -248,6 +242,43 @@
     opacity: 0.9;
 }
 
+.status-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+    position: relative;
+    z-index: 2;
+}
+
+.status-card {
+    background: rgba(255,255,255,0.1);
+    padding: 2rem;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.status-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.status-card-count {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 0.5rem;
+}
+
+.status-card-label {
+    font-size: 1rem;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
 .church-footer {
     margin-top: 3rem;
     padding: 1.5rem;
@@ -295,6 +326,11 @@
 }
 
 :global(html[data-theme="dark"]) .info-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+:global(html[data-theme="dark"]) .status-card {
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.12);
 }
