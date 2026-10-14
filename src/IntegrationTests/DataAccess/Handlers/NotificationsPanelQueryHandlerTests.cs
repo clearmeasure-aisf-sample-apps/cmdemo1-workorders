@@ -45,10 +45,10 @@ public class NotificationsPanelQueryHandlerTests
     public async Task Handle_ReturnsOverdueAndDueTodayWorkOrders()
     {
         var notifTestUserUserName = TestData.UserName("notif_test_user");
-        var numberWo001 = TestData.Number("N");
-        var numberWo002 = TestData.Number("N");
-        var numberWo003 = TestData.Number("N");
-        var numberWo004 = TestData.Number("N");
+        var overdueOrderNumber = TestData.Number("N");
+        var dueTodayNumber = TestData.Number("N");
+        var futureDueNumber = TestData.Number("N");
+        var completeNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var today = ChurchTimeZone.Today(time);
@@ -64,7 +64,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var overdueOrder = new WorkOrder
             {
-                Number = numberWo001,
+                Number = overdueOrderNumber,
                 Title = "Overdue Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -75,7 +75,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var dueToday = new WorkOrder
             {
-                Number = numberWo002,
+                Number = dueTodayNumber,
                 Title = "Due Today Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -86,7 +86,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var futureDue = new WorkOrder
             {
-                Number = numberWo003,
+                Number = futureDueNumber,
                 Title = "Future Due Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -97,7 +97,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var complete = new WorkOrder
             {
-                Number = numberWo004,
+                Number = completeNumber,
                 Title = "Complete Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -119,17 +119,17 @@ public class NotificationsPanelQueryHandlerTests
         var result = await handler.Handle(new NotificationsPanelQuery(notifTestUserUserName));
 
         result.OverdueAndDueToday.Length.ShouldBe(2);
-        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain(numberWo001);
-        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain(numberWo002);
+        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain(overdueOrderNumber);
+        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain(dueTodayNumber);
     }
 
     [Test]
     public async Task Handle_ReturnsNewlyAssignedLast7DaysWorkOrders()
     {
         var notifNewUserUserName = TestData.UserName("notif_new_user");
-        var numberWo101 = TestData.Number("N");
-        var numberWo102 = TestData.Number("N");
-        var numberWo103 = TestData.Number("N");
+        var recentlyAssignedNumber = TestData.Number("N");
+        var oldAssignmentNumber = TestData.Number("N");
+        var notAssignedNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var now = time.GetUtcNow().DateTime;
@@ -144,7 +144,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var recentlyAssigned = new WorkOrder
             {
-                Number = numberWo101,
+                Number = recentlyAssignedNumber,
                 Title = "Recent Assignment",
                 Creator = assignee,
                 Assignee = assignee,
@@ -155,7 +155,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var oldAssignment = new WorkOrder
             {
-                Number = numberWo102,
+                Number = oldAssignmentNumber,
                 Title = "Old Assignment",
                 Creator = assignee,
                 Assignee = assignee,
@@ -166,7 +166,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var notAssigned = new WorkOrder
             {
-                Number = numberWo103,
+                Number = notAssignedNumber,
                 Title = "Not Assigned",
                 Creator = assignee,
                 Assignee = null,
@@ -186,7 +186,7 @@ public class NotificationsPanelQueryHandlerTests
         var result = await handler.Handle(new NotificationsPanelQuery(notifNewUserUserName));
 
         result.NewlyAssignedLast7Days.Length.ShouldBe(1);
-        result.NewlyAssignedLast7Days[0].Number.ShouldBe(numberWo101);
+        result.NewlyAssignedLast7Days[0].Number.ShouldBe(recentlyAssignedNumber);
     }
 
     [Test]
@@ -194,10 +194,10 @@ public class NotificationsPanelQueryHandlerTests
     {
         var notifCreatorUserName = TestData.UserName("notif_creator");
         var notifOtherUserName = TestData.UserName("notif_other");
-        var numberWo201 = TestData.Number("N");
-        var numberWo202 = TestData.Number("N");
-        var numberWo203 = TestData.Number("N");
-        var numberWo204 = TestData.Number("N");
+        var recentlyAssignedNumber = TestData.Number("N");
+        var recentlyCompletedNumber = TestData.Number("N");
+        var oldStatusChangeNumber = TestData.Number("N");
+        var draftNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var now = time.GetUtcNow().DateTime;
@@ -214,7 +214,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var recentlyAssigned = new WorkOrder
             {
-                Number = numberWo201,
+                Number = recentlyAssignedNumber,
                 Title = "Recent Status Change",
                 Creator = creator,
                 Assignee = otherUser,
@@ -225,7 +225,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var recentlyCompleted = new WorkOrder
             {
-                Number = numberWo202,
+                Number = recentlyCompletedNumber,
                 Title = "Recently Completed",
                 Creator = creator,
                 Assignee = otherUser,
@@ -236,7 +236,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var oldStatusChange = new WorkOrder
             {
-                Number = numberWo203,
+                Number = oldStatusChangeNumber,
                 Title = "Old Status Change",
                 Creator = creator,
                 Assignee = otherUser,
@@ -247,7 +247,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var draft = new WorkOrder
             {
-                Number = numberWo204,
+                Number = draftNumber,
                 Title = "Draft Order",
                 Creator = creator,
                 Assignee = null,
@@ -269,7 +269,7 @@ public class NotificationsPanelQueryHandlerTests
 
         result.CreatedByMeStatusChangedLast7Days.Length.ShouldBe(2);
         var numbers = result.CreatedByMeStatusChangedLast7Days.Select(wo => wo.Number).ToList();
-        numbers.ShouldContain(numberWo201);
-        numbers.ShouldContain(numberWo202);
+        numbers.ShouldContain(recentlyAssignedNumber);
+        numbers.ShouldContain(recentlyCompletedNumber);
     }
 }

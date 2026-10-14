@@ -17,14 +17,6 @@ public class EmployeeWorkLoadQueryHandlerTests
         var ewlCreatorUserName = TestData.UserName("ewl_creator");
         var ewlWorkerUserName = TestData.UserName("ewl_worker");
         var ewlIdleUserName = TestData.UserName("ewl_idle");
-        var numberEwl1 = TestData.Number("E");
-        var numberEwl2 = TestData.Number("E");
-        var numberEwl3 = TestData.Number("E");
-        var numberEwl4 = TestData.Number("E");
-        var numberEwl5 = TestData.Number("E");
-        var numberEwl6 = TestData.Number("E");
-        var numberEwl7 = TestData.Number("E");
-        var numberEwl8 = TestData.Number("E");
 
         var creator = new Employee(ewlCreatorUserName, "Cre", "Ator", "creator@test.com");
         var worker = new Employee(ewlWorkerUserName, "Wor", "Ker", "worker@test.com");
@@ -38,14 +30,14 @@ public class EmployeeWorkLoadQueryHandlerTests
             context.Add(creator);
             context.Add(worker);
             context.Add(idle);
-            context.Add(NewOrder(numberEwl1, creator, worker, WorkOrderStatus.Draft, today.AddDays(5)));
-            context.Add(NewOrder(numberEwl2, creator, worker, WorkOrderStatus.Assigned, today.AddDays(-3)));
-            context.Add(NewOrder(numberEwl3, creator, worker, WorkOrderStatus.InProgress, today.AddDays(-1)));
-            context.Add(NewOrder(numberEwl4, creator, worker, WorkOrderStatus.InProgress, null));
-            context.Add(NewOrder(numberEwl5, creator, worker, WorkOrderStatus.Complete, today.AddDays(-10), recent));
-            context.Add(NewOrder(numberEwl6, creator, worker, WorkOrderStatus.Complete, today.AddDays(-90), old));
-            context.Add(NewOrder(numberEwl7, creator, worker, WorkOrderStatus.Cancelled, today.AddDays(-2)));
-            context.Add(NewOrder(numberEwl8, creator, null, WorkOrderStatus.Assigned, today.AddDays(-2)));
+            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Draft, today.AddDays(5)));
+            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Assigned, today.AddDays(-3)));
+            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.InProgress, today.AddDays(-1)));
+            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.InProgress, null));
+            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Complete, today.AddDays(-10), recent));
+            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Complete, today.AddDays(-90), old));
+            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Cancelled, today.AddDays(-2)));
+            context.Add(NewOrder(TestData.Number("E"), creator, null, WorkOrderStatus.Assigned, today.AddDays(-2)));
             await context.SaveChangesAsync();
         }
 

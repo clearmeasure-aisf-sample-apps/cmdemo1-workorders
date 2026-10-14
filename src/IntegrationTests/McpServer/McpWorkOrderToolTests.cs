@@ -365,11 +365,9 @@ public class McpWorkOrderToolTests
     public async Task ShouldExecuteCancelCommand()
     {
         var employeeUserName = TestData.UserName("user");
-        var workOrderNumber = TestData.Number("W");
         var number2 = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
-        //var order = new WorkOrder { Creator = employee, Number = workOrderNumber, Title = "Test" };
         var assignedOrder = new WorkOrder { Creator = employee, Number = number2, Title = "Assigned order", Status = WorkOrderStatus.Assigned };
 
         await using var context = TestHost.GetRequiredService<DbContext>();
