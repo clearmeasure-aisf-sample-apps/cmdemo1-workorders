@@ -1,13 +1,16 @@
 /* Dashboard (#260): same header and cards as Work Order Search. Colours come from the tokens in app.css. */
 .dashboard-page {
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+}
+
+.dashboard-container {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
     max-width: 1600px;
     margin: 0 auto;
     min-width: 0;
-    color: var(--color-text);
-    font-size: var(--font-size-body);
 }
 
 .status-cards {

@@ -117,6 +117,49 @@ public class DashboardTests : AcceptanceTestBase
             .ToHaveCSSAsync("color", "rgb(255, 255, 255)");
     }
 
+    [Test, Retry(2)]
+    public async Task ShouldFillContentArea_WhenSignedOut_At1000Px()
+    {
+        await Page.SetViewportSizeAsync(1000, 800);
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await Expect(Page.GetByTestId(nameof(IndexPage.Elements.SignInPrompt))).ToBeVisibleAsync();
+
+        var content = await ContentBoxAsync();
+        var container = await Page.Locator(".dashboard-container").BoundingBoxAsync();
+
+        ((double)container!.X).ShouldBe(content.Left, 1);
+        ((double)container.Width).ShouldBe(content.Width, 1);
+    }
+
+    [TestCase(1000)]
+    [TestCase(1280)]
+    [Retry(2)]
+    public async Task ShouldAlignHeaderWithSearchPage_WhenSignedIn(int width)
+    {
+        await OpenDashboardAsync();
+        await Page.SetViewportSizeAsync(width, 800);
+        var content = await ContentBoxAsync();
+        var dashboardHeader = await Page.Locator(".page-header").BoundingBoxAsync();
+
+        await Page.GetByTestId(nameof(IndexPage.Elements.QuickLinkWorkOrders)).ClickAsync();
+        await Page.WaitForURLAsync("**/workorder/search");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchHeader = await Page.Locator(".page-header").BoundingBoxAsync();
+
+        dashboardHeader!.X.ShouldBe(searchHeader!.X, 1);
+        dashboardHeader.Width.ShouldBe(searchHeader.Width, 1);
+        ((double)dashboardHeader.Width).ShouldBe(content.Width, 1);
+    }
+
+    private async Task<(double Left, double Width)> ContentBoxAsync()
+    {
+        var box = await Page.Locator(".content-wrapper").EvaluateAsync<double[]>(
+            "e => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);" +
+            " const l = parseFloat(s.paddingLeft), p = l + parseFloat(s.paddingRight);" +
+            " return [r.left + l, e.clientWidth - p]; }");
+        return (box[0], box[1]);
+    }
+
     private async Task OpenDashboardAsync()
     {
         await LoginAsCurrentUser();
