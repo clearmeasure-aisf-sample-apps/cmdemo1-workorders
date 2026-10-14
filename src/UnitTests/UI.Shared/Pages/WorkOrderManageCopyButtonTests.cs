@@ -40,7 +40,7 @@ public class WorkOrderManageCopyButtonTests
         ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator));
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
-        ctx.Services.AddSingleton<IJSRuntime>(new StubJSRuntime());
+        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime());
         ctx.Services.AddSpeechSynthesis();
         ctx.Services.AddSpeechRecognition();
 
@@ -69,7 +69,7 @@ public class WorkOrderManageCopyButtonTests
         ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator, isNewMode: true));
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
-        ctx.Services.AddSingleton<IJSRuntime>(new StubJSRuntime());
+        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime());
         ctx.Services.AddSpeechSynthesis();
         ctx.Services.AddSpeechRecognition();
 
@@ -89,14 +89,131 @@ public class WorkOrderManageCopyButtonTests
         }
     }
 
-    private class StubWorkOrderManageBus : Bus
+    [Test]
+    public async Task CopyWorkOrderNumberAsync_ShouldExecuteSuccessfully_WhenClickingCopyButton()
     {
-        private readonly WorkOrder? _workOrder;
+        await using var ctx = new BunitContext();
 
-        public StubWorkOrderManageBus(WorkOrder? workOrder = null) : base(null!)
+        var creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+        var workOrderId = Guid.NewGuid();
+        var workOrder = new WorkOrder
         {
-            _workOrder = workOrder;
-        }
+            Id = workOrderId,
+            Number = "WO-456",
+            Status = WorkOrderStatus.Draft,
+            Creator = creator,
+            Title = "Test Work Order"
+        };
+
+        ctx.Services.AddSingleton<IBus>(new StubWorkOrderManageBus(workOrder));
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
+        ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
+        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime());
+        ctx.Services.AddSpeechSynthesis();
+        ctx.Services.AddSpeechRecognition();
+
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo($"/workorder/manage/{workOrder.Id}");
+
+        var component = ctx.Render<WorkOrderManage>();
+
+        var copyButton = await component.WaitForElementAsync(
+            $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
+        copyButton.ShouldNotBeNull();
+
+        var clickTask = copyButton.ClickAsync(new());
+        clickTask.ShouldNotBeNull();
+        await clickTask;
+    }
+
+    [Test]
+    public async Task CopyWorkOrderNumberAsync_ShouldHandleJSException_Gracefully()
+    {
+        await using var ctx = new BunitContext();
+
+        var creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+        var workOrderId = Guid.NewGuid();
+        var workOrder = new WorkOrder
+        {
+            Id = workOrderId,
+            Number = "WO-789",
+            Status = WorkOrderStatus.Draft,
+            Creator = creator,
+            Title = "Test Work Order"
+        };
+
+        ctx.Services.AddSingleton<IBus>(new StubWorkOrderManageBus(workOrder));
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
+        ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
+        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime(throwJSException: true));
+        ctx.Services.AddSpeechSynthesis();
+        ctx.Services.AddSpeechRecognition();
+
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo($"/workorder/manage/{workOrder.Id}");
+
+        var component = ctx.Render<WorkOrderManage>();
+
+        var copyButton = await component.WaitForElementAsync(
+            $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
+        copyButton.ShouldNotBeNull();
+
+        await copyButton.ClickAsync(new());
+
+        var statusElement = component.Find("#copy-status");
+        statusElement.TextContent.ShouldNotContain("Copied to clipboard");
+    }
+
+    [Test]
+    public async Task CopyWorkOrderNumberAsync_ShouldHandleJSDisconnectedException_Gracefully()
+    {
+        await using var ctx = new BunitContext();
+
+        var creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+        var workOrderId = Guid.NewGuid();
+        var workOrder = new WorkOrder
+        {
+            Id = workOrderId,
+            Number = "WO-999",
+            Status = WorkOrderStatus.Draft,
+            Creator = creator,
+            Title = "Test Work Order"
+        };
+
+        ctx.Services.AddSingleton<IBus>(new StubWorkOrderManageBus(workOrder));
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
+        ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
+        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime(throwDisconnectedException: true));
+        ctx.Services.AddSpeechSynthesis();
+        ctx.Services.AddSpeechRecognition();
+
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo($"/workorder/manage/{workOrder.Id}");
+
+        var component = ctx.Render<WorkOrderManage>();
+
+        var copyButton = await component.WaitForElementAsync(
+            $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
+        copyButton.ShouldNotBeNull();
+
+        await copyButton.ClickAsync(new());
+
+        var statusElement = component.Find("#copy-status");
+        statusElement.TextContent.ShouldNotContain("Copied to clipboard");
+    }
+
+    private class StubWorkOrderManageBus(WorkOrder? workOrder = null) : Bus(null!)
+    {
+        private readonly WorkOrder? _workOrder = workOrder;
 
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
@@ -150,13 +267,13 @@ public class WorkOrderManageCopyButtonTests
         }
     }
 
-    private class StubJSRuntime : IJSRuntime
+    private class StubJsRuntime(bool throwJSException = false, bool throwDisconnectedException = false) : IJSRuntime
     {
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && typeof(TValue) == typeof(IJSObjectReference))
             {
-                var module = new StubClipboardModule();
+                var module = new StubClipboardModule(throwJSException, throwDisconnectedException);
                 return ValueTask.FromResult((TValue)(object)module);
             }
 
@@ -168,12 +285,22 @@ public class WorkOrderManageCopyButtonTests
             InvokeAsync<TValue>(identifier, args);
     }
 
-    private class StubClipboardModule : IJSObjectReference
+    private class StubClipboardModule(bool throwJSException = false, bool throwDisconnectedException = false) : IJSObjectReference
     {
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "copyToClipboard")
             {
+                if (throwJSException)
+                {
+                    throw new JSException("Clipboard permission denied");
+                }
+
+                if (throwDisconnectedException)
+                {
+                    throw new JSDisconnectedException("JS runtime disconnected");
+                }
+
                 return ValueTask.FromResult((TValue)(object)true);
             }
 
