@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.AcceptanceTests.Extensions;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -56,7 +57,7 @@ public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
 
         // Check that icon changed to check2
         var icon = copyButton.Locator("i");
-        await Expect(icon).ToHaveClassAsync(/bi-check2/);
+        await Expect(icon).ToHaveClassAsync(new Regex("bi-check2"));
 
         // Check aria-live message
         var statusRegion = Page.Locator("[role='status'][aria-live='polite']");
@@ -66,7 +67,7 @@ public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
         await Task.Delay(2500);
 
         // Icon should revert to clipboard
-        await Expect(icon).ToHaveClassAsync(/bi-clipboard/);
+        await Expect(icon).ToHaveClassAsync(new Regex("bi-clipboard"));
     }
 
     [Test, Retry(2)]
