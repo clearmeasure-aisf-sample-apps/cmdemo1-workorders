@@ -46,7 +46,7 @@ public class MainLayoutTests
         var layout = component.FindComponent<MainLayout>();
 
         var subtitle = layout.Find($"[data-testid='{nameof(MainLayout.Elements.BrandSubtitle)}']");
-        subtitle.TextContent.Trim().ShouldBe("Springfield · Facilities");
+        subtitle.TextContent.Trim().ShouldBe("Kalahari Church · Facilities");
         subtitle.Closest(".brand-text").ShouldBeNull();
         layout.Find(".church-brand").QuerySelector(".brand-mark").ShouldNotBeNull();
     }
