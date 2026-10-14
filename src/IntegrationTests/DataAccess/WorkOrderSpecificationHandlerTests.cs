@@ -311,7 +311,7 @@ public class WorkOrderSpecificationHandlerTests
         {
             context.Add(creator);
             context.Add(other);
-            context.AddRange(orders);
+            context.AddRange(orders.Cast<object>());
             await context.SaveChangesAsync();
         }
 

@@ -713,11 +713,11 @@ public class WorkOrderSearchTests
     [Test]
     public void ShouldRemotableRequest_RoundTrip_OverdueOnly()
     {
-        var query = new ClearMeasure.Bootcamp.Core.Queries.WorkOrderSpecificationQuery();
+        var query = new WorkOrderSpecificationQuery();
         query.MatchOverdueOnly(true);
 
         var json = System.Text.Json.JsonSerializer.Serialize(query);
-        var rehydrated = System.Text.Json.JsonSerializer.Deserialize<ClearMeasure.Bootcamp.Core.Queries.WorkOrderSpecificationQuery>(json);
+        var rehydrated = System.Text.Json.JsonSerializer.Deserialize<WorkOrderSpecificationQuery>(json);
 
         rehydrated.ShouldNotBeNull();
         rehydrated.OverdueOnly.ShouldBeTrue();
@@ -997,14 +997,14 @@ public class WorkOrderSearchTests
     {
         await using var ctx = CreateContext();
         var component = ctx.Render<WorkOrderSearch>();
-        var priorityHeader = () => component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").ParentElement!;
-        priorityHeader().GetAttribute("aria-sort").ShouldBe("none");
+        AngleSharp.Dom.IElement PriorityHeader() => component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").ParentElement!;
+        PriorityHeader().GetAttribute("aria-sort").ShouldBe("none");
 
         await component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").ClickAsync(new());
-        priorityHeader().GetAttribute("aria-sort").ShouldBe("ascending");
+        PriorityHeader().GetAttribute("aria-sort").ShouldBe("ascending");
 
         await component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").ClickAsync(new());
-        priorityHeader().GetAttribute("aria-sort").ShouldBe("descending");
+        PriorityHeader().GetAttribute("aria-sort").ShouldBe("descending");
         component.Find($"#{WorkOrderSearch.Elements.SortSelect}").QuerySelector("option[selected]")!.TextContent
             .ShouldBe("Sort: Priority ↓");
     }
@@ -1118,15 +1118,15 @@ public class WorkOrderSearchTests
         var component = ctx.Render<WorkOrderSearch>();
 
         _ = component.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").ChangeAsync(new() { Value = "tlovejoy" });
-        component.WaitForAssertion(() => bus.Held.Count.ShouldBe(1));
+        await component.WaitForAssertionAsync(() => bus.Held.Count.ShouldBe(1));
         _ = component.Find($"#{WorkOrderSearch.Elements.StatusSelect}").ChangeAsync(new() { Value = WorkOrderStatus.Assigned.Key });
-        component.WaitForAssertion(() => bus.Held.Count.ShouldBe(2));
+        await component.WaitForAssertionAsync(() => bus.Held.Count.ShouldBe(2));
 
         bus.Held[1].SetResult([new WorkOrder { Number = "NEWEST1", Title = "Newest", Status = WorkOrderStatus.Assigned }]);
-        component.WaitForAssertion(() => component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}NEWEST1']").Count.ShouldBe(1));
+        await component.WaitForAssertionAsync(() => component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}NEWEST1']").Count.ShouldBe(1));
         bus.Held[0].SetResult([new WorkOrder { Number = "STALE01", Title = "Stale", Status = WorkOrderStatus.Draft }]);
 
-        component.WaitForAssertion(() =>
+        await component.WaitForAssertionAsync(() =>
         {
             navigation.Uri.ShouldContain("Creator=");
             navigation.Uri.ShouldContain("Status=");
@@ -1160,6 +1160,7 @@ public class WorkOrderSearchTests
             .Select(i => new WorkOrder { Number = $"WO-{i:000}", Title = $"Order {i}", Status = WorkOrderStatus.Draft })
             .ToArray();
 
+    // ReSharper disable once ConvertToPrimaryConstructor -- the orders are also passed to the base constructor (CS9107)
     private sealed class StubBulkBus : StubBus
     {
         private readonly WorkOrder[] _orders;

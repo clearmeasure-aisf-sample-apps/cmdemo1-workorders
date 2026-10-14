@@ -21,7 +21,7 @@
                     <ul id="saved-views-menu" class="popover-menu" role="menu" aria-label="Saved views" hidden="@(!_savedViewsOpen)">
                         @foreach (var view in SavedViews)
                         {
-                            <li role="none">
+                            <li role="presentation">
                                 <a role="menuitem" class="popover-menu-item" href="@view.Href" @onclick="() => _savedViewsOpen = false">@view.Name</a>
                             </li>
                         }
@@ -258,7 +258,7 @@
                                     }
                                 </td>
                                 <td class="col-actions">
-                                    <div class="menu-anchor" @onkeydown="e => HandleRowMenuKeyDown(e)">
+                                    <div class="menu-anchor" @onkeydown="HandleRowMenuKeyDown">
                                         <button type="button" class="row-menu-button" id="@($"row-menu-{number}")" data-testid="@($"{Elements.RowMenu}{number}")"
                                                 aria-haspopup="menu" aria-expanded="@(_openRowMenu == number ? "true" : "false")"
                                                 aria-label="@($"Actions for {order.DisplayNumber}")" @onclick="() => ToggleRowMenu(number)">
@@ -267,7 +267,7 @@
                                         @if (_openRowMenu == number)
                                         {
                                             <ul class="popover-menu" role="menu" aria-label="@($"Actions for {order.DisplayNumber}")">
-                                                <li role="none">
+                                                <li role="presentation">
                                                     <a role="menuitem" class="popover-menu-item" data-testid="@($"{Elements.RowMenuOpen}{number}")"
                                                        href="/workorder/manage/@number?mode=Edit">Open</a>
                                                 </li>

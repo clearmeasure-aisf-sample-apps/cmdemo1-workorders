@@ -120,7 +120,7 @@ public class WorkOrderSearchSummaryQueryHandlerTests
         var assignees = orders.Select(o => o.Assignee).OfType<Employee>().Where(e => e != creator).Distinct();
         context.AttachRange(assignees);
         context.Add(creator);
-        context.AddRange(orders);
+        context.AddRange(orders.Cast<object>());
         await context.SaveChangesAsync();
     }
 

@@ -21,10 +21,10 @@ public enum SummaryCard
 public sealed record WorkOrderSearchUrlState
 {
     /// <summary>Path of the search page, relative to the app base.</summary>
-    public const string SearchPath = "workorder/search";
+    private const string SearchPath = "workorder/search";
 
     /// <summary>Default window of the Completed card, in days.</summary>
-    public const int CompletedCardDays = 30;
+    private const int CompletedCardDays = 30;
 
     public string? Creator { get; init; }
     public string? Assignee { get; init; }

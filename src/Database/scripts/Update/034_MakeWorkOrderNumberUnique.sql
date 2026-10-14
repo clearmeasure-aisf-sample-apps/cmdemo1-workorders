@@ -1,7 +1,17 @@
 BEGIN TRY
 	BEGIN TRANSACTION
-	PRINT N'Dropping index [IX_WorkOrder_Number] (declared on [Id])'
-	DROP INDEX IF EXISTS [IX_WorkOrder_Number] ON [dbo].[WorkOrder]
+	-- The old IX_WorkOrder_Number is declared on [Id] and enforces foreign keys that reference
+	-- WorkOrder(Id), so it cannot be dropped: rename it and give the name to the [Number] index.
+	IF EXISTS (
+		SELECT 1
+		FROM sys.indexes i
+		INNER JOIN sys.index_columns ic ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+		INNER JOIN sys.columns c ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+		WHERE i.object_id = OBJECT_ID(N'[dbo].[WorkOrder]') AND i.name = N'IX_WorkOrder_Number' AND c.name = N'Id')
+	BEGIN
+		PRINT N'Renaming index [IX_WorkOrder_Number] (declared on [Id]) to [IX_WorkOrder_Id]'
+		EXEC sp_rename N'dbo.WorkOrder.IX_WorkOrder_Number', N'IX_WorkOrder_Id', N'INDEX';
+	END
 
 	PRINT N'Renumbering later duplicates of [dbo].[WorkOrder].[Number]'
 	DECLARE @Duplicates TABLE ([Id] uniqueidentifier NOT NULL PRIMARY KEY)
@@ -34,7 +44,7 @@ BEGIN TRY
 END TRY
 BEGIN CATCH
 	IF @@TRANCOUNT > 0
-		ROLLBACK TRANSACTION
-	THROW
+		ROLLBACK TRANSACTION;
+	THROW;
 END CATCH
 GO

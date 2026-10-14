@@ -23,7 +23,7 @@ public static class UserDisplay
             : string.Join(" · ", employee.Roles.Select(r => r.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Order(StringComparer.OrdinalIgnoreCase));
 
     private static bool HasFirstAndLastName(Employee? employee) =>
-        employee != null && !string.IsNullOrWhiteSpace(employee.FirstName) && !string.IsNullOrWhiteSpace(employee.LastName);
+        employee is { FirstName: { } first, LastName: { } last } && !string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last);
 
     private static string InitialsFromName(string? name)
     {

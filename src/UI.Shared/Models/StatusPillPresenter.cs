@@ -30,5 +30,5 @@ public static class StatusPillPresenter
             : new StatusPill(workOrder.Status.FriendlyName, $"{Base} {Base}--{Modifier(workOrder.Status)}", null);
 
     private static string Modifier(WorkOrderStatus status) =>
-        Modifiers.TryGetValue(status.Key, out var modifier) ? modifier : "draft";
+        Modifiers.GetValueOrDefault(status.Key, "draft");
 }

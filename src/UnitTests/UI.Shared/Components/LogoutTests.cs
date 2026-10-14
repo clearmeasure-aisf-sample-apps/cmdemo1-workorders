@@ -216,7 +216,7 @@ public class LogoutTests
     [Test]
     public async Task ShouldRenderInitialsFullNameAndRoles()
     {
-        await using var ctx = CreateMenuContext(out _);
+        await using var ctx = CreateMenuContext();
 
         var component = ctx.Render<Logout>();
 
@@ -228,7 +228,7 @@ public class LogoutTests
     [Test]
     public async Task ShouldToggleAriaExpanded_WhenTriggerClicked()
     {
-        await using var ctx = CreateMenuContext(out _);
+        await using var ctx = CreateMenuContext();
         var component = ctx.Render<Logout>();
         var toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
 
@@ -245,7 +245,7 @@ public class LogoutTests
     [Test]
     public async Task ShouldCloseMenu_WhenEscapePressed()
     {
-        await using var ctx = CreateMenuContext(out _);
+        await using var ctx = CreateMenuContext();
         var component = ctx.Render<Logout>();
         var toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
         await component.Find(toggleSelector).ClickAsync(new());
@@ -257,10 +257,10 @@ public class LogoutTests
         ctx.JSInterop.VerifyFocusAsyncInvoke();
     }
 
-    private static BunitContext CreateMenuContext(out CustomAuthenticationStateProvider authProvider)
+    private static BunitContext CreateMenuContext()
     {
         var ctx = new BunitContext();
-        authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         authProvider.Login("tlovejoy").GetAwaiter().GetResult();
         var employee = new Employee("tlovejoy", "Timothy", "Lovejoy Jr", "tlovejoy@example.com");
         employee.AddRole(new Role("Requester", true, false));

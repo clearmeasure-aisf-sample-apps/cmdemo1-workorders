@@ -33,7 +33,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await using (var context = TestHost.NewDbContext())
         {
             context.Add(creator);
-            context.AddRange(orders);
+            context.AddRange(orders.Cast<object>());
             await context.SaveChangesAsync();
         }
 

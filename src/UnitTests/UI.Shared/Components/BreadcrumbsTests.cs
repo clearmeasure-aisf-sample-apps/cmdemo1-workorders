@@ -62,7 +62,7 @@ public class BreadcrumbsTests
 
         ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("settings");
 
-        component.WaitForAssertion(() => Crumbs(component).ShouldBe(["Settings"]));
+        await component.WaitForAssertionAsync(() => Crumbs(component).ShouldBe(["Settings"]));
     }
 
     private static string[] Crumbs(IRenderedComponent<Breadcrumbs> component) =>

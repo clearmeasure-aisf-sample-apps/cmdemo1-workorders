@@ -25,7 +25,7 @@ public sealed record SearchResultPage(WorkOrderSearchResultRow[] Rows, int Page,
 public static class WorkOrderSearchPager
 {
     /// <summary>Rows per page.</summary>
-    public const int PageSize = 25;
+    private const int PageSize = 25;
 
     /// <summary>The requested page, clamped to the available pages.</summary>
     public static SearchResultPage GetPage(IReadOnlyList<WorkOrderSearchResultRow> rows, int page)

@@ -13,7 +13,6 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
     public int SummaryRequestCount { get; private set; }
 
-    public string[] Buildings { get; set; } = ["Kitchen", "Sanctuary"];
 
     public WorkOrderSpecificationQuery? LastSpecification { get; private set; }
 
@@ -73,7 +72,7 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
         if (request is WorkOrderBuildingsQuery)
         {
-            return Task.FromResult<TResponse>((TResponse)(object)Buildings);
+            return Task.FromResult<TResponse>((TResponse)(object)new[] { "Kitchen", "Sanctuary" });
         }
 
         throw new NotImplementedException();

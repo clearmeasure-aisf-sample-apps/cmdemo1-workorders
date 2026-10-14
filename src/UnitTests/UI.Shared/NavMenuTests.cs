@@ -87,7 +87,7 @@ public class NavMenuTests
 
         component.FindAll("h2.nav-section").ShouldNotContain(h => h.TextContent.Trim() == "Menu");
         component.Markup.ShouldNotContain(">Menu<");
-        component.FindAll($"[data-testid='AllAssignedWorkOrders']").Count.ShouldBe(0);
+        component.FindAll("[data-testid='AllAssignedWorkOrders']").Count.ShouldBe(0);
     }
 
     [Test]
@@ -114,7 +114,7 @@ public class NavMenuTests
         bus.Summary = new WorkOrderSearchSummary { OpenCount = 2 };
         component.Instance.Handle(new WorkOrderChangedEvent(new StateCommandResult(new WorkOrder { Number = "X" }, "Save", "saved")));
 
-        component.WaitForAssertion(() => BadgeText(component, NavMenu.Elements.Search).ShouldBe("2"));
+        await component.WaitForAssertionAsync(() => BadgeText(component, NavMenu.Elements.Search).ShouldBe("2"));
         bus.SummaryRequestCount.ShouldBe(2);
     }
 
@@ -134,7 +134,7 @@ public class NavMenuTests
 
         navigation.NavigateTo("workorder/search?OverdueOnly=true");
 
-        component.WaitForAssertion(() => Link(component, NavMenu.Elements.Overdue).ClassList.ShouldContain("active"));
+        await component.WaitForAssertionAsync(() => Link(component, NavMenu.Elements.Overdue).ClassList.ShouldContain("active"));
         Link(component, NavMenu.Elements.AllWorkOrdersInProgress).ClassList.ShouldNotContain("active");
     }
 

@@ -36,7 +36,7 @@ public static class WorkOrderSearchSorter
         };
 
     /// <summary>True when <paramref name="column"/> is a known sortable column.</summary>
-    public static bool IsSortable(string? column) => column != null && Sorters.ContainsKey(column);
+    private static bool IsSortable(string? column) => column != null && Sorters.ContainsKey(column);
 
     /// <summary>Parses a sort control value such as "DueDate:desc"; an empty or unknown column means no sort.</summary>
     public static (string? Column, bool Descending) ParseOption(string? value)
