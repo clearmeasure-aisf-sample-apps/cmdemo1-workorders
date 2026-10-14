@@ -145,6 +145,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
             .Select(c => (c.CompletedDate!.Value - c.CreatedDate!.Value).TotalDays)
             .ToList();
 
+        data.CompletedLast30Days = completions.Count;
         data.AverageDaysToClose = durations.Count == 0 ? null : durations.Average();
     }
 

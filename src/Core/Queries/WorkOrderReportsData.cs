@@ -25,7 +25,7 @@ public class WorkOrderReportsData
     public int OverdueCount { get; set; }
 
     /// <summary>Work orders completed in the last 30 days.</summary>
-    public int CompletedLast30Days => CompletedPerWeek.Sum(w => w.Count);
+    public int CompletedLast30Days { get; set; }
 
     public class WeeklyCount
     {
