@@ -19,6 +19,7 @@ public static class StatusBadgeCssClassMapper
             _ when status == WorkOrderStatus.Draft => "status-badge--draft",
             _ when status == WorkOrderStatus.Assigned => "status-badge--assigned",
             _ when status == WorkOrderStatus.InProgress => "status-badge--in-progress",
+            _ when status == WorkOrderStatus.WaitingOnVendor => "status-badge--waiting",
             _ when status == WorkOrderStatus.Complete => "status-badge--complete",
             _ when status == WorkOrderStatus.Cancelled => "status-badge--cancelled",
             _ => string.Empty

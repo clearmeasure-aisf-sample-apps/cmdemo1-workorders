@@ -15,7 +15,7 @@ public class ToolsWorkOrderStatusesControllerTests
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         var statuses = ok.Value.ShouldBeOfType<WorkOrderStatusDto[]>();
-        statuses.Length.ShouldBe(5);
+        statuses.Length.ShouldBe(6);
     }
 
     [Test]
@@ -54,6 +54,7 @@ public class ToolsWorkOrderStatusesControllerTests
         keys.ShouldContain("Draft");
         keys.ShouldContain("Assigned");
         keys.ShouldContain("InProgress");
+        keys.ShouldContain("WaitingOnVendor");
         keys.ShouldContain("Complete");
         keys.ShouldContain("Cancelled");
     }
