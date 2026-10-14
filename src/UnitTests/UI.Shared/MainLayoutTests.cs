@@ -688,6 +688,25 @@ public class MainLayoutTests
     }
 
     [Test]
+    public async Task NotificationsBadge_ShouldRenderOnInitialLoad_WithOverdueAndDueTodayCount()
+    {
+        WorkOrder[] orders =
+        [
+            new() { Number = "WO-1", Title = "A", Status = WorkOrderStatus.Assigned },
+            new() { Number = "WO-2", Title = "B", Status = WorkOrderStatus.InProgress },
+            new() { Number = "WO-3", Title = "C", Status = WorkOrderStatus.Draft }
+        ];
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(orders, [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        await layout.WaitForAssertionAsync(() =>
+            layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("3"));
+        layout.FindAll(".notifications-panel").Count.ShouldBe(0);
+    }
+
+    [Test]
     public async Task NotificationsBell_ShouldNotOpenPanel_WhenUserNameIsMissing()
     {
         var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));

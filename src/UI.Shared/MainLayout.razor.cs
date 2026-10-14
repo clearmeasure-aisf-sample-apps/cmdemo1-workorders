@@ -118,6 +118,8 @@ public partial class MainLayout : IAsyncDisposable
         {
             // graceful fallback — malformed response, fields remain "unknown"
         }
+
+        await LoadNotificationsAsync();
     }
 
     /// <summary>
@@ -190,23 +192,35 @@ public partial class MainLayout : IAsyncDisposable
 
     private async Task OpenNotificationsPanelAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var currentUserName = ResolveUserName(authState.User);
-
-        if (string.IsNullOrWhiteSpace(currentUserName))
+        if (await LoadNotificationsAsync())
         {
-            return;
-        }
-
-        try
-        {
-            _notificationsPanelData = await Bus.Send(new NotificationsPanelQuery(currentUserName));
             _notificationsPanelOpen = true;
             await InvokeAsync(StateHasChanged);
         }
-        catch
+    }
+
+    /// <summary>
+    /// Loads the notifications for the signed-in user so the bell badge is correct on page load.
+    /// Returns false when there is no signed-in user or the query fails.
+    /// </summary>
+    private async Task<bool> LoadNotificationsAsync()
+    {
+        try
         {
-            // Silently fail - panel won't open
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var currentUserName = ResolveUserName(authState.User);
+            if (string.IsNullOrWhiteSpace(currentUserName))
+            {
+                return false;
+            }
+
+            _notificationsPanelData = await Bus.Send(new NotificationsPanelQuery(currentUserName));
+            return true;
+        }
+        catch (Exception)
+        {
+            // Silently fail - badge stays hidden and panel won't open
+            return false;
         }
     }
 
