@@ -6,6 +6,15 @@
     <div class="work-order-header">
         <h2 title="Create or edit a work order" data-testid="@Elements.ManageHeadingTooltip">
             Work Order #<span data-testid="@Elements.WorkOrderNumber">@Model.WorkOrderNumber</span>
+            @if (_workOrder != null && _workOrder.Id != Guid.Empty)
+            {
+                <button type="button" data-testid="@Elements.CopyWorkOrderNumber" class="btn btn-copy-number" aria-label="Copy work order number" @onclick="CopyWorkOrderNumberAsync">
+                    <i class="@(_copyButtonShowSuccess ? "bi bi-check2" : "bi bi-clipboard")"></i>
+                </button>
+                <span role="status" aria-live="polite" aria-atomic="true" class="visually-hidden" id="copy-status">
+                    @if (_copyButtonShowSuccess) { <text>Copied to clipboard</text> }
+                </span>
+            }
             <span class="status-badge @CurrentStatusBadgeCssClass" data-testid="@Elements.Status">@Model.Status</span>
         </h2>
         <p data-testid="@Elements.RequiredFieldsNote">Fields marked with * are required.</p>
@@ -248,6 +257,7 @@
         RequiredFieldsNote,
         ManageHeadingTooltip,
         Priority,
-        Building
+        Building,
+        CopyWorkOrderNumber
     }
 }

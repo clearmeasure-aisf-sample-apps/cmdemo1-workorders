@@ -291,6 +291,51 @@
     font-size: 1.1rem;
 }
 
+.btn-copy-number {
+    background: transparent;
+    border: none;
+    color: #2d3748;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    margin-left: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+}
+
+.btn-copy-number:hover {
+    background: rgba(123, 104, 238, 0.1);
+}
+
+.btn-copy-number:active {
+    background: rgba(123, 104, 238, 0.2);
+}
+
+.btn-copy-number.copied {
+    background: rgba(52, 211, 153, 0.1);
+}
+
+:global(html[data-theme="dark"]) .btn-copy-number {
+    color: #f7fafc;
+}
+
+:global(html[data-theme="dark"]) .btn-copy-number:hover {
+    background: rgba(163, 191, 250, 0.1);
+}
+
+:global(html[data-theme="dark"]) .btn-copy-number:active {
+    background: rgba(163, 191, 250, 0.2);
+}
+
+:global(html[data-theme="dark"]) .btn-copy-number.copied {
+    background: rgba(34, 197, 94, 0.15);
+}
+
 .status-badge {
     display: inline-block;
     padding: 0.5rem 1rem;
