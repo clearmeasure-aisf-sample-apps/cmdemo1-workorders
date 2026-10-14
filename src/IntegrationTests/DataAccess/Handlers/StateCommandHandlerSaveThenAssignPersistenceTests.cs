@@ -20,15 +20,17 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldClearAssigneeAndDate_WhenCancelOnExistingAssignedRowAfterRemoting()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
+        var number = TestData.Number("P");
 
         var creator = Faker<Employee>();
-        creator.UserName = "tlovejoy";
+        creator.UserName = creatorUserName;
         var assignee = Faker<Employee>();
-        assignee.UserName = "gwillie";
+        assignee.UserName = assigneeUserName;
         var order = Faker<WorkOrder>();
         order.Id = Guid.Empty;
-        order.Number = "CNLKEEP";
+        order.Number = number;
         order.Status = WorkOrderStatus.Assigned;
         order.Creator = creator;
         order.Assignee = assignee;
@@ -58,7 +60,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
         await using (var loadCtx = TestHost.GetRequiredService<DbContext>())
         {
             forCancel = await loadCtx.Set<WorkOrder>().AsNoTracking()
-                .SingleAsync(w => w.Number == "CNLKEEP");
+                .SingleAsync(w => w.Number == number);
         }
 
         var handler = TestHost.GetRequiredService<StateCommandHandler>();
@@ -68,7 +70,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
 
         await using var fresh = TestHost.GetRequiredService<DbContext>();
         var reloaded = await fresh.Set<WorkOrder>().AsNoTracking()
-            .SingleAsync(w => w.Number == "CNLKEEP");
+            .SingleAsync(w => w.Number == number);
 
         reloaded.Status.ShouldBe(WorkOrderStatus.Cancelled);
         reloaded.Status.Code.ShouldBe("CNL");
@@ -81,12 +83,14 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldPersistAssignedStatusAndDate_WhenSaveDraftThenRemotedAssign_OnExistingId()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
+        var number = TestData.Number("P");
 
         var creator = Faker<Employee>();
-        creator.UserName = "tlovejoy";
+        creator.UserName = creatorUserName;
         var assignee = Faker<Employee>();
-        assignee.UserName = "gwillie";
+        assignee.UserName = assigneeUserName;
 
         await using (var seed = TestHost.GetRequiredService<DbContext>())
         {
@@ -97,7 +101,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
 
         var draft = Faker<WorkOrder>();
         draft.Id = Guid.Empty;
-        draft.Number = "SVASG1";
+        draft.Number = number;
         draft.Title = "mow front grass";
         draft.Description = "edge the walk";
         draft.Instructions = "do a good job";
@@ -125,7 +129,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
         orderForAssign.Id.ShouldNotBe(Guid.Empty);
         orderForAssign.Status.ShouldBe(WorkOrderStatus.Draft);
         orderForAssign.Assignee.ShouldNotBeNull();
-        orderForAssign.Assignee!.UserName.ShouldBe("gwillie");
+        orderForAssign.Assignee!.UserName.ShouldBe(assigneeUserName);
 
         var assignHandler = TestHost.GetRequiredService<StateCommandHandler>();
         var assignCommand = RemotableRequestTests.SimulateRemoteObject(
@@ -140,7 +144,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
         {
             reloaded = await newCtx.Set<WorkOrder>()
                 .AsNoTracking()
-                .SingleAsync(w => w.Number == "SVASG1");
+                .SingleAsync(w => w.Number == number);
         }
 
         reloaded.Status.ShouldBe(WorkOrderStatus.Assigned);
@@ -149,38 +153,38 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
         reloaded.AssignedDate.ShouldNotBeNull();
         reloaded.AssignedDate.ShouldBe(TestHost.TestTime.DateTime);
         reloaded.Assignee.ShouldNotBeNull();
-        reloaded.Assignee!.UserName.ShouldBe("gwillie");
+        reloaded.Assignee!.UserName.ShouldBe(assigneeUserName);
         reloaded.Creator.ShouldNotBeNull();
-        reloaded.Creator!.UserName.ShouldBe("tlovejoy");
-        reloaded.Number.ShouldBe("SVASG1");
+        reloaded.Creator!.UserName.ShouldBe(creatorUserName);
+        reloaded.Number.ShouldBe(number);
         reloaded.Title.ShouldBe("mow front grass");
         reloaded.Description.ShouldBe("edge the walk");
         reloaded.Instructions.ShouldBe("do a good job");
         reloaded.RoomNumber.ShouldBe("front lawn");
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var byNumber = await bus.Send(new WorkOrderByNumberQuery("SVASG1"));
+        var byNumber = await bus.Send(new WorkOrderByNumberQuery(number));
         byNumber.ShouldNotBeNull();
         byNumber.Status.ShouldBe(WorkOrderStatus.Assigned);
         byNumber.AssignedDate.ShouldNotBeNull();
-        byNumber.Assignee!.UserName.ShouldBe("gwillie");
+        byNumber.Assignee!.UserName.ShouldBe(assigneeUserName);
 
-        var getJson = await WorkOrderTools.GetWorkOrder(bus, "SVASG1");
+        var getJson = await WorkOrderTools.GetWorkOrder(bus, number);
         using var doc = JsonDocument.Parse(getJson);
         var detail = doc.RootElement;
         detail.GetProperty("Status").GetString().ShouldBe("Assigned");
         detail.GetProperty("AssignedDate").ValueKind.ShouldNotBe(JsonValueKind.Null);
-        detail.GetProperty("AssigneeUsername").GetString().ShouldBe("gwillie");
+        detail.GetProperty("AssigneeUsername").GetString().ShouldBe(assigneeUserName);
     }
 
     [Test]
     public async Task ShouldKeepAddPathAssignedDateAndStatusWhenIdEmpty()
     {
-        new DatabaseTests().Clean();
+        var number = TestData.Number("P");
 
         var o = Faker<WorkOrder>();
         o.Id = Guid.Empty;
-        o.Number = "ADDASD";
+        o.Number = number;
         var currentUser = Faker<Employee>();
         var assignee = Faker<Employee>();
         o.Creator = currentUser;
@@ -208,13 +212,14 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldLeaveNearbyInProgressUnchangedWhenAssigningDifferentDraft()
     {
-        new DatabaseTests().Clean();
+        var inProgressNumber = TestData.Number("P");
+        var draftNumber = TestData.Number("P");
 
         var creator = Faker<Employee>();
         var assignee = Faker<Employee>();
         var inProgress = Faker<WorkOrder>();
         inProgress.Id = Guid.Empty;
-        inProgress.Number = "IPGFRZ";
+        inProgress.Number = inProgressNumber;
         inProgress.Status = WorkOrderStatus.InProgress;
         inProgress.Creator = creator;
         inProgress.Assignee = assignee;
@@ -223,7 +228,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
 
         var draft = Faker<WorkOrder>();
         draft.Id = Guid.Empty;
-        draft.Number = "DRFTAS";
+        draft.Number = draftNumber;
         draft.Status = WorkOrderStatus.Draft;
         draft.Creator = creator;
         draft.Assignee = assignee;
@@ -242,7 +247,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
         await using (var loadCtx = TestHost.GetRequiredService<DbContext>())
         {
             forAssign = await loadCtx.Set<WorkOrder>().AsNoTracking()
-                .SingleAsync(w => w.Number == "DRFTAS");
+                .SingleAsync(w => w.Number == draftNumber);
         }
 
         var handler = TestHost.GetRequiredService<StateCommandHandler>();
@@ -252,13 +257,13 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
 
         await using var fresh = TestHost.GetRequiredService<DbContext>();
         var frozen = await fresh.Set<WorkOrder>().AsNoTracking()
-            .SingleAsync(w => w.Number == "IPGFRZ");
+            .SingleAsync(w => w.Number == inProgressNumber);
         frozen.Status.ShouldBe(WorkOrderStatus.InProgress);
         frozen.Title.ShouldBe("nearby in progress");
         frozen.Assignee!.UserName.ShouldBe(assignee.UserName);
 
         var assigned = await fresh.Set<WorkOrder>().AsNoTracking()
-            .SingleAsync(w => w.Number == "DRFTAS");
+            .SingleAsync(w => w.Number == draftNumber);
         assigned.Status.ShouldBe(WorkOrderStatus.Assigned);
         assigned.AssignedDate.ShouldNotBeNull();
     }

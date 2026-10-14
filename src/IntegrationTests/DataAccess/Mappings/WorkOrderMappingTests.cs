@@ -11,12 +11,12 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldMapWorkOrderBasicProperties()
     {
-        new DatabaseTests().Clean();
+        var numberWo01 = TestData.Number("M");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
         {
-            Number = "WO-01",
+            Number = numberWo01,
             Title = "Fix lighting",
             Description = "Replace broken light bulbs in conference room",
             Instructions = "Lock out panel before work.",
@@ -41,7 +41,7 @@ public class WorkOrderMappingTests
         }
 
         rehydratedWorkOrder.Id.ShouldBe(workOrder.Id);
-        rehydratedWorkOrder.Number.ShouldBe("WO-01");
+        rehydratedWorkOrder.Number.ShouldBe(numberWo01);
         rehydratedWorkOrder.Title.ShouldBe("Fix lighting");
         rehydratedWorkOrder.Description.ShouldBe("Replace broken light bulbs in conference room");
         rehydratedWorkOrder.Instructions.ShouldBe("Lock out panel before work.");
@@ -54,10 +54,10 @@ public class WorkOrderMappingTests
     [Test]
     public async Task ShouldSaveWorkOrder()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("M");
 
-        var creator = new Employee("1", "1", "1", "1");
-        var assignee = new Employee("2", "2", "2", "2");
+        var creator = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var assignee = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order = new WorkOrder
         {
             Creator = creator,
@@ -68,7 +68,7 @@ public class WorkOrderMappingTests
             RoomNumber = "123 a"
         };
         order.ChangeStatus(WorkOrderStatus.InProgress);
-        order.Number = "123";
+        order.Number = number123;
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -102,10 +102,10 @@ public class WorkOrderMappingTests
     [Test]
     public async Task ShouldSaveAuditEntries()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("M");
 
-        var creator = new Employee("1", "1", "1", "1");
-        var assignee = new Employee("2", "2", "2", "2");
+        var creator = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var assignee = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order = new WorkOrder
         {
             Creator = creator,
@@ -116,7 +116,7 @@ public class WorkOrderMappingTests
             RoomNumber = "123 a"
         };
         order.ChangeStatus(WorkOrderStatus.InProgress);
-        order.Number = "123";
+        order.Number = number123;
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -141,13 +141,13 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldMapWorkOrderWithCreatorAndAssignee()
     {
-        new DatabaseTests().Clean();
+        var numberWo02 = TestData.Number("M");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
-        var assignee = new Employee("assignee1", "Jane", "Smith", "jane@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
+        var assignee = new Employee(TestData.UserName("assignee1"), "Jane", "Smith", "jane@example.com");
         var workOrder = new WorkOrder
         {
-            Number = "WO-02",
+            Number = numberWo02,
             Title = "Fix plumbing",
             Description = "Fix sink in bathroom",
             Creator = creator,
@@ -179,12 +179,12 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldMapWorkOrderStatusConversion()
     {
-        new DatabaseTests().Clean();
+        var numberWo04 = TestData.Number("M");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
         {
-            Number = "WO-04",
+            Number = numberWo04,
             Title = "Test Status",
             Description = "Testing status conversion",
             Creator = creator,
@@ -211,9 +211,7 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldEnforceRequiredProperties()
     {
-        new DatabaseTests().Clean();
-
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
         {
             Creator = creator,
@@ -234,9 +232,7 @@ public class WorkOrderMappingTests
     {
         SqlServerTestAssumptions.RequireSqlServer();
 
-        new DatabaseTests().Clean();
-
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         // WorkOrder.Description setter truncates to 4000 before EF sees the value, so length violations
         // for Description are not observable through the domain model here.
         var workOrder = new WorkOrder
@@ -262,12 +258,10 @@ public class WorkOrderMappingTests
     {
         SqlServerTestAssumptions.RequireSqlServer();
 
-        new DatabaseTests().Clean();
-
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
         {
-            Number = "number",
+            Number = TestData.Number("M"),
             Title = new string('B', 300),
             Description = "description",
             RoomNumber = "room number",
@@ -287,13 +281,13 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldSupportMaxLengthRoomNumber()
     {
-        new DatabaseTests().Clean();
+        var numberWoR9 = TestData.Number("M");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var room = new string('R', WorkOrder.RoomNumberMaxLength);
         var workOrder = new WorkOrder
         {
-            Number = "WO-R9",
+            Number = numberWoR9,
             Title = "Max length room",
             Description = "description",
             RoomNumber = room,
@@ -322,13 +316,13 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldEagerFetchCreatorAndAssigneeByDefault()
     {
-        new DatabaseTests().Clean();
+        var numberWo06 = TestData.Number("M");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
-        var assignee = new Employee("assignee1", "Jane", "Smith", "jane@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
+        var assignee = new Employee(TestData.UserName("assignee1"), "Jane", "Smith", "jane@example.com");
         var workOrder = new WorkOrder
         {
-            Number = "WO-06",
+            Number = numberWo06,
             Title = "Test Eager Loading",
             Description = "Testing that Creator and Assignee are auto-included",
             Creator = creator,
@@ -366,12 +360,12 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistNullInstructionsForLegacyWorkOrder()
     {
-        new DatabaseTests().Clean();
+        var numberWo07 = TestData.Number("M");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
         {
-            Number = "WO-07",
+            Number = numberWo07,
             Title = "Legacy work order",
             Description = "No instructions provided",
             Creator = creator,
@@ -398,13 +392,13 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistInstructionsAtMaxLength()
     {
-        new DatabaseTests().Clean();
+        var numberWo08 = TestData.Number("M");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var longInstructions = new string('I', 4001);
         var workOrder = new WorkOrder
         {
-            Number = "WO-08",
+            Number = numberWo08,
             Title = "Max length instructions",
             Description = "Testing truncation",
             Creator = creator,
@@ -431,30 +425,31 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldRejectDuplicateNumber_WhenSavedDirectly()
     {
-        new DatabaseTests().Clean();
+        var numberDup0002 = TestData.Number("M");
 
-        var creator = new Employee("dupcreator", "Dup", "Creator", "dup@example.com");
+        var creator = new Employee(TestData.UserName("dupcreator"), "Dup", "Creator", "dup@example.com");
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(creator);
-            context.Add(new WorkOrder { Number = "DUP0002", Title = "First", Creator = creator });
+            context.Add(new WorkOrder { Number = numberDup0002, Title = "First", Creator = creator });
             context.SaveChanges();
         }
 
         using var secondContext = TestHost.GetRequiredService<DbContext>();
         secondContext.Attach(creator);
-        secondContext.Add(new WorkOrder { Number = "DUP0002", Title = "Second", Creator = creator });
+        secondContext.Add(new WorkOrder { Number = numberDup0002, Title = "Second", Creator = creator });
 
         Should.Throw<DbUpdateException>(() => secondContext.SaveChanges());
     }
     [Test]
     public void ShouldPersistPriorityAndBuilding()
     {
-        new DatabaseTests().Clean();
+        var numberPri0001 = TestData.Number("M");
+        var numberPri0002 = TestData.Number("M");
 
-        var creator = new Employee("prio", "Prio", "Creator", "prio@example.com");
-        var high = new WorkOrder { Number = "PRI0001", Title = "High", Creator = creator, Priority = WorkOrderPriority.High, Building = "Sanctuary" };
-        var defaulted = new WorkOrder { Number = "PRI0002", Title = "Default", Creator = creator };
+        var creator = new Employee(TestData.UserName("prio"), "Prio", "Creator", "prio@example.com");
+        var high = new WorkOrder { Number = numberPri0001, Title = "High", Creator = creator, Priority = WorkOrderPriority.High, Building = "Sanctuary" };
+        var defaulted = new WorkOrder { Number = numberPri0002, Title = "Default", Creator = creator };
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(creator);
