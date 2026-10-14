@@ -1,4 +1,7 @@
+using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.UI.Shared;
+using FluentValidation;
 using MediatR;
 using Shouldly;
 
@@ -62,6 +65,55 @@ public class BusTests
 
         stubMediator.LastNotification.ShouldBe(notification);
         ((TestNotification)stubMediator.LastNotification!).Message.ShouldBe("test message");
+    }
+
+    [Test]
+    public async Task ShouldThrowValidationException_WhenSaveDraftTitleExceedsMaxLength()
+    {
+        var stubMediator = new StubMediator();
+        var bus = new Bus(stubMediator);
+        var command = CreateSaveDraftCommand(WorkOrder.TitleMaxLength + 1);
+
+        var ex = await Should.ThrowAsync<ValidationException>(() => bus.Send(command));
+
+        ex.Errors.ShouldContain(failure =>
+            failure.PropertyName == "WorkOrder.Title" &&
+            failure.ErrorMessage == "Title cannot exceed 300 characters.");
+        stubMediator.LastRequest.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldSendSaveDraft_WhenTitleIsAtMaxLength()
+    {
+        var stubMediator = new StubMediator();
+        var command = CreateSaveDraftCommand(WorkOrder.TitleMaxLength);
+        var expected = new StateCommandResult(command.WorkOrder);
+        stubMediator.SetResponse(expected);
+        var bus = new Bus(stubMediator);
+
+        var result = await bus.Send(command);
+
+        result.ShouldBe(expected);
+        stubMediator.LastRequest.ShouldBe(command);
+    }
+
+    [Test]
+    public async Task ShouldThrowValidationException_WhenSaveDraftSentAsObjectWithLongTitle()
+    {
+        var stubMediator = new StubMediator();
+        var bus = new Bus(stubMediator);
+        object command = CreateSaveDraftCommand(WorkOrder.TitleMaxLength + 1);
+
+        await Should.ThrowAsync<ValidationException>(() => bus.Send(command));
+
+        stubMediator.LastObjectRequest.ShouldBeNull();
+    }
+
+    private static SaveDraftCommand CreateSaveDraftCommand(int titleLength)
+    {
+        var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
+        var workOrder = new WorkOrder { Title = new string('T', titleLength), Creator = creator };
+        return new SaveDraftCommand(workOrder, creator);
     }
 
     private class StubMediator : IMediator

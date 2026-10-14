@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -41,6 +42,31 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
         order.CreatedDate.ShouldBe(TestHost.TestTime.DateTime);
         order.Title.ShouldBe(workOrder.Title);
         order.Instructions.ShouldBe("Turn off water main first");
+    }
+
+    [Test]
+    public async Task ShouldSaveAndReadBackMaxLengthTitle()
+    {
+        new DatabaseTests().Clean();
+
+        var currentUser = Faker<Employee>();
+        currentUser.Id = Guid.NewGuid();
+        var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(currentUser);
+        await context.SaveChangesAsync();
+
+        var expectedTitle = new string('T', WorkOrder.TitleMaxLength);
+        var workOrder = Faker<WorkOrder>();
+        workOrder.Id = Guid.Empty;
+        workOrder.Creator = currentUser;
+        workOrder.Title = expectedTitle;
+
+        var result = await TestHost.GetRequiredService<IBus>().Send(new SaveDraftCommand(workOrder, currentUser));
+
+        var readContext = TestHost.GetRequiredService<DbContext>();
+        var order = readContext.Find<WorkOrder>(result.WorkOrder.Id) ?? throw new InvalidOperationException();
+        order.Title.ShouldBe(expectedTitle);
+        order.Title!.Length.ShouldBe(WorkOrder.TitleMaxLength);
     }
 
     [Test]
