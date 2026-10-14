@@ -61,6 +61,11 @@ public class StateCommandHandler(
     private async Task<WorkOrder> InsertNewAsync(WorkOrder order, CancellationToken cancellationToken)
     {
         dbContext.ChangeTracker.Clear();
+        if (await dbContext.Set<WorkOrder>().AnyAsync(w => w.Number == order.Number, cancellationToken))
+        {
+            throw new InvalidOperationException($"Work order number {order.Number} already exists.");
+        }
+
         dbContext.Attach(order);
         dbContext.Add(order);
         await dbContext.SaveChangesAsync(cancellationToken);

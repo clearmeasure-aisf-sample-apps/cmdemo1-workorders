@@ -290,4 +290,39 @@ public class WorkOrderSpecificationHandlerTests
         orders.Length.ShouldBe(1);
         orders[0].Number.ShouldBe("OVR-001");
     }
+    [Test]
+    public async Task ShouldReturnEachWorkOrderOnce_WhenSearchingByCreatorWithSeveralRoles()
+    {
+        new DatabaseTests().Clean();
+
+        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy Jr", "tlovejoy@example.com");
+        creator.AddRole(new Role("Pastor", true, false));
+        creator.AddRole(new Role("Requester", true, false));
+        var other = new Employee("other", "Other", "Person", "other@example.com");
+        var orders = new[]
+        {
+            new WorkOrder { Creator = creator, Number = "38173BA", Title = "One" },
+            new WorkOrder { Creator = creator, Number = "38173BB", Title = "Two" },
+            new WorkOrder { Creator = creator, Assignee = other, Number = "38173BC", Title = "Three" },
+            new WorkOrder { Creator = other, Number = "38173BD", Title = "Not mine" }
+        };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.Add(other);
+            context.AddRange(orders);
+            await context.SaveChangesAsync();
+        }
+
+        var dataContext = TestHost.GetRequiredService<DataContext>();
+        var repository = new WorkOrderSearchHandler(dataContext);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchCreator(creator);
+        var result = await repository.Handle(specification);
+
+        result.Length.ShouldBe(3);
+        result.Select(o => o.Number).Distinct().Count().ShouldBe(3);
+        result.Select(o => o.Number).ShouldBe(["38173BA", "38173BB", "38173BC"], ignoreOrder: true);
+    }
 }

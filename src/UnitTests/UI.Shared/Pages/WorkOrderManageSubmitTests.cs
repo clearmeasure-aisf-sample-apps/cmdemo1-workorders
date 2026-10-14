@@ -108,9 +108,53 @@ public class WorkOrderManageSubmitTests
         });
     }
 
-    private sealed class StubSubmitBus(WorkOrder? existing = null) : Bus(null!)
+    [Test]
+    public async Task HandleSubmit_SubmittedTwiceWhileInFlight_SendsOneCommand()
+    {
+        await using var ctx = new BunitContext();
+        var user = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+        user.AddRole(new Role("creator", true, false));
+        var gate = new TaskCompletionSource();
+        var bus = new StubSubmitBus(commandGate: gate.Task);
+        RegisterServices(ctx, bus, user);
+
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo(navigationManager.GetUriWithQueryParameter("Mode", "New"));
+
+        var component = ctx.Render<WorkOrderManage>();
+        await component.WaitForAssertionAsync(() =>
+            component.Find($"[data-testid='{WorkOrderManage.Elements.Title}']").ShouldNotBeNull());
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Title}']").ChangeAsync(new() { Value = "Once" });
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Description}']").ChangeAsync(new() { Value = "Only once" });
+
+        var saveSelector = $"[data-testid='{WorkOrderManage.Elements.CommandButton}Save']";
+        _ = component.Find(saveSelector).ClickAsync(new());
+        await component.WaitForAssertionAsync(() => bus.CommandCount.ShouldBe(1));
+        var pendingSave = component.Find(saveSelector);
+        pendingSave.HasAttribute("disabled").ShouldBeTrue();
+        await component.Find("form").SubmitAsync();
+        gate.SetResult();
+
+        await component.WaitForAssertionAsync(() => navigationManager.Uri.ShouldContain("/workorder/search"));
+        bus.CommandCount.ShouldBe(1);
+    }
+
+    private static void RegisterServices(BunitContext ctx, IBus bus, Employee user)
+    {
+        ctx.Services.AddSingleton(bus);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(user));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(user));
+        ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
+        ctx.Services.AddSpeechSynthesis();
+        ctx.Services.AddSpeechRecognition();
+    }
+
+    private sealed class StubSubmitBus(WorkOrder? existing = null, Task? commandGate = null) : Bus(null!)
     {
         public object? LastCommand { get; private set; }
+        public int CommandCount { get; private set; }
         public int WorkOrderByNumberHits { get; private set; }
 
         public override Task Publish(INotification notification) => Task.CompletedTask;
@@ -142,12 +186,23 @@ public class WorkOrderManageSubmitTests
             if (request is IStateCommand)
             {
                 LastCommand = request;
+                CommandCount++;
                 var wo = existing ?? new WorkOrder { Number = "WO-TEST", Status = WorkOrderStatus.Draft };
                 var result = new StateCommandResult(wo);
-                return Task.FromResult((TResponse)(object)result);
+                return RespondAfterGate((TResponse)(object)result);
             }
 
             throw new NotImplementedException(request.GetType().Name);
+        }
+
+        private async Task<TResponse> RespondAfterGate<TResponse>(TResponse response)
+        {
+            if (commandGate != null)
+            {
+                await commandGate;
+            }
+
+            return response;
         }
     }
 

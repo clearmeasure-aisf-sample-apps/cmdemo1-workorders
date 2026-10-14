@@ -21,6 +21,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private WorkOrderAttachment[] _attachments = [];
     private string _preferredLanguage = "en-US";
     private DictationTarget _dictationTarget = DictationTarget.None;
+    private bool _isSubmitting;
     [Inject] public IWorkOrderBuilder? WorkOrderBuilder { get; set; }
     [Inject] public IUserSession? UserSession { get; set; }
     [Inject] private NavigationManager? NavigationManager { get; set; }
@@ -181,6 +182,24 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     }
 
     private async Task HandleSubmit()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        try
+        {
+            _isSubmitting = true;
+            await SubmitAsync();
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SubmitAsync()
     {
         var currentUser = (await UserSession!.GetCurrentUserAsync())!;
         WorkOrder workOrder;
