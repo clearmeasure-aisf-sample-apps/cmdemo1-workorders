@@ -817,49 +817,77 @@ jobs:
       - name: Build AcceptanceTests
         run: dotnet build src/AcceptanceTests/AcceptanceTests.csproj --configuration Release --no-restore -v minimal
 
-      - name: Validate Shard Filters
+      - name: Validate Shard Coverage with vstest
         shell: pwsh
         run: |
           . ./build.ps1
 
-          Write-Host "Validating shard filter definitions..."
+          Write-Host "Validating shard coverage with vstest..."
           Write-Host ""
 
-          # Validate each shard filter is non-empty and valid
+          $dll = "src/AcceptanceTests/bin/Release/net10.0/ClearMeasure.Bootcamp.AcceptanceTests.dll"
+
+          # Get filters from the single source of truth
           $shard1Filter = Get-ShardTestFilter -ShardNumber 1
-          if ([string]::IsNullOrEmpty($shard1Filter)) {
-            Write-Host "ERROR: Shard 1 filter is empty"
-            exit 1
-          }
-          Write-Host "✓ Shard 1 filter is defined ($(($shard1Filter.Length)) chars)"
-
           $shard2Filter = Get-ShardTestFilter -ShardNumber 2
-          if ([string]::IsNullOrEmpty($shard2Filter)) {
-            Write-Host "ERROR: Shard 2 filter is empty"
-            exit 1
-          }
-          Write-Host "✓ Shard 2 filter is defined ($(($shard2Filter.Length)) chars)"
-
           $shard3Filter = Get-ShardTestFilter -ShardNumber 3
-          if ([string]::IsNullOrEmpty($shard3Filter)) {
-            Write-Host "ERROR: Shard 3 filter is empty"
+
+          # Get test lists using vstest with ListTestsTargetPath
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:unfiltered.txt" 2>&1 | Out-Null
+          $unfiltered = @(Get-Content unfiltered.txt | Where-Object {$_})
+          $unfilteredCount = $unfiltered.Count
+
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard1.txt" "/TestCaseFilter:$shard1Filter" 2>&1 | Out-Null
+          $shard1 = @(Get-Content shard1.txt | Where-Object {$_})
+          $shard1Count = $shard1.Count
+
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard2.txt" "/TestCaseFilter:$shard2Filter" 2>&1 | Out-Null
+          $shard2 = @(Get-Content shard2.txt | Where-Object {$_})
+          $shard2Count = $shard2.Count
+
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard3.txt" "/TestCaseFilter:$shard3Filter" 2>&1 | Out-Null
+          $shard3 = @(Get-Content shard3.txt | Where-Object {$_})
+          $shard3Count = $shard3.Count
+
+          # Report counts
+          Write-Host "Test coverage report:"
+          Write-Host "  Unfiltered: $unfilteredCount"
+          Write-Host "  Shard 1:    $shard1Count"
+          Write-Host "  Shard 2:    $shard2Count"
+          Write-Host "  Shard 3:    $shard3Count"
+          Write-Host "  Sum:        $($shard1Count + $shard2Count + $shard3Count)"
+          Write-Host ""
+
+          # Validate totals match
+          $totalAcrossShards = $shard1Count + $shard2Count + $shard3Count
+          if ($totalAcrossShards -ne $unfilteredCount) {
+            Write-Host "ERROR: Shard totals ($totalAcrossShards) do not equal unfiltered total ($unfilteredCount)"
             exit 1
           }
-          Write-Host "✓ Shard 3 filter is defined ($(($shard3Filter.Length)) chars, complement)"
+          Write-Host "✓ Shard totals equal unfiltered total"
 
-          # Validate total test count
-          $allTests = @(dotnet test --list-tests --no-restore --no-build --configuration Release src/AcceptanceTests 2>&1 | Select-String "^    [A-Z]")
-          $totalTests = $allTests.Count
-          Write-Host "✓ Total tests in assembly: $totalTests"
+          # Check for overlaps
+          $overlap12 = @($shard1 | Where-Object {$shard2 -contains $_}).Count
+          $overlap13 = @($shard1 | Where-Object {$shard3 -contains $_}).Count
+          $overlap23 = @($shard2 | Where-Object {$shard3 -contains $_}).Count
 
-          if ($totalTests -le 0) {
-            Write-Host "ERROR: No tests found in assembly"
+          if ($overlap12 -gt 0 -or $overlap13 -gt 0 -or $overlap23 -gt 0) {
+            Write-Host "ERROR: Overlaps detected: S1∩S2=$overlap12, S1∩S3=$overlap13, S2∩S3=$overlap23"
             exit 1
           }
+          Write-Host "✓ No overlaps (S1∩S2=$overlap12, S1∩S3=$overlap13, S2∩S3=$overlap23)"
+
+          # Check for missing tests
+          $allShardTests = @($shard1 + $shard2 + $shard3)
+          $missing = @($unfiltered | Where-Object {$allShardTests -notcontains $_}).Count
+          if ($missing -gt 0) {
+            Write-Host "ERROR: $missing tests missing from all shards"
+            exit 1
+          }
+          Write-Host "✓ No missing tests"
 
           Write-Host ""
-          Write-Host "Shard filter validation PASSED"
-          Write-Host "Note: Filter effectiveness is validated by execution results from matrix jobs"
+          Write-Host "Coverage validation PASSED"
 
   build-result:
     name: Build result

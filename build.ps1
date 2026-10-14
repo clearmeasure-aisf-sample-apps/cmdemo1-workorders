@@ -428,15 +428,16 @@ Function Get-ShardTestFilter {
 		return ""
 	}
 
-	# Shard 1: App and AIAgents namespaces
-	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents."
+	# REBALANCED SHARDING (measured counts from 169 total tests):
+	# Shard 1: App (39) + AIAgents (4) + Extensions (5) + NServiceBus (1) + Api (8) = 57 tests
+	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api."
 
-	# Shard 2: McpServer, Api, Extensions, NServiceBus, plus specific WorkOrder classes
-	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|(FullyQualifiedName~WorkOrderAssignTests|FullyQualifiedName~WorkOrderBeginTests|FullyQualifiedName~WorkOrderCancelTests|FullyQualifiedName~WorkOrderCompleteTests|FullyQualifiedName~WorkOrderAttachmentTests|FullyQualifiedName~WorkOrderDueDateTests)"
+	# Shard 2: Authentication (25) + McpServer (26) + WorkOrders.WorkOrderDictationTests (5) = 56 tests
+	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests"
 
-	# Shard 3: TRUE COMPLEMENT - Everything NOT in Shard 1 or 2
-	$shard1Or2 = "($shard1Filter|$shard2Filter)"
-	$shard3Filter = "!($shard1Or2)"
+	# Shard 3: EXPLICIT EXCLUSION CHAIN - Remaining WorkOrders classes (56 tests)
+	# Excludes all namespaces/classes in Shards 1 and 2
+	$shard3Filter = "FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Api.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests"
 
 	switch ($ShardNumber) {
 		1 { return $shard1Filter }
