@@ -17,6 +17,10 @@
             }
             <span class="status-badge @CurrentStatusBadgeCssClass" data-testid="@Elements.Status">@Model.Status</span>
         </h2>
+        @if (Model.Mode != EditMode.New)
+        {
+            <a data-testid="@Elements.PrintLink" href="/workorder/print/@Model.WorkOrderNumber" target="_blank">Print</a>
+        }
         <p data-testid="@Elements.RequiredFieldsNote">Fields marked with * are required.</p>
     </div>
 
@@ -258,6 +262,7 @@
         ManageHeadingTooltip,
         Priority,
         Building,
-        CopyWorkOrderNumber
+        CopyWorkOrderNumber,
+        PrintLink
     }
 }
