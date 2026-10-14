@@ -6,7 +6,7 @@
     <div class="work-order-header">
         <h2 title="Create or edit a work order" data-testid="@Elements.ManageHeadingTooltip">
             Work Order #<span data-testid="@Elements.WorkOrderNumber">@Model.WorkOrderNumber</span>
-            @if (_workOrder != null)
+            @if (_workOrder != null && _workOrder.Id != Guid.Empty)
             {
                 <button type="button" data-testid="@Elements.CopyWorkOrderNumber" class="btn btn-copy-number" aria-label="Copy work order number" @onclick="CopyWorkOrderNumberAsync">
                     <i class="@(_copyButtonShowSuccess ? "bi bi-check2" : "bi bi-clipboard")"></i>
