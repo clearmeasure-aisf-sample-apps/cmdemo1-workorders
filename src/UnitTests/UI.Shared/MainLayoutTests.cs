@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Bunit;
+using Bunit.TestDoubles;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -10,6 +11,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
@@ -65,7 +67,9 @@ public class MainLayoutTests
         breadcrumbs.TextContent.ShouldContain("Dashboard");
         layout.Find("[role='search']").ShouldNotBeNull();
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.HelpLink)}']").GetAttribute("aria-label").ShouldBe("Help");
-        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").GetAttribute("aria-disabled").ShouldBe("true");
+        var notifButton = layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']");
+        notifButton.ShouldNotBeNull();
+        notifButton.GetAttribute("aria-disabled").ShouldBeNull();
     }
 
     [Test]
@@ -645,7 +649,200 @@ public class MainLayoutTests
         element.TextContent.Trim().ShouldBe("unknown");
     }
 
+    [Test]
+    public async Task NotificationsButton_ShouldNotBeDisabled_WhenUserIsAuthenticated()
+    {
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson");
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var button = layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']");
+        button.GetAttribute("aria-disabled").ShouldBeNull();
+        button.GetAttribute("title").ShouldBe("Notifications");
+    }
+
+    [Test]
+    public async Task NotificationsBadge_ShouldNotRender_WhenCountIsZero()
+    {
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson");
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var badges = layout.FindAll($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']");
+        badges.Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task NotificationsBell_ShouldOpenPanelAndShowBadge_WhenUserHasOverdueWork()
+    {
+        var order = new WorkOrder { Number = "WO-9", Title = "Late", Status = WorkOrderStatus.Assigned };
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([order], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+
+        await layout.WaitForAssertionAsync(() => layout.Find(".notifications-panel").ShouldNotBeNull());
+        bus.LastUserName.ShouldBe("hsimpson");
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("1");
+    }
+
+    [Test]
+    public async Task NotificationsBadge_ShouldRenderOnInitialLoad_WithOverdueAndDueTodayCount()
+    {
+        WorkOrder[] orders =
+        [
+            new() { Number = "WO-1", Title = "A", Status = WorkOrderStatus.Assigned },
+            new() { Number = "WO-2", Title = "B", Status = WorkOrderStatus.InProgress },
+            new() { Number = "WO-3", Title = "C", Status = WorkOrderStatus.Draft }
+        ];
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(orders, [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        await layout.WaitForAssertionAsync(() =>
+            layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("3"));
+        layout.FindAll(".notifications-panel").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task NotificationsBell_ShouldNotOpenPanel_WhenUserNameIsMissing()
+    {
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));
+        await using var ctx = CreateContext(bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+
+        layout.FindAll(".notifications-panel").Count.ShouldBe(0);
+        bus.LastUserName.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task NotificationsBell_ShouldNotOpenPanel_WhenQueryFails()
+    {
+        var bus = new NotificationsStubBus(null);
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+
+        layout.FindAll(".notifications-panel").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task NotificationsPanel_ShouldClose_WhenEscapeIsInvoked()
+    {
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+        var panel = await layout.WaitForElementAsync(".notifications-panel");
+        panel.ShouldNotBeNull();
+
+        var panelComponent = layout.FindComponent<NotificationsPanel>();
+        await layout.InvokeAsync(() => panelComponent.Instance.HandleEscapeKey());
+
+        await layout.WaitForAssertionAsync(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
+            .GetAttribute("aria-expanded").ShouldBe("false");
+    }
+
+    [Test]
+    public async Task NotificationsPanel_ShouldClose_WhenLocationChanges()
+    {
+        var order = new WorkOrder { Number = "WO-9", Title = "Late", Status = WorkOrderStatus.Assigned };
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([order], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+        await layout.WaitForElementAsync(".notifications-panel");
+
+        await layout.InvokeAsync(() => ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("/workorder/manage/WO-9?mode=Edit"));
+
+        await layout.WaitForAssertionAsync(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
+            .GetAttribute("aria-expanded").ShouldBe("false");
+    }
+
+    [Test]
+    public async Task NotificationsPanel_ShouldClose_WhenEntryIsClicked()
+    {
+        var order = new WorkOrder { Number = "WO-9", Title = "Late", Status = WorkOrderStatus.Assigned };
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([order], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+        await layout.WaitForElementAsync(".notifications-panel");
+
+        await layout.Find(".notification-card").ClickAsync(new());
+
+        await layout.WaitForAssertionAsync(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
+            .GetAttribute("aria-expanded").ShouldBe("false");
+    }
+
+    [Test]
+    public async Task NotificationsBadge_ShouldShow_WhenUserSignsInAfterInitialAnonymousRender()
+    {
+        WorkOrder[] orders = [new() { Number = "WO-1" }, new() { Number = "WO-2" }];
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(orders, [], []));
+        await using var ctx = CreateContext(bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        layout.FindAll($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").Count.ShouldBe(0);
+        bus.LastUserName.ShouldBeNull();
+
+        await layout.InvokeAsync(() => ((BunitAuthenticationStateProvider)ctx.Services.GetRequiredService<AuthenticationStateProvider>())
+            .TriggerAuthenticationStateChanged("mflanders"));
+
+        await layout.WaitForAssertionAsync(() =>
+            layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("2"));
+        bus.LastUserName.ShouldBe("mflanders");
+    }
+
+    [Test]
+    public async Task NotificationsBadge_ShouldRefresh_WhenLocationChanges()
+    {
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        layout.FindAll($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").Count.ShouldBe(0);
+
+        bus.Result = new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([new WorkOrder { Number = "WO-3" }], [], []);
+        await layout.InvokeAsync(() => ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("/workorder/search"));
+
+        await layout.WaitForAssertionAsync(() =>
+            layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("1"));
+    }
+
+    private sealed class NotificationsStubBus(ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? result) : StubBus
+    {
+        public string? LastUserName { get; private set; }
+
+        public ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? Result { get; set; } = result;
+
+        public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        {
+            if (request is not ClearMeasure.Bootcamp.Core.Queries.NotificationsPanelQuery query)
+            {
+                return base.Send(request);
+            }
+
+            LastUserName = query.UserName;
+            if (Result is null)
+            {
+                throw new InvalidOperationException("boom");
+            }
+
+            return Task.FromResult((TResponse)(object)Result);
+        }
+    }
+
     private static BunitContext CreateContext(
+        IBus? bus = null,
         string? authenticateAsUser = null,
         string? gitSha = null,
         string? environmentName = null,
@@ -661,7 +858,7 @@ public class MainLayoutTests
         }
 
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton(bus ?? new StubBus());
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession());
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();
