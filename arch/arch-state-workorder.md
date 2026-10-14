@@ -12,6 +12,8 @@ stateDiagram-v2
     Assigned --> InProgress : AssignedToInProgressCommand
 
     InProgress --> Complete : InProgressToCompleteCommand
+    InProgress --> Cancelled : InProgressToCancelledCommand
 
     Complete --> [*]
+    Cancelled --> [*]
 ```
