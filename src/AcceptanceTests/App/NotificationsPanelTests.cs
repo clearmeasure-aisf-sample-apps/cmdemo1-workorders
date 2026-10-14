@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using Shouldly;
@@ -20,18 +21,99 @@ public class NotificationsPanelTests : AcceptanceTestBase
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         var yesterday = today.AddDays(-1);
+        var dayBeforeYesterday = today.AddDays(-2);
         var tomorrow = today.AddDays(1);
+        var otherUser = new Employee("other_user", "Other", "User", "other@test.com");
 
-        // Seed work orders
-        var allOrders = await Bus.Send(new WorkOrderSpecificationQuery());
-        var countBefore = allOrders.Length;
+        // Create work orders in various states assigned to CurrentUser
+        var overdueAssigned = new WorkOrder
+        {
+            Number = $"WO-{TestTag}-OVD1",
+            Title = "Overdue Work Order 1",
+            Creator = CurrentUser,
+            Assignee = CurrentUser,
+            Status = WorkOrderStatus.Assigned,
+            DueDate = dayBeforeYesterday,
+            AssignedDate = DateTime.UtcNow.AddDays(-5)
+        };
 
-        // Create orders via HTTP API or direct database seeding would be needed here
-        // For now, verify the UI structure is in place
+        var overdueInProgress = new WorkOrder
+        {
+            Number = $"WO-{TestTag}-OVD2",
+            Title = "Overdue Work Order 2",
+            Creator = CurrentUser,
+            Assignee = CurrentUser,
+            Status = WorkOrderStatus.InProgress,
+            DueDate = yesterday,
+            AssignedDate = DateTime.UtcNow.AddDays(-5)
+        };
+
+        var dueToday = new WorkOrder
+        {
+            Number = $"WO-{TestTag}-TODAY",
+            Title = "Due Today Work Order",
+            Creator = CurrentUser,
+            Assignee = CurrentUser,
+            Status = WorkOrderStatus.Draft,
+            DueDate = today,
+            AssignedDate = DateTime.UtcNow.AddDays(-3)
+        };
+
+        var dueTomorrow = new WorkOrder
+        {
+            Number = $"WO-{TestTag}-TOM",
+            Title = "Due Tomorrow Work Order",
+            Creator = CurrentUser,
+            Assignee = CurrentUser,
+            Status = WorkOrderStatus.Assigned,
+            DueDate = tomorrow,
+            AssignedDate = DateTime.UtcNow.AddDays(-2)
+        };
+
+        var overdueCompleted = new WorkOrder
+        {
+            Number = $"WO-{TestTag}-COMP",
+            Title = "Completed Overdue (should not count)",
+            Creator = CurrentUser,
+            Assignee = CurrentUser,
+            Status = WorkOrderStatus.Complete,
+            DueDate = yesterday,
+            CompletedDate = DateTime.UtcNow.AddDays(-1)
+        };
+
+        var overdueOtherUser = new WorkOrder
+        {
+            Number = $"WO-{TestTag}-OTHER",
+            Title = "Overdue Assigned to Other (should not count)",
+            Creator = CurrentUser,
+            Assignee = otherUser,
+            Status = WorkOrderStatus.Assigned,
+            DueDate = yesterday,
+            AssignedDate = DateTime.UtcNow.AddDays(-3)
+        };
+
+        // Seed work orders via database context (no special commands needed for acceptance test setup)
+        var context = TestHost.GetRequiredService<Microsoft.EntityFrameworkCore.DbContext>();
+        context.Add(otherUser);
+        context.Add(overdueAssigned);
+        context.Add(overdueInProgress);
+        context.Add(dueToday);
+        context.Add(dueTomorrow);
+        context.Add(overdueCompleted);
+        context.Add(overdueOtherUser);
+        await context.SaveChangesAsync();
+
+        // Reload page to see the badge
         await Page.ReloadAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var bellButton = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsButton));
+        var badge = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsBadge));
+
+        // Badge should show count of overdue + due-today items (3: overdue1, overdue2, today)
+        // Not including: completed (3), assigned to other (1), due tomorrow (1)
+        var expectedCount = 3;
+        await Expect(badge).ToHaveTextAsync(expectedCount.ToString());
 
         // Bell button should be enabled (not disabled)
         var ariaDisabled = await bellButton.GetAttributeAsync("aria-disabled");
