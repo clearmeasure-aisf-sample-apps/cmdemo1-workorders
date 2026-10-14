@@ -60,7 +60,7 @@ public class NavRailToggleTests : AcceptanceTestBase
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var urlBefore = Page.Url;
-        var searchButton = Page.Locator($"#{nameof(WorkOrderSearch.Elements.SearchButton)}");
+        var searchButton = Page.Locator($"#{nameof(WorkOrderSearch.Elements.CreatorSelect)}");
         await Expect(searchButton).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
 
         await Click(nameof(MainLayout.Elements.NavRailToggle));

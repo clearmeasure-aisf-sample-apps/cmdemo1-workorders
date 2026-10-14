@@ -2,19 +2,55 @@
 
 <div class="search-page">
     <div class="search-container">
-        <div class="search-header">
-            <h2 title="Search every work order" data-testid="@Elements.SearchHeadingTooltip">Work Order Search</h2>
-            <p data-testid="@Elements.SearchHint">Use the filters to narrow the list of work orders.</p>
-            <div class="search-subtitle">Find and manage church maintenance requests</div>
-        </div>
+        <header class="search-header">
+            <div class="search-heading">
+                <h1 title="Search every work order" data-testid="@Elements.SearchHeadingTooltip">Work Order Search</h1>
+                <p class="search-subtitle" data-testid="@Elements.SearchHint">Find, triage and track maintenance requests across all church facilities.</p>
+            </div>
+            <div class="search-actions">
+                <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.ExportButton"
+                        disabled title="Download the filtered work orders as CSV">
+                    <i class="bi bi-download" aria-hidden="true"></i> Export
+                </button>
+                <div class="menu-anchor" @onkeydown="HandleSavedViewsKeyDown">
+                    <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.SavedViewsButton"
+                            aria-haspopup="menu" aria-expanded="@(_savedViewsOpen ? "true" : "false")" aria-controls="saved-views-menu"
+                            @ref="_savedViewsButton" @onclick="() => _savedViewsOpen = !_savedViewsOpen">
+                        <i class="bi bi-bookmark" aria-hidden="true"></i> Saved views
+                    </button>
+                    <ul id="saved-views-menu" class="popover-menu" role="menu" aria-label="Saved views" hidden="@(!_savedViewsOpen)">
+                        @foreach (var view in SavedViews)
+                        {
+                            <li role="none">
+                                <a role="menuitem" class="popover-menu-item" href="@view.Href" @onclick="() => _savedViewsOpen = false">@view.Name</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                @if (_canCreate)
+                {
+                    <a class="btn-app btn-app--primary" data-testid="@Elements.NewWorkOrderButton" href="workorder/manage?mode=New">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> New Work Order
+                    </a>
+                }
+            </div>
+        </header>
 
-        <div class="search-filters-card">
-            <EditForm Model="@Model" OnValidSubmit="OnSearch!">
+        <WorkOrderSummaryCards Summary="_summary" OnCardSelected="HandleCardSelected"/>
+
+        <section class="filters-card" aria-labelledby="filters-heading">
+            <div class="filters-card-header">
+                <h2 id="filters-heading" class="card-title">Filters</h2>
+                <button id="@Elements.ClearFiltersButton" type="button" class="link-button" disabled="@(!HasActiveFilters)" @onclick="HandleClearFilters">
+                    Clear all
+                </button>
+            </div>
+            <EditForm Model="@Model">
                 <div class="filters-grid">
                     <div class="filter-group">
                         <label class="filter-label" for="@Elements.CreatorSelect">Creator</label>
-                        <InputSelect id="@Elements.CreatorSelect" @bind-Value="Model.Filters.Creator" class="form-control">
-                            <option value="">All</option>
+                        <InputSelect id="@Elements.CreatorSelect" @bind-Value="Model.Filters.Creator" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Creator)">
+                            <option value="">Anyone</option>
                             @foreach (var user in UserOptions)
                             {
                                 <option value="@user.Value">@user.Text</option>
@@ -24,8 +60,8 @@
 
                     <div class="filter-group">
                         <label class="filter-label" for="@Elements.AssigneeSelect">Assignee</label>
-                        <InputSelect id="@Elements.AssigneeSelect" @bind-Value="Model.Filters.Assignee" class="form-control" disabled="@_assignedToMe">
-                            <option value="">All</option>
+                        <InputSelect id="@Elements.AssigneeSelect" @bind-Value="Model.Filters.Assignee" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(_assignedToMe ? null : Model.Filters.Assignee)" disabled="@_assignedToMe">
+                            <option value="">Anyone</option>
                             @foreach (var user in UserOptions)
                             {
                                 <option value="@user.Value">@user.Text</option>
@@ -34,14 +70,9 @@
                     </div>
 
                     <div class="filter-group">
-                        <InputCheckbox id="@Elements.AssignedToMeCheckbox" @bind-Value="_assignedToMe" @bind-Value:after="HandleAssignedToMeChanged" />
-                        <label class="filter-label" for="@Elements.AssignedToMeCheckbox">Assigned to me</label>
-                    </div>
-
-                    <div class="filter-group">
                         <label class="filter-label" for="@Elements.StatusSelect">Status</label>
-                        <InputSelect id="@Elements.StatusSelect" @bind-Value="Model.Filters.Status" class="form-control">
-                            <option value="">All</option>
+                        <InputSelect id="@Elements.StatusSelect" @bind-Value="Model.Filters.Status" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Status)">
+                            <option value="">All statuses</option>
                             @foreach (var status in StatusOptions)
                             {
                                 <option value="@status.Value">@status.Text</option>
@@ -50,23 +81,58 @@
                     </div>
 
                     <div class="filter-group">
-                        <label class="filter-label" for="@Elements.OverdueOnlyToggle">Overdue</label>
-                        <div class="overdue-toggle-wrapper">
-                            <InputCheckbox id="@Elements.OverdueOnlyToggle" @bind-Value="Model.Filters.OverdueOnly" />
-                            <label for="@Elements.OverdueOnlyToggle">Show overdue only</label>
-                        </div>
+                        <label class="filter-label" for="@Elements.PrioritySelect">Priority</label>
+                        <InputSelect id="@Elements.PrioritySelect" @bind-Value="Model.Filters.Priority" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Priority)">
+                            <option value="">All priorities</option>
+                            @foreach (var priority in PriorityOptions)
+                            {
+                                <option value="@priority">@priority</option>
+                            }
+                        </InputSelect>
                     </div>
 
                     <div class="filter-group">
-                        <button id="@Elements.SearchButton" type="submit" class="btn btn-primary">
-                            <i class="bi bi-search" aria-hidden="true"></i> Search
-                        </button>
-                        <button id="@Elements.ClearFiltersButton" type="button" class="btn btn-secondary" disabled="@(!HasActiveFilters)" @onclick="HandleClearFilters">
-                            Clear filters
-                        </button>
+                        <label class="filter-label" for="@Elements.BuildingSelect">Building</label>
+                        <InputSelect id="@Elements.BuildingSelect" @bind-Value="Model.Filters.Building" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Building)">
+                            <option value="">All buildings</option>
+                            @foreach (var building in BuildingOptions)
+                            {
+                                <option value="@building">@building</option>
+                            }
+                        </InputSelect>
                     </div>
                 </div>
             </EditForm>
+        </section>
+
+        <div class="active-filters-row">
+            <div class="active-filters" data-testid="@Elements.ActiveFilters">
+                <span class="active-filters-label">Active:</span>
+                @if (Chips.Count == 0)
+                {
+                    <span class="active-filters-none">None</span>
+                }
+                @foreach (var chip in Chips)
+                {
+                    <button type="button" class="filter-chip" data-testid="@($"{Elements.ActiveFilterChip}{chip.Key}")"
+                            aria-label="@($"Remove filter {chip.Label}")" @onclick="() => HandleChipRemoved(chip.Key)">
+                        <span>@chip.Label</span>
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                }
+            </div>
+            <div class="filter-switches">
+                <label class="switch" for="@Elements.AssignedToMeCheckbox">
+                    <input type="checkbox" role="switch" id="@Elements.AssignedToMeCheckbox" class="switch-input"
+                           @bind="_assignedToMe" @bind:after="HandleAssignedToMeChanged"/>
+                    <span class="switch-label">Assigned to me</span>
+                </label>
+                <label class="switch" for="@Elements.OverdueOnlyToggle">
+                    <input type="checkbox" role="switch" id="@Elements.OverdueOnlyToggle" class="switch-input"
+                           @bind="Model.Filters.OverdueOnly" @bind:after="HandleFiltersChanged"/>
+                    <span class="switch-label">Overdue only</span>
+                </label>
+            </div>
         </div>
 
         <div class="results-card">
@@ -172,7 +238,6 @@
         AssigneeSelect,
         StatusSelect,
         OverdueOnlyToggle,
-        SearchButton,
         ClearFiltersButton,
         WorkOrderLink,
         DueDateCell,
@@ -183,11 +248,17 @@
         SortByRoomButton,
         AssignedToMeCheckbox,
         SearchHint,
-        SearchHeadingTooltip
+        SearchHeadingTooltip,
+        PrioritySelect,
+        BuildingSelect,
+        ActiveFilters,
+        ActiveFilterChip,
+        ExportButton,
+        SavedViewsButton,
+        NewWorkOrderButton
     }
 
     public WorkOrderSearchModel Model { get; set; } = new();
     public List<SelectListItem> UserOptions { get; set; } = new();
     public List<SelectListItem> StatusOptions { get; set; } = new();
-    public Func<Task>? OnSearch { get; set; }
 }

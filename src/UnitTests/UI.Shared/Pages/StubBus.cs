@@ -15,6 +15,8 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
     public string[] Buildings { get; set; } = ["Kitchen", "Sanctuary"];
 
+    public WorkOrderSpecificationQuery? LastSpecification { get; private set; }
+
     public override Task Publish(INotification notification)
     {
         return Task.CompletedTask;
@@ -33,8 +35,9 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return (Task<TResponse>)EmployeeByUserNameQueryResponse<TResponse>();
         }
 
-        if (request is WorkOrderSpecificationQuery)
+        if (request is WorkOrderSpecificationQuery specification)
         {
+            LastSpecification = specification;
             return Task.FromResult<TResponse>((TResponse)(object)(workOrderResults ?? WorkOrderSpecificationQueryResponse()));
         }
 

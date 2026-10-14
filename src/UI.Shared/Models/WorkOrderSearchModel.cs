@@ -7,12 +7,19 @@ public class WorkOrderSearchModel
     public SearchFilters Filters { get; } = new();
     public WorkOrderSearchResultRow[] Results { get; set; } = [];
 
+    /// <summary>Values bound to the filter controls on the search page.</summary>
     public class SearchFilters
     {
         public string? Creator { get; set; }
         public string? Assignee { get; set; }
         public string? Status { get; set; }
         public bool OverdueOnly { get; set; }
+
+        /// <summary>Selected priority name (Low, Medium, High) or empty for all.</summary>
+        public string? Priority { get; set; }
+
+        /// <summary>Selected building or empty for all.</summary>
+        public string? Building { get; set; }
     }
 }
 

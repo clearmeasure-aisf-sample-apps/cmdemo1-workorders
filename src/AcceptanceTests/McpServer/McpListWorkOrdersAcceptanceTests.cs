@@ -203,14 +203,11 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
         var filterArguments = BuildListWorkOrdersArguments(creatorUsername, assigneeUsername, status);
 
         await creatorSelect.SelectOptionAsync(creatorUsername ?? string.Empty);
         await assigneeSelect.SelectOptionAsync(assigneeUsername ?? string.Empty);
         await statusSelect.SelectOptionAsync(status ?? string.Empty);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         foreach (var number in requiredNumbers)
@@ -230,8 +227,10 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
                 return;
             }
 
-            await searchButton.ClickAsync();
+            // Filters apply on change and live in the URL, so a reload re-runs the same search.
+            await Page.ReloadAsync();
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Expect(creatorSelect).ToHaveValueAsync(creatorUsername ?? string.Empty);
             mcpNumbers = await CallListWorkOrders(filterArguments);
             portalNumbers = await VisibleSearchNumbers();
         }
@@ -261,7 +260,7 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
             .ToHaveTextAsync("Welcome tlovejoy!");
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Expect(Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}")).ToBeVisibleAsync();
+        await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}")).ToBeVisibleAsync();
     }
 
     private sealed record ParityWorkOrderNumbers(
