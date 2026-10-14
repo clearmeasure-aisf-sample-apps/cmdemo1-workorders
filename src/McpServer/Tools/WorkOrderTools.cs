@@ -94,16 +94,10 @@ public class WorkOrderTools
                 return dueDateError!;
             }
 
-            var (parsedPriority, priorityError) = ParseAndValidatePriority(priority);
-            if (priorityError != null)
+            var (parsedPriority, trimmedBuilding, optionError) = ParsePriorityAndBuilding(priority, building);
+            if (optionError != null)
             {
-                return priorityError;
-            }
-
-            var (trimmedBuilding, buildingError) = ValidateBuilding(building);
-            if (buildingError != null)
-            {
-                return buildingError;
+                return optionError;
             }
 
             var workOrder = new WorkOrder
@@ -440,6 +434,13 @@ public class WorkOrderTools
         }
 
         return (WorkOrderPriority.Medium, $"Invalid priority '{priorityStr}'. Valid values are: Low, Medium, High.");
+    }
+
+    internal static (WorkOrderPriority, string?, string?) ParsePriorityAndBuilding(string? priority, string? building)
+    {
+        var (parsedPriority, priorityError) = ParseAndValidatePriority(priority);
+        var (trimmedBuilding, buildingError) = ValidateBuilding(building);
+        return (parsedPriority, trimmedBuilding, priorityError ?? buildingError);
     }
 
     internal static (string?, string?) ValidateBuilding(string? building)
