@@ -124,9 +124,7 @@ public class WorkOrderManageCopyButtonTests
             $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
         copyButton.ShouldNotBeNull();
 
-        var clickTask = copyButton.ClickAsync(new());
-        clickTask.ShouldNotBeNull();
-        await clickTask;
+        await copyButton.ClickAsync(new());
     }
 
     [Test]
