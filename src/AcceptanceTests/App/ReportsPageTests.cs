@@ -126,6 +126,9 @@ public class ReportsPageTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Reports));
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
+        // Wait for export button to be enabled before clicking
+        await Expect(Page.GetByTestId(nameof(Reports.Elements.ExportButton))).ToBeEnabledAsync(new() { Timeout = 30_000 });
+
         // Initiate download and verify it completes
         var downloadTask = Page.WaitForDownloadAsync();
 

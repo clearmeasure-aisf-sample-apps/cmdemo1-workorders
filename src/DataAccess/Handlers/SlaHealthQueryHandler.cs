@@ -22,8 +22,15 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         var lastMonthStart = currentMonthStart.AddMonths(-1);
         var lastMonthEnd = currentMonthStart.AddDays(-1);
 
-        var currentMonthData = await ComputeMonthSla(currentMonthStart, currentMonthEnd, cancellationToken);
-        var lastMonthData = await ComputeMonthSla(lastMonthStart, lastMonthEnd, cancellationToken);
+        // Load all completed orders with DueDate once
+        var orders = await context.Set<WorkOrder>()
+            .AsNoTracking()
+            .Where(wo => wo.Status == WorkOrderStatus.Complete && wo.DueDate != null && wo.CompletedDate.HasValue)
+            .ToListAsync(cancellationToken);
+
+        // Compute both months in memory
+        var currentMonthData = ComputeMonthSlaInMemory(orders, currentMonthStart, currentMonthEnd);
+        var lastMonthData = ComputeMonthSlaInMemory(orders, lastMonthStart, lastMonthEnd);
 
         return new SlaHealth
         {
@@ -34,13 +41,8 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         };
     }
 
-    private async Task<MonthSlaData> ComputeMonthSla(DateOnly monthStart, DateOnly monthEnd, CancellationToken cancellationToken)
+    private static MonthSlaData ComputeMonthSlaInMemory(List<WorkOrder> orders, DateOnly monthStart, DateOnly monthEnd)
     {
-        var orders = await context.Set<WorkOrder>()
-            .AsNoTracking()
-            .Where(wo => wo.Status == WorkOrderStatus.Complete && wo.DueDate != null && wo.CompletedDate.HasValue)
-            .ToListAsync(cancellationToken);
-
         var monthOrders = orders
             .Where(wo => IsInMonth(wo.CompletedDate!.Value, monthStart, monthEnd))
             .ToList();
