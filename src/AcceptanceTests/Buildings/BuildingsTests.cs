@@ -92,7 +92,7 @@ public class BuildingsTests : AcceptanceTestBase
         var expectedOpenCount = int.Parse(openCountText);
 
         // Click the open link
-        await Click(openLink);
+        await openLink.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify we're on the search page with the correct filters
@@ -154,7 +154,7 @@ public class BuildingsTests : AcceptanceTestBase
         var expectedOverdueCount = int.Parse(overdueCountText);
 
         // Click the overdue link
-        await Click(overdueLink);
+        await overdueLink.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify we're on search page with overdue filter
@@ -216,7 +216,7 @@ public class BuildingsTests : AcceptanceTestBase
         var expectedCompletedCount = int.Parse(completedCountText);
 
         // Click the completed link
-        await Click(completedLink);
+        await completedLink.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify we're on search page with completed filters
