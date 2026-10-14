@@ -116,6 +116,12 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return Task.FromResult<TResponse>((TResponse)(object)load);
         }
 
+        if (request is SlaHealthQuery)
+        {
+            var slaHealth = new SlaHealth { CurrentMonthPercentage = null, LastMonthPercentage = null, CurrentMonthOrderCount = 0, LastMonthOrderCount = 0 };
+            return Task.FromResult<TResponse>((TResponse)(object)slaHealth);
+        }
+
         throw new NotImplementedException();
     }
 
