@@ -146,15 +146,16 @@ public class ReportsPageTests : AcceptanceTestBase
     {
         // Seed test data for the Reports page
         await using var context = TestHost.GetRequiredService<DataContext>();
-        var creator = new Employee("rcreator", "Reports", "Creator", "reports@test.com");
+        var tag = Guid.NewGuid().ToString("N")[..5];
+        var creator = new Employee("rc" + tag, "Reports", "Creator", "rc" + tag + "@test.com");
         var now = DateTime.UtcNow;
 
-        var orders = new[]
-        {
+        WorkOrder[] orders =
+        [
             new WorkOrder
             {
                 Creator = creator,
-                Number = "R001",
+                Number = $"R{tag}1",
                 Title = "Test 1",
                 Status = WorkOrderStatus.Draft,
                 Priority = WorkOrderPriority.High,
@@ -165,7 +166,7 @@ public class ReportsPageTests : AcceptanceTestBase
             new WorkOrder
             {
                 Creator = creator,
-                Number = "R002",
+                Number = $"R{tag}2",
                 Title = "Test 2",
                 Status = WorkOrderStatus.Assigned,
                 Priority = WorkOrderPriority.Medium,
@@ -175,7 +176,7 @@ public class ReportsPageTests : AcceptanceTestBase
             new WorkOrder
             {
                 Creator = creator,
-                Number = "R003",
+                Number = $"R{tag}3",
                 Title = "Test 3",
                 Status = WorkOrderStatus.InProgress,
                 Priority = WorkOrderPriority.Low,
@@ -185,7 +186,7 @@ public class ReportsPageTests : AcceptanceTestBase
             new WorkOrder
             {
                 Creator = creator,
-                Number = "R004",
+                Number = $"R{tag}4",
                 Title = "Test 4",
                 Status = WorkOrderStatus.Complete,
                 Priority = WorkOrderPriority.High,
@@ -196,7 +197,7 @@ public class ReportsPageTests : AcceptanceTestBase
             new WorkOrder
             {
                 Creator = creator,
-                Number = "R005",
+                Number = $"R{tag}5",
                 Title = "Test 5",
                 Status = WorkOrderStatus.Complete,
                 Priority = WorkOrderPriority.Medium,
@@ -204,7 +205,7 @@ public class ReportsPageTests : AcceptanceTestBase
                 CreatedDate = now.AddDays(-8),
                 CompletedDate = now.AddDays(-2)
             }
-        };
+        ];
 
         context.Add(creator);
         context.AddRange(orders.Cast<object>());

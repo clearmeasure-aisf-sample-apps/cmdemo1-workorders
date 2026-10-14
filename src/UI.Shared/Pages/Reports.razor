@@ -2,7 +2,6 @@
 @attribute [Authorize]
 @using System.Globalization
 @using Microsoft.AspNetCore.Authorization
-@using ClearMeasure.Bootcamp.Core.Queries
 <PageTitle>Reports - Kalahari Church Work Order System</PageTitle>
 
 <div class="reports-page">
@@ -30,7 +29,7 @@
                 </div>
                 <div class="chart-bars">
                     @{
-                        var statusLabels = new[] { "Draft", "Assigned", "InProgress" };
+                        string[] statusLabels = ["Draft", "Assigned", "InProgress"];
                         var maxCount = Data.CountByStatus.Values.Any() ? Data.CountByStatus.Values.Max() : 1;
                         if (maxCount == 0) maxCount = 1;
                     }
@@ -57,7 +56,7 @@
                 </div>
                 <div class="chart-bars">
                     @{
-                        var priorityLabels = new[] { "High", "Medium", "Low" };
+                        string[] priorityLabels = ["High", "Medium", "Low"];
                         var maxPriorityCount = Data.CountByPriority.Values.Any() ? Data.CountByPriority.Values.Max() : 1;
                         if (maxPriorityCount == 0) maxPriorityCount = 1;
                     }
