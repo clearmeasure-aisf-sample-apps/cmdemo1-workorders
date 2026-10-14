@@ -97,6 +97,7 @@ public abstract class AcceptanceTestBase
         {
             BaseURL = ServerFixture.ApplicationBaseUrl,
             IgnoreHTTPSErrors = true,
+            Permissions = ["clipboard-read", "clipboard-write"],
             ViewportSize = new ViewportSize { Width = 800, Height = 600 }
         });
         browserContext.SetDefaultTimeout(60_000);
