@@ -573,7 +573,9 @@
 }
 
 .board-card-room {
-    margin-left: auto;
+    min-width: 0;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
 }
 
 .board-card-due {
