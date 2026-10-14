@@ -71,7 +71,9 @@
     outline-offset: 2px;
 }
 
-.card-header {
+.notification-card-header {
+    background: var(--color-surface-2);
+    color: var(--color-text);
     display: flex;
     justify-content: space-between;
     align-items: center;

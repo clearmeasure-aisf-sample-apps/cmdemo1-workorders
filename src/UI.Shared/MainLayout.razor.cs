@@ -107,6 +107,7 @@ public partial class MainLayout : IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         Navigation.LocationChanged += OnLocationChanged;
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
 
         try
         {
@@ -217,6 +218,7 @@ public partial class MainLayout : IAsyncDisposable
             var currentUserName = ResolveUserName(authState.User);
             if (string.IsNullOrWhiteSpace(currentUserName))
             {
+                _notificationsPanelData = null;
                 return false;
             }
 
@@ -234,7 +236,22 @@ public partial class MainLayout : IAsyncDisposable
         (user.FindFirst("preferred_username") ?? user.FindFirst("name"))?.Value ?? user.Identity?.Name;
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
-        InvokeAsync(CloseNotificationsPanelAsync);
+        InvokeAsync(CloseAndRefreshNotificationsAsync);
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> task) =>
+        InvokeAsync(RefreshNotificationsAsync);
+
+    private async Task CloseAndRefreshNotificationsAsync()
+    {
+        await CloseNotificationsPanelAsync();
+        await RefreshNotificationsAsync();
+    }
+
+    private async Task RefreshNotificationsAsync()
+    {
+        await LoadNotificationsAsync();
+        StateHasChanged();
+    }
 
     private async Task CloseNotificationsPanelAsync()
     {
@@ -246,6 +263,7 @@ public partial class MainLayout : IAsyncDisposable
     {
         Theme.OnChange -= OnThemeChanged;
         Navigation.LocationChanged -= OnLocationChanged;
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
 
         if (_navToggleHelper is not null)
         {

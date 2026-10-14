@@ -14,7 +14,7 @@
                     @foreach (var order in Data.OverdueAndDueToday)
                     {
                         <a href="/workorder/manage/@order.Number?mode=Edit" class="notification-card" @onclick="OnClose">
-                            <div class="card-header">
+                            <div class="notification-card-header">
                                 <span class="card-number">@order.Number</span>
                                 <span class="card-due-date" data-due-urgency="@GetDueUrgency(order)">
                                     @GetDueDateText(order.DueDate)
@@ -45,7 +45,7 @@
                     @foreach (var order in Data.NewlyAssignedLast7Days)
                     {
                         <a href="/workorder/manage/@order.Number?mode=Edit" class="notification-card" @onclick="OnClose">
-                            <div class="card-header">
+                            <div class="notification-card-header">
                                 <span class="card-number">@order.Number</span>
                                 <span class="card-status" data-status="@order.Status.Key">@order.Status</span>
                             </div>
@@ -74,7 +74,7 @@
                     @foreach (var order in Data.CreatedByMeStatusChangedLast7Days)
                     {
                         <a href="/workorder/manage/@order.Number?mode=Edit" class="notification-card" @onclick="OnClose">
-                            <div class="card-header">
+                            <div class="notification-card-header">
                                 <span class="card-number">@order.Number</span>
                                 <span class="card-status" data-status="@order.Status.Key">@order.Status</span>
                             </div>

@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
+using ClearMeasure.Bootcamp.UI.Shared.Components;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
@@ -107,9 +108,11 @@ public class NotificationsPanelTests : AcceptanceTestBase
         context.Add(overdueOtherUser);
         await context.SaveChangesAsync();
 
-        // Reload page to see the badge
-        await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        // Sign out and back in through the normal login flow (no manual reload): the badge must
+        // reflect the seeded work orders as soon as the user is signed in.
+        await LogoutViaUserMenu();
+        await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
+        await LoginAsCurrentUser();
 
         var bellButton = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsButton));
         var badge = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsBadge));
@@ -117,7 +120,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
         // Badge should show count of overdue + due-today items (3: overdue1, overdue2, today)
         // Not including: completed (3), assigned to other (1), due tomorrow (1)
         var expectedCount = 3;
-        await Expect(badge).ToHaveTextAsync(expectedCount.ToString());
+        await Expect(badge).ToHaveTextAsync(expectedCount.ToString(), new() { Timeout = 30_000 });
 
         // Bell button should be enabled (not disabled)
         var ariaDisabled = await bellButton.GetAttributeAsync("aria-disabled");

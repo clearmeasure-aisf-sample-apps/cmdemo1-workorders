@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Bunit;
+using Bunit.TestDoubles;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -784,9 +785,44 @@ public class MainLayoutTests
             .GetAttribute("aria-expanded").ShouldBe("false");
     }
 
+    [Test]
+    public async Task NotificationsBadge_ShouldShow_WhenUserSignsInAfterInitialAnonymousRender()
+    {
+        WorkOrder[] orders = [new() { Number = "WO-1" }, new() { Number = "WO-2" }];
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(orders, [], []));
+        await using var ctx = CreateContext(bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        layout.FindAll($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").Count.ShouldBe(0);
+        bus.LastUserName.ShouldBeNull();
+
+        await layout.InvokeAsync(() => ((BunitAuthenticationStateProvider)ctx.Services.GetRequiredService<AuthenticationStateProvider>())
+            .TriggerAuthenticationStateChanged("mflanders", [], [], null));
+
+        await layout.WaitForAssertionAsync(() =>
+            layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("2"));
+        bus.LastUserName.ShouldBe("mflanders");
+    }
+
+    [Test]
+    public async Task NotificationsBadge_ShouldRefresh_WhenLocationChanges()
+    {
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        layout.FindAll($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").Count.ShouldBe(0);
+
+        bus.Result = new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([new WorkOrder { Number = "WO-3" }], [], []);
+        await layout.InvokeAsync(() => ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("/workorder/search"));
+
+        await layout.WaitForAssertionAsync(() =>
+            layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("1"));
+    }
+
     private sealed class NotificationsStubBus(ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? result) : StubBus
     {
         public string? LastUserName { get; private set; }
+
+        public ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? Result { get; set; } = result;
 
         public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
         {
@@ -796,12 +832,12 @@ public class MainLayoutTests
             }
 
             LastUserName = query.UserName;
-            if (result is null)
+            if (Result is null)
             {
                 throw new InvalidOperationException("boom");
             }
 
-            return Task.FromResult((TResponse)(object)result);
+            return Task.FromResult((TResponse)(object)Result);
         }
     }
 
