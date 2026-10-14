@@ -275,6 +275,40 @@
     box-shadow: 0 2px 10px rgba(123, 104, 238, 0.3);
 }
 
+.btn-outline-secondary {
+    background: white;
+    color: #4a5568;
+    border: 2px solid #cbd5e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-outline-secondary:hover {
+    background: #f7fafc;
+    border-color: #a0aec0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.btn-outline-secondary:active {
+    background: #edf2f7;
+}
+
+.btn-outline-danger {
+    background: white;
+    color: #c53030;
+    border: 2px solid #fc8181;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-outline-danger:hover {
+    background: #fff5f5;
+    border-color: #f56565;
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+}
+
+.btn-outline-danger:active {
+    background: #fed7d7;
+}
+
 .readonly-message {
     background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
     color: #c53030;
@@ -434,6 +468,36 @@
     background: #374151;
     border-color: #4a5568;
     color: #f7fafc;
+}
+
+:global(html[data-theme="dark"]) .btn-outline-secondary {
+    background: #374151;
+    color: #e2e8f0;
+    border-color: #4a5568;
+}
+
+:global(html[data-theme="dark"]) .btn-outline-secondary:hover {
+    background: #4a5568;
+    border-color: #718096;
+}
+
+:global(html[data-theme="dark"]) .btn-outline-secondary:active {
+    background: #2d3748;
+}
+
+:global(html[data-theme="dark"]) .btn-outline-danger {
+    background: #374151;
+    color: #fc8181;
+    border-color: #e53e3e;
+}
+
+:global(html[data-theme="dark"]) .btn-outline-danger:hover {
+    background: #4a2b2b;
+    border-color: #fc8181;
+}
+
+:global(html[data-theme="dark"]) .btn-outline-danger:active {
+    background: #3d2121;
 }
 
 :global(html[data-theme="dark"]) .status-badge--draft {

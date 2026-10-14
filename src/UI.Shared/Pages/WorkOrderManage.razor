@@ -1,3 +1,5 @@
+@using ClearMeasure.Bootcamp.Core.Services.Impl
+
 <PageTitle>@(Model.Mode == EditMode.New ? "New Work Order" : $"Work Order {Model.WorkOrderNumber}") - Kalahari Church Work Order System</PageTitle>
 
 <div class="work-order-container">
@@ -165,11 +167,12 @@
             else
             {
                 <div class="action-buttons">
-                    @foreach (var command in ValidCommands)
+                    @foreach (var command in SortedValidCommands)
                     {
                         var buttonTestId = Elements.CommandButton + command.TransitionVerbPresentTense;
-                        var buttonClass = "btn btn-primary";
-                        <button data-testid="@buttonTestId" type="submit" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
+                        var buttonStyle = CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, ValidCommandNames);
+                        var buttonClass = "btn " + buttonStyle;
+                        <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLower()}")" type="submit" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
                             @command.TransitionVerbPresentTense
                         </button>
                     }
