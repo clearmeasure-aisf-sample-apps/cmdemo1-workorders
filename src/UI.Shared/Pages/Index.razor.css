@@ -20,6 +20,9 @@
     font-size: clamp(1.75rem, 5vw, 2.25rem);
     line-height: 1;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    color: #fff;
+    width: 100%;
+    text-align: center;
 }
 
 .greeting-banner p {
@@ -56,9 +59,10 @@
 }
 
 .church-icon {
+    display: block;
     font-size: 4rem;
     margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    color: #fff;
 }
 
 .church-title {
@@ -91,12 +95,6 @@
 .welcome-message {
     flex: 1;
     text-align: left;
-}
-
-.welcome-message h2 {
-    font-size: 2.2rem;
-    margin-bottom: 1rem;
-    color: #fff;
 }
 
 .welcome-message p {
@@ -153,7 +151,9 @@
     transform: translateX(-50%);
     font-size: 2rem;
     color: #ffd700;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .church-main {
@@ -226,9 +226,54 @@
     font-size: 1.5rem;
     margin-bottom: 1rem;
     color: #ffd700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.info-card h3 i {
+    font-size: 1.8rem;
 }
 
 .info-card p {
+    font-size: 1rem;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.status-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+    position: relative;
+    z-index: 2;
+}
+
+.status-card {
+    background: rgba(255,255,255,0.1);
+    padding: 2rem;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.status-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.status-card-count {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 0.5rem;
+}
+
+.status-card-label {
     font-size: 1rem;
     line-height: 1.5;
     opacity: 0.9;
@@ -281,6 +326,11 @@
 }
 
 :global(html[data-theme="dark"]) .info-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+:global(html[data-theme="dark"]) .status-card {
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.12);
 }

@@ -26,7 +26,7 @@ public class IndexPageTests
 
         var emoji = component.Find($"[data-testid='{nameof(IndexPage.Elements.GreetingBannerEmoji)}']");
         emoji.GetAttribute("aria-hidden").ShouldBe("true");
-        emoji.TextContent.ShouldContain("⛪");
+        emoji.ClassList.ShouldContain("bi");
     }
 
     [Test]
