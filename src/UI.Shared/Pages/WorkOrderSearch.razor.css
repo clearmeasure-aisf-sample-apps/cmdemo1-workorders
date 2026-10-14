@@ -178,12 +178,12 @@
 .grid-data td:nth-child(2),
 .grid-data th:nth-child(3),
 .grid-data td:nth-child(3) {
-    width: 13%;
+    width: 11%;
 }
 
 .grid-data th:nth-child(4),
 .grid-data td:nth-child(4) {
-    width: 13%;
+    width: 14%;
 }
 
 .grid-data th:nth-child(5),
@@ -194,17 +194,18 @@
 
 .grid-data th:nth-child(6),
 .grid-data td:nth-child(6) {
-    width: 13%;
+    width: 10%;
     white-space: nowrap;
 }
 
 .grid-data th:nth-child(7),
 .grid-data td:nth-child(7) {
-    width: 10%;
+    width: 11%;
 }
 
 .grid-data td,
 .grid-data thead th {
+    box-sizing: border-box;
     padding: 1rem 0.5rem;
 }
 
@@ -531,4 +532,8 @@
 
 .grid-data td .status-badge {
     white-space: nowrap;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
