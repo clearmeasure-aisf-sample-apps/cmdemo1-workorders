@@ -4,11 +4,13 @@
 
 @if (WorkOrderLastChanged != null)
 {
-    <a href="/workorder/manage/@(WorkOrderLastChanged?.Number)?mode=Edit"
-       title="Most recently viewed work order"
-       data-testid="@nameof(Elements.LastWorkOrderTooltip)">
-        @WorkOrderLastChanged?.Number
-    </a>
+    <NavLink href="/workorder/manage/@(WorkOrderLastChanged?.Number)?mode=Edit"
+             class="nav-link"
+             title="Most recently viewed work order"
+             data-testid="@nameof(Elements.LastWorkOrderTooltip)">
+        <i class="bi bi-clock-history nav-icon" aria-hidden="true"></i>
+        <span class="nav-text">@WorkOrderLastChanged?.Number</span>
+    </NavLink>
 }
 
 @code {

@@ -1,13 +1,4 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Menu</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass nav-scrollable">
     <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
@@ -69,12 +60,12 @@
             </div>
             <div class="nav-item px-3">
                 <NavLink data-testid="@Elements.AllWorkOrdersInProgress" class="nav-link" href="@($"workorder/search?Status={WorkOrderStatus.InProgress.Key}")">
-                    <i class="bi bi-gear-fill nav-icon" aria-hidden="true"></i>
+                    <i class="bi bi-hourglass-split nav-icon" aria-hidden="true"></i>
                     <span class="nav-text">In Progress</span>
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <span class="nav-text"><LastWorkOrder/></span>
+                <LastWorkOrder/>
             </div>
         }
     </nav>
