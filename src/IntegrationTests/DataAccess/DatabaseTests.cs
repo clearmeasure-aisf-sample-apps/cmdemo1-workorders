@@ -13,9 +13,4 @@ public class DatabaseTests
         var context = TestHost.GetRequiredService<DbContext>();
         context.Database.EnsureCreated();
     }
-
-    public void Clean()
-    {
-        new DatabaseEmptier(TestHost.GetRequiredService<DbContext>().Database).DeleteAllData();
-    }
 }
