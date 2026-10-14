@@ -88,5 +88,6 @@ public static class DueDateUrgencyCalculator
     private static bool IsOpen(WorkOrderStatus status) =>
         status == WorkOrderStatus.Draft
         || status == WorkOrderStatus.Assigned
-        || status == WorkOrderStatus.InProgress;
+        || status == WorkOrderStatus.InProgress
+        || status == WorkOrderStatus.WaitingOnVendor;
 }

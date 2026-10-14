@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 /// </summary>
 public static class WorkOrderReportsExporter
 {
-    private static readonly string[] StatusOrder = ["Draft", "Assigned", "InProgress"];
+    private static readonly string[] StatusOrder = ["Draft", "Assigned", "InProgress", "WaitingOnVendor"];
     private static readonly string[] PriorityOrder = ["High", "Medium", "Low"];
 
     /// <summary>The CSV text for the reports <paramref name="data"/>, lines separated by CRLF.</summary>

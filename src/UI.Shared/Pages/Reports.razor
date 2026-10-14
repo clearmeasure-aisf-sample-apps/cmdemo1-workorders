@@ -29,7 +29,7 @@
                 </div>
                 <div class="chart-bars">
                     @{
-                        string[] statusLabels = ["Draft", "Assigned", "InProgress"];
+                        string[] statusLabels = ["Draft", "Assigned", "InProgress", "WaitingOnVendor"];
                         var maxCount = Data.CountByStatus.Values.Any() ? Data.CountByStatus.Values.Max() : 1;
                         if (maxCount == 0) maxCount = 1;
                     }

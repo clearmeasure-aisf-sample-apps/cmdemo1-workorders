@@ -17,6 +17,7 @@ public static class DashboardStatusCards
         [WorkOrderStatus.Draft.Key] = ("summary-card--status-draft", "bi-pencil-square"),
         [WorkOrderStatus.Assigned.Key] = ("summary-card--status-assigned", "bi-person-check"),
         [WorkOrderStatus.InProgress.Key] = ("summary-card--status-in-progress", "bi-hourglass-split"),
+        [WorkOrderStatus.WaitingOnVendor.Key] = ("summary-card--status-waiting", "bi-hourglass-end"),
         [WorkOrderStatus.Complete.Key] = ("summary-card--status-complete", "bi-check2-circle"),
         [WorkOrderStatus.Cancelled.Key] = ("summary-card--status-cancelled", "bi-x-circle")
     };

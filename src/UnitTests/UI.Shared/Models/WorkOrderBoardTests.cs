@@ -12,11 +12,11 @@ public class WorkOrderBoardTests
         new() { WorkOrder = new WorkOrder { Number = number, Title = number, Status = status }, Urgency = urgency };
 
     [Test]
-    public void Build_NoRows_ReturnsFiveEmptyColumnsInStatusOrder()
+    public void Build_NoRows_ReturnsSixEmptyColumnsInStatusOrder()
     {
         var columns = WorkOrderBoard.Build([]);
 
-        columns.Select(c => c.Status.Key).ShouldBe(["Draft", "Assigned", "InProgress", "Complete", "Cancelled"]);
+        columns.Select(c => c.Status.Key).ShouldBe(["Draft", "Assigned", "InProgress", "WaitingOnVendor", "Complete", "Cancelled"]);
         columns.ShouldAllBe(c => c.Cards.Length == 0);
     }
 

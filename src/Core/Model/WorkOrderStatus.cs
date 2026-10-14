@@ -13,8 +13,9 @@ public class WorkOrderStatus : IEquatable<WorkOrderStatus>
     public static readonly WorkOrderStatus Draft = new("DRT", "Draft", "Draft", 1);
     public static readonly WorkOrderStatus Assigned = new("ASD", "Assigned", "Assigned", 2);
     public static readonly WorkOrderStatus InProgress = new("IPG", "InProgress", "In Progress", 3);
-    public static readonly WorkOrderStatus Complete = new("CMP", "Complete", "Complete", 4);
-    public static readonly WorkOrderStatus Cancelled = new("CNL", "Cancelled", "Cancelled", 5);
+    public static readonly WorkOrderStatus WaitingOnVendor = new("WTV", "WaitingOnVendor", "Waiting on vendor", 4);
+    public static readonly WorkOrderStatus Complete = new("CMP", "Complete", "Complete", 5);
+    public static readonly WorkOrderStatus Cancelled = new("CNL", "Cancelled", "Cancelled", 6);
 
     public WorkOrderStatus()
     {
@@ -33,7 +34,7 @@ public class WorkOrderStatus : IEquatable<WorkOrderStatus>
 
     public static WorkOrderStatus[] GetAllItems()
     {
-        return [Draft, Assigned, InProgress, Complete, Cancelled];
+        return [Draft, Assigned, InProgress, WaitingOnVendor, Complete, Cancelled];
     }
 
     public string Code { get; }
