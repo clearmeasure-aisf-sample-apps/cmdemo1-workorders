@@ -57,11 +57,13 @@ public sealed record WorkOrderSearchUrlState
     public static WorkOrderSearchUrlState Default { get; } = new();
 
     /// <summary>True when any filter (not sort or page) is set.</summary>
-    public bool HasAnyFilter => HasPeopleFilter || HasAttributeFilter || HasFlagFilter;
+    public bool HasAnyFilter => HasPeopleFilter || HasAttributeFilter || HasLocationFilter || HasFlagFilter;
 
     private bool HasPeopleFilter => HasText(Creator) || HasText(Assignee) || AssignedToMe;
 
-    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasText(Building) || HasText(Room) || NoBuilding || NoRoom || HasText(Q);
+    private bool HasAttributeFilter => HasText(Status) || Priority.HasValue || HasText(Q);
+
+    private bool HasLocationFilter => HasText(Building) || HasText(Room) || NoBuilding || NoRoom;
 
     private bool HasFlagFilter => OverdueOnly || OpenOnly || CompletedWithinDays.HasValue;
 
