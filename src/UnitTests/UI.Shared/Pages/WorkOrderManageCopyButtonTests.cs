@@ -149,7 +149,7 @@ public class WorkOrderManageCopyButtonTests
         ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator));
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
-        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime(throwJSException: true));
+        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime(throwJsException: true));
         ctx.Services.AddSpeechSynthesis();
         ctx.Services.AddSpeechRecognition();
 
@@ -211,8 +211,6 @@ public class WorkOrderManageCopyButtonTests
 
     private class StubWorkOrderManageBus(WorkOrder? workOrder = null) : Bus(null!)
     {
-        private readonly WorkOrder? _workOrder = workOrder;
-
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
@@ -228,9 +226,9 @@ public class WorkOrderManageCopyButtonTests
                 return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderAttachment>());
             }
 
-            if (request is WorkOrderByNumberQuery && _workOrder != null)
+            if (request is WorkOrderByNumberQuery && workOrder != null)
             {
-                return Task.FromResult((TResponse)(object)_workOrder);
+                return Task.FromResult((TResponse)(object)workOrder);
             }
 
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
@@ -265,13 +263,13 @@ public class WorkOrderManageCopyButtonTests
         }
     }
 
-    private class StubJsRuntime(bool throwJSException = false, bool throwDisconnectedException = false) : IJSRuntime
+    private class StubJsRuntime(bool throwJsException = false, bool throwDisconnectedException = false) : IJSRuntime
     {
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && typeof(TValue) == typeof(IJSObjectReference))
             {
-                var module = new StubClipboardModule(throwJSException, throwDisconnectedException);
+                var module = new StubClipboardModule(throwJsException, throwDisconnectedException);
                 return ValueTask.FromResult((TValue)(object)module);
             }
 
@@ -283,13 +281,13 @@ public class WorkOrderManageCopyButtonTests
             InvokeAsync<TValue>(identifier, args);
     }
 
-    private class StubClipboardModule(bool throwJSException = false, bool throwDisconnectedException = false) : IJSObjectReference
+    private class StubClipboardModule(bool throwJsException = false, bool throwDisconnectedException = false) : IJSObjectReference
     {
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "copyToClipboard")
             {
-                if (throwJSException)
+                if (throwJsException)
                 {
                     throw new JSException("Clipboard permission denied");
                 }
