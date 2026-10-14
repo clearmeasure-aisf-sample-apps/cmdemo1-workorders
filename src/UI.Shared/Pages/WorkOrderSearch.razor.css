@@ -125,6 +125,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
+    table-layout: fixed;
 }
 
 .grid-data thead th {
@@ -148,7 +149,10 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 0;
+    padding: 1.25rem 1.5rem;
+    display: block;
+    width: 100%;
+    text-align: left;
 }
 
 .sort-btn:hover {
@@ -157,6 +161,24 @@
 
 .sort-btn.sort-active {
     color: #7b68ee;
+}
+
+.muted-cell {
+    color: #999;
+}
+
+.grid-data th:nth-child(1),
+.grid-data td:nth-child(1) {
+    max-width: 100px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.grid-data th:nth-child(5),
+.grid-data td:nth-child(5) {
+    word-break: break-word;
 }
 
 .due-date-today {
