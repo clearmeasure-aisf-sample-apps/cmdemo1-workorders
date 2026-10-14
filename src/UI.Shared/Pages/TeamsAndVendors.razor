@@ -1,0 +1,195 @@
+@using ClearMeasure.Bootcamp.Core.Model
+@using ClearMeasure.Bootcamp.Core.Queries
+@using ClearMeasure.Bootcamp.UI.Shared.Models
+
+<PageTitle>Teams & Vendors - Kalahari Church Work Order System</PageTitle>
+
+<div class="teams-page">
+    <div class="teams-container">
+        <header class="teams-header">
+            <h1>Teams & Vendors</h1>
+            <p class="teams-subtitle">Everyone who works on work orders, with their load.</p>
+        </header>
+
+        @if (_tableData == null)
+        {
+            <div class="teams-loading">
+                <p>Loading...</p>
+            </div>
+        }
+        else if (_tableData.Count == 0)
+        {
+            <div class="teams-empty-state">
+                <p>No assignable employees found.</p>
+            </div>
+        }
+        else
+        {
+            <section class="teams-table-card" aria-labelledby="teams-table-heading">
+                <h2 id="teams-table-heading" class="visually-hidden">Teams and vendors list</h2>
+                <div class="table-scroll">
+                    <table class="teams-table">
+                        <thead>
+                        <tr>
+                            <th class="col-name" scope="col">
+                                <button type="button" class="@SortHeaderClass(SortColumn.Name)"
+                                        @onclick="() => HandleSortColumnClicked(SortColumn.Name)">
+                                    Name
+                                    @if (_sortColumn == SortColumn.Name)
+                                    {
+                                        <span class="sort-indicator" aria-hidden="true">
+                                            @(_sortAscending ? "▲" : "▼")
+                                        </span>
+                                    }
+                                </button>
+                            </th>
+                            <th class="col-role" scope="col">Role</th>
+                            <th class="col-assigned-open" scope="col">
+                                <button type="button" class="@SortHeaderClass(SortColumn.OpenLoad)"
+                                        @onclick="() => HandleSortColumnClicked(SortColumn.OpenLoad)">
+                                    Assigned Open
+                                    @if (_sortColumn == SortColumn.OpenLoad)
+                                    {
+                                        <span class="sort-indicator" aria-hidden="true">
+                                            @(_sortAscending ? "▲" : "▼")
+                                        </span>
+                                    }
+                                </button>
+                            </th>
+                            <th class="col-in-progress" scope="col">In Progress</th>
+                            <th class="col-overdue" scope="col">Overdue</th>
+                            <th class="col-completed" scope="col">Completed 30d</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var row in _tableData)
+                        {
+                            var encodedName = Uri.EscapeDataString(row.Employee.UserName);
+                            var searchUrl = $"workorder/search?Assignee={encodedName}";
+                            <tr class="teams-table-row">
+                                <td class="col-name" data-testid="@($"{Elements.TableRowName}{row.Employee.UserName}")">
+                                    <a href="@searchUrl" class="assignee-link">
+                                        <span class="avatar avatar--@AvatarIndex(row.Employee.UserName)" aria-hidden="true">
+                                            @UserDisplay.Initials(row.Employee)
+                                        </span>
+                                        <span>@row.Employee.GetFullName()</span>
+                                    </a>
+                                </td>
+                                <td class="col-role" data-testid="@($"{Elements.TableRowRole}{row.Employee.UserName}")">
+                                    @UserDisplay.Roles(row.Employee)
+                                </td>
+                                <td class="col-assigned-open" data-testid="@($"{Elements.TableRowAssignedOpen}{row.Employee.UserName}")">
+                                    @row.Load.AssignedAndOpen
+                                </td>
+                                <td class="col-in-progress" data-testid="@($"{Elements.TableRowInProgress}{row.Employee.UserName}")">
+                                    @row.Load.InProgress
+                                </td>
+                                <td class="col-overdue" data-testid="@($"{Elements.TableRowOverdue}{row.Employee.UserName}")">
+                                    @row.Load.Overdue
+                                </td>
+                                <td class="col-completed" data-testid="@($"{Elements.TableRowCompleted}{row.Employee.UserName}")">
+                                    @row.Load.CompletedLast30Days
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+@code {
+    public enum Elements
+    {
+        TableRowName,
+        TableRowRole,
+        TableRowAssignedOpen,
+        TableRowInProgress,
+        TableRowOverdue,
+        TableRowCompleted
+    }
+
+    private enum SortColumn
+    {
+        Name,
+        OpenLoad
+    }
+
+    private sealed class TeamTableRow
+    {
+        public required Employee Employee { get; init; }
+        public required EmployeeWorkLoad Load { get; init; }
+    }
+
+    private List<TeamTableRow>? _tableData;
+    private SortColumn _sortColumn = SortColumn.Name;
+    private bool _sortAscending = true;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var employees = await Bus.Send(new EmployeeGetAllQuery());
+        var assignableEmployees = employees
+            .Where(e => e.CanFulfillWorkOrder())
+            .ToList();
+
+        _tableData = new List<TeamTableRow>();
+
+        foreach (var employee in assignableEmployees)
+        {
+            var load = await Bus.Send(new EmployeeWorkLoadQuery(employee.UserName));
+            _tableData.Add(new TeamTableRow
+            {
+                Employee = employee,
+                Load = load
+            });
+        }
+
+        SortTableData();
+    }
+
+    private void HandleSortColumnClicked(SortColumn column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = column == SortColumn.Name;
+        }
+
+        SortTableData();
+    }
+
+    private void SortTableData()
+    {
+        if (_tableData == null) return;
+
+        _tableData = _sortColumn switch
+        {
+            SortColumn.Name => _sortAscending
+                ? _tableData.OrderBy(r => r.Employee.LastName)
+                    .ThenBy(r => r.Employee.FirstName)
+                    .ToList()
+                : _tableData.OrderByDescending(r => r.Employee.LastName)
+                    .ThenByDescending(r => r.Employee.FirstName)
+                    .ToList(),
+            SortColumn.OpenLoad => _sortAscending
+                ? _tableData.OrderBy(r => r.Load.AssignedAndOpen).ToList()
+                : _tableData.OrderByDescending(r => r.Load.AssignedAndOpen).ToList(),
+            _ => _tableData
+        };
+    }
+
+    private string SortHeaderClass(SortColumn column) =>
+        _sortColumn == column ? "sort-header active-sort" : "sort-header";
+
+    private static int AvatarIndex(string? userName) =>
+        (userName ?? string.Empty).Aggregate(0, (hash, c) => (hash * 31 + c) % 6);
+}
