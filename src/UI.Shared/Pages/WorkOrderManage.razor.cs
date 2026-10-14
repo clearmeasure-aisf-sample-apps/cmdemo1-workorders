@@ -22,6 +22,8 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private string _preferredLanguage = "en-US";
     private DictationTarget _dictationTarget = DictationTarget.None;
     private bool _isSubmitting;
+    private bool _copyButtonShowSuccess;
+    private IJSObjectReference? _clipboardModule;
     [Inject] public IWorkOrderBuilder? WorkOrderBuilder { get; set; }
     [Inject] public IUserSession? UserSession { get; set; }
     [Inject] private NavigationManager? NavigationManager { get; set; }
@@ -29,6 +31,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     [Inject] public SpeechSynthesis? SpeechSynthesis { get; set; }
     [Inject] public SpeechRecognition? SpeechRecognition { get; set; }
     [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
+    [Inject] private IJSRuntime? Js { get; set; }
 
     private DueDateUrgency CurrentDueDateUrgency =>
         _workOrder == null
@@ -370,6 +373,36 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private string DictateAriaPressed(DictationTarget target)
     {
         return _dictationTarget == target ? "true" : "false";
+    }
+
+    private async Task CopyWorkOrderNumberAsync()
+    {
+        try
+        {
+            if (Js == null || string.IsNullOrEmpty(Model.WorkOrderNumber))
+            {
+                return;
+            }
+
+            _clipboardModule ??= await Js.InvokeAsync<IJSObjectReference>("import",
+                "./_content/ClearMeasure.Bootcamp.UI.Shared/js/clipboard.js");
+
+            await _clipboardModule.InvokeAsync<object>("copyToClipboard", Model.WorkOrderNumber);
+            _copyButtonShowSuccess = true;
+            await InvokeAsync(StateHasChanged);
+
+            await Task.Delay(2000);
+            _copyButtonShowSuccess = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Clipboard API not available or page disconnected; silently ignore
+        }
+        catch (JSException)
+        {
+            // Clipboard permission denied or other JS error; silently ignore
+        }
     }
 
     public async ValueTask DisposeAsync()
