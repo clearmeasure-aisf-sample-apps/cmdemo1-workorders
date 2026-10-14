@@ -49,6 +49,9 @@ public partial class WorkOrderSearch : AppComponentBase
     [SupplyParameterFromQuery] public string? OverdueOnly { get; set; }
     [SupplyParameterFromQuery] public string? Priority { get; set; }
     [SupplyParameterFromQuery] public string? Building { get; set; }
+    [SupplyParameterFromQuery] public string? Room { get; set; }
+    [SupplyParameterFromQuery] public string? NoBuilding { get; set; }
+    [SupplyParameterFromQuery] public string? NoRoom { get; set; }
     [SupplyParameterFromQuery] public string? AssignedToMe { get; set; }
     [SupplyParameterFromQuery] public string? OpenOnly { get; set; }
     [SupplyParameterFromQuery] public string? CompletedWithinDays { get; set; }
@@ -104,6 +107,9 @@ public partial class WorkOrderSearch : AppComponentBase
         [nameof(OverdueOnly)] = OverdueOnly,
         [nameof(Priority)] = Priority,
         [nameof(Building)] = Building,
+        [nameof(Room)] = Room,
+        [nameof(NoBuilding)] = NoBuilding,
+        [nameof(NoRoom)] = NoRoom,
         [nameof(AssignedToMe)] = AssignedToMe,
         [nameof(OpenOnly)] = OpenOnly,
         [nameof(CompletedWithinDays)] = CompletedWithinDays,
@@ -229,6 +235,9 @@ public partial class WorkOrderSearch : AppComponentBase
         specification.MatchOverdueOnly(_state.OverdueOnly);
         specification.MatchPriority(_state.Priority);
         specification.MatchBuilding(_state.Building);
+        specification.MatchNoBuilding(_state.NoBuilding);
+        specification.MatchRoom(_state.Room);
+        specification.MatchNoRoom(_state.NoRoom);
         specification.MatchOpenOnly(_state.OpenOnly);
         specification.MatchCompletedWithinDays(_state.CompletedWithinDays);
         specification.MatchSearchText(_state.Q);
