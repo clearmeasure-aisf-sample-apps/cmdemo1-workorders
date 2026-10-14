@@ -87,19 +87,19 @@
             </div>
 
             <div class="readonly-info">
-                <span class="label">Created Date</span>
+                <span class="form-label">Created Date</span>
                 <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
 
-                <span class="label">Assigned Date</span>
+                <span class="form-label">Assigned Date</span>
                 <span data-testid="@Elements.AssignedDate" class="value">@Model.AssignedDate</span>
 
-                <span class="label">Completed Date</span>
+                <span class="form-label">Completed Date</span>
                 <span data-testid="@Elements.CompletedDate" class="value">@Model.CompletedDate</span>
 
                 <div class="due-date-field">
                     @if (!Model.IsReadOnly)
                     {
-                        <label for="DueDate" class="label">Due Date</label>
+                        <label for="DueDate" class="form-label">Due Date</label>
                         <InputDate TValue="DateOnly?" data-testid="@Elements.DueDate" id="DueDate"
                                    @bind-Value="Model.DueDateInput"
                                    class="@($"form-control input-date {CurrentDueDateCssClass}")" />
@@ -110,7 +110,7 @@
                     }
                     else
                     {
-                        <span class="label">Due Date</span>
+                        <span class="form-label">Due Date</span>
                         <span data-testid="@Elements.DueDateDisplay" class="value @CurrentDueDateCssClass">@Model.DueDateDisplay@if (!string.IsNullOrEmpty(CurrentDueDateUrgencyText))
                             {
                                 <span class="visually-hidden">@CurrentDueDateUrgencyText</span>
