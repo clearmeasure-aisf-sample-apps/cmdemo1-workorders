@@ -14,7 +14,7 @@ public class WorkOrderInProgressToCancelTests : AcceptanceTestBase
         order = await ClickWorkOrderNumberFromSearchPage(order);
         order = await AssignExistingWorkOrder(order, CurrentUser.UserName);
         order = await ClickWorkOrderNumberFromSearchPage(order);
-        order = await BeginWorkOrder(order);
+        order = await BeginExistingWorkOrder(order);
         order = await ClickWorkOrderNumberFromSearchPage(order);
 
         order.Title = "Title from automation";
