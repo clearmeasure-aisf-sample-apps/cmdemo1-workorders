@@ -262,6 +262,27 @@ public class ServerFixture
 
     private async Task StartAndWaitForServer()
     {
+        const int maxAttempts = 2;
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await StartAndWaitForServerOnce();
+                return;
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
+            {
+                TestContext.Out.WriteLine(
+                    $"  [Server] start attempt {attempt}/{maxAttempts} failed, retrying: {ex.Message}");
+                await ProcessCleanupHelper.StopServerProcessAsync(_serverProcess, ApplicationBaseUrl);
+                try { _serverProcess?.Dispose(); } catch (ObjectDisposedException) { }
+                _serverProcess = null;
+            }
+        }
+    }
+
+    private async Task StartAndWaitForServerOnce()
+    {
         var connectionString = GetSqlConnectionString();
         var useSqlite = IsSqliteConnection(connectionString);
         _serverProcess = CreateDotnetProcess(ProjectPath, BuildServerArguments(useSqlite));
