@@ -238,6 +238,18 @@ public class StatusPillPresenterTests
         pill.ShouldBe(new StatusPill(text, css, null));
     }
 
+    [TestCase("Draft")]
+    [TestCase("Assigned")]
+    [TestCase("InProgress")]
+    [TestCase("Complete")]
+    [TestCase("Cancelled")]
+    public void ForStatus_MatchesPresentWhenNotOverdue(string key)
+    {
+        var status = WorkOrderStatus.FromKey(key);
+
+        StatusPillPresenter.ForStatus(status).ShouldBe(StatusPillPresenter.Present(new WorkOrder { Status = status }, false));
+    }
+
     [Test]
     public void Present_Overdue_ShowsOverdueWithStoredStatusHidden()
     {

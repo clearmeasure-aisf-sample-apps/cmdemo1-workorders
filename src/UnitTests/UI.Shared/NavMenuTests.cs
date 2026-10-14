@@ -74,7 +74,7 @@ public class NavMenuTests
 
         var placeholders = component.FindAll("[aria-disabled='true']");
         placeholders.Select(p => p.QuerySelector(".nav-text")!.TextContent.Trim())
-            .ShouldBe(["Buildings & Rooms", "Teams & Vendors"]);
+            .ShouldBe(["Buildings & Rooms"]);
         placeholders.ShouldAllBe(p => p.TagName == "SPAN" && p.TextContent.Contains("Soon"));
     }
 

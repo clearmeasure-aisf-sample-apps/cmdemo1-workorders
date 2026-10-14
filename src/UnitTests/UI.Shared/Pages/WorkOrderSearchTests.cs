@@ -1135,6 +1135,240 @@ public class WorkOrderSearchTests
         });
     }
 
+    [Test]
+    public async Task ViewSwitch_BareUrl_TablePressedBoardNotDisabled()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var table = component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']");
+        var board = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']");
+        table.GetAttribute("aria-pressed").ShouldBe("true");
+        table.ClassList.ShouldContain("is-active");
+        board.GetAttribute("aria-pressed").ShouldBe("false");
+        board.ClassList.ShouldNotContain("is-active");
+        board.HasAttribute("aria-disabled").ShouldBeFalse();
+        board.HasAttribute("title").ShouldBeFalse();
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardView}']").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ClickBoard_ShowsAllResultsAsCards_WithoutPagerOrTable()
+    {
+        var bus = new StubBus(ManyOrders(30));
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        var component = ctx.Render<WorkOrderSearch>();
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("25 of 30");
+        var sendsBefore = bus.SendCallCount;
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']").ClickAsync(new());
+
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']").GetAttribute("aria-pressed").ShouldBe("true");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']").GetAttribute("aria-pressed").ShouldBe("false");
+        component.FindAll(".grid-data").Count.ShouldBe(0);
+        BoardCardNumbers(component).Length.ShouldBe(30);
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.PageNextButton}']").Count.ShouldBe(0);
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.ResultsRangeText}']").Count.ShouldBe(0);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("30 of 30");
+        navigation.Uri.ShouldEndWith("/workorder/search?View=Board");
+        ((BunitNavigationManager)navigation).History.First().Options.ReplaceHistoryEntry.ShouldBeTrue();
+        bus.SendCallCount.ShouldBe(sendsBefore);
+    }
+
+    [Test]
+    public async Task ClickTable_FromBoard_RestoresBareUrlAndTable()
+    {
+        await using var ctx = CreateContext(new StubBus(ManyOrders(30)));
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("workorder/search?View=Board&Page=2");
+        var component = ctx.Render<WorkOrderSearch>();
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardView}']").ShouldNotBeNull();
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']").ClickAsync(new());
+
+        navigation.Uri.ShouldEndWith("/workorder/search");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']").GetAttribute("aria-pressed").ShouldBe("true");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']").GetAttribute("aria-pressed").ShouldBe("false");
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardView}']").Count.ShouldBe(0);
+        component.FindAll("tbody tr").Count.ShouldBe(25);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("25 of 30");
+    }
+
+    [Test]
+    public async Task ClickActiveView_KeepsUrlUnchanged()
+    {
+        await using var ctx = CreateContext();
+        var navigation = (BunitNavigationManager)ctx.Services.GetRequiredService<NavigationManager>();
+        var component = ctx.Render<WorkOrderSearch>();
+        var historyBefore = navigation.History.Count;
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']").ClickAsync(new());
+
+        navigation.History.Count.ShouldBe(historyBefore);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']").GetAttribute("aria-pressed").ShouldBe("true");
+    }
+
+    [Test]
+    public async Task BoardUrl_WithCreator_LoadsBoardAndFilters()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board&Creator=tlovejoy");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        bus.LastSpecification!.Creator.ShouldNotBeNull();
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardView}']").ShouldNotBeNull();
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']").GetAttribute("aria-pressed").ShouldBe("true");
+        ChipKeys(component).ShouldBe(["Creator"]);
+    }
+
+    [Test]
+    public async Task BoardCard_HrefMatchesTableLink()
+    {
+        await using var ctx = CreateContext();
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        var component = ctx.Render<WorkOrderSearch>();
+        var tableHref = component.Find($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}WO-001']").GetAttribute("href");
+
+        navigation.NavigateTo("workorder/search?View=Board");
+
+        var card = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WO-001']");
+        card.GetAttribute("href").ShouldBe(tableHref);
+        card.GetAttribute("href").ShouldBe("/workorder/manage/WO-001?mode=Edit");
+        card.TextContent.ShouldContain("WO-WO-001");
+    }
+
+    [Test]
+    public async Task Board_OnlyDraftRows_ShowsFiveColumnsFourEmpty()
+    {
+        await using var ctx = CreateContext(new StubBus(ManyOrders(30)));
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.FindAll(".board-column").Count.ShouldBe(5);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}Draft']").TextContent.ShouldBe("30");
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}Draft']").Count.ShouldBe(0);
+        foreach (var key in new[] { "Assigned", "InProgress", "Complete", "Cancelled" })
+        {
+            component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}{key}']").TextContent.ShouldBe("No work orders");
+            component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}{key}']").TextContent.ShouldBe("0");
+        }
+    }
+
+    [Test]
+    public async Task Board_OrdersPerStatus_EachColumnHoldsItsStatus()
+    {
+        var orders = OrdersPerStatus(2);
+        await using var ctx = CreateContext(new StubBus(orders));
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        foreach (var status in WorkOrderStatus.GetAllItems())
+        {
+            var column = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumn}{status.Key}']");
+            var heading = column.QuerySelector("h3")!;
+            column.GetAttribute("aria-labelledby").ShouldBe(heading.Id);
+            heading.QuerySelector(".status-badge")!.TextContent.ShouldBe(status.FriendlyName);
+            CardNumbers(column).ShouldBe(orders.Where(o => o.Status == status).Select(o => o.Number!));
+        }
+    }
+
+    [Test]
+    public async Task Board_Card_ShowsTitlePriorityAssigneeRoomAndDueDate()
+    {
+        var orders = OrdersPerStatus(1);
+        await using var ctx = CreateContext(new StubBus(orders));
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var assigned = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WO-002']");
+        assigned.QuerySelector(".board-card-title")!.TextContent.ShouldBe(orders[1].Title);
+        assigned.QuerySelector(".priority")!.TextContent.Trim().ShouldBe("High");
+        assigned.QuerySelector(".avatar")!.TextContent.ShouldBe("GW");
+        assigned.QuerySelector(".board-card-assignee .visually-hidden")!.TextContent.ShouldBe("Assigned to Groundskeeper Willie");
+        assigned.QuerySelector(".board-card-room")!.TextContent.ShouldBe("101");
+        assigned.QuerySelector($"[data-testid='{WorkOrderSearch.Elements.UrgencyBadge}WO-002']")!.TextContent.ShouldBe("Overdue");
+        var draft = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WO-001']");
+        draft.QuerySelector(".board-card-assignee .visually-hidden")!.TextContent.ShouldBe("Unassigned");
+        draft.QuerySelector(".avatar")!.ClassList.ShouldContain("avatar--empty");
+        draft.QuerySelector(".board-card-room")!.GetAttribute("aria-label").ShouldBe("No room");
+        draft.QuerySelector($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}WO-001']")!.TextContent.ShouldBe("–");
+    }
+
+    [Test]
+    public async Task Board_SortSelectTitleAsc_OrdersCardsInColumn()
+    {
+        var orders = OrdersPerStatus(3);
+        await using var ctx = CreateContext(new StubBus(orders));
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
+        var component = ctx.Render<WorkOrderSearch>();
+        var drafts = orders.Where(o => o.Status == WorkOrderStatus.Draft).ToArray();
+        DraftColumnNumbers(component).ShouldBe(drafts.Select(o => o.Number!));
+
+        await component.Find($"#{WorkOrderSearch.Elements.SortSelect}").ChangeAsync(new() { Value = "Title:asc" });
+
+        DraftColumnNumbers(component).ShouldBe(drafts.OrderBy(o => o.Title, StringComparer.OrdinalIgnoreCase).Select(o => o.Number!));
+        DraftColumnNumbers(component).ShouldNotBe(drafts.Select(o => o.Number!));
+        ctx.Services.GetRequiredService<NavigationManager>().Uri.ShouldEndWith("/workorder/search?Sort=Title&View=Board");
+    }
+
+    [Test]
+    public async Task Board_ClearAllAndSummaryCard_KeepViewBoard()
+    {
+        await using var ctx = CreateContext();
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("workorder/search?View=Board&Creator=tlovejoy");
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find($"#{WorkOrderSearch.Elements.ClearFiltersButton}").ClickAsync(new());
+
+        navigation.Uri.ShouldEndWith("/workorder/search?View=Board");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardView}']").ShouldNotBeNull();
+
+        await component.Find("[data-testid='SummaryCardOverdue']").ClickAsync(new());
+
+        navigation.Uri.ShouldEndWith("/workorder/search?OverdueOnly=true&View=Board");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']").GetAttribute("aria-pressed").ShouldBe("true");
+    }
+
+    [Test]
+    public async Task Board_SwitchClearsSelection_NoBulkBar()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<WorkOrderSearch>();
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.RowCheckbox}WO-001']").ChangeAsync(new() { Value = true });
+        component.FindAll("[data-testid='BulkActionBar']").Count.ShouldBe(1);
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']").ClickAsync(new());
+
+        component.FindAll("[data-testid='BulkActionBar']").Count.ShouldBe(0);
+        component.FindAll("input[type='checkbox'].row-checkbox").Count.ShouldBe(0);
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']").ClickAsync(new());
+
+        component.FindAll("[data-testid='BulkActionBar']").Count.ShouldBe(0);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsRangeText}']").TextContent.ShouldEndWith("0 selected");
+    }
+
+    [Test]
+    public async Task Board_ZeroResults_ShowsEmptyMessage()
+    {
+        await using var ctx = CreateContext(new StubBus([]));
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.Find(".empty-results").TextContent.ShouldContain("No work orders found");
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardView}']").Count.ShouldBe(0);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("0 of 0");
+    }
+
     private sealed class StubHeldSearchBus : StubBus
     {
         private bool _initialSearchDone;
@@ -1158,6 +1392,36 @@ public class WorkOrderSearchTests
     private static WorkOrder[] ManyOrders(int count) =>
         Enumerable.Range(1, count)
             .Select(i => new WorkOrder { Number = $"WO-{i:000}", Title = $"Order {i}", Status = WorkOrderStatus.Draft })
+            .ToArray();
+
+    private static WorkOrder[] OrdersPerStatus(int perStatus)
+    {
+        var statuses = WorkOrderStatus.GetAllItems();
+        var total = statuses.Length * perStatus;
+        var willie = new Employee("gwillie", "Groundskeeper", "Willie", "willie@example.com");
+        return Enumerable.Range(1, total)
+            .Select(n => new WorkOrder
+            {
+                Number = $"WO-{n:000}",
+                Title = $"Title {total - n + 1:000}",
+                Status = statuses[(n - 1) % statuses.Length],
+                Priority = n % 2 == 0 ? WorkOrderPriority.High : WorkOrderPriority.Low,
+                Assignee = n % 2 == 0 ? willie : null,
+                RoomNumber = n % 2 == 0 ? "101" : null,
+                DueDate = n % 2 == 0 ? new DateOnly(2000, 1, 1) : null
+            })
+            .ToArray();
+    }
+
+    private static string[] BoardCardNumbers(IRenderedComponent<WorkOrderSearch> component) =>
+        CardNumbers(component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardView}']"));
+
+    private static string[] DraftColumnNumbers(IRenderedComponent<WorkOrderSearch> component) =>
+        CardNumbers(component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumn}Draft']"));
+
+    private static string[] CardNumbers(AngleSharp.Dom.IElement container) =>
+        container.QuerySelectorAll($"[data-testid^='{WorkOrderSearch.Elements.BoardCard}']")
+            .Select(a => a.GetAttribute("data-testid")![nameof(WorkOrderSearch.Elements.BoardCard).Length..])
             .ToArray();
 
     // ReSharper disable once ConvertToPrimaryConstructor -- the orders are also passed to the base constructor (CS9107)

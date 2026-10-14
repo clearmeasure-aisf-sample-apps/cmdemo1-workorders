@@ -56,6 +56,7 @@ public partial class WorkOrderSearch : AppComponentBase
     [SupplyParameterFromQuery] public string? Sort { get; set; }
     [SupplyParameterFromQuery] public string? Dir { get; set; }
     [SupplyParameterFromQuery] public string? Page { get; set; }
+    [SupplyParameterFromQuery] public string? View { get; set; }
 
     private List<string> BuildingOptions { get; set; } = [];
 
@@ -109,7 +110,8 @@ public partial class WorkOrderSearch : AppComponentBase
         [nameof(Q)] = Q,
         [nameof(Sort)] = Sort,
         [nameof(Dir)] = Dir,
-        [nameof(Page)] = Page
+        [nameof(Page)] = Page,
+        [nameof(View)] = View
     });
 
     /// <summary>
@@ -175,12 +177,12 @@ public partial class WorkOrderSearch : AppComponentBase
     }
 
     private Task HandleCardSelected(SummaryCard card) =>
-        CommitAsync(WorkOrderSearchUrlState.ForCard(card) with { Sort = _state.Sort, Descending = _state.Descending });
+        CommitAsync(WorkOrderSearchUrlState.ForCard(card) with { Sort = _state.Sort, Descending = _state.Descending, View = _state.View });
 
     private Task HandleChipRemoved(FilterChipKey key) => CommitAsync(WorkOrderFilterChips.Remove(_state, key));
 
     private Task HandleClearFilters() =>
-        CommitAsync(WorkOrderSearchUrlState.Default with { Sort = _state.Sort, Descending = _state.Descending });
+        CommitAsync(WorkOrderSearchUrlState.Default with { Sort = _state.Sort, Descending = _state.Descending, View = _state.View });
 
     private async Task HandleSavedViewsKeyDown(KeyboardEventArgs e)
     {
@@ -238,6 +240,12 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private SearchResultPage CurrentPage => WorkOrderSearchPager.GetPage(Model.Results, _state.Page);
 
+    /// <summary>The results count pill: the page slice in table view, every result in board view.</summary>
+    private string CountPillText =>
+        _state.View == SearchView.Board ? WorkOrderBoard.CountText(Model.Results.Length) : CurrentPage.CountText;
+
+    private IReadOnlyList<BoardColumn> BoardColumns => WorkOrderBoard.Build(Model.Results);
+
     private string[] PageNumbers => CurrentPage.Rows.Select(r => r.Number).ToArray();
 
     private IReadOnlyList<string> BulkStatusOptions => _currentUser == null
@@ -268,7 +276,7 @@ public partial class WorkOrderSearch : AppComponentBase
         return options.ToArray();
     }
 
-    /// <summary>Applies a sort or page change without a new search and records it in the URL.</summary>
+    /// <summary>Applies a sort, page or view change without a new search and records it in the URL.</summary>
     private void CommitView(WorkOrderSearchUrlState state)
     {
         _state = state;
@@ -289,6 +297,24 @@ public partial class WorkOrderSearch : AppComponentBase
     }
 
     private void HandlePageSelected(int page) => CommitView(_state with { Page = page });
+
+    private string ViewButtonClass(SearchView view) =>
+        _state.View == view ? "view-switch-button is-active" : "view-switch-button";
+
+    private string ViewPressed(SearchView view) => _state.View == view ? "true" : "false";
+
+    /// <summary>Screen-reader text next to a board card's avatar.</summary>
+    private static string AssigneeText(WorkOrderSearchResultRow card) =>
+        card.Assignee is null ? "Unassigned" : $"Assigned to {card.Assignee.GetFullName()}";
+
+    /// <summary>Switches between the table and the board without a new search; the view is kept in the URL.</summary>
+    private void HandleViewSelected(SearchView view)
+    {
+        if (view != _state.View)
+        {
+            CommitView(_state with { View = view, Page = 1 });
+        }
+    }
 
     /// <summary>Header button text: the label, plus " ▲" or " ▼" on the sorted column.</summary>
     private string SortLabel(string column, string label) =>
@@ -371,7 +397,7 @@ public partial class WorkOrderSearch : AppComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (Model.Results.Length == 0)
+        if (Model.Results.Length == 0 || _state.View == SearchView.Board)
         {
             return;
         }

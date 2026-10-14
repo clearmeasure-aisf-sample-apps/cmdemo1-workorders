@@ -12,6 +12,13 @@ public enum SummaryCard
     Completed
 }
 
+/// <summary>How the Work Order Search results are shown: a paged table or a board with a column per status.</summary>
+public enum SearchView
+{
+    Table,
+    Board
+}
+
 /// <summary>
 /// The Work Order Search state that lives in the URL query string so a search can be bookmarked,
 /// shared and survives a reload. Parsing is forgiving (invalid values fall back to defaults) and
@@ -39,6 +46,9 @@ public sealed record WorkOrderSearchUrlState
     public string? Sort { get; init; }
     public bool Descending { get; init; }
     public int Page { get; init; } = 1;
+
+    /// <summary>The results view; <see cref="SearchView.Table"/> is the default and is not written to the URL.</summary>
+    public SearchView View { get; init; }
 
     /// <summary>The state with no filters, no sort and the first page.</summary>
     public static WorkOrderSearchUrlState Default { get; } = new();
@@ -73,7 +83,8 @@ public sealed record WorkOrderSearchUrlState
             Q = Text(values, nameof(Q)),
             Sort = ParseSort(Text(values, nameof(Sort))),
             Descending = string.Equals(Text(values, "Dir"), "desc", StringComparison.OrdinalIgnoreCase),
-            Page = ParsePage(Text(values, nameof(Page)))
+            Page = ParsePage(Text(values, nameof(Page))),
+            View = ParseView(Text(values, nameof(View)))
         };
     }
 
@@ -121,6 +132,7 @@ public sealed record WorkOrderSearchUrlState
         yield return Pair(nameof(Sort), Sort);
         yield return Pair("Dir", HasText(Sort) && Descending ? "desc" : null);
         yield return Pair(nameof(Page), Page > 1 ? Page.ToString(CultureInfo.InvariantCulture) : null);
+        yield return Pair(nameof(View), View == SearchView.Board ? nameof(SearchView.Board) : null);
     }
 
     private static KeyValuePair<string, string?> Pair(string key, string? value) =>
@@ -143,6 +155,11 @@ public sealed record WorkOrderSearchUrlState
         Enum.TryParse<WorkOrderPriority>(value, true, out var priority) && Enum.IsDefined(priority) && !int.TryParse(value, out _)
             ? priority
             : null;
+
+    private static SearchView ParseView(string? value) =>
+        Enum.TryParse<SearchView>(value, true, out var view) && Enum.IsDefined(view) && !int.TryParse(value, out _)
+            ? view
+            : SearchView.Table;
 
     private static int? ParseDays(string? value) =>
         int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var days) && days is >= 1 and <= 3650
