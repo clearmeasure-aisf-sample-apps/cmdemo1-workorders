@@ -24,6 +24,7 @@ public class WorkOrderSpecificationQueryValidatorTests
         {
             SearchText = new string('a', WorkOrderSpecificationQueryValidator.SearchTextMaxLength),
             Building = new string('b', WorkOrder.BuildingMaxLength),
+            Room = new string('r', WorkOrder.RoomNumberMaxLength),
             CompletedWithinDays = WorkOrderSpecificationQueryValidator.CompletedWithinDaysMax,
             Priority = WorkOrderPriority.Low
         };
@@ -48,6 +49,14 @@ public class WorkOrderSpecificationQueryValidatorTests
         var query = new WorkOrderSpecificationQuery { Building = new string('b', WorkOrder.BuildingMaxLength + 1) };
 
         _validator.TestValidate(query).ShouldHaveValidationErrorFor(x => x.Building);
+    }
+
+    [Test]
+    public void ShouldFail_WhenRoomTooLong()
+    {
+        var query = new WorkOrderSpecificationQuery { Room = new string('r', WorkOrder.RoomNumberMaxLength + 1) };
+
+        _validator.TestValidate(query).ShouldHaveValidationErrorFor(x => x.Room);
     }
 
     [TestCase(0)]

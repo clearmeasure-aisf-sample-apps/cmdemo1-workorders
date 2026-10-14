@@ -10,6 +10,9 @@ public enum FilterChipKey
     Status,
     Priority,
     Building,
+    Room,
+    NoBuilding,
+    NoRoom,
     OpenOnly,
     CompletedWithinDays,
     Q
@@ -44,6 +47,9 @@ public static class WorkOrderFilterChips
         [FilterChipKey.Status] = s => s with { Status = null },
         [FilterChipKey.Priority] = s => s with { Priority = null },
         [FilterChipKey.Building] = s => s with { Building = null },
+        [FilterChipKey.Room] = s => s with { Room = null },
+        [FilterChipKey.NoBuilding] = s => s with { NoBuilding = false },
+        [FilterChipKey.NoRoom] = s => s with { NoRoom = false },
         [FilterChipKey.OpenOnly] = s => s with { OpenOnly = false },
         [FilterChipKey.CompletedWithinDays] = s => s with { CompletedWithinDays = null },
         [FilterChipKey.Q] = s => s with { Q = null }
@@ -65,6 +71,9 @@ public static class WorkOrderFilterChips
         AddIf(chips, state.Status != null, FilterChipKey.Status, () => $"Status: {WorkOrderStatus.FromKey(state.Status!).FriendlyName}");
         AddIf(chips, state.Priority.HasValue, FilterChipKey.Priority, () => $"Priority: {state.Priority}");
         AddIf(chips, state.Building != null, FilterChipKey.Building, () => $"Building: {state.Building}");
+        AddIf(chips, state is { NoBuilding: true, Building: null }, FilterChipKey.NoBuilding, () => "Building: No building");
+        AddIf(chips, state.Room != null, FilterChipKey.Room, () => $"Room: {state.Room}");
+        AddIf(chips, state is { NoRoom: true, Room: null }, FilterChipKey.NoRoom, () => "Room: No room");
     }
 
     private static void AddFlags(List<FilterChip> chips, WorkOrderSearchUrlState state)

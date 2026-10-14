@@ -37,6 +37,24 @@ public record WorkOrderSpecificationQuery : IRequest<WorkOrder[]>, IRemotableReq
         Building = building;
     }
 
+    /// <summary>Restricts the result to one room; null or blank matches every room.</summary>
+    public void MatchRoom(string? room)
+    {
+        Room = room;
+    }
+
+    /// <summary>Restricts the result to work orders with no building (null or empty).</summary>
+    public void MatchNoBuilding(bool noBuilding)
+    {
+        NoBuilding = noBuilding;
+    }
+
+    /// <summary>Restricts the result to work orders with no room (null or empty).</summary>
+    public void MatchNoRoom(bool noRoom)
+    {
+        NoRoom = noRoom;
+    }
+
     /// <summary>Restricts the result to open work orders (Draft, Assigned, In Progress).</summary>
     public void MatchOpenOnly(bool openOnly)
     {
@@ -74,6 +92,15 @@ public record WorkOrderSpecificationQuery : IRequest<WorkOrder[]>, IRemotableReq
 
     /// <summary>Building to match; null or blank matches every building.</summary>
     public string? Building { get; set; }
+
+    /// <summary>Room to match; null or blank matches every room.</summary>
+    public string? Room { get; set; }
+
+    /// <summary>When true matches work orders with no building (null or empty).</summary>
+    public bool NoBuilding { get; set; }
+
+    /// <summary>When true matches work orders with no room (null or empty).</summary>
+    public bool NoRoom { get; set; }
 
     /// <summary>When true only Draft, Assigned and In Progress work orders match.</summary>
     public bool OpenOnly { get; set; }
