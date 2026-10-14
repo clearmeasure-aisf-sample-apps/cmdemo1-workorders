@@ -409,10 +409,10 @@ public class WorkOrderSpecificationHandlerTests
         new DatabaseTests().Clean();
 
         var employee = new Employee("1", "1", "1", "1");
-        var lowerRoom = new WorkOrder { Creator = employee, Number = "CASE001", RoomNumber = "sanctuary" };
-        var upperRoom = new WorkOrder { Creator = employee, Number = "CASE002", RoomNumber = "SANCTUARY" };
-        var mixedRoom = new WorkOrder { Creator = employee, Number = "CASE003", RoomNumber = "Sanctuary" };
-        var differentRoom = new WorkOrder { Creator = employee, Number = "CASE004", RoomNumber = "kitchen" };
+        var lowerRoom = new WorkOrder { Creator = employee, Number = "CS001", RoomNumber = "sanctuary" };
+        var upperRoom = new WorkOrder { Creator = employee, Number = "CS002", RoomNumber = "SANCTUARY" };
+        var mixedRoom = new WorkOrder { Creator = employee, Number = "CS003", RoomNumber = "Sanctuary" };
+        var differentRoom = new WorkOrder { Creator = employee, Number = "CS004", RoomNumber = "kitchen" };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -428,7 +428,7 @@ public class WorkOrderSpecificationHandlerTests
 
         // SQL Server is case-insensitive; SQLite is case-sensitive.
         // This test should find at least the exact match.
-        orders.Select(o => o.Number).ShouldContain("CASE003");
+        orders.Select(o => o.Number).ShouldContain("CS003");
     }
 
     [Test]
@@ -437,10 +437,10 @@ public class WorkOrderSpecificationHandlerTests
         new DatabaseTests().Clean();
 
         var employee = new Employee("1", "1", "1", "1");
-        var withRoom = new WorkOrder { Creator = employee, Number = "NOROOM001", RoomNumber = "101" };
-        var nullRoom = new WorkOrder { Creator = employee, Number = "NOROOM002", RoomNumber = null };
-        var emptyRoom = new WorkOrder { Creator = employee, Number = "NOROOM003", RoomNumber = "" };
-        var whitespaceRoom = new WorkOrder { Creator = employee, Number = "NOROOM004", RoomNumber = "   " };
+        var withRoom = new WorkOrder { Creator = employee, Number = "NR001", RoomNumber = "101" };
+        var nullRoom = new WorkOrder { Creator = employee, Number = "NR002", RoomNumber = null };
+        var emptyRoom = new WorkOrder { Creator = employee, Number = "NR003", RoomNumber = "" };
+        var whitespaceRoom = new WorkOrder { Creator = employee, Number = "NR004", RoomNumber = "   " };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -454,7 +454,7 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchNoRoom(true);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["NOROOM002", "NOROOM003", "NOROOM004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["NR002", "NOROOM003", "NOROOM004"], ignoreOrder: true);
     }
 
     [Test]
@@ -463,10 +463,10 @@ public class WorkOrderSpecificationHandlerTests
         new DatabaseTests().Clean();
 
         var employee = new Employee("1", "1", "1", "1");
-        var withBuilding = new WorkOrder { Creator = employee, Number = "NOBLD001", Building = "Sanctuary" };
-        var nullBuilding = new WorkOrder { Creator = employee, Number = "NOBLD002", Building = null };
-        var emptyBuilding = new WorkOrder { Creator = employee, Number = "NOBLD003", Building = "" };
-        var whitespaceBuilding = new WorkOrder { Creator = employee, Number = "NOBLD004", Building = "   " };
+        var withBuilding = new WorkOrder { Creator = employee, Number = "NB001", Building = "Sanctuary" };
+        var nullBuilding = new WorkOrder { Creator = employee, Number = "NB002", Building = null };
+        var emptyBuilding = new WorkOrder { Creator = employee, Number = "NB003", Building = "" };
+        var whitespaceBuilding = new WorkOrder { Creator = employee, Number = "NB004", Building = "   " };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -480,7 +480,7 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchNoBuilding(true);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["NOBLD002", "NOBLD003", "NOBLD004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["NB002", "NOBLD003", "NOBLD004"], ignoreOrder: true);
     }
 
     [Test]
@@ -489,10 +489,10 @@ public class WorkOrderSpecificationHandlerTests
         new DatabaseTests().Clean();
 
         var employee = new Employee("1", "1", "1", "1");
-        var sanctuaryRoom101 = new WorkOrder { Creator = employee, Number = "COMBO001", Building = "Sanctuary", RoomNumber = "101" };
-        var noRoomWithBuilding = new WorkOrder { Creator = employee, Number = "COMBO002", Building = "Sanctuary", RoomNumber = null };
-        var room101NoBuilding = new WorkOrder { Creator = employee, Number = "COMBO003", Building = null, RoomNumber = "101" };
-        var room101NoRoom = new WorkOrder { Creator = employee, Number = "COMBO004", Building = null, RoomNumber = null };
+        var sanctuaryRoom101 = new WorkOrder { Creator = employee, Number = "CB001", Building = "Sanctuary", RoomNumber = "101" };
+        var noRoomWithBuilding = new WorkOrder { Creator = employee, Number = "CB002", Building = "Sanctuary", RoomNumber = null };
+        var room101NoBuilding = new WorkOrder { Creator = employee, Number = "CB003", Building = null, RoomNumber = "101" };
+        var room101NoRoom = new WorkOrder { Creator = employee, Number = "CB004", Building = null, RoomNumber = null };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -506,7 +506,7 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchRoom("101");
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["COMBO001", "COMBO003"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["CB001", "COMBO003"], ignoreOrder: true);
     }
 
     [Test]
@@ -515,10 +515,10 @@ public class WorkOrderSpecificationHandlerTests
         new DatabaseTests().Clean();
 
         var employee = new Employee("1", "1", "1", "1");
-        var openRoom101 = new WorkOrder { Creator = employee, Number = "ROOMOPEN001", RoomNumber = "101", Status = WorkOrderStatus.Assigned };
-        var completeRoom101 = new WorkOrder { Creator = employee, Number = "ROOMOPEN002", RoomNumber = "101", Status = WorkOrderStatus.Complete };
-        var openRoom102 = new WorkOrder { Creator = employee, Number = "ROOMOPEN003", RoomNumber = "102", Status = WorkOrderStatus.Draft };
-        var draftRoom101 = new WorkOrder { Creator = employee, Number = "ROOMOPEN004", RoomNumber = "101", Status = WorkOrderStatus.Draft };
+        var openRoom101 = new WorkOrder { Creator = employee, Number = "RO001", RoomNumber = "101", Status = WorkOrderStatus.Assigned };
+        var completeRoom101 = new WorkOrder { Creator = employee, Number = "RO002", RoomNumber = "101", Status = WorkOrderStatus.Complete };
+        var openRoom102 = new WorkOrder { Creator = employee, Number = "RO003", RoomNumber = "102", Status = WorkOrderStatus.Draft };
+        var draftRoom101 = new WorkOrder { Creator = employee, Number = "RO004", RoomNumber = "101", Status = WorkOrderStatus.Draft };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -533,6 +533,6 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchOpenOnly(true);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["ROOMOPEN001", "ROOMOPEN004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe(["RO001", "ROOMOPEN004"], ignoreOrder: true);
     }
 }
