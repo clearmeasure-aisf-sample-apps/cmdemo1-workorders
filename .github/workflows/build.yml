@@ -643,17 +643,20 @@ jobs:
           retention-days: 2
 
   acceptance-tests:
-    name: Acceptance Tests
+    name: Acceptance Tests [shard ${{ matrix.shard }}/3]
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
-      group: acceptance-tests-${{ github.ref }}-${{ github.sha }}
+      group: acceptance-tests-${{ github.ref }}-${{ github.sha }}-shard-${{ matrix.shard }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
     permissions:
       contents: read
       packages: read
+    strategy:
+      matrix:
+        shard: [1, 2, 3]
     env:
       BUILD_CONFIGURATION: Release
 
@@ -683,7 +686,7 @@ jobs:
           version="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           echo "BUILD_BUILDNUMBER=$version" >> $GITHUB_ENV
 
-      - name: Run Acceptance Tests
+      - name: Run Acceptance Tests (Shard ${{ matrix.shard }}/3)
         shell: pwsh
         env:
           BUILD_BUILDNUMBER: ${{ env.BUILD_BUILDNUMBER }}
@@ -691,38 +694,41 @@ jobs:
           AI_OpenAI_Url: ${{ vars.AI_OPENAI_URL }}
           AI_OpenAI_Model: ${{ vars.AI_OPENAI_MODEL }}
         run: |
-          Write-Host "Running Acceptance Tests"
+          Write-Host "Running Acceptance Tests Shard ${{ matrix.shard }}/3"
           . ./build.ps1
-          Invoke-AcceptanceTests
+          Invoke-AcceptanceTests -ShardNumber ${{ matrix.shard }}
 
-      - name: Test Reporter
+      - name: Test Reporter (Shard ${{ matrix.shard }}/3)
         uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
-          name: Acceptance Test Results
+          name: Acceptance Test Results [shard ${{ matrix.shard }}/3]
           path: 'build/test/**/*.trx'
           reporter: dotnet-trx
 
-      - name: Upload Test Results
+      - name: Upload Test Results (Shard ${{ matrix.shard }}/3)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-acceptance
+          name: test-results-acceptance-linux-shard-${{ matrix.shard }}
           path: build/test/**/*.trx
           retention-days: 2
 
   acceptance-tests-arm:
-    name: Acceptance Tests (ARM SQLite)
+    name: Acceptance Tests (ARM SQLite) [shard ${{ matrix.shard }}/3]
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     concurrency:
-      group: acceptance-tests-arm-${{ github.ref }}-${{ github.sha }}
+      group: acceptance-tests-arm-${{ github.ref }}-${{ github.sha }}-shard-${{ matrix.shard }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
     permissions:
       contents: read
       packages: read
+    strategy:
+      matrix:
+        shard: [1, 2, 3]
     env:
       BUILD_CONFIGURATION: Release
       DATABASE_ENGINE: SQLite
@@ -753,7 +759,7 @@ jobs:
           version="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           echo "BUILD_BUILDNUMBER=$version" >> $GITHUB_ENV
 
-      - name: Run Acceptance Tests (ARM SQLite)
+      - name: Run Acceptance Tests (ARM SQLite, Shard ${{ matrix.shard }}/3)
         shell: pwsh
         env:
           BUILD_BUILDNUMBER: ${{ env.BUILD_BUILDNUMBER }}
@@ -762,25 +768,95 @@ jobs:
           AI_OpenAI_Model: ${{ vars.AI_OPENAI_MODEL }}
           ConnectionStrings__SqlConnectionString: "Data Source=ChurchBulletin.db"
         run: |
-          Write-Host "Running Acceptance Tests with SQLite on ARM"
+          Write-Host "Running Acceptance Tests with SQLite on ARM Shard ${{ matrix.shard }}/3"
           . ./build.ps1
-          Invoke-AcceptanceTests -UseSqlite
+          Invoke-AcceptanceTests -ShardNumber ${{ matrix.shard }} -UseSqlite
 
-      - name: Test Reporter
+      - name: Test Reporter (Shard ${{ matrix.shard }}/3)
         uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
-          name: ARM Acceptance Test Results
+          name: ARM Acceptance Test Results [shard ${{ matrix.shard }}/3]
           path: 'build/test/**/*.trx'
           reporter: dotnet-trx
 
-      - name: Upload Test Results
+      - name: Upload Test Results (Shard ${{ matrix.shard }}/3)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-acceptance-arm
+          name: test-results-acceptance-arm-shard-${{ matrix.shard }}
           path: build/test/**/*.trx
           retention-days: 2
+
+  acceptance-tests-coverage-check:
+    name: Acceptance Tests Coverage Check
+    needs:
+      - changes
+      - acceptance-tests
+      - acceptance-tests-arm
+    if: always() && !cancelled() && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Coverage Check
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Restore solution to enumerate tests
+          dotnet restore src/ChurchBulletin.sln
+
+          # 1. Check total test count (no filter)
+          total_tests=$(dotnet test --list-tests --no-restore --no-build src/AcceptanceTests 2>/dev/null | grep -c "ClearMeasure.Bootcamp.AcceptanceTests" || echo "0")
+          echo "Total tests in assembly: ${total_tests}"
+          if [ "${total_tests}" -ne 200 ]; then
+            echo "ERROR: Expected 200 tests, got ${total_tests}"
+            exit 1
+          fi
+
+          # 2. Check per-shard test counts
+          shard1_filter="Namespace==ClearMeasure.Bootcamp.AcceptanceTests.App|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.AIAgents"
+          shard1_tests=$(dotnet test --list-tests --no-restore --no-build --filter "${shard1_filter}" src/AcceptanceTests 2>/dev/null | grep -c "ClearMeasure.Bootcamp.AcceptanceTests" || echo "0")
+          echo "Shard 1 tests: ${shard1_tests}"
+          if [ "${shard1_tests}" -ne 55 ]; then
+            echo "ERROR: Expected 55 tests in Shard 1, got ${shard1_tests}"
+            exit 1
+          fi
+
+          shard2_filter="Namespace==ClearMeasure.Bootcamp.AcceptanceTests.McpServer|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Api|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Extensions|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus|(FullyQualifiedName~WorkOrderAssignTests|FullyQualifiedName~WorkOrderBeginTests|FullyQualifiedName~WorkOrderCancelTests|FullyQualifiedName~WorkOrderCompleteTests|FullyQualifiedName~WorkOrderAttachmentTests|FullyQualifiedName~WorkOrderDueDateTests)"
+          shard2_tests=$(dotnet test --list-tests --no-restore --no-build --filter "${shard2_filter}" src/AcceptanceTests 2>/dev/null | grep -c "ClearMeasure.Bootcamp.AcceptanceTests" || echo "0")
+          echo "Shard 2 tests: ${shard2_tests}"
+          if [ "${shard2_tests}" -ne 69 ]; then
+            echo "ERROR: Expected 69 tests in Shard 2, got ${shard2_tests}"
+            exit 1
+          fi
+
+          shard3_filter="(Namespace==ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Authentication)&(FullyQualifiedName!~WorkOrderAssignTests&FullyQualifiedName!~WorkOrderBeginTests&FullyQualifiedName!~WorkOrderCancelTests&FullyQualifiedName!~WorkOrderCompleteTests&FullyQualifiedName!~WorkOrderAttachmentTests&FullyQualifiedName!~WorkOrderDueDateTests)"
+          shard3_tests=$(dotnet test --list-tests --no-restore --no-build --filter "${shard3_filter}" src/AcceptanceTests 2>/dev/null | grep -c "ClearMeasure.Bootcamp.AcceptanceTests" || echo "0")
+          echo "Shard 3 tests: ${shard3_tests}"
+          if [ "${shard3_tests}" -ne 76 ]; then
+            echo "ERROR: Expected 76 tests in Shard 3, got ${shard3_tests}"
+            exit 1
+          fi
+
+          total_shard_tests=$((shard1_tests + shard2_tests + shard3_tests))
+          echo "Total across shards: ${total_shard_tests}"
+          if [ "${total_shard_tests}" -ne 200 ]; then
+            echo "ERROR: Shard totals do not match assembly total: ${total_shard_tests} vs ${total_tests}"
+            exit 1
+          fi
+
+          echo "Acceptance test coverage check passed: 200 tests distributed across 3 shards (55 + 69 + 76)"
 
   build-result:
     name: Build result
@@ -794,6 +870,7 @@ jobs:
       - build-windows
       - acceptance-tests
       - acceptance-tests-arm
+      - acceptance-tests-coverage-check
     if: always() && !cancelled()
     runs-on: ubuntu-latest
     steps:
@@ -808,6 +885,7 @@ jobs:
           WINDOWS: ${{ needs.build-windows.result }}
           ACCEPTANCE: ${{ needs.acceptance-tests.result }}
           ACCEPTANCE_ARM: ${{ needs.acceptance-tests-arm.result }}
+          COVERAGE_CHECK: ${{ needs.acceptance-tests-coverage-check.result }}
         run: |
           set -euo pipefail
           if [ "${CODE}" != "true" ]; then
@@ -831,6 +909,7 @@ jobs:
           check "Integration Build (Windows LocalDB)" "${WINDOWS}"
           check "Acceptance Tests" "${ACCEPTANCE}"
           check "Acceptance Tests (ARM SQLite)" "${ACCEPTANCE_ARM}"
+          check "Acceptance Tests Coverage Check" "${COVERAGE_CHECK}"
           if [ "${failed}" -ne 0 ]; then
             echo "A required Build job did not succeed."
             exit 1

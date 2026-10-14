@@ -360,6 +360,11 @@ Function PackageScript {
 }
 
 Function AcceptanceTests {
+	param (
+		[Parameter(Mandatory = $false)]
+		[string]$TestFilter = ""
+	)
+
 	$projectConfig = "Release"
 	Push-Location -Path $acceptanceTestProjectPath
 
@@ -382,16 +387,65 @@ Function AcceptanceTests {
 
 	$runSettingsPath = Join-Path $acceptanceTestProjectPath "AcceptanceTests.runsettings"
 	try {
+		$dotnetArgs = @(
+			"test",
+			"/p:CopyLocalLockFileAssemblies=true",
+			"-nologo",
+			"-v", "minimal",
+			"--logger:trx",
+			"--results-directory", $(Join-Path $test_dir "AcceptanceTests"),
+			"--no-build",
+			"--no-restore",
+			"--configuration", $projectConfig,
+			"--settings:$runSettingsPath",
+			"--collect:XPlat Code Coverage"
+		)
+
+		if (-not [string]::IsNullOrEmpty($TestFilter)) {
+			$dotnetArgs += @("--filter", $TestFilter)
+		}
+
 		exec {
-		& dotnet test /p:CopyLocalLockFileAssemblies=true -nologo -v minimal --logger:trx `
-				--results-directory $(Join-Path $test_dir "AcceptanceTests") --no-build `
-				--no-restore --configuration $projectConfig `
-				--settings:$runSettingsPath `
-				--collect:"XPlat Code Coverage"
+			& dotnet @dotnetArgs
 		}
 	}
 	finally {
 		Pop-Location
+	}
+}
+
+Function Get-ShardTestFilter {
+	param (
+		[Parameter(Mandatory = $true)]
+		[ValidateRange(0, 3)]
+		[int]$ShardNumber,
+		[Parameter(Mandatory = $false)]
+		[int]$ShardCount = 3
+	)
+
+	if ($ShardNumber -eq 0) {
+		# Shard 0 means all tests (no filter)
+		return ""
+	}
+
+	switch ($ShardNumber) {
+		1 {
+			# Shard 1: App (10 classes, 49 tests) + AIAgents (3 classes, 6 tests) = 55 tests
+			return "Namespace==ClearMeasure.Bootcamp.AcceptanceTests.App|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.AIAgents"
+		}
+		2 {
+			# Shard 2: McpServer (10 classes, 36 tests) + Api (5 classes, 13 tests) + Extensions (1 class, 6 tests)
+			# + NServiceBus (1 class, 2 tests) + 6 WorkOrders classes (12 tests) = 69 tests
+			return "Namespace==ClearMeasure.Bootcamp.AcceptanceTests.McpServer|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Api|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Extensions|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus|(FullyQualifiedName~WorkOrderAssignTests|FullyQualifiedName~WorkOrderBeginTests|FullyQualifiedName~WorkOrderCancelTests|FullyQualifiedName~WorkOrderCompleteTests|FullyQualifiedName~WorkOrderAttachmentTests|FullyQualifiedName~WorkOrderDueDateTests)"
+		}
+		3 {
+			# Shard 3: COMPLEMENT - Everything NOT in Shard 1 or 2
+			# WorkOrders remaining (10 classes, 50 tests) + Authentication (2 classes, 26 tests) = 76 tests
+			return "(Namespace==ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders|Namespace==ClearMeasure.Bootcamp.AcceptanceTests.Authentication)&(FullyQualifiedName!~WorkOrderAssignTests&FullyQualifiedName!~WorkOrderBeginTests&FullyQualifiedName!~WorkOrderCancelTests&FullyQualifiedName!~WorkOrderCompleteTests&FullyQualifiedName!~WorkOrderAttachmentTests&FullyQualifiedName!~WorkOrderDueDateTests)"
+		}
+		default {
+			throw "Invalid shard number: $ShardNumber"
+		}
 	}
 }
 
@@ -403,7 +457,14 @@ Function Invoke-AcceptanceTests {
 		[string]$databaseName ="",
 
 		[Parameter(Mandatory = $false)]
-		[switch]$UseSqlite
+		[switch]$UseSqlite,
+
+		[Parameter(Mandatory = $false)]
+		[ValidateRange(0, 3)]
+		[int]$ShardNumber = 0,
+
+		[Parameter(Mandatory = $false)]
+		[int]$ShardCount = 3
 	)
 
 	$projectConfig = "Release"
@@ -425,7 +486,9 @@ Function Invoke-AcceptanceTests {
 	Init
 	Compile
 	Setup-DatabaseForBuild
-	AcceptanceTests
+
+	$testFilter = Get-ShardTestFilter -ShardNumber $ShardNumber -ShardCount $ShardCount
+	AcceptanceTests -TestFilter $testFilter
 
 	$sw.Stop()
 	$elapsed = $sw.Elapsed.ToString()
