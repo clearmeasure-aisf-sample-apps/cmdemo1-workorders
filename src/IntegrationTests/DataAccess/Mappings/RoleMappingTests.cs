@@ -10,11 +10,9 @@ public class RoleMappingTests
     [Test, Retry(2)]
     public void ShouldPersistRoles()
     {
-        // Empty the database
-        EmptyDatabase();
-
-        // Create and save a Role
-        var role = new Role("foo", true, true);
+        // Create and save a Role with a unique name
+        var name = $"role_{TestData.Tag()}";
+        var role = new Role(name, true, true);
 
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -32,13 +30,8 @@ public class RoleMappingTests
 
         // Assert
         rehydratedRole.Id.ShouldBe(role.Id);
-        rehydratedRole.Name.ShouldBe("foo");
+        rehydratedRole.Name.ShouldBe(name);
         rehydratedRole.CanCreateWorkOrder.ShouldBeTrue();
         rehydratedRole.CanFulfillWorkOrder.ShouldBeTrue();
-    }
-
-    private void EmptyDatabase()
-    {
-        new DatabaseEmptier(TestHost.GetRequiredService<DbContext>().Database).DeleteAllData();
     }
 }
