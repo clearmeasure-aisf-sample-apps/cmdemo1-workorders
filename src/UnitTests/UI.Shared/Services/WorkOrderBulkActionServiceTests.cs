@@ -76,7 +76,7 @@ public class WorkOrderBulkActionServiceTests
 
         options.ShouldNotContain(SaveDraftCommand.Name);
         options.ShouldNotContain(DraftToAssignedCommand.Name);
-        options.ShouldBe([AssignedToCancelledCommand.Name, InProgressToAssignedCommand.Name, InProgressToCompleteCommand.Name], ignoreOrder: true);
+        options.ShouldBe([AssignedToCancelledCommand.Name, InProgressToAssignedCommand.Name, InProgressToWaitingOnVendorCommand.Name, InProgressToCompleteCommand.Name], ignoreOrder: true);
     }
 
     [Test]

@@ -75,7 +75,7 @@ public class IndexPageTests
 
         component.FindComponents<PageHeader>().Count.ShouldBe(1);
         component.FindComponents<WorkOrderSummaryCards>().Count.ShouldBe(1);
-        component.FindComponents<KpiCard>().Count.ShouldBe(9);
+        component.FindComponents<KpiCard>().Count.ShouldBe(10);
     }
 
     [Test]

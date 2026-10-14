@@ -150,9 +150,9 @@ public class WorkOrderSearchTests
         assigneeOptions.Length.ShouldBe(6);
         assigneeOptions[0].TextContent.ShouldBe("Anyone");
 
-        // Verify status options are loaded (4 statuses + "All" option = 5 options)
+        // Verify status options are loaded (6 statuses + "All" option = 7 options)
         var statusOptions = statusSelect.QuerySelectorAll("option");
-        statusOptions.Length.ShouldBe(6);
+        statusOptions.Length.ShouldBe(7);
         statusOptions[0].TextContent.ShouldBe("All statuses");
     }
 
@@ -1259,17 +1259,17 @@ public class WorkOrderSearchTests
     }
 
     [Test]
-    public async Task Board_OnlyDraftRows_ShowsFiveColumnsFourEmpty()
+    public async Task Board_OnlyDraftRows_ShowsSixColumnsFiveEmpty()
     {
         await using var ctx = CreateContext(new StubBus(ManyOrders(30)));
         ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
 
         var component = ctx.Render<WorkOrderSearch>();
 
-        component.FindAll(".board-column").Count.ShouldBe(5);
+        component.FindAll(".board-column").Count.ShouldBe(6);
         component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}Draft']").TextContent.ShouldBe("30");
         component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}Draft']").Count.ShouldBe(0);
-        foreach (var key in new[] { "Assigned", "InProgress", "Complete", "Cancelled" })
+        foreach (var key in new[] { "Assigned", "InProgress", "WaitingOnVendor", "Complete", "Cancelled" })
         {
             component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}{key}']").TextContent.ShouldBe("No work orders");
             component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}{key}']").TextContent.ShouldBe("0");
