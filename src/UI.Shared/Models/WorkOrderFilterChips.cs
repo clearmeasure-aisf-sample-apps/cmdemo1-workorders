@@ -71,9 +71,9 @@ public static class WorkOrderFilterChips
         AddIf(chips, state.Status != null, FilterChipKey.Status, () => $"Status: {WorkOrderStatus.FromKey(state.Status!).FriendlyName}");
         AddIf(chips, state.Priority.HasValue, FilterChipKey.Priority, () => $"Priority: {state.Priority}");
         AddIf(chips, state.Building != null, FilterChipKey.Building, () => $"Building: {state.Building}");
-        AddIf(chips, state.NoBuilding && state.Building == null, FilterChipKey.NoBuilding, () => "Building: No building");
+        AddIf(chips, state is { NoBuilding: true, Building: null }, FilterChipKey.NoBuilding, () => "Building: No building");
         AddIf(chips, state.Room != null, FilterChipKey.Room, () => $"Room: {state.Room}");
-        AddIf(chips, state.NoRoom && state.Room == null, FilterChipKey.NoRoom, () => "Room: No room");
+        AddIf(chips, state is { NoRoom: true, Room: null }, FilterChipKey.NoRoom, () => "Room: No room");
     }
 
     private static void AddFlags(List<FilterChip> chips, WorkOrderSearchUrlState state)
