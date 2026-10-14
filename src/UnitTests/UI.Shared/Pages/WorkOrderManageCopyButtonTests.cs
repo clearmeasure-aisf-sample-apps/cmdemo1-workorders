@@ -66,7 +66,7 @@ public class WorkOrderManageCopyButtonTests
         ctx.Services.AddSingleton<IBus>(new StubWorkOrderManageBus());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);
-        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator));
+        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator, isNewMode: true));
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
         ctx.Services.AddSingleton<IJSRuntime>(new StubJSRuntime());
@@ -122,13 +122,13 @@ public class WorkOrderManageCopyButtonTests
         }
     }
 
-    private class StubWorkOrderBuilder(Guid workOrderId, Employee creator) : IWorkOrderBuilder
+    private class StubWorkOrderBuilder(Guid workOrderId, Employee creator, bool isNewMode = false) : IWorkOrderBuilder
     {
         public WorkOrder CreateNewWorkOrder(Employee currentUser)
         {
             return new WorkOrder
             {
-                Id = workOrderId,
+                Id = isNewMode ? Guid.Empty : workOrderId,
                 Number = "WO-NEW",
                 Status = WorkOrderStatus.Draft,
                 Creator = creator,
