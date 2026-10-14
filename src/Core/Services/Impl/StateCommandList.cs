@@ -23,6 +23,7 @@ public class StateCommandList
             new AssignedToInProgressCommand(workOrder, currentUser),
             new InProgressToAssignedCommand(workOrder, currentUser),
             new InProgressToCompleteCommand(workOrder, currentUser),
+            new InProgressToCancelledCommand(workOrder, currentUser),
             new AssignedToCancelledCommand(workOrder, currentUser)
         };
 
