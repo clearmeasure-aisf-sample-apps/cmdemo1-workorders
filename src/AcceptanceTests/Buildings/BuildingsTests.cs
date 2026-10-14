@@ -45,9 +45,8 @@ public class BuildingsTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        // Create a unique building name with timestamp to avoid conflicts
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var buildingName = $"TestBuilding{timestamp}";
+        // Create a unique building name so parallel tests never share it
+        var buildingName = $"TestBuilding{TestData.Tag()}";
         var room1 = "TestRoom1";
         var room2 = "TestRoom2";
 
@@ -129,15 +128,15 @@ public class BuildingsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a unique building name
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var buildingName = $"TestBuilding{timestamp}";
+        var buildingName = $"TestBuilding{TestData.Tag()}";
         var room = "TestRoom";
 
         // Create test work orders
         var wo1 = await CreateAndSaveNewWorkOrder();
         wo1.Building = buildingName;
         wo1.RoomNumber = room;
-        wo1.DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)); // Overdue
+        // Overdue at the church (Chicago) at any UTC time of day
+        wo1.DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-3));
         wo1.ChangeStatus(WorkOrderStatus.Assigned);
 
         var wo2 = await CreateAndSaveNewWorkOrder();
@@ -198,8 +197,7 @@ public class BuildingsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a unique building name
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var buildingName = $"TestBuilding{timestamp}";
+        var buildingName = $"TestBuilding{TestData.Tag()}";
         var room = "TestRoom";
 
         // Create test work orders
