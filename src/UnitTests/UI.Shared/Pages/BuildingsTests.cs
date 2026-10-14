@@ -171,8 +171,8 @@ public class BuildingsTests
         await component.WaitForAssertionAsync(() =>
         {
             var link = component.Find("[data-testid='room-open-link-No building-No room']");
-            link.GetAttribute("href").ShouldContain("NoBuilding=true");
-            link.GetAttribute("href").ShouldContain("NoRoom=true");
+            link.GetAttribute("href")!.ShouldContain("NoBuilding=true");
+            link.GetAttribute("href")!.ShouldContain("NoRoom=true");
         });
     }
 
