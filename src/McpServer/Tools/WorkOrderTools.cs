@@ -252,6 +252,11 @@ public class WorkOrderTools
             return "The Title field is required.";
         }
 
+        if (title is { Length: > WorkOrder.TitleMaxLength })
+        {
+            return $"Title cannot exceed {WorkOrder.TitleMaxLength} characters.";
+        }
+
         if (IsInvalidDueDatePatch(dueDate))
         {
             return $"Invalid due date '{dueDate}'. Use yyyy-MM-dd.";
