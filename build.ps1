@@ -429,11 +429,11 @@ Function Get-ShardTestFilter {
 	}
 
 	# REBALANCED SHARDING (measured counts from 169 total tests):
-	# Shard 1: App (39) + AIAgents (4) + Extensions (5) + NServiceBus (1) + Api (8) + WorkOrderDueDateTests (6) + WorkOrderSaveDraftTests (6) = 69 tests
-	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests"
+	# Shard 1: App (39) + AIAgents (4) + Extensions (5) + NServiceBus (1) + Api (8) + WorkOrderDueDateTests (6) = 63 tests
+	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests"
 
-	# Shard 2: Authentication (25) + McpServer (26) + WorkOrders.WorkOrderDictationTests (5) = 56 tests
-	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests"
+	# Shard 2: Authentication (25) + McpServer (26) + WorkOrders.WorkOrderDictationTests (5) + WorkOrderSaveDraftTests (6) = 62 tests
+	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests"
 
 	# Shard 3: EXPLICIT EXCLUSION CHAIN - Remaining WorkOrders classes (44 tests)
 	# Excludes all namespaces/classes in Shards 1 and 2
