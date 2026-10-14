@@ -23,12 +23,14 @@ public class NotificationsPanelTests : AcceptanceTestBase
         var yesterday = today.AddDays(-1);
         var dayBeforeYesterday = today.AddDays(-2);
         var tomorrow = today.AddDays(1);
+        // WorkOrder.Number is limited to 7 characters: 1 letter + 5 random digits + 1 sequence digit
+        var numberPrefix = $"N{Random.Shared.Next(0, 100000):D5}";
         var otherUser = new Employee($"other_user_{TestTag}", "Other", "User", $"other_{TestTag}@test.com");
 
         // Create work orders in various states assigned to CurrentUser
         var overdueAssigned = new WorkOrder
         {
-            Number = $"WO-{TestTag}-OVD1",
+            Number = $"{numberPrefix}1",
             Title = "Overdue Work Order 1",
             Creator = CurrentUser,
             Assignee = CurrentUser,
@@ -39,7 +41,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
 
         var overdueInProgress = new WorkOrder
         {
-            Number = $"WO-{TestTag}-OVD2",
+            Number = $"{numberPrefix}2",
             Title = "Overdue Work Order 2",
             Creator = CurrentUser,
             Assignee = CurrentUser,
@@ -50,7 +52,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
 
         var dueToday = new WorkOrder
         {
-            Number = $"WO-{TestTag}-TODAY",
+            Number = $"{numberPrefix}3",
             Title = "Due Today Work Order",
             Creator = CurrentUser,
             Assignee = CurrentUser,
@@ -61,7 +63,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
 
         var dueTomorrow = new WorkOrder
         {
-            Number = $"WO-{TestTag}-TOM",
+            Number = $"{numberPrefix}4",
             Title = "Due Tomorrow Work Order",
             Creator = CurrentUser,
             Assignee = CurrentUser,
@@ -72,7 +74,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
 
         var overdueCompleted = new WorkOrder
         {
-            Number = $"WO-{TestTag}-COMP",
+            Number = $"{numberPrefix}5",
             Title = "Completed Overdue (should not count)",
             Creator = CurrentUser,
             Assignee = CurrentUser,
@@ -83,7 +85,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
 
         var overdueOtherUser = new WorkOrder
         {
-            Number = $"WO-{TestTag}-OTHER",
+            Number = $"{numberPrefix}6",
             Title = "Overdue Assigned to Other (should not count)",
             Creator = CurrentUser,
             Assignee = otherUser,
