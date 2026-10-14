@@ -4,15 +4,16 @@
     <aside id="app-navigation-rail" class="@SidebarClass">
         <div class="sidebar-header">
             <div class="church-brand">
-                <div class="church-icon">
-                    <i class="bi bi-building" aria-hidden="true"></i>
-                </div>
-                <div class="brand-text">
-                    <h4>Kalahari Church Work Order System</h4>
+                <div class="church-icon brand-mark" aria-hidden="true">KC</div>
+                <div class="brand-block">
+                    <div class="brand-text">
+                        <h4>Kalahari Church Work Order System</h4>
+                    </div>
+                    <p class="brand-subtitle" data-testid="@nameof(Elements.BrandSubtitle)">Springfield · Facilities</p>
                 </div>
             </div>
         </div>
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" aria-label="Main navigation">
             <NavMenu/>
         </nav>
         <div class="sidebar-footer">
@@ -49,12 +50,26 @@
                         }
                     </button>
                     <div class="header-title">
-                        <h3>Work Order Administration</h3>
+                        <Breadcrumbs/>
                     </div>
                 </div>
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="header-search">
+                            <GlobalSearchBox/>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
                 <div class="header-actions">
+                    <a href="ai-agent"
+                       class="icon-button"
+                       data-testid="@nameof(Elements.HelpLink)"
+                       title="Help"
+                       aria-label="Help">
+                        <i class="bi bi-question-lg" aria-hidden="true"></i>
+                    </a>
                     <button type="button"
-                            class="dark-mode-toggle"
+                            class="dark-mode-toggle icon-button"
                             data-testid="@nameof(Elements.DarkModeToggle)"
                             @onclick="ToggleDarkModeAsync"
                             title="@DarkModeToggleTitle"
@@ -67,6 +82,14 @@
                         {
                             <i class="bi bi-sun" aria-hidden="true"></i>
                         }
+                    </button>
+                    <button type="button"
+                            class="icon-button"
+                            data-testid="@nameof(Elements.NotificationsButton)"
+                            aria-disabled="true"
+                            title="No notifications"
+                            aria-label="Notifications (none)">
+                        <i class="bi bi-bell" aria-hidden="true"></i>
                     </button>
                     <AuthorizeView>
                         <Authorized>

@@ -1,6 +1,10 @@
 using Bunit;
+using Bunit.TestDoubles;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
@@ -18,11 +22,16 @@ public class WorkOrderSearchTests
     private const string CurrentUsername = "jpalermo";
 
     private static BunitContext CreateContext(IBus? bus = null, string loggedInAs = CurrentUsername,
-        WorkOrderSearchState? searchState = null)
+        WorkOrderSearchState? searchState = null, Employee? currentUser = null)
     {
         var ctx = new BunitContext();
-        ctx.Services.AddSingleton(bus ?? new StubBus());
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var theBus = bus ?? new StubBus();
+        var uiBus = new StubUiBus();
+        ctx.Services.AddSingleton(theBus);
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(currentUser));
+        ctx.Services.AddSingleton<IUiBus>(uiBus);
+        ctx.Services.AddSingleton(new WorkOrderBulkActionService(theBus, uiBus));
         ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton(searchState ?? new WorkOrderSearchState());
 
@@ -42,7 +51,7 @@ public class WorkOrderSearchTests
         var component = ctx.Render<WorkOrderSearch>();
 
         var hint = component.Find($"[data-testid='{WorkOrderSearch.Elements.SearchHint}']");
-        hint.TextContent.ShouldBe("Use the filters to narrow the list of work orders.");
+        hint.TextContent.ShouldBe("Find, triage and track maintenance requests across all church facilities.");
     }
 
     [Test]
@@ -63,8 +72,8 @@ public class WorkOrderSearchTests
 
         var component = ctx.Render<WorkOrderSearch>();
 
-        component.Find(".results-header").TextContent.Trim()
-            .ShouldContain("Search Results (0 work orders)");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("0 of 0");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsRangeText}']").TextContent.ShouldBe("Showing 0 of 0 work orders · 0 selected");
     }
 
     [Test]
@@ -78,8 +87,8 @@ public class WorkOrderSearchTests
 
         var component = ctx.Render<WorkOrderSearch>();
 
-        component.Find(".results-header").TextContent.Trim()
-            .ShouldContain("Search Results (1 work order)");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("1 of 1");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsRangeText}']").TextContent.ShouldBe("Showing 1–1 of 1 work order · 0 selected");
     }
 
     [Test]
@@ -94,8 +103,8 @@ public class WorkOrderSearchTests
 
         var component = ctx.Render<WorkOrderSearch>();
 
-        component.Find(".results-header").TextContent.Trim()
-            .ShouldContain("Search Results (2 work orders)");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("2 of 2");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsRangeText}']").TextContent.ShouldBe("Showing 1–2 of 2 work orders · 0 selected");
     }
 
     [Test]
@@ -118,16 +127,16 @@ public class WorkOrderSearchTests
         // Verify user options are loaded (5 employees + "All" option = 6 options)
         var creatorOptions = creatorSelect.QuerySelectorAll("option");
         creatorOptions.Length.ShouldBe(6);
-        creatorOptions[0].TextContent.ShouldBe("All");
+        creatorOptions[0].TextContent.ShouldBe("Anyone");
 
         var assigneeOptions = assigneeSelect.QuerySelectorAll("option");
         assigneeOptions.Length.ShouldBe(6);
-        assigneeOptions[0].TextContent.ShouldBe("All");
+        assigneeOptions[0].TextContent.ShouldBe("Anyone");
 
         // Verify status options are loaded (4 statuses + "All" option = 5 options)
         var statusOptions = statusSelect.QuerySelectorAll("option");
         statusOptions.Length.ShouldBe(6);
-        statusOptions[0].TextContent.ShouldBe("All");
+        statusOptions[0].TextContent.ShouldBe("All statuses");
     }
 
     [Test]
@@ -140,6 +149,8 @@ public class WorkOrderSearchTests
         AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.CreatorSelect);
         AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.AssigneeSelect);
         AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.StatusSelect);
+        AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.PrioritySelect);
+        AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.BuildingSelect);
     }
 
     private static void AssertLabelForMatchesSelectId(IRenderedComponent<WorkOrderSearch> component, WorkOrderSearch.Elements element)
@@ -237,9 +248,6 @@ public class WorkOrderSearchTests
         await assigneeSelect.ChangeAsync(new() { Value = "hsimpson" });
         await statusSelect.ChangeAsync(new() { Value = WorkOrderStatus.InProgress.Key });
 
-        var searchButton = component.Find($"#{WorkOrderSearch.Elements.SearchButton}");
-        await searchButton.ClickAsync(new());
-
         // Assert
         var workOrderTable = component.Find(".grid-data");
         workOrderTable.ShouldNotBeNull();
@@ -289,7 +297,7 @@ public class WorkOrderSearchTests
         var sortBtn = component.Find($"#{WorkOrderSearch.Elements.SortByStatusButton}");
         await sortBtn.ClickAsync(new());
 
-        var cells = component.FindAll("tbody tr td:nth-child(4)");
+        var cells = component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.StatusCell}'] .status-badge");
         cells[0].TextContent.Trim().ShouldBe(WorkOrderStatus.Assigned.FriendlyName);
         cells[1].TextContent.Trim().ShouldBe(WorkOrderStatus.Draft.FriendlyName);
         cells[2].TextContent.Trim().ShouldBe(WorkOrderStatus.InProgress.FriendlyName);
@@ -312,7 +320,7 @@ public class WorkOrderSearchTests
         await sortBtn.ClickAsync(new());
         await sortBtn.ClickAsync(new());
 
-        var cells = component.FindAll("tbody tr td:nth-child(4)");
+        var cells = component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.StatusCell}'] .status-badge");
         cells[0].TextContent.Trim().ShouldBe(WorkOrderStatus.InProgress.FriendlyName);
         cells[1].TextContent.Trim().ShouldBe(WorkOrderStatus.Draft.FriendlyName);
         cells[2].TextContent.Trim().ShouldBe(WorkOrderStatus.Assigned.FriendlyName);
@@ -334,10 +342,7 @@ public class WorkOrderSearchTests
         var sortBtn = component.Find($"#{WorkOrderSearch.Elements.SortByDueDateButton}");
         await sortBtn.ClickAsync(new());
 
-        var tds = component.FindAll("tbody tr");
-        tds[0].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-002");
-        tds[1].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-001");
-        tds[2].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-003");
+        LinkNumbers(component).ShouldBe(["WO-002", "WO-001", "WO-003"]);
     }
 
     [Test]
@@ -357,10 +362,7 @@ public class WorkOrderSearchTests
         await sortBtn.ClickAsync(new());
         await sortBtn.ClickAsync(new());
 
-        var tds = component.FindAll("tbody tr");
-        tds[0].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-001");
-        tds[1].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-002");
-        tds[2].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-003");
+        LinkNumbers(component).ShouldBe(["WO-001", "WO-002", "WO-003"]);
     }
 
     [Test]
@@ -385,10 +387,7 @@ public class WorkOrderSearchTests
         var dueDateBtn = component.Find($"#{WorkOrderSearch.Elements.SortByDueDateButton}");
         await dueDateBtn.ClickAsync(new());
 
-        var tds = component.FindAll("tbody tr");
-        tds[0].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-001");
-        tds[1].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-003");
-        tds[2].QuerySelector("td")!.TextContent.Trim().ShouldBe("WO-002");
+        LinkNumbers(component).ShouldBe(["WO-001", "WO-003", "WO-002"]);
     }
 
     [Test]
@@ -468,7 +467,7 @@ public class WorkOrderSearchTests
         var sortBtn = component.Find($"#{WorkOrderSearch.Elements.SortByTitleButton}");
         await sortBtn.ClickAsync(new());
 
-        var cells = component.FindAll("tbody tr td:nth-child(5)");
+        var cells = component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.TitleCell}']");
         cells[0].TextContent.Trim().ShouldBe("A");
         cells[1].TextContent.Trim().ShouldBe("B");
         cells[2].TextContent.Trim().ShouldBe("C");
@@ -491,7 +490,7 @@ public class WorkOrderSearchTests
         await sortBtn.ClickAsync(new());
         await sortBtn.ClickAsync(new());
 
-        var cells = component.FindAll("tbody tr td:nth-child(5)");
+        var cells = component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.TitleCell}']");
         cells[0].TextContent.Trim().ShouldBe("C");
         cells[1].TextContent.Trim().ShouldBe("B");
         cells[2].TextContent.Trim().ShouldBe("A");
@@ -513,7 +512,7 @@ public class WorkOrderSearchTests
         var sortBtn = component.Find($"#{WorkOrderSearch.Elements.SortByRoomButton}");
         await sortBtn.ClickAsync(new());
 
-        var cells = component.FindAll("tbody tr td:nth-child(7)");
+        var cells = component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.RoomCell}']");
         cells[0].TextContent.Trim().ShouldBe("A");
         cells[1].TextContent.Trim().ShouldBe("B");
         cells[2].TextContent.Trim().ShouldBe("C");
@@ -536,7 +535,7 @@ public class WorkOrderSearchTests
         await sortBtn.ClickAsync(new());
         await sortBtn.ClickAsync(new());
 
-        var cells = component.FindAll("tbody tr td:nth-child(7)");
+        var cells = component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.RoomCell}']");
         cells[0].TextContent.Trim().ShouldBe("C");
         cells[1].TextContent.Trim().ShouldBe("B");
         cells[2].TextContent.Trim().ShouldBe("A");
@@ -714,13 +713,489 @@ public class WorkOrderSearchTests
     [Test]
     public void ShouldRemotableRequest_RoundTrip_OverdueOnly()
     {
-        var query = new ClearMeasure.Bootcamp.Core.Queries.WorkOrderSpecificationQuery();
+        var query = new WorkOrderSpecificationQuery();
         query.MatchOverdueOnly(true);
 
         var json = System.Text.Json.JsonSerializer.Serialize(query);
-        var rehydrated = System.Text.Json.JsonSerializer.Deserialize<ClearMeasure.Bootcamp.Core.Queries.WorkOrderSpecificationQuery>(json);
+        var rehydrated = System.Text.Json.JsonSerializer.Deserialize<WorkOrderSpecificationQuery>(json);
 
         rehydrated.ShouldNotBeNull();
         rehydrated.OverdueOnly.ShouldBeTrue();
     }
+    [Test]
+    public async Task ShouldNotRenderSearchButton()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.FindAll("#SearchButton").Count.ShouldBe(0);
+        component.FindAll("button[type='submit']").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ChangingCreator_RunsSearchAndReplacesUrl()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        var component = ctx.Render<WorkOrderSearch>();
+        var sendsBefore = bus.SendCallCount;
+
+        await component.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").ChangeAsync(new() { Value = "tlovejoy" });
+
+        bus.SendCallCount.ShouldBeGreaterThan(sendsBefore);
+        bus.LastSpecification!.Creator.ShouldNotBeNull();
+        navigation.Uri.ShouldEndWith("/workorder/search?Creator=tlovejoy");
+        ((BunitNavigationManager)navigation).History.First().Options.ReplaceHistoryEntry.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task QueryString_PriorityBuildingAndQ_AppliedOnLoad()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        ctx.Services.GetRequiredService<NavigationManager>()
+            .NavigateTo("workorder/search?Priority=High&Building=Kitchen&Q=organ&OpenOnly=true&CompletedWithinDays=30");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        bus.LastSpecification!.Priority.ShouldBe(WorkOrderPriority.High);
+        bus.LastSpecification.Building.ShouldBe("Kitchen");
+        bus.LastSpecification.SearchText.ShouldBe("organ");
+        bus.LastSpecification.OpenOnly.ShouldBeTrue();
+        bus.LastSpecification.CompletedWithinDays.ShouldBe(30);
+        component.Find($"#{WorkOrderSearch.Elements.PrioritySelect}").GetAttribute("value").ShouldBe("High");
+        component.Find($"#{WorkOrderSearch.Elements.BuildingSelect}").GetAttribute("value").ShouldBe("Kitchen");
+        ChipKeys(component).ShouldBe(["Priority", "Building", "OpenOnly", "CompletedWithinDays", "Q"]);
+    }
+
+    [Test]
+    public async Task RemovingChip_ClearsThatFilter()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("workorder/search?Creator=tlovejoy&OpenOnly=true");
+        var component = ctx.Render<WorkOrderSearch>();
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ActiveFilterChip}Creator']").TextContent
+            .ShouldContain("Creator: Timothy Lovejoy Jr");
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.ActiveFilterChip}OpenOnly']").ClickAsync(new());
+
+        ChipKeys(component).ShouldBe(["Creator"]);
+        bus.LastSpecification!.OpenOnly.ShouldBeFalse();
+        navigation.Uri.ShouldEndWith("/workorder/search?Creator=tlovejoy");
+    }
+
+    [Test]
+    public async Task SelectWithValue_HasValueClass()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<WorkOrderSearch>();
+        component.Find($"#{WorkOrderSearch.Elements.StatusSelect}").ClassList.ShouldNotContain("has-value");
+
+        await component.Find($"#{WorkOrderSearch.Elements.StatusSelect}").ChangeAsync(new() { Value = WorkOrderStatus.Assigned.Key });
+
+        component.Find($"#{WorkOrderSearch.Elements.StatusSelect}").ClassList.ShouldContain("has-value");
+        component.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").ClassList.ShouldNotContain("has-value");
+    }
+
+    [Test]
+    public async Task ClickingOverdueCard_AppliesOnlyOverdueFilter()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("workorder/search?Creator=tlovejoy&Priority=Low");
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find("[data-testid='SummaryCardOverdue']").ClickAsync(new());
+
+        bus.LastSpecification!.OverdueOnly.ShouldBeTrue();
+        bus.LastSpecification.Creator.ShouldBeNull();
+        bus.LastSpecification.Priority.ShouldBeNull();
+        component.Find($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}").HasAttribute("checked").ShouldBeTrue();
+        navigation.Uri.ShouldEndWith("/workorder/search?OverdueOnly=true");
+    }
+
+    [Test]
+    public async Task SessionAssignedToMe_OnBareUrl_DoesNotRewriteUrl()
+    {
+        var bus = new StubBusWithAssigneeCapture();
+        await using var ctx = CreateContext(bus, searchState: new WorkOrderSearchState { AssignedToMe = true });
+        var navigation = (BunitNavigationManager)ctx.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("workorder/search");
+        var historyBefore = navigation.History.Count;
+
+        ctx.Render<WorkOrderSearch>();
+
+        bus.LastAssigneeQueried.ShouldBe(CurrentUsername);
+        navigation.Uri.ShouldEndWith("/workorder/search");
+        navigation.History.Count.ShouldBe(historyBefore);
+    }
+
+    [Test]
+    public async Task ShouldRenderNewWorkOrderButton_WhenUserCanCreate()
+    {
+        var creator = new Employee(CurrentUsername, "Jeffrey", "Palermo", "j@example.com");
+        creator.AddRole(new Role("creator", true, false));
+        await using var ctx = CreateContext(currentUser: creator);
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.NewWorkOrderButton}']").GetAttribute("href")
+            .ShouldBe("workorder/manage?mode=New");
+    }
+
+    [Test]
+    public async Task ShouldNotRenderNewWorkOrderButton_WhenUserCannotCreate()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.NewWorkOrderButton}']").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task SavedViewsMenu_TogglesAndClosesOnEscape()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<WorkOrderSearch>();
+        var button = component.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewsButton}']");
+
+        await button.ClickAsync(new());
+
+        component.Find("#saved-views-menu").HasAttribute("hidden").ShouldBeFalse();
+        component.FindAll("#saved-views-menu a[role='menuitem']").Select(a => a.GetAttribute("href"))
+            .ShouldContain("workorder/search?OverdueOnly=true");
+
+        await component.Find(".menu-anchor").KeyDownAsync(new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Escape" });
+
+        component.Find("#saved-views-menu").HasAttribute("hidden").ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ShouldRenderSummaryCardsFromSummaryQuery()
+    {
+        var bus = new StubBus { Summary = new WorkOrderSearchSummary { OpenCount = 24, OverdueCount = 3 } };
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.Find("[data-testid='SummaryCardOpen'] .summary-card-value").TextContent.ShouldBe("24");
+        component.Find("[data-testid='SummaryCardOverdue'] .summary-card-value").TextContent.ShouldBe("3");
+    }
+
+    [Test]
+    public async Task ShouldRenderColumnsInMockupOrder()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.FindAll("thead th").Select(th => th.TextContent.Trim())
+            .ShouldBe(["", "Work Order", "Title", "Status", "Priority", "Assignee", "Room", "Due Date", "Actions"]);
+    }
+
+    [Test]
+    public async Task ShouldShowDashAndHiddenText_WhenNoDueDate()
+    {
+        var order = new WorkOrder { Number = "WO-ND", Title = "No date", Status = WorkOrderStatus.Draft, DueDate = null };
+        await using var ctx = CreateContext(new StubBus([order]));
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var cell = component.Find($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}WO-ND']");
+        cell.TextContent.ShouldBe("–");
+        cell.ParentElement!.QuerySelector(".visually-hidden")!.TextContent.ShouldBe("No due date");
+    }
+
+    [Test]
+    public async Task ShouldShowUnassigned_WhenNoAssignee()
+    {
+        var order = new WorkOrder { Number = "WO-UA", Title = "Nobody", Status = WorkOrderStatus.Draft };
+        await using var ctx = CreateContext(new StubBus([order]));
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var cell = component.Find($"[data-testid='{WorkOrderSearch.Elements.AssigneeCell}WO-UA']");
+        cell.TextContent.Trim().ShouldBe("Unassigned");
+        cell.QuerySelector(".avatar--empty").ShouldNotBeNull();
+    }
+
+    [Test]
+    public async Task ShouldShowAssigneeInitialsAndPriorityLabel()
+    {
+        var order = new WorkOrder
+        {
+            Number = "WO-AS", Title = "Organ", Status = WorkOrderStatus.Assigned, Priority = WorkOrderPriority.High,
+            Assignee = new Employee("gwillie", "Groundskeeper", "Willie", "g@x")
+        };
+        await using var ctx = CreateContext(new StubBus([order]));
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.AssigneeCell}WO-AS'] .avatar").TextContent.ShouldBe("GW");
+        var priority = component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityCell}WO-AS'] .priority");
+        priority.ClassList.ShouldContain("priority--high");
+        priority.TextContent.Trim().ShouldBe("High");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.StatusCell}WO-AS'] .status-badge").TextContent.ShouldBe("Assigned");
+    }
+
+    [Test]
+    public async Task ShouldShowBulkBar_WhenRowSelected()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<WorkOrderSearch>();
+        component.FindAll("[data-testid='BulkActionBar']").Count.ShouldBe(0);
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.RowCheckbox}WO-001']").ChangeAsync(new() { Value = true });
+
+        var bar = component.Find("[data-testid='BulkActionBar']");
+        bar.GetAttribute("role").ShouldBe("toolbar");
+        bar.QuerySelector("[data-testid='BulkSelectedCount']")!.TextContent.ShouldBe("1 selected");
+        component.Find("tbody tr").ClassList.ShouldContain("row-selected");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsRangeText}']").TextContent.ShouldEndWith("1 selected");
+    }
+
+    [Test]
+    public async Task SelectAll_SelectsCurrentPageOnly()
+    {
+        await using var ctx = CreateContext(new StubBus(ManyOrders(30)));
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find($"#{WorkOrderSearch.Elements.SelectAllCheckbox}").ChangeAsync(new() { Value = true });
+
+        component.Find("[data-testid='BulkSelectedCount']").TextContent.ShouldBe("25 selected");
+        component.Find($"#{WorkOrderSearch.Elements.SelectAllCheckbox}").HasAttribute("checked").ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ShouldShowSecondPage_WhenNextClicked()
+    {
+        await using var ctx = CreateContext(new StubBus(ManyOrders(30)));
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        var component = ctx.Render<WorkOrderSearch>();
+        component.FindAll("tbody tr").Count.ShouldBe(25);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PagePrevButton}']").HasAttribute("disabled").ShouldBeTrue();
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PageButton}1']").GetAttribute("aria-current").ShouldBe("page");
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.PageNextButton}']").ClickAsync(new());
+
+        component.FindAll("tbody tr").Count.ShouldBe(5);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("5 of 30");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsRangeText}']").TextContent
+            .ShouldBe("Showing 26–30 of 30 work orders · 0 selected");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PageNextButton}']").HasAttribute("disabled").ShouldBeTrue();
+        navigation.Uri.ShouldEndWith("/workorder/search?Page=2");
+    }
+
+    [Test]
+    public async Task SortHeader_SetsAriaSort()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<WorkOrderSearch>();
+        AngleSharp.Dom.IElement PriorityHeader() => component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").ParentElement!;
+        PriorityHeader().GetAttribute("aria-sort").ShouldBe("none");
+
+        await component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").ClickAsync(new());
+        PriorityHeader().GetAttribute("aria-sort").ShouldBe("ascending");
+
+        await component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").ClickAsync(new());
+        PriorityHeader().GetAttribute("aria-sort").ShouldBe("descending");
+        component.Find($"#{WorkOrderSearch.Elements.SortSelect}").QuerySelector("option[selected]")!.TextContent
+            .ShouldBe("Sort: Priority ↓");
+    }
+
+    [Test]
+    public async Task SortSelect_SortsLikeTheHeader()
+    {
+        var rows = new[]
+        {
+            new WorkOrder { Number = "WO-L", Title = "L", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.Low },
+            new WorkOrder { Number = "WO-H", Title = "H", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.High },
+            new WorkOrder { Number = "WO-M", Title = "M", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.Medium }
+        };
+        await using var ctx = CreateContext(new StubBus(rows));
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find($"#{WorkOrderSearch.Elements.SortSelect}").ChangeAsync(new() { Value = "Priority:desc" });
+
+        LinkNumbers(component).ShouldBe(["WO-H", "WO-M", "WO-L"]);
+        component.Find($"#{WorkOrderSearch.Elements.SortByPriorityButton}").TextContent.ShouldContain("▼");
+
+        await component.Find($"#{WorkOrderSearch.Elements.SortSelect}").ChangeAsync(new() { Value = "" });
+
+        LinkNumbers(component).ShouldBe(["WO-L", "WO-H", "WO-M"]);
+    }
+
+    [Test]
+    public async Task ShouldPrefixDisplayNumberButKeepHrefAndTestId()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var link = component.Find($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}WO-001']");
+        link.TextContent.ShouldBe("WO-WO-001");
+        link.GetAttribute("href").ShouldBe("/workorder/manage/WO-001?mode=Edit");
+    }
+
+    [Test]
+    public async Task ShouldShowOverduePillWithHiddenStoredStatus()
+    {
+        var order = new WorkOrder { Number = "WO-OD", Title = "Late", Status = WorkOrderStatus.InProgress, DueDate = new DateOnly(2000, 1, 1) };
+        await using var ctx = CreateContext(new StubBus([order]));
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var cell = component.Find($"[data-testid='{WorkOrderSearch.Elements.StatusCell}WO-OD']");
+        cell.QuerySelector(".status-badge")!.TextContent.ShouldBe("Overdue");
+        cell.QuerySelector(".status-badge")!.ClassList.ShouldContain("status-badge--overdue");
+        cell.QuerySelector(".visually-hidden")!.TextContent.ShouldBe(", status In Progress");
+    }
+
+    [Test]
+    public async Task RowMenu_OpensWithOpenLink()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.RowMenu}WO-001']").ClickAsync(new());
+
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.RowMenuOpen}WO-001']").GetAttribute("href")
+            .ShouldBe("/workorder/manage/WO-001?mode=Edit");
+        await component.Find(".col-actions .menu-anchor").KeyDownAsync(new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Escape" });
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.RowMenuOpen}WO-001']").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task Export_DownloadsCsvOfFilteredRows()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js");
+        module.SetupVoid("downloadCsv", _ => true).SetVoidResult();
+        module.SetupVoid("setIndeterminate", _ => true).SetVoidResult();
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.ExportButton}']").ClickAsync(new());
+
+        var invocation = module.VerifyInvoke("downloadCsv");
+        invocation.Arguments[0]!.ToString()!.ShouldStartWith("work-orders-");
+        var csv = invocation.Arguments[1]!.ToString()!;
+        csv.ShouldContain("WO-001");
+        csv.ShouldContain("WO-002");
+    }
+
+    [Test]
+    public async Task BulkAssign_SendsAssignForSelectedRowsAndReportsOutcome()
+    {
+        var creator = new Employee(CurrentUsername, "Jeffrey", "Palermo", "j@example.com") { Id = Guid.NewGuid() };
+        creator.AddRole(new Role("creator", true, false));
+        var draft = new WorkOrder { Number = "WO-D1", Title = "Draft", Status = WorkOrderStatus.Draft, Creator = creator };
+        var bus = new StubBulkBus([draft]);
+        await using var ctx = CreateContext(bus, currentUser: creator);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find($"[data-testid='{WorkOrderSearch.Elements.RowCheckbox}WO-D1']").ChangeAsync(new() { Value = true });
+        await component.Find("[data-testid='BulkAssignSelect']").ChangeAsync(new() { Value = "hsimpson" });
+        await component.Find("[data-testid='BulkAssignButton']").ClickAsync(new());
+
+        bus.Commands.Single().TransitionVerbPresentTense.ShouldBe("Assign");
+        bus.Commands.Single().WorkOrder.Assignee!.UserName.ShouldBe("hsimpson");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.BulkOutcome}']").TextContent.ShouldBe("1 updated, 0 skipped");
+        component.FindAll("[data-testid='BulkActionBar']").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ShouldKeepLatestFilters_WhenEarlierSearchCompletesLast()
+    {
+        var bus = new StubHeldSearchBus();
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        var component = ctx.Render<WorkOrderSearch>();
+
+        _ = component.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").ChangeAsync(new() { Value = "tlovejoy" });
+        await component.WaitForAssertionAsync(() => bus.Held.Count.ShouldBe(1));
+        _ = component.Find($"#{WorkOrderSearch.Elements.StatusSelect}").ChangeAsync(new() { Value = WorkOrderStatus.Assigned.Key });
+        await component.WaitForAssertionAsync(() => bus.Held.Count.ShouldBe(2));
+
+        bus.Held[1].SetResult([new WorkOrder { Number = "NEWEST1", Title = "Newest", Status = WorkOrderStatus.Assigned }]);
+        await component.WaitForAssertionAsync(() => component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}NEWEST1']").Count.ShouldBe(1));
+        bus.Held[0].SetResult([new WorkOrder { Number = "STALE01", Title = "Stale", Status = WorkOrderStatus.Draft }]);
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            navigation.Uri.ShouldContain("Creator=");
+            navigation.Uri.ShouldContain("Status=");
+            component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}NEWEST1']").Count.ShouldBe(1);
+            component.FindAll($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}STALE01']").Count.ShouldBe(0);
+        });
+    }
+
+    private sealed class StubHeldSearchBus : StubBus
+    {
+        private bool _initialSearchDone;
+
+        public List<TaskCompletionSource<WorkOrder[]>> Held { get; } = [];
+
+        public override async Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        {
+            if (request is not WorkOrderSpecificationQuery || !_initialSearchDone)
+            {
+                _initialSearchDone |= request is WorkOrderSpecificationQuery;
+                return await base.Send(request);
+            }
+
+            var pending = new TaskCompletionSource<WorkOrder[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Held.Add(pending);
+            return (TResponse)(object)await pending.Task;
+        }
+    }
+
+    private static WorkOrder[] ManyOrders(int count) =>
+        Enumerable.Range(1, count)
+            .Select(i => new WorkOrder { Number = $"WO-{i:000}", Title = $"Order {i}", Status = WorkOrderStatus.Draft })
+            .ToArray();
+
+    // ReSharper disable once ConvertToPrimaryConstructor -- the orders are also passed to the base constructor (CS9107)
+    private sealed class StubBulkBus : StubBus
+    {
+        private readonly WorkOrder[] _orders;
+
+        public StubBulkBus(WorkOrder[] orders) : base(orders)
+        {
+            _orders = orders;
+        }
+
+        public List<ClearMeasure.Bootcamp.Core.Model.StateCommands.StateCommandBase> Commands { get; } = [];
+
+        public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        {
+            if (request is WorkOrderByNumberQuery byNumber)
+            {
+                return Task.FromResult((TResponse)(object)_orders.Single(o => o.Number == byNumber.Number));
+            }
+
+            if (request is ClearMeasure.Bootcamp.Core.Model.StateCommands.StateCommandBase command)
+            {
+                Commands.Add(command);
+                return Task.FromResult((TResponse)(object)new ClearMeasure.Bootcamp.Core.Model.StateCommands.StateCommandResult(command.WorkOrder, command.TransitionVerbPresentTense, "done"));
+            }
+
+            return base.Send(request);
+        }
+    }
+
+    private static string[] LinkNumbers(IRenderedComponent<WorkOrderSearch> component) =>
+        component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']")
+            .Select(a => a.GetAttribute("data-testid")![nameof(WorkOrderSearch.Elements.WorkOrderLink).Length..])
+            .ToArray();
+
+    private static string[] ChipKeys(IRenderedComponent<WorkOrderSearch> component) =>
+        component.FindAll($"[data-testid^='{WorkOrderSearch.Elements.ActiveFilterChip}']")
+            .Select(c => c.GetAttribute("data-testid")![nameof(WorkOrderSearch.Elements.ActiveFilterChip).Length..])
+            .ToArray();
 }

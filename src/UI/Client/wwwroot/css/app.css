@@ -1,9 +1,150 @@
+/* Design tokens (#251). Scoped component styles use these; dark values follow html[data-theme="dark"]. */
+:root {
+    --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    --color-primary: #4f46e5;
+    --color-primary-2: #6366f1;
+    --color-primary-strong: #4338ca;
+    --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    --color-primary-tint: #eef2ff;
+    --color-primary-tint-border: #c7d2fe;
+    --color-on-primary: #ffffff;
+
+    --color-text: #0f172a;
+    --color-muted: #64748b;
+    --muted-on-page: #475569;
+    --color-border: #e5e9f0;
+    --color-border-strong: #cbd5e1;
+    --color-page: #f5f7fb;
+    --color-surface: #ffffff;
+    --color-surface-2: #f8fafc;
+    --color-row-hover: #f8fafc;
+    --color-row-selected: #eef2ff;
+
+    --sidebar-from: #0b1220;
+    --sidebar-to: #111a2e;
+    --sidebar-text: #cbd5e1;
+    --sidebar-text-strong: #f8fafc;
+    --sidebar-muted: #94a3b8;
+    --sidebar-hover: rgba(148, 163, 184, 0.12);
+    --sidebar-active: rgba(99, 102, 241, 0.22);
+    --sidebar-accent: #818cf8;
+    --sidebar-border: rgba(148, 163, 184, 0.16);
+    --sidebar-badge-bg: rgba(148, 163, 184, 0.2);
+
+    --color-danger: #b91c1c;
+    --color-danger-bg: #fee2e2;
+    --color-danger-accent: #ef4444;
+    --color-success: #047857;
+    --color-success-bg: #d1fae5;
+    --color-warning: #b45309;
+    --color-warning-bg: #fef3c7;
+    --color-info: #1d4ed8;
+    --color-info-bg: #dbeafe;
+    --color-teal: #0e7490;
+    --color-teal-bg: #cffafe;
+
+    --status-assigned-fg: #1d4ed8;
+    --status-assigned-bg: #dbeafe;
+    --status-inprogress-fg: #b45309;
+    --status-inprogress-bg: #fef3c7;
+    --status-overdue-fg: #b91c1c;
+    --status-overdue-bg: #fee2e2;
+    --status-waiting-fg: #6d28d9;
+    --status-waiting-bg: #ede9fe;
+    --status-draft-fg: #475569;
+    --status-draft-bg: #f1f5f9;
+    --status-complete-fg: #047857;
+    --status-complete-bg: #d1fae5;
+
+    --priority-high: #dc2626;
+    --priority-medium: #d97706;
+    --priority-low: #64748b;
+    --priority-off: #cbd5e1;
+
+    --radius-card: 12px;
+    --radius-control: 8px;
+    --control-height: 38px;
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.08);
+    --shadow-popover: 0 10px 30px rgba(15, 23, 42, 0.16);
+
+    --font-size-title: 26px;
+    --font-size-card-title: 15px;
+    --font-size-body: 14px;
+    --font-size-label: 11px;
+
+    --focus-ring-color: #4f46e5;
+    --focus-ring: 2px solid var(--focus-ring-color);
+}
+
+html[data-theme="dark"] {
+    --color-primary: #818cf8;
+    --color-primary-2: #6366f1;
+    --color-primary-strong: #a5b4fc;
+    --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    --color-primary-tint: rgba(99, 102, 241, 0.18);
+    --color-primary-tint-border: rgba(129, 140, 248, 0.45);
+    --color-on-primary: #ffffff;
+
+    --color-text: #e2e8f0;
+    --color-muted: #94a3b8;
+    --muted-on-page: #a3b1c6;
+    --color-border: #263248;
+    --color-border-strong: #334155;
+    --color-page: #0f172a;
+    --color-surface: #151f33;
+    --color-surface-2: #1b263b;
+    --color-row-hover: #1b263b;
+    --color-row-selected: rgba(99, 102, 241, 0.16);
+
+    --sidebar-from: #070c16;
+    --sidebar-to: #0b1220;
+
+    --color-danger: #fca5a5;
+    --color-danger-bg: rgba(239, 68, 68, 0.16);
+    --color-success: #6ee7b7;
+    --color-success-bg: rgba(16, 185, 129, 0.16);
+    --color-warning: #fcd34d;
+    --color-warning-bg: rgba(245, 158, 11, 0.16);
+    --color-info: #93c5fd;
+    --color-info-bg: rgba(59, 130, 246, 0.18);
+    --color-teal: #67e8f9;
+    --color-teal-bg: rgba(6, 182, 212, 0.16);
+
+    --status-assigned-fg: #bfdbfe;
+    --status-assigned-bg: rgba(59, 130, 246, 0.22);
+    --status-inprogress-fg: #fde68a;
+    --status-inprogress-bg: rgba(245, 158, 11, 0.2);
+    --status-overdue-fg: #fecaca;
+    --status-overdue-bg: rgba(239, 68, 68, 0.22);
+    --status-waiting-fg: #ddd6fe;
+    --status-waiting-bg: rgba(139, 92, 246, 0.22);
+    --status-draft-fg: #cbd5e1;
+    --status-draft-bg: rgba(148, 163, 184, 0.18);
+    --status-complete-fg: #a7f3d0;
+    --status-complete-bg: rgba(16, 185, 129, 0.2);
+
+    --priority-high: #f87171;
+    --priority-medium: #fbbf24;
+    --priority-low: #94a3b8;
+    --priority-off: #334155;
+
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-popover: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --focus-ring-color: #a5b4fc;
+}
+
 html, body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-sans);
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: var(--color-page);
     min-height: 100vh;
+}
+
+body {
+    font-size: var(--font-size-body);
+    -webkit-font-smoothing: antialiased;
 }
 
 h1:focus {
@@ -274,16 +415,16 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Focus visible for better accessibility */
+/* Focus visible for better accessibility: one ring token for every interactive element, both themes */
 :focus-visible {
-    outline: 2px solid #7b68ee;
+    outline: var(--focus-ring);
     outline-offset: 2px;
 }
 
 /* Dark theme (html data-theme set by theme.js / inline boot script) */
 html[data-theme="dark"],
 html[data-theme="dark"] body {
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    background: var(--color-page);
     color: #e2e8f0;
 }
 
@@ -373,5 +514,5 @@ html[data-theme="dark"] .alert-info {
 }
 
 html[data-theme="dark"] :focus-visible {
-    outline-color: #a3bffa;
+    outline-color: var(--focus-ring-color);
 }

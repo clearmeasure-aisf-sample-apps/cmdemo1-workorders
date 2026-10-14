@@ -1,0 +1,49 @@
+@inherits ComponentBase
+@using System.Globalization
+@using ClearMeasure.Bootcamp.Core.Queries
+
+<section class="summary-cards" aria-label="Work order summary">
+    @Card(SummaryCard.Open, Elements.SummaryCardOpen, "Open work orders", Summary?.OpenCount,
+        $"+{Summary?.OpenedLast7Days ?? 0} this week", "summary-card--indigo", "bi-clipboard2-data", "note--success")
+    @Card(SummaryCard.AssignedToMe, Elements.SummaryCardAssignedToMe, "Assigned to me", Summary?.AssignedToMeCount,
+        $"{Summary?.AssignedToMeDueToday ?? 0} due today", "summary-card--teal", "bi-person-check", "note--warning")
+    @Card(SummaryCard.Overdue, Elements.SummaryCardOverdue, "Overdue", Summary?.OverdueCount,
+        "Needs attention", "summary-card--danger", "bi-exclamation-triangle", "note--danger")
+    @Card(SummaryCard.Completed, Elements.SummaryCardCompleted, "Completed (30 days)", Summary?.CompletedLast30Days,
+        AverageNote, "summary-card--success", "bi-check2-circle", "note--muted")
+</section>
+
+@code {
+    /// <summary>Counts to show; null renders dashes while loading.</summary>
+    [Parameter] public WorkOrderSearchSummary? Summary { get; set; }
+
+    /// <summary>Raised with the card the user clicked.</summary>
+    [Parameter] public EventCallback<SummaryCard> OnCardSelected { get; set; }
+
+    public enum Elements
+    {
+        SummaryCardOpen,
+        SummaryCardAssignedToMe,
+        SummaryCardOverdue,
+        SummaryCardCompleted
+    }
+
+    private string AverageNote => Summary?.AverageDaysToClose is { } days
+        ? $"Avg. {days.ToString("0.0", CultureInfo.InvariantCulture)} days to close"
+        : "No recent closures";
+
+    private RenderFragment Card(SummaryCard card, Elements testId, string label, int? count, string note,
+        string tone, string icon, string noteTone) =>
+        @<button type="button" class="summary-card @tone" data-testid="@testId"
+                 aria-label="@($"{label}: {CountText(count)}. {note}. Show these work orders")"
+                 @onclick="() => OnCardSelected.InvokeAsync(card)">
+            <span class="summary-card-text">
+                <span class="summary-card-label">@label</span>
+                <span class="summary-card-value">@CountText(count)</span>
+                <span class="summary-card-note @noteTone">@note</span>
+            </span>
+            <span class="summary-card-icon" aria-hidden="true"><i class="bi @icon"></i></span>
+        </button>;
+
+    private static string CountText(int? count) => count?.ToString(CultureInfo.InvariantCulture) ?? "–";
+}

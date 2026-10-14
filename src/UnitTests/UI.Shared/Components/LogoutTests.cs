@@ -8,6 +8,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
@@ -117,7 +118,8 @@ public class LogoutTests
         logoutButton.GetAttribute("type").ShouldBe("button");
         logoutButton.TextContent.ShouldBe("Logout");
         logoutButton.GetAttribute("href").ShouldBeNull();
-        logoutButton.GetAttribute("class")!.ShouldContain("ms-3");
+        logoutButton.GetAttribute("class")!.ShouldContain("user-menu-item");
+        logoutButton.GetAttribute("role").ShouldBe("menuitem");
     }
 
     [Test]
@@ -209,6 +211,66 @@ public class LogoutTests
         spyEventBus.LastNotifiedEvent.ShouldBeOfType<UserLoggedOutEvent>();
         navigationManager.Uri.ShouldEndWith("/login");
         authProvider.IsAuthenticated().ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ShouldRenderInitialsFullNameAndRoles()
+    {
+        await using var ctx = CreateMenuContext();
+
+        var component = ctx.Render<Logout>();
+
+        component.Find(".user-avatar").TextContent.Trim().ShouldBe("TL");
+        component.Find($"[data-testid='{nameof(Logout.Elements.UserFullName)}']").TextContent.Trim().ShouldBe("Timothy Lovejoy Jr");
+        component.Find($"[data-testid='{nameof(Logout.Elements.UserRoles)}']").TextContent.Trim().ShouldBe("Pastor · Requester");
+    }
+
+    [Test]
+    public async Task ShouldToggleAriaExpanded_WhenTriggerClicked()
+    {
+        await using var ctx = CreateMenuContext();
+        var component = ctx.Render<Logout>();
+        var toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
+
+        component.Find(toggleSelector).GetAttribute("aria-expanded").ShouldBe("false");
+        component.Find(toggleSelector).GetAttribute("aria-haspopup").ShouldBe("menu");
+        component.Find("[role='menu']").HasAttribute("hidden").ShouldBeTrue();
+
+        await component.Find(toggleSelector).ClickAsync(new());
+
+        component.Find(toggleSelector).GetAttribute("aria-expanded").ShouldBe("true");
+        component.Find("[role='menu']").HasAttribute("hidden").ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ShouldCloseMenu_WhenEscapePressed()
+    {
+        await using var ctx = CreateMenuContext();
+        var component = ctx.Render<Logout>();
+        var toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
+        await component.Find(toggleSelector).ClickAsync(new());
+
+        await component.Find(".user-menu").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
+
+        component.Find(toggleSelector).GetAttribute("aria-expanded").ShouldBe("false");
+        component.Find("[role='menu']").HasAttribute("hidden").ShouldBeTrue();
+        ctx.JSInterop.VerifyFocusAsyncInvoke();
+    }
+
+    private static BunitContext CreateMenuContext()
+    {
+        var ctx = new BunitContext();
+        var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        authProvider.Login("tlovejoy").GetAwaiter().GetResult();
+        var employee = new Employee("tlovejoy", "Timothy", "Lovejoy Jr", "tlovejoy@example.com");
+        employee.AddRole(new Role("Requester", true, false));
+        employee.AddRole(new Role("Pastor", true, false));
+
+        ctx.Services.AddSingleton(authProvider);
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
+        return ctx;
     }
 
     private static string NormalizeWhitespace(string text) =>

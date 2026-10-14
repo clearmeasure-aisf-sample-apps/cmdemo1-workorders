@@ -67,14 +67,14 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Assert minimum count (base data has ~18 employees) plus "All" option.
         const int minimumBaseEmployees = 18;
         var creatorOptions = creatorSelect.Locator("option");
-        await Expect(creatorOptions.First).ToHaveTextAsync("All");
+        await Expect(creatorOptions.First).ToHaveTextAsync("Anyone");
         // Wait for employee data to finish loading via auto-retrying assertion
         await Expect(creatorOptions.Filter(new(){ HasText = "Timothy Lovejoy"})).ToHaveCountAsync(1);
         var creatorOptionCount = await creatorOptions.CountAsync();
         creatorOptionCount.ShouldBeGreaterThanOrEqualTo(minimumBaseEmployees + 1);
 
         var assigneeOptions = assigneeSelect.Locator("option");
-        await Expect(assigneeOptions.First).ToHaveTextAsync("All");
+        await Expect(assigneeOptions.First).ToHaveTextAsync("Anyone");
         // Wait for employee data to finish loading via auto-retrying assertion
         await Expect(assigneeOptions.Filter(new(){ HasText = "Timothy Lovejoy"})).ToHaveCountAsync(1);
         var assigneeOptionCount = await assigneeOptions.CountAsync();
@@ -83,7 +83,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Verify status options are loaded (5 statuses + "All" option = 6 options)
         var statusOptions = statusSelect.Locator("option");
         await Expect(statusOptions).ToHaveCountAsync(WorkOrderStatus.GetAllItems().Length + 1);
-        await Expect(statusOptions.First).ToHaveTextAsync("All");
+        await Expect(statusOptions.First).ToHaveTextAsync("All statuses");
     }
 
     [Test, Retry(2)]
@@ -148,7 +148,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var workOrderRows = workOrderTable.Locator("tbody tr");
         var rowCount = await workOrderRows.CountAsync();
         rowCount.ShouldBeGreaterThanOrEqualTo(1);
-        await Expect(workOrderRows.First.Locator("td:nth-child(2)")).ToContainTextAsync(creator.GetFullName());
+        await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.ActiveFilterChip}Creator")).ToContainTextAsync(creator.GetFullName());
     }
 
     [Test, Retry(2)]
@@ -183,7 +183,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var workOrderRows = workOrderTable.Locator("tbody tr");
         var rowCount = await workOrderRows.CountAsync();
         rowCount.ShouldBeGreaterThanOrEqualTo(1);
-        await Expect(workOrderRows.First.Locator("td:nth-child(3)")).ToContainTextAsync(assignee.GetFullName());
+        await Expect(FirstRowCell(WorkOrderSearch.Elements.AssigneeCell)).ToContainTextAsync(assignee.GetFullName());
     }
 
     [Test, Retry(2)]
@@ -202,7 +202,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await context.SaveChangesAsync();
 
         // Act
-        await Click(nameof(NavMenu.Elements.AllAssignedWorkOrders));
+        await Click(nameof(NavMenu.Elements.Search));
+        await Page.WaitForURLAsync("**/workorder/search");
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Status={status.Key}");
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "StatusFiltered");
 
@@ -215,7 +217,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         var workOrderRows = workOrderTable.Locator("tbody tr");
         await Expect(workOrderRows).ToHaveCountAsync(await workOrderRows.CountAsync());
-        await Expect(workOrderRows.First.Locator("td:nth-child(4)")).ToContainTextAsync(status.FriendlyName);
+        await Expect(FirstRowCell(WorkOrderSearch.Elements.StatusCell)).ToContainTextAsync(status.FriendlyName);
     }
 
     [Test, Retry(2)]
@@ -244,14 +246,12 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
 
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await assigneeSelect.SelectOptionAsync(assignee.UserName);
         await statusSelect.SelectOptionAsync(status.Key);
         await TakeScreenshotAsync(2, "FiltersSet");
 
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(3, "SearchCompleted");
 
@@ -287,8 +287,8 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable).ToBeVisibleAsync();
 
-        var firstWorkOrderLink = workOrderTable.Locator("tbody tr").First.Locator("td").First.Locator("a");
-        var workOrderNumber = await firstWorkOrderLink.TextContentAsync();
+        var firstWorkOrderLink = workOrderTable.Locator($"tbody tr [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
+        var workOrderNumber = (await firstWorkOrderLink.GetAttributeAsync("data-testid"))?[nameof(WorkOrderSearch.Elements.WorkOrderLink).Length..];
 
         if (!string.IsNullOrEmpty(workOrderNumber))
         {
@@ -319,17 +319,14 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
 
         // First set a filter
         await creatorSelect.SelectOptionAsync(creator.UserName);
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "FilterSet");
 
         // Then clear it by selecting "All"
         await creatorSelect.SelectOptionAsync("");
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(2, "FilterCleared");
 
@@ -365,13 +362,11 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
 
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await assigneeSelect.SelectOptionAsync(assignee.UserName);
         await statusSelect.SelectOptionAsync(status.Key);
 
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "AfterSearch");
 
@@ -506,8 +501,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Filter by creator so only these two work orders are in the result set
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(2, "Filtered");
 
@@ -516,7 +509,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(3, "SortedAscending");
 
         await Expect(statusSortBtn).ToHaveTextAsync("Status ▲");
-        var firstCell = Page.Locator(".grid-data tbody tr").First.Locator("td:nth-child(4)");
+        var firstCell = FirstRowCell(WorkOrderSearch.Elements.StatusCell);
         await Expect(firstCell).ToContainTextAsync(WorkOrderStatus.Assigned.FriendlyName);
 
         await statusSortBtn.ClickAsync();
@@ -549,8 +542,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var titleSortBtn = Page.Locator($"#{WorkOrderSearch.Elements.SortByTitleButton}");
@@ -558,7 +549,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(1, "SortedAscending");
 
         await Expect(titleSortBtn).ToHaveTextAsync("Title ▲");
-        var firstTitleCell = Page.Locator(".grid-data tbody tr").First.Locator("td:nth-child(5)");
+        var firstTitleCell = FirstRowCell(WorkOrderSearch.Elements.TitleCell);
         await Expect(firstTitleCell).ToContainTextAsync("Alpha");
 
         await titleSortBtn.ClickAsync();
@@ -591,8 +582,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var roomSortBtn = Page.Locator($"#{WorkOrderSearch.Elements.SortByRoomButton}");
@@ -600,7 +589,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(1, "SortedAscending");
 
         await Expect(roomSortBtn).ToHaveTextAsync("Room ▲");
-        var firstRoomCell = Page.Locator(".grid-data tbody tr").First.Locator("td:nth-child(7)");
+        var firstRoomCell = FirstRowCell(WorkOrderSearch.Elements.RoomCell);
         await Expect(firstRoomCell).ToContainTextAsync("Atrium");
 
         await roomSortBtn.ClickAsync();
@@ -665,6 +654,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         otherOrder.Creator = otherEmployee;
         otherOrder.Assignee = otherEmployee;
         otherOrder.Title = $"[{TestTag}] other order";
+        // Results are paged newest first (#251): make both orders the newest so the full list shows them on page 1.
+        myOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
+        otherOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
 
         await using var context = TestHost.NewDbContext();
         context.Attach(CurrentUser);
@@ -720,7 +712,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(1, "ToggleChecked");
 
         // Navigate away to a work order detail and back
-        var workOrderLink = Page.Locator(".grid-data tbody tr").First.Locator("td").First.Locator("a");
+        var workOrderLink = Page.Locator($".grid-data tbody tr [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
         await workOrderLink.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(2, "WorkOrderDetail");
@@ -763,8 +755,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Filter by creator so only these two work orders are in the result set
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(2, "Filtered");
 
@@ -773,14 +763,14 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(3, "SortedAscending");
 
         await Expect(dueDateSortBtn).ToHaveTextAsync("Due Date ▲");
-        var firstRow = Page.Locator(".grid-data tbody tr").First;
-        await Expect(firstRow.Locator("td:nth-child(6)")).ToContainTextAsync("Jan");
+        var firstDueDate = FirstRowCell(WorkOrderSearch.Elements.DueDateCell);
+        await Expect(firstDueDate).ToContainTextAsync("Jan");
 
         await dueDateSortBtn.ClickAsync();
         await TakeScreenshotAsync(4, "SortedDescending");
 
         await Expect(dueDateSortBtn).ToHaveTextAsync("Due Date ▼");
-        await Expect(firstRow.Locator("td:nth-child(6)")).ToContainTextAsync("Dec");
+        await Expect(firstDueDate).ToContainTextAsync("Dec");
     }
 
     [Test, Retry(2)]
@@ -811,8 +801,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Filter to this creator so only our two orders appear
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "BothOrders");
 
@@ -823,7 +811,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Toggle "Show overdue only"
         var toggle = Page.Locator($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}");
         await toggle.CheckAsync();
-        await searchButton.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(2, "OverdueOnly");
 
@@ -832,4 +819,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var onlyRow = tableRows.First;
         await Expect(onlyRow).ToHaveClassAsync(new Regex("overdue-row"));
     }
+
+    private ILocator FirstRowCell(WorkOrderSearch.Elements cell) =>
+        Page.Locator(".grid-data tbody tr").First.Locator($"[data-testid^='{cell}']");
 }

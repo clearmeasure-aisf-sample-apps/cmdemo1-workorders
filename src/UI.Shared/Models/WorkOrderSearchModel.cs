@@ -7,12 +7,19 @@ public class WorkOrderSearchModel
     public SearchFilters Filters { get; } = new();
     public WorkOrderSearchResultRow[] Results { get; set; } = [];
 
+    /// <summary>Values bound to the filter controls on the search page.</summary>
     public class SearchFilters
     {
         public string? Creator { get; set; }
         public string? Assignee { get; set; }
         public string? Status { get; set; }
         public bool OverdueOnly { get; set; }
+
+        /// <summary>Selected priority name (Low, Medium, High) or empty for all.</summary>
+        public string? Priority { get; set; }
+
+        /// <summary>Selected building or empty for all.</summary>
+        public string? Building { get; set; }
     }
 }
 
@@ -31,5 +38,22 @@ public class WorkOrderSearchResultRow
     public string DueDateCssClass { get; init; } = string.Empty;
     public string? DueDateUrgencyText { get; init; }
     public DueDateUrgency Urgency { get; init; }
-    public string StatusBadgeCssClass { get; init; } = string.Empty;
+
+    /// <summary>Number shown in the table, for example "WO-38173BA"; the stored number stays unprefixed.</summary>
+    public string DisplayNumber => "WO-" + Number;
+
+    /// <summary>Status pill text and style; "Overdue" for open work orders past their due date.</summary>
+    public StatusPill StatusPill => StatusPillPresenter.Present(WorkOrder, Urgency == DueDateUrgency.Overdue);
+
+    /// <summary>"priority--high", "priority--medium" or "priority--low".</summary>
+    public string PriorityCssClass => "priority--" + WorkOrder.Priority.ToString().ToLowerInvariant();
+
+    /// <summary>Initials of the assignee for the avatar.</summary>
+    public string AssigneeInitials => UserDisplay.Initials(Assignee);
+
+    /// <summary>One of six avatar colours, stable for a given assignee.</summary>
+    public string AvatarCssClass => "avatar--" + AvatarIndex(Assignee?.UserName);
+
+    private static int AvatarIndex(string? userName) =>
+        (userName ?? string.Empty).Aggregate(0, (hash, c) => (hash * 31 + c) % 6);
 }

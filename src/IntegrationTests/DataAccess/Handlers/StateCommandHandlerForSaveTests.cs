@@ -160,4 +160,37 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
         order.Creator.ShouldBe(currentUser);
         order.Assignee.ShouldBe(assignee);
     }
+    [Test]
+    public async Task ShouldRejectSecondInsert_WhenNumberAlreadyExists()
+    {
+        new DatabaseTests().Clean();
+
+        var currentUser = Faker<Employee>();
+        currentUser.Id = Guid.NewGuid();
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(currentUser);
+            await context.SaveChangesAsync();
+        }
+
+        var first = Faker<WorkOrder>();
+        first.Id = Guid.Empty;
+        first.Number = "DUP0001";
+        first.Creator = currentUser;
+        var second = Faker<WorkOrder>();
+        second.Id = Guid.Empty;
+        second.Number = "DUP0001";
+        second.Creator = currentUser;
+
+        await TestHost.GetRequiredService<StateCommandHandler>()
+            .Handle(RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(first, currentUser)));
+        var secondHandler = TestHost.GetRequiredService<StateCommandHandler>();
+        var secondCommand = RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(second, currentUser));
+
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() => secondHandler.Handle(secondCommand));
+
+        exception.Message.ShouldContain("DUP0001");
+        await using var verify = TestHost.GetRequiredService<DbContext>();
+        (await verify.Set<WorkOrder>().CountAsync(w => w.Number == "DUP0001")).ShouldBe(1);
+    }
 }

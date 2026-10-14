@@ -45,4 +45,15 @@ public class WorkOrderManageModel
 
     [StringLength(WorkOrder.RoomNumberMaxLength, ErrorMessage = "Room cannot exceed 900 characters.")]
     public string? RoomNumber { get; set; }
+
+    /// <summary>
+    /// Priority chosen on the form. Defaults to Medium.
+    /// </summary>
+    public WorkOrderPriority Priority { get; set; } = WorkOrderPriority.Medium;
+
+    /// <summary>
+    /// Optional building the work happens in.
+    /// </summary>
+    [StringLength(WorkOrder.BuildingMaxLength, ErrorMessage = "Building cannot exceed 100 characters.")]
+    public string? Building { get; set; }
 }

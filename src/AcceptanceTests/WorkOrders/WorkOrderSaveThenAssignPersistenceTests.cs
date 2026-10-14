@@ -102,7 +102,7 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.AssignedDate)))
             .Not.ToBeEmptyAsync();
 
-        await Click(nameof(Logout.Elements.LogoutLink));
+        await LogoutViaUserMenu();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
 
@@ -133,14 +133,12 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}")
             .SelectOptionAsync(WorkOrderStatus.Assigned.Key);
-        await Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}").ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrderNumber))
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
 
         await Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}")
             .SelectOptionAsync(WorkOrderStatus.Cancelled.Key);
-        await Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}").ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrderNumber))
             .ToHaveCountAsync(0);

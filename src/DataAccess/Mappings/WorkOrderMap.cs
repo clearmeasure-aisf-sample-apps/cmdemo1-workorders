@@ -18,11 +18,14 @@ public class WorkOrderMap : IEntityFrameworkMapping
                 .HasDefaultValue(Guid.Empty);
 
             entity.Property(e => e.Number).IsRequired().HasMaxLength(7);
+            entity.HasIndex(e => e.Number).IsUnique().HasDatabaseName("IX_WorkOrder_Number");
             entity.Property(e => e.Title).IsRequired().HasMaxLength(300);
             entity.Property(e => e.Description).HasMaxLength(4000);
             entity.Property(e => e.Instructions).HasMaxLength(WorkOrder.InstructionsMaxLength);
             entity.Property(e => e.RoomNumber).HasMaxLength(WorkOrder.RoomNumberMaxLength);
             entity.Property(e => e.DueDate).HasColumnType("date");
+            entity.Property(e => e.Priority).HasConversion<byte>().IsRequired();
+            entity.Property(e => e.Building).HasMaxLength(WorkOrder.BuildingMaxLength);
 
             // Configure relationships
             entity.HasOne(e => e.Creator)

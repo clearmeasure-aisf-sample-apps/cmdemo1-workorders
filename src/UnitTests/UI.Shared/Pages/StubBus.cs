@@ -9,6 +9,13 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 {
     public int SendCallCount { get; private set; }
 
+    public WorkOrderSearchSummary Summary { get; set; } = new();
+
+    public int SummaryRequestCount { get; private set; }
+
+
+    public WorkOrderSpecificationQuery? LastSpecification { get; private set; }
+
     public override Task Publish(INotification notification)
     {
         return Task.CompletedTask;
@@ -27,8 +34,9 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return (Task<TResponse>)EmployeeByUserNameQueryResponse<TResponse>();
         }
 
-        if (request is WorkOrderSpecificationQuery)
+        if (request is WorkOrderSpecificationQuery specification)
         {
+            LastSpecification = specification;
             return Task.FromResult<TResponse>((TResponse)(object)(workOrderResults ?? WorkOrderSpecificationQueryResponse()));
         }
 
@@ -54,6 +62,17 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
         {
             var counts = WorkOrderStatus.GetAllItems().ToDictionary(s => s.Key, _ => 0);
             return Task.FromResult<TResponse>((TResponse)(object)counts);
+        }
+
+        if (request is WorkOrderSearchSummaryQuery)
+        {
+            SummaryRequestCount++;
+            return Task.FromResult<TResponse>((TResponse)(object)Summary);
+        }
+
+        if (request is WorkOrderBuildingsQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)new[] { "Kitchen", "Sanctuary" });
         }
 
         throw new NotImplementedException();

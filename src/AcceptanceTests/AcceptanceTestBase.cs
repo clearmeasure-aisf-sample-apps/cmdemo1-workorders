@@ -242,7 +242,33 @@ public abstract class AcceptanceTestBase
         // Assert: Should be redirected to home and see welcome message
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
-        await welcomeTextLocator.DblClickAsync(); // causes the browser to finish DOM loading - HACK
+        // HACK: a double click finishes DOM loading. WelcomeText is visually hidden inside the user menu
+        // trigger (#251), so the trigger takes the clicks: the first opens the menu, the second closes it.
+        await Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle)).DblClickAsync();
+    }
+
+    /// <summary>
+    /// Opens the user menu in the top bar (#251: Logout lives inside it) and waits for the Logout item.
+    /// </summary>
+    protected async Task OpenUserMenu()
+    {
+        var toggle = Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle));
+        await Expect(toggle).ToBeVisibleAsync();
+        if (await toggle.GetAttributeAsync("aria-expanded") != "true")
+        {
+            await Click(nameof(Logout.Elements.UserMenuToggle));
+        }
+
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.LogoutLink))).ToBeVisibleAsync();
+    }
+
+    /// <summary>
+    /// Signs out through the user menu: opens it, then clicks Logout.
+    /// </summary>
+    protected async Task LogoutViaUserMenu()
+    {
+        await OpenUserMenu();
+        await Click(nameof(Logout.Elements.LogoutLink));
     }
 
     /// <summary>
@@ -403,11 +429,7 @@ public abstract class AcceptanceTestBase
 
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var linkTestId = nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number;
-        await Page.GetByTestId(linkTestId).WaitForAsync(new LocatorWaitForOptions
-        {
-            State = WaitForSelectorState.Visible,
-            Timeout = 60_000
-        });
+        await WaitForWorkOrderLinkAsync(order.Number!, linkTestId);
         await Click(linkTestId);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
@@ -415,6 +437,25 @@ public abstract class AcceptanceTestBase
         await Expect(woNumberLocator).ToHaveTextAsync(order.Number!);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         return order;
+    }
+
+    /// <summary>
+    /// Waits for the work order's link on the search page. Results are paged (25 newest first, #251):
+    /// when parallel tests have pushed the row off page 1, search for its number instead.
+    /// </summary>
+    private async Task WaitForWorkOrderLinkAsync(string number, string linkTestId)
+    {
+        var link = Page.GetByTestId(linkTestId);
+        try
+        {
+            await link.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 20_000 });
+        }
+        catch (TimeoutException)
+        {
+            await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={Uri.EscapeDataString(number)}");
+            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await link.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60_000 });
+        }
     }
 
     protected async Task<WorkOrder> AssignExistingWorkOrder(WorkOrder order, string username)

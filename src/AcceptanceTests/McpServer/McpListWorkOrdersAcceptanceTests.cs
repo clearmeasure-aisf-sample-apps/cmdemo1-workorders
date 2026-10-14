@@ -106,6 +106,9 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         (await context.Set<Employee>().AnyAsync(employee => employee.UserName == "not-a-person"))
             .ShouldBeFalse();
 
+        // The unfiltered result is paged (#251); search for the number so its row is on the page.
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={seededNumbers.LovejoyDraft}");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(WorkOrderSearch.Elements.WorkOrderLink) + seededNumbers.LovejoyDraft);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber)))
             .ToHaveTextAsync(seededNumbers.LovejoyDraft);
@@ -203,21 +206,16 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
-        var searchButton = Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}");
         var filterArguments = BuildListWorkOrdersArguments(creatorUsername, assigneeUsername, status);
 
         await creatorSelect.SelectOptionAsync(creatorUsername ?? string.Empty);
         await assigneeSelect.SelectOptionAsync(assigneeUsername ?? string.Empty);
         await statusSelect.SelectOptionAsync(status ?? string.Empty);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await searchButton.ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        foreach (var number in requiredNumbers)
-        {
-            await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + number))
-                .ToBeVisibleAsync();
-        }
+        // Results are paged (25 per page, #251): VisibleSearchNumbers walks every page, so required
+        // numbers are checked against the whole filtered result rather than the first page.
+        await Expect(creatorSelect).ToHaveValueAsync(creatorUsername ?? string.Empty);
 
         // Re-query MCP after the portal settles so parity is not based on a stale pre-search
         // snapshot while Parallelizable siblings mutate the shared database.
@@ -230,8 +228,10 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
                 return;
             }
 
-            await searchButton.ClickAsync();
+            // Filters apply on change and live in the URL, so a reload re-runs the same search.
+            await Page.ReloadAsync();
             await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await Expect(creatorSelect).ToHaveValueAsync(creatorUsername ?? string.Empty);
             mcpNumbers = await CallListWorkOrders(filterArguments);
             portalNumbers = await VisibleSearchNumbers();
         }
@@ -244,12 +244,49 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
     private static string FormatSet(IEnumerable<string> numbers) =>
         string.Join(", ", numbers.OrderBy(number => number));
 
+    /// <summary>
+    /// Every work order number in the portal's filtered result, across all pages (25 rows each),
+    /// read from the link test ids (the link text carries a "WO-" display prefix). Ends on page 1.
+    /// </summary>
     private async Task<HashSet<string>> VisibleSearchNumbers()
     {
-        var workOrderLinks = Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']");
-        return (await workOrderLinks.AllTextContentsAsync())
-            .Select(number => number.Trim())
-            .ToHashSet();
+        var numbers = new HashSet<string>();
+        var next = Page.GetByTestId(nameof(WorkOrderSearch.Elements.PageNextButton));
+        numbers.UnionWith(await NumbersOnCurrentPage());
+        while (await next.IsEnabledAsync())
+        {
+            var firstLink = await FirstLinkTestId();
+            await next.ClickAsync();
+            await Expect(Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First)
+                .Not.ToHaveAttributeAsync("data-testid", firstLink!);
+            numbers.UnionWith(await NumbersOnCurrentPage());
+        }
+
+        var firstPage = Page.GetByTestId($"{WorkOrderSearch.Elements.PageButton}1");
+        if (await firstPage.GetAttributeAsync("aria-current") != "page")
+        {
+            await firstPage.ClickAsync();
+            await Expect(firstPage).ToHaveAttributeAsync("aria-current", "page");
+        }
+
+        return numbers;
+    }
+
+    private async Task<string?> FirstLinkTestId() =>
+        await Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First.GetAttributeAsync("data-testid");
+
+    private async Task<IEnumerable<string>> NumbersOnCurrentPage()
+    {
+        var links = Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']");
+        var prefixLength = nameof(WorkOrderSearch.Elements.WorkOrderLink).Length;
+        var numbers = new List<string>();
+        for (var index = 0; index < await links.CountAsync(); index++)
+        {
+            var testId = await links.Nth(index).GetAttributeAsync("data-testid");
+            numbers.Add(testId![prefixLength..]);
+        }
+
+        return numbers;
     }
 
     private async Task LoginAsTlovejoyAsync()
@@ -261,7 +298,7 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
             .ToHaveTextAsync("Welcome tlovejoy!");
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Expect(Page.Locator($"#{WorkOrderSearch.Elements.SearchButton}")).ToBeVisibleAsync();
+        await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}")).ToBeVisibleAsync();
     }
 
     private sealed record ParityWorkOrderNumbers(

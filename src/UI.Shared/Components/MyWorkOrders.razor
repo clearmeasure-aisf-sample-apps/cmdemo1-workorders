@@ -1,12 +1,11 @@
-﻿@implements Palermo.BlazorMvc.IListener<WorkOrderChangedEvent>
+@implements Palermo.BlazorMvc.IListener<WorkOrderChangedEvent>
 @using ClearMeasure.Bootcamp.Core.Queries
 @using ClearMeasure.Bootcamp.UI.Shared.Pages
 @inherits AppComponentBase
 @inject IUserSession UserSession
 
-<span data-testid="@Elements.MyWorkOrdersTooltip" title="Work orders assigned to you">
-    My Work Orders (@Count)
-</span>
+<span data-testid="@Elements.MyWorkOrdersTooltip" class="nav-text" title="Work orders you created">Created by Me</span>
+<span class="nav-badge">@Count<span class="visually-hidden"> work orders</span></span>
 
 @code {
     private Employee? _currentUser;

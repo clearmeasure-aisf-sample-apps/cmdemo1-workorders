@@ -1,0 +1,86 @@
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+@inject IJSRuntime Js
+
+<div class="global-search" role="search">
+    <label for="@InputId" class="visually-hidden">Search work orders</label>
+    <i class="bi bi-search global-search-icon" aria-hidden="true"></i>
+    <input id="@InputId"
+           data-testid="@Elements.GlobalSearchInput"
+           type="search"
+           class="global-search-input"
+           placeholder="Search work orders, rooms, people…"
+           maxlength="200"
+           aria-keyshortcuts="Control+K"
+           @bind="_text"
+           @bind:event="oninput"
+           @onkeydown="HandleKeyDown" />
+    <kbd class="global-search-hint" aria-hidden="true">Ctrl K</kbd>
+</div>
+
+@code {
+    /// <summary>DOM id of the search input; the Ctrl+K listener focuses it.</summary>
+    public const string InputId = "GlobalSearchInput";
+
+    private string? _text;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _shortcut;
+
+    public enum Elements
+    {
+        GlobalSearchInput
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter")
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(WorkOrderSearchUrl(_text));
+    }
+
+    /// <summary>Search page URL for free text; the bare search page when the text is blank.</summary>
+    public static string WorkOrderSearchUrl(string? text) =>
+        string.IsNullOrWhiteSpace(text) ? "workorder/search" : $"workorder/search?Q={Uri.EscapeDataString(text.Trim())}";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            _module = await Js.InvokeAsync<IJSObjectReference>("import",
+                "./_content/ClearMeasure.Bootcamp.UI.Shared/js/mainLayoutNav.js");
+            _shortcut = await _module.InvokeAsync<IJSObjectReference>("initGlobalSearchShortcut", InputId);
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_shortcut is not null)
+            {
+                await _shortcut.InvokeVoidAsync("dispose");
+                await _shortcut.DisposeAsync();
+            }
+
+            if (_module is not null)
+            {
+                await _module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+}

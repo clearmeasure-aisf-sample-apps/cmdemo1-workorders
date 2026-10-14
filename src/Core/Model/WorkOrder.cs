@@ -21,6 +21,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public const int InstructionsMaxLength = 4000;
 
+    /// <summary>
+    /// Maximum length of <see cref="Building"/> accepted by persistence and the work-order form.
+    /// </summary>
+    public const int BuildingMaxLength = 100;
+
     public string? Title { get; set; } = "";
 
     public string? Description
@@ -58,6 +63,16 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// Optional calendar due date (date-only, no time). Null when unset.
     /// </summary>
     public DateOnly? DueDate { get; set; }
+
+    /// <summary>
+    /// How urgently the work order should be handled. Defaults to <see cref="WorkOrderPriority.Medium"/>.
+    /// </summary>
+    public WorkOrderPriority Priority { get; set; } = WorkOrderPriority.Medium;
+
+    /// <summary>
+    /// Optional name of the building the work happens in (for example "Sanctuary"). Null when unset.
+    /// </summary>
+    public string? Building { get; set; }
 
     private string GetTruncatedString(string? value)
     {

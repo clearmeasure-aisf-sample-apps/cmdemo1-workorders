@@ -21,6 +21,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private WorkOrderAttachment[] _attachments = [];
     private string _preferredLanguage = "en-US";
     private DictationTarget _dictationTarget = DictationTarget.None;
+    private bool _isSubmitting;
     [Inject] public IWorkOrderBuilder? WorkOrderBuilder { get; set; }
     [Inject] public IUserSession? UserSession { get; set; }
     [Inject] private NavigationManager? NavigationManager { get; set; }
@@ -165,6 +166,8 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             AssignedDate = workOrder.AssignedDate?.ToString("G", CultureInfo.CurrentCulture),
             CompletedDate = workOrder.CompletedDate?.ToString("G", CultureInfo.CurrentCulture),
             DueDateInput = workOrder.DueDate,
+            Priority = workOrder.Priority,
+            Building = workOrder.Building,
             DueDateDisplay = FormatDueDateDisplay(workOrder.DueDate)
         };
     }
@@ -181,6 +184,24 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     }
 
     private async Task HandleSubmit()
+    {
+        if (_isSubmitting)
+        {
+            return;
+        }
+
+        try
+        {
+            _isSubmitting = true;
+            await SubmitAsync();
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SubmitAsync()
     {
         var currentUser = (await UserSession!.GetCurrentUserAsync())!;
         WorkOrder workOrder;
@@ -207,6 +228,8 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         workOrder.Instructions = Model.Instructions;
         workOrder.RoomNumber = Model.RoomNumber;
         workOrder.DueDate = Model.DueDateInput;
+        workOrder.Priority = Model.Priority;
+        workOrder.Building = string.IsNullOrWhiteSpace(Model.Building) ? null : Model.Building.Trim();
 
         var matchingCommand = new StateCommandList()
             .GetMatchingCommand(workOrder, currentUser, SelectedCommand!);
