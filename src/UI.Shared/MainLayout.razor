@@ -86,10 +86,16 @@
                     <button type="button"
                             class="icon-button"
                             data-testid="@nameof(Elements.NotificationsButton)"
-                            aria-disabled="true"
-                            title="No notifications"
-                            aria-label="Notifications (none)">
+                            @ref="_bellButtonRef"
+                            @onclick="OpenNotificationsPanelAsync"
+                            title="Notifications"
+                            aria-label="Notifications"
+                            aria-expanded="@(_notificationsPanelOpen ? "true" : "false")">
                         <i class="bi bi-bell" aria-hidden="true"></i>
+                        @if (BadgeCount > 0)
+                        {
+                            <span class="badge-count" data-testid="@nameof(Elements.NotificationsBadge)">@BadgeCount</span>
+                        }
                     </button>
                     <AuthorizeView>
                         <Authorized>
@@ -106,6 +112,15 @@
                 </div>
             </div>
         </header>
+
+        <AuthorizeView>
+            <Authorized>
+                <NotificationsPanel IsOpen="@_notificationsPanelOpen"
+                                   Data="@_notificationsPanelData"
+                                   BellButtonRef="_bellButtonRef"
+                                   OnClose="CloseNotificationsPanelAsync"/>
+            </Authorized>
+        </AuthorizeView>
 
         <main class="modern-main">
             <div class="content-wrapper">

@@ -1,7 +1,12 @@
 using System.Reflection;
+using System.Security.Claims;
 using System.Text.Json;
+using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
@@ -25,7 +30,8 @@ public partial class MainLayout : IAsyncDisposable
         EnvironmentName,
         BrandSubtitle,
         HelpLink,
-        NotificationsButton
+        NotificationsButton,
+        NotificationsBadge
     }
 
     /// <summary>
@@ -48,7 +54,17 @@ public partial class MainLayout : IAsyncDisposable
     [Inject]
     private HttpClient Http { get; set; } = null!;
 
+    [Inject]
+    private new IBus Bus { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
     private ElementReference _navToggleButtonRef;
+    private ElementReference _bellButtonRef;
     private DotNetObjectReference<MainLayout>? _dotNetRef;
     private IJSObjectReference? _jsModule;
     private IJSObjectReference? _navToggleHelper;
@@ -57,6 +73,8 @@ public partial class MainLayout : IAsyncDisposable
     private bool _navVisible = true;
     private string _gitSha = "unknown";
     private string _environmentName = "unknown";
+    private bool _notificationsPanelOpen;
+    private NotificationsPanel? _notificationsPanelData;
 
     private string AppContainerClass => NavRailCss.AppContainerClass(_isNarrowViewport, _navVisible);
 
@@ -68,6 +86,8 @@ public partial class MainLayout : IAsyncDisposable
     private string NavToggleAriaExpanded => _navVisible ? "true" : "false";
 
     private string DarkModeToggleTitle => Theme.IsDarkMode ? "Switch to light mode" : "Switch to dark mode";
+
+    private int BadgeCount => _notificationsPanelData?.OverdueAndDueToday.Length ?? 0;
 
     [JSInvokable]
     public Task OnViewportChanged(bool isNarrow)
@@ -86,6 +106,9 @@ public partial class MainLayout : IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        Navigation.LocationChanged += OnLocationChanged;
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
         try
         {
             var response = await Http.GetAsync("/api/status/environment");
@@ -102,6 +125,8 @@ public partial class MainLayout : IAsyncDisposable
         {
             // graceful fallback — malformed response, fields remain "unknown"
         }
+
+        await LoadNotificationsAsync();
     }
 
     /// <summary>
@@ -172,9 +197,73 @@ public partial class MainLayout : IAsyncDisposable
         }
     }
 
+    private async Task OpenNotificationsPanelAsync()
+    {
+        if (await LoadNotificationsAsync())
+        {
+            _notificationsPanelOpen = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    /// <summary>
+    /// Loads the notifications for the signed-in user so the bell badge is correct on page load.
+    /// Returns false when there is no signed-in user or the query fails.
+    /// </summary>
+    private async Task<bool> LoadNotificationsAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var currentUserName = ResolveUserName(authState.User);
+            if (string.IsNullOrWhiteSpace(currentUserName))
+            {
+                _notificationsPanelData = null;
+                return false;
+            }
+
+            _notificationsPanelData = await Bus.Send(new NotificationsPanelQuery(currentUserName));
+            return true;
+        }
+        catch (Exception)
+        {
+            // Silently fail - badge stays hidden and panel won't open
+            return false;
+        }
+    }
+
+    private static string? ResolveUserName(ClaimsPrincipal user) =>
+        (user.FindFirst("preferred_username") ?? user.FindFirst("name"))?.Value ?? user.Identity?.Name;
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        InvokeAsync(CloseAndRefreshNotificationsAsync);
+
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> task) =>
+        InvokeAsync(RefreshNotificationsAsync);
+
+    private async Task CloseAndRefreshNotificationsAsync()
+    {
+        await CloseNotificationsPanelAsync();
+        await RefreshNotificationsAsync();
+    }
+
+    private async Task RefreshNotificationsAsync()
+    {
+        await LoadNotificationsAsync();
+        StateHasChanged();
+    }
+
+    private async Task CloseNotificationsPanelAsync()
+    {
+        _notificationsPanelOpen = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
     public async ValueTask DisposeAsync()
     {
         Theme.OnChange -= OnThemeChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
 
         if (_navToggleHelper is not null)
         {
