@@ -680,9 +680,9 @@ public class MainLayoutTests
         await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
         var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
 
-        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
 
-        layout.WaitForAssertion(() => layout.Find(".notifications-panel").ShouldNotBeNull());
+        await layout.WaitForAssertionAsync(() => layout.Find(".notifications-panel").ShouldNotBeNull());
         bus.LastUserName.ShouldBe("hsimpson");
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("1");
     }
@@ -694,7 +694,7 @@ public class MainLayoutTests
         await using var ctx = CreateContext(bus: bus);
         var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
 
-        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
 
         layout.FindAll(".notifications-panel").Count.ShouldBe(0);
         bus.LastUserName.ShouldBeNull();
@@ -707,7 +707,7 @@ public class MainLayoutTests
         await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
         var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
 
-        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
 
         layout.FindAll(".notifications-panel").Count.ShouldBe(0);
     }
@@ -718,14 +718,14 @@ public class MainLayoutTests
         var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []));
         await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
         var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
-        layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").Click();
-        var panel = layout.WaitForElement(".notifications-panel");
+        await layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']").ClickAsync(new());
+        var panel = await layout.WaitForElementAsync(".notifications-panel");
         panel.ShouldNotBeNull();
 
         var panelComponent = layout.FindComponent<NotificationsPanel>();
         await layout.InvokeAsync(() => panelComponent.Instance.HandleEscapeKey());
 
-        layout.WaitForAssertion(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
+        await layout.WaitForAssertionAsync(() => layout.FindAll(".notifications-panel").Count.ShouldBe(0));
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']")
             .GetAttribute("aria-expanded").ShouldBe("false");
     }

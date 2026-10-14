@@ -94,6 +94,8 @@ public class NotificationsPanelTests : AcceptanceTestBase
 
         // Seed work orders via database context (no special commands needed for acceptance test setup)
         var context = TestHost.GetRequiredService<Microsoft.EntityFrameworkCore.DbContext>();
+        // CurrentUser already exists in the database; attach it so adding work orders does not re-insert it.
+        context.Attach(CurrentUser);
         context.Add(otherUser);
         context.Add(overdueAssigned);
         context.Add(overdueInProgress);

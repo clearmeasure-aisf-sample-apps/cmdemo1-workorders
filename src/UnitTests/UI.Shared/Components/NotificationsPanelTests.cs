@@ -285,7 +285,7 @@ public class NotificationsPanelTests
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
-        component.WaitForAssertion(() => ctx.JSInterop.Invocations.Any(i => i.Identifier == "setupEscapeHandler").ShouldBeTrue());
+        await component.WaitForAssertionAsync(() => ctx.JSInterop.Invocations.Any(i => i.Identifier == "setupEscapeHandler").ShouldBeTrue());
 
         await ctx.DisposeAsync();
 
