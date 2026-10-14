@@ -278,6 +278,10 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private void HandlePageSelected(int page) => CommitView(_state with { Page = page });
 
+    /// <summary>Header button text: the label, plus " ▲" or " ▼" on the sorted column.</summary>
+    private string SortLabel(string column, string label) =>
+        _state.Sort != column ? label : $"{label} {(_state.Descending ? "▼" : "▲")}";
+
     private string AriaSort(string column) =>
         _state.Sort != column ? "none" : _state.Descending ? "descending" : "ascending";
 

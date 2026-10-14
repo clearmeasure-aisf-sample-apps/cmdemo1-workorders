@@ -371,7 +371,7 @@
     private RenderFragment SortHeader(string column, Elements testId, string label, string cssClass) =>
         @<th class="@cssClass" scope="col" aria-sort="@AriaSort(column)">
             <button id="@testId" type="button" class="@(_state.Sort == column ? "sort-btn sort-active" : "sort-btn")" @onclick="() => HandleSortBy(column)">
-                @label @if (_state.Sort == column) { <span>@(_state.Descending ? "▼" : "▲")</span> }
+                @SortLabel(column, label)
             </button>
         </th>;
     public List<SelectListItem> UserOptions { get; set; } = new();

@@ -654,6 +654,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         otherOrder.Creator = otherEmployee;
         otherOrder.Assignee = otherEmployee;
         otherOrder.Title = $"[{TestTag}] other order";
+        // Results are paged newest first (#251): make both orders the newest so the full list shows them on page 1.
+        myOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
+        otherOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
 
         await using var context = TestHost.NewDbContext();
         context.Attach(CurrentUser);

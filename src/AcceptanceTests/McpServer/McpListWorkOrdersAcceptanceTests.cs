@@ -210,11 +210,9 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         await statusSelect.SelectOptionAsync(status ?? string.Empty);
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        foreach (var number in requiredNumbers)
-        {
-            await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + number))
-                .ToBeVisibleAsync();
-        }
+        // Results are paged (25 per page, #251): VisibleSearchNumbers walks every page, so required
+        // numbers are checked against the whole filtered result rather than the first page.
+        await Expect(creatorSelect).ToHaveValueAsync(creatorUsername ?? string.Empty);
 
         // Re-query MCP after the portal settles so parity is not based on a stale pre-search
         // snapshot while Parallelizable siblings mutate the shared database.
