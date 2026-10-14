@@ -1,4 +1,3 @@
-@using ClearMeasure.Bootcamp.Core.Model
 @namespace ClearMeasure.Bootcamp.UI.Shared.Components
 @inherits Microsoft.AspNetCore.Components.ComponentBase
 
@@ -10,7 +9,7 @@
 
         <section class="notifications-section" aria-labelledby="section-overdue">
             <h3 id="section-overdue" class="section-title">Overdue & Due Today</h3>
-            @if (Data?.OverdueAndDueToday?.Length > 0)
+            @if (Data?.OverdueAndDueToday.Length > 0)
             {
                 <div class="cards-container">
                     @foreach (var order in Data.OverdueAndDueToday)
@@ -41,7 +40,7 @@
 
         <section class="notifications-section" aria-labelledby="section-new">
             <h3 id="section-new" class="section-title">Newly Assigned (Last 7 Days)</h3>
-            @if (Data?.NewlyAssignedLast7Days?.Length > 0)
+            @if (Data?.NewlyAssignedLast7Days.Length > 0)
             {
                 <div class="cards-container">
                     @foreach (var order in Data.NewlyAssignedLast7Days)
@@ -70,7 +69,7 @@
 
         <section class="notifications-section" aria-labelledby="section-changed">
             <h3 id="section-changed" class="section-title">Status Changed (Last 7 Days)</h3>
-            @if (Data?.CreatedByMeStatusChangedLast7Days?.Length > 0)
+            @if (Data?.CreatedByMeStatusChangedLast7Days.Length > 0)
             {
                 <div class="cards-container">
                     @foreach (var order in Data.CreatedByMeStatusChangedLast7Days)

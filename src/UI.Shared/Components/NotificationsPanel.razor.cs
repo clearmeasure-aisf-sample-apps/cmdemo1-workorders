@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 

@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 [TestFixture]
 public class NotificationsPanelTests
 {
-    private static void SetupJSInterop(BunitContext ctx)
+    private static void SetupJsInterop(BunitContext ctx)
     {
         var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/notificationsPanel.js");
         module.SetupVoid("setupEscapeHandler", _ => true);
@@ -32,7 +32,7 @@ public class NotificationsPanelTests
     public void ShouldRenderPanel_WhenIsOpenIsTrue()
     {
         using var ctx = new BunitContext();
-        SetupJSInterop(ctx);
+        SetupJsInterop(ctx);
 
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
@@ -45,7 +45,7 @@ public class NotificationsPanelTests
     public void ShouldRenderAllThreeSections_WhenOpen()
     {
         using var ctx = new BunitContext();
-        SetupJSInterop(ctx);
+        SetupJsInterop(ctx);
 
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
@@ -60,7 +60,7 @@ public class NotificationsPanelTests
     public void ShouldRenderEmptyMessage_WhenOverdueAndDueTodayIsEmpty()
     {
         using var ctx = new BunitContext();
-        SetupJSInterop(ctx);
+        SetupJsInterop(ctx);
 
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
@@ -73,7 +73,7 @@ public class NotificationsPanelTests
     public void ShouldRenderWorkOrderCards_WhenOverdueAndDueTodayHasItems()
     {
         using var ctx = new BunitContext();
-        SetupJSInterop(ctx);
+        SetupJsInterop(ctx);
 
         var creator = new Employee("test_user", "Test", "User", "test@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -89,7 +89,7 @@ public class NotificationsPanelTests
         };
 
         var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
-            new[] { workOrder },
+            [workOrder],
             [],
             []);
 
@@ -106,7 +106,7 @@ public class NotificationsPanelTests
     public void ShouldRenderWorkOrderAsLink_ToManageRoute()
     {
         using var ctx = new BunitContext();
-        SetupJSInterop(ctx);
+        SetupJsInterop(ctx);
 
         var creator = new Employee("test_user", "Test", "User", "test@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -122,7 +122,7 @@ public class NotificationsPanelTests
         };
 
         var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
-            new[] { workOrder },
+            [workOrder],
             [],
             []);
 
@@ -138,7 +138,7 @@ public class NotificationsPanelTests
     public void ShouldRenderNewlyAssignedWorkOrders()
     {
         using var ctx = new BunitContext();
-        SetupJSInterop(ctx);
+        SetupJsInterop(ctx);
 
         var creator = new Employee("test_user", "Test", "User", "test@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -155,7 +155,7 @@ public class NotificationsPanelTests
 
         var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
             [],
-            new[] { workOrder },
+            [workOrder],
             []);
 
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
@@ -170,7 +170,7 @@ public class NotificationsPanelTests
     public void ShouldRenderCreatedByMeStatusChangedWorkOrders()
     {
         using var ctx = new BunitContext();
-        SetupJSInterop(ctx);
+        SetupJsInterop(ctx);
 
         var creator = new Employee("creator_user", "Creator", "User", "creator@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -188,7 +188,7 @@ public class NotificationsPanelTests
         var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
             [],
             [],
-            new[] { workOrder });
+            [workOrder]);
 
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)

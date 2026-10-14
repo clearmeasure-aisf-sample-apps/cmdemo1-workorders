@@ -84,7 +84,7 @@ public partial class MainLayout : IAsyncDisposable
 
     private string DarkModeToggleTitle => Theme.IsDarkMode ? "Switch to light mode" : "Switch to dark mode";
 
-    private int BadgeCount => _notificationsPanelData?.OverdueAndDueToday?.Length ?? 0;
+    private int BadgeCount => _notificationsPanelData?.OverdueAndDueToday.Length ?? 0;
 
     [JSInvokable]
     public Task OnViewportChanged(bool isNarrow)
