@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,6 +71,39 @@ public class WorkOrderPrintTests
                      WorkOrderPrint.Elements.Assignee, WorkOrderPrint.Elements.Description,
                      WorkOrderPrint.Elements.Instructions, WorkOrderPrint.Elements.AttachmentsNone })
             c.Find(Id(e)).TextContent.ShouldBe("None");
+    }
+
+    [Test]
+    public async Task ShouldShowDueDateWithUrgencyText()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var today = ChurchTimeZone.Today(TimeProvider.System);
+        var wo = new WorkOrder { Number = "WO-3", Title = "Late", Status = WorkOrderStatus.Assigned, DueDate = today.AddDays(-1) };
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-3"));
+
+        c.Find(Id(WorkOrderPrint.Elements.DueDate)).TextContent
+            .ShouldBe($"{today.AddDays(-1):yyyy-MM-dd} (Overdue)");
+    }
+
+    [Test]
+    public async Task ShouldShowDueDateWithoutUrgencyText()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        var due = ChurchTimeZone.Today(TimeProvider.System).AddDays(10);
+        var wo = new WorkOrder { Number = "WO-4", Title = "Later", Status = WorkOrderStatus.Assigned, DueDate = due };
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-4"));
+
+        c.Find(Id(WorkOrderPrint.Elements.DueDate)).TextContent.ShouldBe(due.ToString("yyyy-MM-dd"));
     }
 
     [Test]

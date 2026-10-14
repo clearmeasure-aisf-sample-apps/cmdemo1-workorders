@@ -1,7 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
-using ClearMeasure.Bootcamp.Core.Services.Impl;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -25,7 +24,7 @@ public partial class WorkOrderPrint : AppComponentBase
             : await Bus.Send(new WorkOrderByNumberQuery(Number));
         _attachments = _workOrder == null
             ? []
-            : await Bus.Send(new WorkOrderAttachmentsQuery(_workOrder.Id)) ?? [];
+            : await Bus.Send(new WorkOrderAttachmentsQuery(_workOrder.Id));
         _loaded = true;
     }
 
