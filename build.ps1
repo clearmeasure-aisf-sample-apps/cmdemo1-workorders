@@ -360,6 +360,11 @@ Function PackageScript {
 }
 
 Function AcceptanceTests {
+	param (
+		[Parameter(Mandatory = $false)]
+		[string]$TestFilter = ""
+	)
+
 	$projectConfig = "Release"
 	Push-Location -Path $acceptanceTestProjectPath
 
@@ -382,16 +387,65 @@ Function AcceptanceTests {
 
 	$runSettingsPath = Join-Path $acceptanceTestProjectPath "AcceptanceTests.runsettings"
 	try {
+		$dotnetArgs = @(
+			"test",
+			"/p:CopyLocalLockFileAssemblies=true",
+			"-nologo",
+			"-v", "minimal",
+			"--logger:trx",
+			"--results-directory", $(Join-Path $test_dir "AcceptanceTests"),
+			"--no-build",
+			"--no-restore",
+			"--configuration", $projectConfig,
+			"--settings:$runSettingsPath",
+			"--collect:XPlat Code Coverage"
+		)
+
+		if (-not [string]::IsNullOrEmpty($TestFilter)) {
+			$dotnetArgs += @("--filter", $TestFilter)
+		}
+
 		exec {
-		& dotnet test /p:CopyLocalLockFileAssemblies=true -nologo -v minimal --logger:trx `
-				--results-directory $(Join-Path $test_dir "AcceptanceTests") --no-build `
-				--no-restore --configuration $projectConfig `
-				--settings:$runSettingsPath `
-				--collect:"XPlat Code Coverage"
+			& dotnet @dotnetArgs
 		}
 	}
 	finally {
 		Pop-Location
+	}
+}
+
+Function Get-ShardTestFilter {
+	param (
+		[Parameter(Mandatory = $true)]
+		[ValidateRange(0, 3)]
+		[int]$ShardNumber,
+		[Parameter(Mandatory = $false)]
+		[int]$ShardCount = 3
+	)
+
+	if ($ShardNumber -eq 0) {
+		# Shard 0 means all tests (no filter)
+		return ""
+	}
+
+	# REBALANCED SHARDING (measured counts from 169 total tests):
+	# Shard 1: App (39) + AIAgents (4) + Extensions (5) + NServiceBus (1) + Api (8) + WorkOrderDueDateTests (6) = 63 tests
+	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests"
+
+	# Shard 2: Authentication (25) + McpServer (26) + WorkOrders.WorkOrderDictationTests (5) + WorkOrderSaveDraftTests (6) = 62 tests
+	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests"
+
+	# Shard 3: EXPLICIT EXCLUSION CHAIN - Remaining WorkOrders classes (44 tests)
+	# Excludes all namespaces/classes in Shards 1 and 2
+	$shard3Filter = "FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Api.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests"
+
+	switch ($ShardNumber) {
+		1 { return $shard1Filter }
+		2 { return $shard2Filter }
+		3 { return $shard3Filter }
+		default {
+			throw "Invalid shard number: $ShardNumber"
+		}
 	}
 }
 
@@ -403,7 +457,14 @@ Function Invoke-AcceptanceTests {
 		[string]$databaseName ="",
 
 		[Parameter(Mandatory = $false)]
-		[switch]$UseSqlite
+		[switch]$UseSqlite,
+
+		[Parameter(Mandatory = $false)]
+		[ValidateRange(0, 3)]
+		[int]$ShardNumber = 0,
+
+		[Parameter(Mandatory = $false)]
+		[int]$ShardCount = 3
 	)
 
 	$projectConfig = "Release"
@@ -425,7 +486,9 @@ Function Invoke-AcceptanceTests {
 	Init
 	Compile
 	Setup-DatabaseForBuild
-	AcceptanceTests
+
+	$testFilter = Get-ShardTestFilter -ShardNumber $ShardNumber -ShardCount $ShardCount
+	AcceptanceTests -TestFilter $testFilter
 
 	$sw.Stop()
 	$elapsed = $sw.Elapsed.ToString()

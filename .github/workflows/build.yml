@@ -643,17 +643,21 @@ jobs:
           retention-days: 2
 
   acceptance-tests:
-    name: Acceptance Tests
+    name: Acceptance Tests [shard ${{ matrix.shard }}/3]
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
-      group: acceptance-tests-${{ github.ref }}-${{ github.sha }}
+      group: acceptance-tests-${{ github.ref }}-${{ github.sha }}-shard-${{ matrix.shard }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
     permissions:
       contents: read
       packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     env:
       BUILD_CONFIGURATION: Release
 
@@ -683,7 +687,7 @@ jobs:
           version="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           echo "BUILD_BUILDNUMBER=$version" >> $GITHUB_ENV
 
-      - name: Run Acceptance Tests
+      - name: Run Acceptance Tests (Shard ${{ matrix.shard }}/3)
         shell: pwsh
         env:
           BUILD_BUILDNUMBER: ${{ env.BUILD_BUILDNUMBER }}
@@ -691,38 +695,42 @@ jobs:
           AI_OpenAI_Url: ${{ vars.AI_OPENAI_URL }}
           AI_OpenAI_Model: ${{ vars.AI_OPENAI_MODEL }}
         run: |
-          Write-Host "Running Acceptance Tests"
+          Write-Host "Running Acceptance Tests Shard ${{ matrix.shard }}/3"
           . ./build.ps1
-          Invoke-AcceptanceTests
+          Invoke-AcceptanceTests -ShardNumber ${{ matrix.shard }}
 
-      - name: Test Reporter
+      - name: Test Reporter (Shard ${{ matrix.shard }}/3)
         uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
-          name: Acceptance Test Results
+          name: Acceptance Test Results [shard ${{ matrix.shard }}/3]
           path: 'build/test/**/*.trx'
           reporter: dotnet-trx
 
-      - name: Upload Test Results
+      - name: Upload Test Results (Shard ${{ matrix.shard }}/3)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-acceptance
+          name: test-results-acceptance-linux-shard-${{ matrix.shard }}
           path: build/test/**/*.trx
           retention-days: 2
 
   acceptance-tests-arm:
-    name: Acceptance Tests (ARM SQLite)
+    name: Acceptance Tests (ARM SQLite) [shard ${{ matrix.shard }}/3]
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     concurrency:
-      group: acceptance-tests-arm-${{ github.ref }}-${{ github.sha }}
+      group: acceptance-tests-arm-${{ github.ref }}-${{ github.sha }}-shard-${{ matrix.shard }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
     permissions:
       contents: read
       packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     env:
       BUILD_CONFIGURATION: Release
       DATABASE_ENGINE: SQLite
@@ -753,7 +761,7 @@ jobs:
           version="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           echo "BUILD_BUILDNUMBER=$version" >> $GITHUB_ENV
 
-      - name: Run Acceptance Tests (ARM SQLite)
+      - name: Run Acceptance Tests (ARM SQLite, Shard ${{ matrix.shard }}/3)
         shell: pwsh
         env:
           BUILD_BUILDNUMBER: ${{ env.BUILD_BUILDNUMBER }}
@@ -762,25 +770,124 @@ jobs:
           AI_OpenAI_Model: ${{ vars.AI_OPENAI_MODEL }}
           ConnectionStrings__SqlConnectionString: "Data Source=ChurchBulletin.db"
         run: |
-          Write-Host "Running Acceptance Tests with SQLite on ARM"
+          Write-Host "Running Acceptance Tests with SQLite on ARM Shard ${{ matrix.shard }}/3"
           . ./build.ps1
-          Invoke-AcceptanceTests -UseSqlite
+          Invoke-AcceptanceTests -ShardNumber ${{ matrix.shard }} -UseSqlite
 
-      - name: Test Reporter
+      - name: Test Reporter (Shard ${{ matrix.shard }}/3)
         uses: dorny/test-reporter@v2.1.1
         if: always()
         with:
-          name: ARM Acceptance Test Results
+          name: ARM Acceptance Test Results [shard ${{ matrix.shard }}/3]
           path: 'build/test/**/*.trx'
           reporter: dotnet-trx
 
-      - name: Upload Test Results
+      - name: Upload Test Results (Shard ${{ matrix.shard }}/3)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-acceptance-arm
+          name: test-results-acceptance-arm-shard-${{ matrix.shard }}
           path: build/test/**/*.trx
           retention-days: 2
+
+  acceptance-tests-coverage-check:
+    name: Acceptance Tests Coverage Check
+    needs:
+      - changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/AcceptanceTests/**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Restore AcceptanceTests
+        run: dotnet restore src/AcceptanceTests/AcceptanceTests.csproj
+
+      - name: Build AcceptanceTests
+        run: dotnet build src/AcceptanceTests/AcceptanceTests.csproj --configuration Release --no-restore -v minimal
+
+      - name: Validate Shard Coverage with vstest
+        shell: pwsh
+        run: |
+          . ./build.ps1
+
+          Write-Host "Validating shard coverage with vstest..."
+          Write-Host ""
+
+          $dll = "src/AcceptanceTests/bin/Release/net10.0/ClearMeasure.Bootcamp.AcceptanceTests.dll"
+
+          # Get filters from the single source of truth
+          $shard1Filter = Get-ShardTestFilter -ShardNumber 1
+          $shard2Filter = Get-ShardTestFilter -ShardNumber 2
+          $shard3Filter = Get-ShardTestFilter -ShardNumber 3
+
+          # Get test lists using vstest with ListTestsTargetPath
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:unfiltered.txt" 2>&1 | Out-Null
+          $unfiltered = @(Get-Content unfiltered.txt | Where-Object {$_})
+          $unfilteredCount = $unfiltered.Count
+
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard1.txt" "/TestCaseFilter:$shard1Filter" 2>&1 | Out-Null
+          $shard1 = @(Get-Content shard1.txt | Where-Object {$_})
+          $shard1Count = $shard1.Count
+
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard2.txt" "/TestCaseFilter:$shard2Filter" 2>&1 | Out-Null
+          $shard2 = @(Get-Content shard2.txt | Where-Object {$_})
+          $shard2Count = $shard2.Count
+
+          & dotnet vstest $dll "/ListFullyQualifiedTests" "/ListTestsTargetPath:shard3.txt" "/TestCaseFilter:$shard3Filter" 2>&1 | Out-Null
+          $shard3 = @(Get-Content shard3.txt | Where-Object {$_})
+          $shard3Count = $shard3.Count
+
+          # Report counts
+          Write-Host "Test coverage report:"
+          Write-Host "  Unfiltered: $unfilteredCount"
+          Write-Host "  Shard 1:    $shard1Count"
+          Write-Host "  Shard 2:    $shard2Count"
+          Write-Host "  Shard 3:    $shard3Count"
+          Write-Host "  Sum:        $($shard1Count + $shard2Count + $shard3Count)"
+          Write-Host ""
+
+          # Validate totals match
+          $totalAcrossShards = $shard1Count + $shard2Count + $shard3Count
+          if ($totalAcrossShards -ne $unfilteredCount) {
+            Write-Host "ERROR: Shard totals ($totalAcrossShards) do not equal unfiltered total ($unfilteredCount)"
+            exit 1
+          }
+          Write-Host "✓ Shard totals equal unfiltered total"
+
+          # Check for overlaps
+          $overlap12 = @($shard1 | Where-Object {$shard2 -contains $_}).Count
+          $overlap13 = @($shard1 | Where-Object {$shard3 -contains $_}).Count
+          $overlap23 = @($shard2 | Where-Object {$shard3 -contains $_}).Count
+
+          if ($overlap12 -gt 0 -or $overlap13 -gt 0 -or $overlap23 -gt 0) {
+            Write-Host "ERROR: Overlaps detected: S1∩S2=$overlap12, S1∩S3=$overlap13, S2∩S3=$overlap23"
+            exit 1
+          }
+          Write-Host "✓ No overlaps (S1∩S2=$overlap12, S1∩S3=$overlap13, S2∩S3=$overlap23)"
+
+          # Check for missing tests
+          $allShardTests = @($shard1 + $shard2 + $shard3)
+          $missing = @($unfiltered | Where-Object {$allShardTests -notcontains $_}).Count
+          if ($missing -gt 0) {
+            Write-Host "ERROR: $missing tests missing from all shards"
+            exit 1
+          }
+          Write-Host "✓ No missing tests"
+
+          Write-Host ""
+          Write-Host "Coverage validation PASSED"
 
   build-result:
     name: Build result
@@ -794,6 +901,7 @@ jobs:
       - build-windows
       - acceptance-tests
       - acceptance-tests-arm
+      - acceptance-tests-coverage-check
     if: always() && !cancelled()
     runs-on: ubuntu-latest
     steps:
@@ -808,6 +916,7 @@ jobs:
           WINDOWS: ${{ needs.build-windows.result }}
           ACCEPTANCE: ${{ needs.acceptance-tests.result }}
           ACCEPTANCE_ARM: ${{ needs.acceptance-tests-arm.result }}
+          COVERAGE_CHECK: ${{ needs.acceptance-tests-coverage-check.result }}
         run: |
           set -euo pipefail
           if [ "${CODE}" != "true" ]; then
@@ -831,6 +940,7 @@ jobs:
           check "Integration Build (Windows LocalDB)" "${WINDOWS}"
           check "Acceptance Tests" "${ACCEPTANCE}"
           check "Acceptance Tests (ARM SQLite)" "${ACCEPTANCE_ARM}"
+          check "Acceptance Tests Coverage Check" "${COVERAGE_CHECK}"
           if [ "${failed}" -ne 0 ]; then
             echo "A required Build job did not succeed."
             exit 1

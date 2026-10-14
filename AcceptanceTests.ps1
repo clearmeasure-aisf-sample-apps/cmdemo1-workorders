@@ -6,7 +6,14 @@ param (
     [string]$databaseName = "",
 
     [Parameter(Mandatory=$false)]
-    [switch]$Headful
+    [switch]$Headful,
+
+    [Parameter(Mandatory=$false)]
+    [ValidateRange(0, 3)]
+    [int]$ShardNumber = 0,
+
+    [Parameter(Mandatory=$false)]
+    [int]$ShardCount = 3
 )
 
 . .\build.ps1
@@ -24,5 +31,11 @@ if (-not [string]::IsNullOrEmpty($databaseServer)) {
 }
 if (-not [string]::IsNullOrEmpty($databaseName)) {
     $buildArgs["databaseName"] = $databaseName
+}
+if ($ShardNumber -gt 0) {
+    $buildArgs["ShardNumber"] = $ShardNumber
+}
+if ($ShardCount -ne 3) {
+    $buildArgs["ShardCount"] = $ShardCount
 }
 Invoke-AcceptanceTests @buildArgs
