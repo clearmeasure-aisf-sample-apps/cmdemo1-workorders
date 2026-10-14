@@ -1,5 +1,7 @@
 @using ClearMeasure.Bootcamp.Core.Services.Impl
 
+<PageTitle>@(Model.Mode == EditMode.New ? "New Work Order" : $"Work Order {Model.WorkOrderNumber}") - Kalahari Church Work Order System</PageTitle>
+
 <div class="work-order-container">
     <div class="work-order-header">
         <h2 title="Create or edit a work order" data-testid="@Elements.ManageHeadingTooltip">
