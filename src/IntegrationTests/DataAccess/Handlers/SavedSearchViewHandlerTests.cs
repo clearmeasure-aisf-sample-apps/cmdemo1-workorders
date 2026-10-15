@@ -17,12 +17,17 @@ public class SavedSearchViewHandlerTests
     [SetUp]
     public async Task SetUp()
     {
-        new DatabaseTests().Clean();
-        _owner = new Employee("svowner", "Saved", "Owner", "owner@example.com");
-        _other = new Employee("svother", "Saved", "Other", "other@example.com");
+        _owner = NewEmployee("svowner", "Owner");
+        _other = NewEmployee("svother", "Other");
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.AddRange(_owner, _other);
         await context.SaveChangesAsync();
+    }
+
+    private static Employee NewEmployee(string prefix, string lastName)
+    {
+        var userName = TestData.UserName(prefix);
+        return new Employee(userName, "Saved", lastName, TestData.Email(userName));
     }
 
     private static SavedSearchViewHandler NewHandler() =>
