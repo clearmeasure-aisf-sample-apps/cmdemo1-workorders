@@ -18,7 +18,7 @@ internal sealed class TestingDatabaseStartupFilter : IStartupFilter
                 var db = scope.ServiceProvider.GetRequiredService<DataContext>();
                 if (db.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    ClearMeasure.Bootcamp.DataAccess.SqliteSchemaUpgrade.EnsureCreatedAndUpgraded(db);
+                    DataAccess.SqliteSchemaUpgrade.EnsureCreatedAndUpgraded(db);
                 }
             }
 
