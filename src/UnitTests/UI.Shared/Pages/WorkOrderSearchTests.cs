@@ -1382,6 +1382,26 @@ public class WorkOrderSearchTests
     }
 
     [Test]
+    public async Task Board_WaitingOnVendorCard_ShowsWaitingPillInInProgressColumn()
+    {
+        var rows = new[]
+        {
+            new WorkOrder { Number = "WV001", Title = "Waiting", Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0) },
+            new WorkOrder { Number = "WV002", Title = "Working", Status = WorkOrderStatus.InProgress }
+        };
+        await using var ctx = CreateContext(new StubBus(rows));
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var column = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumn}{WorkOrderStatus.InProgress.Key}']");
+        var waitingCard = column.QuerySelector($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WV001']");
+        waitingCard.ShouldNotBeNull();
+        waitingCard.QuerySelector(".status-badge--waiting")!.TextContent.ShouldBe("Waiting on vendor");
+        column.QuerySelector($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WV002']")!
+            .QuerySelector(".status-badge--waiting").ShouldBeNull();
+    }
+
+    [Test]
     public async Task ClickActiveView_KeepsUrlUnchanged()
     {
         await using var ctx = CreateContext();
