@@ -320,9 +320,12 @@ public class McpSaveWorkOrderTests
             "Preserve long room",
             "Description",
             "creator1",
-            roomNumber: longRoom);
+            roomNumber: null);
 
         var number = ExtractWorkOrderNumber(createResult)!;
+        var legacy = (await bus.Send(new WorkOrderByNumberQuery(number)))!;
+        legacy.RoomNumber = longRoom;
+        await bus.Send(new SaveDraftCommand(legacy, legacy.Creator!) { PreviousRoomNumber = longRoom });
 
         await WorkOrderTools.SaveWorkOrder(bus, number, "creator1", title: "Updated title");
 

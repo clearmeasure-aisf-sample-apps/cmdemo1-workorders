@@ -185,7 +185,7 @@ public class WorkOrderTools
             return $"Employee with username '{executingUsername}' not found.";
         }
 
-        var validationError = ValidateSave(workOrder, executingUser, title, dueDate);
+        var validationError = ValidateSave(workOrder, executingUser, title, dueDate, roomNumber);
         if (validationError != null)
         {
             return validationError;
@@ -241,7 +241,8 @@ public class WorkOrderTools
         WorkOrder workOrder,
         Employee executingUser,
         string? title,
-        string? dueDate)
+        string? dueDate,
+        string? roomNumber = null)
     {
         if (!new SaveDraftCommand(workOrder, executingUser).IsValid())
         {
@@ -256,6 +257,11 @@ public class WorkOrderTools
         if (title is { Length: > WorkOrder.TitleMaxLength })
         {
             return $"Title cannot exceed {WorkOrder.TitleMaxLength} characters.";
+        }
+
+        if (roomNumber is { Length: > WorkOrder.RoomNumberEntryMaxLength } && roomNumber != workOrder.RoomNumber)
+        {
+            return $"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters.";
         }
 
         if (IsInvalidDueDatePatch(dueDate))
