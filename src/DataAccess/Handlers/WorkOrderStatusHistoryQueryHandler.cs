@@ -12,6 +12,7 @@ public class WorkOrderStatusHistoryQueryHandler(DbContext dbContext) : IRequestH
         var history = await dbContext.Set<WorkOrderStatusChange>()
             .Where(c => c.WorkOrderId == query.WorkOrderId)
             .OrderByDescending(c => c.ChangedDate)
+            .Include(c => c.ChangedBy)
             .ToArrayAsync(cancellationToken);
 
         return history;

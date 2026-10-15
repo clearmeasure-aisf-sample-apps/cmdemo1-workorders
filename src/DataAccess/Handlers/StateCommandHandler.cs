@@ -34,13 +34,7 @@ public class StateCommandHandler(
             order.Assignee = order.Creator; //EFCore reference checking
         }
 
-        var persisted = await PersistAsync(order, cancellationToken);
-
-        // Record status change if this is a state-changing command
-        if (persisted.Status != beginStatus)
-        {
-            await RecordStatusChangeAsync(persisted, beginStatus, request.CurrentUser, currentDateTime, cancellationToken);
-        }
+        var persisted = await PersistAsync(order, beginStatus, request.CurrentUser, currentDateTime, cancellationToken);
 
         var loweredTransitionVerb = request.TransitionVerbPastTense.ToLower();
         var workOrderNumber = persisted.Number;
@@ -56,17 +50,27 @@ public class StateCommandHandler(
         return result;
     }
 
-    private async Task<WorkOrder> PersistAsync(WorkOrder order, CancellationToken cancellationToken)
+    private async Task<WorkOrder> PersistAsync(
+        WorkOrder order,
+        WorkOrderStatus beginStatus,
+        Employee changedBy,
+        DateTime changedDate,
+        CancellationToken cancellationToken)
     {
         if (order.Id == Guid.Empty)
         {
-            return await InsertNewAsync(order, cancellationToken);
+            return await InsertNewAsync(order, beginStatus, changedBy, changedDate, cancellationToken);
         }
 
-        return await UpdateExistingAsync(order, cancellationToken);
+        return await UpdateExistingAsync(order, beginStatus, changedBy, changedDate, cancellationToken);
     }
 
-    private async Task<WorkOrder> InsertNewAsync(WorkOrder order, CancellationToken cancellationToken)
+    private async Task<WorkOrder> InsertNewAsync(
+        WorkOrder order,
+        WorkOrderStatus beginStatus,
+        Employee changedBy,
+        DateTime changedDate,
+        CancellationToken cancellationToken)
     {
         dbContext.ChangeTracker.Clear();
         if (await dbContext.Set<WorkOrder>().AnyAsync(w => w.Number == order.Number, cancellationToken))
@@ -76,11 +80,32 @@ public class StateCommandHandler(
 
         dbContext.Attach(order);
         dbContext.Add(order);
+
+        // Record status change if this is a state-changing command, in the same transaction
+        if (order.Status != beginStatus)
+        {
+            var statusChange = new WorkOrderStatusChange
+            {
+                Id = Guid.NewGuid(),
+                WorkOrderId = order.Id,
+                FromStatus = beginStatus,
+                ToStatus = order.Status,
+                ChangedById = changedBy.Id,
+                ChangedDate = changedDate
+            };
+            dbContext.Add(statusChange);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return order;
     }
 
-    private async Task<WorkOrder> UpdateExistingAsync(WorkOrder order, CancellationToken cancellationToken)
+    private async Task<WorkOrder> UpdateExistingAsync(
+        WorkOrder order,
+        WorkOrderStatus beginStatus,
+        Employee changedBy,
+        DateTime changedDate,
+        CancellationToken cancellationToken)
     {
         dbContext.ChangeTracker.Clear();
 
@@ -91,30 +116,23 @@ public class StateCommandHandler(
         // Attachments remain database-owned; remoted commands do not carry a complete collection.
         await ApplyRelationshipsAsync(existing, order, cancellationToken);
 
+        // Record status change if this is a state-changing command, in the same transaction
+        if (existing.Status != beginStatus)
+        {
+            var statusChange = new WorkOrderStatusChange
+            {
+                Id = Guid.NewGuid(),
+                WorkOrderId = existing.Id,
+                FromStatus = beginStatus,
+                ToStatus = existing.Status,
+                ChangedById = changedBy.Id,
+                ChangedDate = changedDate
+            };
+            dbContext.Add(statusChange);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return existing;
-    }
-
-    private async Task RecordStatusChangeAsync(
-        WorkOrder workOrder,
-        WorkOrderStatus fromStatus,
-        Employee changedBy,
-        DateTime changedDate,
-        CancellationToken cancellationToken)
-    {
-        var statusChange = new WorkOrderStatusChange
-        {
-            Id = Guid.NewGuid(),
-            WorkOrderId = workOrder.Id,
-            FromStatus = fromStatus,
-            ToStatus = workOrder.Status,
-            ChangedById = changedBy.Id,
-            ChangedDate = changedDate
-        };
-
-        dbContext.Attach(statusChange);
-        dbContext.Add(statusChange);
-        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task ApplyRelationshipsAsync(
