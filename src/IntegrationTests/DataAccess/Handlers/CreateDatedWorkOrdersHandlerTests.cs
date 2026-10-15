@@ -44,12 +44,14 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_ShouldPersistNullAndDateWithoutUtcShift()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("creator1");
+        var withDateNumber = TestData.Number("D");
+        var withoutDateNumber = TestData.Number("D");
 
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(creatorUserName, "John", "Doe", "john@example.com");
         var withDate = new WorkOrder
         {
-            Number = "WO-D1",
+            Number = withDateNumber,
             Title = "Has due date",
             Description = "desc",
             Creator = creator,
@@ -58,7 +60,7 @@ public class CreateDatedWorkOrdersHandlerTests
         };
         var withoutDate = new WorkOrder
         {
-            Number = "WO-D2",
+            Number = withoutDateNumber,
             Title = "No due date",
             Description = "desc",
             Creator = creator,
@@ -75,8 +77,8 @@ public class CreateDatedWorkOrdersHandlerTests
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
-            var loadedWith = await context.Set<WorkOrder>().SingleAsync(w => w.Number == "WO-D1");
-            var loadedWithout = await context.Set<WorkOrder>().SingleAsync(w => w.Number == "WO-D2");
+            var loadedWith = await context.Set<WorkOrder>().SingleAsync(w => w.Number == withDateNumber);
+            var loadedWithout = await context.Set<WorkOrder>().SingleAsync(w => w.Number == withoutDateNumber);
 
             loadedWith.DueDate.ShouldBe(new DateOnly(2026, 8, 29));
             loadedWithout.DueDate.ShouldBeNull();
@@ -86,10 +88,11 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_ShouldCreateTenInOneTransaction()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
-        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy", "t@test.com");
-        var assignee = new Employee("gwillie", "Groundskeeper Willie", "MacDougal", "w@test.com");
+        var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
+        var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(creator);
@@ -103,8 +106,8 @@ public class CreateDatedWorkOrdersHandlerTests
 
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await bus.Send(new CreateDatedWorkOrdersCommand(
-            "tlovejoy",
-            "gwillie",
+            creatorUserName,
+            assigneeUserName,
             "Mow the grass",
             "Weekly Saturday mow",
             dueDates));
@@ -115,22 +118,23 @@ public class CreateDatedWorkOrdersHandlerTests
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             var created = await context.Set<WorkOrder>()
-                .Where(w => w.Assignee!.UserName == "gwillie")
+                .Where(w => w.Assignee!.UserName == assigneeUserName)
                 .OrderBy(w => w.DueDate)
                 .ToListAsync();
             created.Count.ShouldBe(10);
             created.Select(w => w.DueDate!.Value).ToList().ShouldBe(dueDates);
             created.ShouldAllBe(w => w.Status == WorkOrderStatus.Assigned);
-            created.ShouldAllBe(w => w.Creator!.UserName == "tlovejoy");
+            created.ShouldAllBe(w => w.Creator!.UserName == creatorUserName);
         }
     }
 
     [Test]
     public async Task Handle_WhenAssigneeMissing_CreatesZero()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var missingAssigneeUserName = TestData.UserName("missing");
 
-        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy", "t@test.com");
+        var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(creator);
@@ -139,8 +143,8 @@ public class CreateDatedWorkOrdersHandlerTests
 
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await bus.Send(new CreateDatedWorkOrdersCommand(
-            "tlovejoy",
-            "missing-willie",
+            creatorUserName,
+            missingAssigneeUserName,
             "Mow the grass",
             "Weekly Saturday mow",
             [new DateOnly(2026, 8, 29)]));
@@ -150,19 +154,20 @@ public class CreateDatedWorkOrdersHandlerTests
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
-            (await context.Set<WorkOrder>().CountAsync()).ShouldBe(0);
+            (await context.Set<WorkOrder>().CountAsync(w => w.Creator!.UserName == creatorUserName)).ShouldBe(0);
         }
     }
 
     [Test]
     public async Task Handle_WhenDueDatesEmpty_CreatesZero()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await bus.Send(new CreateDatedWorkOrdersCommand(
-            "tlovejoy",
-            "gwillie",
+            creatorUserName,
+            assigneeUserName,
             "Mow the grass",
             "Weekly Saturday mow",
             []));
@@ -175,7 +180,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_WhenBatchExceedsLimit_CreatesZero()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
         var dueDates = Enumerable.Range(0, CreateDatedWorkOrdersCommand.MaximumBatchSize + 1)
             .Select(i => new DateOnly(2026, 8, 29).AddDays(i))
@@ -183,8 +189,8 @@ public class CreateDatedWorkOrdersHandlerTests
         var bus = TestHost.GetRequiredService<IBus>();
 
         var result = await bus.Send(new CreateDatedWorkOrdersCommand(
-            "tlovejoy",
-            "gwillie",
+            creatorUserName,
+            assigneeUserName,
             "Mow the grass",
             "Weekly Saturday mow",
             dueDates));
@@ -193,15 +199,16 @@ public class CreateDatedWorkOrdersHandlerTests
         result.Message.ShouldContain("cannot exceed 10");
         result.WorkOrders.Count.ShouldBe(0);
         await using var context = TestHost.GetRequiredService<DbContext>();
-        (await context.Set<WorkOrder>().CountAsync()).ShouldBe(0);
+        (await context.Set<WorkOrder>().CountAsync(w => w.Creator!.UserName == creatorUserName || w.Assignee!.UserName == assigneeUserName)).ShouldBe(0);
     }
 
     [Test]
     public async Task Handle_WhenCreatorMissing_CreatesZero()
     {
-        new DatabaseTests().Clean();
+        var assigneeUserName = TestData.UserName("gw");
+        var missingCreatorUserName = TestData.UserName("missing");
 
-        var assignee = new Employee("gwillie", "Groundskeeper Willie", "MacDougal", "w@test.com");
+        var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(assignee);
@@ -210,8 +217,8 @@ public class CreateDatedWorkOrdersHandlerTests
 
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await bus.Send(new CreateDatedWorkOrdersCommand(
-            "missing-lovejoy",
-            "gwillie",
+            missingCreatorUserName,
+            assigneeUserName,
             "Mow the grass",
             "Weekly Saturday mow",
             [new DateOnly(2026, 8, 29)]));
@@ -221,17 +228,18 @@ public class CreateDatedWorkOrdersHandlerTests
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
-            (await context.Set<WorkOrder>().CountAsync()).ShouldBe(0);
+            (await context.Set<WorkOrder>().CountAsync(w => w.Assignee!.UserName == assigneeUserName)).ShouldBe(0);
         }
     }
 
     [Test]
     public async Task Handle_WhenPartialBatchFails_RollsBackAll()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
-        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy", "t@test.com");
-        var assignee = new Employee("gwillie", "Groundskeeper Willie", "MacDougal", "w@test.com");
+        var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
+        var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(creator);
@@ -254,8 +262,8 @@ public class CreateDatedWorkOrdersHandlerTests
 
         await Should.ThrowAsync<InvalidOperationException>(() => handler.Handle(
             new CreateDatedWorkOrdersCommand(
-                "tlovejoy",
-                "gwillie",
+                creatorUserName,
+                assigneeUserName,
                 "Mow the grass",
                 "Weekly Saturday mow",
                 dueDates),
@@ -263,17 +271,18 @@ public class CreateDatedWorkOrdersHandlerTests
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
-            (await context.Set<WorkOrder>().CountAsync()).ShouldBe(0);
+            (await context.Set<WorkOrder>().CountAsync(w => w.Assignee!.UserName == assigneeUserName)).ShouldBe(0);
         }
     }
 
     [Test]
     public async Task Handle_WhenTelemetryPublishFails_ReturnsCommittedWorkOrders()
     {
-        new DatabaseTests().Clean();
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
-        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy", "t@test.com");
-        var assignee = new Employee("gwillie", "Groundskeeper Willie", "MacDougal", "w@test.com");
+        var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
+        var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(creator);
@@ -291,8 +300,8 @@ public class CreateDatedWorkOrdersHandlerTests
 
         var result = await handler.Handle(
             new CreateDatedWorkOrdersCommand(
-                "tlovejoy",
-                "gwillie",
+                creatorUserName,
+                assigneeUserName,
                 "Mow the grass",
                 "Weekly Saturday mow",
                 [new DateOnly(2026, 8, 29)]),
@@ -301,6 +310,6 @@ public class CreateDatedWorkOrdersHandlerTests
         result.Success.ShouldBeTrue();
         result.WorkOrders.Count.ShouldBe(1);
         await using var verifyContext = TestHost.GetRequiredService<DbContext>();
-        (await verifyContext.Set<WorkOrder>().CountAsync()).ShouldBe(1);
+        (await verifyContext.Set<WorkOrder>().CountAsync(w => w.Assignee!.UserName == assigneeUserName)).ShouldBe(1);
     }
 }
