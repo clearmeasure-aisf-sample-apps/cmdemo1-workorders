@@ -110,8 +110,9 @@ public class CreateVendorCommandValidatorTests
     [Test]
     public void ShouldPass_WhenOptionalFieldsAreAtTheirMaximumLengths()
     {
+        var longEmail = new string('a', 242) + "@test.com";
         var command = new CreateVendorCommand("Acme", new string('t', 100), new string('c', 100),
-            new string('e', 255), new string('5', 50));
+            longEmail, new string('5', 50));
 
         var result = _validator.TestValidate(command);
 
@@ -136,5 +137,147 @@ public class CreateVendorCommandValidatorTests
         var violations = command.FindRuleViolations(["Bolt", "Acme"]);
 
         violations.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void ShouldPass_WhenEmailAddressIsValid()
+    {
+        var command = new CreateVendorCommand("Acme", null, null, "test@example.com", null);
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldPass_WhenEmailAddressIsNull()
+    {
+        var command = new CreateVendorCommand("Acme", null, null, null, null);
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.EmailAddress);
+    }
+
+    [Test]
+    public void ShouldPass_WhenEmailAddressIsEmpty()
+    {
+        var command = new CreateVendorCommand("Acme", null, null, "", null);
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.EmailAddress);
+    }
+
+    [TestCase("not-an-email")]
+    [TestCase("test@")]
+    [TestCase("@example.com")]
+    [TestCase("test")]
+    public void ShouldFail_WhenEmailAddressIsInvalid(string email)
+    {
+        var command = new CreateVendorCommand("Acme", null, null, email, null);
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.EmailAddress);
+    }
+
+    [Test]
+    public void ShouldPass_WhenEmailAddressIsAtMaxLengthWithValidFormat()
+    {
+        var email = new string('a', 244) + "@test.com";
+        var command = new CreateVendorCommand("Acme", null, null, email, null);
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldPass_WhenPhoneNumberIsValid()
+    {
+        var command = new CreateVendorCommand("Acme", null, null, null, "555-0100");
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [TestCase("+1 (555) 012-0100")]
+    [TestCase("5550100")]
+    [TestCase("555 0100")]
+    [TestCase("+15550100")]
+    public void ShouldPass_WhenPhoneNumberIsValidFormat(string phone)
+    {
+        var command = new CreateVendorCommand("Acme", null, null, null, phone);
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldPass_WhenPhoneNumberIsNull()
+    {
+        var command = new CreateVendorCommand("Acme", null, null, null, null);
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.PhoneNumber);
+    }
+
+    [Test]
+    public void ShouldPass_WhenPhoneNumberIsEmpty()
+    {
+        var command = new CreateVendorCommand("Acme", null, null, null, "");
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.PhoneNumber);
+    }
+
+    [TestCase("555-01")]
+    [TestCase("123")]
+    [TestCase("      ")]
+    public void ShouldFail_WhenPhoneNumberHasFewerThan7Digits(string phone)
+    {
+        var command = new CreateVendorCommand("Acme", null, null, null, phone);
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.PhoneNumber);
+    }
+
+    [TestCase("555@0100")]
+    [TestCase("555#0100")]
+    [TestCase("555*0100")]
+    public void ShouldFail_WhenPhoneNumberContainsInvalidCharacters(string phone)
+    {
+        var command = new CreateVendorCommand("Acme", null, null, null, phone);
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.PhoneNumber);
+    }
+
+    [Test]
+    public void ShouldPass_WhenPhoneNumberIsAtMaxLengthWithValidFormat()
+    {
+        var phone = "(555) 012-0100 (555) 555-5555 555";
+        var command = new CreateVendorCommand("Acme", null, null, null, phone);
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldPass_WhenEmailAndPhoneAreValidTogether()
+    {
+        var command = new CreateVendorCommand("Acme", "HVAC", "Pat Smith", "pat@acme.test", "555-0100");
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
     }
 }
