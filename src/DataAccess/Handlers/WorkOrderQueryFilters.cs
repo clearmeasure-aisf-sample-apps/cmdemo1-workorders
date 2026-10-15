@@ -36,6 +36,7 @@ internal static class WorkOrderQueryFilters
         query = ApplyBuilding(query, specification.Building, specification.NoBuilding);
         query = ApplyRoom(query, specification.Room, specification.NoRoom);
         query = ApplyOpen(query, specification.OpenOnly);
+        query = ApplyWaitingOnVendor(query, specification.WaitingOnVendorOnly);
         query = ApplyCompletedWithin(query, specification.CompletedWithinDays, time);
         return ApplySearchText(query, specification.SearchText);
     }
@@ -168,6 +169,14 @@ internal static class WorkOrderQueryFilters
 
     private static IQueryable<WorkOrder> ApplyOpen(IQueryable<WorkOrder> query, bool openOnly) =>
         openOnly ? OpenOnly(query) : query;
+
+    private static IQueryable<WorkOrder> ApplyWaitingOnVendor(IQueryable<WorkOrder> query, bool waitingOnVendorOnly)
+    {
+        var inProgress = WorkOrderStatus.InProgress;
+        return waitingOnVendorOnly
+            ? query.Where(wo => wo.Status == inProgress && wo.WaitingOnVendorSince != null)
+            : query;
+    }
 
     private static IQueryable<WorkOrder> ApplyCompletedWithin(IQueryable<WorkOrder> query, int? days, TimeProvider time) =>
         days == null ? query : CompletedWithin(query, days.Value, time);

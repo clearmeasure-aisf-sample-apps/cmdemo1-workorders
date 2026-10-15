@@ -87,4 +87,37 @@ public class WorkOrdersBulkImportIntegrationTests
         json.ShouldContain("\"success\":false");
         json.ShouldContain("createdCount\":0");
     }
+    [Test]
+    public async Task ShouldImportBuildingPriorityAndDueDate_WhenSevenColumnCsvUploaded()
+    {
+        using (var scope = _factory!.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+            await db.Database.EnsureCreatedAsync();
+            db.Add(new Employee("bulk-seven", "Bulk", "Seven", "seven@t.test"));
+            await db.SaveChangesAsync();
+        }
+
+        var csv = "Title,Description,CreatorUsername,RoomNumber,Building,Priority,DueDate\n"
+                  + "Seven A,Desc A,bulk-seven,2B,East Wing,high,2026-12-01\n"
+                  + "Seven B,Desc B,bulk-seven,,,,\n";
+        using var content = new MultipartFormDataContent();
+        content.Add(new StringContent(csv, Encoding.UTF8, "text/csv"), "file", "seven.csv");
+
+        var response = await _httpClient!.PostAsync(new Uri(_httpClient.BaseAddress!, "api/v1.0/work-orders/bulk-import"), content);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        using var scope2 = _factory.Services.CreateScope();
+        var db2 = scope2.ServiceProvider.GetRequiredService<DataContext>();
+        var orders = await db2.Set<WorkOrder>().Where(w => w.Creator!.UserName == "bulk-seven").ToListAsync();
+        orders.Count.ShouldBe(2);
+        var a = orders.Single(w => w.Title == "Seven A");
+        a.Building.ShouldBe("East Wing");
+        a.Priority.ShouldBe(WorkOrderPriority.High);
+        a.DueDate.ShouldBe(new DateOnly(2026, 12, 1));
+        var b = orders.Single(w => w.Title == "Seven B");
+        b.Building.ShouldBeNull();
+        b.Priority.ShouldBe(WorkOrderPriority.Medium);
+        b.DueDate.ShouldBeNull();
+    }
 }
