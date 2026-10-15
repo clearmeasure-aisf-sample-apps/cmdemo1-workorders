@@ -47,7 +47,7 @@ public class SlaHealth
     /// </summary>
     public static (decimal? Percentage, int TotalCount) CalculateOnTimePercentage(IEnumerable<WorkOrder> orders)
     {
-        var qualifying = orders.Where(wo => wo.DueDate != null && wo.CompletedDate.HasValue).ToList();
+        var qualifying = orders.Where(wo => wo is { DueDate: not null, CompletedDate: not null }).ToList();
         if (qualifying.Count == 0)
         {
             return (null, 0);
