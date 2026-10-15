@@ -235,7 +235,16 @@ public partial class WorkOrderSearch : AppComponentBase
             return;
         }
 
-        _userViews = await Bus.Send(new SavedSearchViewsQuery(_currentUserName));
+        try
+        {
+            _userViews = await Bus.Send(new SavedSearchViewsQuery(_currentUserName));
+        }
+        catch (Exception)
+        {
+            // Saved views are an optional extra: a failure loading them (for example a database not yet
+            // upgraded with the SavedSearchView table) must never break the search page.
+            _userViews = [];
+        }
     }
 
     private void OpenSaveForm()

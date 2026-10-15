@@ -47,6 +47,19 @@ public class WorkOrderSearchTests
     }
 
     [Test]
+    public async Task ShouldStillRenderResultsAndNewButton_WhenLoadingSavedViewsFails()
+    {
+        var creator = new Employee(CurrentUsername, "Jeffrey", "Palermo", "j@example.com");
+        creator.AddRole(new Role("creator", true, false));
+        await using var ctx = CreateContext(new StubBus { FailSavedViewsQuery = true }, currentUser: creator);
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.NewWorkOrderButton}']").Count.ShouldBe(1);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("2 of 2");
+    }
+
+    [Test]
     public async Task ShouldRenderSearchHintWithExactText()
     {
         await using var ctx = CreateContext();

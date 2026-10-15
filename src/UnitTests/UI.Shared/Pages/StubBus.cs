@@ -30,6 +30,8 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
     public SavedSearchViewResult SaveResult { get; init; } = SavedSearchViewResult.Success;
 
+    public bool FailSavedViewsQuery { get; init; }
+
     public override Task Publish(INotification notification)
     {
         return Task.CompletedTask;
@@ -87,6 +89,11 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
         if (request is SavedSearchViewsQuery)
         {
+            if (FailSavedViewsQuery)
+            {
+                throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            }
+
             return Task.FromResult<TResponse>((TResponse)(object)SavedViews.ToArray());
         }
 
