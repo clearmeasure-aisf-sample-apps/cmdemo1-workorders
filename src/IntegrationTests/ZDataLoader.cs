@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.DemoData;
-using ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests;
@@ -11,7 +10,6 @@ public class ZDataLoader
     [Test]
     public void LoadData()
     {
-        new DatabaseTests().Clean();
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
             DemoEmployeeSeeder.Seed(context);
@@ -41,7 +39,7 @@ public class ZDataLoader
             CreatedDate = new DateTime(2024, 10, 15, 9, 0, 0),
             RoomNumber = "Sanctuary"
         };
-        db.Add(christmasOrder1);
+        AddIfMissing(db, christmasOrder1);
 
         var christmasOrder2 = new WorkOrder
         {
@@ -55,7 +53,7 @@ public class ZDataLoader
             AssignedDate = new DateTime(2024, 11, 2, 10, 0, 0),
             RoomNumber = "Exterior Grounds"
         };
-        db.Add(christmasOrder2);
+        AddIfMissing(db, christmasOrder2);
 
         var christmasOrder3 = new WorkOrder
         {
@@ -69,7 +67,7 @@ public class ZDataLoader
             AssignedDate = new DateTime(2024, 11, 6, 9, 0, 0),
             RoomNumber = "Sanctuary Organ Loft"
         };
-        db.Add(christmasOrder3);
+        AddIfMissing(db, christmasOrder3);
 
         var christmasOrder4 = new WorkOrder
         {
@@ -82,7 +80,7 @@ public class ZDataLoader
             CreatedDate = new DateTime(2024, 11, 10, 16, 0, 0),
             RoomNumber = "Sanctuary"
         };
-        db.Add(christmasOrder4);
+        AddIfMissing(db, christmasOrder4);
 
         var christmasOrder5 = new WorkOrder
         {
@@ -97,7 +95,7 @@ public class ZDataLoader
             CompletedDate = new DateTime(2024, 12, 5, 15, 0, 0),
             RoomNumber = "Sanctuary"
         };
-        db.Add(christmasOrder5);
+        AddIfMissing(db, christmasOrder5);
 
         var christmasOrder6 = new WorkOrder
         {
@@ -111,7 +109,17 @@ public class ZDataLoader
             AssignedDate = new DateTime(2024, 11, 21, 9, 0, 0),
             RoomNumber = "Church Office"
         };
-        db.Add(christmasOrder6);
+        AddIfMissing(db, christmasOrder6);
         db.SaveChanges();
+    }
+
+    /// <summary>Adds the work order unless one with the same title and creator is already stored.</summary>
+    private static void AddIfMissing(DbContext db, WorkOrder order)
+    {
+        var creatorId = order.Creator!.Id;
+        if (!db.Set<WorkOrder>().Any(w => w.Title == order.Title && w.Creator!.Id == creatorId))
+        {
+            db.Add(order);
+        }
     }
 }

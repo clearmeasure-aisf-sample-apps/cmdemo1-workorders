@@ -46,9 +46,8 @@ public class BuildingsTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        // Create a unique building name with timestamp to avoid conflicts
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var buildingName = $"TestBuilding{timestamp}";
+        // Create a unique building name so parallel tests never share it
+        var buildingName = $"TestBuilding{TestData.Tag()}";
         var room1 = "TestRoom1";
         var room2 = "TestRoom2";
 
@@ -130,8 +129,7 @@ public class BuildingsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a unique building name
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var buildingName = $"TestBuilding{timestamp}";
+        var buildingName = $"TestBuilding{TestData.Tag()}";
         var room = "TestRoom";
 
         // Create test work orders
@@ -199,8 +197,7 @@ public class BuildingsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a unique building name
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var buildingName = $"TestBuilding{timestamp}";
+        var buildingName = $"TestBuilding{TestData.Tag()}";
         var room = "TestRoom";
 
         // Create test work orders

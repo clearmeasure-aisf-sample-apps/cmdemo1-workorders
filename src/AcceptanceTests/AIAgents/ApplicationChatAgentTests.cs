@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using Microsoft.EntityFrameworkCore;
 using NavMenu = ClearMeasure.Bootcamp.UI.Shared.NavMenu;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
@@ -41,6 +42,13 @@ public class ApplicationChatAgentTests : AcceptanceTestBase
             "In your final response, include the work order number on its own line in exactly this format: " +
             "WorkOrderNumber: <number>";
 
+        // Work orders that exist before the chat, so the fallback below picks only one the agent creates.
+        HashSet<Guid> before;
+        await using (var snapshot = TestHost.NewDbContext())
+        {
+            before = (await snapshot.Set<WorkOrder>().Select(w => w.Id).ToListAsync()).ToHashSet();
+        }
+
         await Input(nameof(ApplicationChat.Elements.ChatInput), prompt);
         await Click(nameof(ApplicationChat.Elements.SendButton));
 
@@ -65,13 +73,14 @@ public class ApplicationChatAgentTests : AcceptanceTestBase
         var bus = TestHost.GetRequiredService<IBus>();
         var createdWo = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
 
-        // Fallback: if the exact number lookup failed, search all work orders for one
-        // created by tlovejoy and assigned to gwillie (LLM may format the number differently)
+        // Fallback: if the exact number lookup failed, look among the work orders created during this
+        // test for one created by tlovejoy and assigned to gwillie (LLM may format the number differently)
         if (createdWo == null)
         {
             var allWorkOrders = await bus.Send(new WorkOrderSpecificationQuery());
             createdWo = allWorkOrders
-                .FirstOrDefault(wo => wo.Creator?.UserName == "tlovejoy"
+                .FirstOrDefault(wo => !before.Contains(wo.Id)
+                                      && wo.Creator?.UserName == "tlovejoy"
                                       && wo.Assignee?.UserName == "gwillie");
         }
 
