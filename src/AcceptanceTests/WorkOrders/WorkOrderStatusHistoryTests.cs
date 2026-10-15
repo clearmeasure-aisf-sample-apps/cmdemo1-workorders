@@ -65,7 +65,7 @@ public class WorkOrderStatusHistoryTests : AcceptanceTestBase
 
             // Verify the first entry is now InProgress (newest first)
             var firstToStatusCell = Page.GetByTestId(nameof(WorkOrderManage.Elements.StatusHistoryToStatus)).First;
-            await Expect(firstToStatusCell).ToContainTextAsync("InProgress");
+            await Expect(firstToStatusCell).ToContainTextAsync("In Progress");
         }
     }
 }

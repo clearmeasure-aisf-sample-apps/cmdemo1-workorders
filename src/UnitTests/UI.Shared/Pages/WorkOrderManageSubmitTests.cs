@@ -266,6 +266,15 @@ public class WorkOrderManageSubmitTests
                 return RespondAfterGate((TResponse)(object)result);
             }
 
+            if (request is WorkOrderStatusHistoryQuery)
+
+            {
+
+                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+
+            }
+
+
             throw new NotImplementedException(request.GetType().Name);
         }
 
