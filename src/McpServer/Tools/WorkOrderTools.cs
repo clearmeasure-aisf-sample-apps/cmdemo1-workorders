@@ -249,6 +249,13 @@ public class WorkOrderTools
             return FormatInvalidSaveCommand(workOrder);
         }
 
+        return ValidateTitlePatch(title)
+            ?? ValidateRoomNumberPatch(workOrder, roomNumber)
+            ?? ValidateDueDatePatch(dueDate);
+    }
+
+    private static string? ValidateTitlePatch(string? title)
+    {
         if (IsBlankPatch(title))
         {
             return "The Title field is required.";
@@ -259,18 +266,21 @@ public class WorkOrderTools
             return $"Title cannot exceed {WorkOrder.TitleMaxLength} characters.";
         }
 
+        return null;
+    }
+
+    private static string? ValidateRoomNumberPatch(WorkOrder workOrder, string? roomNumber)
+    {
         if (roomNumber is { Length: > WorkOrder.RoomNumberEntryMaxLength } && roomNumber != workOrder.RoomNumber)
         {
             return $"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters.";
         }
 
-        if (IsInvalidDueDatePatch(dueDate))
-        {
-            return $"Invalid due date '{dueDate}'. Use yyyy-MM-dd.";
-        }
-
         return null;
     }
+
+    private static string? ValidateDueDatePatch(string? dueDate) =>
+        IsInvalidDueDatePatch(dueDate) ? $"Invalid due date '{dueDate}'. Use yyyy-MM-dd." : null;
 
     private static bool IsBlankPatch(string? value) => value != null && string.IsNullOrWhiteSpace(value);
 
