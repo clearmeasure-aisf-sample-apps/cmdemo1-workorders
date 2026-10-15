@@ -58,11 +58,35 @@ public class AppShellTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldFitWithoutHorizontalScroll_At1280()
     {
+        // Measure the layout with this test's own realistic rows, not whatever other tests left in the database.
+        await using (var context = TestHost.NewDbContext())
+        {
+            context.Attach(CurrentUser);
+            foreach (var status in new[] { WorkOrderStatus.Draft, WorkOrderStatus.Assigned, WorkOrderStatus.InProgress })
+            {
+                context.Add(new WorkOrder
+                {
+                    Number = TestData.Number("A"),
+                    Creator = CurrentUser,
+                    Assignee = CurrentUser,
+                    Status = status,
+                    Title = $"[{TestTag}] Replace hallway light fixtures near the fellowship hall entrance",
+                    Building = "Sanctuary",
+                    RoomNumber = "Fellowship Hall 2",
+                    DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
+
+            await context.SaveChangesAsync();
+        }
+
         await Page.SetViewportSizeAsync(1280, 800);
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await Expect(Page.Locator(".grid-data")).ToBeVisibleAsync();
+        await Expect(Page.Locator(".grid-data tbody tr")).ToHaveCountAsync(3);
 
         var pageFits = await Page.EvaluateAsync<bool>(
             "() => document.documentElement.scrollWidth <= document.documentElement.clientWidth");

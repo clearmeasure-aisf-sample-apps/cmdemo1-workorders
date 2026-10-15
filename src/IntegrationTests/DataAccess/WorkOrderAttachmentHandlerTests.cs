@@ -13,10 +13,8 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task AddAttachmentMetadataCommand_ShouldPersistAttachment()
     {
-        new DatabaseTests().Clean();
-
-        var uploader = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com");
-        var workOrder = new WorkOrder { Number = "WO-001", Creator = uploader };
+        var uploader = new Employee(TestData.UserName("uploader"), "Attachment", "Uploader", "uploader@example.com");
+        var workOrder = new WorkOrder { Number = TestData.Number("A"), Creator = uploader };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -47,10 +45,8 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task WorkOrderAttachmentsQuery_ShouldReturnAttachmentsForWorkOrder()
     {
-        new DatabaseTests().Clean();
-
-        var uploader = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com");
-        var workOrder = new WorkOrder { Number = "WO-002", Creator = uploader };
+        var uploader = new Employee(TestData.UserName("uploader"), "Attachment", "Uploader", "uploader@example.com");
+        var workOrder = new WorkOrder { Number = TestData.Number("A"), Creator = uploader };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -73,10 +69,8 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task WorkOrderAttachmentsQuery_ShouldReturnEmptyForWorkOrderWithNoAttachments()
     {
-        new DatabaseTests().Clean();
-
-        var creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com");
-        var workOrder = new WorkOrder { Number = "WO-003", Creator = creator };
+        var creator = new Employee(TestData.UserName("uploader"), "Attachment", "Uploader", "uploader@example.com");
+        var workOrder = new WorkOrder { Number = TestData.Number("A"), Creator = creator };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {

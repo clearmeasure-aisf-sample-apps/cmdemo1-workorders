@@ -19,8 +19,8 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     {
         var creator = Faker<Employee>();
         creator.UserName = $"dup_{TestTag}";
-        creator.AddRole(new Role("Pastor", true, false));
-        creator.AddRole(new Role("Requester", true, false));
+        creator.AddRole(new Role($"Pastor_{TestTag}", true, false));
+        creator.AddRole(new Role($"Requester_{TestTag}", true, false));
         var orders = Enumerable.Range(0, 3).Select(_ =>
         {
             var order = Faker<WorkOrder>();
