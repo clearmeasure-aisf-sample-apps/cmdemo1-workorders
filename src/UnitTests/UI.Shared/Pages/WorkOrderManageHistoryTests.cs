@@ -151,8 +151,8 @@ public class WorkOrderManageHistoryTests
         {
             var toStatusCells = component.FindAll($"[data-testid='{WorkOrderManage.Elements.StatusHistoryToStatus}']");
             toStatusCells.Count.ShouldBe(2);
-            // First one should be InProgress (newest)
-            toStatusCells[0].TextContent.ShouldContain("InProgress");
+            // First one should be In Progress (newest)
+            toStatusCells[0].TextContent.ShouldContain("In Progress");
             // Second one should be Assigned (oldest)
             toStatusCells[1].TextContent.ShouldContain("Assigned");
         });
@@ -195,6 +195,11 @@ public class WorkOrderManageHistoryTests
             if (request is EmployeeGetAllQuery)
             {
                 return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<Employee>());
+            }
+
+            if (request is WorkOrderAttachmentsQuery)
+            {
+                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderAttachment>());
             }
 
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
