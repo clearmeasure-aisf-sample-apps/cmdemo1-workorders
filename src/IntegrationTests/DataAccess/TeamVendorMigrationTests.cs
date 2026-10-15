@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core;
 using DbUp;
 using DbUp.Engine.Output;
@@ -63,8 +64,8 @@ public class TeamVendorMigrationTests
         full.Successful.ShouldBeTrue(full.Error?.ToString());
         full.Scripts.Select(s => Path.GetFileName(s.Name)).ShouldBe([ScriptName]);
         SnapshotExistingSchema().ShouldBe(schemaBefore);
-        Query("SELECT CONCAT([UserName], '|', [FirstName], '|', [LastName], '|', [EmailAddress], '|', " +
-              "[PreferredLanguage]) FROM [dbo].[Employee] WHERE [Id] = @id",
+        Query("SELECT [UserName], [FirstName], [LastName], [EmailAddress], [PreferredLanguage] " +
+              "FROM [dbo].[Employee] WHERE [Id] = @id",
                 new SqlParameter("@id", SeededEmployeeId))
             .ShouldBe(["mig291|Migration|Check|mig291@example.com|fr-FR"]);
         NewTables.Select(TableExists).ShouldAllBe(exists => exists);
@@ -76,7 +77,7 @@ public class TeamVendorMigrationTests
         ]);
         ColumnsOf("TeamMember").ShouldBe(["TeamId|uniqueidentifier||NO", "EmployeeId|uniqueidentifier||NO"]);
         Execute("INSERT INTO [dbo].[Vendor] ([Id], [Name]) VALUES (NEWID(), N'Acme')");
-        Query("SELECT CAST([IsActive] AS NVARCHAR(1)) FROM [dbo].[Vendor] WHERE [Name] = N'Acme'").ShouldBe(["1"]);
+        Query("SELECT [IsActive] FROM [dbo].[Vendor] WHERE [Name] = N'Acme'").ShouldBe(["True"]);
     }
 
     private DbUp.Engine.DatabaseUpgradeResult Upgrade(string scriptDirectory, Func<string, bool>? filter)
@@ -100,22 +101,22 @@ public class TeamVendorMigrationTests
     {
         const string excluded = "('SchemaVersions', 'Team', 'Vendor', 'TeamMember')";
         var columns = Query(
-            "SELECT CONCAT('C|', TABLE_SCHEMA, '|', TABLE_NAME, '|', COLUMN_NAME, '|', ORDINAL_POSITION, '|', " +
-            "DATA_TYPE, '|', CHARACTER_MAXIMUM_LENGTH, '|', IS_NULLABLE, '|', COLUMN_DEFAULT) " +
+            "SELECT 'C', TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, DATA_TYPE, " +
+            "CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE, COLUMN_DEFAULT " +
             "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME NOT IN " + excluded);
         var constraints = Query(
-            "SELECT CONCAT('K|', TABLE_SCHEMA, '|', TABLE_NAME, '|', CONSTRAINT_NAME, '|', CONSTRAINT_TYPE) " +
+            "SELECT 'K', TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME, CONSTRAINT_TYPE " +
             "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME NOT IN " + excluded);
         var indexes = Query(
-            "SELECT CONCAT('I|', SCHEMA_NAME(t.schema_id), '|', t.name, '|', i.name, '|', i.type_desc, '|', " +
-            "i.is_unique) FROM sys.indexes i JOIN sys.tables t ON t.object_id = i.object_id " +
+            "SELECT 'I', SCHEMA_NAME(t.schema_id), t.name, i.name, i.type_desc, i.is_unique " +
+            "FROM sys.indexes i JOIN sys.tables t ON t.object_id = i.object_id " +
             "WHERE t.name NOT IN " + excluded);
 
         return columns.Concat(constraints).Concat(indexes).OrderBy(row => row, StringComparer.Ordinal).ToArray();
     }
 
     private string[] ColumnsOf(string table) =>
-        Query("SELECT CONCAT(COLUMN_NAME, '|', DATA_TYPE, '|', CHARACTER_MAXIMUM_LENGTH, '|', IS_NULLABLE) " +
+        Query("SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE " +
               "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = @table " +
               "ORDER BY ORDINAL_POSITION", new SqlParameter("@table", table));
 
@@ -132,6 +133,8 @@ public class TeamVendorMigrationTests
         command.ExecuteNonQuery();
     }
 
+    // Columns are joined on the client: concatenating in SQL mixes the catalog collation of sys.* names
+    // with the database collation and fails with a collation conflict.
     private string[] Query(string sql, params SqlParameter[] parameters)
     {
         using var connection = new SqlConnection(_connectionString);
@@ -142,7 +145,11 @@ public class TeamVendorMigrationTests
         var rows = new List<string>();
         while (reader.Read())
         {
-            rows.Add(reader.GetString(0));
+            var values = Enumerable.Range(0, reader.FieldCount)
+                .Select(i => reader.IsDBNull(i)
+                    ? ""
+                    : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "");
+            rows.Add(string.Join("|", values));
         }
 
         return rows.ToArray();

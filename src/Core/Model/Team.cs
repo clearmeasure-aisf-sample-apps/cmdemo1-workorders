@@ -41,12 +41,12 @@ public class Team : EntityBase<Team>
     /// <summary>
     /// Name of the team, unique ignoring case.
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; init; }
 
     /// <summary>
     /// Optional description of what the team does.
     /// </summary>
-    public string? Description { get; set; }
+    public string? Description { get; init; }
 
     /// <summary>
     /// Employees who belong to the team. An employee appears at most once.

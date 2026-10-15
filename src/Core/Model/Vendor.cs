@@ -1,4 +1,3 @@
-// ReSharper disable UnusedAutoPropertyAccessor.Global -- read by EF Core and serialization until the vendor UI ships
 namespace ClearMeasure.Bootcamp.Core.Model;
 
 /// <summary>
@@ -47,30 +46,30 @@ public class Vendor : EntityBase<Vendor>
     /// <summary>
     /// Name of the vendor, unique ignoring case.
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; init; }
 
     /// <summary>
     /// Optional trade, such as HVAC or plumbing.
     /// </summary>
-    public string? Trade { get; set; }
+    public string? Trade { get; init; }
 
     /// <summary>
     /// Optional name of the person to contact at the vendor.
     /// </summary>
-    public string? ContactName { get; set; }
+    public string? ContactName { get; init; }
 
     /// <summary>
     /// Optional email address of the vendor.
     /// </summary>
-    public string? EmailAddress { get; set; }
+    public string? EmailAddress { get; init; }
 
     /// <summary>
     /// Optional phone number of the vendor.
     /// </summary>
-    public string? PhoneNumber { get; set; }
+    public string? PhoneNumber { get; init; }
 
     /// <summary>
     /// Whether the church still uses this vendor. New vendors are active.
     /// </summary>
-    public bool IsActive { get; set; } = true;
+    public bool IsActive { get; init; } = true;
 }

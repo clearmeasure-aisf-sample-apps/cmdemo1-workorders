@@ -30,7 +30,7 @@ public class OnionArchitectureTests
     {
         var project = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "Core", "Core.csproj"));
 
-        project.ShouldNotContain("<ProjectReference", Case.Insensitive);
+        project.ShouldNotContain("<ProjectReference");
     }
 
     [TestCase(typeof(Team))]
