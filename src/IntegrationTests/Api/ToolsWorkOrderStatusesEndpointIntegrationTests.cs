@@ -38,13 +38,12 @@ public class ToolsWorkOrderStatusesEndpointIntegrationTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var statuses = await response.Content.ReadFromJsonAsync<JsonElement[]>(JsonOptions);
         statuses.ShouldNotBeNull();
-        statuses.Length.ShouldBe(6);
+        statuses.Length.ShouldBe(5);
 
         var keys = statuses.Select(s => s.GetProperty("key").GetString()).ToArray();
         keys.ShouldContain("Draft");
         keys.ShouldContain("Assigned");
         keys.ShouldContain("InProgress");
-        keys.ShouldContain("WaitingOnVendor");
         keys.ShouldContain("Complete");
         keys.ShouldContain("Cancelled");
     }

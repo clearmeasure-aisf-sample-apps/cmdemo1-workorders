@@ -8,7 +8,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// <summary>
 /// Composable work-order filters shared by the search handlers. Every filter is a small method so
 /// the chain stays readable and each predicate translates on SQL Server, SQLite and in memory.
-/// "Open" means Draft, Assigned, In Progress, or Waiting on vendor; "today" is the church's calendar date.
+/// "Open" means Draft, Assigned or In Progress; "today" is the church's calendar date.
 /// </summary>
 internal static class WorkOrderQueryFilters
 {
@@ -40,7 +40,7 @@ internal static class WorkOrderQueryFilters
         return ApplySearchText(query, specification.SearchText);
     }
 
-    /// <summary>Open work orders: Draft, Assigned, In Progress, or Waiting on vendor.</summary>
+    /// <summary>Open work orders: Draft, Assigned or In Progress.</summary>
     public static IQueryable<WorkOrder> OpenOnly(IQueryable<WorkOrder> query) => query.Where(IsOpen());
 
     /// <summary>Open work orders whose due date is before <paramref name="today"/>.</summary>
@@ -51,14 +51,13 @@ internal static class WorkOrderQueryFilters
     public static IQueryable<WorkOrder> CompletedWithin(IQueryable<WorkOrder> query, int days, TimeProvider time) =>
         query.Where(IsCompletedWithin(days, time));
 
-    /// <summary>Predicate of an open work order: Draft, Assigned, In Progress, or Waiting on vendor.</summary>
+    /// <summary>Predicate of an open work order: Draft, Assigned or In Progress.</summary>
     public static Expression<Func<WorkOrder, bool>> IsOpen()
     {
         var draft = WorkOrderStatus.Draft;
         var assigned = WorkOrderStatus.Assigned;
         var inProgress = WorkOrderStatus.InProgress;
-        var waitingOnVendor = WorkOrderStatus.WaitingOnVendor;
-        return wo => wo.Status == draft || wo.Status == assigned || wo.Status == inProgress || wo.Status == waitingOnVendor;
+        return wo => wo.Status == draft || wo.Status == assigned || wo.Status == inProgress;
     }
 
     /// <summary>Predicate of an open work order whose due date is before <paramref name="today"/>.</summary>

@@ -8,17 +8,17 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Models;
 public class DashboardStatusCardsTests
 {
     [Test]
-    public void Build_ReturnsSixCardsInStatusOrder()
+    public void Build_ReturnsFiveCardsInStatusOrder()
     {
         var counts = new Dictionary<string, int>
         {
-            ["Draft"] = 1, ["Assigned"] = 2, ["InProgress"] = 3, ["WaitingOnVendor"] = 4, ["Complete"] = 5, ["Cancelled"] = 6
+            ["Draft"] = 1, ["Assigned"] = 2, ["InProgress"] = 3, ["Complete"] = 4, ["Cancelled"] = 5
         };
 
         var cards = DashboardStatusCards.Build(counts);
 
         cards.Select(c => c.Status).ShouldBe(WorkOrderStatus.GetAllItems());
-        cards.Select(c => c.Count).ShouldBe([1, 2, 3, 4, 5, 6]);
+        cards.Select(c => c.Count).ShouldBe([1, 2, 3, 4, 5]);
     }
 
     [Test]
@@ -29,15 +29,14 @@ public class DashboardStatusCardsTests
         var partial = DashboardStatusCards.Build(counts);
         var none = DashboardStatusCards.Build(null);
 
-        partial.Select(c => c.Count).ShouldBe([0, 7, 0, 0, 0, 0]);
-        none.Length.ShouldBe(6);
+        partial.Select(c => c.Count).ShouldBe([0, 7, 0, 0, 0]);
+        none.Length.ShouldBe(5);
         none.ShouldAllBe(c => c.Count == 0);
     }
 
     [TestCase("Draft", "summary-card--status-draft", "bi-pencil-square")]
     [TestCase("Assigned", "summary-card--status-assigned", "bi-person-check")]
     [TestCase("InProgress", "summary-card--status-in-progress", "bi-hourglass-split")]
-    [TestCase("WaitingOnVendor", "summary-card--status-waiting", "bi-hourglass-end")]
     [TestCase("Complete", "summary-card--status-complete", "bi-check2-circle")]
     [TestCase("Cancelled", "summary-card--status-cancelled", "bi-x-circle")]
     public void Build_AssignsToneAndIconPerStatus(string key, string tone, string icon)

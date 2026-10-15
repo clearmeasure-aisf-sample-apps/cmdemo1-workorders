@@ -13,7 +13,7 @@ public record EmployeeWorkLoadQuery(string EmployeeUserName) : IRequest<Employee
 public class EmployeeWorkLoad
 {
     /// <summary>
-    /// Count of work orders assigned to the employee with status Draft, Assigned, InProgress, or Waiting on vendor.
+    /// Count of work orders assigned to the employee with status Draft, Assigned, or InProgress.
     /// </summary>
     public int AssignedAndOpen { get; init; }
 
@@ -23,7 +23,7 @@ public class EmployeeWorkLoad
     public int InProgress { get; init; }
 
     /// <summary>
-    /// Count of open work orders (Draft, Assigned, InProgress, Waiting on vendor) assigned to the employee with due date in the past.
+    /// Count of open work orders (Draft, Assigned, InProgress) assigned to the employee with due date in the past.
     /// </summary>
     public int Overdue { get; init; }
 

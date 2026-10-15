@@ -13,13 +13,12 @@ public class WorkOrderStatusTests
     {
         var statuses = WorkOrderStatus.GetAllItems();
 
-        Assert.That(statuses.Length, Is.EqualTo(6));
+        Assert.That(statuses.Length, Is.EqualTo(5));
         Assert.That(statuses[0], Is.EqualTo(WorkOrderStatus.Draft));
         Assert.That(statuses[1], Is.EqualTo(WorkOrderStatus.Assigned));
         Assert.That(statuses[2], Is.EqualTo(WorkOrderStatus.InProgress));
-        Assert.That(statuses[3], Is.EqualTo(WorkOrderStatus.WaitingOnVendor));
-        Assert.That(statuses[4], Is.EqualTo(WorkOrderStatus.Complete));
-        Assert.That(statuses[5], Is.EqualTo(WorkOrderStatus.Cancelled));
+        Assert.That(statuses[3], Is.EqualTo(WorkOrderStatus.Complete));
+        Assert.That(statuses[4], Is.EqualTo(WorkOrderStatus.Cancelled));
     }
 
     [Test]
@@ -34,9 +33,6 @@ public class WorkOrderStatusTests
         var inprogress = WorkOrderStatus.Parse("inprogress");
         Assert.That(inprogress, Is.EqualTo(WorkOrderStatus.InProgress));
 
-        var waitingOnVendor = WorkOrderStatus.Parse("waitingonvendor");
-        Assert.That(waitingOnVendor, Is.EqualTo(WorkOrderStatus.WaitingOnVendor));
-
         var complete = WorkOrderStatus.Parse("complete");
         Assert.That(complete, Is.EqualTo(WorkOrderStatus.Complete));
     }
@@ -50,8 +46,6 @@ public class WorkOrderStatusTests
         WorkOrderStatus.FromCode("CNL").ShouldBe(WorkOrderStatus.Cancelled);
         WorkOrderStatus.FromCode("DRT").ShouldBe(WorkOrderStatus.Draft);
         WorkOrderStatus.FromCode("DRT  ").ShouldBe(WorkOrderStatus.Draft);
-        WorkOrderStatus.FromCode("WTV").ShouldBe(WorkOrderStatus.WaitingOnVendor);
-        WorkOrderStatus.FromCode("WTV ").ShouldBe(WorkOrderStatus.WaitingOnVendor);
     }
 
     [Test]

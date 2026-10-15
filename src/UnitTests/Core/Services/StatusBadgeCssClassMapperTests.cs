@@ -10,7 +10,6 @@ public class StatusBadgeCssClassMapperTests
     [TestCase(nameof(WorkOrderStatus.Draft), "status-badge--draft")]
     [TestCase(nameof(WorkOrderStatus.Assigned), "status-badge--assigned")]
     [TestCase(nameof(WorkOrderStatus.InProgress), "status-badge--in-progress")]
-    [TestCase(nameof(WorkOrderStatus.WaitingOnVendor), "status-badge--waiting")]
     [TestCase(nameof(WorkOrderStatus.Complete), "status-badge--complete")]
     [TestCase(nameof(WorkOrderStatus.Cancelled), "status-badge--cancelled")]
     public void CssClass_ReturnsCssClassForStatus(string statusKey, string expectedClass)

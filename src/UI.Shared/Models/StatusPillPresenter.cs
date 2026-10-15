@@ -19,7 +19,6 @@ public static class StatusPillPresenter
         [WorkOrderStatus.Draft.Key] = "draft",
         [WorkOrderStatus.Assigned.Key] = "assigned",
         [WorkOrderStatus.InProgress.Key] = "in-progress",
-        [WorkOrderStatus.WaitingOnVendor.Key] = "waiting",
         [WorkOrderStatus.Complete.Key] = "complete",
         [WorkOrderStatus.Cancelled.Key] = "cancelled"
     };

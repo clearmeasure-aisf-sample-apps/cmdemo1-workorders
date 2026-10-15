@@ -38,8 +38,7 @@ public class EmployeeWorkLoadQueryHandler(DataContext context, TimeProvider time
     {
         return workOrder.Status == WorkOrderStatus.Draft ||
                workOrder.Status == WorkOrderStatus.Assigned ||
-               workOrder.Status == WorkOrderStatus.InProgress ||
-               workOrder.Status == WorkOrderStatus.WaitingOnVendor;
+               workOrder.Status == WorkOrderStatus.InProgress;
     }
 
     private static bool IsCompletedSince(WorkOrder workOrder, DateTime since)
