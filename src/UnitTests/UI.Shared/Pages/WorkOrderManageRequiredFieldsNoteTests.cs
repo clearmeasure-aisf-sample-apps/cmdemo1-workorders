@@ -67,13 +67,9 @@ public class WorkOrderManageRequiredFieldsNoteTests
             }
 
             if (request is WorkOrderStatusHistoryQuery)
-
             {
-
-                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
-
+                return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
             }
-
 
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
         }

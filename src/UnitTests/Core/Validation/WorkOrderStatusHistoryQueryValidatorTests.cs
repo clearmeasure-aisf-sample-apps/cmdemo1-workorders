@@ -8,12 +8,20 @@ namespace ClearMeasure.Bootcamp.UnitTests.Core.Validation;
 [TestFixture]
 public class WorkOrderStatusHistoryQueryValidatorTests
 {
-    private readonly WorkOrderStatusHistoryQueryValidator _validator = new();
+    private WorkOrderStatusHistoryQueryValidator _validator = null!;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _validator = new WorkOrderStatusHistoryQueryValidator();
+    }
 
     [Test]
-    public void ShouldPass_WhenWorkOrderIdIsSet()
+    public void ShouldPass_WhenWorkOrderIdIsProvided()
     {
-        var result = _validator.TestValidate(new WorkOrderStatusHistoryQuery(Guid.NewGuid()));
+        var query = new WorkOrderStatusHistoryQuery(Guid.NewGuid());
+
+        var result = _validator.TestValidate(query);
 
         result.IsValid.ShouldBeTrue();
     }
@@ -21,7 +29,9 @@ public class WorkOrderStatusHistoryQueryValidatorTests
     [Test]
     public void ShouldFail_WhenWorkOrderIdIsEmpty()
     {
-        var result = _validator.TestValidate(new WorkOrderStatusHistoryQuery(Guid.Empty));
+        var query = new WorkOrderStatusHistoryQuery(Guid.Empty);
+
+        var result = _validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.WorkOrderId);
     }

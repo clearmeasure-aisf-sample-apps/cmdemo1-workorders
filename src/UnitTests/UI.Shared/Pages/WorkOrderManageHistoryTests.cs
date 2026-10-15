@@ -151,7 +151,7 @@ public class WorkOrderManageHistoryTests
         {
             var toStatusCells = component.FindAll($"[data-testid='{WorkOrderManage.Elements.StatusHistoryToStatus}']");
             toStatusCells.Count.ShouldBe(2);
-            // First one should be InProgress (newest)
+            // First one should be In Progress (newest)
             toStatusCells[0].TextContent.ShouldContain("In Progress");
             // Second one should be Assigned (oldest)
             toStatusCells[1].TextContent.ShouldContain("Assigned");
