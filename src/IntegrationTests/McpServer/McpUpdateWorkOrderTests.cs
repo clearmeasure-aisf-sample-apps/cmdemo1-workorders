@@ -481,12 +481,17 @@ public class McpUpdateWorkOrderTests
     {
         var creator = new Employee(_creator, "Jane", "Smith", "jane@test.com");
         var otherUser = new Employee(_other, "Other", "User", "other@test.com");
+        var originalDueDate = new DateOnly(2026, 6, 15);
         var workOrder = new WorkOrder
         {
             Creator = creator,
             Number = $"{_stem}15",
             Title = "Draft work order",
-            Status = WorkOrderStatus.Draft
+            Status = WorkOrderStatus.Draft,
+            Priority = WorkOrderPriority.Low,
+            Building = "Original",
+            RoomNumber = "101",
+            DueDate = originalDueDate
         };
 
         await using var context = TestHost.GetRequiredService<DbContext>();
@@ -500,9 +505,19 @@ public class McpUpdateWorkOrderTests
             bus,
             $"{_stem}15",
             _other,
-            priority: "High");
+            priority: "High",
+            building: "Changed",
+            roomNumber: "999",
+            dueDate: "2026-12-25");
 
-        result.ShouldContain("cannot be executed");
+        result.ShouldBe($"Only the creator '{_creator}' can update draft work order '{_stem}15'.");
+
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}15"));
+        reloaded!.Priority.ShouldBe(WorkOrderPriority.Low);
+        reloaded.Building.ShouldBe("Original");
+        reloaded.RoomNumber.ShouldBe("101");
+        reloaded.DueDate.ShouldBe(originalDueDate);
+        reloaded.Status.ShouldBe(WorkOrderStatus.Draft);
     }
 
     [Test]

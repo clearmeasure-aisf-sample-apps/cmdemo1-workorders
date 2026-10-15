@@ -468,6 +468,24 @@ public class WorkOrderTools
     private static string FormatInvalidSaveCommand(WorkOrder workOrder) =>
         $"Command '{SaveDraftCommand.Name}' cannot be executed. Work order is in '{workOrder.Status.FriendlyName}' status but the command requires '{WorkOrderStatus.Draft.FriendlyName}' status.";
 
+    /// <summary>
+    /// Message for an update-work-order request whose Save command is not valid: a draft work order
+    /// updated by someone other than its creator gets a permission message; any other status gets the
+    /// standard invalid-status message.
+    /// </summary>
+    internal static string FormatUpdateNotAllowed(WorkOrder workOrder)
+    {
+        if (workOrder.Status != WorkOrderStatus.Draft)
+        {
+            return FormatInvalidSaveCommand(workOrder);
+        }
+
+        var creatorUserName = workOrder.Creator?.UserName;
+        return string.IsNullOrWhiteSpace(creatorUserName)
+            ? $"Only the creator can update draft work order '{workOrder.Number}'."
+            : $"Only the creator '{creatorUserName}' can update draft work order '{workOrder.Number}'.";
+    }
+
     private static async Task<Employee?> FindEmployeeByUsername(IBus bus, string username)
     {
         try
@@ -530,7 +548,7 @@ public class WorkOrderTools
     {
         if (!new SaveDraftCommand(workOrder, executingUser).IsValid())
         {
-            return FormatInvalidSaveCommand(workOrder);
+            return FormatUpdateNotAllowed(workOrder);
         }
 
         if (IsBlankPatch(priority))

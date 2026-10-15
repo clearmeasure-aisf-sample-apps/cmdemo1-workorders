@@ -190,4 +190,44 @@ public class WorkOrderToolParameterTests
 
         error.ShouldNotBeNull();
     }
+
+    [Test]
+    public void ShouldReturnPermissionMessageForDraftUpdateNotAllowed()
+    {
+        var workOrder = new WorkOrder
+        {
+            Number = "WO-1",
+            Status = WorkOrderStatus.Draft,
+            Creator = new Employee("jsmith", "Jane", "Smith", "jane@test.com")
+        };
+
+        WorkOrderTools.FormatUpdateNotAllowed(workOrder)
+            .ShouldBe("Only the creator 'jsmith' can update draft work order 'WO-1'.");
+    }
+
+    [Test]
+    public void ShouldReturnPermissionMessageWithoutCreatorNameWhenCreatorMissing()
+    {
+        var workOrder = new WorkOrder { Number = "WO-2", Status = WorkOrderStatus.Draft, Creator = null };
+
+        WorkOrderTools.FormatUpdateNotAllowed(workOrder)
+            .ShouldBe("Only the creator can update draft work order 'WO-2'.");
+    }
+
+    [Test]
+    public void ShouldReturnInvalidStatusMessageForNonDraftUpdateNotAllowed()
+    {
+        var workOrder = new WorkOrder
+        {
+            Number = "WO-3",
+            Status = WorkOrderStatus.Assigned,
+            Creator = new Employee("jsmith", "Jane", "Smith", "jane@test.com")
+        };
+
+        var message = WorkOrderTools.FormatUpdateNotAllowed(workOrder);
+
+        message.ShouldContain("cannot be executed");
+        message.ShouldContain("'Assigned' status");
+        message.ShouldNotContain("Only the creator");
+    }
 }
