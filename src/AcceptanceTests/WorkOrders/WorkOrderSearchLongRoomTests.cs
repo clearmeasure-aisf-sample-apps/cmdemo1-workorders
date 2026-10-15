@@ -8,7 +8,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
 {
     [Test, Retry(2)]
-    public async Task ShouldNotWidthResultsTableWithLongRoom()
+    public async Task ShouldNotWidenResultsTableWithLongRoom()
     {
         await LoginAsCurrentUser();
 
@@ -48,5 +48,20 @@ public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
         var roomText = roomCell.Locator(".room-text");
         var titleAttribute = await roomText.GetAttributeAsync("title");
         titleAttribute.ShouldBe(room);
+
+        // .table-scroll has overflow-x:auto, so the page check alone would pass without the fix.
+        var roomTextBox = await roomText.BoundingBoxAsync();
+        roomTextBox.ShouldNotBeNull();
+        roomTextBox!.Width.ShouldBeLessThanOrEqualTo(141);
+
+        var cellBox = await roomCell.BoundingBoxAsync();
+        cellBox.ShouldNotBeNull();
+        cellBox!.Width.ShouldBeLessThanOrEqualTo(200);
+
+        var tableWidth = await Page.Locator(".grid-data").EvaluateAsync<double>("t => t.getBoundingClientRect().width");
+        tableWidth.ShouldBeLessThanOrEqualTo(1280);
+
+        var isTruncated = await roomText.EvaluateAsync<bool>("e => e.scrollWidth > e.clientWidth");
+        isTruncated.ShouldBeTrue();
     }
 }

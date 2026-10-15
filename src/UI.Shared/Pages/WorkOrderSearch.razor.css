@@ -611,7 +611,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 100%;
+    /* Explicit px cap: in auto table layout max-width on the td is ignored, so the
+       cap must live on the content to keep its min-content width at 140px. */
+    max-width: 140px;
 }
 
 .col-due {
