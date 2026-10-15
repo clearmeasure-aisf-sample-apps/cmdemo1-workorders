@@ -66,6 +66,29 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     }
 
     [Test]
+    public async Task ShouldSaveAndReadBackMaxLengthBuilding()
+    {
+        var currentUser = Faker<Employee>();
+        currentUser.Id = Guid.NewGuid();
+        var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(currentUser);
+        await context.SaveChangesAsync();
+
+        var expectedBuilding = new string('B', WorkOrder.BuildingMaxLength);
+        var workOrder = Faker<WorkOrder>();
+        workOrder.Id = Guid.Empty;
+        workOrder.Creator = currentUser;
+        workOrder.Building = expectedBuilding;
+
+        var result = await TestHost.GetRequiredService<IBus>().Send(new SaveDraftCommand(workOrder, currentUser));
+
+        var readContext = TestHost.GetRequiredService<DbContext>();
+        var order = readContext.Find<WorkOrder>(result.WorkOrder.Id) ?? throw new InvalidOperationException();
+        order.Building.ShouldBe(expectedBuilding);
+        order.Building!.Length.ShouldBe(WorkOrder.BuildingMaxLength);
+    }
+
+    [Test]
     public async Task ShouldSaveWorkOrderWithAssigneeAndCreator()
     {
         var workOrder = Faker<WorkOrder>();
