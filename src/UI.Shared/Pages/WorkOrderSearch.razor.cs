@@ -47,6 +47,7 @@ public partial class WorkOrderSearch : AppComponentBase
     [SupplyParameterFromQuery] public string? Assignee { get; set; }
     [SupplyParameterFromQuery] public string? Status { get; set; }
     [SupplyParameterFromQuery] public string? OverdueOnly { get; set; }
+    [SupplyParameterFromQuery] public string? WaitingOnVendorOnly { get; set; }
     [SupplyParameterFromQuery] public string? Priority { get; set; }
     [SupplyParameterFromQuery] public string? Building { get; set; }
     [SupplyParameterFromQuery] public string? Room { get; set; }
@@ -105,6 +106,7 @@ public partial class WorkOrderSearch : AppComponentBase
         [nameof(Assignee)] = Assignee,
         [nameof(Status)] = Status,
         [nameof(OverdueOnly)] = OverdueOnly,
+        [nameof(WaitingOnVendorOnly)] = WaitingOnVendorOnly,
         [nameof(Priority)] = Priority,
         [nameof(Building)] = Building,
         [nameof(Room)] = Room,
@@ -137,6 +139,7 @@ public partial class WorkOrderSearch : AppComponentBase
         Model.Filters.Assignee = state.AssignedToMe ? _currentUserName : state.Assignee;
         Model.Filters.Status = state.Status;
         Model.Filters.OverdueOnly = state.OverdueOnly;
+        Model.Filters.WaitingOnVendorOnly = state.WaitingOnVendorOnly;
         Model.Filters.Priority = state.Priority?.ToString();
         Model.Filters.Building = state.Building;
         await SearchWorkOrders();
@@ -164,6 +167,7 @@ public partial class WorkOrderSearch : AppComponentBase
         Priority = Enum.TryParse<WorkOrderPriority>(Model.Filters.Priority, out var priority) ? priority : null,
         Building = NullIfBlank(Model.Filters.Building),
         OverdueOnly = Model.Filters.OverdueOnly,
+        WaitingOnVendorOnly = Model.Filters.WaitingOnVendorOnly,
         AssignedToMe = _assignedToMe,
         Page = 1
     };
@@ -233,6 +237,7 @@ public partial class WorkOrderSearch : AppComponentBase
         specification.MatchAssignee(await FindEmployeeAsync(Model.Filters.Assignee));
         specification.MatchStatus(_state.Status == null ? null : WorkOrderStatus.FromKey(_state.Status));
         specification.MatchOverdueOnly(_state.OverdueOnly);
+        specification.MatchWaitingOnVendorOnly(_state.WaitingOnVendorOnly);
         specification.MatchPriority(_state.Priority);
         specification.MatchBuilding(_state.Building);
         specification.MatchNoBuilding(_state.NoBuilding);

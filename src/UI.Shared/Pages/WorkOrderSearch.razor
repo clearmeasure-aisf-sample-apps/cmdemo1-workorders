@@ -131,6 +131,11 @@
                            @bind="Model.Filters.OverdueOnly" @bind:after="HandleFiltersChanged"/>
                     <span class="switch-label">Overdue only</span>
                 </label>
+                <label class="switch" for="@Elements.WaitingOnVendorOnlyToggle">
+                    <input type="checkbox" role="@SwitchRole" id="@Elements.WaitingOnVendorOnlyToggle" class="switch-input"
+                           @bind="Model.Filters.WaitingOnVendorOnly" @bind:after="HandleFiltersChanged"/>
+                    <span class="switch-label">Waiting on vendor</span>
+                </label>
             </div>
         </div>
 
@@ -197,6 +202,10 @@
                                                 <a class="board-card" data-testid="@(Elements.BoardCard + card.Number)" href="/workorder/manage/@card.Number?mode=Edit">
                                                     <span class="board-card-number">@card.DisplayNumber</span>
                                                     <span class="board-card-title">@card.Title</span>
+                                                    @if (card.WorkOrder.IsWaitingOnVendor)
+                                                    {
+                                                        <span class="@card.StatusPill.CssClass">@card.StatusPill.Text</span>
+                                                    }
                                                     <span class="board-card-meta">
                                                         @PriorityView(card)
                                                         <span class="board-card-assignee">@AvatarView(card)<span class="visually-hidden">@AssigneeText(card)</span></span>
@@ -403,7 +412,8 @@
         BoardColumn,
         BoardColumnCount,
         BoardColumnEmpty,
-        BoardCard
+        BoardCard,
+        WaitingOnVendorOnlyToggle
     }
 
     // ARIA 1.1 role; bound from a constant because the HTML inspector does not know the value.
