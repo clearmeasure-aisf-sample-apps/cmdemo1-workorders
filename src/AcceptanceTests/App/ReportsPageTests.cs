@@ -178,22 +178,56 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Wait for page to load by checking for seeded test data
+        await Expect(Page.GetByTestId(nameof(Reports.Elements.SummaryCardBuilding)))
+            .ToContainTextAsync($"Sanctuary {TestTag}");
 
         // Initiate download and verify it completes
-        var downloadTask = Page.WaitForDownloadAsync();
+        var download = await Page.RunAndWaitForDownloadAsync(async () =>
+            await Click(nameof(Reports.Elements.ExportButton)));
 
-        await Click(nameof(Reports.Elements.ExportButton));
-
-        var download = await downloadTask;
         var fileName = download.SuggestedFilename;
 
         // Verify filename matches expected pattern
         fileName.ShouldStartWith("reports-");
         fileName.ShouldEndWith(".csv");
 
+        // Read and verify file content
+        var filePath = await download.PathAsync();
+        var content = await File.ReadAllTextAsync(filePath);
+        var lines = content.Split("\r\n", StringSplitOptions.None);
+
+        // Verify header rows exist
+        lines.ShouldContain("Category,Status,Count");
+        lines.ShouldContain("Category,Priority,Count");
+        lines.ShouldContain("Category,Building,Count");
+        lines.ShouldContain("Week Ending,Completed");
+        lines.ShouldContain("Metric,Value");
+
+        // Verify summary metrics exist
+        var completedLine = lines.FirstOrDefault(l => l.StartsWith("Completed (30 days),"));
+        completedLine.ShouldNotBeNull();
+
+        var avgLine = lines.FirstOrDefault(l => l.StartsWith("Average Days to Close,"));
+        avgLine.ShouldNotBeNull();
+
+        var overdueLineIndex = Array.FindIndex(lines, l => l.StartsWith("Overdue Count,"));
+        overdueLineIndex.ShouldBeGreaterThanOrEqualTo(0);
+
+        // Verify building data includes seeded building
+        var buildingLine = $"Open by Building,Sanctuary {TestTag},2";
+        lines.ShouldContain(buildingLine);
+
         // Cleanup
-        await download.DeleteAsync();
+        try
+        {
+            await download.DeleteAsync();
+        }
+        catch
+        {
+            // Download cleanup is best-effort
+        }
     }
 
     private async Task SeedData()
