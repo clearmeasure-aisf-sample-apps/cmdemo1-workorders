@@ -602,7 +602,16 @@
 
 .col-room {
     width: 110px;
+    max-width: 140px;
     overflow-wrap: break-word;
+}
+
+.room-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .col-due {
