@@ -274,6 +274,15 @@ public class WorkOrderManageDictationTests
                 return Task.FromResult<TResponse>((TResponse)(object)workOrderByNumber);
             }
 
+            if (request is WorkOrderStatusHistoryQuery)
+
+            {
+
+                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+
+            }
+
+
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
         }
     }

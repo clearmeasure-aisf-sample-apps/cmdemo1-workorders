@@ -231,6 +231,15 @@ public class WorkOrderManageCopyButtonTests
                 return Task.FromResult((TResponse)(object)workOrder);
             }
 
+            if (request is WorkOrderStatusHistoryQuery)
+
+            {
+
+                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+
+            }
+
+
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
         }
     }
