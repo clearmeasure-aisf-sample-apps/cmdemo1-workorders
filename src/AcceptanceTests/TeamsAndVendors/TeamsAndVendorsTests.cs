@@ -229,7 +229,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await Expect(teamCard).ToBeVisibleAsync();
 
         // Verify member count is displayed
-        var memberCount = teamCard.Locator($"[data-testid*='TeamMemberCount']");
+        var memberCount = teamCard.Locator("[data-testid*='TeamMemberCount']");
         await Expect(memberCount).ToContainTextAsync("2 members");
 
         // Verify member avatars are displayed
@@ -250,8 +250,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
             "Plumbing",
             "John Smith",
             "john@plumbing.com",
-            "555-1234",
-            true
+            "555-1234"
         ));
         vendorResult.Succeeded.ShouldBeTrue();
 
@@ -277,8 +276,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
             "HVAC",
             "Jane Doe",
             "jane@hvac.com",
-            "555-5678",
-            true
+            "555-5678"
         ));
         vendorResult.Succeeded.ShouldBeTrue();
 
@@ -341,8 +339,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
             null,
             null,
             vendorEmail,
-            null,
-            true
+            null
         ));
         vendorResult.Succeeded.ShouldBeTrue();
 

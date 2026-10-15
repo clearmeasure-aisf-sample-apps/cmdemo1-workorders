@@ -331,7 +331,7 @@ public class TeamsAndVendorsTests
             memberLink.ShouldNotBeNull();
             var href = memberLink.GetAttribute("href");
             href.ShouldNotBeNullOrEmpty();
-            href!.ShouldContain("workorder/search");
+            href.ShouldContain("workorder/search");
             href.ShouldContain("Assignee=hsimpson");
             href.ShouldContain("OpenOnly=true");
         });
@@ -473,7 +473,7 @@ public class TeamsAndVendorsTests
         {
             var vendorCards = component.FindAll("[class*='vendor-card']");
             vendorCards.Count.ShouldBe(2);
-            var firstCardName = vendorCards[0].QuerySelector("[class*='vendor-name']")?.TextContent?.Trim();
+            var firstCardName = vendorCards[0].QuerySelector("[class*='vendor-name']")?.TextContent.Trim();
             firstCardName.ShouldBe("Active Vendor");
         });
     }
