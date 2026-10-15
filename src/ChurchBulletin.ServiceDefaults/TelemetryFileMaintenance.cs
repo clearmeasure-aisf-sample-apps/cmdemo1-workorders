@@ -19,7 +19,7 @@ internal static class TelemetryFileMaintenance
         }
     }
 
-    internal static bool IsExpired(string file, DateTime cutoffUtc, IReadOnlyCollection<string> keepPaths) =>
+    private static bool IsExpired(string file, DateTime cutoffUtc, IReadOnlyCollection<string> keepPaths) =>
         !keepPaths.Contains(file) && File.GetLastWriteTimeUtc(file) < cutoffUtc;
 
     /// <summary>

@@ -17,8 +17,8 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 {
     internal const string MaxFileMegabytesKey = "LocalTelemetry:MaxFileMegabytes";
     internal const string RetainDaysKey = "LocalTelemetry:RetainDays";
-    internal const int DefaultMaxFileMegabytes = 100;
-    internal const int DefaultRetainDays = 3;
+    private const int DefaultMaxFileMegabytes = 100;
+    private const int DefaultRetainDays = 3;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
