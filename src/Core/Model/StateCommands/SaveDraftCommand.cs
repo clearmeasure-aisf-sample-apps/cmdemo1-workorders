@@ -11,7 +11,7 @@ StateCommandBase(WorkOrder, CurrentUser)
     /// The room number persisted on the work order before this command was created.
     /// Used to skip entry-length validation when the room number is unchanged.
     /// </summary>
-    public string? PreviousRoomNumber { get; init; } = null;
+    public string? PreviousRoomNumber { get; init; }
 
     public override WorkOrderStatus GetBeginStatus()
     {

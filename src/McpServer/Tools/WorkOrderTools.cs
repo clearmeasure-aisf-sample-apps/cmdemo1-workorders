@@ -104,7 +104,7 @@ public class WorkOrderTools
                 DueDate = parsedDueDate
             };
 
-            var command = new SaveDraftCommand(workOrder, creator) { PreviousRoomNumber = null };
+            var command = new SaveDraftCommand(workOrder, creator);
             var result = await bus.Send(command);
 
             return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
