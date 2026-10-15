@@ -259,6 +259,42 @@ public class StatusPillPresenterTests
     }
 
     [Test]
+    public void Present_InProgressWaitingOnVendor_ShowsWaitingPill()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0) };
+
+        StatusPillPresenter.Present(order, false)
+            .ShouldBe(new StatusPill("Waiting on vendor", "status-badge status-badge--waiting", null));
+    }
+
+    [Test]
+    public void Present_InProgressNotWaiting_ShowsInProgressPill()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.InProgress };
+
+        StatusPillPresenter.Present(order, false)
+            .ShouldBe(new StatusPill("In Progress", "status-badge status-badge--in-progress", null));
+    }
+
+    [Test]
+    public void Present_NotInProgressWithStaleField_ShowsStoredStatus()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.Assigned, WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0) };
+
+        StatusPillPresenter.Present(order, false)
+            .ShouldBe(new StatusPill("Assigned", "status-badge status-badge--assigned", null));
+    }
+
+    [Test]
+    public void Present_WaitingAndOverdue_ShowsOverdue()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0) };
+
+        StatusPillPresenter.Present(order, true)
+            .ShouldBe(new StatusPill("Overdue", "status-badge status-badge--overdue", ", status In Progress"));
+    }
+
+    [Test]
     public void Row_ExposesDisplayNumberPriorityAndAvatar()
     {
         var row = new WorkOrderSearchResultRow
