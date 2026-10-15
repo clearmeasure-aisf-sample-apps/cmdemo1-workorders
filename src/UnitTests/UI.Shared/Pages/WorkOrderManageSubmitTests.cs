@@ -257,6 +257,11 @@ public class WorkOrderManageSubmitTests
                 return Task.FromResult((TResponse)(object)employee);
             }
 
+            if (request is WorkOrderStatusHistoryQuery)
+            {
+                return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+            }
+
             if (request is IStateCommand)
             {
                 LastCommand = request;
