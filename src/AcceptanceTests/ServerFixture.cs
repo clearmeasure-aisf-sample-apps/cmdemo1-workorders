@@ -527,7 +527,7 @@ public class ServerFixture
             var isSqlite = context.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true;
             if (isSqlite)
             {
-                context.Database.EnsureCreated();
+                ClearMeasure.Bootcamp.DataAccess.SqliteSchemaUpgrade.EnsureCreatedAndUpgraded(context);
             }
 
             new ZDataLoader().LoadData();

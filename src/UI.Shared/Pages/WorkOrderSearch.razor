@@ -36,6 +36,10 @@
                                 </button>
                             </li>
                         }
+                        @if (_deleteViewError is not null)
+                        {
+                            <li role="alert" class="save-view-error" data-testid="@Elements.SavedViewDeleteError">@_deleteViewError</li>
+                        }
                         <li role="presentation">
                             <button type="button" role="menuitem" class="popover-menu-item" data-testid="@Elements.SaveCurrentViewButton"
                                     @onclick="OpenSaveForm">Save current view…</button>
@@ -435,6 +439,7 @@
         SavedViewSaveButton,
         SavedViewCancelButton,
         SavedViewError,
+        SavedViewDeleteError,
         UserSavedViewLink,
         UserSavedViewDeleteButton,
         NewWorkOrderButton,

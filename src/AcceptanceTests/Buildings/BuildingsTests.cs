@@ -1,4 +1,3 @@
-using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
@@ -136,13 +135,14 @@ public class BuildingsTests : AcceptanceTestBase
         var wo1 = await CreateAndSaveNewWorkOrder();
         wo1.Building = buildingName;
         wo1.RoomNumber = room;
-        wo1.DueDate = ChurchTimeZone.Today(TimeProvider.System).AddDays(-1); // Overdue (church-local calendar, matches app)
+        // Overdue at the church (Chicago) at any UTC time of day
+        wo1.DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-3));
         wo1.ChangeStatus(WorkOrderStatus.Assigned);
 
         var wo2 = await CreateAndSaveNewWorkOrder();
         wo2.Building = buildingName;
         wo2.RoomNumber = room;
-        wo2.DueDate = ChurchTimeZone.Today(TimeProvider.System).AddDays(1); // Not overdue
+        wo2.DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)); // Not overdue
         wo2.ChangeStatus(WorkOrderStatus.Assigned);
 
         // Update in database

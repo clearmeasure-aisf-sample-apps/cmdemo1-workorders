@@ -36,6 +36,7 @@ public partial class WorkOrderSearch : AppComponentBase
     private bool _focusSaveInput;
     private string _newViewName = string.Empty;
     private string? _saveViewError;
+    private string? _deleteViewError;
     private ElementReference _saveViewNameInput;
     private WorkOrderSearchSummary? _summary;
     private WorkOrderSearchUrlState _state = WorkOrderSearchUrlState.Default;
@@ -273,10 +274,18 @@ public partial class WorkOrderSearch : AppComponentBase
             return;
         }
 
-        var result = await Bus.Send(new SaveSearchViewCommand(_currentUserName, _newViewName.Trim(), query));
-        if (!result.Succeeded)
+        try
         {
-            _saveViewError = result.Error ?? "The view could not be saved.";
+            var result = await Bus.Send(new SaveSearchViewCommand(_currentUserName, _newViewName.Trim(), query));
+            if (!result.Succeeded)
+            {
+                _saveViewError = result.Error ?? "The view could not be saved.";
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            _saveViewError = "The view could not be saved. Please try again later.";
             return;
         }
 
@@ -291,10 +300,22 @@ public partial class WorkOrderSearch : AppComponentBase
             return;
         }
 
-        var result = await Bus.Send(new DeleteSearchViewCommand(_currentUserName, view.Id));
-        if (result.Succeeded)
+        try
         {
-            await LoadUserViewsAsync();
+            var result = await Bus.Send(new DeleteSearchViewCommand(_currentUserName, view.Id));
+            if (result.Succeeded)
+            {
+                await LoadUserViewsAsync();
+                _deleteViewError = null;
+            }
+            else
+            {
+                _deleteViewError = result.Error ?? "The view could not be deleted.";
+            }
+        }
+        catch (Exception)
+        {
+            _deleteViewError = "The view could not be deleted. Please try again later.";
         }
     }
 

@@ -986,6 +986,37 @@ public class WorkOrderSearchTests
     }
 
     [Test]
+    public async Task SaveCurrentView_WhenBusThrows_ShowsErrorAndKeepsPage()
+    {
+        var bus = new StubBus { ThrowOnSaveCommand = true };
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.SaveCurrentViewButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewNameInput)).InputAsync(new ChangeEventArgs { Value = "Mine" });
+        await component.Find("form.save-view-form").SubmitAsync();
+
+        component.Find(TestId(WorkOrderSearch.Elements.SavedViewError)).TextContent.ShouldContain("could not be saved");
+        component.FindAll("form.save-view-form").Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task DeleteSavedView_WhenBusThrows_ShowsError()
+    {
+        var bus = new StubBus { ThrowOnDeleteCommand = true };
+        bus.SavedViews.Add(new SavedSearchView { Name = "Old", Query = "OverdueOnly=true" });
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find(TestId(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync(new());
+        await component.Find(TestId(WorkOrderSearch.Elements.UserSavedViewDeleteButton, "Old")).ClickAsync(new());
+
+        component.Find(TestId(WorkOrderSearch.Elements.SavedViewDeleteError)).TextContent.ShouldContain("could not be deleted");
+        component.FindAll(TestId(WorkOrderSearch.Elements.UserSavedViewLink, "Old")).Count.ShouldBe(1);
+    }
+
+    [Test]
     public async Task DeleteSavedView_SendsCommandWithViewId()
     {
         var bus = new StubBus();
