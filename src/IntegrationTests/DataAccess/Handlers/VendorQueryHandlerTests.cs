@@ -2,48 +2,56 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using Microsoft.EntityFrameworkCore;
+using ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
 
+/// <summary>
+/// The database is shared with other tests, so each test uses its own tag in vendor names and asserts
+/// only on those rows.
+/// </summary>
 [TestFixture]
 public class VendorQueryHandlerTests
 {
+    private string _tag = "";
+
     [SetUp]
     public void SetUp()
     {
-        new DatabaseTests().Clean();
+        _tag = TestData.Tag();
     }
 
     [Test]
     public async Task ShouldReturnActiveVendorsFirstThenByName()
     {
         var handler = new VendorQueryHandler(TestHost.GetRequiredService<DataContext>());
-        (await handler.Handle(new CreateVendorCommand("Acme", null, null, null, null, false))).Succeeded.ShouldBeTrue();
-        (await handler.Handle(new CreateVendorCommand("Zed", null, null, null, null))).Succeeded.ShouldBeTrue();
-        (await handler.Handle(new CreateVendorCommand("Bolt", null, null, null, null))).Succeeded.ShouldBeTrue();
+        (await handler.Handle(new CreateVendorCommand(VendorName("Acme"), null, null, null, null, false)))
+            .Succeeded.ShouldBeTrue();
+        (await handler.Handle(new CreateVendorCommand(VendorName("Zed"), null, null, null, null)))
+            .Succeeded.ShouldBeTrue();
+        (await handler.Handle(new CreateVendorCommand(VendorName("Bolt"), null, null, null, null)))
+            .Succeeded.ShouldBeTrue();
 
-        var vendors = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
-            .Handle(new VendorsQuery());
+        var vendors = await OwnVendors();
 
-        vendors.Select(v => v.Name).ShouldBe(["Bolt", "Zed", "Acme"]);
-        vendors.Single(v => v.Name == "Acme").IsActive.ShouldBeFalse();
+        vendors.Select(v => v.Name).ShouldBe([VendorName("Bolt"), VendorName("Zed"), VendorName("Acme")]);
+        vendors.Single(v => v.Name == VendorName("Acme")).IsActive.ShouldBeFalse();
         vendors.Select(v => v.Id).Distinct().Count().ShouldBe(3);
     }
 
     [Test]
     public async Task ShouldPersistAllVendorFields()
     {
+        var name = VendorName("Acme Heating");
         var result = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
-            .Handle(new CreateVendorCommand(" Acme Heating ", "HVAC", "Pat Smith", "pat@acme.test", "555-0100"));
+            .Handle(new CreateVendorCommand($" {name} ", "HVAC", "Pat Smith", "pat@acme.test", "555-0100"));
 
         result.Succeeded.ShouldBeTrue(result.Message);
         result.Id.ShouldNotBeNull();
-        var vendor = (await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
-            .Handle(new VendorsQuery())).ShouldHaveSingleItem();
+        var vendor = (await OwnVendors()).ShouldHaveSingleItem();
         vendor.Id.ShouldBe(result.Id.Value);
-        vendor.Name.ShouldBe("Acme Heating");
+        vendor.Name.ShouldBe(name);
         vendor.Trade.ShouldBe("HVAC");
         vendor.ContactName.ShouldBe("Pat Smith");
         vendor.EmailAddress.ShouldBe("pat@acme.test");
@@ -54,16 +62,25 @@ public class VendorQueryHandlerTests
     [Test]
     public async Task ShouldFail_WhenVendorNameDuplicatesIgnoringCase()
     {
+        var name = VendorName("Acme");
         (await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
-            .Handle(new CreateVendorCommand("Acme", null, null, null, null))).Succeeded.ShouldBeTrue();
+            .Handle(new CreateVendorCommand(name, null, null, null, null))).Succeeded.ShouldBeTrue();
 
         var result = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
-            .Handle(new CreateVendorCommand("acme", "Plumbing", null, null, null));
+            .Handle(new CreateVendorCommand(name.ToLowerInvariant(), "Plumbing", null, null, null));
 
         result.Succeeded.ShouldBeFalse();
         result.Id.ShouldBeNull();
         result.Message.ShouldContain("already exists");
-        await using var context = TestHost.GetRequiredService<DataContext>();
-        (await context.Set<Vendor>().CountAsync()).ShouldBe(1);
+        (await OwnVendors()).Length.ShouldBe(1);
+    }
+
+    private string VendorName(string name) => $"{name} {_tag}";
+
+    private async Task<Vendor[]> OwnVendors()
+    {
+        var vendors = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
+            .Handle(new VendorsQuery());
+        return vendors.Where(v => v.Name.EndsWith(_tag, StringComparison.Ordinal)).ToArray();
     }
 }
