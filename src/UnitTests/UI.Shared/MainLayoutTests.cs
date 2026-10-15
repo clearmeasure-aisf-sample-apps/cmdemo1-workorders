@@ -841,6 +841,52 @@ public class MainLayoutTests
         }
     }
 
+    [Test]
+    public async Task ShouldNotInitializeNavToggleWhenDisposedWhileModuleLoads()
+    {
+        await using var ctx = CreateContext();
+        var js = new PendingImportJsRuntime();
+        ctx.Services.AddSingleton<Microsoft.JSInterop.IJSRuntime>(js);
+        ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        await ctx.DisposeComponentsAsync();
+        var module = new RecordingJsModule();
+        js.Import.SetResult(module);
+
+        module.Identifiers.ShouldNotContain("initNavToggle");
+    }
+
+    private sealed class PendingImportJsRuntime : Microsoft.JSInterop.IJSRuntime
+    {
+        public TaskCompletionSource<Microsoft.JSInterop.IJSObjectReference> Import { get; } = new();
+
+        public async ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        {
+            if (identifier == "import" && args?[0] is string path && path.EndsWith("mainLayoutNav.js"))
+                return (TValue)await Import.Task;
+            return default!;
+        }
+
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
+            object?[]? args) => InvokeAsync<TValue>(identifier, args);
+    }
+
+    private sealed class RecordingJsModule : Microsoft.JSInterop.IJSObjectReference
+    {
+        public List<string> Identifiers { get; } = [];
+
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        {
+            Identifiers.Add(identifier);
+            return ValueTask.FromResult(default(TValue)!);
+        }
+
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
+            object?[]? args) => InvokeAsync<TValue>(identifier, args);
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+
     private static BunitContext CreateContext(
         IBus? bus = null,
         string? authenticateAsUser = null,
