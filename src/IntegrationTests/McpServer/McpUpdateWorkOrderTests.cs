@@ -24,7 +24,7 @@ public class McpUpdateWorkOrderTests
         _creator = TestData.UserName("creator");
         _other = TestData.UserName("other");
         _worker = TestData.UserName("worker");
-        _stem = TestData.NumberSeries(1)[0][..5];
+        _stem = TestData.NumberSeries(1)[0][..5]; // 5-char stem + 2-digit suffix = 7 = WorkOrder.Number max length
     }
 
     [Test]
@@ -88,7 +88,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}700",
+            Number = $"{_stem}00",
             Title = "Update priority",
             Status = WorkOrderStatus.Draft,
             Priority = WorkOrderPriority.Low
@@ -102,14 +102,14 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}700",
+            $"{_stem}00",
             _creator,
             priority: "High");
 
         var parsed = JsonDocument.Parse(result);
         parsed.RootElement.GetProperty("Priority").GetString().ShouldBe("High");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}700"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}00"));
         reloaded!.Priority.ShouldBe(WorkOrderPriority.High);
     }
 
@@ -120,7 +120,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}701",
+            Number = $"{_stem}01",
             Title = "Update building",
             Status = WorkOrderStatus.Draft,
             Building = "Old Building",
@@ -135,7 +135,7 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}701",
+            $"{_stem}01",
             _creator,
             building: "New Building",
             roomNumber: "202");
@@ -144,7 +144,7 @@ public class McpUpdateWorkOrderTests
         parsed.RootElement.GetProperty("Building").GetString().ShouldBe("New Building");
         parsed.RootElement.GetProperty("RoomNumber").GetString().ShouldBe("202");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}701"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}01"));
         reloaded!.Building.ShouldBe("New Building");
         reloaded.RoomNumber.ShouldBe("202");
     }
@@ -156,7 +156,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}702",
+            Number = $"{_stem}02",
             Title = "Update due date",
             Status = WorkOrderStatus.Draft,
             DueDate = new DateOnly(2026, 8, 1)
@@ -171,14 +171,14 @@ public class McpUpdateWorkOrderTests
         var newDueDate = new DateOnly(2026, 12, 25);
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}702",
+            $"{_stem}02",
             _creator,
             dueDate: newDueDate.ToString("yyyy-MM-dd"));
 
         var parsed = JsonDocument.Parse(result);
         parsed.RootElement.GetProperty("DueDate").GetString().ShouldBe("2026-12-25");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}702"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}02"));
         reloaded!.DueDate.ShouldBe(newDueDate);
     }
 
@@ -190,7 +190,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}703",
+            Number = $"{_stem}03",
             Title = "Omitted fields",
             Status = WorkOrderStatus.Draft,
             Priority = WorkOrderPriority.High,
@@ -207,11 +207,11 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}703",
+            $"{_stem}03",
             _creator,
             roomNumber: "301");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}703"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}03"));
         reloaded!.Priority.ShouldBe(WorkOrderPriority.High);
         reloaded.Building.ShouldBe("West Wing");
         reloaded.RoomNumber.ShouldBe("301");
@@ -225,7 +225,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}704",
+            Number = $"{_stem}04",
             Title = "Clear building",
             Status = WorkOrderStatus.Draft,
             Building = "Main Hall"
@@ -239,11 +239,11 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}704",
+            $"{_stem}04",
             _creator,
             building: string.Empty);
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}704"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}04"));
         reloaded!.Building.ShouldBeNull();
     }
 
@@ -254,7 +254,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}705",
+            Number = $"{_stem}05",
             Title = "Clear room",
             Status = WorkOrderStatus.Draft,
             RoomNumber = "501"
@@ -268,11 +268,11 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}705",
+            $"{_stem}05",
             _creator,
             roomNumber: "   ");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}705"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}05"));
         reloaded!.RoomNumber.ShouldBe(string.Empty);
     }
 
@@ -283,7 +283,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}706",
+            Number = $"{_stem}06",
             Title = "Clear due date",
             Status = WorkOrderStatus.Draft,
             DueDate = new DateOnly(2026, 10, 1)
@@ -297,11 +297,11 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}706",
+            $"{_stem}06",
             _creator,
             dueDate: string.Empty);
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}706"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}06"));
         reloaded!.DueDate.ShouldBeNull();
     }
 
@@ -312,7 +312,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}710",
+            Number = $"{_stem}10",
             Title = "Invalid priority test",
             Status = WorkOrderStatus.Draft,
             Priority = WorkOrderPriority.Medium
@@ -326,13 +326,13 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}710",
+            $"{_stem}10",
             _creator,
             priority: "Urgent");
 
         result.ShouldContain("Invalid priority");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}710"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}10"));
         reloaded!.Priority.ShouldBe(WorkOrderPriority.Medium);
     }
 
@@ -343,7 +343,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}711",
+            Number = $"{_stem}11",
             Title = "Building too long test",
             Status = WorkOrderStatus.Draft,
             Building = "Original"
@@ -358,13 +358,13 @@ public class McpUpdateWorkOrderTests
         var tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}711",
+            $"{_stem}11",
             _creator,
             building: tooLong);
 
         result.ShouldContain("Building cannot exceed");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}711"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}11"));
         reloaded!.Building.ShouldBe("Original");
     }
 
@@ -375,7 +375,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}712",
+            Number = $"{_stem}12",
             Title = "Bad date test",
             Status = WorkOrderStatus.Draft,
             DueDate = new DateOnly(2026, 8, 1)
@@ -389,13 +389,13 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}712",
+            $"{_stem}12",
             _creator,
             dueDate: "not-a-date");
 
         result.ShouldContain("Invalid due date");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}712"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}12"));
         reloaded!.DueDate.ShouldBe(new DateOnly(2026, 8, 1));
     }
 
@@ -425,7 +425,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}713",
+            Number = $"{_stem}13",
             Title = "Unknown user test",
             Status = WorkOrderStatus.Draft
         };
@@ -438,7 +438,7 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}713",
+            $"{_stem}13",
             "unknown-user",
             priority: "Low");
 
@@ -454,7 +454,7 @@ public class McpUpdateWorkOrderTests
         {
             Creator = creator,
             Assignee = assignee,
-            Number = $"{_stem}714",
+            Number = $"{_stem}14",
             Title = "Assigned work order",
             Status = WorkOrderStatus.Assigned
         };
@@ -468,7 +468,7 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}714",
+            $"{_stem}14",
             _creator,
             priority: "High");
 
@@ -484,7 +484,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}715",
+            Number = $"{_stem}15",
             Title = "Draft work order",
             Status = WorkOrderStatus.Draft
         };
@@ -498,7 +498,7 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}715",
+            $"{_stem}15",
             _other,
             priority: "High");
 
@@ -514,7 +514,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}716",
+            Number = $"{_stem}16",
             Title = "Dates test",
             Status = WorkOrderStatus.Draft,
             CreatedDate = createdDate,
@@ -529,11 +529,11 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}716",
+            $"{_stem}16",
             _creator,
             priority: "High");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}716"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}16"));
         reloaded!.CreatedDate.ShouldBe(createdDate);
         reloaded.CompletedDate.ShouldBe(completedDate);
     }
@@ -545,7 +545,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}720",
+            Number = $"{_stem}20",
             Title = "List output test",
             Status = WorkOrderStatus.Draft,
             Priority = WorkOrderPriority.High,
@@ -562,7 +562,7 @@ public class McpUpdateWorkOrderTests
 
         using var document = JsonDocument.Parse(result);
         var item = document.RootElement.EnumerateArray()
-            .First(e => e.GetProperty("Number").GetString() == $"{_stem}720");
+            .First(e => e.GetProperty("Number").GetString() == $"{_stem}20");
         item.GetProperty("Priority").GetString().ShouldBe("High");
         item.GetProperty("Building").GetString().ShouldBe("East Wing");
     }
@@ -574,7 +574,7 @@ public class McpUpdateWorkOrderTests
         var workOrder = new WorkOrder
         {
             Creator = creator,
-            Number = $"{_stem}721",
+            Number = $"{_stem}21",
             Title = "Blank priority test",
             Status = WorkOrderStatus.Draft,
             Priority = WorkOrderPriority.High
@@ -588,13 +588,13 @@ public class McpUpdateWorkOrderTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await WorkOrderTools.UpdateWorkOrder(
             bus,
-            $"{_stem}721",
+            $"{_stem}21",
             _creator,
             priority: "   ");
 
         result.ShouldContain("Priority cannot be cleared");
 
-        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}721"));
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery($"{_stem}21"));
         reloaded!.Priority.ShouldBe(WorkOrderPriority.High);
     }
 }
