@@ -70,8 +70,6 @@ Work order state transitions: Draft → Assigned → InProgress → Complete (al
 - **Employee**: UserName, FirstName, LastName, EmailAddress, Roles. Methods: `CanCreateWorkOrder()`, `CanFulfillWorkOrder()`
 - **WorkOrderStatus**: Smart enum — Draft, Assigned, InProgress, Complete, Cancelled. Factory methods: `FromCode()`, `FromKey()`
 - **Role**: Name, CanCreateWorkOrder, CanFulfillWorkOrder
-- **Team**: Name (unique ignoring case, max 100), Description (optional, max 500), Members (Employees, via `dbo.TeamMember`), MemberCount. `TeamsQuery` (ordered by name), `CreateTeamCommand` (rule checks in `FindRuleViolations`)
-- **Vendor**: Name (unique ignoring case, max 100), Trade, ContactName, EmailAddress, PhoneNumber (optional), IsActive (default true). `VendorsQuery` (active first, then by name), `CreateVendorCommand`
 
 ## Database Migrations
 
