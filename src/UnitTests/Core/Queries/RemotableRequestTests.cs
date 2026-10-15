@@ -78,6 +78,9 @@ public class RemotableRequestTests
         AssertRemotable(new WorkOrderSearchSummaryQuery("tlovejoy"));
         AssertRemotable(new WorkOrderSearchSummaryQuery(null));
         AssertRemotable(new WorkOrderBuildingsQuery());
+        AssertRemotable(new SavedSearchViewsQuery("tlovejoy"));
+        AssertRemotable(new SaveSearchViewCommand("tlovejoy", "Mine", "status=Draft"));
+        AssertRemotable(new DeleteSearchViewCommand("tlovejoy", Guid.NewGuid()));
         var summary = new WorkOrderSearchSummary
         {
             OpenCount = 24, OpenedLast7Days = 3, AssignedToMeCount = 2, AssignedToMeTotal = 4,

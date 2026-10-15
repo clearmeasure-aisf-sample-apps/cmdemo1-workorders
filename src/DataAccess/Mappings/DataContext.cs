@@ -39,6 +39,7 @@ public class DataContext : DbContext
         new WorkOrderAttachmentMap().Map(modelBuilder);
         new TeamMap().Map(modelBuilder);
         new VendorMap().Map(modelBuilder);
+        new SavedSearchViewMap().Map(modelBuilder);
     }
 
     public sealed override string ToString()

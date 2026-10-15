@@ -11,7 +11,7 @@ public class SqliteDatabaseSetup
         var context = TestHost.GetRequiredService<DbContext>();
         if (context.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
         {
-            context.Database.EnsureCreated();
+            ClearMeasure.Bootcamp.DataAccess.SqliteSchemaUpgrade.EnsureCreatedAndUpgraded(context);
         }
     }
 }

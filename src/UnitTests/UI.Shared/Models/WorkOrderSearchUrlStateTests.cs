@@ -233,4 +233,37 @@ public class WorkOrderSearchUrlStateTests
         uri.Split('?', 2)[1].Split('&')
             .Select(p => p.Split('=', 2))
             .ToDictionary(p => p[0], p => (string?)Uri.UnescapeDataString(p[1]));
+
+    [Test]
+    public void ToQueryString_Defaults_ReturnsEmpty()
+    {
+        WorkOrderSearchUrlState.Default.ToQueryString().ShouldBe(string.Empty);
+    }
+
+    [Test]
+    public void ToQueryString_RoundTripsThroughRelativeUriForQueryAndFromQuery()
+    {
+        var state = new WorkOrderSearchUrlState
+        {
+            Creator = "hsimpson",
+            Priority = WorkOrderPriority.High,
+            OverdueOnly = true,
+            Q = "leaky roof & more"
+        };
+
+        var query = state.ToQueryString();
+
+        query.ShouldNotStartWith("?");
+        WorkOrderSearchUrlState.RelativeUriForQuery(query).ShouldBe(state.ToRelativeUri());
+        var parsed = WorkOrderSearchUrlState.FromQuery(query.Split('&')
+            .Select(part => part.Split('=', 2))
+            .ToDictionary(kv => kv[0], kv => (string?)Uri.UnescapeDataString(kv[1])));
+        parsed.ShouldBe(state);
+    }
+
+    [Test]
+    public void RelativeUriForQuery_Empty_ReturnsBareSearchPath()
+    {
+        WorkOrderSearchUrlState.RelativeUriForQuery(string.Empty).ShouldBe("workorder/search");
+    }
 }
