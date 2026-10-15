@@ -52,11 +52,11 @@ public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
         // .table-scroll has overflow-x:auto, so the page check alone would pass without the fix.
         var roomTextBox = await roomText.BoundingBoxAsync();
         roomTextBox.ShouldNotBeNull();
-        roomTextBox!.Width.ShouldBeLessThanOrEqualTo(141);
+        roomTextBox.Width.ShouldBeLessThanOrEqualTo(141);
 
         var cellBox = await roomCell.BoundingBoxAsync();
         cellBox.ShouldNotBeNull();
-        cellBox!.Width.ShouldBeLessThanOrEqualTo(200);
+        cellBox.Width.ShouldBeLessThanOrEqualTo(200);
 
         var tableWidth = await Page.Locator(".grid-data").EvaluateAsync<double>("t => t.getBoundingClientRect().width");
         tableWidth.ShouldBeLessThanOrEqualTo(1280);
