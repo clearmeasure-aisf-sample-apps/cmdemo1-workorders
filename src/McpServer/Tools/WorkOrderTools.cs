@@ -87,14 +87,10 @@ public class WorkOrderTools
                 return $"Employee with username '{creatorUsername}' not found.";
             }
 
-            if (string.IsNullOrWhiteSpace(description))
+            var validationError = ValidateCreateParameters(description, dueDate);
+            if (validationError != null)
             {
-                return "Description is required.";
-            }
-
-            if (description.Length > WorkOrder.DescriptionMaxLength)
-            {
-                return $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.";
+                return validationError;
             }
 
             if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out var dueDateError))
@@ -149,14 +145,10 @@ public class WorkOrderTools
                 return resolveError;
             }
 
-            if (string.IsNullOrWhiteSpace(description))
+            var validationError = ValidateCreateParameters(description, null);
+            if (validationError != null)
             {
-                return "Description is required.";
-            }
-
-            if (description.Length > WorkOrder.DescriptionMaxLength)
-            {
-                return $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.";
+                return validationError;
             }
 
             var result = await bus.Send(new CreateDatedWorkOrdersCommand(
@@ -299,6 +291,16 @@ public class WorkOrderTools
         }
 
         return null;
+    }
+
+    private static string? ValidateCreateParameters(string? description, string? dueDate)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return "Description is required.";
+        }
+
+        return ValidateDescriptionPatch(description);
     }
 
     private static string? ValidateRoomNumberPatch(WorkOrder workOrder, string? roomNumber)

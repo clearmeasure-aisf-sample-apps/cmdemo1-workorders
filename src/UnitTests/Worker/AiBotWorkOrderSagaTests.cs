@@ -151,6 +151,36 @@ public class AiBotWorkOrderSagaTests
         stub.PublishedMessages.ShouldBeEmpty();
     }
 
+    [Test]
+    public async Task Handle_Started_ShouldTruncateDescriptionOver4000()
+    {
+        var sagaId = Guid.NewGuid();
+        var longBaseDescription = new string('b', WorkOrder.DescriptionMaxLength - 100);
+        var workOrder = new WorkOrder
+        {
+            Number = "WO-6",
+            Assignee = new Employee("bot", "AI", "Bot", "bot@test.com"),
+            Description = longBaseDescription
+        };
+        var longAiResponse = new string('a', 500);
+        var bus = new StubBus();
+        var saga = new AiBotWorkOrderSaga(bus, new StubChatClientFactory(bus, longAiResponse))
+        {
+            Data = new AiBotWorkOrderSagaState
+            {
+                SagaId = sagaId,
+                WorkOrderNumber = "WO-6",
+                WorkOrder = workOrder
+            }
+        };
+        var stub = StubMessageHandlerContext.Create();
+
+        await saga.Handle(new AiBotStartedWorkOrderEvent(sagaId), stub.Context);
+
+        saga.Data.WorkOrder.Description.ShouldNotBeNull();
+        saga.Data.WorkOrder.Description.Length.ShouldBe(WorkOrder.DescriptionMaxLength);
+    }
+
     private static bool IsComplete(AiBotWorkOrderSaga saga) =>
         (bool)CompletedProperty.GetValue(saga)!;
 
