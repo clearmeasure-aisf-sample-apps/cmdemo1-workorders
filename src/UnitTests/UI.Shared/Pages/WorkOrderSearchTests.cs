@@ -1575,7 +1575,7 @@ public class WorkOrderSearchTests
             _orders = orders;
         }
 
-        public List<ClearMeasure.Bootcamp.Core.Model.StateCommands.StateCommandBase> Commands { get; } = [];
+        public List<StateCommandBase> Commands { get; } = [];
 
         public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
         {
@@ -1584,10 +1584,10 @@ public class WorkOrderSearchTests
                 return Task.FromResult((TResponse)(object)_orders.Single(o => o.Number == byNumber.Number));
             }
 
-            if (request is ClearMeasure.Bootcamp.Core.Model.StateCommands.StateCommandBase command)
+            if (request is StateCommandBase command)
             {
                 Commands.Add(command);
-                return Task.FromResult((TResponse)(object)new ClearMeasure.Bootcamp.Core.Model.StateCommands.StateCommandResult(command.WorkOrder, command.TransitionVerbPresentTense, "done"));
+                return Task.FromResult((TResponse)(object)new StateCommandResult(command.WorkOrder, command.TransitionVerbPresentTense, "done"));
             }
 
             return base.Send(request);

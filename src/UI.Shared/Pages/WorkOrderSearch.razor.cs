@@ -494,11 +494,7 @@ public partial class WorkOrderSearch : AppComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_focusSaveInput && _saveFormOpen)
-        {
-            _focusSaveInput = false;
-            await _saveViewNameInput.FocusAsync();
-        }
+        await FocusSaveInputIfRequestedAsync();
 
         if (Model.Results.Length == 0 || _state.View == SearchView.Board)
         {
@@ -513,6 +509,17 @@ public partial class WorkOrderSearch : AppComponentBase
         catch (JSDisconnectedException)
         {
         }
+    }
+
+    private async Task FocusSaveInputIfRequestedAsync()
+    {
+        if (!_focusSaveInput || !_saveFormOpen)
+        {
+            return;
+        }
+
+        _focusSaveInput = false;
+        await _saveViewNameInput.FocusAsync();
     }
 
     private WorkOrderSearchResultRow MapSearchRow(WorkOrder workOrder)
