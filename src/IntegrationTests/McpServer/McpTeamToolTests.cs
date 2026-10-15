@@ -34,7 +34,7 @@ public class McpTeamToolTests
 
         result.ShouldContain(team1.Name);
         result.ShouldContain(team2.Name);
-        result.ShouldContain(team1.Description);
+        result.ShouldContain(team1.Description!);
         result.ShouldContain(emp1.FirstName);
         result.ShouldContain(emp2.FirstName);
     }
