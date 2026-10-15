@@ -19,6 +19,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private WorkOrder? _workOrder;
     private WorkOrder? _lastNotifiedWorkOrder;
     private WorkOrderAttachment[] _attachments = [];
+    private WorkOrderStatusChange[] _statusHistory = [];
     private bool _canRemoveAttachments;
     private Guid? _pendingRemoveId;
     private string? _removeAttachmentError;
@@ -153,6 +154,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         if (workOrder.Id != Guid.Empty)
         {
             _attachments = await Bus.Send(new WorkOrderAttachmentsQuery(workOrder.Id));
+            _statusHistory = await Bus.Send(new WorkOrderStatusHistoryQuery(workOrder.Id));
             _canRemoveAttachments = RemoveAttachmentCommand.CanRemove(workOrder, currentUser);
         }
     }

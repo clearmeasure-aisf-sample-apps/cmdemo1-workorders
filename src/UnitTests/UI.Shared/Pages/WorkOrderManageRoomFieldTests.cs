@@ -67,6 +67,11 @@ public class WorkOrderManageRoomFieldTests
                 return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderAttachment>());
             }
 
+            if (request is WorkOrderStatusHistoryQuery)
+            {
+                return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+            }
+
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
         }
     }
