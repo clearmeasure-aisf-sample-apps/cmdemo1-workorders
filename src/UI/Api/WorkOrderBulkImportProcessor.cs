@@ -63,17 +63,10 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
         Dictionary<string, Employee> creatorsByUsername,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(row.Title)
-            || string.IsNullOrWhiteSpace(row.Description)
-            || string.IsNullOrWhiteSpace(row.CreatorUsername))
+        var rowError = ValidateRow(row);
+        if (rowError != null)
         {
-            return new WorkOrderBulkImportRowResult(row.LineNumber, false, null,
-                "Title, Description, and CreatorUsername are required on each data row.");
-        }
-
-        if (row.Error != null)
-        {
-            return new WorkOrderBulkImportRowResult(row.LineNumber, false, null, row.Error);
+            return new WorkOrderBulkImportRowResult(row.LineNumber, false, null, rowError);
         }
 
         var creatorResult = await ResolveCreatorAsync(row, creatorsByUsername, cancellationToken);
@@ -84,6 +77,16 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
 
         return await SaveDraftAsync(row, creatorResult.Creator!, cancellationToken);
     }
+
+    private static string? ValidateRow(WorkOrderBulkImportRow row) =>
+        HasRequiredFields(row)
+            ? row.Error
+            : "Title, Description, and CreatorUsername are required on each data row.";
+
+    private static bool HasRequiredFields(WorkOrderBulkImportRow row) =>
+        !string.IsNullOrWhiteSpace(row.Title)
+        && !string.IsNullOrWhiteSpace(row.Description)
+        && !string.IsNullOrWhiteSpace(row.CreatorUsername);
 
     private async Task<(Employee? Creator, string? Error)> ResolveCreatorAsync(
         WorkOrderBulkImportRow row,
