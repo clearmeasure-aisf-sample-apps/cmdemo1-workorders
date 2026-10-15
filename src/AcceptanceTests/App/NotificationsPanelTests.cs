@@ -20,7 +20,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowBadgeCount_MatchingOverdueAndDueTodayWorkOrders()
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = ClearMeasure.Bootcamp.Core.Services.ChurchTimeZone.Today(TimeProvider.System);
         var yesterday = today.AddDays(-1);
         var dayBeforeYesterday = today.AddDays(-2);
         var tomorrow = today.AddDays(1);

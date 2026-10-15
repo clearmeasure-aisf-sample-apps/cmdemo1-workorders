@@ -137,13 +137,13 @@ public class BuildingsTests : AcceptanceTestBase
         var wo1 = await CreateAndSaveNewWorkOrder();
         wo1.Building = buildingName;
         wo1.RoomNumber = room;
-        wo1.DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)); // Overdue
+        wo1.DueDate = ClearMeasure.Bootcamp.Core.Services.ChurchTimeZone.Today(TimeProvider.System).AddDays(-1); // Overdue (church-local calendar, matches app)
         wo1.ChangeStatus(WorkOrderStatus.Assigned);
 
         var wo2 = await CreateAndSaveNewWorkOrder();
         wo2.Building = buildingName;
         wo2.RoomNumber = room;
-        wo2.DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)); // Not overdue
+        wo2.DueDate = ClearMeasure.Bootcamp.Core.Services.ChurchTimeZone.Today(TimeProvider.System).AddDays(1); // Not overdue
         wo2.ChangeStatus(WorkOrderStatus.Assigned);
 
         // Update in database
