@@ -442,8 +442,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         var locator = Page.Locator($"#{select}");
         await Expect(locator.Locator($"option[value='{value}']")).ToHaveCountAsync(1);
         await locator.SelectOptionAsync(value);
-        var searchTable = Page.Locator(".grid-data tbody");
-        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Expect(locator).ToHaveValueAsync(value);
     }
 
     private async Task<Employee> SeedCreatorAsync(string prefix)

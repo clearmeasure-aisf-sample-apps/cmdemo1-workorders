@@ -34,8 +34,6 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        var searchTable = Page.Locator(".grid-data tbody");
-        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
         await Click(nameof(Counter.Elements.IncrementButton));
@@ -50,8 +48,6 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        var searchTable = Page.Locator(".grid-data tbody");
-        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
         await Click(nameof(Counter.Elements.IncrementButton));
@@ -67,8 +63,6 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        var searchTable = Page.Locator(".grid-data tbody");
-        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
         await Expect(Page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("^Counter - Kalahari Church Work Order System$"));

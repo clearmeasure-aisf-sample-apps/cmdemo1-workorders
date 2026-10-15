@@ -285,7 +285,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var workOrderLink = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrder.Number);
         await Expect(workOrderLink).ToBeVisibleAsync();
         await workOrderLink.ClickAsync();
-        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.WaitForURLAsync(new Regex($"/workorder/manage/{Regex.Escape(workOrder.Number!)}"));
         await TakeScreenshotAsync(2, "WorkOrderDetailsPage");
 
         // Assert

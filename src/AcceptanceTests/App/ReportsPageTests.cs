@@ -17,6 +17,7 @@ public class ReportsPageTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
         await Page.WaitForURLAsync("**/reports");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify page title
         var title = Page.GetByTestId(nameof(Reports.Elements.ReportsTitle));
@@ -33,6 +34,7 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify all 4 cards are visible
         var statusCard = Page.GetByTestId(nameof(Reports.Elements.SummaryCardStatus));
@@ -58,6 +60,7 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify weekly completions chart is visible
         var weeklyChart = Page.GetByTestId(nameof(Reports.Elements.ChartCompletedPerWeek));
@@ -76,6 +79,7 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var exportButton = Page.GetByTestId(nameof(Reports.Elements.ExportButton));
         await Expect(exportButton).ToBeEnabledAsync();
@@ -158,6 +162,7 @@ public class ReportsPageTests : AcceptanceTestBase
     public async Task Reports_NavLink_ShouldNotHaveSoonTag()
     {
         await LoginAsCurrentUser();
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify the Reports link does not have a "Soon" tag
         var reportsLink = Page.GetByTestId(nameof(NavMenu.Elements.Reports));
@@ -170,27 +175,122 @@ public class ReportsPageTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Reports_DownloadCsv_ShouldDownloadFile()
     {
-        await SeedData();
-        await LoginAsCurrentUser();
-        await Click(nameof(NavMenu.Elements.Reports));
+        var (building, openCount) = await SeedLeadingBuilding();
+        try
+        {
+            await LoginAsCurrentUser();
+            await Click(nameof(NavMenu.Elements.Reports));
 
-        // Wait for export button to be enabled before clicking
-        await Expect(Page.GetByTestId(nameof(Reports.Elements.ExportButton))).ToBeEnabledAsync(new() { Timeout = 30_000 });
+            // This test's building has the highest open count in the database, so it is first in the
+            // Open by Building card (top 6) and in the CSV (top 10) whatever other tests left behind.
+            await Expect(Page.GetByTestId(nameof(Reports.Elements.SummaryCardBuilding)))
+                .ToContainTextAsync(building);
 
-        // Initiate download and verify it completes
-        var downloadTask = Page.WaitForDownloadAsync();
+            // Wait for export button to be enabled before clicking
+            await Expect(Page.GetByTestId(nameof(Reports.Elements.ExportButton))).ToBeEnabledAsync(new() { Timeout = 30_000 });
 
-        await Click(nameof(Reports.Elements.ExportButton));
+            // Initiate download and verify it completes
+            var download = await Page.RunAndWaitForDownloadAsync(async () =>
+                await Click(nameof(Reports.Elements.ExportButton)));
 
-        var download = await downloadTask;
-        var fileName = download.SuggestedFilename;
+            var fileName = download.SuggestedFilename;
 
-        // Verify filename matches expected pattern
-        fileName.ShouldStartWith("reports-");
-        fileName.ShouldEndWith(".csv");
+            // Verify filename matches expected pattern
+            fileName.ShouldStartWith("reports-");
+            fileName.ShouldEndWith(".csv");
 
-        // Cleanup
-        await download.DeleteAsync();
+            // Read and verify file content
+            var filePath = await download.PathAsync();
+            var content = await File.ReadAllTextAsync(filePath);
+            var lines = content.Split("\r\n");
+
+            // Verify header rows exist
+            lines.ShouldContain("Category,Status,Count");
+            lines.ShouldContain("Category,Priority,Count");
+            lines.ShouldContain("Category,Building,Count");
+            lines.ShouldContain("Week Ending,Completed");
+            lines.ShouldContain("Metric,Value");
+
+            // Verify summary metrics exist
+            var completedLine = lines.FirstOrDefault(l => l.StartsWith("Completed (30 days),"));
+            completedLine.ShouldNotBeNull();
+
+            var avgLine = lines.FirstOrDefault(l => l.StartsWith("Average Days to Close,"));
+            avgLine.ShouldNotBeNull();
+
+            var overdueLineIndex = Array.FindIndex(lines, l => l.StartsWith("Overdue Count,"));
+            overdueLineIndex.ShouldBeGreaterThanOrEqualTo(0);
+
+            // The building row counts this test's open orders only, not its completed one
+            lines.ShouldContain($"Open by Building,{building},{openCount}");
+
+            try
+            {
+                await download.DeleteAsync();
+            }
+            catch
+            {
+                // Download cleanup is best-effort
+            }
+        }
+        finally
+        {
+            // Rows of this test must not outlive it: on a reused database they would push later runs
+            // down the top-N building lists.
+            await using var cleanup = TestHost.NewDbContext();
+            var seeded = await cleanup.Set<WorkOrder>().Where(wo => wo.Building == building).ToListAsync();
+            cleanup.RemoveRange(seeded);
+            await cleanup.SaveChangesAsync();
+        }
+    }
+
+    private async Task<(string Building, int OpenCount)> SeedLeadingBuilding()
+    {
+        int highest;
+        await using (var read = TestHost.NewDbContext())
+        {
+            var data = await new WorkOrderReportsQueryHandler(read, TimeProvider.System).Handle(new WorkOrderReportsQuery());
+            highest = data.CountByBuilding.Values.DefaultIfEmpty(0).Max();
+        }
+
+        // Above every building already stored, and above the 3 orders a parallel test puts in one building
+        var openCount = Math.Max(highest, 3) + 1;
+        var building = $"Download {TestTag}";
+        var userName = TestData.UserName("rd");
+        var creator = new Employee(userName, "Reports", "Download", TestData.Email(userName));
+        WorkOrderStatus[] openStatuses = [WorkOrderStatus.Draft, WorkOrderStatus.Assigned, WorkOrderStatus.InProgress];
+        var now = DateTime.UtcNow;
+
+        var orders = Enumerable.Range(0, openCount)
+            .Select(i => new WorkOrder
+            {
+                Creator = creator,
+                Number = TestData.Number("D"),
+                Title = $"[{TestTag}] Download {i + 1}",
+                Status = openStatuses[i % openStatuses.Length],
+                Priority = WorkOrderPriority.Medium,
+                Building = building,
+                CreatedDate = now.AddDays(-3)
+            })
+            .Append(new WorkOrder
+            {
+                // A completed order in the same building must not be counted as open
+                Creator = creator,
+                Number = TestData.Number("D"),
+                Title = $"[{TestTag}] Download done",
+                Status = WorkOrderStatus.Complete,
+                Priority = WorkOrderPriority.Medium,
+                Building = building,
+                CreatedDate = now.AddDays(-6),
+                CompletedDate = now.AddDays(-2)
+            })
+            .ToArray();
+
+        await using var context = TestHost.NewDbContext();
+        context.Add(creator);
+        context.AddRange(orders.Cast<object>());
+        await context.SaveChangesAsync();
+        return (building, openCount);
     }
 
     private async Task SeedData()

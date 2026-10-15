@@ -13,8 +13,6 @@ public class DarkModeTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Settings));
         await Page.WaitForURLAsync("**/settings");
-        var searchTable = Page.Locator(".grid-data tbody");
-        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.GetByTestId(nameof(Settings.Elements.DarkModeSwitch)).WaitForAsync();
         await Expect(Page.GetByTestId(nameof(Settings.Elements.DarkModeSwitch)))
             .ToHaveAttributeAsync("role", "switch");
