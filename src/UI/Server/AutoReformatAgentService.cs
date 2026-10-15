@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
@@ -124,7 +125,7 @@ public class AutoReformatAgentService : BackgroundService
         try
         {
             workOrder.Title = result.Title;
-            workOrder.Description = result.Description;
+            workOrder.Description = WorkOrderStringUtility.TruncateDescription(result.Description);
 
             dbContext.Attach(workOrder);
             dbContext.Update(workOrder);

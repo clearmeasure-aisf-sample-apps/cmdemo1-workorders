@@ -21,9 +21,12 @@ public class StateCommandList
             new SaveDraftCommand(workOrder, currentUser),
             new DraftToAssignedCommand(workOrder, currentUser),
             new AssignedToInProgressCommand(workOrder, currentUser),
+            new InProgressToWaitingOnVendorCommand(workOrder, currentUser),
+            new WaitingOnVendorToInProgressCommand(workOrder, currentUser),
             new InProgressToAssignedCommand(workOrder, currentUser),
             new InProgressToCompleteCommand(workOrder, currentUser),
             new InProgressToCancelledCommand(workOrder, currentUser),
+            new WaitingOnVendorToCancelledCommand(workOrder, currentUser),
             new AssignedToCancelledCommand(workOrder, currentUser)
         };
 

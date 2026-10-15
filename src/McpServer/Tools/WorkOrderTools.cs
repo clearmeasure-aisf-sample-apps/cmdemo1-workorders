@@ -89,6 +89,12 @@ public class WorkOrderTools
                 return $"Employee with username '{creatorUsername}' not found.";
             }
 
+            var validationError = ValidateCreateParameters(description);
+            if (validationError != null)
+            {
+                return validationError;
+            }
+
             if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out var dueDateError))
             {
                 return dueDateError!;
@@ -149,6 +155,12 @@ public class WorkOrderTools
                 return resolveError;
             }
 
+            var validationError = ValidateCreateParameters(description);
+            if (validationError != null)
+            {
+                return validationError;
+            }
+
             var result = await bus.Send(new CreateDatedWorkOrdersCommand(
                 creatorUsername,
                 assigneeUsername,
@@ -196,15 +208,16 @@ public class WorkOrderTools
             return $"Employee with username '{executingUsername}' not found.";
         }
 
-        var validationError = ValidateSave(workOrder, executingUser, title, dueDate);
+        var validationError = ValidateSave(workOrder, executingUser, title, dueDate, roomNumber, description);
         if (validationError != null)
         {
             return validationError;
         }
 
+        var originalRoomNumber = workOrder.RoomNumber;
         ApplySavePatches(workOrder, title, description, instructions, roomNumber, dueDate);
 
-        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser));
+        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser) { PreviousRoomNumber = originalRoomNumber });
         return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
             new JsonSerializerOptions { WriteIndented = true });
     }
@@ -295,13 +308,23 @@ public class WorkOrderTools
         WorkOrder workOrder,
         Employee executingUser,
         string? title,
-        string? dueDate)
+        string? dueDate,
+        string? roomNumber = null,
+        string? description = null)
     {
         if (!new SaveDraftCommand(workOrder, executingUser).IsValid())
         {
             return FormatInvalidSaveCommand(workOrder);
         }
 
+        return ValidateTitlePatch(title)
+            ?? ValidateDescriptionPatch(description)
+            ?? ValidateRoomNumberPatch(workOrder, roomNumber)
+            ?? ValidateDueDatePatch(dueDate);
+    }
+
+    private static string? ValidateTitlePatch(string? title)
+    {
         if (IsBlankPatch(title))
         {
             return "The Title field is required.";
@@ -312,13 +335,41 @@ public class WorkOrderTools
             return $"Title cannot exceed {WorkOrder.TitleMaxLength} characters.";
         }
 
-        if (IsInvalidDueDatePatch(dueDate))
+        return null;
+    }
+
+    private static string? ValidateDescriptionPatch(string? description)
+    {
+        if (description is { Length: > WorkOrder.DescriptionMaxLength })
         {
-            return $"Invalid due date '{dueDate}'. Use yyyy-MM-dd.";
+            return $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.";
         }
 
         return null;
     }
+
+    private static string? ValidateCreateParameters(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return "Description is required.";
+        }
+
+        return ValidateDescriptionPatch(description);
+    }
+
+    private static string? ValidateRoomNumberPatch(WorkOrder workOrder, string? roomNumber)
+    {
+        if (roomNumber is { Length: > WorkOrder.RoomNumberEntryMaxLength } && roomNumber != workOrder.RoomNumber)
+        {
+            return $"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters.";
+        }
+
+        return null;
+    }
+
+    private static string? ValidateDueDatePatch(string? dueDate) =>
+        IsInvalidDueDatePatch(dueDate) ? $"Invalid due date '{dueDate}'. Use yyyy-MM-dd." : null;
 
     private static bool IsBlankPatch(string? value) => value != null && string.IsNullOrWhiteSpace(value);
 

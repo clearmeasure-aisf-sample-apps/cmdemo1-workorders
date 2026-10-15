@@ -5,7 +5,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
-public class WorkOrderManageModel
+public class WorkOrderManageModel : IValidatableObject
 {
     public WorkOrder? WorkOrder { get; set; }
     public EditMode Mode { get; set; }
@@ -21,7 +21,8 @@ public class WorkOrderManageModel
     [Required, StringLength(WorkOrder.TitleMaxLength, ErrorMessage = "Title cannot exceed 300 characters.")]
     public string? Title { get; set; }
 
-    [Required] public string? Description { get; set; }
+    [Required, StringLength(WorkOrder.DescriptionMaxLength, ErrorMessage = "Description cannot exceed 4000 characters.")]
+    public string? Description { get; set; }
 
     [StringLength(WorkOrder.InstructionsMaxLength, ErrorMessage = "Instructions cannot exceed 4000 characters.")]
     public string? Instructions { get; set; }
@@ -44,8 +45,13 @@ public class WorkOrderManageModel
     /// </summary>
     public string? DueDateDisplay { get; set; }
 
-    [StringLength(WorkOrder.RoomNumberMaxLength, ErrorMessage = "Room cannot exceed 900 characters.")]
     public string? RoomNumber { get; set; }
+
+    /// <summary>
+    /// The room number persisted on the work order when the model was filled.
+    /// Used to skip entry-length validation when the room number is unchanged.
+    /// </summary>
+    public string? OriginalRoomNumber { get; set; }
 
     /// <summary>
     /// Priority chosen on the form. Defaults to Medium.
@@ -57,4 +63,15 @@ public class WorkOrderManageModel
     /// </summary>
     [StringLength(WorkOrder.BuildingMaxLength, ErrorMessage = "Building cannot exceed 100 characters.")]
     public string? Building { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext context)
+    {
+        // Skip room number entry length validation when the value is unchanged
+        if (RoomNumber != OriginalRoomNumber && RoomNumber?.Length > WorkOrder.RoomNumberEntryMaxLength)
+        {
+            yield return new ValidationResult(
+                "Room number cannot exceed 50 characters.",
+                [nameof(RoomNumber)]);
+        }
+    }
 }

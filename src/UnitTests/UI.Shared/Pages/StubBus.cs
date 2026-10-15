@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using MediatR;
@@ -20,6 +21,20 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
     public WorkOrder[] RecentWorkOrders { get; init; } = [];
 
     public WorkOrderSpecificationQuery? LastSpecification { get; private set; }
+
+    public List<SavedSearchView> SavedViews { get; } = [];
+
+    public SaveSearchViewCommand? LastSaveCommand { get; private set; }
+
+    public DeleteSearchViewCommand? LastDeleteCommand { get; private set; }
+
+    public SavedSearchViewResult SaveResult { get; init; } = SavedSearchViewResult.Success;
+
+    public bool FailSavedViewsQuery { get; init; }
+
+    public bool ThrowOnSaveCommand { get; init; }
+
+    public bool ThrowOnDeleteCommand { get; init; }
 
     public override Task Publish(INotification notification)
     {
@@ -76,6 +91,36 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return Task.FromResult<TResponse>((TResponse)(object)Summary);
         }
 
+        if (request is SavedSearchViewsQuery)
+        {
+            if (FailSavedViewsQuery)
+            {
+                throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            }
+
+            return Task.FromResult<TResponse>((TResponse)(object)SavedViews.ToArray());
+        }
+
+        if (request is SaveSearchViewCommand save)
+        {
+            LastSaveCommand = save;
+            if (ThrowOnSaveCommand) throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            if (SaveResult.Succeeded)
+            {
+                SavedViews.Add(new SavedSearchView { Name = save.Name, Query = save.Query });
+            }
+
+            return Task.FromResult<TResponse>((TResponse)(object)SaveResult);
+        }
+
+        if (request is DeleteSearchViewCommand delete)
+        {
+            LastDeleteCommand = delete;
+            if (ThrowOnDeleteCommand) throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            SavedViews.RemoveAll(v => v.Id == delete.Id);
+            return Task.FromResult<TResponse>((TResponse)(object)SavedSearchViewResult.Success);
+        }
+
         if (request is RecentWorkOrdersQuery)
         {
             return Task.FromResult<TResponse>((TResponse)(object)RecentWorkOrders);
@@ -114,6 +159,12 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
         {
             var load = new EmployeeWorkLoad { AssignedAndOpen = 5, InProgress = 2, Overdue = 1, CompletedLast30Days = 10 };
             return Task.FromResult<TResponse>((TResponse)(object)load);
+        }
+
+        if (request is SlaHealthQuery)
+        {
+            var slaHealth = new SlaHealth { CurrentMonthPercentage = null, LastMonthPercentage = null, CurrentMonthOrderCount = 0, LastMonthOrderCount = 0 };
+            return Task.FromResult<TResponse>((TResponse)(object)slaHealth);
         }
 
         throw new NotImplementedException();

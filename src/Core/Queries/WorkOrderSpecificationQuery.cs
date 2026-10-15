@@ -25,6 +25,12 @@ public record WorkOrderSpecificationQuery : IRequest<WorkOrder[]>, IRemotableReq
         OverdueOnly = overdueOnly;
     }
 
+    /// <summary>Restricts the result to In Progress work orders that are waiting on a vendor.</summary>
+    public void MatchWaitingOnVendorOnly(bool waitingOnVendorOnly)
+    {
+        WaitingOnVendorOnly = waitingOnVendorOnly;
+    }
+
     /// <summary>Restricts the result to one priority; null matches every priority.</summary>
     public void MatchPriority(WorkOrderPriority? priority)
     {
@@ -86,6 +92,10 @@ public record WorkOrderSpecificationQuery : IRequest<WorkOrder[]>, IRemotableReq
 
     // ReSharper disable once MemberCanBePrivate.Global -- required for System.Text.Json round-trip serialization (remoting protocol)
     public bool OverdueOnly { get; set; }
+
+    /// <summary>When true only In Progress work orders waiting on a vendor match.</summary>
+    // ReSharper disable once MemberCanBePrivate.Global -- required for System.Text.Json round-trip serialization (remoting protocol)
+    public bool WaitingOnVendorOnly { get; set; }
 
     /// <summary>Priority to match; null matches every priority.</summary>
     public WorkOrderPriority? Priority { get; set; }

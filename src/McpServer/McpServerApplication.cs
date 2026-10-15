@@ -45,6 +45,8 @@ public static class McpServerApplication
             })
             .WithTools<WorkOrderTools>()
             .WithTools<EmployeeTools>()
+            .WithTools<TeamTools>()
+            .WithTools<VendorTools>()
             .WithResources<ReferenceResources>();
 
         configureBuilder?.Invoke(builder);

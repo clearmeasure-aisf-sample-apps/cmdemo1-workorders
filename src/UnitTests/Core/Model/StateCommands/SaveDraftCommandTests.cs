@@ -67,6 +67,34 @@ public class SaveDraftCommandTests : StateCommandBaseTests
         Assert.That(order.CreatedDate, Is.Not.Null);
     }
 
+    [Test]
+    public void WithPreviousRoomNumber_ShouldSetPreviousRoomNumber_WhenSaveDraftCommand()
+    {
+        var employee = new Employee();
+        var order = new WorkOrder { Status = WorkOrderStatus.Draft, Creator = employee };
+        var command = new SaveDraftCommand(order, employee);
+
+        var result = SaveDraftCommand.WithPreviousRoomNumber(command, "Room A");
+
+        var save = result as SaveDraftCommand;
+        Assert.That(save, Is.Not.Null);
+        Assert.That(save!.PreviousRoomNumber, Is.EqualTo("Room A"));
+        Assert.That(save.WorkOrder, Is.SameAs(order));
+        Assert.That(save.CurrentUser, Is.SameAs(employee));
+    }
+
+    [Test]
+    public void WithPreviousRoomNumber_ShouldReturnSameInstance_WhenOtherCommand()
+    {
+        var employee = new Employee();
+        var order = new WorkOrder { Status = WorkOrderStatus.Draft, Creator = employee };
+        IStateCommand command = new DraftToAssignedCommand(order, employee);
+
+        var result = SaveDraftCommand.WithPreviousRoomNumber(command, "Room A");
+
+        Assert.That(result, Is.SameAs(command));
+    }
+
     protected override StateCommandBase GetStateCommand(WorkOrder order, Employee employee)
     {
         return new SaveDraftCommand(order, employee);

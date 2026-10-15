@@ -122,7 +122,7 @@
                 <div class="form-group">
                     <label for="RoomNumber" class="form-label">Room</label>
                     <div>
-                        <InputTextArea data-testid="@Elements.RoomNumber" id="RoomNumber" @bind-Value="Model.RoomNumber" class="form-control input-textarea input-room" maxlength="@WorkOrder.RoomNumberMaxLength" disabled="@Model.IsReadOnly"/>
+                        <InputTextArea data-testid="@Elements.RoomNumber" id="RoomNumber" @bind-Value="Model.RoomNumber" class="form-control input-textarea input-room" maxlength="@WorkOrder.RoomNumberEntryMaxLength" disabled="@Model.IsReadOnly"/>
                     </div>
                 </div>
             </div>
@@ -175,6 +175,10 @@
             {
                 <div class="attachments-section" data-testid="@Elements.AttachmentsSection">
                     <h4>Attachments</h4>
+                    @if (_removeAttachmentError is not null)
+                    {
+                        <div role="alert" class="text-danger" data-testid="@Elements.AttachmentRemoveError">@_removeAttachmentError</div>
+                    }
                     <table class="table table-sm">
                         <thead>
                             <tr>
@@ -183,6 +187,10 @@
                                 <th>Size</th>
                                 <th>Uploaded By</th>
                                 <th>Upload Date</th>
+                                @if (_canRemoveAttachments)
+                                {
+                                    <th></th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -194,6 +202,21 @@
                                     <td data-testid="@Elements.AttachmentFileSize">@attachment.FileSize</td>
                                     <td data-testid="@Elements.AttachmentUploadedBy">@attachment.UploadedBy?.GetFullName()</td>
                                     <td data-testid="@Elements.AttachmentUploadedDate">@attachment.UploadedDate.ToString("G")</td>
+                                    @if (_canRemoveAttachments)
+                                    {
+                                        <td>
+                                            @if (_pendingRemoveId == attachment.Id)
+                                            {
+                                                <span>Remove @attachment.FileName?</span>
+                                                <button type="button" class="btn btn-sm btn-danger" data-testid="@Elements.AttachmentRemoveConfirm" @onclick="() => ConfirmRemoveAttachmentAsync(attachment)">Confirm</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" data-testid="@Elements.AttachmentRemoveCancel" @onclick="CancelRemoveAttachment">Cancel</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-testid="@Elements.AttachmentRemove" aria-label="@($"Remove attachment {attachment.FileName}")" @onclick="() => BeginRemoveAttachment(attachment)">Remove</button>
+                                            }
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -252,6 +275,10 @@
         AttachmentFileSize,
         AttachmentUploadedBy,
         AttachmentUploadedDate,
+        AttachmentRemove,
+        AttachmentRemoveConfirm,
+        AttachmentRemoveCancel,
+        AttachmentRemoveError,
         SpeakTitle,
         SpeakDescription,
         DictateTitle,

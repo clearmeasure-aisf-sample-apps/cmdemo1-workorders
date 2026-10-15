@@ -63,6 +63,73 @@
     color: var(--color-text);
 }
 
+/* Saved views: separator, user views with a delete button, and the inline save form */
+.popover-menu-separator {
+    height: 1px;
+    margin: 0.35rem 0;
+    background: var(--color-border);
+}
+
+.user-view-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.user-view-item .popover-menu-item {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-view-delete {
+    flex: 0 0 auto;
+    padding: 0.35rem 0.5rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+.user-view-delete:hover {
+    background: var(--color-surface-2);
+}
+
+.user-view-delete:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.save-view-form {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: min(280px, calc(100vw - 32px));
+    padding: 0.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    box-shadow: var(--shadow-popover);
+}
+
+.save-view-error {
+    color: var(--color-danger);
+    font-size: 0.875rem;
+}
+
+.save-view-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
 /* Filters card */
 .filters-card {
     background: var(--color-surface);
@@ -602,7 +669,18 @@
 
 .col-room {
     width: 110px;
+    max-width: 140px;
     overflow-wrap: break-word;
+}
+
+.room-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /* Explicit px cap: in auto table layout max-width on the td is ignored, so the
+       cap must live on the content to keep its min-content width at 140px. */
+    max-width: 140px;
 }
 
 .col-due {

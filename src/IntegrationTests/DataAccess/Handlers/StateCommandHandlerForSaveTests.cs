@@ -13,8 +13,6 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldSaveWorkOrderBySavingDraft()
     {
-        new DatabaseTests().Clean();
-
         var currentUser = Faker<Employee>();
         currentUser.Id = Guid.NewGuid();
         var context = TestHost.GetRequiredService<DbContext>();
@@ -47,8 +45,6 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldSaveAndReadBackMaxLengthTitle()
     {
-        new DatabaseTests().Clean();
-
         var currentUser = Faker<Employee>();
         currentUser.Id = Guid.NewGuid();
         var context = TestHost.GetRequiredService<DbContext>();
@@ -70,10 +66,31 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     }
 
     [Test]
+    public async Task ShouldSaveAndReadBackMaxLengthBuilding()
+    {
+        var currentUser = Faker<Employee>();
+        currentUser.Id = Guid.NewGuid();
+        var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(currentUser);
+        await context.SaveChangesAsync();
+
+        var expectedBuilding = new string('B', WorkOrder.BuildingMaxLength);
+        var workOrder = Faker<WorkOrder>();
+        workOrder.Id = Guid.Empty;
+        workOrder.Creator = currentUser;
+        workOrder.Building = expectedBuilding;
+
+        var result = await TestHost.GetRequiredService<IBus>().Send(new SaveDraftCommand(workOrder, currentUser));
+
+        var readContext = TestHost.GetRequiredService<DbContext>();
+        var order = readContext.Find<WorkOrder>(result.WorkOrder.Id) ?? throw new InvalidOperationException();
+        order.Building.ShouldBe(expectedBuilding);
+        order.Building!.Length.ShouldBe(WorkOrder.BuildingMaxLength);
+    }
+
+    [Test]
     public async Task ShouldSaveWorkOrderWithAssigneeAndCreator()
     {
-        new DatabaseTests().Clean();
-
         var workOrder = Faker<WorkOrder>();
         var currentUser = Faker<Employee>();
         workOrder.Creator = currentUser;
@@ -109,8 +126,6 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldUpdateWorkOrderWithAssigneeAndCreator()
     {
-        new DatabaseTests().Clean();
-
         var workOrder = Faker<WorkOrder>();
         var currentUser = Faker<Employee>();
         workOrder.Creator = currentUser;
@@ -150,8 +165,6 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldUpdateWorkOrderWithAssigneeAndCreatorWithRemotedOrder()
     {
-        new DatabaseTests().Clean();
-
         var workOrder = Faker<WorkOrder>();
         var currentUser = Faker<Employee>();
         workOrder.Creator = currentUser;
@@ -189,7 +202,7 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldRejectSecondInsert_WhenNumberAlreadyExists()
     {
-        new DatabaseTests().Clean();
+        var duplicateNumber = TestData.Number("P");
 
         var currentUser = Faker<Employee>();
         currentUser.Id = Guid.NewGuid();
@@ -201,11 +214,11 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
 
         var first = Faker<WorkOrder>();
         first.Id = Guid.Empty;
-        first.Number = "DUP0001";
+        first.Number = duplicateNumber;
         first.Creator = currentUser;
         var second = Faker<WorkOrder>();
         second.Id = Guid.Empty;
-        second.Number = "DUP0001";
+        second.Number = duplicateNumber;
         second.Creator = currentUser;
 
         await TestHost.GetRequiredService<StateCommandHandler>()
@@ -215,8 +228,8 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(() => secondHandler.Handle(secondCommand));
 
-        exception.Message.ShouldContain("DUP0001");
+        exception.Message.ShouldContain(duplicateNumber);
         await using var verify = TestHost.GetRequiredService<DbContext>();
-        (await verify.Set<WorkOrder>().CountAsync(w => w.Number == "DUP0001")).ShouldBe(1);
+        (await verify.Set<WorkOrder>().CountAsync(w => w.Number == duplicateNumber)).ShouldBe(1);
     }
 }

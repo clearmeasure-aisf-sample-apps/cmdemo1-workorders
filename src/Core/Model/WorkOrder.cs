@@ -7,6 +7,11 @@ namespace ClearMeasure.Bootcamp.Core.Model;
 public class WorkOrder : EntityBase<WorkOrder>
 {
     /// <summary>
+    /// Maximum length of <see cref="RoomNumber"/> entry in the form and validator.
+    /// </summary>
+    public const int RoomNumberEntryMaxLength = 50;
+
+    /// <summary>
     /// Maximum length of <see cref="RoomNumber"/> accepted by persistence and the work-order form.
     /// </summary>
     public const int RoomNumberMaxLength = 900;
@@ -33,11 +38,7 @@ public class WorkOrder : EntityBase<WorkOrder>
 
     public string? Title { get; set; } = "";
 
-    public string? Description
-    {
-        get;
-        set => field = GetTruncatedString(value);
-    } = "";
+    public string? Description { get; set; } = "";
 
     public string? Instructions
     {
@@ -79,6 +80,18 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public string? Building { get; set; }
 
+    /// <summary>
+    /// When the assignee started waiting on a vendor (parts, contractor, quote). Set while the assignee
+    /// waits on a vendor; only meaningful while <see cref="Status"/> is In Progress. Null when not waiting.
+    /// </summary>
+    public DateTime? WaitingOnVendorSince { get; set; }
+
+    /// <summary>
+    /// <c>true</c> when the work order is In Progress and waiting on a vendor. A stale
+    /// <see cref="WaitingOnVendorSince"/> on any other status is ignored.
+    /// </summary>
+    public bool IsWaitingOnVendor => Status == WorkOrderStatus.InProgress && WaitingOnVendorSince != null;
+
     private string GetTruncatedString(string? value)
     {
         if (value == null)
@@ -110,6 +123,10 @@ public class WorkOrder : EntityBase<WorkOrder>
     public void ChangeStatus(Employee employee, DateTime date, WorkOrderStatus status)
     {
         Status = status;
+        if (status != WorkOrderStatus.InProgress)
+        {
+            WaitingOnVendorSince = null;
+        }
     }
 
     public string GetMessage()

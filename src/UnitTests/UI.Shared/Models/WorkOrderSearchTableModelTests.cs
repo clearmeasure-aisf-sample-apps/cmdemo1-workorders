@@ -195,9 +195,48 @@ public class WorkOrderCsvExporterTests
 
         var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
-        lines[0].ShouldBe("Work Order,Title,Status,Priority,Assignee,Creator,Building,Room,Due Date,Created");
-        lines[1].ShouldBe("38173BA,\"Mow grass, north lawn\",Assigned,High,Groundskeeper Willie,Timothy Lovejoy,Grounds,Lawn,2026-10-18,2026-10-01 09:30");
+        lines[0].ShouldBe("Work Order,Title,Status,Priority,Assignee,Creator,Building,Room,Due Date,Created,Completed");
+        lines[1].ShouldBe("38173BA,\"Mow grass, north lawn\",Assigned,High,Groundskeeper Willie,Timothy Lovejoy,Grounds,Lawn,2026-10-18,2026-10-01 09:30,");
         lines[2].ShouldBe(string.Empty);
+    }
+
+    [Test]
+    public void ToCsv_WithCompletedDate_ExportsFormattedDateTime()
+    {
+        var row = new WorkOrderSearchResultRow
+        {
+            WorkOrder = new WorkOrder
+            {
+                Number = "12345CD", Title = "Fix roof", Status = WorkOrderStatus.Complete,
+                Priority = WorkOrderPriority.High, Building = "Main", RoomNumber = "Attic", DueDate = new DateOnly(2026, 10, 18),
+                CreatedDate = new DateTime(2026, 10, 1, 9, 30, 0),
+                CompletedDate = new DateTime(2026, 10, 10, 14, 45, 0),
+                Assignee = new Employee("jd", "John", "Doe", "e"), Creator = new Employee("ab", "Admin", "Bob", "e")
+            }
+        };
+
+        var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
+
+        lines[1].ShouldBe("12345CD,Fix roof,Complete,High,John Doe,Admin Bob,Main,Attic,2026-10-18,2026-10-01 09:30,2026-10-10 14:45");
+    }
+
+    [Test]
+    public void ToCsv_WithoutCompletedDate_ExportsEmptyCell()
+    {
+        var row = new WorkOrderSearchResultRow
+        {
+            WorkOrder = new WorkOrder
+            {
+                Number = "98765EF", Title = "Paint wall", Status = WorkOrderStatus.Draft,
+                Priority = WorkOrderPriority.Medium, Building = "West", RoomNumber = "Room 101", DueDate = new DateOnly(2026, 10, 20),
+                CreatedDate = new DateTime(2026, 10, 5, 11, 15, 0),
+                Assignee = new Employee("ms", "Mary", "Smith", "e"), Creator = new Employee("pj", "Project", "Jones", "e")
+            }
+        };
+
+        var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
+
+        lines[1].ShouldBe("98765EF,Paint wall,Draft,Medium,Mary Smith,Project Jones,West,Room 101,2026-10-20,2026-10-05 11:15,");
     }
 
     [TestCase("plain", "plain")]
@@ -256,6 +295,42 @@ public class StatusPillPresenterTests
         var pill = StatusPillPresenter.Present(new WorkOrder { Status = WorkOrderStatus.Assigned }, true);
 
         pill.ShouldBe(new StatusPill("Overdue", "status-badge status-badge--overdue", ", status Assigned"));
+    }
+
+    [Test]
+    public void Present_InProgressWaitingOnVendor_ShowsWaitingPill()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0) };
+
+        StatusPillPresenter.Present(order, false)
+            .ShouldBe(new StatusPill("Waiting on vendor", "status-badge status-badge--waiting", null));
+    }
+
+    [Test]
+    public void Present_InProgressNotWaiting_ShowsInProgressPill()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.InProgress };
+
+        StatusPillPresenter.Present(order, false)
+            .ShouldBe(new StatusPill("In Progress", "status-badge status-badge--in-progress", null));
+    }
+
+    [Test]
+    public void Present_NotInProgressWithStaleField_ShowsStoredStatus()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.Assigned, WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0) };
+
+        StatusPillPresenter.Present(order, false)
+            .ShouldBe(new StatusPill("Assigned", "status-badge status-badge--assigned", null));
+    }
+
+    [Test]
+    public void Present_WaitingAndOverdue_ShowsOverdue()
+    {
+        var order = new WorkOrder { Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0) };
+
+        StatusPillPresenter.Present(order, true)
+            .ShouldBe(new StatusPill("Overdue", "status-badge status-badge--overdue", ", status In Progress"));
     }
 
     [Test]
