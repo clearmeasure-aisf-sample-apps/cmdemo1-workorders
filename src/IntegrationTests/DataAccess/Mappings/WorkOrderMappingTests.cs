@@ -471,4 +471,80 @@ public class WorkOrderMappingTests
         rehydratedDefault.Priority.ShouldBe(WorkOrderPriority.Medium);
         rehydratedDefault.Building.ShouldBeNull();
     }
+
+    [Test]
+    public void ShouldPersistWaitingOnVendorSince()
+    {
+        new DatabaseTests().Clean();
+
+        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var assignee = new Employee("assignee1", "Jane", "Roe", "jane@example.com");
+        var since = new DateTime(2026, 10, 14, 9, 30, 0);
+        var workOrder = new WorkOrder
+        {
+            Number = "WV-01",
+            Title = "Replace boiler valve",
+            Status = WorkOrderStatus.InProgress,
+            Creator = creator,
+            Assignee = assignee,
+            WaitingOnVendorSince = since
+        };
+
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.Add(assignee);
+            context.Add(workOrder);
+            context.SaveChanges();
+        }
+
+        WorkOrder rehydrated;
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            rehydrated = context.Set<WorkOrder>().Single(wo => wo.Id == workOrder.Id);
+        }
+
+        rehydrated.WaitingOnVendorSince.ShouldBe(since);
+        rehydrated.IsWaitingOnVendor.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldReadRowWrittenWithoutWaitingOnVendorColumnAsNotWaiting()
+    {
+        new DatabaseTests().Clean();
+
+        // A row as app2 writes it: app2 knows nothing of WaitingOnVendorSince, so the column is left out.
+        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.SaveChanges();
+        }
+
+        var id = Guid.NewGuid();
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            var table = context.Database.ProviderName!.Contains("Sqlite", StringComparison.OrdinalIgnoreCase)
+                ? "\"WorkOrder\""
+                : "[dbo].[WorkOrder]";
+#pragma warning disable EF1002, EF1003 // The table name is one of two constants; every value is a parameter
+            context.Database.ExecuteSqlRaw(
+                "INSERT INTO " + table +
+                " (Id, Number, Title, Description, Instructions, Status, CreatorId, Priority)" +
+                " VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
+                id, "APP2001", "app2 row", "", "", WorkOrderStatus.InProgress.Code, creator.Id, (byte)2);
+#pragma warning restore EF1002, EF1003
+        }
+
+        WorkOrder rehydrated;
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            rehydrated = context.Set<WorkOrder>().Single(wo => wo.Number == "APP2001");
+        }
+
+        rehydrated.Id.ShouldBe(id);
+        rehydrated.Status.ShouldBe(WorkOrderStatus.InProgress);
+        rehydrated.WaitingOnVendorSince.ShouldBeNull();
+        rehydrated.IsWaitingOnVendor.ShouldBeFalse();
+    }
 }

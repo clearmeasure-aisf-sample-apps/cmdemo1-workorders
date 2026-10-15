@@ -535,4 +535,59 @@ public class WorkOrderSpecificationHandlerTests
 
         orders.Select(o => o.Number).ShouldBe(["RO001", "RO004"], ignoreOrder: true);
     }
+
+    private static async Task SeedWaitingOnVendorOrdersAsync()
+    {
+        new DatabaseTests().Clean();
+
+        var employee = new Employee("1", "1", "1", "1");
+        var since = new DateTime(2026, 10, 14, 9, 0, 0);
+        var waiting = new WorkOrder { Creator = employee, Assignee = employee, Number = "WV001", Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = since };
+        var inProgress = new WorkOrder { Creator = employee, Assignee = employee, Number = "WV002", Status = WorkOrderStatus.InProgress };
+        var completeWithStaleField = new WorkOrder { Creator = employee, Assignee = employee, Number = "WV003", Status = WorkOrderStatus.Complete, WaitingOnVendorSince = since };
+
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(employee);
+        context.AddRange(waiting, inProgress, completeWithStaleField);
+        await context.SaveChangesAsync();
+    }
+
+    [Test]
+    public async Task ShouldReturnWaitingOnVendorOrder_WhenOpenOnly()
+    {
+        await SeedWaitingOnVendorOrdersAsync();
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchOpenOnly(true);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["WV001", "WV002"], ignoreOrder: true);
+    }
+
+    [Test]
+    public async Task ShouldReturnWaitingOnVendorOrder_WhenStatusIsInProgress()
+    {
+        await SeedWaitingOnVendorOrdersAsync();
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchStatus(WorkOrderStatus.InProgress);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["WV001", "WV002"], ignoreOrder: true);
+    }
+
+    [Test]
+    public async Task ShouldReturnOnlyWaitingOnVendorOrders_WhenWaitingOnVendorOnly()
+    {
+        await SeedWaitingOnVendorOrdersAsync();
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchWaitingOnVendorOnly(true);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe(["WV001"]);
+    }
 }

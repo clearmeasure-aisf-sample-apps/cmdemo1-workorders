@@ -40,6 +40,22 @@ public class WorkOrderSearchSummaryQueryHandlerTests
     }
 
     [Test]
+    public async Task ShouldCountWaitingOnVendorAsOpenAndInProgress()
+    {
+        new DatabaseTests().Clean();
+        var creator = new Employee("sumcreator4", "Sum", "Creator", "s4@example.com");
+        var now = Now.DateTime;
+        var waiting = Order(creator, "W000001", WorkOrderStatus.InProgress, created: now.AddDays(-20));
+        waiting.WaitingOnVendorSince = now.AddDays(-1);
+        await SaveAsync(creator, waiting, Order(creator, "W000002", WorkOrderStatus.InProgress, created: now.AddDays(-20)));
+
+        var summary = await Handle(null);
+
+        summary.OpenCount.ShouldBe(2);
+        summary.InProgressCount.ShouldBe(2);
+    }
+
+    [Test]
     public async Task ShouldCountAssignedToMeAndDueToday_ForUser()
     {
         new DatabaseTests().Clean();
