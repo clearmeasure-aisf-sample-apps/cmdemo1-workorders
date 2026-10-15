@@ -260,7 +260,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         // Verify vendor is displayed
         await Expect(Page.GetByText(vendorName, new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.GetByText("Plumbing")).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Plumbing", new() { Exact = true })).ToBeVisibleAsync();
         await Expect(Page.GetByText("John Smith")).ToBeVisibleAsync();
     }
 
