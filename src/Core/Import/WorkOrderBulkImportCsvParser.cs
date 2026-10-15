@@ -117,6 +117,7 @@ public static class WorkOrderBulkImportCsvParser
         {
             var cells = CsvLineReader.SplitCsvLine(line);
             var building = OptionalCell(cells, "Building");
+            var description = OptionalCell(cells, "Description");
             var priorityText = OptionalCell(cells, "Priority");
             var dueDateText = OptionalCell(cells, "DueDate");
             var priority = ParsePriority(priorityText);
@@ -125,13 +126,13 @@ public static class WorkOrderBulkImportCsvParser
             return new WorkOrderBulkImportRow(
                 lineNumber,
                 OptionalCell(cells, "Title"),
-                OptionalCell(cells, "Description"),
+                description,
                 OptionalCell(cells, "CreatorUsername"),
                 OptionalCell(cells, "RoomNumber"),
                 building,
                 priority,
                 dueDate,
-                BuildingError(building) ?? PriorityError(priorityText, priority) ?? DueDateError(dueDateText, dueDate));
+                BuildingError(building) ?? DescriptionError(description) ?? PriorityError(priorityText, priority) ?? DueDateError(dueDateText, dueDate));
         }
 
         private string? OptionalCell(List<string> cells, string name)
@@ -170,6 +171,11 @@ public static class WorkOrderBulkImportCsvParser
     private static string? BuildingError(string? building) =>
         building is { Length: > WorkOrder.BuildingMaxLength }
             ? $"Building must be at most {WorkOrder.BuildingMaxLength} characters."
+            : null;
+
+    private static string? DescriptionError(string? description) =>
+        description is { Length: > WorkOrder.DescriptionMaxLength }
+            ? $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters."
             : null;
 
     private static class CsvLineReader
