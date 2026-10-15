@@ -470,14 +470,12 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistWaitingOnVendorSince()
     {
-        new DatabaseTests().Clean();
-
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
-        var assignee = new Employee("assignee1", "Jane", "Roe", "jane@example.com");
+        var creator = new Employee(TestData.UserName("creator"), "John", "Doe", "john@example.com");
+        var assignee = new Employee(TestData.UserName("assignee"), "Jane", "Roe", "jane@example.com");
         var since = new DateTime(2026, 10, 14, 9, 30, 0);
         var workOrder = new WorkOrder
         {
-            Number = "WV-01",
+            Number = TestData.Number("V"),
             Title = "Replace boiler valve",
             Status = WorkOrderStatus.InProgress,
             Creator = creator,
@@ -506,10 +504,8 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldReadRowWrittenWithoutWaitingOnVendorColumnAsNotWaiting()
     {
-        new DatabaseTests().Clean();
-
         // A row as app2 writes it: app2 knows nothing of WaitingOnVendorSince, so the column is left out.
-        var creator = new Employee("creator1", "John", "Doe", "john@example.com");
+        var creator = new Employee(TestData.UserName("creator"), "John", "Doe", "john@example.com");
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(creator);
@@ -517,6 +513,7 @@ public class WorkOrderMappingTests
         }
 
         var id = Guid.NewGuid();
+        var number = TestData.Number("A");
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
             var table = context.Database.ProviderName!.Contains("Sqlite", StringComparison.OrdinalIgnoreCase)
@@ -527,14 +524,14 @@ public class WorkOrderMappingTests
                 "INSERT INTO " + table +
                 " (Id, Number, Title, Description, Instructions, Status, CreatorId, Priority)" +
                 " VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
-                id, "APP2001", "app2 row", "", "", WorkOrderStatus.InProgress.Code, creator.Id, (byte)2);
+                id, number, "app2 row", "", "", WorkOrderStatus.InProgress.Code, creator.Id, (byte)2);
 #pragma warning restore EF1002, EF1003
         }
 
         WorkOrder rehydrated;
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
-            rehydrated = context.Set<WorkOrder>().Single(wo => wo.Number == "APP2001");
+            rehydrated = context.Set<WorkOrder>().Single(wo => wo.Number == number);
         }
 
         rehydrated.Id.ShouldBe(id);

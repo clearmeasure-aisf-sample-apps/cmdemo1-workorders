@@ -46,17 +46,18 @@ public class WorkOrderSearchSummaryQueryHandlerTests
     [Test]
     public async Task ShouldCountWaitingOnVendorAsOpenAndInProgress()
     {
-        new DatabaseTests().Clean();
-        var creator = new Employee("sumcreator4", "Sum", "Creator", "s4@example.com");
-        var now = Now.DateTime;
-        var waiting = Order(creator, "W000001", WorkOrderStatus.InProgress, created: now.AddDays(-20));
+        var clock = TestData.FutureClock();
+        var now = clock.GetUtcNow().UtcDateTime;
+        var before = await Handle(null, clock);
+        var creator = NewEmployee("sumcreator");
+        var waiting = Order(creator, WorkOrderStatus.InProgress, created: now.AddDays(-20));
         waiting.WaitingOnVendorSince = now.AddDays(-1);
-        await SaveAsync(creator, waiting, Order(creator, "W000002", WorkOrderStatus.InProgress, created: now.AddDays(-20)));
+        await SaveAsync(creator, waiting, Order(creator, WorkOrderStatus.InProgress, created: now.AddDays(-20)));
 
-        var summary = await Handle(null);
+        var summary = await Handle(null, clock);
 
-        summary.OpenCount.ShouldBe(2);
-        summary.InProgressCount.ShouldBe(2);
+        (summary.OpenCount - before.OpenCount).ShouldBe(2);
+        (summary.InProgressCount - before.InProgressCount).ShouldBe(2);
     }
 
     [Test]
