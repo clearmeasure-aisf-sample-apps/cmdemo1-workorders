@@ -6,9 +6,9 @@ public class WorkOrderStatusChange : EntityBase<WorkOrderStatusChange>
 
     public Guid WorkOrderId { get; set; }
 
-    public WorkOrderStatus FromStatus { get; set; }
+    public WorkOrderStatus FromStatus { get; set; } = WorkOrderStatus.Draft;
 
-    public WorkOrderStatus ToStatus { get; set; }
+    public WorkOrderStatus ToStatus { get; set; } = WorkOrderStatus.Draft;
 
     public Guid ChangedById { get; set; }
 
