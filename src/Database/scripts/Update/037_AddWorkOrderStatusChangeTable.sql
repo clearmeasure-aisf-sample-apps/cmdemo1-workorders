@@ -11,7 +11,7 @@ BEGIN TRY
 		[ChangedById] UNIQUEIDENTIFIER NOT NULL,
 		[ChangedDate] DATETIME2 NOT NULL,
 		CONSTRAINT [FK_WorkOrderStatusChange_WorkOrder] FOREIGN KEY ([WorkOrderId]) REFERENCES [dbo].[WorkOrder]([Id]) ON DELETE CASCADE,
-		CONSTRAINT [FK_WorkOrderStatusChange_Employee] FOREIGN KEY ([ChangedById]) REFERENCES [dbo].[Employee]([Id]) ON DELETE RESTRICT
+		CONSTRAINT [FK_WorkOrderStatusChange_Employee] FOREIGN KEY ([ChangedById]) REFERENCES [dbo].[Employee]([Id])
 	)
 
 	PRINT N'The database update succeeded'
