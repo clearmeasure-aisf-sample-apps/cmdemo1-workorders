@@ -53,7 +53,7 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
 
     private static bool IsInMonth(DateTime completedDate, DateOnly monthStart, DateOnly monthEnd)
     {
-        var completedDateOnly = DateOnly.FromDateTime(completedDate);
+        var completedDateOnly = SlaHealth.ChurchDate(completedDate);
         return completedDateOnly >= monthStart && completedDateOnly <= monthEnd;
     }
 

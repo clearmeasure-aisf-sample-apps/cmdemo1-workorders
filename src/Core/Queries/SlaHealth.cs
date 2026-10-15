@@ -1,5 +1,6 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global -- System.Text.Json round-trip serialization (remoting protocol) requires mutable setters
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services;
 
 namespace ClearMeasure.Bootcamp.Core.Queries;
 
@@ -42,7 +43,7 @@ public class SlaHealth
 
     /// <summary>
     /// Computes the on-time percentage (0–100, rounded to a whole number) for the given orders.
-    /// Orders without a DueDate or CompletedDate are excluded. On time means the completion date is on or before the DueDate.
+    /// Orders without a DueDate or CompletedDate are excluded. On time means the church-local completion date is on or before the DueDate.
     /// Returns a null percentage when no qualifying orders exist.
     /// </summary>
     public static (decimal? Percentage, int TotalCount) CalculateOnTimePercentage(IEnumerable<WorkOrder> orders)
@@ -54,8 +55,16 @@ public class SlaHealth
         }
 
         var onTimeCount = qualifying.Count(wo =>
-            DateOnly.FromDateTime(wo.CompletedDate!.Value) <= wo.DueDate!.Value);
+            ChurchDate(wo.CompletedDate!.Value) <= wo.DueDate!.Value);
         var percentage = (decimal)onTimeCount / qualifying.Count * 100;
         return (Math.Round(percentage, 0), qualifying.Count);
     }
+
+    /// <summary>
+    /// Gets the church calendar date (America/Chicago) of a completion time. Stored values are UTC and come back with
+    /// <see cref="DateTimeKind.Unspecified"/>, so the value is treated as UTC.
+    /// </summary>
+    public static DateOnly ChurchDate(DateTime completedUtc) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.SpecifyKind(completedUtc, DateTimeKind.Utc), ChurchTimeZone.Chicago));
 }

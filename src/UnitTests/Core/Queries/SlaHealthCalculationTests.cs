@@ -90,7 +90,7 @@ public class SlaHealthCalculationTests
         var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
         [
             Order(null, new DateTime(2026, 5, 10)),
-            Order(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 11))
+            Order(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 11, 12, 0, 0))
         ]);
 
         percentage.ShouldBe(0m);
@@ -120,9 +120,27 @@ public class SlaHealthCalculationTests
     public void Should_CountAsLate_When_CompletedAfterDueDate()
     {
         var (percentage, _) = SlaHealth.CalculateOnTimePercentage(
-            [Order(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 11, 0, 1, 0))]);
+            [Order(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 11, 5, 1, 0))]);
 
         percentage.ShouldBe(0m);
+    }
+
+    [Test]
+    public void Should_CountAsOnTime_When_CompletedEveningLocal_NextDayUtc()
+    {
+        var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
+            [Order(new DateOnly(2026, 10, 15), new DateTime(2026, 10, 16, 1, 0, 0))]);
+
+        percentage.ShouldBe(100m);
+        count.ShouldBe(1);
+    }
+
+    [Test]
+    public void Should_ReturnChurchDate_When_CompletedLateEveningLocal()
+    {
+        var result = SlaHealth.ChurchDate(new DateTime(2026, 11, 1, 3, 0, 0));
+
+        result.ShouldBe(new DateOnly(2026, 10, 31));
     }
 
     [Test]

@@ -52,7 +52,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-001",
             DueDate = null,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -84,7 +84,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-001",
             DueDate = dueDate,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = dueDate.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = dueDate.ToDateTime(new TimeOnly(12, 0))
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -117,7 +117,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-001",
             DueDate = dueDate,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -149,7 +149,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-001",
             DueDate = today,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
         };
 
         var lateOrder = new WorkOrder
@@ -158,7 +158,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-002",
             DueDate = today.AddDays(-1),
             Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -192,7 +192,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-001",
             DueDate = today,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
         };
 
         var lastMonthOrder = new WorkOrder
@@ -201,7 +201,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-002",
             DueDate = lastMonth,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = lastMonth.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = lastMonth.ToDateTime(new TimeOnly(12, 0))
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -238,7 +238,7 @@ public class SlaHealthQueryHandlerTests
             Number = "WO-001",
             DueDate = nextMonth,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(TimeOnly.MinValue)
+            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
