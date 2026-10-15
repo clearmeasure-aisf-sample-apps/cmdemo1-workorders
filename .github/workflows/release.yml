@@ -60,22 +60,36 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
+      - name: Sign in to Octopus
+        uses: OctopusDeploy/login@v2
+        with:
+          server: ${{ vars.OCTOPUS_URL }}
+          service_account_id: ${{ vars.OCTOPUS_SERVICE_ACCOUNT_ID }}
+
       - name: Check if this commit should skip release
         id: order
         env:
           OCTOPUS_URL: ${{ vars.OCTOPUS_URL }}
           OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
           PROJECT: ${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}
-          OCTOPUS_API_KEY: ${{ vars.OCTOPUS_SERVICE_ACCOUNT_ID }}
           CURRENT_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
 
           # Attempt to fetch the latest release from Octopus
           # Tolerate API failure by proceeding (warn)
-          RELEASES_JSON=$(curl -s \
-            --header "X-Octopus-ApiKey: $OCTOPUS_API_KEY" \
-            "$OCTOPUS_URL/api/$OCTOPUS_SPACE/projects/$PROJECT/releases?take=1" \
+          # The space is configured by name; the API path needs its id.
+          SPACE_ID=$(curl -fsS --header "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+            "$OCTOPUS_URL/api/spaces?partialName=$(jq -rn --arg s "$OCTOPUS_SPACE" '$s|@uri')&take=100" \
+            | jq -r --arg s "$OCTOPUS_SPACE" '[.Items[] | select(.Name == $s)][0].Id // empty') || SPACE_ID=""
+          if [ -z "$SPACE_ID" ]; then
+            echo "Warning: Could not resolve Octopus space '$OCTOPUS_SPACE'; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RELEASES_JSON=$(curl -fsS \
+            --header "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+            "$OCTOPUS_URL/api/$SPACE_ID/projects/$PROJECT/releases?take=1" \
             2>&1) || {
             echo "Warning: Could not reach Octopus API; proceeding with release"
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -109,9 +123,8 @@ jobs:
             exit 0
           }
 
-          # Extract commit SHA from release notes (40-char or 7+ char)
-          # Pattern: matches commit SHAs in format "..., <SHA>, ..."
-          LAST_SHA=$(echo "$RELEASE_NOTES" | grep -oE '[0-9a-f]{40}|[0-9a-f]{7,39}' | head -1) || {
+          # Extract commit SHA from release notes: exactly 40 hex digits after " of "
+          LAST_SHA=$(echo "$RELEASE_NOTES" | sed -nE 's/.* of ([0-9a-f]{40}),.*/\1/p' | head -1) || {
             echo "No commit SHA found in release notes; proceeding with release"
             echo "skip=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -123,13 +136,21 @@ jobs:
             exit 0
           fi
 
-          # If SHA is abbreviated, resolve it to full SHA
-          if [ ${#LAST_SHA} -lt 40 ]; then
-            LAST_SHA=$(git rev-parse "$LAST_SHA" 2>/dev/null) || {
-              echo "Warning: Could not resolve abbreviated SHA; proceeding with release"
+          # Check if SHA is a known object; if not, try to fetch from origin
+          if ! git cat-file -e "$LAST_SHA" 2>/dev/null; then
+            echo "Commit $LAST_SHA not found locally; fetching from origin..."
+            git fetch origin master 2>/dev/null || {
+              echo "Warning: Could not fetch origin master; proceeding with release"
               echo "skip=false" >> "$GITHUB_OUTPUT"
               exit 0
             }
+          fi
+
+          # Check again if SHA is known after fetch
+          if ! git cat-file -e "$LAST_SHA" 2>/dev/null; then
+            echo "Warning: Commit $LAST_SHA still not found after fetch; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           echo "Current commit: $CURRENT_SHA"
