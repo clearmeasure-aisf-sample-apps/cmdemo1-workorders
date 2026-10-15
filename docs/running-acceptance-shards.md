@@ -51,7 +51,7 @@ The script detects Docker and creates a SQL Server container automatically. To c
 
 ```powershell
 $env:SQL_EXTERNAL = "true"
-$env:SQL_SERVER_HOST = "sql-host:1433"
+$env:SQL_SERVER_HOST = "sql-host,1433"
 . ./build.ps1
 Invoke-AcceptanceTests -ShardNumber 1
 ```
