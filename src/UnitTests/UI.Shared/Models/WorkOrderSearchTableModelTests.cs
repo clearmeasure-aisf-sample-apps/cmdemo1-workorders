@@ -217,7 +217,7 @@ public class WorkOrderCsvExporterTests
 
         var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
-        lines[1].ShouldBe("12345CD,\"Fix roof\",Complete,High,John Doe,Admin Bob,Main,Attic,2026-10-18,2026-10-01 09:30,2026-10-10 14:45");
+        lines[1].ShouldBe("12345CD,Fix roof,Complete,High,John Doe,Admin Bob,Main,Attic,2026-10-18,2026-10-01 09:30,2026-10-10 14:45");
     }
 
     [Test]
@@ -236,7 +236,7 @@ public class WorkOrderCsvExporterTests
 
         var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
-        lines[1].ShouldBe("98765EF,\"Paint wall\",Draft,Medium,Mary Smith,Project Jones,West,\"Room 101\",2026-10-20,2026-10-05 11:15,");
+        lines[1].ShouldBe("98765EF,Paint wall,Draft,Medium,Mary Smith,Project Jones,West,Room 101,2026-10-20,2026-10-05 11:15,");
     }
 
     [TestCase("plain", "plain")]
