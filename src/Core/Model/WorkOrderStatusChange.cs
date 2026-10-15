@@ -4,15 +4,15 @@ public class WorkOrderStatusChange : EntityBase<WorkOrderStatusChange>
 {
     public override Guid Id { get; set; }
 
-    public Guid WorkOrderId { get; set; }
+    public Guid WorkOrderId { get; init; }
 
-    public WorkOrderStatus FromStatus { get; set; } = null!;
+    public WorkOrderStatus FromStatus { get; init; } = null!;
 
-    public WorkOrderStatus ToStatus { get; set; } = null!;
+    public WorkOrderStatus ToStatus { get; init; } = null!;
 
-    public Guid ChangedById { get; set; }
+    public Guid ChangedById { get; init; }
 
-    public Employee? ChangedBy { get; set; }
+    public Employee? ChangedBy { get; init; }
 
-    public DateTime ChangedDate { get; set; }
+    public DateTime ChangedDate { get; init; }
 }
