@@ -32,7 +32,7 @@ public class SavedSearchView
             return $"Name must be {MaxNameLength} characters or fewer.";
         if ((query ?? string.Empty).Length > MaxQueryLength)
             return "Current filters are too long to save.";
-        if (existingNames.Any(n => string.Equals(n?.Trim(), trimmed, StringComparison.OrdinalIgnoreCase)))
+        if (existingNames.Any(n => string.Equals(n.Trim(), trimmed, StringComparison.OrdinalIgnoreCase)))
             return $"A view named '{trimmed}' already exists.";
         if (existingNames.Count >= MaxViewsPerEmployee)
             return $"You can save up to {MaxViewsPerEmployee} views. Delete one first.";

@@ -45,7 +45,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
             Id = Guid.NewGuid(),
             EmployeeId = employee.Id,
             Name = request.Name.Trim(),
-            Query = request.Query ?? string.Empty,
+            Query = request.Query,
             CreatedDate = time.GetUtcNow().DateTime
         });
         await context.SaveChangesAsync(cancellationToken);

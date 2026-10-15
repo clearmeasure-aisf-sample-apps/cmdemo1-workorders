@@ -28,7 +28,7 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
     public DeleteSearchViewCommand? LastDeleteCommand { get; private set; }
 
-    public SavedSearchViewResult SaveResult { get; set; } = SavedSearchViewResult.Success;
+    public SavedSearchViewResult SaveResult { get; init; } = SavedSearchViewResult.Success;
 
     public override Task Publish(INotification notification)
     {

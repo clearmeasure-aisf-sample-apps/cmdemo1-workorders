@@ -13,6 +13,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
@@ -889,7 +890,7 @@ public class WorkOrderSearchTests
         component.FindAll("#saved-views-menu a[role='menuitem']").Select(a => a.GetAttribute("href"))
             .ShouldContain("workorder/search?OverdueOnly=true");
 
-        await component.Find(".menu-anchor").KeyDownAsync(new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Escape" });
+        await component.Find(".menu-anchor").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
 
         component.Find("#saved-views-menu").HasAttribute("hidden").ShouldBeTrue();
     }
@@ -1010,7 +1011,7 @@ public class WorkOrderSearchTests
         component.Find($"label[for='{input.Id}']").TextContent.ShouldBe("View name");
         input.GetAttribute("maxlength").ShouldBe("100");
 
-        await component.Find(".menu-anchor").KeyDownAsync(new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Escape" });
+        await component.Find(".menu-anchor").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
 
         component.FindAll("form.save-view-form").Count.ShouldBe(0);
         component.Find("#saved-views-menu").HasAttribute("hidden").ShouldBeTrue();
@@ -1207,7 +1208,7 @@ public class WorkOrderSearchTests
 
         component.Find($"[data-testid='{WorkOrderSearch.Elements.RowMenuOpen}WO-001']").GetAttribute("href")
             .ShouldBe("/workorder/manage/WO-001?mode=Edit");
-        await component.Find(".col-actions .menu-anchor").KeyDownAsync(new Microsoft.AspNetCore.Components.Web.KeyboardEventArgs { Key = "Escape" });
+        await component.Find(".col-actions .menu-anchor").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
         component.FindAll($"[data-testid='{WorkOrderSearch.Elements.RowMenuOpen}WO-001']").Count.ShouldBe(0);
     }
 
