@@ -257,6 +257,11 @@ public class WorkOrderManageSubmitTests
                 return Task.FromResult((TResponse)(object)employee);
             }
 
+            if (request is WorkOrderStatusHistoryQuery)
+            {
+                return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+            }
+
             if (request is IStateCommand)
             {
                 LastCommand = request;
@@ -265,6 +270,15 @@ public class WorkOrderManageSubmitTests
                 var result = new StateCommandResult(wo);
                 return RespondAfterGate((TResponse)(object)result);
             }
+
+            if (request is WorkOrderStatusHistoryQuery)
+
+            {
+
+                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+
+            }
+
 
             throw new NotImplementedException(request.GetType().Name);
         }

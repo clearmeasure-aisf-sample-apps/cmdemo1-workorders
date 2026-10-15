@@ -167,6 +167,11 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return Task.FromResult<TResponse>((TResponse)(object)slaHealth);
         }
 
+        if (request is WorkOrderStatusHistoryQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+        }
+
         throw new NotImplementedException();
     }
 

@@ -62,7 +62,7 @@ public class TeamVendorMigrationTests
         var full = Upgrade(scriptDirectory, null);
 
         full.Successful.ShouldBeTrue(full.Error?.ToString());
-        full.Scripts.Select(s => Path.GetFileName(s.Name)).ShouldBe([ScriptName]);
+        full.Scripts.Select(s => Path.GetFileName(s.Name)).Where(n => string.CompareOrdinal(n, "037_") < 0).ShouldBe([ScriptName]);
         SnapshotExistingSchema().ShouldBe(schemaBefore);
         Query("SELECT [UserName], [FirstName], [LastName], [EmailAddress], [PreferredLanguage] " +
               "FROM [dbo].[Employee] WHERE [Id] = @id",
@@ -99,7 +99,7 @@ public class TeamVendorMigrationTests
 
     private string[] SnapshotExistingSchema()
     {
-        const string excluded = "('SchemaVersions', 'Team', 'Vendor', 'TeamMember')";
+        const string excluded = "('SchemaVersions', 'Team', 'Vendor', 'TeamMember', 'WorkOrderStatusChange')";
         var columns = Query(
             "SELECT 'C', TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, DATA_TYPE, " +
             "CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE, COLUMN_DEFAULT " +
