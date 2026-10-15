@@ -30,7 +30,11 @@ public class TeamQueryHandlerTests
         ];
 
         await using var context = TestHost.GetRequiredService<DbContext>();
-        context.AddRange(_employees);
+        foreach (var employee in _employees)
+        {
+            context.Add(employee);
+        }
+
         await context.SaveChangesAsync();
     }
 
@@ -115,7 +119,7 @@ public class TeamQueryHandlerTests
 
     private async Task<int> OwnMembershipCount()
     {
-        var ids = _employees.Select(e => e.Id).ToArray();
+        var ids = _employees.Select(e => e.Id).ToList();
         await using var context = TestHost.GetRequiredService<DataContext>();
         return await context.Set<Dictionary<string, object>>("TeamMember")
             .CountAsync(m => ids.Contains(EF.Property<Guid>(m, "EmployeeId")));
