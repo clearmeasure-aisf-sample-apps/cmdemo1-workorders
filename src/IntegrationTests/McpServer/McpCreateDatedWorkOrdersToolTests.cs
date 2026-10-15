@@ -2,7 +2,6 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
-using ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -17,16 +16,10 @@ public class McpCreateDatedWorkOrdersToolTests
         public override DateTimeOffset GetUtcNow() => utcNow;
     }
 
-    [SetUp]
-    public void Setup()
-    {
-        new DatabaseTests().Clean();
-    }
-
     [Test]
     public async Task CreateDatedWorkOrders_WithSaturdayCount_CreatesTen()
     {
-        await SeedLovejoyAndWillieAsync();
+        var (creatorUserName, assigneeUserName) = await SeedCreatorAndAssigneeAsync();
         var bus = TestHost.GetRequiredService<IBus>();
         // Saturday 2026-08-29 noon Chicago → UTC
         var clock = ChicagoNoon(2026, 8, 29);
@@ -34,8 +27,8 @@ public class McpCreateDatedWorkOrdersToolTests
         var result = await WorkOrderTools.CreateDatedWorkOrders(
             bus,
             clock,
-            "tlovejoy",
-            "gwillie",
+            creatorUserName,
+            assigneeUserName,
             "Mow the grass",
             "Weekly Saturday mow",
             saturdayCount: 10);
@@ -45,20 +38,20 @@ public class McpCreateDatedWorkOrdersToolTests
         result.ShouldContain("2026-10-31");
 
         await using var context = TestHost.GetRequiredService<DbContext>();
-        (await context.Set<WorkOrder>().CountAsync()).ShouldBe(10);
+        (await context.Set<WorkOrder>().CountAsync(w => w.Assignee!.UserName == assigneeUserName)).ShouldBe(10);
     }
 
     [Test]
     public async Task CreateDatedWorkOrders_WithExplicitDueDates_UsesThoseDates()
     {
-        await SeedLovejoyAndWillieAsync();
+        var (creatorUserName, assigneeUserName) = await SeedCreatorAndAssigneeAsync();
         var bus = TestHost.GetRequiredService<IBus>();
 
         var result = await WorkOrderTools.CreateDatedWorkOrders(
             bus,
             TimeProvider.System,
-            "tlovejoy",
-            "gwillie",
+            creatorUserName,
+            assigneeUserName,
             "Mow the grass",
             "desc",
             dueDates: "2026-09-05,2026-09-12");
@@ -71,7 +64,8 @@ public class McpCreateDatedWorkOrdersToolTests
     [Test]
     public async Task CreateDatedWorkOrders_WhenAssigneeMissing_CreatesNothing()
     {
-        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy", "t@test.com");
+        var creatorUserName = TestData.UserName("tl");
+        var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(creator);
         await context.SaveChangesAsync();
@@ -80,15 +74,15 @@ public class McpCreateDatedWorkOrdersToolTests
         var result = await WorkOrderTools.CreateDatedWorkOrders(
             bus,
             TimeProvider.System,
-            "tlovejoy",
-            "missing",
+            creatorUserName,
+            TestData.UserName("missing"),
             "Mow",
             "desc",
             saturdayCount: 3);
 
         result.ShouldContain("not found");
         await using var db = TestHost.GetRequiredService<DbContext>();
-        (await db.Set<WorkOrder>().CountAsync()).ShouldBe(0);
+        (await db.Set<WorkOrder>().CountAsync(w => w.Creator!.UserName == creatorUserName)).ShouldBe(0);
     }
 
     [Test]
@@ -164,14 +158,15 @@ public class McpCreateDatedWorkOrdersToolTests
         ]);
     }
 
-    private static async Task SeedLovejoyAndWillieAsync()
+    private static async Task<(string CreatorUserName, string AssigneeUserName)> SeedCreatorAndAssigneeAsync()
     {
-        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy", "t@test.com");
-        var assignee = new Employee("gwillie", "Groundskeeper Willie", "MacDougal", "w@test.com");
+        var creator = new Employee(TestData.UserName("tl"), "Dated", "Creator", "t@test.com");
+        var assignee = new Employee(TestData.UserName("gw"), "Dated", "Assignee", "w@test.com");
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(creator);
         context.Add(assignee);
         await context.SaveChangesAsync();
+        return (creator.UserName, assignee.UserName);
     }
 
     private static FixedTimeProvider ChicagoNoon(int year, int month, int day)

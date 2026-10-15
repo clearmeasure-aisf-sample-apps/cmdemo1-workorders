@@ -20,21 +20,22 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithAssignee()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
-        var employee1 = new Employee("1", "1", "1", "1");
-        var employee2 = new Employee("2", "2", "2", "2");
+        var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = employee2,
             Assignee = employee1,
-            Number = "123"
+            Number = number123
         };
         var order2 = new WorkOrder()
         {
             Creator = employee1,
             Assignee = employee2,
-            Number = "456"
+            Number = number456
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -59,19 +60,20 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithCreator()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
-        var creator1 = new Employee("1", "1", "1", "1");
-        var creator2 = new Employee("2", "2", "2", "2");
+        var creator1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var creator2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = creator1,
-            Number = "123"
+            Number = number123
         };
         var order2 = new WorkOrder()
         {
             Creator = creator2,
-            Number = "456"
+            Number = number456
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -96,22 +98,23 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithFullSpecification()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
-        var employee1 = new Employee("1", "1", "1", "1");
-        var employee2 = new Employee("2", "2", "2", "2");
+        var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = employee2,
             Assignee = employee1,
-            Number = "123",
+            Number = number123,
             Status = WorkOrderStatus.Assigned
         };
         var order2 = new WorkOrder()
         {
             Creator = employee1,
             Assignee = employee2,
-            Number = "456",
+            Number = number456,
             Status = WorkOrderStatus.Draft
         };
 
@@ -139,22 +142,23 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithStatus()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
-        var employee1 = new Employee("1", "1", "1", "1");
-        var employee2 = new Employee("2", "2", "2", "2");
+        var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = employee2,
             Assignee = employee1,
-            Number = "123",
+            Number = number123,
             Status = WorkOrderStatus.Assigned
         };
         var order2 = new WorkOrder()
         {
             Creator = employee1,
             Assignee = employee2,
-            Number = "456",
+            Number = number456,
             Status = WorkOrderStatus.Draft
         };
 
@@ -171,7 +175,8 @@ public class WorkOrderSpecificationHandlerTests
         var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchStatus(WorkOrderStatus.Assigned);
-        var orders = await repository.Handle(specification);
+        var orders = (await repository.Handle(specification))
+            .Where(o => o.Id == order1.Id || o.Id == order2.Id).ToArray();
 
         orders.Length.ShouldBe(1);
         orders[0].Id.ShouldBe(order1.Id);
@@ -180,11 +185,12 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchWithEmptySpecificationAndReturnAll()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var order1 = new WorkOrder { Creator = employee, Assignee = employee, Number = "123" };
-        var order2 = new WorkOrder { Creator = employee, Assignee = employee, Number = "456" };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var order1 = new WorkOrder { Creator = employee, Assignee = employee, Number = number123 };
+        var order2 = new WorkOrder { Creator = employee, Assignee = employee, Number = number456 };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -197,7 +203,6 @@ public class WorkOrderSpecificationHandlerTests
         var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var orders = await repository.Handle(new WorkOrderSpecificationQuery());
 
-        orders.Length.ShouldBe(2);
         orders.Any(o => o.Id == order1.Id).ShouldBeTrue();
         orders.Any(o => o.Id == order2.Id).ShouldBeTrue();
     }
@@ -205,16 +210,16 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task SearchShouldReturnHydratedEmployeesWithWorkOrders()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("S");
 
-        var creator = new Employee("1", "John", "Doe", "john.doe@example.com");
-        var assignee = new Employee("2", "Jane", "Smith", "jane.smith@example.com");
+        var creator = new Employee(TestData.UserName("employee1"), "John", "Doe", "john.doe@example.com");
+        var assignee = new Employee(TestData.UserName("employee2"), "Jane", "Smith", "jane.smith@example.com");
 
         var order1 = new WorkOrder
         {
             Creator = creator,
             Assignee = assignee,
-            Number = "123",
+            Number = number123,
             Title = "Fix plumbing",
             Description = "Fix the plumbing in room 101",
             RoomNumber = "101",
@@ -239,7 +244,7 @@ public class WorkOrderSpecificationHandlerTests
 
         orders.Length.ShouldBe(1);
 
-        var rehydratedOrder = orders.First(o => o.Number == "123");
+        var rehydratedOrder = orders.First(o => o.Number == number123);
 
         rehydratedOrder.Creator.ShouldNotBeNull();
         rehydratedOrder.Assignee.ShouldNotBeNull();
@@ -255,20 +260,21 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldReturnOnlyOverdueWorkOrders_WhenOverdueOnlyFilterIsTrue()
     {
-        new DatabaseTests().Clean();
+        var overdueOrderNumber = TestData.Number("S");
+        var futureOrderNumber = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var overdueOrder = new WorkOrder
         {
             Creator = employee,
-            Number = "OVR-001",
+            Number = overdueOrderNumber,
             Status = WorkOrderStatus.InProgress,
             DueDate = new DateOnly(2000, 1, 1)
         };
         var futureOrder = new WorkOrder
         {
             Creator = employee,
-            Number = "FUT-001",
+            Number = futureOrderNumber,
             Status = WorkOrderStatus.InProgress,
             DueDate = new DateOnly(2099, 12, 31)
         };
@@ -285,26 +291,30 @@ public class WorkOrderSpecificationHandlerTests
         var repository = new WorkOrderSearchHandler(dataContext, TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchOverdueOnly(true);
+        specification.MatchCreator(employee);
         var orders = await repository.Handle(specification);
 
         orders.Length.ShouldBe(1);
-        orders[0].Number.ShouldBe("OVR-001");
+        orders[0].Number.ShouldBe(overdueOrderNumber);
     }
     [Test]
     public async Task ShouldReturnEachWorkOrderOnce_WhenSearchingByCreatorWithSeveralRoles()
     {
-        new DatabaseTests().Clean();
+        var firstNumber = TestData.Number("S");
+        var secondNumber = TestData.Number("S");
+        var thirdNumber = TestData.Number("S");
+        var otherCreatorNumber = TestData.Number("S");
 
-        var creator = new Employee("tlovejoy", "Timothy", "Lovejoy Jr", "tlovejoy@example.com");
-        creator.AddRole(new Role("Pastor", true, false));
-        creator.AddRole(new Role("Requester", true, false));
-        var other = new Employee("other", "Other", "Person", "other@example.com");
+        var creator = new Employee(TestData.UserName("creator"), "Timothy", "Lovejoy Jr", "creator@example.com");
+        creator.AddRole(new Role($"Pastor_{TestData.Tag()}", true, false));
+        creator.AddRole(new Role($"Requester_{TestData.Tag()}", true, false));
+        var other = new Employee(TestData.UserName("other"), "Other", "Person", "other@example.com");
         var orders = new[]
         {
-            new WorkOrder { Creator = creator, Number = "38173BA", Title = "One" },
-            new WorkOrder { Creator = creator, Number = "38173BB", Title = "Two" },
-            new WorkOrder { Creator = creator, Assignee = other, Number = "38173BC", Title = "Three" },
-            new WorkOrder { Creator = other, Number = "38173BD", Title = "Not mine" }
+            new WorkOrder { Creator = creator, Number = firstNumber, Title = "One" },
+            new WorkOrder { Creator = creator, Number = secondNumber, Title = "Two" },
+            new WorkOrder { Creator = creator, Assignee = other, Number = thirdNumber, Title = "Three" },
+            new WorkOrder { Creator = other, Number = otherCreatorNumber, Title = "Not mine" }
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -323,18 +333,18 @@ public class WorkOrderSpecificationHandlerTests
 
         result.Length.ShouldBe(3);
         result.Select(o => o.Number).Distinct().Count().ShouldBe(3);
-        result.Select(o => o.Number).ShouldBe(["38173BA", "38173BB", "38173BC"], ignoreOrder: true);
+        result.Select(o => o.Number).ShouldBe([firstNumber, secondNumber, thirdNumber], ignoreOrder: true);
     }
     [Test]
     public async Task ShouldOrderByCreatedDateDescendingThenNumber()
     {
-        new DatabaseTests().Clean();
-
-        var creator = new Employee("order", "Order", "Creator", "order@example.com");
-        var oldest = new WorkOrder { Creator = creator, Number = "AAA0001", CreatedDate = new DateTime(2026, 1, 1) };
-        var newestB = new WorkOrder { Creator = creator, Number = "BBB0002", CreatedDate = new DateTime(2026, 3, 1) };
-        var newestA = new WorkOrder { Creator = creator, Number = "AAA0002", CreatedDate = new DateTime(2026, 3, 1) };
-        var middle = new WorkOrder { Creator = creator, Number = "CCC0003", CreatedDate = new DateTime(2026, 2, 1) };
+        var creator = new Employee(TestData.UserName("order"), "Order", "Creator", "order@example.com");
+        // Numbers ascend in index order, so the two orders created on the same day sort A before B.
+        var numbers = TestData.NumberSeries(4);
+        var oldest = new WorkOrder { Creator = creator, Number = numbers[3], CreatedDate = new DateTime(2026, 1, 1) };
+        var newestB = new WorkOrder { Creator = creator, Number = numbers[1], CreatedDate = new DateTime(2026, 3, 1) };
+        var newestA = new WorkOrder { Creator = creator, Number = numbers[0], CreatedDate = new DateTime(2026, 3, 1) };
+        var middle = new WorkOrder { Creator = creator, Number = numbers[2], CreatedDate = new DateTime(2026, 2, 1) };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -344,21 +354,25 @@ public class WorkOrderSpecificationHandlerTests
         }
 
         var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
-        var orders = await handler.Handle(new WorkOrderSpecificationQuery());
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchCreator(creator);
+        var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["AAA0002", "BBB0002", "CCC0003", "AAA0001"]);
+        orders.Select(o => o.Number).ShouldBe([newestA.Number, newestB.Number, middle.Number, oldest.Number]);
     }
 
     [Test]
     public async Task ShouldMatchSearchTextCaseInsensitively()
     {
-        new DatabaseTests().Clean();
+        var byTitleNumber = TestData.Number("S");
+        var byAssigneeNumber = TestData.Number("S");
+        var noneNumber = TestData.Number("S");
 
-        var creator = new Employee("ned", "Ned", "Flanders", "ned@example.com");
-        var assignee = new Employee("willie", "Groundskeeper", "Willie", "willie@example.com");
-        var byTitle = new WorkOrder { Creator = creator, Number = "SRCH001", Title = "Tune the ORGAN", RoomNumber = "Choir loft" };
-        var byAssignee = new WorkOrder { Creator = creator, Assignee = assignee, Number = "SRCH002", Title = "Mow", RoomNumber = "Grounds" };
-        var none = new WorkOrder { Creator = creator, Number = "SRCH003", Title = "Paint", RoomNumber = "Hall" };
+        var creator = new Employee(TestData.UserName("requester"), "Ned", "Flanders", "ned@example.com");
+        var assignee = new Employee(TestData.UserName("willie"), "Groundskeeper", "Willie", "willie@example.com");
+        var byTitle = new WorkOrder { Creator = creator, Number = byTitleNumber, Title = "Tune the ORGAN", RoomNumber = "Choir loft" };
+        var byAssignee = new WorkOrder { Creator = creator, Assignee = assignee, Number = byAssigneeNumber, Title = "Mow", RoomNumber = "Grounds" };
+        var none = new WorkOrder { Creator = creator, Number = noneNumber, Title = "Paint", RoomNumber = "Hall" };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -370,23 +384,28 @@ public class WorkOrderSpecificationHandlerTests
         var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
         var organ = new WorkOrderSpecificationQuery();
         organ.MatchSearchText("organ");
+        organ.MatchCreator(creator);
         var willie = new WorkOrderSpecificationQuery();
         willie.MatchSearchText("WILL");
+        willie.MatchCreator(creator);
 
-        (await handler.Handle(organ)).Select(o => o.Number).ShouldBe(["SRCH001"]);
-        (await handler.Handle(willie)).Select(o => o.Number).ShouldBe(["SRCH002"]);
+        (await handler.Handle(organ)).Select(o => o.Number).ShouldBe([byTitleNumber]);
+        (await handler.Handle(willie)).Select(o => o.Number).ShouldBe([byAssigneeNumber]);
     }
 
     [Test]
     public async Task ShouldFilterByRoomExactMatch()
     {
-        new DatabaseTests().Clean();
+        var room101Number = TestData.Number("S");
+        var room101SpacesNumber = TestData.Number("S");
+        var room102Number = TestData.Number("S");
+        var noRoomNumber = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var room101 = new WorkOrder { Creator = employee, Number = "RM001", RoomNumber = "101" };
-        var room101Spaces = new WorkOrder { Creator = employee, Number = "RM002", RoomNumber = " 101 " };
-        var room102 = new WorkOrder { Creator = employee, Number = "RM003", RoomNumber = "102" };
-        var noRoom = new WorkOrder { Creator = employee, Number = "RM004", RoomNumber = null };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var room101 = new WorkOrder { Creator = employee, Number = room101Number, RoomNumber = "101" };
+        var room101Spaces = new WorkOrder { Creator = employee, Number = room101SpacesNumber, RoomNumber = " 101 " };
+        var room102 = new WorkOrder { Creator = employee, Number = room102Number, RoomNumber = "102" };
+        var noRoom = new WorkOrder { Creator = employee, Number = noRoomNumber, RoomNumber = null };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -398,21 +417,25 @@ public class WorkOrderSpecificationHandlerTests
         var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchRoom("101");
+        specification.MatchCreator(employee);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["RM001", "RM002"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe([room101Number, room101SpacesNumber], ignoreOrder: true);
     }
 
     [Test]
     public async Task ShouldFilterByRoomCaseInsensitiveWhenDatabaseIsCaseInsensitive()
     {
-        new DatabaseTests().Clean();
+        var lowerRoomNumber = TestData.Number("S");
+        var upperRoomNumber = TestData.Number("S");
+        var mixedRoomNumber = TestData.Number("S");
+        var differentRoomNumber = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var lowerRoom = new WorkOrder { Creator = employee, Number = "CS001", RoomNumber = "sanctuary" };
-        var upperRoom = new WorkOrder { Creator = employee, Number = "CS002", RoomNumber = "SANCTUARY" };
-        var mixedRoom = new WorkOrder { Creator = employee, Number = "CS003", RoomNumber = "Sanctuary" };
-        var differentRoom = new WorkOrder { Creator = employee, Number = "CS004", RoomNumber = "kitchen" };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var lowerRoom = new WorkOrder { Creator = employee, Number = lowerRoomNumber, RoomNumber = "sanctuary" };
+        var upperRoom = new WorkOrder { Creator = employee, Number = upperRoomNumber, RoomNumber = "SANCTUARY" };
+        var mixedRoom = new WorkOrder { Creator = employee, Number = mixedRoomNumber, RoomNumber = "Sanctuary" };
+        var differentRoom = new WorkOrder { Creator = employee, Number = differentRoomNumber, RoomNumber = "kitchen" };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -424,23 +447,27 @@ public class WorkOrderSpecificationHandlerTests
         var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchRoom("Sanctuary");
+        specification.MatchCreator(employee);
         var orders = await handler.Handle(specification);
 
         // SQL Server is case-insensitive; SQLite is case-sensitive.
         // This test should find at least the exact match.
-        orders.Select(o => o.Number).ShouldContain("CS003");
+        orders.Select(o => o.Number).ShouldContain(mixedRoomNumber);
     }
 
     [Test]
     public async Task ShouldFilterByNoRoomWhenRoomIsNull()
     {
-        new DatabaseTests().Clean();
+        var withRoomNumber = TestData.Number("S");
+        var nullRoomNumber = TestData.Number("S");
+        var emptyRoomNumber = TestData.Number("S");
+        var whitespaceRoomNumber = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var withRoom = new WorkOrder { Creator = employee, Number = "NR001", RoomNumber = "101" };
-        var nullRoom = new WorkOrder { Creator = employee, Number = "NR002", RoomNumber = null };
-        var emptyRoom = new WorkOrder { Creator = employee, Number = "NR003", RoomNumber = "" };
-        var whitespaceRoom = new WorkOrder { Creator = employee, Number = "NR004", RoomNumber = "   " };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var withRoom = new WorkOrder { Creator = employee, Number = withRoomNumber, RoomNumber = "101" };
+        var nullRoom = new WorkOrder { Creator = employee, Number = nullRoomNumber, RoomNumber = null };
+        var emptyRoom = new WorkOrder { Creator = employee, Number = emptyRoomNumber, RoomNumber = "" };
+        var whitespaceRoom = new WorkOrder { Creator = employee, Number = whitespaceRoomNumber, RoomNumber = "   " };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -452,21 +479,25 @@ public class WorkOrderSpecificationHandlerTests
         var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchNoRoom(true);
+        specification.MatchCreator(employee);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["NR002", "NR003", "NR004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe([nullRoomNumber, emptyRoomNumber, whitespaceRoomNumber], ignoreOrder: true);
     }
 
     [Test]
     public async Task ShouldFilterByNoBuilding()
     {
-        new DatabaseTests().Clean();
+        var withBuildingNumber = TestData.Number("S");
+        var nullBuildingNumber = TestData.Number("S");
+        var emptyBuildingNumber = TestData.Number("S");
+        var whitespaceBuildingNumber = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var withBuilding = new WorkOrder { Creator = employee, Number = "NB001", Building = "Sanctuary" };
-        var nullBuilding = new WorkOrder { Creator = employee, Number = "NB002", Building = null };
-        var emptyBuilding = new WorkOrder { Creator = employee, Number = "NB003", Building = "" };
-        var whitespaceBuilding = new WorkOrder { Creator = employee, Number = "NB004", Building = "   " };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var withBuilding = new WorkOrder { Creator = employee, Number = withBuildingNumber, Building = "Sanctuary" };
+        var nullBuilding = new WorkOrder { Creator = employee, Number = nullBuildingNumber, Building = null };
+        var emptyBuilding = new WorkOrder { Creator = employee, Number = emptyBuildingNumber, Building = "" };
+        var whitespaceBuilding = new WorkOrder { Creator = employee, Number = whitespaceBuildingNumber, Building = "   " };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -478,21 +509,25 @@ public class WorkOrderSpecificationHandlerTests
         var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchNoBuilding(true);
+        specification.MatchCreator(employee);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["NB002", "NB003", "NB004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe([nullBuildingNumber, emptyBuildingNumber, whitespaceBuildingNumber], ignoreOrder: true);
     }
 
     [Test]
     public async Task ShouldMatchRoomExactWhenBothRoomAndNoBuildingAreSpecified()
     {
-        new DatabaseTests().Clean();
+        var sanctuaryRoom101Number = TestData.Number("S");
+        var noRoomWithBuildingNumber = TestData.Number("S");
+        var room101NoBuildingNumber = TestData.Number("S");
+        var room101NoRoomNumber = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var sanctuaryRoom101 = new WorkOrder { Creator = employee, Number = "CB001", Building = "Sanctuary", RoomNumber = "101" };
-        var noRoomWithBuilding = new WorkOrder { Creator = employee, Number = "CB002", Building = "Sanctuary", RoomNumber = null };
-        var room101NoBuilding = new WorkOrder { Creator = employee, Number = "CB003", Building = null, RoomNumber = "101" };
-        var room101NoRoom = new WorkOrder { Creator = employee, Number = "CB004", Building = null, RoomNumber = null };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var sanctuaryRoom101 = new WorkOrder { Creator = employee, Number = sanctuaryRoom101Number, Building = "Sanctuary", RoomNumber = "101" };
+        var noRoomWithBuilding = new WorkOrder { Creator = employee, Number = noRoomWithBuildingNumber, Building = "Sanctuary", RoomNumber = null };
+        var room101NoBuilding = new WorkOrder { Creator = employee, Number = room101NoBuildingNumber, Building = null, RoomNumber = "101" };
+        var room101NoRoom = new WorkOrder { Creator = employee, Number = room101NoRoomNumber, Building = null, RoomNumber = null };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -504,21 +539,25 @@ public class WorkOrderSpecificationHandlerTests
         var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchRoom("101");
+        specification.MatchCreator(employee);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["CB001", "CB003"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe([sanctuaryRoom101Number, room101NoBuildingNumber], ignoreOrder: true);
     }
 
     [Test]
     public async Task ShouldCombineRoomFilterWithOpenOnlyFilter()
     {
-        new DatabaseTests().Clean();
+        var openRoom101Number = TestData.Number("S");
+        var completeRoom101Number = TestData.Number("S");
+        var openRoom102Number = TestData.Number("S");
+        var draftRoom101Number = TestData.Number("S");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var openRoom101 = new WorkOrder { Creator = employee, Number = "RO001", RoomNumber = "101", Status = WorkOrderStatus.Assigned };
-        var completeRoom101 = new WorkOrder { Creator = employee, Number = "RO002", RoomNumber = "101", Status = WorkOrderStatus.Complete };
-        var openRoom102 = new WorkOrder { Creator = employee, Number = "RO003", RoomNumber = "102", Status = WorkOrderStatus.Draft };
-        var draftRoom101 = new WorkOrder { Creator = employee, Number = "RO004", RoomNumber = "101", Status = WorkOrderStatus.Draft };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var openRoom101 = new WorkOrder { Creator = employee, Number = openRoom101Number, RoomNumber = "101", Status = WorkOrderStatus.Assigned };
+        var completeRoom101 = new WorkOrder { Creator = employee, Number = completeRoom101Number, RoomNumber = "101", Status = WorkOrderStatus.Complete };
+        var openRoom102 = new WorkOrder { Creator = employee, Number = openRoom102Number, RoomNumber = "102", Status = WorkOrderStatus.Draft };
+        var draftRoom101 = new WorkOrder { Creator = employee, Number = draftRoom101Number, RoomNumber = "101", Status = WorkOrderStatus.Draft };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -531,8 +570,9 @@ public class WorkOrderSpecificationHandlerTests
         var specification = new WorkOrderSpecificationQuery();
         specification.MatchRoom("101");
         specification.MatchOpenOnly(true);
+        specification.MatchCreator(employee);
         var orders = await handler.Handle(specification);
 
-        orders.Select(o => o.Number).ShouldBe(["RO001", "RO004"], ignoreOrder: true);
+        orders.Select(o => o.Number).ShouldBe([openRoom101Number, draftRoom101Number], ignoreOrder: true);
     }
 }
