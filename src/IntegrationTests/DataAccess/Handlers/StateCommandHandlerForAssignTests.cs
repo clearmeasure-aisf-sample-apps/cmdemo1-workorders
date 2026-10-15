@@ -12,8 +12,6 @@ public class StateCommandHandlerForAssignTests : IntegratedTestBase
     [Test]
     public async Task ShouldSaveWorkOrderWithAssigneeAndCreator()
     {
-        new DatabaseTests().Clean();
-
         var o = Faker<WorkOrder>();
         o.Id = Guid.Empty;
         var currentUser = Faker<Employee>();
@@ -46,8 +44,6 @@ public class StateCommandHandlerForAssignTests : IntegratedTestBase
     [Test]
     public async Task ShouldSaveWorkOrderWithOnlyCreatorRemotingCommand()
     {
-        new DatabaseTests().Clean();
-
         var o = Faker<WorkOrder>();
         o.Id = Guid.Empty;
         var currentUser = Faker<Employee>();
@@ -75,8 +71,6 @@ public class StateCommandHandlerForAssignTests : IntegratedTestBase
     [Test]
     public async Task ShouldSaveWorkOrderWithOnlyCreatorRemotingWorkOrder()
     {
-        new DatabaseTests().Clean();
-
         var o = Faker<WorkOrder>();
         o.Id = Guid.Empty;
         var currentUser = Faker<Employee>();

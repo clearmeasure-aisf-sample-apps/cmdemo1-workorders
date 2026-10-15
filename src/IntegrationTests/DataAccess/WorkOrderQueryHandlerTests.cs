@@ -13,18 +13,19 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldGetWorkOrderByNumber()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
-        var creator = new Employee("1", "1", "1", "1");
+        var creator = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var order1 = new WorkOrder()
         {
             Creator = creator,
-            Number = "123"
+            Number = number123
         };
         var order2 = new WorkOrder()
         {
             Creator = creator,
-            Number = "456"
+            Number = number456
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -37,8 +38,8 @@ public class WorkOrderQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var repository = new WorkOrderQueryHandler(dataContext);
-        var order123 = (await repository.GetWorkOrderAsync("123"))!;
-        var order456 = (await repository.GetWorkOrderAsync("456"))!;
+        var order123 = (await repository.GetWorkOrderAsync(number123))!;
+        var order456 = (await repository.GetWorkOrderAsync(number456))!;
 
         order123.Id.ShouldBe(order1.Id);
         order456.Id.ShouldBe(order2.Id);
@@ -48,21 +49,22 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithAssignee()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
-        var employee1 = new Employee("1", "1", "1", "1");
-        var employee2 = new Employee("2", "2", "2", "2");
+        var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = employee2,
             Assignee = employee1,
-            Number = "123"
+            Number = number123
         };
         var order2 = new WorkOrder()
         {
             Creator = employee1,
             Assignee = employee2,
-            Number = "456"
+            Number = number456
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -87,19 +89,20 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithCreator()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
-        var creator1 = new Employee("1", "1", "1", "1");
-        var creator2 = new Employee("2", "2", "2", "2");
+        var creator1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var creator2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = creator1,
-            Number = "123"
+            Number = number123
         };
         var order2 = new WorkOrder()
         {
             Creator = creator2,
-            Number = "456"
+            Number = number456
         };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -124,22 +127,23 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithFullSpecification()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
-        var employee1 = new Employee("1", "1", "1", "1");
-        var employee2 = new Employee("2", "2", "2", "2");
+        var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = employee2,
             Assignee = employee1,
-            Number = "123",
+            Number = number123,
             Status = WorkOrderStatus.Assigned
         };
         var order2 = new WorkOrder()
         {
             Creator = employee1,
             Assignee = employee2,
-            Number = "456",
+            Number = number456,
             Status = WorkOrderStatus.Draft
         };
 
@@ -167,22 +171,23 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithStatus()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
-        var employee1 = new Employee("1", "1", "1", "1");
-        var employee2 = new Employee("2", "2", "2", "2");
+        var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
         var order1 = new WorkOrder()
         {
             Creator = employee2,
             Assignee = employee1,
-            Number = "123",
+            Number = number123,
             Status = WorkOrderStatus.Assigned
         };
         var order2 = new WorkOrder()
         {
             Creator = employee1,
             Assignee = employee2,
-            Number = "456",
+            Number = number456,
             Status = WorkOrderStatus.Draft
         };
 
@@ -199,7 +204,8 @@ public class WorkOrderQueryHandlerTests
         var repository = new WorkOrderQueryHandler(dataContext);
         var specification = new WorkOrderSearchSpecification();
         specification.MatchStatus(WorkOrderStatus.Assigned);
-        var orders = await repository.GetWorkOrdersAsync(specification);
+        var orders = (await repository.GetWorkOrdersAsync(specification))
+            .Where(o => o.Id == order1.Id || o.Id == order2.Id).ToArray();
 
         orders.Length.ShouldBe(1);
         orders[0].Id.ShouldBe(order1.Id);
@@ -208,11 +214,12 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchWithEmptySpecificationAndReturnAll()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
-        var employee = new Employee("1", "1", "1", "1");
-        var order1 = new WorkOrder { Creator = employee, Assignee = employee, Number = "123" };
-        var order2 = new WorkOrder { Creator = employee, Assignee = employee, Number = "456" };
+        var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
+        var order1 = new WorkOrder { Creator = employee, Assignee = employee, Number = number123 };
+        var order2 = new WorkOrder { Creator = employee, Assignee = employee, Number = number456 };
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -225,7 +232,6 @@ public class WorkOrderQueryHandlerTests
         var repository = new WorkOrderQueryHandler(dataContext);
         var orders = await repository.GetWorkOrdersAsync(new WorkOrderSearchSpecification());
 
-        orders.Length.ShouldBe(2);
         orders.Any(o => o.Id == order1.Id).ShouldBeTrue();
         orders.Any(o => o.Id == order2.Id).ShouldBeTrue();
     }
@@ -234,16 +240,16 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task SearchShouldReturnHydratedEmployeesWithWorkOrders()
     {
-        new DatabaseTests().Clean();
+        var number123 = TestData.Number("Q");
 
-        var creator = new Employee("1", "John", "Doe", "john.doe@example.com");
-        var assignee = new Employee("2", "Jane", "Smith", "jane.smith@example.com");
+        var creator = new Employee(TestData.UserName("employee1"), "John", "Doe", "john.doe@example.com");
+        var assignee = new Employee(TestData.UserName("employee2"), "Jane", "Smith", "jane.smith@example.com");
 
         var order1 = new WorkOrder
         {
             Creator = creator,
             Assignee = assignee,
-            Number = "123",
+            Number = number123,
             Title = "Fix plumbing",
             Description = "Fix the plumbing in room 101",
             RoomNumber = "101",
@@ -268,7 +274,7 @@ public class WorkOrderQueryHandlerTests
 
         orders.Length.ShouldBe(1);
 
-        var rehydratedOrder = orders.First(o => o.Number == "123");
+        var rehydratedOrder = orders.First(o => o.Number == number123);
 
         rehydratedOrder.Creator.ShouldNotBeNull();
         rehydratedOrder.Assignee.ShouldNotBeNull();
