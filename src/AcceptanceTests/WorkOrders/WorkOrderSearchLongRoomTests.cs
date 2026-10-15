@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
@@ -12,26 +11,15 @@ public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
+        var order = await CreateAndSaveNewWorkOrder();
+
+        // The form limits entry to RoomNumberEntryMaxLength; seed a legacy room up to the column length directly.
         var room = new string('R', WorkOrder.RoomNumberMaxLength);
-        var order = Faker<WorkOrder>();
-        order.Title = $"[{TestTag}] long room search";
-        order.Number = null;
-        order.RoomNumber = room;
+        var stored = (await Bus.Send(new WorkOrderByNumberQuery(order.Number!)))!;
+        stored.RoomNumber = room;
+        await Bus.Send(new SaveDraftCommand(stored, stored.Creator!) { PreviousRoomNumber = room });
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await Click(nameof(NavMenu.Elements.NewWorkOrder));
-        await Page.WaitForURLAsync("**/workorder/manage?mode=New");
-
-        var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        order.Number = await woNumberLocator.InnerTextAsync();
-
-        await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
-        await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
-        await Input(nameof(WorkOrderManage.Elements.RoomNumber), room);
-
-        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
-        await Click(saveButtonTestId);
+        await Page.ReloadAsync();
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
         var workOrderLink = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number);
