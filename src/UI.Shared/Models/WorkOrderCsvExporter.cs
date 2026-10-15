@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 public static class WorkOrderCsvExporter
 {
     private static readonly string[] Header =
-        ["Work Order", "Title", "Status", "Priority", "Assignee", "Creator", "Building", "Room", "Due Date", "Created"];
+        ["Work Order", "Title", "Status", "Priority", "Assignee", "Creator", "Building", "Room", "Due Date", "Created", "Completed"];
 
     /// <summary>The CSV text for <paramref name="rows"/>, lines separated by CRLF.</summary>
     public static string ToCsv(IEnumerable<WorkOrderSearchResultRow> rows)
@@ -40,7 +40,8 @@ public static class WorkOrderCsvExporter
         row.WorkOrder.Building,
         row.WorkOrder.RoomNumber,
         row.WorkOrder.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        row.WorkOrder.CreatedDate?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
+        row.WorkOrder.CreatedDate?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+        row.WorkOrder.CompletedDate?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
     ];
 
     private static void AppendLine(StringBuilder csv, IEnumerable<string?> cells)

@@ -38,11 +38,7 @@ public class WorkOrder : EntityBase<WorkOrder>
 
     public string? Title { get; set; } = "";
 
-    public string? Description
-    {
-        get;
-        set => field = GetTruncatedString(value);
-    } = "";
+    public string? Description { get; set; } = "";
 
     public string? Instructions
     {

@@ -221,6 +221,31 @@ public static class TestHost
                         => EmployeeTools.GetEmployee(CreateScopedBus(), username),
                     "GetEmployee",
                     "Retrieves a single employee by username."),
+                AIFunctionFactory.Create(
+                    () => TeamTools.ListTeams(CreateScopedBus()),
+                    "ListTeams",
+                    "Lists all teams."),
+                AIFunctionFactory.Create(
+                    ([System.ComponentModel.Description("Team name")] string name,
+                     [System.ComponentModel.Description("Optional description")] string? description = null,
+                     [System.ComponentModel.Description("Optional member usernames")] string[]? memberUserNames = null)
+                        => TeamTools.CreateTeam(CreateScopedBus(), name, description, memberUserNames),
+                    "CreateTeam",
+                    "Creates a new team."),
+                AIFunctionFactory.Create(
+                    () => VendorTools.ListVendors(CreateScopedBus()),
+                    "ListVendors",
+                    "Lists all vendors."),
+                AIFunctionFactory.Create(
+                    ([System.ComponentModel.Description("Vendor name")] string name,
+                     [System.ComponentModel.Description("Trade type")] string trade,
+                     [System.ComponentModel.Description("Optional contact name")] string? contactName = null,
+                     [System.ComponentModel.Description("Optional email")] string? emailAddress = null,
+                     [System.ComponentModel.Description("Optional phone")] string? phoneNumber = null,
+                     [System.ComponentModel.Description("Active status")] bool isActive = true)
+                        => VendorTools.CreateVendor(CreateScopedBus(), name, trade, contactName, emailAddress, phoneNumber, isActive),
+                    "CreateVendor",
+                    "Creates a new vendor."),
             ];
             return Task.FromResult(tools);
         }
