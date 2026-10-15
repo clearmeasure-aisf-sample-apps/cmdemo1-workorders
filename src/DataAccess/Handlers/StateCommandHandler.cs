@@ -24,7 +24,9 @@ public class StateCommandHandler(
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Executing");
-        request.Execute(new StateCommandContext { CurrentDateTime = time.GetUtcNow().DateTime });
+        var currentDateTime = time.GetUtcNow().DateTime;
+        var beginStatus = request.GetBeginStatus();
+        request.Execute(new StateCommandContext { CurrentDateTime = currentDateTime });
 
         var order = request.WorkOrder;
         if (order.Assignee == order.Creator)
@@ -33,6 +35,12 @@ public class StateCommandHandler(
         }
 
         var persisted = await PersistAsync(order, cancellationToken);
+
+        // Record status change if this is a state-changing command
+        if (persisted.Status != beginStatus)
+        {
+            await RecordStatusChangeAsync(persisted, beginStatus, request.CurrentUser, currentDateTime, cancellationToken);
+        }
 
         var loweredTransitionVerb = request.TransitionVerbPastTense.ToLower();
         var workOrderNumber = persisted.Number;
@@ -85,6 +93,28 @@ public class StateCommandHandler(
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return existing;
+    }
+
+    private async Task RecordStatusChangeAsync(
+        WorkOrder workOrder,
+        WorkOrderStatus fromStatus,
+        Employee changedBy,
+        DateTime changedDate,
+        CancellationToken cancellationToken)
+    {
+        var statusChange = new WorkOrderStatusChange
+        {
+            Id = Guid.NewGuid(),
+            WorkOrderId = workOrder.Id,
+            FromStatus = fromStatus,
+            ToStatus = workOrder.Status,
+            ChangedById = changedBy.Id,
+            ChangedDate = changedDate
+        };
+
+        dbContext.Attach(statusChange);
+        dbContext.Add(statusChange);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task ApplyRelationshipsAsync(
