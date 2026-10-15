@@ -196,7 +196,7 @@ public class ReportsPageTests : AcceptanceTestBase
         // Read and verify file content
         var filePath = await download.PathAsync();
         var content = await File.ReadAllTextAsync(filePath);
-        var lines = content.Split("\r\n", StringSplitOptions.None);
+        var lines = content.Split("\r\n");
 
         // Verify header rows exist
         lines.ShouldContain("Category,Status,Count");
