@@ -89,21 +89,11 @@ public class WorkOrderTools
                 return $"Employee with username '{creatorUsername}' not found.";
             }
 
-            var validationError = ValidateCreateParameters(description);
-            if (validationError != null)
+            var (inputError, parsedDueDate, parsedPriority, trimmedBuilding) =
+                ValidateCreateInputs(description, dueDate, priority, building);
+            if (inputError != null)
             {
-                return validationError;
-            }
-
-            if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out var dueDateError))
-            {
-                return dueDateError!;
-            }
-
-            var (parsedPriority, trimmedBuilding, optionError) = ParsePriorityAndBuilding(priority, building);
-            if (optionError != null)
-            {
-                return optionError;
+                return inputError;
             }
 
             var workOrder = new WorkOrder
@@ -346,6 +336,27 @@ public class WorkOrderTools
         }
 
         return null;
+    }
+
+    private static (string? Error, DateOnly? DueDate, WorkOrderPriority Priority, string? Building) ValidateCreateInputs(
+        string description,
+        string? dueDate,
+        string? priority,
+        string? building)
+    {
+        var validationError = ValidateCreateParameters(description);
+        if (validationError != null)
+        {
+            return (validationError, null, WorkOrderPriority.Medium, null);
+        }
+
+        if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out var dueDateError))
+        {
+            return (dueDateError, null, WorkOrderPriority.Medium, null);
+        }
+
+        var (parsedPriority, trimmedBuilding, optionError) = ParsePriorityAndBuilding(priority, building);
+        return (optionError, parsedDueDate, parsedPriority, trimmedBuilding);
     }
 
     private static string? ValidateCreateParameters(string? description)
