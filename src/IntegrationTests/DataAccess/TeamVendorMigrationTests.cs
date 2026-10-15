@@ -145,10 +145,14 @@ public class TeamVendorMigrationTests
         var rows = new List<string>();
         while (reader.Read())
         {
-            var values = Enumerable.Range(0, reader.FieldCount)
-                .Select(i => reader.IsDBNull(i)
+            var values = new string[reader.FieldCount];
+            for (var i = 0; i < values.Length; i++)
+            {
+                values[i] = reader.IsDBNull(i)
                     ? ""
-                    : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "");
+                    : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "";
+            }
+
             rows.Add(string.Join("|", values));
         }
 
