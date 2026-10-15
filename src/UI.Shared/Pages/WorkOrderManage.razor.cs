@@ -235,8 +235,9 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         workOrder.Priority = Model.Priority;
         workOrder.Building = string.IsNullOrWhiteSpace(Model.Building) ? null : Model.Building.Trim();
 
-        var matchingCommand = new StateCommandList()
-            .GetMatchingCommand(workOrder, currentUser, SelectedCommand!);
+        var matchingCommand = SaveDraftCommand.WithPreviousRoomNumber(
+            new StateCommandList().GetMatchingCommand(workOrder, currentUser, SelectedCommand!),
+            Model.OriginalRoomNumber);
 
         var result = await Bus.Send(matchingCommand);
         EventBus.Notify(new WorkOrderChangedEvent(result));

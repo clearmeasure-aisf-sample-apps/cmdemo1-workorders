@@ -52,49 +52,31 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
     public async Task ShouldAllowOpeningAndSavingWorkOrderWithLongRoomNumberWhenUnchanged()
     {
         await LoginAsCurrentUser();
+        var order = await CreateAndSaveNewWorkOrder();
 
+        // Seed a legacy room number longer than the entry limit, as stored before the 50-character rule.
         var longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
-        var order = Faker<WorkOrder>();
-        order.Title = $"[{TestTag}] 900 char room unchanged";
-        order.Number = null;
-        order.RoomNumber = longRoom;
+        var stored = (await Bus.Send(new WorkOrderByNumberQuery(order.Number!)))!;
+        stored.RoomNumber = longRoom;
+        await Bus.Send(new SaveDraftCommand(stored, stored.Creator!) { PreviousRoomNumber = longRoom });
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await Click(nameof(NavMenu.Elements.NewWorkOrder));
-        await Page.WaitForURLAsync("**/workorder/manage?mode=New");
-
-        var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        order.Number = await woNumberLocator.InnerTextAsync();
-
-        await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
-        await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
+        await ClickWorkOrderNumberFromSearchPage(order);
 
         var roomField = Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber));
-        await Expect(roomField).ToBeEditableAsync(new LocatorAssertionsToBeEditableOptions { Timeout = 30_000 });
-        await roomField.EvaluateAsync("el => el.removeAttribute('maxlength')");
-        await roomField.FillAsync(longRoom);
-        await roomField.BlurAsync();
+        await Expect(roomField).ToHaveValueAsync(longRoom);
+
+        var newTitle = $"[{TestTag}] 900 char room unchanged";
+        await Input(nameof(WorkOrderManage.Elements.Title), newTitle);
 
         var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
-        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
-
-        var workOrderLink = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number);
-        await workOrderLink.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
-        await ClickWorkOrderNumberFromSearchPage(order);
-
-        var updatedRoomField = Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber));
-        await Expect(updatedRoomField).ToHaveValueAsync(longRoom);
-
-        var saveAgainButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
-        await Click(saveAgainButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
         WorkOrder rehydratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number!))
             ?? throw new InvalidOperationException();
         rehydratedOrder.RoomNumber.ShouldBe(longRoom);
         rehydratedOrder.RoomNumber!.Length.ShouldBe(WorkOrder.RoomNumberMaxLength);
+        rehydratedOrder.Title.ShouldBe(newTitle);
     }
 
     [Test, Retry(2)]
