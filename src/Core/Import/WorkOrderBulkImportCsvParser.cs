@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Text;
+using ClearMeasure.Bootcamp.Core.Model;
 
 namespace ClearMeasure.Bootcamp.Core.Import;
 
@@ -33,7 +35,7 @@ public static class WorkOrderBulkImportCsvParser
         if (missingColumn != null)
         {
             return WorkOrderBulkImportParseResult.Fail(
-                $"Missing required column \"{missingColumn}\". Expected header: Title, Description, CreatorUsername, RoomNumber (optional).");
+                $"Missing required column \"{missingColumn}\". Expected header: Title, Description, CreatorUsername, RoomNumber (optional), Building (optional), Priority (optional), DueDate (optional).");
         }
 
         var rows = ParseDataRows(reader, columnIndex, ref lineNumber, cancellationToken);
@@ -114,21 +116,61 @@ public static class WorkOrderBulkImportCsvParser
         public WorkOrderBulkImportRow ParseRow(string line, int lineNumber)
         {
             var cells = CsvLineReader.SplitCsvLine(line);
-            string? Cell(int index) => index >= 0 && index < cells.Count ? NullIfWhitespace(cells[index]) : null;
-
-            var titleIx = _columns["Title"];
-            var descIx = _columns["Description"];
-            var creatorIx = _columns["CreatorUsername"];
-            var roomIx = _columns.GetValueOrDefault("RoomNumber", -1);
+            var building = OptionalCell(cells, "Building");
+            var priorityText = OptionalCell(cells, "Priority");
+            var dueDateText = OptionalCell(cells, "DueDate");
+            var priority = ParsePriority(priorityText);
+            var dueDate = ParseDueDate(dueDateText);
 
             return new WorkOrderBulkImportRow(
                 lineNumber,
-                Cell(titleIx),
-                Cell(descIx),
-                Cell(creatorIx),
-                roomIx >= 0 ? Cell(roomIx) : null);
+                OptionalCell(cells, "Title"),
+                OptionalCell(cells, "Description"),
+                OptionalCell(cells, "CreatorUsername"),
+                OptionalCell(cells, "RoomNumber"),
+                building,
+                priority,
+                dueDate,
+                BuildingError(building) ?? PriorityError(priorityText, priority) ?? DueDateError(dueDateText, dueDate));
+        }
+
+        private string? OptionalCell(List<string> cells, string name)
+        {
+            var index = _columns.GetValueOrDefault(name, -1);
+            return index >= 0 && index < cells.Count ? NullIfWhitespace(cells[index]) : null;
         }
     }
+
+    private static WorkOrderPriority? ParsePriority(string? text)
+    {
+        if (text == null || !char.IsLetter(text[0]))
+        {
+            return null;
+        }
+
+        return Enum.TryParse<WorkOrderPriority>(text, ignoreCase: true, out var value) && Enum.IsDefined(value)
+            ? value
+            : null;
+    }
+
+    private static string? PriorityError(string? text, WorkOrderPriority? parsed) =>
+        text != null && parsed == null
+            ? $"Priority '{text}' is not valid. Expected one of: {string.Join(", ", Enum.GetNames<WorkOrderPriority>())}."
+            : null;
+
+    private static DateOnly? ParseDueDate(string? text) =>
+        text != null && DateOnly.TryParseExact(text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None,
+            out var value)
+            ? value
+            : null;
+
+    private static string? DueDateError(string? text, DateOnly? parsed) =>
+        text != null && parsed == null ? $"DueDate '{text}' is not a valid date (expected yyyy-MM-dd)." : null;
+
+    private static string? BuildingError(string? building) =>
+        building is { Length: > WorkOrder.BuildingMaxLength }
+            ? $"Building must be at most {WorkOrder.BuildingMaxLength} characters."
+            : null;
 
     private static class CsvLineReader
     {
