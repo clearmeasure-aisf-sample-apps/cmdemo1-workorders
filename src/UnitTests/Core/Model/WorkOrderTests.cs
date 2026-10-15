@@ -19,6 +19,8 @@ public class WorkOrderTests
         Assert.That(workOrder.Creator, Is.EqualTo(null));
         Assert.That(workOrder.Assignee, Is.EqualTo(null));
         Assert.That(workOrder.DueDate, Is.Null);
+        Assert.That(workOrder.WaitingOnVendorSince, Is.Null);
+        Assert.That(workOrder.IsWaitingOnVendor, Is.False);
     }
 
     [Test]
@@ -107,5 +109,53 @@ public class WorkOrderTests
         var order = new WorkOrder() { Status = WorkOrderStatus.Draft };
         order.ChangeStatus(WorkOrderStatus.Assigned);
         Assert.That(order.Status, Is.EqualTo(WorkOrderStatus.Assigned));
+    }
+
+    [Test]
+    public void IsWaitingOnVendor_InProgressWithField_IsTrue()
+    {
+        var workOrder = new WorkOrder { Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = DateTime.UtcNow };
+
+        workOrder.IsWaitingOnVendor.ShouldBeTrue();
+    }
+
+    [TestCase("Draft")]
+    [TestCase("Assigned")]
+    [TestCase("Complete")]
+    [TestCase("Cancelled")]
+    public void IsWaitingOnVendor_NotInProgressEvenWithField_IsFalse(string statusKey)
+    {
+        var workOrder = new WorkOrder { Status = WorkOrderStatus.FromKey(statusKey), WaitingOnVendorSince = DateTime.UtcNow };
+
+        workOrder.IsWaitingOnVendor.ShouldBeFalse();
+    }
+
+    [Test]
+    public void IsWaitingOnVendor_InProgressWithoutField_IsFalse()
+    {
+        var workOrder = new WorkOrder { Status = WorkOrderStatus.InProgress };
+
+        workOrder.IsWaitingOnVendor.ShouldBeFalse();
+    }
+
+    [Test]
+    public void ChangeStatus_ToInProgress_KeepsWaitingOnVendorSince()
+    {
+        var since = new DateTime(2026, 10, 14, 9, 0, 0);
+        var workOrder = new WorkOrder { Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = since };
+
+        workOrder.ChangeStatus(new Employee(), DateTime.UtcNow, WorkOrderStatus.InProgress);
+
+        workOrder.WaitingOnVendorSince.ShouldBe(since);
+    }
+
+    [Test]
+    public void ChangeStatus_OutOfInProgress_ClearsWaitingOnVendorSince()
+    {
+        var workOrder = new WorkOrder { Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = DateTime.UtcNow };
+
+        workOrder.ChangeStatus(new Employee(), DateTime.UtcNow, WorkOrderStatus.Complete);
+
+        workOrder.WaitingOnVendorSince.ShouldBeNull();
     }
 }

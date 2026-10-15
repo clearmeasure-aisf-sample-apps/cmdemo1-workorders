@@ -17,8 +17,14 @@ public abstract record StateCommandBase(WorkOrder WorkOrder, Employee CurrentUse
     {
         var beginStatusMatches = WorkOrder.Status == GetBeginStatus();
         var currentUserIsCorrectRole = UserCanExecute(CurrentUser);
-        return beginStatusMatches && currentUserIsCorrectRole;
+        return beginStatusMatches && currentUserIsCorrectRole && IsAllowedInCurrentState();
     }
+
+    /// <summary>
+    /// Extra precondition beyond the begin status and the user's role (for example a sub-state of
+    /// In Progress). Defaults to <c>true</c>.
+    /// </summary>
+    protected virtual bool IsAllowedInCurrentState() => true;
 
     public bool Matches(string commandName)
     {

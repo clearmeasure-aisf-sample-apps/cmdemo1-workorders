@@ -67,6 +67,23 @@ public class InProgressToCompleteCommandTests : StateCommandBaseTests
         Assert.That(order.CompletedDate, Is.Not.Null);
     }
 
+    [Test]
+    public void ShouldClearWaitingOnVendorSince_WhenCompleted()
+    {
+        var employee = new Employee();
+        var order = new WorkOrder
+        {
+            Number = "123",
+            Status = WorkOrderStatus.InProgress,
+            Assignee = employee,
+            WaitingOnVendorSince = DateTime.UtcNow
+        };
+
+        new InProgressToCompleteCommand(order, employee).Execute(new StateCommandContext());
+
+        Assert.That(order.WaitingOnVendorSince, Is.Null);
+    }
+
     protected override StateCommandBase GetStateCommand(WorkOrder order, Employee employee)
     {
         return new InProgressToCompleteCommand(order, employee);
