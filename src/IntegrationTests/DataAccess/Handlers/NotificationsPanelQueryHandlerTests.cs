@@ -14,8 +14,6 @@ public class NotificationsPanelQueryHandlerTests
     [Test]
     public async Task Handle_WithNullUserName_ReturnsEmptyArrays()
     {
-        new DatabaseTests().Clean();
-
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var time = TestHost.GetRequiredService<TimeProvider>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
@@ -30,13 +28,13 @@ public class NotificationsPanelQueryHandlerTests
     [Test]
     public async Task Handle_WithNonExistentUserName_ReturnsEmptyArrays()
     {
-        new DatabaseTests().Clean();
+        var nonexistentUserUserName = TestData.UserName("nonexistent_user");
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var time = TestHost.GetRequiredService<TimeProvider>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
 
-        var result = await handler.Handle(new NotificationsPanelQuery("nonexistent_user"));
+        var result = await handler.Handle(new NotificationsPanelQuery(nonexistentUserUserName));
 
         result.OverdueAndDueToday.Length.ShouldBe(0);
         result.NewlyAssignedLast7Days.Length.ShouldBe(0);
@@ -46,7 +44,11 @@ public class NotificationsPanelQueryHandlerTests
     [Test]
     public async Task Handle_ReturnsOverdueAndDueTodayWorkOrders()
     {
-        new DatabaseTests().Clean();
+        var notifTestUserUserName = TestData.UserName("notif_test_user");
+        var overdueOrderNumber = TestData.Number("N");
+        var dueTodayNumber = TestData.Number("N");
+        var futureDueNumber = TestData.Number("N");
+        var completeNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var today = ChurchTimeZone.Today(time);
@@ -54,7 +56,7 @@ public class NotificationsPanelQueryHandlerTests
         var tomorrow = today.AddDays(1);
         var now = time.GetUtcNow().DateTime;
 
-        var assignee = new Employee("notif_test_user", "Test", "User", "test@example.com");
+        var assignee = new Employee(notifTestUserUserName, "Test", "User", "test@example.com");
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -62,7 +64,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var overdueOrder = new WorkOrder
             {
-                Number = "WO-001",
+                Number = overdueOrderNumber,
                 Title = "Overdue Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -73,7 +75,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var dueToday = new WorkOrder
             {
-                Number = "WO-002",
+                Number = dueTodayNumber,
                 Title = "Due Today Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -84,7 +86,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var futureDue = new WorkOrder
             {
-                Number = "WO-003",
+                Number = futureDueNumber,
                 Title = "Future Due Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -95,7 +97,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var complete = new WorkOrder
             {
-                Number = "WO-004",
+                Number = completeNumber,
                 Title = "Complete Task",
                 Creator = assignee,
                 Assignee = assignee,
@@ -114,24 +116,27 @@ public class NotificationsPanelQueryHandlerTests
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
 
-        var result = await handler.Handle(new NotificationsPanelQuery("notif_test_user"));
+        var result = await handler.Handle(new NotificationsPanelQuery(notifTestUserUserName));
 
         result.OverdueAndDueToday.Length.ShouldBe(2);
-        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain("WO-001");
-        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain("WO-002");
+        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain(overdueOrderNumber);
+        result.OverdueAndDueToday.Select(wo => wo.Number).ShouldContain(dueTodayNumber);
     }
 
     [Test]
     public async Task Handle_ReturnsNewlyAssignedLast7DaysWorkOrders()
     {
-        new DatabaseTests().Clean();
+        var notifNewUserUserName = TestData.UserName("notif_new_user");
+        var recentlyAssignedNumber = TestData.Number("N");
+        var oldAssignmentNumber = TestData.Number("N");
+        var notAssignedNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var now = time.GetUtcNow().DateTime;
         var today = ChurchTimeZone.Today(time);
         var futureDate = today.AddDays(10);
 
-        var assignee = new Employee("notif_new_user", "New", "User", "new@example.com");
+        var assignee = new Employee(notifNewUserUserName, "New", "User", "new@example.com");
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -139,7 +144,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var recentlyAssigned = new WorkOrder
             {
-                Number = "WO-101",
+                Number = recentlyAssignedNumber,
                 Title = "Recent Assignment",
                 Creator = assignee,
                 Assignee = assignee,
@@ -150,7 +155,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var oldAssignment = new WorkOrder
             {
-                Number = "WO-102",
+                Number = oldAssignmentNumber,
                 Title = "Old Assignment",
                 Creator = assignee,
                 Assignee = assignee,
@@ -161,7 +166,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var notAssigned = new WorkOrder
             {
-                Number = "WO-103",
+                Number = notAssignedNumber,
                 Title = "Not Assigned",
                 Creator = assignee,
                 Assignee = null,
@@ -178,24 +183,29 @@ public class NotificationsPanelQueryHandlerTests
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
 
-        var result = await handler.Handle(new NotificationsPanelQuery("notif_new_user"));
+        var result = await handler.Handle(new NotificationsPanelQuery(notifNewUserUserName));
 
         result.NewlyAssignedLast7Days.Length.ShouldBe(1);
-        result.NewlyAssignedLast7Days[0].Number.ShouldBe("WO-101");
+        result.NewlyAssignedLast7Days[0].Number.ShouldBe(recentlyAssignedNumber);
     }
 
     [Test]
     public async Task Handle_ReturnsCreatedByMeStatusChangedLast7DaysWorkOrders()
     {
-        new DatabaseTests().Clean();
+        var notifCreatorUserName = TestData.UserName("notif_creator");
+        var notifOtherUserName = TestData.UserName("notif_other");
+        var recentlyAssignedNumber = TestData.Number("N");
+        var recentlyCompletedNumber = TestData.Number("N");
+        var oldStatusChangeNumber = TestData.Number("N");
+        var draftNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var now = time.GetUtcNow().DateTime;
         var today = ChurchTimeZone.Today(time);
         var futureDate = today.AddDays(30);
 
-        var creator = new Employee("notif_creator", "Creator", "User", "creator@example.com");
-        var otherUser = new Employee("notif_other", "Other", "User", "other@example.com");
+        var creator = new Employee(notifCreatorUserName, "Creator", "User", "creator@example.com");
+        var otherUser = new Employee(notifOtherUserName, "Other", "User", "other@example.com");
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -204,7 +214,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var recentlyAssigned = new WorkOrder
             {
-                Number = "WO-201",
+                Number = recentlyAssignedNumber,
                 Title = "Recent Status Change",
                 Creator = creator,
                 Assignee = otherUser,
@@ -215,7 +225,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var recentlyCompleted = new WorkOrder
             {
-                Number = "WO-202",
+                Number = recentlyCompletedNumber,
                 Title = "Recently Completed",
                 Creator = creator,
                 Assignee = otherUser,
@@ -226,7 +236,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var oldStatusChange = new WorkOrder
             {
-                Number = "WO-203",
+                Number = oldStatusChangeNumber,
                 Title = "Old Status Change",
                 Creator = creator,
                 Assignee = otherUser,
@@ -237,7 +247,7 @@ public class NotificationsPanelQueryHandlerTests
 
             var draft = new WorkOrder
             {
-                Number = "WO-204",
+                Number = draftNumber,
                 Title = "Draft Order",
                 Creator = creator,
                 Assignee = null,
@@ -255,11 +265,11 @@ public class NotificationsPanelQueryHandlerTests
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new NotificationsPanelQueryHandler(dataContext, time);
 
-        var result = await handler.Handle(new NotificationsPanelQuery("notif_creator"));
+        var result = await handler.Handle(new NotificationsPanelQuery(notifCreatorUserName));
 
         result.CreatedByMeStatusChangedLast7Days.Length.ShouldBe(2);
         var numbers = result.CreatedByMeStatusChangedLast7Days.Select(wo => wo.Number).ToList();
-        numbers.ShouldContain("WO-201");
-        numbers.ShouldContain("WO-202");
+        numbers.ShouldContain(recentlyAssignedNumber);
+        numbers.ShouldContain(recentlyCompletedNumber);
     }
 }
