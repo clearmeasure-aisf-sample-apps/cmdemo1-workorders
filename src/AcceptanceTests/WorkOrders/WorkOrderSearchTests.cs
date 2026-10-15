@@ -34,7 +34,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     public async Task ShouldAssociateFilterLabelsWithSelectIds()
     {
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
         await Expect(Page.Locator($"label[for='{WorkOrderSearch.Elements.CreatorSelect}']")).ToBeAttachedAsync();
         await Expect(Page.Locator($"label[for='{WorkOrderSearch.Elements.AssigneeSelect}']")).ToBeAttachedAsync();
@@ -106,7 +106,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // Act
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "InitialLoad");
 
         // Assert
@@ -167,7 +167,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // Act
         await Click(nameof(NavMenu.Elements.WorkOrdersAssignedToMe));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "AssigneeFiltered");
 
         // Assert
@@ -202,7 +202,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Status={status.Key}");
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "StatusFiltered");
 
         // Assert
@@ -247,7 +247,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await assigneeSelect.SelectOptionAsync(assignee.UserName);
         await statusSelect.SelectOptionAsync(status.Key);
         await TakeScreenshotAsync(2, "FiltersSet");
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(3, "SearchCompleted");
 
         // Assert
@@ -279,13 +279,13 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "SearchPageLoaded");
 
         var workOrderLink = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrder.Number);
         await Expect(workOrderLink).ToBeVisibleAsync();
         await workOrderLink.ClickAsync();
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "WorkOrderDetailsPage");
 
         // Assert
@@ -312,12 +312,12 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // First set a filter
         await creatorSelect.SelectOptionAsync(creator.UserName);
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "FilterSet");
 
         // Then clear it by selecting "All"
         await creatorSelect.SelectOptionAsync("");
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "FilterCleared");
 
         // Assert
@@ -355,7 +355,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await assigneeSelect.SelectOptionAsync(assignee.UserName);
         await statusSelect.SelectOptionAsync(status.Key);
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "AfterSearch");
 
         // Assert
@@ -380,7 +380,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // Act
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
@@ -396,7 +396,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // Click clear
         await clearButton.ClickAsync();
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "FiltersCleared");
 
         // Assert all selects reset
@@ -413,7 +413,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     {
         // Act
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "PageLoaded");
 
         // Assert
@@ -441,7 +441,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // Act
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
         // Assert
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
@@ -456,7 +456,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Expect(creatorSelect).ToHaveValueAsync(CurrentUser.UserName, new() { Timeout = 30_000 });
 
         await Click(nameof(NavMenu.Elements.WorkOrdersAssignedToMe));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Expect(assigneeSelect).ToHaveValueAsync(CurrentUser.UserName, new() { Timeout = 30_000 });
 
         await Click(nameof(NavMenu.Elements.AllWorkOrdersInProgress));
@@ -481,13 +481,13 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await context.SaveChangesAsync();
 
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "Loaded");
 
         // Filter by creator so only these two work orders are in the result set
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "Filtered");
 
         var statusSortBtn = Page.Locator($"#{WorkOrderSearch.Elements.SortByStatusButton}");
@@ -527,7 +527,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
         var titleSortBtn = Page.Locator($"#{WorkOrderSearch.Elements.SortByTitleButton}");
         await titleSortBtn.ClickAsync();
@@ -563,11 +563,11 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await context.SaveChangesAsync();
 
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
         var roomSortBtn = Page.Locator($"#{WorkOrderSearch.Elements.SortByRoomButton}");
         await roomSortBtn.ClickAsync();
@@ -614,7 +614,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         var checkbox = Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}");
         await checkbox.CheckAsync();
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "AfterToggle");
 
         // Assert: only my order appears
@@ -722,7 +722,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }
 
     [Test, Retry(2)]
@@ -749,7 +749,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Filter by creator so only these two work orders are in the result set
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "Filtered");
 
         var dueDateSortBtn = Page.Locator($"#{WorkOrderSearch.Elements.SortByDueDateButton}");
@@ -790,12 +790,12 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // Act
         await Click(nameof(NavMenu.Elements.Search));
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
         // Filter to this creator so only our two orders appear
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "BothOrders");
 
         // Check both rows visible
@@ -805,7 +805,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Toggle "Show overdue only"
         var toggle = Page.Locator($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}");
         await toggle.CheckAsync();
-		await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "OverdueOnly");
 
         // Assert only the overdue row is visible

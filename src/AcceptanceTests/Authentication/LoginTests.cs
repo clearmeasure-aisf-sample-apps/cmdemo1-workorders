@@ -10,7 +10,7 @@ public class LoginTests : AcceptanceTestBase
 {
     /// <summary>
     /// The employee &lt;option&gt; elements are rendered only after the Blazor WASM app
-    /// boots interactively and the employee list loads. WaitForLoadStateAsync(NetworkIdle)
+    /// boots interactively and the employee list loads. a network-idle wait
     /// does not guarantee that render has happened, so wait for the option itself.
     /// Options live inside a closed &lt;select&gt; and therefore have no bounding box —
     /// they are never "visible" to Playwright, so wait for Attached, not Visible.
