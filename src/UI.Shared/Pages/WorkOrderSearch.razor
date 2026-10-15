@@ -14,17 +14,53 @@
                 <div class="menu-anchor" @onkeydown="HandleSavedViewsKeyDown">
                     <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.SavedViewsButton"
                             aria-haspopup="menu" aria-expanded="@(_savedViewsOpen ? "true" : "false")" aria-controls="saved-views-menu"
-                            @ref="_savedViewsButton" @onclick="() => _savedViewsOpen = !_savedViewsOpen">
+                            @ref="_savedViewsButton" @onclick="ToggleSavedViews">
                         <i class="bi bi-bookmark" aria-hidden="true"></i> Saved views
                     </button>
-                    <ul id="saved-views-menu" class="popover-menu" role="menu" aria-label="Saved views" hidden="@(!_savedViewsOpen)">
+                    <ul id="saved-views-menu" class="popover-menu" role="menu" aria-label="Saved views" hidden="@(!_savedViewsOpen || _saveFormOpen)">
                         @foreach (var view in SavedViews)
                         {
                             <li role="presentation">
-                                <a role="menuitem" class="popover-menu-item" href="@view.Href" @onclick="() => _savedViewsOpen = false">@view.Name</a>
+                                <a role="menuitem" class="popover-menu-item" href="@view.Href" @onclick="CloseSavedViews">@view.Name</a>
                             </li>
                         }
+                        <li role="separator" class="popover-menu-separator"></li>
+                        @foreach (var view in _userViews)
+                        {
+                            <li role="presentation" class="user-view-item">
+                                <a role="menuitem" class="popover-menu-item" data-testid="@($"{Elements.UserSavedViewLink}{view.Name}")"
+                                   href="@WorkOrderSearchUrlState.RelativeUriForQuery(view.Query)" @onclick="CloseSavedViews">@view.Name</a>
+                                <button type="button" role="menuitem" class="user-view-delete" data-testid="@($"{Elements.UserSavedViewDeleteButton}{view.Name}")"
+                                        aria-label="@($"Delete saved view {view.Name}")" title="Delete" @onclick="() => HandleDeleteView(view)">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                </button>
+                            </li>
+                        }
+                        @if (_deleteViewError is not null)
+                        {
+                            <li role="alert" class="save-view-error" data-testid="@Elements.SavedViewDeleteError">@_deleteViewError</li>
+                        }
+                        <li role="presentation">
+                            <button type="button" role="menuitem" class="popover-menu-item" data-testid="@Elements.SaveCurrentViewButton"
+                                    @onclick="OpenSaveForm">Save current view…</button>
+                        </li>
                     </ul>
+                    @if (_savedViewsOpen && _saveFormOpen)
+                    {
+                        <form class="save-view-form" @onsubmit="HandleSaveView" @onsubmit:preventDefault>
+                            <label for="saved-view-name" class="form-label">View name</label>
+                            <input id="saved-view-name" type="text" class="form-control" maxlength="100"
+                                   data-testid="@Elements.SavedViewNameInput" @ref="_saveViewNameInput" @bind="_newViewName" @bind:event="oninput" />
+                            @if (_saveViewError is not null)
+                            {
+                                <div class="save-view-error" role="alert" data-testid="@Elements.SavedViewError">@_saveViewError</div>
+                            }
+                            <div class="save-view-actions">
+                                <button type="submit" class="btn-app btn-app--primary" data-testid="@Elements.SavedViewSaveButton">Save</button>
+                                <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.SavedViewCancelButton" @onclick="CancelSaveForm">Cancel</button>
+                            </div>
+                        </form>
+                    }
                 </div>
                 @if (_canCreate)
                 {
@@ -407,6 +443,14 @@
         ActiveFilterChip,
         ExportButton,
         SavedViewsButton,
+        SaveCurrentViewButton,
+        SavedViewNameInput,
+        SavedViewSaveButton,
+        SavedViewCancelButton,
+        SavedViewError,
+        SavedViewDeleteError,
+        UserSavedViewLink,
+        UserSavedViewDeleteButton,
         NewWorkOrderButton,
         BoardView,
         BoardColumn,
