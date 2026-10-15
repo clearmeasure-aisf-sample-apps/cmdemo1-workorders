@@ -109,6 +109,28 @@ public class BusTests
         stubMediator.LastObjectRequest.ShouldBeNull();
     }
 
+    [Test]
+    public async Task ShouldThrowValidationException_WhenSaveDraftBuildingExceedsMaxLength()
+    {
+        var stubMediator = new StubMediator();
+        var bus = new Bus(stubMediator);
+        var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
+        var workOrder = new WorkOrder
+        {
+            Title = "T",
+            Building = new string('B', WorkOrder.BuildingMaxLength + 1),
+            Creator = creator
+        };
+        var command = new SaveDraftCommand(workOrder, creator);
+
+        var ex = await Should.ThrowAsync<ValidationException>(() => bus.Send(command));
+
+        ex.Errors.ShouldContain(failure =>
+            failure.PropertyName == "WorkOrder.Building" &&
+            failure.ErrorMessage == "Building cannot exceed 100 characters.");
+        stubMediator.LastRequest.ShouldBeNull();
+    }
+
     private static SaveDraftCommand CreateSaveDraftCommand(int titleLength)
     {
         var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
