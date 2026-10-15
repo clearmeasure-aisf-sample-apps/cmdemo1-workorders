@@ -104,7 +104,7 @@ public class WorkOrderTools
                 DueDate = parsedDueDate
             };
 
-            var command = new SaveDraftCommand(workOrder, creator);
+            var command = new SaveDraftCommand(workOrder, creator) { PreviousRoomNumber = null };
             var result = await bus.Send(command);
 
             return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
@@ -191,9 +191,10 @@ public class WorkOrderTools
             return validationError;
         }
 
+        var originalRoomNumber = workOrder.RoomNumber;
         ApplySavePatches(workOrder, title, description, instructions, roomNumber, dueDate);
 
-        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser));
+        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser) { PreviousRoomNumber = originalRoomNumber });
         return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
             new JsonSerializerOptions { WriteIndented = true });
     }

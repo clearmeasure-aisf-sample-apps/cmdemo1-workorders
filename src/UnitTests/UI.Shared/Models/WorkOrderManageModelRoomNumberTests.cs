@@ -20,10 +20,11 @@ public class WorkOrderManageModelRoomNumberTests
     }
 
     [Test]
-    public void ShouldAcceptRoomNumberAtMaxLength()
+    public void ShouldAcceptRoomNumberAtEntryMaxLength()
     {
         var model = ValidModel();
-        model.RoomNumber = new string('R', WorkOrder.RoomNumberMaxLength);
+        model.RoomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength);
+        model.OriginalRoomNumber = model.RoomNumber;
 
         var results = Validate(model);
 
@@ -31,10 +32,11 @@ public class WorkOrderManageModelRoomNumberTests
     }
 
     [Test]
-    public void ShouldRejectRoomNumberLongerThanMaxLength()
+    public void ShouldRejectRoomNumberLongerThanEntryMaxLength()
     {
         var model = ValidModel();
-        model.RoomNumber = new string('R', WorkOrder.RoomNumberMaxLength + 1);
+        model.RoomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength + 1);
+        model.OriginalRoomNumber = null;
 
         var results = Validate(model);
 
@@ -42,9 +44,28 @@ public class WorkOrderManageModelRoomNumberTests
     }
 
     [Test]
+    public void ShouldAllowUnchangedLongRoomNumber()
+    {
+        var longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
+        var model = ValidModel();
+        model.RoomNumber = longRoom;
+        model.OriginalRoomNumber = longRoom;
+
+        var results = Validate(model);
+
+        results.ShouldBeEmpty();
+    }
+
+    [Test]
     public void RoomNumberMaxLength_ShouldBe900()
     {
         WorkOrder.RoomNumberMaxLength.ShouldBe(900);
+    }
+
+    [Test]
+    public void RoomNumberEntryMaxLength_ShouldBe50()
+    {
+        WorkOrder.RoomNumberEntryMaxLength.ShouldBe(50);
     }
 
     private static WorkOrderManageModel ValidModel()

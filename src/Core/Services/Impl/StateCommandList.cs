@@ -18,7 +18,7 @@ public class StateCommandList
     {
         var commands = new List<IStateCommand>
         {
-            new SaveDraftCommand(workOrder, currentUser),
+            new SaveDraftCommand(workOrder, currentUser) { PreviousRoomNumber = workOrder.RoomNumber },
             new DraftToAssignedCommand(workOrder, currentUser),
             new AssignedToInProgressCommand(workOrder, currentUser),
             new InProgressToAssignedCommand(workOrder, currentUser),

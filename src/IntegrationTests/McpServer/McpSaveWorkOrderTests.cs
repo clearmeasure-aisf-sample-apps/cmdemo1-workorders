@@ -282,28 +282,53 @@ public class McpSaveWorkOrderTests
     }
 
     [Test]
-    public async Task ShouldTruncateRoomNumberTo900Characters()
+    public async Task ShouldRejectRoomNumberLongerThan50CharactersOnNewWorkOrder()
     {
         await SeedCreatorAsync();
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var longRoom = new string('r', WorkOrder.RoomNumberMaxLength + 1);
-        var expected = new string('r', WorkOrder.RoomNumberMaxLength);
+        var tooLongRoom = new string('r', WorkOrder.RoomNumberEntryMaxLength + 1);
 
         var createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
-            "Truncate room",
+            "Reject long room",
             "Description",
             "creator1");
 
         var number = ExtractWorkOrderNumber(createResult)!;
 
-        await WorkOrderTools.SaveWorkOrder(bus, number, "creator1", roomNumber: longRoom);
+        var result = await WorkOrderTools.SaveWorkOrder(bus, number, "creator1", roomNumber: tooLongRoom);
+
+        result.ShouldContain("cannot exceed");
+
+        var reloaded = await bus.Send(new WorkOrderByNumberQuery(number));
+        reloaded!.RoomNumber.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldAllowPreservingLongRoomNumberViaMcpOnExistingWorkOrder()
+    {
+        await SeedCreatorAsync();
+        var bus = TestHost.GetRequiredService<IBus>();
+        var numberGenerator = new WorkOrderNumberGenerator();
+        var longRoom = new string('r', WorkOrder.RoomNumberMaxLength);
+
+        var createResult = await WorkOrderTools.CreateWorkOrder(
+            bus,
+            numberGenerator,
+            "Preserve long room",
+            "Description",
+            "creator1",
+            roomNumber: longRoom);
+
+        var number = ExtractWorkOrderNumber(createResult)!;
+
+        await WorkOrderTools.SaveWorkOrder(bus, number, "creator1", title: "Updated title");
 
         var reloaded = await bus.Send(new WorkOrderByNumberQuery(number));
         reloaded!.RoomNumber!.Length.ShouldBe(WorkOrder.RoomNumberMaxLength);
-        reloaded.RoomNumber.ShouldBe(expected);
+        reloaded.RoomNumber.ShouldBe(longRoom);
     }
 
     [Test]

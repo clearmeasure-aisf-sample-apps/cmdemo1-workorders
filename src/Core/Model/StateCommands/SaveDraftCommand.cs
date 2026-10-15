@@ -7,6 +7,12 @@ StateCommandBase(WorkOrder, CurrentUser)
 {
     public const string Name = "Save";
 
+    /// <summary>
+    /// The room number persisted on the work order before this command was created.
+    /// Used to skip entry-length validation when the room number is unchanged.
+    /// </summary>
+    public string? PreviousRoomNumber { get; init; } = null;
+
     public override WorkOrderStatus GetBeginStatus()
     {
         return WorkOrderStatus.Draft;

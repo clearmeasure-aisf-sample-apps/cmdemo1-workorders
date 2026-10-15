@@ -18,7 +18,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 public class WorkOrderManageRoomFieldTests
 {
     [Test]
-    public async Task WorkOrderManage_ShouldRenderRoomAsTextareaWithMaxLength900()
+    public async Task WorkOrderManage_ShouldRenderRoomAsTextareaWithMaxLength50()
     {
         await using var ctx = new BunitContext();
 
@@ -42,7 +42,7 @@ public class WorkOrderManageRoomFieldTests
         var room = await component.WaitForElementAsync(
             $"[data-testid='{WorkOrderManage.Elements.RoomNumber}']");
         room.TagName.ShouldBe("TEXTAREA");
-        room.GetAttribute("maxlength").ShouldBe(WorkOrder.RoomNumberMaxLength.ToString());
+        room.GetAttribute("maxlength").ShouldBe(WorkOrder.RoomNumberEntryMaxLength.ToString());
     }
 
     private class StubWorkOrderManageBus : Bus

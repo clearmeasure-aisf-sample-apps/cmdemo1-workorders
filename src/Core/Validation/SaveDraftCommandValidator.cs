@@ -17,5 +17,10 @@ public sealed class SaveDraftCommandValidator : AbstractValidator<SaveDraftComma
         RuleFor(x => x.WorkOrder.Title)
             .MaximumLength(WorkOrder.TitleMaxLength)
             .WithMessage($"Title cannot exceed {WorkOrder.TitleMaxLength} characters.");
+
+        RuleFor(x => x.WorkOrder.RoomNumber)
+            .MaximumLength(WorkOrder.RoomNumberEntryMaxLength)
+            .WithMessage($"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters.")
+            .When(x => x.WorkOrder.RoomNumber != x.PreviousRoomNumber);
     }
 }
