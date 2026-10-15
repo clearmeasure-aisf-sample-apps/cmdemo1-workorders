@@ -19,6 +19,10 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private WorkOrder? _workOrder;
     private WorkOrder? _lastNotifiedWorkOrder;
     private WorkOrderAttachment[] _attachments = [];
+    private bool _canRemoveAttachments;
+    private Guid? _pendingRemoveId;
+    private string? _removeAttachmentError;
+    private string _currentUserName = string.Empty;
     private string _preferredLanguage = "en-US";
     private DictationTarget _dictationTarget = DictationTarget.None;
     private bool _isSubmitting;
@@ -123,6 +127,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     {
         var currentUser = (await UserSession!.GetCurrentUserAsync())!;
         _preferredLanguage = currentUser.PreferredLanguage;
+        _currentUserName = currentUser.UserName;
         WorkOrder workOrder;
 
         if (CurrentMode == EditMode.New)
@@ -148,7 +153,30 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         if (workOrder.Id != Guid.Empty)
         {
             _attachments = await Bus.Send(new WorkOrderAttachmentsQuery(workOrder.Id));
+            _canRemoveAttachments = RemoveAttachmentCommand.CanRemove(workOrder, currentUser);
         }
+    }
+
+    private void BeginRemoveAttachment(WorkOrderAttachment attachment)
+    {
+        _pendingRemoveId = attachment.Id;
+        _removeAttachmentError = null;
+    }
+
+    private void CancelRemoveAttachment() => _pendingRemoveId = null;
+
+    private async Task ConfirmRemoveAttachmentAsync(WorkOrderAttachment attachment)
+    {
+        var result = await Bus.Send(new RemoveAttachmentCommand(_workOrder!.Id, attachment.Id, _currentUserName));
+        _pendingRemoveId = null;
+        if (!result.Succeeded)
+        {
+            _removeAttachmentError = result.Error;
+            return;
+        }
+
+        _removeAttachmentError = null;
+        _attachments = await Bus.Send(new WorkOrderAttachmentsQuery(_workOrder.Id));
     }
 
     private WorkOrderManageModel CreateViewModel(EditMode mode, WorkOrder workOrder)
