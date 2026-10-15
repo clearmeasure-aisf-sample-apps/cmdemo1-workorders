@@ -17,7 +17,6 @@ public class ReportsPageTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
         await Page.WaitForURLAsync("**/reports");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify page title
         var title = Page.GetByTestId(nameof(Reports.Elements.ReportsTitle));
@@ -34,7 +33,6 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify all 4 cards are visible
         var statusCard = Page.GetByTestId(nameof(Reports.Elements.SummaryCardStatus));
@@ -60,7 +58,6 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify weekly completions chart is visible
         var weeklyChart = Page.GetByTestId(nameof(Reports.Elements.ChartCompletedPerWeek));
@@ -79,7 +76,6 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var exportButton = Page.GetByTestId(nameof(Reports.Elements.ExportButton));
         await Expect(exportButton).ToBeEnabledAsync();
@@ -162,7 +158,6 @@ public class ReportsPageTests : AcceptanceTestBase
     public async Task Reports_NavLink_ShouldNotHaveSoonTag()
     {
         await LoginAsCurrentUser();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify the Reports link does not have a "Soon" tag
         var reportsLink = Page.GetByTestId(nameof(NavMenu.Elements.Reports));
@@ -178,7 +173,6 @@ public class ReportsPageTests : AcceptanceTestBase
         await SeedData();
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Reports));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Wait for export button to be enabled before clicking
         await Expect(Page.GetByTestId(nameof(Reports.Elements.ExportButton))).ToBeEnabledAsync(new() { Timeout = 30_000 });

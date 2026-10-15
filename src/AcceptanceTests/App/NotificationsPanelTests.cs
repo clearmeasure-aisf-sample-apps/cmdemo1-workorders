@@ -135,7 +135,6 @@ public class NotificationsPanelTests : AcceptanceTestBase
     public async Task ShouldOpenPanelAndShowThreeGroups()
     {
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var bellButton = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsButton));
         await bellButton.ClickAsync();
@@ -151,7 +150,6 @@ public class NotificationsPanelTests : AcceptanceTestBase
     public async Task ShouldShowEmptyMessages_WhenUserHasNoNotifications()
     {
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var bellButton = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsButton));
 
@@ -169,7 +167,6 @@ public class NotificationsPanelTests : AcceptanceTestBase
     public async Task ShouldClosePanel_OnEscapeKey_AndReturnFocusToBell()
     {
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var bellButton = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsButton));
 

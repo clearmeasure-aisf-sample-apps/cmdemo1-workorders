@@ -54,7 +54,6 @@ public class BlazorWasmWarmUp
             TestContext.Out.WriteLine($"Blazor WASM warm-up: attempt {attempt}/{MaxAttempts}");
 
             await page.GotoAsync("/");
-            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             var loginLink = page.GetByTestId("LoginLink");
             try
@@ -84,7 +83,11 @@ public class BlazorWasmWarmUp
                 {
                     TestContext.Out.WriteLine("Blazor WASM warm-up: reloading page...");
                     await page.ReloadAsync();
-                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                    await loginLink.WaitForAsync(new LocatorWaitForOptions
+                    {
+                        State = WaitForSelectorState.Visible,
+                        Timeout = TimeoutSeconds * 1000
+                    });
                 }
             }
         }

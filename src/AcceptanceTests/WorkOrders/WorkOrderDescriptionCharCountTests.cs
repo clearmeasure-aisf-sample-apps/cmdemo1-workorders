@@ -10,7 +10,6 @@ public class WorkOrderDescriptionCharCountTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
         await WaitForNewWorkOrderFormReadyAsync();
@@ -25,7 +24,6 @@ public class WorkOrderDescriptionCharCountTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
         await WaitForNewWorkOrderFormReadyAsync();
@@ -45,7 +43,6 @@ public class WorkOrderDescriptionCharCountTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
         await WaitForNewWorkOrderFormReadyAsync();

@@ -9,7 +9,6 @@ public class CopyrightFooterTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowCopyrightFooter_OnLandingPage_WhenAnonymous()
     {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var footer = Page.GetByTestId(nameof(MainLayout.Elements.CopyrightFooter));
         await footer.WaitForAsync();
@@ -31,7 +30,6 @@ public class CopyrightFooterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var footer = Page.GetByTestId(nameof(MainLayout.Elements.CopyrightFooter));
         await Expect(footer).ToBeVisibleAsync();
@@ -45,7 +43,6 @@ public class CopyrightFooterTests : AcceptanceTestBase
     public async Task ShouldShowCopyrightFooter_OnNotFoundRoute()
     {
         await Page.GotoAsync("/this-route-does-not-exist-1842");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var footer = Page.GetByTestId(nameof(MainLayout.Elements.CopyrightFooter));
         await footer.WaitForAsync();
@@ -57,7 +54,6 @@ public class CopyrightFooterTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowFooterNote_OnLandingPage_WhenAnonymous()
     {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var footerNote = Page.GetByTestId(nameof(MainLayout.Elements.FooterNote));
         await footerNote.WaitForAsync();
@@ -67,7 +63,6 @@ public class CopyrightFooterTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowSoftwareVersion_OnLandingPage_WhenAnonymous()
     {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var versionSpan = Page.GetByTestId(nameof(MainLayout.Elements.SoftwareVersion));
         await versionSpan.WaitForAsync();
@@ -79,7 +74,6 @@ public class CopyrightFooterTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowGitSha_InFooter_OnLandingPage()
     {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var gitSha = Page.GetByTestId(nameof(MainLayout.Elements.GitSha));
         await gitSha.WaitForAsync();
@@ -97,7 +91,6 @@ public class CopyrightFooterTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowEnvironmentName_InFooter_OnLandingPage()
     {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var envName = Page.GetByTestId(nameof(MainLayout.Elements.EnvironmentName));
         await envName.WaitForAsync();

@@ -26,7 +26,6 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
         WorkOrder order = await CreateAndSaveNewWorkOrder();
 
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(3, "WorkOrderSearchAfterSave");
 
         order.Number.ShouldNotBeNullOrWhiteSpace();
@@ -71,7 +70,6 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
         order.Number = null;
         order.Instructions = null;
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
 
@@ -106,7 +104,6 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
         var order = await CreateAndSaveNewWorkOrder();
 
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         order.Number.ShouldNotBeNullOrWhiteSpace();
 
@@ -122,7 +119,6 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name);
 
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await workOrderLink.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await ClickWorkOrderNumberFromSearchPage(order);
@@ -168,7 +164,6 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
         order.Title = $"[{TestTag}] instructions over limit";
         order.Number = null;
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
 

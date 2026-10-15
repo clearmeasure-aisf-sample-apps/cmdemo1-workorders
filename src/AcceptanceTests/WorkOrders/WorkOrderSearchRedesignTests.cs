@@ -38,11 +38,9 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         }
 
         await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await Expect(creatorSelect.Locator($"option[value='{creator.UserName}']")).ToHaveCountAsync(1);
         await creatorSelect.SelectOptionAsync(creator.UserName);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         foreach (var order in orders)
         {
@@ -64,11 +62,9 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
         await SelectFilterAsync(WorkOrderSearch.Elements.PrioritySelect, nameof(WorkOrderPriority.High));
         await Page.Locator($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}").CheckAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Rows()).ToHaveCountAsync(1);
 
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         Page.Url.ShouldContain($"Creator={creator.UserName}");
         Page.Url.ShouldContain("Priority=High");
@@ -96,7 +92,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
 
         await card.ClickAsync();
         await Page.WaitForURLAsync(new Regex("AssignedToMe=true&OpenOnly=true"));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}")).ToBeCheckedAsync();
         await Expect(Chip("OpenOnly")).ToHaveTextAsync("Not closed");
         await Expect(Rows()).ToHaveCountAsync(2);
@@ -116,7 +111,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(Rows()).ToHaveCountAsync(1);
 
         await Chip("Priority").ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Expect(Chip("Priority")).ToHaveCountAsync(0);
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.PrioritySelect}")).ToHaveValueAsync("");
@@ -134,7 +128,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await search.FillAsync(order.Number!);
         await search.PressAsync("Enter");
         await Page.WaitForURLAsync($"**/workorder/search?Q={order.Number}");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Expect(Chip("Q")).ToHaveTextAsync($"Search: {order.Number}");
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number)).ToHaveCountAsync(1);
@@ -156,7 +149,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
 
         await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkAssignSelect)).SelectOptionAsync(fixer.UserName);
         await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkAssignButton)).ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BulkOutcome))).ToHaveTextAsync("2 updated, 0 skipped");
         foreach (var order in new[] { first, second })
@@ -186,7 +178,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
 
         await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkChangeStatusSelect)).SelectOptionAsync("Cancel");
         await Page.GetByTestId(nameof(WorkOrderBulkActionBar.Elements.BulkChangeStatusButton)).ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BulkOutcome))).ToHaveTextAsync("2 updated, 1 skipped");
         (await Bus.Send(new WorkOrderByNumberQuery(assignedOne.Number!)))!.Status.ShouldBe(WorkOrderStatus.Cancelled);
@@ -364,7 +355,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         }
 
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BoardView))).ToBeVisibleAsync();
         await Expect(Cards(Page.Locator("body"))).ToHaveCountAsync(30);
 
@@ -398,7 +388,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Page.WaitForURLAsync($"**/workorder/manage/{order.Number}?mode=Edit");
 
         await Page.GoBackAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.BoardView))).ToBeVisibleAsync();
         await Expect(Page.Locator(boardButton)).ToHaveAttributeAsync("aria-pressed", "true");
     }
@@ -445,7 +434,6 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     {
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search**");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}")).ToBeVisibleAsync();
     }
 
@@ -454,7 +442,8 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         var locator = Page.Locator($"#{select}");
         await Expect(locator.Locator($"option[value='{value}']")).ToHaveCountAsync(1);
         await locator.SelectOptionAsync(value);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }
 
     private async Task<Employee> SeedCreatorAsync(string prefix)

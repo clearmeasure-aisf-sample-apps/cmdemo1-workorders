@@ -10,7 +10,6 @@ public class NavMenuTests : AcceptanceTestBase
     public async Task Counter_NavLink_ShouldNotBeVisible()
     {
         await LoginAsCurrentUser();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // The Counter nav link used data-testid="Counter"; verify it is absent from the DOM.
         var counterLink = Page.GetByTestId("Counter");
@@ -21,7 +20,6 @@ public class NavMenuTests : AcceptanceTestBase
     public async Task FetchData_NavLink_ShouldNotBeVisible()
     {
         await LoginAsCurrentUser();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // The Fetch data nav link had no testid; locate by href and verify it is absent.
         var fetchDataLink = Page.Locator("a.nav-link[href='fetchdata']");
@@ -37,7 +35,6 @@ public class NavMenuTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.AiAgent));
         await Page.WaitForURLAsync("**/ai-agent");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Expect(Page.GetByTestId(nameof(ApplicationChat.Elements.ChatInput))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(ApplicationChat.Elements.SendButton))).ToBeVisibleAsync();

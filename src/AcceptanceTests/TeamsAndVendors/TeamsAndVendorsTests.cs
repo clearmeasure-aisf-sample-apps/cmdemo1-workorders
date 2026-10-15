@@ -27,7 +27,6 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/admin/teams");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var table = Page.Locator(".teams-table");
         await Expect(table).ToBeVisibleAsync();
@@ -49,7 +48,6 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/admin/teams");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var userNameCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowName}{CurrentUser.UserName}");
         await Expect(userNameCell).ToBeVisibleAsync();
@@ -61,7 +59,6 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/admin/teams");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var rows = Page.Locator(".teams-table tbody tr");
         await Expect(rows.First).ToBeVisibleAsync();
@@ -78,7 +75,6 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/admin/teams");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Page.EvaluateAsync("() => { document.documentElement.setAttribute('data-theme', 'dark'); }");
         await Task.Delay(500);
@@ -121,7 +117,6 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         // Read open count from Teams & Vendors page
         await Page.GotoAsync("/admin/teams");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var openCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowAssignedOpen}{CurrentUser.UserName}");
         var openCountText = await openCountCell.InnerTextAsync();
@@ -130,7 +125,6 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         // Navigate to search page and count results with same assignee filter
         var searchUrl = $"/workorder/search?Assignee={Uri.EscapeDataString(CurrentUser.UserName)}&OpenOnly=true";
         await Page.GotoAsync(searchUrl);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Results render asynchronously after the interactive circuit runs the search, so wait
         // (web-first) for both assigned work orders before counting; CountAsync does not wait.
@@ -154,7 +148,6 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         // Ensure current user has no work orders assigned
         await Page.GotoAsync("/admin/teams");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var openCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowAssignedOpen}{CurrentUser.UserName}");
         var openCountText = await openCountCell.InnerTextAsync();

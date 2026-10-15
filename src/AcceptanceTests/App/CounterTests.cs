@@ -10,7 +10,6 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var valueLocator = Page.GetByTestId(nameof(Counter.Elements.CounterValue));
         await valueLocator.WaitForAsync();
@@ -23,7 +22,6 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var valueLocator = Page.GetByTestId(nameof(Counter.Elements.CounterValue));
         await valueLocator.WaitForAsync();
@@ -36,7 +34,8 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
         await Click(nameof(Counter.Elements.IncrementButton));
@@ -51,7 +50,8 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
         await Click(nameof(Counter.Elements.IncrementButton));
@@ -67,7 +67,8 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
         await Expect(Page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("^Counter - Kalahari Church Work Order System$"));
@@ -78,7 +79,6 @@ public class CounterTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/counter");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var subtitleLocator = Page.GetByTestId(nameof(Counter.Elements.CounterSubtitle));
         await Expect(subtitleLocator).ToContainTextAsync("volunteer service");
