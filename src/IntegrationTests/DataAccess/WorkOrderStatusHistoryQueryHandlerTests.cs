@@ -175,7 +175,7 @@ public class WorkOrderStatusHistoryQueryHandlerTests
         result.Length.ShouldBe(1);
         result[0].ChangedBy.ShouldNotBeNull();
         result[0].ChangedBy!.UserName.ShouldBe("hsimpson");
-        result[0].ChangedBy.GetFullName().ShouldBe("Homer Simpson");
+        result[0].ChangedBy!.GetFullName().ShouldBe("Homer Simpson");
     }
 
     [Test]
