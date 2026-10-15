@@ -47,16 +47,8 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
             .Where(wo => IsInMonth(wo.CompletedDate!.Value, monthStart, monthEnd))
             .ToList();
 
-        if (monthOrders.Count == 0)
-        {
-            return new MonthSlaData { TotalCount = 0, Percentage = null };
-        }
-
-        var onTimeCount = monthOrders.Count(wo =>
-            DateOnly.FromDateTime(wo.CompletedDate!.Value) <= wo.DueDate!.Value);
-        var percentage = (decimal)onTimeCount / monthOrders.Count * 100;
-
-        return new MonthSlaData { TotalCount = monthOrders.Count, Percentage = Math.Round(percentage, 0) };
+        var (percentage, totalCount) = SlaHealth.CalculateOnTimePercentage(monthOrders);
+        return new MonthSlaData { TotalCount = totalCount, Percentage = percentage };
     }
 
     private static bool IsInMonth(DateTime completedDate, DateOnly monthStart, DateOnly monthEnd)

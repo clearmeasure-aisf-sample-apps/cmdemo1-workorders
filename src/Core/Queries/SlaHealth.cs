@@ -1,4 +1,6 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global -- System.Text.Json round-trip serialization (remoting protocol) requires mutable setters
+using ClearMeasure.Bootcamp.Core.Model;
+
 namespace ClearMeasure.Bootcamp.Core.Queries;
 
 /// <summary>
@@ -36,5 +38,24 @@ public class SlaHealth
             : diff < 0
                 ? $"↓ down from {lastPercent:0}%"
                 : $"— flat at {lastPercent:0}%";
+    }
+
+    /// <summary>
+    /// Computes the on-time percentage (0–100, rounded to a whole number) for the given orders.
+    /// Orders without a DueDate or CompletedDate are excluded. On time means the completion date is on or before the DueDate.
+    /// Returns a null percentage when no qualifying orders exist.
+    /// </summary>
+    public static (decimal? Percentage, int TotalCount) CalculateOnTimePercentage(IEnumerable<WorkOrder> orders)
+    {
+        var qualifying = orders.Where(wo => wo.DueDate != null && wo.CompletedDate.HasValue).ToList();
+        if (qualifying.Count == 0)
+        {
+            return (null, 0);
+        }
+
+        var onTimeCount = qualifying.Count(wo =>
+            DateOnly.FromDateTime(wo.CompletedDate!.Value) <= wo.DueDate!.Value);
+        var percentage = (decimal)onTimeCount / qualifying.Count * 100;
+        return (Math.Round(percentage, 0), qualifying.Count);
     }
 }
