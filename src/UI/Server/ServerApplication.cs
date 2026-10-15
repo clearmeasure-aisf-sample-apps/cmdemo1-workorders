@@ -131,6 +131,8 @@ public static class ServerApplication
             .WithHttpTransport()
             .WithTools<WorkOrderTools>()
             .WithTools<EmployeeTools>()
+            .WithTools<TeamTools>()
+            .WithTools<VendorTools>()
             .WithResources<ReferenceResources>();
     }
 

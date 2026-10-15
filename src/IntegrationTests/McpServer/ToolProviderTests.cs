@@ -52,8 +52,13 @@ public class ToolProviderTests
         await using var provider = new ToolProvider(server, httpClientFactory, logger);
         var tools = await provider.GetToolsAsync();
 
-        tools.Count.ShouldBeGreaterThanOrEqualTo(6);
-        tools.Select(t => t.Name).ShouldContain("list-work-orders");
+        tools.Count.ShouldBeGreaterThanOrEqualTo(10);
+        var toolNames = tools.Select(t => t.Name).ToList();
+        toolNames.ShouldContain("list-work-orders");
+        toolNames.ShouldContain("list-teams");
+        toolNames.ShouldContain("create-team");
+        toolNames.ShouldContain("list-vendors");
+        toolNames.ShouldContain("create-vendor");
     }
 
     [Test]
