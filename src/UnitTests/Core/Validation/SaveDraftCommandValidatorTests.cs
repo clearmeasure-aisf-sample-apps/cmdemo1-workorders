@@ -50,6 +50,56 @@ public class SaveDraftCommandValidatorTests
     }
 
     [Test]
+    public void ShouldPass_WhenDescriptionIsAtMaxLength()
+    {
+        var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
+        var command = new SaveDraftCommand(
+            new WorkOrder
+            {
+                Title = "T",
+                Description = new string('D', WorkOrder.DescriptionMaxLength),
+                Creator = creator
+            },
+            creator);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldFail_WhenDescriptionExceedsMaxLength()
+    {
+        var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
+        var command = new SaveDraftCommand(
+            new WorkOrder
+            {
+                Title = "T",
+                Description = new string('D', WorkOrder.DescriptionMaxLength + 1),
+                Creator = creator
+            },
+            creator);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.PropertyName == "WorkOrder.Description");
+    }
+
+    [Test]
+    public void ShouldPass_WhenDescriptionIsNull()
+    {
+        var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
+        var command = new SaveDraftCommand(
+            new WorkOrder { Title = "T", Description = null, Creator = creator },
+            creator);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
     public void ShouldPass_WhenRoomNumberIsAtEntryMaxLength()
     {
         var roomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength);

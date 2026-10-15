@@ -189,6 +189,26 @@ public class WorkOrderBulkImportCsvParserTests
     }
 
     [Test]
+    public void ShouldAcceptDescription_WhenAtMaxLength()
+    {
+        var description = new string('d', WorkOrder.DescriptionMaxLength);
+        var result = ParseCsv($"Title,Description,CreatorUsername\nT,{description},u\n");
+
+        result.Rows[0].Error.ShouldBeNull();
+    }
+
+    [Test]
+    public void ShouldReportError_WhenDescriptionTooLong()
+    {
+        var description = new string('d', WorkOrder.DescriptionMaxLength + 1);
+        var result = ParseCsv($"Title,Description,CreatorUsername\nT,ok,u\nT,{description},u\n");
+
+        result.Rows[0].Error.ShouldBeNull();
+        result.Rows[1].LineNumber.ShouldBe(3);
+        result.Rows[1].Error.ShouldBe("Description cannot exceed 4000 characters.");
+    }
+
+    [Test]
     public void ShouldListOptionalColumns_WhenRequiredColumnMissing()
     {
         var result = ParseCsv("Title,Description\na,b\n");
