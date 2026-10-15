@@ -104,6 +104,23 @@ public class InProgressToCancelledCommandTests : StateCommandBaseTests
         Assert.That(command.IsValid(), Is.False);
     }
 
+    [Test]
+    public void ShouldClearWaitingOnVendorSince_WhenCancelled()
+    {
+        var employee = new Employee();
+        var order = new WorkOrder
+        {
+            Number = "123",
+            Status = WorkOrderStatus.InProgress,
+            Assignee = employee,
+            WaitingOnVendorSince = DateTime.UtcNow
+        };
+
+        new InProgressToCancelledCommand(order, employee).Execute(new StateCommandContext());
+
+        Assert.That(order.WaitingOnVendorSince, Is.Null);
+    }
+
     protected override StateCommandBase GetStateCommand(WorkOrder order, Employee employee)
     {
         return new InProgressToCancelledCommand(order, employee);

@@ -84,6 +84,18 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public string? Building { get; set; }
 
+    /// <summary>
+    /// When the assignee started waiting on a vendor (parts, contractor, quote). Set while the assignee
+    /// waits on a vendor; only meaningful while <see cref="Status"/> is In Progress. Null when not waiting.
+    /// </summary>
+    public DateTime? WaitingOnVendorSince { get; set; }
+
+    /// <summary>
+    /// <c>true</c> when the work order is In Progress and waiting on a vendor. A stale
+    /// <see cref="WaitingOnVendorSince"/> on any other status is ignored.
+    /// </summary>
+    public bool IsWaitingOnVendor => Status == WorkOrderStatus.InProgress && WaitingOnVendorSince != null;
+
     private string GetTruncatedString(string? value)
     {
         if (value == null)
@@ -115,6 +127,10 @@ public class WorkOrder : EntityBase<WorkOrder>
     public void ChangeStatus(Employee employee, DateTime date, WorkOrderStatus status)
     {
         Status = status;
+        if (status != WorkOrderStatus.InProgress)
+        {
+            WaitingOnVendorSince = null;
+        }
     }
 
     public string GetMessage()

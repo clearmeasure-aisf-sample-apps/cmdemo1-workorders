@@ -16,123 +16,126 @@ public class WorkOrderReportsQueryHandlerTests
     [Test]
     public async Task ShouldCountOpenByStatus()
     {
-        new DatabaseTests().Clean();
-        var creator = new Employee("rcreator", "Reports", "Creator", "r@example.com");
+        var before = await Handle();
+        var creator = NewEmployee("rcreator");
         var now = Now.DateTime;
         await SaveAsync(creator,
-            Order(creator, "R001", WorkOrderStatus.Draft),
-            Order(creator, "R002", WorkOrderStatus.Draft),
-            Order(creator, "R003", WorkOrderStatus.Assigned),
-            Order(creator, "R004", WorkOrderStatus.Assigned),
-            Order(creator, "R005", WorkOrderStatus.InProgress),
-            Order(creator, "R006", WorkOrderStatus.Complete, completed: now.AddDays(-5)),
-            Order(creator, "R007", WorkOrderStatus.Cancelled));
+            Order(creator, WorkOrderStatus.Draft),
+            Order(creator, WorkOrderStatus.Draft),
+            Order(creator, WorkOrderStatus.Assigned),
+            Order(creator, WorkOrderStatus.Assigned),
+            Order(creator, WorkOrderStatus.InProgress),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-5)),
+            Order(creator, WorkOrderStatus.Cancelled));
 
         var data = await Handle();
 
-        data.CountByStatus["Draft"].ShouldBe(2);
-        data.CountByStatus["Assigned"].ShouldBe(2);
-        data.CountByStatus["InProgress"].ShouldBe(1);
+        Delta(before.CountByStatus, data.CountByStatus, "Draft").ShouldBe(2);
+        Delta(before.CountByStatus, data.CountByStatus, "Assigned").ShouldBe(2);
+        Delta(before.CountByStatus, data.CountByStatus, "InProgress").ShouldBe(1);
         data.CountByStatus.ContainsKey("Complete").ShouldBeFalse();
     }
 
     [Test]
     public async Task ShouldCountOpenByPriority()
     {
-        new DatabaseTests().Clean();
-        var creator = new Employee("pcreator", "Priority", "Creator", "p@example.com");
+        var before = await Handle();
+        var creator = NewEmployee("pcreator");
         await SaveAsync(creator,
-            Order(creator, "P001", WorkOrderStatus.Draft, priority: WorkOrderPriority.High),
-            Order(creator, "P002", WorkOrderStatus.Draft, priority: WorkOrderPriority.High),
-            Order(creator, "P003", WorkOrderStatus.Assigned, priority: WorkOrderPriority.Medium),
-            Order(creator, "P004", WorkOrderStatus.InProgress, priority: WorkOrderPriority.Medium),
-            Order(creator, "P005", WorkOrderStatus.Assigned, priority: WorkOrderPriority.Low),
-            Order(creator, "P006", WorkOrderStatus.Complete, priority: WorkOrderPriority.High));
+            Order(creator, WorkOrderStatus.Draft, priority: WorkOrderPriority.High),
+            Order(creator, WorkOrderStatus.Draft, priority: WorkOrderPriority.High),
+            Order(creator, WorkOrderStatus.Assigned, priority: WorkOrderPriority.Medium),
+            Order(creator, WorkOrderStatus.InProgress, priority: WorkOrderPriority.Medium),
+            Order(creator, WorkOrderStatus.Assigned, priority: WorkOrderPriority.Low),
+            Order(creator, WorkOrderStatus.Complete, priority: WorkOrderPriority.High));
 
         var data = await Handle();
 
-        data.CountByPriority["High"].ShouldBe(2);
-        data.CountByPriority["Medium"].ShouldBe(2);
-        data.CountByPriority["Low"].ShouldBe(1);
+        Delta(before.CountByPriority, data.CountByPriority, "High").ShouldBe(2);
+        Delta(before.CountByPriority, data.CountByPriority, "Medium").ShouldBe(2);
+        Delta(before.CountByPriority, data.CountByPriority, "Low").ShouldBe(1);
     }
 
     [Test]
     public async Task ShouldCountOpenByBuilding()
     {
-        new DatabaseTests().Clean();
-        var creator = new Employee("bcreator", "Building", "Creator", "b@example.com");
+        var tag = TestData.Tag();
+        var sanctuary = $"Sanctuary {tag}";
+        var kitchen = $"Kitchen {tag}";
+        var creator = NewEmployee("bcreator");
         await SaveAsync(creator,
-            Order(creator, "B001", WorkOrderStatus.Draft, building: "Sanctuary"),
-            Order(creator, "B002", WorkOrderStatus.Draft, building: "Sanctuary"),
-            Order(creator, "B003", WorkOrderStatus.Assigned, building: "Kitchen"),
-            Order(creator, "B004", WorkOrderStatus.Assigned, building: "Sanctuary"),
-            Order(creator, "B005", WorkOrderStatus.InProgress, building: null),
-            Order(creator, "B006", WorkOrderStatus.Complete, building: "Sanctuary"));
+            Order(creator, WorkOrderStatus.Draft, building: sanctuary),
+            Order(creator, WorkOrderStatus.Draft, building: sanctuary),
+            Order(creator, WorkOrderStatus.Assigned, building: kitchen),
+            Order(creator, WorkOrderStatus.Assigned, building: sanctuary),
+            Order(creator, WorkOrderStatus.InProgress, building: null),
+            Order(creator, WorkOrderStatus.Complete, building: sanctuary));
 
         var data = await Handle();
 
-        data.CountByBuilding["Sanctuary"].ShouldBe(3);
-        data.CountByBuilding["Kitchen"].ShouldBe(1);
+        data.CountByBuilding[sanctuary].ShouldBe(3);
+        data.CountByBuilding[kitchen].ShouldBe(1);
         data.CountByBuilding.Any(kvp => kvp.Key == null).ShouldBeFalse();
     }
 
     [Test]
     public async Task ShouldCountOverdueNow()
     {
-        new DatabaseTests().Clean();
-        var creator = new Employee("ocreator", "Overdue", "Creator", "o@example.com");
+        var before = await Handle();
+        var creator = NewEmployee("ocreator");
         await SaveAsync(creator,
-            Order(creator, "O001", WorkOrderStatus.Draft, due: Today.AddDays(-1)),
-            Order(creator, "O002", WorkOrderStatus.Assigned, due: Today.AddDays(-5)),
-            Order(creator, "O003", WorkOrderStatus.InProgress, due: Today),
-            Order(creator, "O004", WorkOrderStatus.InProgress, due: Today.AddDays(1)),
-            Order(creator, "O005", WorkOrderStatus.Complete, due: Today.AddDays(-1)));
+            Order(creator, WorkOrderStatus.Draft, due: Today.AddDays(-1)),
+            Order(creator, WorkOrderStatus.Assigned, due: Today.AddDays(-5)),
+            Order(creator, WorkOrderStatus.InProgress, due: Today),
+            Order(creator, WorkOrderStatus.InProgress, due: Today.AddDays(1)),
+            Order(creator, WorkOrderStatus.Complete, due: Today.AddDays(-1)));
 
         var data = await Handle();
 
-        data.OverdueCount.ShouldBe(2);
+        (data.OverdueCount - before.OverdueCount).ShouldBe(2);
     }
 
     [Test]
     public async Task ShouldComputeCompletedPerWeek_Last8Weeks()
     {
-        new DatabaseTests().Clean();
-        var creator = new Employee("wcreator", "Weekly", "Creator", "w@example.com");
-        var now = Now.DateTime;
+        var clock = TestData.FutureClock();
+        var creator = NewEmployee("wcreator");
+        var now = clock.GetUtcNow().UtcDateTime;
 
-        // Seed work orders across 8 weeks
+        // One completion in each of the last 8 weeks; the two at day -56 fall before the first week shown
         await SaveAsync(creator,
-            Order(creator, "W001", WorkOrderStatus.Complete, completed: now.AddDays(-56)),
-            Order(creator, "W002", WorkOrderStatus.Complete, completed: now.AddDays(-56)),
-            Order(creator, "W003", WorkOrderStatus.Complete, completed: now.AddDays(-49)),
-            Order(creator, "W004", WorkOrderStatus.Complete, completed: now.AddDays(-42)),
-            Order(creator, "W005", WorkOrderStatus.Complete, completed: now.AddDays(-35)),
-            Order(creator, "W006", WorkOrderStatus.Complete, completed: now.AddDays(-28)),
-            Order(creator, "W007", WorkOrderStatus.Complete, completed: now.AddDays(-21)),
-            Order(creator, "W008", WorkOrderStatus.Complete, completed: now.AddDays(-14)),
-            Order(creator, "W009", WorkOrderStatus.Complete, completed: now.AddDays(-7)),
-            Order(creator, "W010", WorkOrderStatus.Complete, completed: now),
-            Order(creator, "W011", WorkOrderStatus.Draft));
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-56)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-56)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-49)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-42)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-35)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-28)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-21)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-14)),
+            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-7)),
+            Order(creator, WorkOrderStatus.Complete, completed: now),
+            Order(creator, WorkOrderStatus.Draft));
 
-        var data = await Handle();
+        var data = await Handle(clock);
 
         data.CompletedPerWeek.Count.ShouldBe(8);
-        data.CompletedPerWeek.Sum(w => w.Count).ShouldBeGreaterThan(0);
+        data.CompletedPerWeek.Sum(w => w.Count).ShouldBe(8);
+        data.CompletedPerWeek.ShouldAllBe(w => w.Count == 1);
     }
 
     [Test]
     public async Task ShouldComputeAverageDaysToClose_Last30Days()
     {
-        new DatabaseTests().Clean();
-        var creator = new Employee("acreator", "Average", "Creator", "a@example.com");
-        var now = Now.DateTime;
+        var clock = TestData.FutureClock();
+        var creator = NewEmployee("acreator");
+        var now = clock.GetUtcNow().UtcDateTime;
 
         await SaveAsync(creator,
-            Order(creator, "A001", WorkOrderStatus.Complete, created: now.AddDays(-10), completed: now.AddDays(-5)),
-            Order(creator, "A002", WorkOrderStatus.Complete, created: now.AddDays(-8), completed: now.AddDays(-2)),
-            Order(creator, "A004", WorkOrderStatus.Draft));
+            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-10), completed: now.AddDays(-5)),
+            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-8), completed: now.AddDays(-2)),
+            Order(creator, WorkOrderStatus.Draft));
 
-        var data = await Handle();
+        var data = await Handle(clock);
 
         data.CompletedLast30Days.ShouldBe(2);
         data.AverageDaysToClose.ShouldNotBeNull();
@@ -141,60 +144,66 @@ public class WorkOrderReportsQueryHandlerTests
     }
 
     [Test]
-    public async Task ShouldReturnZeros_WhenNoData()
+    public async Task ShouldReturnZeroWindowFigures_WhenNoOwnData()
     {
-        new DatabaseTests().Clean();
+        var data = await Handle(TestData.FutureClock());
 
-        var data = await Handle();
-
-        data.CountByStatus.Count.ShouldBe(0);
-        data.CountByPriority.Count.ShouldBe(0);
-        data.CountByBuilding.Count.ShouldBe(0);
         data.CompletedPerWeek.Count.ShouldBe(8);
         data.CompletedPerWeek.All(w => w.Count == 0).ShouldBeTrue();
+        data.CompletedLast30Days.ShouldBe(0);
         data.AverageDaysToClose.ShouldBeNull();
-        data.OverdueCount.ShouldBe(0);
     }
 
     [Test]
     public async Task AverageDaysToClose_ShouldMatchSearchPageLogic()
     {
         // Verify that the Reports query uses the same averaging logic as the search page
-        new DatabaseTests().Clean();
-        var creator = new Employee("screator", "Sync", "Creator", "s@example.com");
-        var now = Now.DateTime;
+        var clock = TestData.FutureClock();
+        var creator = NewEmployee("screator");
+        var now = clock.GetUtcNow().UtcDateTime;
 
         await SaveAsync(creator,
-            Order(creator, "S001", WorkOrderStatus.Complete, created: now.AddDays(-12), completed: now.AddDays(-10)),
-            Order(creator, "S002", WorkOrderStatus.Complete, created: now.AddDays(-8), completed: now.AddDays(-3)),
-            Order(creator, "S003", WorkOrderStatus.Complete, created: now.AddDays(-4), completed: now.AddDays(-1)));
+            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-12), completed: now.AddDays(-10)),
+            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-8), completed: now.AddDays(-3)),
+            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-4), completed: now.AddDays(-1)));
 
-        var clock = new FixedClock(Now);
         var reportsHandler = new WorkOrderReportsQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
         var searchHandler = new WorkOrderSearchSummaryQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
 
         var reports = await reportsHandler.Handle(new WorkOrderReportsQuery());
         var search = await searchHandler.Handle(new WorkOrderSearchSummaryQuery(null));
 
+        // (2 + 5 + 3) / 3 days
+        reports.AverageDaysToClose.ShouldNotBeNull();
+        reports.AverageDaysToClose.Value.ShouldBe(10.0 / 3, 0.001);
         reports.AverageDaysToClose.ShouldBe(search.AverageDaysToClose);
     }
 
-    private static async Task<WorkOrderReportsData> Handle()
+    private static async Task<WorkOrderReportsData> Handle(TimeProvider? clock = null)
     {
         var handler = new WorkOrderReportsQueryHandler(
-            TestHost.GetRequiredService<DataContext>(), new FixedClock(Now));
+            TestHost.GetRequiredService<DataContext>(), clock ?? TestData.FixedClock(Now));
         return await handler.Handle(new WorkOrderReportsQuery());
     }
 
-    private static WorkOrder Order(Employee creator, string number, WorkOrderStatus status,
+    private static int Delta(IReadOnlyDictionary<string, int> before, IReadOnlyDictionary<string, int> after, string key) =>
+        after.GetValueOrDefault(key) - before.GetValueOrDefault(key);
+
+    private static Employee NewEmployee(string prefix)
+    {
+        var userName = TestData.UserName(prefix);
+        return new Employee(userName, "Reports", "Tester", TestData.Email(userName));
+    }
+
+    private static WorkOrder Order(Employee creator, WorkOrderStatus status,
         Employee? assignee = null, DateTime? created = null, DateTime? completed = null, DateOnly? due = null,
         WorkOrderPriority? priority = null, string? building = null) =>
         new()
         {
             Creator = creator,
             Assignee = assignee,
-            Number = number,
-            Title = number,
+            Number = TestData.Number("R"),
+            Title = $"Reports {creator.UserName}",
             Status = status,
             CreatedDate = created ?? Now.DateTime,
             CompletedDate = completed,
@@ -211,10 +220,5 @@ public class WorkOrderReportsQueryHandlerTests
         context.Add(creator);
         context.AddRange(orders.Cast<object>());
         await context.SaveChangesAsync();
-    }
-
-    private sealed class FixedClock(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }

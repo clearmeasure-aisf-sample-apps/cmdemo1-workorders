@@ -1,10 +1,9 @@
 using System.Globalization;
-using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Login = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
+using Microsoft.EntityFrameworkCore;
 using NavMenu = ClearMeasure.Bootcamp.UI.Shared.NavMenu;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
@@ -47,6 +46,13 @@ public class SaturdayMowSchedulingAgentTests : AcceptanceTestBase
             "one per week for the next 10 Saturdays, each due that Saturday (the day before Sunday service). " +
             "In your reply list every work order number and due date.";
 
+        // Work orders that exist before the chat, so only the ones the agent creates are counted.
+        HashSet<Guid> before;
+        await using (var snapshot = TestHost.NewDbContext())
+        {
+            before = (await snapshot.Set<WorkOrder>().Select(w => w.Id).ToListAsync()).ToHashSet();
+        }
+
         await Input(nameof(ApplicationChat.Elements.ChatInput), prompt);
         await Click(nameof(ApplicationChat.Elements.SendButton));
 
@@ -74,10 +80,15 @@ public class SaturdayMowSchedulingAgentTests : AcceptanceTestBase
             chatText.ShouldContain(iso);
         }
 
-        var bus = TestHost.GetRequiredService<IBus>();
-        var all = await bus.Send(new WorkOrderSpecificationQuery());
-        var created = all
-            .Where(wo => wo.Creator?.UserName == "tlovejoy"
+        await using var fresh = TestHost.NewDbContext();
+        var dueOrders = await fresh.Set<WorkOrder>().AsNoTracking()
+            .Include(wo => wo.Creator)
+            .Include(wo => wo.Assignee)
+            .Where(wo => wo.DueDate != null)
+            .ToListAsync();
+        var created = dueOrders
+            .Where(wo => !before.Contains(wo.Id)
+                         && wo.Creator?.UserName == "tlovejoy"
                          && wo.Assignee?.UserName == "gwillie"
                          && wo.DueDate != null
                          && expectedDates.Contains(wo.DueDate.Value))
