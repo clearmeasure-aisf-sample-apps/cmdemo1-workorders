@@ -36,12 +36,12 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         var headerCount = await headers.CountAsync();
         headerCount.ShouldBeGreaterThanOrEqualTo(6);
 
-        await Expect(table.Locator("text=Name")).ToBeVisibleAsync();
-        await Expect(table.Locator("text=Role")).ToBeVisibleAsync();
-        await Expect(table.Locator("text=Assigned Open")).ToBeVisibleAsync();
-        await Expect(table.Locator("text=In Progress")).ToBeVisibleAsync();
-        await Expect(table.Locator("text=Overdue")).ToBeVisibleAsync();
-        await Expect(table.Locator("text=Completed 30d")).ToBeVisibleAsync();
+        // Match the column headers exactly: a loose text match also finds employee names in the rows
+        // (for example "Role" in "Carole") and fails Playwright's strict mode.
+        foreach (var header in new[] { "Name", "Role", "Assigned Open", "In Progress", "Overdue", "Completed 30d" })
+        {
+            await Expect(table.GetByRole(AriaRole.Columnheader, new() { Name = header, Exact = true })).ToBeVisibleAsync();
+        }
     }
 
     [Test]

@@ -1,6 +1,6 @@
+using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -10,17 +10,11 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.McpServer;
 [TestFixture]
 public class McpEmployeeToolTests
 {
-    [SetUp]
-    public void Setup()
-    {
-        new DatabaseTests().Clean();
-    }
-
     [Test]
     public async Task ShouldListAllEmployees()
     {
-        var emp1 = new Employee("jdoe", "John", "Doe", "john@test.com");
-        var emp2 = new Employee("jsmith", "Jane", "Smith", "jane@test.com");
+        var emp1 = new Employee(TestData.UserName("jdoe"), "John", "Doe", "john@test.com");
+        var emp2 = new Employee(TestData.UserName("jsmith"), "Jane", "Smith", "jane@test.com");
 
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(emp1);
@@ -30,34 +24,37 @@ public class McpEmployeeToolTests
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await EmployeeTools.ListEmployees(bus);
 
-        result.ShouldContain("jdoe");
-        result.ShouldContain("jsmith");
+        result.ShouldContain(emp1.UserName);
+        result.ShouldContain(emp2.UserName);
         result.ShouldContain("John");
         result.ShouldContain("Jane");
     }
 
     [Test]
-    public async Task ShouldReturnEmptyListWhenNoEmployees()
+    public async Task ShouldReturnJsonArrayWithoutUnknownEmployee()
     {
+        var unknown = TestData.UserName("nobody");
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await EmployeeTools.ListEmployees(bus);
 
-        result.ShouldContain("[]");
+        using var json = JsonDocument.Parse(result);
+        json.RootElement.ValueKind.ShouldBe(JsonValueKind.Array);
+        result.ShouldNotContain(unknown);
     }
 
     [Test]
     public async Task ShouldGetEmployeeByUsername()
     {
-        var emp = new Employee("jdoe", "John", "Doe", "john@test.com");
+        var emp = new Employee(TestData.UserName("jdoe"), "John", "Doe", "john@test.com");
 
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(emp);
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await EmployeeTools.GetEmployee(bus, "jdoe");
+        var result = await EmployeeTools.GetEmployee(bus, emp.UserName);
 
-        result.ShouldContain("jdoe");
+        result.ShouldContain(emp.UserName);
         result.ShouldContain("John");
         result.ShouldContain("Doe");
         result.ShouldContain("john@test.com");
@@ -67,7 +64,7 @@ public class McpEmployeeToolTests
     public async Task ShouldReturnNotFoundForMissingEmployee()
     {
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await EmployeeTools.GetEmployee(bus, "nonexistent");
+        var result = await EmployeeTools.GetEmployee(bus, TestData.UserName("nonexistent"));
 
         result.ShouldContain("No employee found");
     }

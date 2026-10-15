@@ -65,6 +65,20 @@ public class WorkOrderBoardTests
     }
 
     [Test]
+    public void Build_WaitingOnVendorRow_StaysInInProgressColumn()
+    {
+        var waiting = Row("W1", WorkOrderStatus.InProgress);
+        waiting.WorkOrder.WaitingOnVendorSince = new DateTime(2026, 10, 14, 9, 0, 0);
+
+        var columns = WorkOrderBoard.Build([waiting]);
+
+        columns.Count.ShouldBe(5);
+        var card = columns.Single(c => c.Status == WorkOrderStatus.InProgress).Cards.ShouldHaveSingleItem();
+        card.Number.ShouldBe("W1");
+        card.StatusPill.CssClass.ShouldContain("status-badge--waiting");
+    }
+
+    [Test]
     public void Build_OverdueOpenRow_StaysInStoredStatusColumn()
     {
         var overdue = Row("LATE", WorkOrderStatus.Assigned, DueDateUrgency.Overdue);
