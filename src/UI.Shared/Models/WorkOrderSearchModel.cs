@@ -15,6 +15,9 @@ public class WorkOrderSearchModel
         public string? Status { get; set; }
         public bool OverdueOnly { get; set; }
 
+        /// <summary>When true only In Progress work orders waiting on a vendor are listed.</summary>
+        public bool WaitingOnVendorOnly { get; set; }
+
         /// <summary>Selected priority name (Low, Medium, High) or empty for all.</summary>
         public string? Priority { get; set; }
 

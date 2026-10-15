@@ -12,8 +12,6 @@ public class StateCommandHandlerForBeginTests : IntegratedTestBase
     [Test]
     public async Task ShouldBeginWorkOrder()
     {
-        new DatabaseTests().Clean();
-
         var o = Faker<WorkOrder>();
         o.Id = Guid.Empty;
         var currentUser = Faker<Employee>();

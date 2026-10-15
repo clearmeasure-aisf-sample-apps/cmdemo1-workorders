@@ -7,14 +7,11 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Mappings;
 [TestFixture]
 public class RoleMappingTests
 {
-    [Test, Retry(2)]
+    [Test]
     public void ShouldPersistRoles()
     {
-        // Empty the database
-        EmptyDatabase();
-
-        // Create and save a Role
-        var role = new Role("foo", true, true);
+        var name = $"role_{TestData.Tag()}";
+        var role = new Role(name, true, true);
 
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -22,7 +19,6 @@ public class RoleMappingTests
             context.SaveChanges();
         }
 
-        // Retrieve the saved Role
         Role rehydratedRole;
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -30,15 +26,9 @@ public class RoleMappingTests
                 .Single(r => r.Id == role.Id);
         }
 
-        // Assert
         rehydratedRole.Id.ShouldBe(role.Id);
-        rehydratedRole.Name.ShouldBe("foo");
+        rehydratedRole.Name.ShouldBe(name);
         rehydratedRole.CanCreateWorkOrder.ShouldBeTrue();
         rehydratedRole.CanFulfillWorkOrder.ShouldBeTrue();
-    }
-
-    private void EmptyDatabase()
-    {
-        new DatabaseEmptier(TestHost.GetRequiredService<DbContext>().Database).DeleteAllData();
     }
 }

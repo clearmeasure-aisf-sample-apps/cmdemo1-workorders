@@ -3,7 +3,6 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
-using ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using Shouldly;
 
@@ -12,16 +11,11 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.McpServer;
 [TestFixture]
 public class McpCreateWorkOrderInstructionsTests
 {
-    [SetUp]
-    public void Setup()
-    {
-        new DatabaseTests().Clean();
-    }
-
     [Test]
     public async Task ShouldPersistExplicitInstructionsDistinctFromDescription()
     {
-        await SeedCreatorAsync();
+        var creatorUserName = TestData.UserName("creator");
+        await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         const string description = "Fix the broken window in the fellowship hall";
@@ -32,7 +26,7 @@ public class McpCreateWorkOrderInstructionsTests
             numberGenerator,
             "New Work Order",
             description,
-            "creator1",
+            creatorUserName,
             instructions: instructions);
 
         result.ShouldContain("New Work Order");
@@ -49,7 +43,8 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldPersistEmptyInstructionsWhenOmitted()
     {
-        await SeedCreatorAsync();
+        var creatorUserName = TestData.UserName("creator");
+        await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
 
@@ -58,7 +53,7 @@ public class McpCreateWorkOrderInstructionsTests
             numberGenerator,
             "Omitted instructions",
             "Description only",
-            "creator1");
+            creatorUserName);
 
         var number = ExtractWorkOrderNumber(result);
         var reloaded = await bus.Send(new WorkOrderByNumberQuery(number!));
@@ -68,7 +63,8 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldPersistEmptyInstructionsWhenEmpty()
     {
-        await SeedCreatorAsync();
+        var creatorUserName = TestData.UserName("creator");
+        await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
 
@@ -77,7 +73,7 @@ public class McpCreateWorkOrderInstructionsTests
             numberGenerator,
             "Empty instructions",
             "Description only",
-            "creator1",
+            creatorUserName,
             instructions: string.Empty);
 
         var number = ExtractWorkOrderNumber(result);
@@ -88,7 +84,8 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldTruncateInstructionsTo4000CharactersOnCreate()
     {
-        await SeedCreatorAsync();
+        var creatorUserName = TestData.UserName("creator");
+        await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         var longInstructions = new string('I', WorkOrder.InstructionsMaxLength + 1);
@@ -99,7 +96,7 @@ public class McpCreateWorkOrderInstructionsTests
             numberGenerator,
             "Long instructions",
             "Description",
-            "creator1",
+            creatorUserName,
             instructions: longInstructions);
 
         result.ShouldContain("Long instructions");
@@ -112,6 +109,8 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldReturnNotFoundWhenCreatorMissing()
     {
+        var missingUserName = TestData.UserName("missing");
+
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
 
@@ -120,15 +119,15 @@ public class McpCreateWorkOrderInstructionsTests
             numberGenerator,
             "Title",
             "Description",
-            "nonexistent_user",
+            missingUserName,
             instructions: "Some instructions");
 
-        result.ShouldBe("Employee with username 'nonexistent_user' not found.");
+        result.ShouldBe($"Employee with username '{missingUserName}' not found.");
     }
 
-    private static async Task SeedCreatorAsync()
+    private static async Task SeedCreatorAsync(string userName)
     {
-        var employee = new Employee("creator1", "Jane", "Smith", "jane@test.com");
+        var employee = new Employee(userName, "Jane", "Smith", "jane@test.com");
         await using var context = TestHost.GetRequiredService<Microsoft.EntityFrameworkCore.DbContext>();
         context.Add(employee);
         await context.SaveChangesAsync();

@@ -28,7 +28,7 @@ public class WorkOrderSearchUrlStateTests
     {
         var state = new WorkOrderSearchUrlState
         {
-            Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key, OverdueOnly = true,
+            Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key, OverdueOnly = true, WaitingOnVendorOnly = true,
             Priority = WorkOrderPriority.High, Building = "Fellowship Hall", Room = "101", OpenOnly = true, CompletedWithinDays = 30,
             Q = "organ & pipes", Sort = "Priority", Descending = true, Page = 3, View = SearchView.Board
         };
@@ -135,6 +135,16 @@ public class WorkOrderSearchUrlStateTests
     }
 
     [Test]
+    public void ToRelativeUri_WaitingOnVendorOnly_WritesFlag()
+    {
+        var state = new WorkOrderSearchUrlState { WaitingOnVendorOnly = true };
+
+        state.ToRelativeUri().ShouldBe("workorder/search?WaitingOnVendorOnly=true");
+        WorkOrderSearchUrlState.FromQuery(new Dictionary<string, string?> { ["WaitingOnVendorOnly"] = "true" })
+            .WaitingOnVendorOnly.ShouldBeTrue();
+    }
+
+    [Test]
     public void ToRelativeUri_DirOnlyWithSort()
     {
         new WorkOrderSearchUrlState { Sort = "Title", Descending = true }.ToRelativeUri()
@@ -154,6 +164,7 @@ public class WorkOrderSearchUrlStateTests
     [TestCase("AssignedToMe")]
     [TestCase("OpenOnly")]
     [TestCase("OverdueOnly")]
+    [TestCase("WaitingOnVendorOnly")]
     [TestCase("CompletedWithinDays")]
     public void HasAnyFilter_TrueForEachFilter(string key)
     {
@@ -162,7 +173,7 @@ public class WorkOrderSearchUrlStateTests
             "Status" => WorkOrderStatus.Draft.Key,
             "Priority" => "Low",
             "CompletedWithinDays" => "7",
-            "AssignedToMe" or "OpenOnly" or "OverdueOnly" or "NoBuilding" or "NoRoom" => "true",
+            "AssignedToMe" or "OpenOnly" or "OverdueOnly" or "WaitingOnVendorOnly" or "NoBuilding" or "NoRoom" => "true",
             _ => "x"
         };
 
@@ -222,4 +233,37 @@ public class WorkOrderSearchUrlStateTests
         uri.Split('?', 2)[1].Split('&')
             .Select(p => p.Split('=', 2))
             .ToDictionary(p => p[0], p => (string?)Uri.UnescapeDataString(p[1]));
+
+    [Test]
+    public void ToQueryString_Defaults_ReturnsEmpty()
+    {
+        WorkOrderSearchUrlState.Default.ToQueryString().ShouldBe(string.Empty);
+    }
+
+    [Test]
+    public void ToQueryString_RoundTripsThroughRelativeUriForQueryAndFromQuery()
+    {
+        var state = new WorkOrderSearchUrlState
+        {
+            Creator = "hsimpson",
+            Priority = WorkOrderPriority.High,
+            OverdueOnly = true,
+            Q = "leaky roof & more"
+        };
+
+        var query = state.ToQueryString();
+
+        query.ShouldNotStartWith("?");
+        WorkOrderSearchUrlState.RelativeUriForQuery(query).ShouldBe(state.ToRelativeUri());
+        var parsed = WorkOrderSearchUrlState.FromQuery(query.Split('&')
+            .Select(part => part.Split('=', 2))
+            .ToDictionary(kv => kv[0], kv => (string?)Uri.UnescapeDataString(kv[1])));
+        parsed.ShouldBe(state);
+    }
+
+    [Test]
+    public void RelativeUriForQuery_Empty_ReturnsBareSearchPath()
+    {
+        WorkOrderSearchUrlState.RelativeUriForQuery(string.Empty).ShouldBe("workorder/search");
+    }
 }
