@@ -7,10 +7,9 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Mappings;
 [TestFixture]
 public class RoleMappingTests
 {
-    [Test, Retry(2)]
+    [Test]
     public void ShouldPersistRoles()
     {
-        // Create and save a Role with a unique name
         var name = $"role_{TestData.Tag()}";
         var role = new Role(name, true, true);
 
@@ -20,7 +19,6 @@ public class RoleMappingTests
             context.SaveChanges();
         }
 
-        // Retrieve the saved Role
         Role rehydratedRole;
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -28,7 +26,6 @@ public class RoleMappingTests
                 .Single(r => r.Id == role.Id);
         }
 
-        // Assert
         rehydratedRole.Id.ShouldBe(role.Id);
         rehydratedRole.Name.ShouldBe(name);
         rehydratedRole.CanCreateWorkOrder.ShouldBeTrue();

@@ -111,10 +111,10 @@ public class DemoEmployeeSeederTests
 
     private DataContext NewContext()
     {
-        return new DataContext(new PrivateDb(_cs));
+        return new DataContext(new StubDatabaseConfiguration(_cs));
     }
 
-    private sealed class PrivateDb(string cs) : IDatabaseConfiguration
+    private sealed class StubDatabaseConfiguration(string cs) : IDatabaseConfiguration
     {
         public string GetConnectionString()
         {

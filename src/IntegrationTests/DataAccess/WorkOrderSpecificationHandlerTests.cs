@@ -306,8 +306,8 @@ public class WorkOrderSpecificationHandlerTests
         var otherCreatorNumber = TestData.Number("S");
 
         var creator = new Employee(TestData.UserName("creator"), "Timothy", "Lovejoy Jr", "creator@example.com");
-        creator.AddRole(new Role("Pastor", true, false));
-        creator.AddRole(new Role("Requester", true, false));
+        creator.AddRole(new Role($"Pastor_{TestData.Tag()}", true, false));
+        creator.AddRole(new Role($"Requester_{TestData.Tag()}", true, false));
         var other = new Employee(TestData.UserName("other"), "Other", "Person", "other@example.com");
         var orders = new[]
         {

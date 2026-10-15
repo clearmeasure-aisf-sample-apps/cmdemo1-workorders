@@ -426,7 +426,7 @@ public class McpWorkOrderToolTests
         var workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
-        creator.AddRole(new Role("Manager", true, false));
+        creator.AddRole(new Role($"Manager_{TestData.Tag()}", true, false));
         var draftOrder = new WorkOrder
         {
             Creator = creator,
@@ -455,7 +455,7 @@ public class McpWorkOrderToolTests
 
         var creator = new Employee(creatorUserName, "Timothy", "Lovejoy", "timothy@test.com");
         var assignee = new Employee(assigneeUserName, "Groundskeeper Willie", "MacDougal", "willie@test.com");
-        assignee.AddRole(new Role("Worker", false, true));
+        assignee.AddRole(new Role($"Worker_{TestData.Tag()}", false, true));
         var inProgressOrder = new WorkOrder
         {
             Creator = creator,
@@ -489,9 +489,9 @@ public class McpWorkOrderToolTests
         var workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
-        creator.AddRole(new Role("Manager", true, false));
+        creator.AddRole(new Role($"Manager_{TestData.Tag()}", true, false));
         var assignee = new Employee(workerUserName, "Sam", "Worker", "worker@test.com");
-        assignee.AddRole(new Role("Worker", false, true));
+        assignee.AddRole(new Role($"Worker_{TestData.Tag()}", false, true));
         var draftOrder = new WorkOrder
         {
             Creator = creator,
@@ -571,7 +571,7 @@ public class McpWorkOrderToolTests
         var missingAssigneeUserName = TestData.UserName("missing");
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
-        creator.AddRole(new Role("Manager", true, false));
+        creator.AddRole(new Role($"Manager_{TestData.Tag()}", true, false));
         var draftOrder = new WorkOrder
         {
             Creator = creator,
@@ -626,7 +626,7 @@ public class McpWorkOrderToolTests
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
         var assignee = new Employee(workerUserName, "Sam", "Worker", "worker@test.com");
-        assignee.AddRole(new Role("Worker", false, true));
+        assignee.AddRole(new Role($"Worker_{TestData.Tag()}", false, true));
         var inProgressOrder = new WorkOrder
         {
             Creator = creator,

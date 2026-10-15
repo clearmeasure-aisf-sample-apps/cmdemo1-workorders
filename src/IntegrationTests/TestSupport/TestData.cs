@@ -55,6 +55,7 @@ public static class TestData
         return $"{prefix}_{Tag()}";
     }
 
+    /// <summary>An e-mail address on the reserved example.test domain for <paramref name="userName"/>.</summary>
     public static string Email(string userName)
     {
         return $"{userName}@example.test";
@@ -65,7 +66,9 @@ public static class TestData
     /// (at least 90 days, plus a random 0-29 days, at 12:00 UTC). Time windows that are open
     /// towards the future (completed in the last 30 days, opened in the last 7 days, completed
     /// per week over 8 weeks) then contain only rows the calling test dates relative to this clock.
-    /// Overdue is open towards the past and is not isolated by this clock.
+    /// Overdue is open towards the past and is not isolated by this clock. Each call moves the
+    /// stored dates 90-119 days further on, so a database that is reused for thousands of runs
+    /// must eventually be recreated (the method throws past the year 9900).
     /// </summary>
     public static TimeProvider FutureClock()
     {
@@ -91,6 +94,7 @@ public static class TestData
         return FixedClock(new DateTimeOffset(noon));
     }
 
+    /// <summary>A clock that always returns <paramref name="utcNow"/>.</summary>
     public static TimeProvider FixedClock(DateTimeOffset utcNow)
     {
         return new FixedTimeProvider(utcNow);

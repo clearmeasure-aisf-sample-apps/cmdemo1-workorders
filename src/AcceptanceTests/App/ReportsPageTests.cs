@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
-using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -199,10 +198,13 @@ public class ReportsPageTests : AcceptanceTestBase
 
     private async Task SeedData()
     {
-        // Seed test data for the Reports page
-        await using var context = TestHost.GetRequiredService<DataContext>();
-        var tag = Guid.NewGuid().ToString("N")[..5];
-        var creator = new Employee("rc" + tag, "Reports", "Creator", "rc" + tag + "@test.com");
+        // Seed this test's own rows for the Reports page: unique numbers, titles, creator and buildings
+        await using var context = TestHost.NewDbContext();
+        var userName = TestData.UserName("rc");
+        var creator = new Employee(userName, "Reports", "Creator", TestData.Email(userName));
+        var numbers = TestData.NumberSeries(5);
+        var sanctuary = $"Sanctuary {TestTag}";
+        var kitchen = $"Kitchen {TestTag}";
         var now = DateTime.UtcNow;
 
         WorkOrder[] orders =
@@ -210,53 +212,53 @@ public class ReportsPageTests : AcceptanceTestBase
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}1",
-                Title = "Test 1",
+                Number = numbers[0],
+                Title = $"[{TestTag}] Reports 1",
                 Status = WorkOrderStatus.Draft,
                 Priority = WorkOrderPriority.High,
-                Building = "Sanctuary",
+                Building = sanctuary,
                 CreatedDate = now.AddDays(-5),
                 DueDate = DateOnly.FromDateTime(now.AddDays(-1))
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}2",
-                Title = "Test 2",
+                Number = numbers[1],
+                Title = $"[{TestTag}] Reports 2",
                 Status = WorkOrderStatus.Assigned,
                 Priority = WorkOrderPriority.Medium,
-                Building = "Kitchen",
+                Building = kitchen,
                 CreatedDate = now.AddDays(-10)
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}3",
-                Title = "Test 3",
+                Number = numbers[2],
+                Title = $"[{TestTag}] Reports 3",
                 Status = WorkOrderStatus.InProgress,
                 Priority = WorkOrderPriority.Low,
-                Building = "Sanctuary",
+                Building = sanctuary,
                 CreatedDate = now.AddDays(-3)
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}4",
-                Title = "Test 4",
+                Number = numbers[3],
+                Title = $"[{TestTag}] Reports 4",
                 Status = WorkOrderStatus.Complete,
                 Priority = WorkOrderPriority.High,
-                Building = "Sanctuary",
+                Building = sanctuary,
                 CreatedDate = now.AddDays(-12),
                 CompletedDate = now.AddDays(-5)
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}5",
-                Title = "Test 5",
+                Number = numbers[4],
+                Title = $"[{TestTag}] Reports 5",
                 Status = WorkOrderStatus.Complete,
                 Priority = WorkOrderPriority.Medium,
-                Building = "Kitchen",
+                Building = kitchen,
                 CreatedDate = now.AddDays(-8),
                 CompletedDate = now.AddDays(-2)
             }

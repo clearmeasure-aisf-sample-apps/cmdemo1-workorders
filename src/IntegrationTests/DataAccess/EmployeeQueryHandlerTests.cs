@@ -28,7 +28,7 @@ public class EmployeeQueryHandlerTests
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var handler = new EmployeeQueryHandler(dataContext);
         var employee = await handler.Handle(new EmployeeByUserNameQuery(one.UserName));
-        Assert.That(employee.Id, Is.EqualTo(one.Id));
+        employee.Id.ShouldBe(one.Id);
     }
 
     [Test]
@@ -51,11 +51,11 @@ public class EmployeeQueryHandlerTests
         var employees = (await handler.Handle(new EmployeeGetAllQuery()))
             .Where(e => ownIds.Contains(e.Id)).ToArray();
 
-        Assert.That(employees.Length, Is.EqualTo(3));
-        Assert.That(employees[0].UserName, Is.EqualTo(one.UserName));
-        Assert.That(employees[0].FirstName, Is.EqualTo("first1"));
-        Assert.That(employees[0].LastName, Is.EqualTo("last1"));
-        Assert.That(employees[0].EmailAddress, Is.EqualTo("email1"));
+        employees.Length.ShouldBe(3);
+        employees[0].UserName.ShouldBe(one.UserName);
+        employees[0].FirstName.ShouldBe("first1");
+        employees[0].LastName.ShouldBe("last1");
+        employees[0].EmailAddress.ShouldBe("email1");
     }
 
     [Test]
