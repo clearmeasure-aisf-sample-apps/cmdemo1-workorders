@@ -54,7 +54,15 @@
 
     private async Task LoadHealthAsync()
     {
-        _health = await Bus.Send(new SlaHealthQuery());
+        try
+        {
+            _health = await Bus.Send(new SlaHealthQuery());
+        }
+        catch (Exception)
+        {
+            // Sidebar card is non-critical: never let a failed metrics query break the app shell.
+            _health = new SlaHealth();
+        }
         _trendText = SlaHealth.TrendText(_health?.CurrentMonthPercentage, _health?.LastMonthPercentage);
         await InvokeAsync(StateHasChanged);
     }

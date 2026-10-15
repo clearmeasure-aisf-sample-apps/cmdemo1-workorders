@@ -91,7 +91,10 @@
         </ul>
     }
 
-    <SlaHealthCard/>
+    @if (CurrentUser != null)
+    {
+        <SlaHealthCard/>
+    }
 </div>
 @code
 {
