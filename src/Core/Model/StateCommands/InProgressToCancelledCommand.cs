@@ -25,6 +25,8 @@ public record InProgressToCancelledCommand(WorkOrder WorkOrder, Employee Current
         return currentUser == WorkOrder.Creator;
     }
 
+    protected override bool IsAllowedInCurrentState() => WorkOrder.WaitingOnVendorSince == null;
+
     public override void Execute(StateCommandContext context)
     {
         WorkOrder.AssignedDate = null;
