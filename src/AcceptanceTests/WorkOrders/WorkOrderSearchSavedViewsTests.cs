@@ -38,7 +38,8 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Page.Locator($"#{WorkOrderSearch.Elements.ClearFiltersButton}").ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        Page.Url.ShouldNotContain("Priority=");
+        await Expect(Page).ToHaveURLAsync(new Regex("^(?!.*Priority=)"));
+        await Expect(Page.Locator($"#{WorkOrderSearch.Elements.PrioritySelect}")).ToHaveValueAsync("");
 
         await Page.GetByTestId(nameof(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync();
         await Page.GetByRole(AriaRole.Menuitem, new() { Name = viewName, Exact = true }).ClickAsync();
