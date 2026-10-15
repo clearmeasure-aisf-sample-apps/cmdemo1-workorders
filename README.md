@@ -167,6 +167,7 @@ Playwright (acceptance tests)
   ```bash
   dotnet test src/AcceptanceTests --configuration Debug
   ```
+- [Running acceptance test shards locally](docs/running-acceptance-shards.md) — run tests in shards, database engine selection, data isolation
 
 gRPC (work orders)
 - Protobuf contract: src/UI/Server/Protos/workorders.proto
