@@ -37,6 +37,9 @@ public sealed record WorkOrderSearchUrlState
     public string? Assignee { get; init; }
     public string? Status { get; init; }
     public bool OverdueOnly { get; init; }
+
+    /// <summary>When true only In Progress work orders waiting on a vendor match.</summary>
+    public bool WaitingOnVendorOnly { get; init; }
     public WorkOrderPriority? Priority { get; init; }
     public string? Building { get; init; }
     public string? Room { get; init; }
@@ -65,7 +68,7 @@ public sealed record WorkOrderSearchUrlState
 
     private bool HasLocationFilter => HasText(Building) || HasText(Room) || NoBuilding || NoRoom;
 
-    private bool HasFlagFilter => OverdueOnly || OpenOnly || CompletedWithinDays.HasValue;
+    private bool HasFlagFilter => OverdueOnly || WaitingOnVendorOnly || OpenOnly || CompletedWithinDays.HasValue;
 
     /// <summary>
     /// Builds the state from query values keyed by parameter name (case-insensitive).
@@ -80,6 +83,7 @@ public sealed record WorkOrderSearchUrlState
             Assignee = Text(values, nameof(Assignee)),
             Status = ParseStatus(Text(values, nameof(Status))),
             OverdueOnly = Flag(values, nameof(OverdueOnly)),
+            WaitingOnVendorOnly = Flag(values, nameof(WaitingOnVendorOnly)),
             Priority = ParsePriority(Text(values, nameof(Priority))),
             Building = Text(values, nameof(Building)),
             Room = Text(values, nameof(Room)),
@@ -108,6 +112,18 @@ public sealed record WorkOrderSearchUrlState
         return parts.Length == 0 ? SearchPath : $"{SearchPath}?{string.Join("&", parts)}";
     }
 
+    /// <summary>The query string of <see cref="ToRelativeUri"/> without the leading <c>?</c>, or an empty string.</summary>
+    public string ToQueryString()
+    {
+        var uri = ToRelativeUri();
+        var index = uri.IndexOf('?');
+        return index < 0 ? string.Empty : uri[(index + 1)..];
+    }
+
+    /// <summary>The search page URL, relative to the app base, for a stored query string.</summary>
+    public static string RelativeUriForQuery(string query) =>
+        string.IsNullOrEmpty(query) ? SearchPath : $"{SearchPath}?{query.TrimStart('?')}";
+
     /// <summary>The filter set a summary card applies; it replaces every other filter.</summary>
     public static WorkOrderSearchUrlState ForCard(SummaryCard card) => card switch
     {
@@ -134,6 +150,7 @@ public sealed record WorkOrderSearchUrlState
         yield return Pair(nameof(AssignedToMe), FlagText(AssignedToMe));
         yield return Pair(nameof(OpenOnly), FlagText(OpenOnly));
         yield return Pair(nameof(OverdueOnly), FlagText(OverdueOnly));
+        yield return Pair(nameof(WaitingOnVendorOnly), FlagText(WaitingOnVendorOnly));
         yield return Pair(nameof(CompletedWithinDays), CompletedWithinDays?.ToString(CultureInfo.InvariantCulture));
         yield return Pair(nameof(Q), Q);
     }

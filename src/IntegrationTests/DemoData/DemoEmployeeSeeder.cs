@@ -11,7 +11,7 @@ using Microsoft.Extensions.Configuration;
 namespace ClearMeasure.Bootcamp.DemoData;
 
 /// <summary>
-/// The demo employees and their roles, kept in one list: <see cref="ZDataLoader"/> loads them into an emptied test
+/// The demo employees and their roles, kept in one list: <see cref="ZDataLoader"/> adds the missing ones to the shared test
 /// database, and the deployment step "Seed demo employees" adds them to every other environment with
 /// <see cref="SeedDemoEmployees"/>. Seeding only inserts: a role whose name exists, an employee whose user name exists
 /// and an existing employee-role link are left as they are, and nothing is updated or deleted.

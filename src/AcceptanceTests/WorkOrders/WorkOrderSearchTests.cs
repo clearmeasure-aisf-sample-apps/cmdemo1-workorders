@@ -273,32 +273,28 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var creator = Faker<Employee>();
         var workOrder = Faker<WorkOrder>();
         workOrder.Creator = creator;
+        workOrder.Title = $"[{TestTag}] details";
 
         await using var context = TestHost.NewDbContext();
         context.Add(creator);
         context.Add(workOrder);
         await context.SaveChangesAsync();
 
-        // Act
+        // Act: search scoped to this test's own row, then open it
         await Click(nameof(NavMenu.Elements.Search));
+        await Page.WaitForURLAsync("**/workorder/search");
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "SearchPageLoaded");
 
-        var workOrderTable = Page.Locator(".grid-data");
-        await Expect(workOrderTable).ToBeVisibleAsync();
+        var workOrderLink = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrder.Number);
+        await Expect(workOrderLink).ToBeVisibleAsync();
+        await workOrderLink.ClickAsync();
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await TakeScreenshotAsync(2, "WorkOrderDetailsPage");
 
-        var firstWorkOrderLink = workOrderTable.Locator($"tbody tr [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
-        var workOrderNumber = (await firstWorkOrderLink.GetAttributeAsync("data-testid"))?[nameof(WorkOrderSearch.Elements.WorkOrderLink).Length..];
-
-        if (!string.IsNullOrEmpty(workOrderNumber))
-        {
-            await firstWorkOrderLink.ClickAsync();
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-            await TakeScreenshotAsync(2, "WorkOrderDetailsPage");
-
-            // Assert
-            await Expect(Page).ToHaveURLAsync(new Regex($"/workorder/manage/{Regex.Escape(workOrderNumber)}"));
-        }
+        // Assert
+        await Expect(Page).ToHaveURLAsync(new Regex($"/workorder/manage/{Regex.Escape(workOrder.Number!)}"));
     }
 
     [Test, Retry(2)]
@@ -620,9 +616,11 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         context.Add(otherOrder);
         await context.SaveChangesAsync();
 
-        // Act
-        await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        // Act: search scoped to this test's own rows, and wait until the unfiltered result has rendered
+        await OpenSearchScopedToTestTag();
+        var workOrderTable = Page.Locator(".grid-data");
+        await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
+        await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(1);
         await TakeScreenshotAsync(1, "BeforeToggle");
 
         var checkbox = Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}");
@@ -631,10 +629,10 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(2, "AfterToggle");
 
         // Assert: only my order appears
-        var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable).ToBeVisibleAsync();
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(0);
+        await Expect(workOrderTable.Locator("tbody tr")).ToHaveCountAsync(1);
 
         // Assert: Assignee dropdown is disabled
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
@@ -654,9 +652,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         otherOrder.Creator = otherEmployee;
         otherOrder.Assignee = otherEmployee;
         otherOrder.Title = $"[{TestTag}] other order";
-        // Results are paged newest first (#251): make both orders the newest so the full list shows them on page 1.
-        myOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
-        otherOrder.CreatedDate = DateTime.UtcNow.AddMinutes(5);
 
         await using var context = TestHost.NewDbContext();
         context.Attach(CurrentUser);
@@ -665,12 +660,15 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         context.Add(otherOrder);
         await context.SaveChangesAsync();
 
-        await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await OpenSearchScopedToTestTag();
+        var workOrderTable = Page.Locator(".grid-data");
+        await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
+        await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(1);
 
         var checkbox = Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}");
         await checkbox.CheckAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(0);
         await TakeScreenshotAsync(1, "ToggleOn");
 
         // Uncheck
@@ -679,7 +677,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await TakeScreenshotAsync(2, "ToggleOff");
 
         // Assert both orders reappear
-        var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(1);
 
@@ -702,17 +699,18 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         context.Add(myOrder);
         await context.SaveChangesAsync();
 
-        // Navigate to search and check the toggle
-        await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        // Navigate to search scoped to this test's rows and check the toggle
+        await OpenSearchScopedToTestTag();
+        await Expect(Page.Locator(".grid-data tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
 
         var checkbox = Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}");
         await checkbox.CheckAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(1, "ToggleChecked");
 
-        // Navigate away to a work order detail and back
-        var workOrderLink = Page.Locator($".grid-data tbody tr [data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
+        // Navigate away to the work order detail and back
+        var workOrderLink = Page.Locator(".grid-data tbody tr").Filter(new() { HasText = myOrder.Title })
+            .Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
         await workOrderLink.ClickAsync();
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await TakeScreenshotAsync(2, "WorkOrderDetail");
@@ -728,6 +726,19 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         // Assert: results still scoped to current user
         var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
+    }
+
+    /// <summary>
+    /// Opens Work Order Search filtered by this test's tag, so the list holds only rows this test
+    /// titled with <c>[TestTag]</c>. The tag is passed without brackets: SQL Server LIKE reads them
+    /// as a character class.
+    /// </summary>
+    private async Task OpenSearchScopedToTestTag()
+    {
+        await Click(nameof(NavMenu.Elements.Search));
+        await Page.WaitForURLAsync("**/workorder/search");
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
     }
 
     [Test, Retry(2)]

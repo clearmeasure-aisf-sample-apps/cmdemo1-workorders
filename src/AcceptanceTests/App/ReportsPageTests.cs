@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -88,20 +88,74 @@ public class ReportsPageTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Reports_AverageDaysToClose_ShouldMatchSearchPage()
     {
-        // Verify that the Reports query result agrees with the Search page's summary KPI
-        await SeedData();
-        await LoginAsCurrentUser();
+        // Both queries share one clock that is later than every stored work order date, so their
+        // 30-day completion window holds only the two orders this test completes.
+        var clock = TestData.FutureClock();
+        var now = clock.GetUtcNow().UtcDateTime;
+        var tag = TestData.Tag();
+        var userName = TestData.UserName("rpavg");
+        var employee = new Employee(userName, "Reports", "Average", TestData.Email(userName));
+        WorkOrder[] orders =
+        [
+            new()
+            {
+                Creator = employee,
+                Number = TestData.Number("R"),
+                Title = $"[{tag}] avg",
+                Status = WorkOrderStatus.Complete,
+                CreatedDate = now.AddDays(-10),
+                CompletedDate = now.AddDays(-3)
+            },
+            new()
+            {
+                Creator = employee,
+                Number = TestData.Number("R"),
+                Title = $"[{tag}] avg",
+                Status = WorkOrderStatus.Complete,
+                CreatedDate = now.AddDays(-8),
+                CompletedDate = now.AddDays(-2)
+            }
+        ];
 
-        // Get reports data
-        var reportsQuery = new WorkOrderReportsQuery();
-        var reportsData = await Bus.Send(reportsQuery);
+        await using (var seed = TestHost.NewDbContext())
+        {
+            seed.Add(employee);
+            seed.AddRange(orders.Cast<object>());
+            await seed.SaveChangesAsync();
+        }
 
-        // Get search summary data
-        var searchQuery = new WorkOrderSearchSummaryQuery(CurrentUser.UserName);
-        var searchSummary = await Bus.Send(searchQuery);
+        try
+        {
+            await using var ctx = TestHost.NewDbContext();
+            var reportsData = await new WorkOrderReportsQueryHandler(ctx, clock).Handle(new WorkOrderReportsQuery());
+            var searchSummary = await new WorkOrderSearchSummaryQueryHandler(ctx, clock)
+                .Handle(new WorkOrderSearchSummaryQuery(userName));
 
-        // Both should have the same average days to close
-        reportsData.AverageDaysToClose.ShouldBe(searchSummary.AverageDaysToClose);
+            // 7 and 6 days to close average to 6.5 on both pages
+            reportsData.AverageDaysToClose.ShouldNotBeNull();
+            searchSummary.AverageDaysToClose.ShouldNotBeNull();
+            reportsData.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
+            searchSummary.AverageDaysToClose.Value.ShouldBe(6.5, 0.0001);
+            reportsData.AverageDaysToClose.ShouldBe(searchSummary.AverageDaysToClose);
+            reportsData.CompletedLast30Days.ShouldBe(2);
+            searchSummary.CompletedLast30Days.ShouldBe(2);
+        }
+        finally
+        {
+            // Dates later than now must not outlive this test: unscoped pages (search, recent activity)
+            // sort newest first, so these rows would push every other test's rows off the first page.
+            await using var cleanup = TestHost.NewDbContext();
+            foreach (var order in orders)
+            {
+                var stored = await cleanup.Set<WorkOrder>().FindAsync(order.Id);
+                if (stored != null)
+                {
+                    cleanup.Remove(stored);
+                }
+            }
+
+            await cleanup.SaveChangesAsync();
+        }
     }
 
     [Test, Retry(2)]
@@ -147,10 +201,13 @@ public class ReportsPageTests : AcceptanceTestBase
 
     private async Task SeedData()
     {
-        // Seed test data for the Reports page
-        await using var context = TestHost.GetRequiredService<DataContext>();
-        var tag = Guid.NewGuid().ToString("N")[..5];
-        var creator = new Employee("rc" + tag, "Reports", "Creator", "rc" + tag + "@test.com");
+        // Seed this test's own rows for the Reports page: unique numbers, titles, creator and buildings
+        await using var context = TestHost.NewDbContext();
+        var userName = TestData.UserName("rc");
+        var creator = new Employee(userName, "Reports", "Creator", TestData.Email(userName));
+        var numbers = TestData.NumberSeries(5);
+        var sanctuary = $"Sanctuary {TestTag}";
+        var kitchen = $"Kitchen {TestTag}";
         var now = DateTime.UtcNow;
 
         WorkOrder[] orders =
@@ -158,53 +215,53 @@ public class ReportsPageTests : AcceptanceTestBase
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}1",
-                Title = "Test 1",
+                Number = numbers[0],
+                Title = $"[{TestTag}] Reports 1",
                 Status = WorkOrderStatus.Draft,
                 Priority = WorkOrderPriority.High,
-                Building = "Sanctuary",
+                Building = sanctuary,
                 CreatedDate = now.AddDays(-5),
                 DueDate = DateOnly.FromDateTime(now.AddDays(-1))
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}2",
-                Title = "Test 2",
+                Number = numbers[1],
+                Title = $"[{TestTag}] Reports 2",
                 Status = WorkOrderStatus.Assigned,
                 Priority = WorkOrderPriority.Medium,
-                Building = "Kitchen",
+                Building = kitchen,
                 CreatedDate = now.AddDays(-10)
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}3",
-                Title = "Test 3",
+                Number = numbers[2],
+                Title = $"[{TestTag}] Reports 3",
                 Status = WorkOrderStatus.InProgress,
                 Priority = WorkOrderPriority.Low,
-                Building = "Sanctuary",
+                Building = sanctuary,
                 CreatedDate = now.AddDays(-3)
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}4",
-                Title = "Test 4",
+                Number = numbers[3],
+                Title = $"[{TestTag}] Reports 4",
                 Status = WorkOrderStatus.Complete,
                 Priority = WorkOrderPriority.High,
-                Building = "Sanctuary",
+                Building = sanctuary,
                 CreatedDate = now.AddDays(-12),
                 CompletedDate = now.AddDays(-5)
             },
             new()
             {
                 Creator = creator,
-                Number = $"R{tag}5",
-                Title = "Test 5",
+                Number = numbers[4],
+                Title = $"[{TestTag}] Reports 5",
                 Status = WorkOrderStatus.Complete,
                 Priority = WorkOrderPriority.Medium,
-                Building = "Kitchen",
+                Building = kitchen,
                 CreatedDate = now.AddDays(-8),
                 CompletedDate = now.AddDays(-2)
             }
