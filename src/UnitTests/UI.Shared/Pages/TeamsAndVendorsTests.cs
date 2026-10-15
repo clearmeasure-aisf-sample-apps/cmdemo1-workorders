@@ -236,6 +236,248 @@ public class TeamsAndVendorsTests
         });
     }
 
+    [Test]
+    public async Task TeamsAndVendors_TeamsSection_RenderWhenTeamsExist()
+    {
+        var emp1 = new Employee("hsimpson", "Homer", "Simpson", "homer@springfield.com");
+        emp1.AddRole(new Role { Name = "Worker", CanCreateWorkOrder = false, CanFulfillWorkOrder = true });
+        var team = new Team("Maintenance", "Maintenance team") { Id = Guid.NewGuid() };
+        team.AddMember(emp1);
+
+        var bus = new StubBusTeamsAndVendors { TeamsToReturn = [team] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Markup.ShouldContain("Maintenance");
+            component.Markup.ShouldContain("Maintenance team");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_TeamsSection_ShowsEmptyStateWhenNoTeams()
+    {
+        var bus = new StubBusTeamsAndVendors { TeamsToReturn = [] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Markup.ShouldContain("No teams found");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_TeamCard_DisplaysTeamNameDescription()
+    {
+        var team = new Team("Kitchen", "Kitchen operations") { Id = Guid.NewGuid() };
+        var bus = new StubBusTeamsAndVendors { TeamsToReturn = [team] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var teamCard = component.Find($"[data-testid='{TeamsAndVendors.Elements.TeamCard}{team.Id}']");
+            teamCard.TextContent.ShouldContain("Kitchen");
+            teamCard.TextContent.ShouldContain("Kitchen operations");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_TeamCard_DisplaysMemberCount()
+    {
+        var emp1 = new Employee("hsimpson", "Homer", "Simpson", "homer@springfield.com");
+        emp1.AddRole(new Role { Name = "Worker", CanCreateWorkOrder = false, CanFulfillWorkOrder = true });
+        var team = new Team("Test Team", null) { Id = Guid.NewGuid() };
+        team.AddMember(emp1);
+
+        var bus = new StubBusTeamsAndVendors { TeamsToReturn = [team] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var memberCountElement = component.Find($"[data-testid='{TeamsAndVendors.Elements.TeamMemberCount}{team.Id}']");
+            memberCountElement.TextContent.ShouldContain("1 member");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_TeamMembers_LinksToAssigneeFilteredSearch()
+    {
+        var emp1 = new Employee("hsimpson", "Homer", "Simpson", "homer@springfield.com");
+        emp1.AddRole(new Role { Name = "Worker", CanCreateWorkOrder = false, CanFulfillWorkOrder = true });
+        var team = new Team("Test Team", null) { Id = Guid.NewGuid() };
+        team.AddMember(emp1);
+
+        var bus = new StubBusTeamsAndVendors { TeamsToReturn = [team] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var memberLink = component.Find($"[data-testid='{TeamsAndVendors.Elements.TeamMemberLink}{emp1.UserName}']");
+            memberLink.ShouldNotBeNull();
+            var href = memberLink.GetAttribute("href");
+            href.ShouldNotBeNullOrEmpty();
+            href!.ShouldContain("workorder/search");
+            href.ShouldContain("Assignee=hsimpson");
+            href.ShouldContain("OpenOnly=true");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_VendorsSection_RenderWhenVendorsExist()
+    {
+        var vendor = new Vendor { Id = Guid.NewGuid(), Name = "Joe's HVAC", IsActive = true };
+        var bus = new StubBusTeamsAndVendors { VendorsToReturn = [vendor] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Markup.ShouldContain("Joe's HVAC");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_VendorsSection_ShowsEmptyStateWhenNoVendors()
+    {
+        var bus = new StubBusTeamsAndVendors { VendorsToReturn = [] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Markup.ShouldContain("No vendors found");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_VendorCard_DisplaysActiveVendorWithStatus()
+    {
+        var vendor = new Vendor { Id = Guid.NewGuid(), Name = "Active Vendor", IsActive = true };
+        var bus = new StubBusTeamsAndVendors { VendorsToReturn = [vendor] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var vendorCard = component.Find($"[data-testid='{TeamsAndVendors.Elements.VendorCard}{vendor.Id}']");
+            vendorCard.TextContent.ShouldContain("Active Vendor");
+            vendorCard.TextContent.ShouldContain("Active");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_VendorCard_DisplaysInactiveVendorWithStatus()
+    {
+        var vendor = new Vendor { Id = Guid.NewGuid(), Name = "Inactive Vendor", IsActive = false };
+        var bus = new StubBusTeamsAndVendors { VendorsToReturn = [vendor] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var vendorCard = component.Find($"[data-testid='{TeamsAndVendors.Elements.VendorCard}{vendor.Id}']");
+            vendorCard.TextContent.ShouldContain("Inactive Vendor");
+            vendorCard.TextContent.ShouldContain("Inactive");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_VendorCard_DisplaysAllDetails()
+    {
+        var vendor = new Vendor
+        {
+            Id = Guid.NewGuid(),
+            Name = "Joe's HVAC",
+            Trade = "HVAC",
+            ContactName = "Joe Smith",
+            EmailAddress = "joe@hvac.com",
+            PhoneNumber = "555-1234",
+            IsActive = true
+        };
+        var bus = new StubBusTeamsAndVendors { VendorsToReturn = [vendor] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var vendorCard = component.Find($"[data-testid='{TeamsAndVendors.Elements.VendorCard}{vendor.Id}']");
+            vendorCard.TextContent.ShouldContain("Joe's HVAC");
+            vendorCard.TextContent.ShouldContain("HVAC");
+            vendorCard.TextContent.ShouldContain("Joe Smith");
+            vendorCard.TextContent.ShouldContain("joe@hvac.com");
+            vendorCard.TextContent.ShouldContain("555-1234");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_VendorEmail_IsMailtoLink()
+    {
+        var vendor = new Vendor
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Vendor",
+            EmailAddress = "test@vendor.com",
+            IsActive = true
+        };
+        var bus = new StubBusTeamsAndVendors { VendorsToReturn = [vendor] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var emailLink = component.Find($"[data-testid='{TeamsAndVendors.Elements.VendorEmail}{vendor.Id}'] a");
+            emailLink.ShouldNotBeNull();
+            emailLink.GetAttribute("href").ShouldBe("mailto:test@vendor.com");
+        });
+    }
+
+    [Test]
+    public async Task TeamsAndVendors_Vendors_InactiveAfterActive()
+    {
+        var activeVendor = new Vendor { Id = Guid.NewGuid(), Name = "Active Vendor", IsActive = true };
+        var inactiveVendor = new Vendor { Id = Guid.NewGuid(), Name = "Inactive Vendor", IsActive = false };
+        var bus = new StubBusTeamsAndVendors { VendorsToReturn = [activeVendor, inactiveVendor] };
+
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var vendorCards = component.FindAll("[class*='vendor-card']");
+            vendorCards.Count.ShouldBe(2);
+            var firstCardName = vendorCards[0].QuerySelector("[class*='vendor-name']")?.TextContent?.Trim();
+            firstCardName.ShouldBe("Active Vendor");
+        });
+    }
+
     private static BunitContext CreateContext(StubBusTeamsAndVendors? bus = null)
     {
         var ctx = new BunitContext();
@@ -291,6 +533,10 @@ public class StubBusTeamsAndVendors : StubBus
         }
     } = [];
 
+    public Team[] TeamsToReturn { get; init; } = [];
+
+    public Vendor[] VendorsToReturn { get; init; } = [];
+
     public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
     {
         if (request is EmployeeGetAllQuery)
@@ -303,6 +549,16 @@ public class StubBusTeamsAndVendors : StubBus
             EmployeeWorkLoadQueriesSent.Add(workLoadQuery);
             var load = new EmployeeWorkLoad { AssignedAndOpen = 5, InProgress = 2, Overdue = 1, CompletedLast30Days = 10 };
             return Task.FromResult<TResponse>((TResponse)(object)load);
+        }
+
+        if (request is TeamsQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)TeamsToReturn);
+        }
+
+        if (request is VendorsQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)VendorsToReturn);
         }
 
         return base.Send(request);

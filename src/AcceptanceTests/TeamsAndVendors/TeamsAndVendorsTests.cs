@@ -175,6 +175,187 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         int.Parse(completedCountText).ShouldBe(0);
     }
 
+    [Test]
+    public async Task ShouldDisplayTeamCreatedThroughCommand()
+    {
+        await LoginAsCurrentUser();
+
+        // Create a team through the command
+        var teamName = $"Test Team {Guid.NewGuid()}";
+        var teamResult = await Bus.Send(new CreateTeamCommand(
+            teamName,
+            "A test team for acceptance testing",
+            [CurrentUser.UserName]
+        ));
+        teamResult.Succeeded.ShouldBeTrue();
+
+        // Navigate to Teams & Vendors page
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Verify team is displayed
+        await Expect(Page.GetByText(teamName, new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("A test team for acceptance testing")).ToBeVisibleAsync();
+    }
+
+    [Test]
+    public async Task ShouldDisplayTeamMembersAsAvatars()
+    {
+        await LoginAsCurrentUser();
+
+        // Get another employee to add to the team
+        var employees = await Bus.Send(new EmployeeGetAllQuery());
+        var otherEmployee = employees.FirstOrDefault(e => e.UserName != CurrentUser.UserName && e.CanFulfillWorkOrder());
+        if (otherEmployee == null)
+        {
+            Assert.Ignore("No other assignable employee found for this test");
+        }
+
+        // Create a team with multiple members
+        var teamName = $"Multi-Member Team {Guid.NewGuid()}";
+        var teamResult = await Bus.Send(new CreateTeamCommand(
+            teamName,
+            null,
+            [CurrentUser.UserName, otherEmployee.UserName]
+        ));
+        teamResult.Succeeded.ShouldBeTrue();
+
+        // Navigate to Teams & Vendors page
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Verify team is displayed and has member avatars
+        var teamCard = Page.Locator($"[data-testid*='TeamCard'][data-testid*='{teamResult.Id}']");
+        await Expect(teamCard).ToBeVisibleAsync();
+
+        // Verify member count is displayed
+        var memberCount = teamCard.Locator($"[data-testid*='TeamMemberCount']");
+        await Expect(memberCount).ToContainTextAsync("2 members");
+
+        // Verify member avatars are displayed
+        var memberAvatars = teamCard.Locator("[class*='member-avatar-link']");
+        var avatarCount = await memberAvatars.CountAsync();
+        avatarCount.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task ShouldDisplayVendorCreatedThroughCommand()
+    {
+        await LoginAsCurrentUser();
+
+        // Create a vendor through the command
+        var vendorName = $"Test Vendor {Guid.NewGuid()}";
+        var vendorResult = await Bus.Send(new CreateVendorCommand(
+            vendorName,
+            "Plumbing",
+            "John Smith",
+            "john@plumbing.com",
+            "555-1234",
+            true
+        ));
+        vendorResult.Succeeded.ShouldBeTrue();
+
+        // Navigate to Teams & Vendors page
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Verify vendor is displayed
+        await Expect(Page.GetByText(vendorName, new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page.GetByText("Plumbing")).ToBeVisibleAsync();
+        await Expect(Page.GetByText("John Smith")).ToBeVisibleAsync();
+    }
+
+    [Test]
+    public async Task ShouldDisplayVendorDetailsCorrectly()
+    {
+        await LoginAsCurrentUser();
+
+        // Create a vendor with all details
+        var vendorName = $"Complete Vendor {Guid.NewGuid()}";
+        var vendorResult = await Bus.Send(new CreateVendorCommand(
+            vendorName,
+            "HVAC",
+            "Jane Doe",
+            "jane@hvac.com",
+            "555-5678",
+            true
+        ));
+        vendorResult.Succeeded.ShouldBeTrue();
+
+        // Navigate to Teams & Vendors page
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Find the vendor card
+        var vendorCard = Page.Locator($"[data-testid*='VendorCard'][data-testid*='{vendorResult.Id}']");
+        await Expect(vendorCard).ToBeVisibleAsync();
+
+        // Verify all vendor details are displayed
+        await Expect(vendorCard).ToContainTextAsync(vendorName);
+        await Expect(vendorCard).ToContainTextAsync("HVAC");
+        await Expect(vendorCard).ToContainTextAsync("Jane Doe");
+        await Expect(vendorCard).ToContainTextAsync("jane@hvac.com");
+        await Expect(vendorCard).ToContainTextAsync("555-5678");
+        await Expect(vendorCard).ToContainTextAsync("Active");
+    }
+
+    [Test]
+    public async Task ShouldDisplayInactiveVendorWithInactiveStatus()
+    {
+        await LoginAsCurrentUser();
+
+        // Create an inactive vendor
+        var vendorName = $"Inactive Vendor {Guid.NewGuid()}";
+        var vendorResult = await Bus.Send(new CreateVendorCommand(
+            vendorName,
+            "Electrical",
+            "Bob Jones",
+            "bob@electrical.com",
+            "555-9999",
+            false
+        ));
+        vendorResult.Succeeded.ShouldBeTrue();
+
+        // Navigate to Teams & Vendors page
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Find the vendor card
+        var vendorCard = Page.Locator($"[data-testid*='VendorCard'][data-testid*='{vendorResult.Id}']");
+        await Expect(vendorCard).ToBeVisibleAsync();
+
+        // Verify inactive status is displayed
+        await Expect(vendorCard).ToContainTextAsync("Inactive");
+    }
+
+    [Test]
+    public async Task ShouldDisplayVendorEmailAsMailtoLink()
+    {
+        await LoginAsCurrentUser();
+
+        // Create a vendor with email
+        var vendorName = $"Email Vendor {Guid.NewGuid()}";
+        var vendorEmail = "contact@vendor.com";
+        var vendorResult = await Bus.Send(new CreateVendorCommand(
+            vendorName,
+            null,
+            null,
+            vendorEmail,
+            null,
+            true
+        ));
+        vendorResult.Succeeded.ShouldBeTrue();
+
+        // Navigate to Teams & Vendors page
+        await Page.GotoAsync("/admin/teams");
+        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Find the email link in the vendor card
+        var emailLink = Page.Locator($"[data-testid*='VendorEmail'][data-testid*='{vendorResult.Id}'] a");
+        await Expect(emailLink).ToBeVisibleAsync();
+        await Expect(emailLink).ToHaveAttributeAsync("href", $"mailto:{vendorEmail}");
+    }
+
     private void AssignWorkOrderToEmployee(WorkOrder workOrder, Employee employee)
     {
         using var readContext = TestHost.NewDbContext();
