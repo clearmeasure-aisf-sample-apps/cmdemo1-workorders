@@ -9,13 +9,13 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
 {
     [Test, Retry(2)]
-    public async Task ShouldSaveWorkOrderWith900CharacterRoom()
+    public async Task ShouldSaveWorkOrderWithRoomNumberAtEntryMaxLength()
     {
         await LoginAsCurrentUser();
 
-        var room = new string('R', WorkOrder.RoomNumberMaxLength);
+        var room = new string('R', WorkOrder.RoomNumberEntryMaxLength);
         var order = Faker<WorkOrder>();
-        order.Title = $"[{TestTag}] 900 char room";
+        order.Title = $"[{TestTag}] 50 char room";
         order.Number = null;
         order.RoomNumber = room;
 
@@ -45,15 +45,46 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         WorkOrder rehydratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number!))
             ?? throw new InvalidOperationException();
         rehydratedOrder.RoomNumber.ShouldBe(room);
-        rehydratedOrder.RoomNumber!.Length.ShouldBe(WorkOrder.RoomNumberMaxLength);
+        rehydratedOrder.RoomNumber!.Length.ShouldBe(WorkOrder.RoomNumberEntryMaxLength);
     }
 
     [Test, Retry(2)]
-    public async Task ShouldRejectRoomLongerThan900Characters()
+    public async Task ShouldAllowOpeningAndSavingWorkOrderWithLongRoomNumberWhenUnchanged()
+    {
+        await LoginAsCurrentUser();
+        var order = await CreateAndSaveNewWorkOrder();
+
+        // Seed a legacy room number longer than the entry limit, as stored before the 50-character rule.
+        var longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
+        var stored = (await Bus.Send(new WorkOrderByNumberQuery(order.Number!)))!;
+        stored.RoomNumber = longRoom;
+        await Bus.Send(new SaveDraftCommand(stored, stored.Creator!) { PreviousRoomNumber = longRoom });
+
+        await ClickWorkOrderNumberFromSearchPage(order);
+
+        var roomField = Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber));
+        await Expect(roomField).ToHaveValueAsync(longRoom);
+
+        var newTitle = $"[{TestTag}] 900 char room unchanged";
+        await Input(nameof(WorkOrderManage.Elements.Title), newTitle);
+
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        await Click(saveButtonTestId);
+        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
+
+        WorkOrder rehydratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number!))
+            ?? throw new InvalidOperationException();
+        rehydratedOrder.RoomNumber.ShouldBe(longRoom);
+        rehydratedOrder.RoomNumber!.Length.ShouldBe(WorkOrder.RoomNumberMaxLength);
+        rehydratedOrder.Title.ShouldBe(newTitle);
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldRejectRoomLongerThan50Characters()
     {
         await LoginAsCurrentUser();
 
-        var tooLong = new string('X', WorkOrder.RoomNumberMaxLength + 1);
+        var tooLong = new string('X', WorkOrder.RoomNumberEntryMaxLength + 1);
 
         await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
@@ -63,7 +94,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
         var number = await woNumberLocator.InnerTextAsync();
 
-        await Input(nameof(WorkOrderManage.Elements.Title), $"[{TestTag}] 901 char room");
+        await Input(nameof(WorkOrderManage.Elements.Title), $"[{TestTag}] 51 char room");
         await Input(nameof(WorkOrderManage.Elements.Description), "description");
 
         var roomField = Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber));
@@ -76,7 +107,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         await Click(saveButtonTestId);
 
         await Expect(Page).ToHaveURLAsync(new Regex("workorder/manage"));
-        await Expect(Page.GetByText("Room cannot exceed 900 characters.")).ToBeVisibleAsync(
+        await Expect(Page.GetByText("Room number cannot exceed 50 characters.")).ToBeVisibleAsync(
             new LocatorAssertionsToBeVisibleOptions { Timeout = 15_000 });
 
         WorkOrder? stored = await Bus.Send(new WorkOrderByNumberQuery(number));

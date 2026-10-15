@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.Core.Validation;
 using FluentValidation.TestHelper;
 using Shouldly;
@@ -46,6 +47,73 @@ public class SaveDraftCommandValidatorTests
         var result = _validator.TestValidate(command);
 
         result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldPass_WhenRoomNumberIsAtEntryMaxLength()
+    {
+        var roomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength);
+        var command = new SaveDraftCommand(
+            new WorkOrder { Title = "T", RoomNumber = roomNumber, Creator = new Employee("c", "C", "O", "c@e.com") },
+            new Employee("c", "C", "O", "c@e.com"))
+        { PreviousRoomNumber = null };
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldFail_WhenRoomNumberExceedsEntryMaxLength()
+    {
+        var roomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength + 1);
+        var command = new SaveDraftCommand(
+            new WorkOrder { Title = "T", RoomNumber = roomNumber, Creator = new Employee("c", "C", "O", "c@e.com") },
+            new Employee("c", "C", "O", "c@e.com"))
+        { PreviousRoomNumber = null };
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.WorkOrder.RoomNumber)
+            .WithErrorMessage("Room number cannot exceed 50 characters.");
+    }
+
+    [Test]
+    public void ShouldPass_WhenRoomNumberUnchangedAndLong()
+    {
+        var longRoomNumber = new string('R', WorkOrder.RoomNumberMaxLength);
+        var command = new SaveDraftCommand(
+            new WorkOrder { Title = "T", RoomNumber = longRoomNumber, Creator = new Employee("c", "C", "O", "c@e.com") },
+            new Employee("c", "C", "O", "c@e.com"))
+        { PreviousRoomNumber = longRoomNumber };
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldFail_WhenFormSaveChangesRoomNumberBeyondEntryMaxLength()
+    {
+        var creator = new Employee("c", "C", "O", "c@e.com");
+        var workOrder = new WorkOrder
+        {
+            Title = "T",
+            RoomNumber = "A",
+            Status = WorkOrderStatus.Draft,
+            Creator = creator
+        };
+        workOrder.RoomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength + 1);
+
+        var command = (SaveDraftCommand)SaveDraftCommand.WithPreviousRoomNumber(
+            new StateCommandList().GetMatchingCommand(workOrder, creator, SaveDraftCommand.Name),
+            "A");
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeFalse();
+        result.ShouldHaveValidationErrorFor(x => x.WorkOrder.RoomNumber)
+            .WithErrorMessage("Room number cannot exceed 50 characters.");
     }
 
     private static SaveDraftCommand CreateCommand(string? title)

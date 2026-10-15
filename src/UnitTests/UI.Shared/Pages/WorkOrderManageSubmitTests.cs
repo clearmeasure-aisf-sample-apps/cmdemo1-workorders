@@ -54,7 +54,7 @@ public class WorkOrderManageSubmitTests
         await component.WaitForAssertionAsync(() =>
         {
             bus.LastCommand.ShouldNotBeNull();
-            bus.LastCommand.ShouldBeOfType<SaveDraftCommand>();
+            bus.LastCommand.ShouldBeOfType<SaveDraftCommand>().PreviousRoomNumber.ShouldBeNull();
             navigationManager.Uri.ShouldContain("/workorder/search");
         });
     }
@@ -105,6 +105,48 @@ public class WorkOrderManageSubmitTests
             bus.WorkOrderByNumberHits.ShouldBeGreaterThan(0);
             bus.LastCommand.ShouldNotBeNull();
             navigationManager.Uri.ShouldContain("/workorder/search");
+        });
+    }
+
+    [Test]
+    public async Task ShouldSendPersistedRoomNumberAsPrevious_WhenEditModeRoomChanged()
+    {
+        await using var ctx = new BunitContext();
+        var user = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+        user.AddRole(new Role("creator", true, false));
+        var existing = new WorkOrder
+        {
+            Id = Guid.NewGuid(),
+            Number = "WO-ROOM",
+            Title = "Existing",
+            Description = "Desc",
+            RoomNumber = "Room A",
+            Status = WorkOrderStatus.Draft,
+            Creator = user
+        };
+        var bus = new StubSubmitBus(existing);
+        RegisterServices(ctx, bus, user);
+
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo("http://localhost/?Mode=Edit&Id=WO-ROOM");
+
+        var component = ctx.Render<WorkOrderManage>(parameters => parameters
+            .Add(p => p.Id, "WO-ROOM"));
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Find($"[data-testid='{WorkOrderManage.Elements.Title}']").GetAttribute("value")
+                .ShouldBe("Existing");
+        });
+
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.RoomNumber}']").ChangeAsync(new() { Value = "Room B" });
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.CommandButton}Save']").ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var command = bus.LastCommand.ShouldBeOfType<SaveDraftCommand>();
+            command.PreviousRoomNumber.ShouldBe("Room A");
+            command.WorkOrder.RoomNumber.ShouldBe("Room B");
         });
     }
 
