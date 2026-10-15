@@ -134,6 +134,23 @@ public class InProgressToAssignedCommandTests : StateCommandBaseTests
         command.IsValid().ShouldBeFalse();
     }
 
+    [Test]
+    public void Should_ClearWaitingOnVendorSince_When_Shelved()
+    {
+        var employee = new Employee();
+        var order = new WorkOrder
+        {
+            Number = "WO-123",
+            Status = WorkOrderStatus.InProgress,
+            Assignee = employee,
+            WaitingOnVendorSince = DateTime.UtcNow
+        };
+
+        new InProgressToAssignedCommand(order, employee).Execute(new StateCommandContext());
+
+        order.WaitingOnVendorSince.ShouldBeNull();
+    }
+
     protected override StateCommandBase GetStateCommand(WorkOrder order, Employee employee)
     {
         return new InProgressToAssignedCommand(order, employee);
