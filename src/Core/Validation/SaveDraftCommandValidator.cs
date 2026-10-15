@@ -17,6 +17,8 @@ public sealed class SaveDraftCommandValidator : AbstractValidator<SaveDraftComma
     public SaveDraftCommandValidator()
     {
         RuleFor(x => x.WorkOrder.Title)
+            .Must(t => !string.IsNullOrWhiteSpace(t))
+            .WithMessage("Title is required.")
             .MaximumLength(WorkOrder.TitleMaxLength)
             .WithMessage($"Title cannot exceed {WorkOrder.TitleMaxLength} characters.");
 

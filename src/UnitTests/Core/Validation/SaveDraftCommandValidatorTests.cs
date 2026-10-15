@@ -29,6 +29,17 @@ public class SaveDraftCommandValidatorTests
     }
 
     [Test]
+    public void ShouldPass_WhenTitleWithSurroundingSpaces()
+    {
+        var titleWithSpaces = "  Some Title  ";
+        var command = CreateCommand(titleWithSpaces);
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
     public void ShouldFail_WhenTitleExceedsMaxLength()
     {
         var command = CreateCommand(new string('T', WorkOrder.TitleMaxLength + 1));
@@ -40,13 +51,36 @@ public class SaveDraftCommandValidatorTests
     }
 
     [Test]
-    public void ShouldPass_WhenTitleIsNull()
+    public void ShouldFail_WhenTitleIsNull()
     {
         var command = CreateCommand(null);
 
         var result = _validator.TestValidate(command);
 
-        result.IsValid.ShouldBeTrue();
+        result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Title)
+            .WithErrorMessage("Title is required.");
+    }
+
+    [Test]
+    public void ShouldFail_WhenTitleIsEmpty()
+    {
+        var command = CreateCommand(string.Empty);
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Title)
+            .WithErrorMessage("Title is required.");
+    }
+
+    [Test]
+    public void ShouldFail_WhenTitleIsWhitespaceOnly()
+    {
+        var command = CreateCommand("   ");
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Title)
+            .WithErrorMessage("Title is required.");
     }
 
     [Test]

@@ -257,7 +257,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
         workOrder.Number = Model.WorkOrderNumber;
         workOrder.Assignee = assignee;
-        workOrder.Title = Model.Title;
+        workOrder.Title = string.IsNullOrWhiteSpace(Model.Title) ? null : Model.Title.Trim();
         workOrder.Description = Model.Description;
         workOrder.Instructions = Model.Instructions;
         workOrder.RoomNumber = Model.RoomNumber;
