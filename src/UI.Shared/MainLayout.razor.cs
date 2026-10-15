@@ -66,6 +66,7 @@ public partial class MainLayout : IAsyncDisposable
     private ElementReference _navToggleButtonRef;
     private ElementReference _bellButtonRef;
     private DotNetObjectReference<MainLayout>? _dotNetRef;
+    private bool _disposed;
     private IJSObjectReference? _jsModule;
     private IJSObjectReference? _navToggleHelper;
     private bool _isNarrowViewport;
@@ -156,6 +157,9 @@ public partial class MainLayout : IAsyncDisposable
             _dotNetRef = DotNetObjectReference.Create(this);
             _jsModule = await Js.InvokeAsync<IJSObjectReference>("import",
                 "./_content/ClearMeasure.Bootcamp.UI.Shared/js/mainLayoutNav.js");
+            // A page with its own layout (the print view) replaces this layout while the module loads.
+            if (_disposed)
+                return;
             _navToggleHelper = await _jsModule.InvokeAsync<IJSObjectReference>("initNavToggle", _dotNetRef,
                 NavRailBreakpointMediaQuery);
         }
@@ -261,6 +265,7 @@ public partial class MainLayout : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         Theme.OnChange -= OnThemeChanged;
         Navigation.LocationChanged -= OnLocationChanged;
         AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
