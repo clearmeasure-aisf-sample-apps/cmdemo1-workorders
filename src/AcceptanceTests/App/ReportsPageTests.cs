@@ -183,6 +183,9 @@ public class ReportsPageTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(Reports.Elements.SummaryCardBuilding)))
             .ToContainTextAsync($"Sanctuary {TestTag}");
 
+        // Wait for export button to be enabled before clicking
+        await Expect(Page.GetByTestId(nameof(Reports.Elements.ExportButton))).ToBeEnabledAsync(new() { Timeout = 30_000 });
+
         // Initiate download and verify it completes
         var download = await Page.RunAndWaitForDownloadAsync(async () =>
             await Click(nameof(Reports.Elements.ExportButton)));
