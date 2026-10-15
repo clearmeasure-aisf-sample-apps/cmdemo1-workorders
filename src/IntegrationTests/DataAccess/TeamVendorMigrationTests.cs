@@ -9,13 +9,13 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
 
 /// <summary>
-/// Applies <c>035_AddTeamAndVendorTables.sql</c> with DbUp to a scratch SQL Server database that is at the
+/// Applies <c>036_AddTeamAndVendorTables.sql</c> with DbUp to a scratch SQL Server database that is at the
 /// previous script, and checks that the existing schema and data are unchanged and the new tables exist.
 /// </summary>
 [TestFixture]
 public class TeamVendorMigrationTests
 {
-    private const string ScriptName = "035_AddTeamAndVendorTables.sql";
+    private const string ScriptName = "036_AddTeamAndVendorTables.sql";
     private static readonly Guid SeededEmployeeId = new("6f1c8d2e-0b7a-4d4e-9a35-2b1d7c0e2911");
     private static readonly string[] NewTables = ["Team", "Vendor", "TeamMember"];
 
@@ -36,7 +36,7 @@ public class TeamVendorMigrationTests
 
     [Test]
     [Category("SqlServerOnly")]
-    public void ShouldApply035OnDatabaseAtPreviousScriptAndLeaveExistingTablesUnchanged()
+    public void ShouldApply036OnDatabaseAtPreviousScriptAndLeaveExistingTablesUnchanged()
     {
         SqlServerTestAssumptions.RequireSqlServer();
 
@@ -50,7 +50,7 @@ public class TeamVendorMigrationTests
         var scriptDirectory = Path.Combine(FindRepoRoot(), "src", "Database", "scripts", "Update");
 
         var previous = Upgrade(scriptDirectory,
-            file => string.CompareOrdinal(Path.GetFileName(file), "035") < 0);
+            file => string.CompareOrdinal(Path.GetFileName(file), "036_") < 0);
         previous.Successful.ShouldBeTrue(previous.Error?.ToString());
         TableExists("Employee").ShouldBeTrue();
         NewTables.Select(TableExists).ShouldAllBe(exists => !exists);
