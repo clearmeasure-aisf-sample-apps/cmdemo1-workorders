@@ -286,6 +286,11 @@ public class WorkOrderManageAttachmentsTests
                 return Task.FromResult<TResponse>((TResponse)(object)Remove(remove));
             }
 
+            if (request is WorkOrderStatusHistoryQuery)
+            {
+                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
+            }
+
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
         }
 

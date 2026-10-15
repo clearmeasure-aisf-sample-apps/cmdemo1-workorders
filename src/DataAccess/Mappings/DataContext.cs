@@ -37,6 +37,7 @@ public class DataContext : DbContext
         new EmployeeMap().Map(modelBuilder);
         new RoleMap().Map(modelBuilder);
         new WorkOrderAttachmentMap().Map(modelBuilder);
+        new WorkOrderStatusChangeMap().Map(modelBuilder);
         new TeamMap().Map(modelBuilder);
         new VendorMap().Map(modelBuilder);
         new SavedSearchViewMap().Map(modelBuilder);

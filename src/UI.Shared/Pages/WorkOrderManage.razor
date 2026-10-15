@@ -223,6 +223,41 @@
                     </table>
                 </div>
             }
+
+            @if (_statusHistory.Length == 0)
+            {
+                <div class="status-history-section" data-testid="@Elements.StatusHistory">
+                    <h4>Status Change History</h4>
+                    <p data-testid="@Elements.StatusHistory">No status changes recorded.</p>
+                </div>
+            }
+            else
+            {
+                <div class="status-history-section" data-testid="@Elements.StatusHistory">
+                    <h4>Status Change History</h4>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>From Status</th>
+                                <th>To Status</th>
+                                <th>Changed By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var change in _statusHistory)
+                            {
+                                <tr data-testid="@Elements.StatusHistoryRow">
+                                    <td data-testid="@Elements.StatusHistoryDate">@TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago).ToString("G")</td>
+                                    <td data-testid="@Elements.StatusHistoryFromStatus">@change.FromStatus</td>
+                                    <td data-testid="@Elements.StatusHistoryToStatus">@change.ToStatus</td>
+                                    <td data-testid="@Elements.StatusHistoryChangedBy">@change.ChangedBy?.GetFullName()</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
 
         <div class="action-section">
@@ -290,6 +325,12 @@
         Priority,
         Building,
         CopyWorkOrderNumber,
-        PrintLink
+        PrintLink,
+        StatusHistory,
+        StatusHistoryRow,
+        StatusHistoryDate,
+        StatusHistoryFromStatus,
+        StatusHistoryToStatus,
+        StatusHistoryChangedBy
     }
 }
