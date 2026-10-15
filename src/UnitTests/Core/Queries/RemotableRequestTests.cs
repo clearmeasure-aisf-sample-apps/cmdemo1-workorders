@@ -146,6 +146,45 @@ public class RemotableRequestTests
         rehydrated.CompletedLast30Days.ShouldBe(9);
     }
 
+    [Test]
+    public void ShouldRoundTripTeamAndVendorRequests()
+    {
+        AssertRemotable(new TeamsQuery());
+        AssertRemotable(new VendorsQuery());
+        AssertRemotable(new CreateVendorCommand("Acme", "HVAC", "Pat", "pat@acme.test", "555", false));
+        AssertRemotable(new CreateTeamResult(true, "Team 'Grounds' created.", Guid.NewGuid()));
+        AssertRemotable(new CreateVendorResult(false, "A vendor named 'Acme' already exists.", null));
+
+        var createTeam = new CreateTeamCommand("Grounds", "Lawn and snow", ["u1", "u2"]);
+        var rehydratedCommand = SimulateRemoteObject(createTeam);
+
+        rehydratedCommand.Name.ShouldBe("Grounds");
+        rehydratedCommand.Description.ShouldBe("Lawn and snow");
+        rehydratedCommand.MemberUserNames.ShouldBe(["u1", "u2"]);
+    }
+
+    [Test]
+    public void ShouldRoundTripTeamWithMembersAndVendor()
+    {
+        var team = new Team { Id = Guid.NewGuid(), Name = "Grounds", Description = "Lawn and snow" };
+        var first = ObjectMother.Faker<Employee>();
+        var second = ObjectMother.Faker<Employee>();
+        team.AddMember(first);
+        team.AddMember(second);
+
+        var rehydrated = (Team)AssertRemotable(team);
+
+        rehydrated.MemberCount.ShouldBe(2);
+        rehydrated.Members.Select(m => m.Id).ShouldBe([first.Id, second.Id], ignoreOrder: true);
+
+        var vendor = new Vendor
+        {
+            Id = Guid.NewGuid(), Name = "Acme", Trade = "HVAC", ContactName = "Pat",
+            EmailAddress = "pat@acme.test", PhoneNumber = "555", IsActive = false
+        };
+        AssertRemotable(vendor);
+    }
+
     public static object AssertRemotable(object theObject)
     {
         var rehydratedQuery = SimulateRemoteObject(theObject);
