@@ -87,7 +87,7 @@ public class WorkOrderTools
                 return $"Employee with username '{creatorUsername}' not found.";
             }
 
-            var validationError = ValidateCreateParameters(description, dueDate);
+            var validationError = ValidateCreateParameters(description);
             if (validationError != null)
             {
                 return validationError;
@@ -145,7 +145,7 @@ public class WorkOrderTools
                 return resolveError;
             }
 
-            var validationError = ValidateCreateParameters(description, null);
+            var validationError = ValidateCreateParameters(description);
             if (validationError != null)
             {
                 return validationError;
@@ -293,7 +293,7 @@ public class WorkOrderTools
         return null;
     }
 
-    private static string? ValidateCreateParameters(string? description, string? dueDate)
+    private static string? ValidateCreateParameters(string? description)
     {
         if (string.IsNullOrWhiteSpace(description))
         {
