@@ -38,6 +38,7 @@ public class WorkOrderStatusHistoryQueryHandlerTests
     public void TearDown()
     {
         _context?.Dispose();
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (!string.IsNullOrEmpty(_dbPath) && File.Exists(_dbPath))
         {
             File.Delete(_dbPath);
