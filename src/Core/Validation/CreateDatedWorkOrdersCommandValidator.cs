@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using FluentValidation;
 
@@ -16,6 +17,10 @@ public sealed class CreateDatedWorkOrdersCommandValidator : AbstractValidator<Cr
         RuleFor(x => x.CreatorUsername).NotEmpty();
         RuleFor(x => x.AssigneeUsername).NotEmpty();
         RuleFor(x => x.Title).NotEmpty();
+        RuleFor(x => x.Description)
+            .NotEmpty()
+            .MaximumLength(WorkOrder.DescriptionMaxLength)
+            .WithMessage($"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.");
         RuleFor(x => x.DueDates)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()

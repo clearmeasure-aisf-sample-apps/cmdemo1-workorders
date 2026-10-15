@@ -496,6 +496,25 @@ public class McpSaveWorkOrderTests
     }
 
     [Test]
+    public async Task ShouldRejectDescriptionLongerThan4000CharactersWhenCreatingWorkOrder()
+    {
+        var creatorUserName = TestData.UserName("creator");
+        await SeedCreatorAsync(creatorUserName);
+        var bus = TestHost.GetRequiredService<IBus>();
+        var numberGenerator = new WorkOrderNumberGenerator();
+        var tooLongDescription = new string('d', WorkOrder.DescriptionMaxLength + 1);
+
+        var result = await WorkOrderTools.CreateWorkOrder(
+            bus,
+            numberGenerator,
+            "Title",
+            tooLongDescription,
+            creatorUserName);
+
+        result.ShouldBe("Description cannot exceed 4000 characters.");
+    }
+
+    [Test]
     public void ShouldNotExposeSaveOnExecuteWorkOrderCommand()
     {
         var executorType = typeof(WorkOrderCommandExecutor);

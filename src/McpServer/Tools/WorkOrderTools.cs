@@ -87,6 +87,16 @@ public class WorkOrderTools
                 return $"Employee with username '{creatorUsername}' not found.";
             }
 
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return "Description is required.";
+            }
+
+            if (description.Length > WorkOrder.DescriptionMaxLength)
+            {
+                return $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.";
+            }
+
             if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out var dueDateError))
             {
                 return dueDateError!;
@@ -139,6 +149,16 @@ public class WorkOrderTools
                 return resolveError;
             }
 
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return "Description is required.";
+            }
+
+            if (description.Length > WorkOrder.DescriptionMaxLength)
+            {
+                return $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.";
+            }
+
             var result = await bus.Send(new CreateDatedWorkOrdersCommand(
                 creatorUsername,
                 assigneeUsername,
@@ -185,7 +205,7 @@ public class WorkOrderTools
             return $"Employee with username '{executingUsername}' not found.";
         }
 
-        var validationError = ValidateSave(workOrder, executingUser, title, dueDate, roomNumber);
+        var validationError = ValidateSave(workOrder, executingUser, title, dueDate, roomNumber, description);
         if (validationError != null)
         {
             return validationError;
@@ -242,7 +262,8 @@ public class WorkOrderTools
         Employee executingUser,
         string? title,
         string? dueDate,
-        string? roomNumber = null)
+        string? roomNumber = null,
+        string? description = null)
     {
         if (!new SaveDraftCommand(workOrder, executingUser).IsValid())
         {
@@ -250,6 +271,7 @@ public class WorkOrderTools
         }
 
         return ValidateTitlePatch(title)
+            ?? ValidateDescriptionPatch(description)
             ?? ValidateRoomNumberPatch(workOrder, roomNumber)
             ?? ValidateDueDatePatch(dueDate);
     }
@@ -264,6 +286,16 @@ public class WorkOrderTools
         if (title is { Length: > WorkOrder.TitleMaxLength })
         {
             return $"Title cannot exceed {WorkOrder.TitleMaxLength} characters.";
+        }
+
+        return null;
+    }
+
+    private static string? ValidateDescriptionPatch(string? description)
+    {
+        if (description is { Length: > WorkOrder.DescriptionMaxLength })
+        {
+            return $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.";
         }
 
         return null;
