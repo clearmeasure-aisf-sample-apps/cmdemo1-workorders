@@ -64,12 +64,21 @@ Work order state transitions: Draft → Assigned → InProgress → Complete, wi
 
 ## Domain Model
 
-- **WorkOrder**: Number (unique, `IX_WorkOrder_Number`), Title, Description, RoomNumber, Building (optional), Priority (WorkOrderPriority), DueDate, Status (WorkOrderStatus), Creator/Assignee (Employee), AssignedDate, CreatedDate, CompletedDate. Methods: `ChangeStatus()`, `CanReassign()`
+- **WorkOrder**: Number (unique, `IX_WorkOrder_Number`), Title, Description, Instructions, RoomNumber, Building (optional string), Priority (WorkOrderPriority), DueDate, Status (WorkOrderStatus), Creator/Assignee (Employee), AssignedDate, CreatedDate, CompletedDate, WaitingOnVendorSince, Attachments. Methods: `ChangeStatus()`, `CanReassign()`, `GetDueDateUrgency()`, `IsOverdue()`
 - **WorkOrderPriority**: enum Low = 1, Medium = 2 (default), High = 3; stored as tinyint
+- **DueDateUrgency**: non-persisted, read-time enum None = 0, DueToday = 1, Overdue = 2
 - **Work Order Search queries**: `WorkOrderSpecificationQuery` (creator, assignee, status, overdue, priority, building, open only, completed within N days, free text; newest first), `WorkOrderSearchSummaryQuery` (summary card and nav badge counts), `WorkOrderBuildingsQuery` (distinct buildings), `BuildingRoomSummaryQuery` (per building and room: open, overdue, completed in the last 30 days and total work orders, grouped by the database with the search's trimming and collation and the summary cards' predicates, so each count equals the matching search), `RecentWorkOrdersQuery` (dashboard recent activity: the last N work orders by their latest created, assigned or completed date). The search page keeps its filters, sort, page and view (table, or a board with a column per status) in the URL (`WorkOrderSearchUrlState`)
-- **Employee**: UserName, FirstName, LastName, EmailAddress, Roles. Methods: `CanCreateWorkOrder()`, `CanFulfillWorkOrder()`
-- **WorkOrderStatus**: Smart enum — Draft, Assigned, InProgress, Complete, Cancelled. WaitingOnVendor is an InProgress substate, not an enum value. Factory methods: `FromCode()`, `FromKey()`
+- **Employee**: UserName, FirstName, MiddleName (optional), LastName, EmailAddress, PreferredLanguage, Roles. Methods: `GetFullName()`, `CanCreateWorkOrder()`, `CanFulfillWorkOrder()`
+- **WorkOrderStatus**: Smart enum — None (empty sentinel), Draft, Assigned, InProgress, Complete, Cancelled; Code, Key, FriendlyName, SortBy. WaitingOnVendor is an InProgress substate, not an enum value. Factory methods: `FromCode()`, `FromKey()`
 - **Role**: Name, CanCreateWorkOrder, CanFulfillWorkOrder
+- **Team**: Name, Description (optional), Members (Employee), MemberCount. Method: `AddMember()`
+- **Vendor**: Name, Trade, ContactName, EmailAddress, PhoneNumber (optional contact fields), IsActive (defaults to true)
+- **SavedSearchView**: Id, EmployeeId, Name, Query, CreatedDate; a named search owned by an employee
+- **WorkOrderStatusChange**: WorkOrderId, FromStatus, ToStatus, ChangedById/ChangedBy (Employee), ChangedDate; status history
+- **WorkOrderAttachment**: Id, WorkOrderId, FileName, ContentType, FileSize, UploadedById/UploadedBy (Employee), UploadedDate; attachment metadata
+- **EntityBase<T>**: Guid Id and identity equality; base for WorkOrder, Employee, Role, Team, Vendor and WorkOrderStatusChange. SavedSearchView and WorkOrderAttachment declare their own Id
+
+The entity/supporting-type inventory and associations are shown in `arch/arch-c4-class-domain-model.puml` (PNG/SVG) and `arch/arch-c4-class-domain-model.md`. Building is a nullable WorkOrder string, not an entity. Team membership is not a WorkOrder assignment; Vendor has no direct WorkOrder association. WeatherForecast is a DTO, and JSON converters, constants, messages, events and command/result records are not entities.
 
 ## Database Migrations
 
