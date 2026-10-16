@@ -108,7 +108,6 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
 
         // The unfiltered result is paged (#251); search for the number so its row is on the page.
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={seededNumbers.LovejoyDraft}");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(WorkOrderSearch.Elements.WorkOrderLink) + seededNumbers.LovejoyDraft);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber)))
             .ToHaveTextAsync(seededNumbers.LovejoyDraft);
@@ -211,7 +210,6 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         await creatorSelect.SelectOptionAsync(creatorUsername ?? string.Empty);
         await assigneeSelect.SelectOptionAsync(assigneeUsername ?? string.Empty);
         await statusSelect.SelectOptionAsync(status ?? string.Empty);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Results are paged (25 per page, #251): VisibleSearchNumbers walks every page, so required
         // numbers are checked against the whole filtered result rather than the first page.
@@ -230,7 +228,6 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
 
             // Filters apply on change and live in the URL, so a reload re-runs the same search.
             await Page.ReloadAsync();
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
             await Expect(creatorSelect).ToHaveValueAsync(creatorUsername ?? string.Empty);
             mcpNumbers = await CallListWorkOrders(filterArguments);
             portalNumbers = await VisibleSearchNumbers();

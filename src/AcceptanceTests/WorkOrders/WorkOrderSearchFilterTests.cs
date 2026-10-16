@@ -17,7 +17,6 @@ public class WorkOrderSearchFilterTests : AcceptanceTestBase
     {
         // Arrange & Act
         await Page.GotoAsync("workorder/search?Building=Sanctuary&Room=101");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Assert
         await Expect(Page).ToHaveTitleAsync(new Regex("Search"));
@@ -28,7 +27,6 @@ public class WorkOrderSearchFilterTests : AcceptanceTestBase
     {
         // Arrange & Act
         await Page.GotoAsync("workorder/search?NoRoom=true");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Assert
         await Expect(Page).ToHaveTitleAsync(new Regex("Search"));

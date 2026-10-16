@@ -19,7 +19,6 @@ public class LogoutTests : AcceptanceTestBase
         await Expect(newLink).ToBeVisibleAsync();
 
         await LogoutViaUserMenu();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         
         var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
         await Expect(loginLink).ToBeVisibleAsync();

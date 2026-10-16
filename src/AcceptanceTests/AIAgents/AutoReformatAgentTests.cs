@@ -26,7 +26,6 @@ public class AutoReformatAgentTests : AcceptanceTestBase
         await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + "Save");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var rehydrated = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
         for (var attempt = 0; attempt < 120 && rehydrated?.Description == order.Description; attempt++)

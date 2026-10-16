@@ -30,7 +30,6 @@ public class WorkOrderAttachmentTests : AcceptanceTestBase
         await Bus.Send(command);
 
         await Click(nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
         await woNumberLocator.WaitForAsync();

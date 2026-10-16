@@ -162,7 +162,6 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
             Timeout = 90_000
         });
         await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
     }

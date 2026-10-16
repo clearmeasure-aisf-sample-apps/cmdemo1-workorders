@@ -10,7 +10,6 @@ public class SidebarSlaHealthCardTests : AcceptanceTestBase
     {
         await Page.SetViewportSizeAsync(1280, 800);
         await LoginAsCurrentUser();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var card = Page.GetByTestId(nameof(SlaHealthCard.Elements.SlaHealthCard));
         await Expect(card).ToBeVisibleAsync();

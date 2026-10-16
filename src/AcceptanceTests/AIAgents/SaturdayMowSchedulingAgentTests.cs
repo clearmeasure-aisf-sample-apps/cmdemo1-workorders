@@ -33,13 +33,11 @@ public class SaturdayMowSchedulingAgentTests : AcceptanceTestBase
             Timeout = 90_000
         });
         await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
 
         await Click(nameof(NavMenu.Elements.AiAgent));
         await Page.WaitForURLAsync("**/ai-agent");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         const string prompt =
             "Create 10 work orders for Groundskeeper Willie MacDougal to mow the grass, " +
@@ -114,12 +112,10 @@ public class SaturdayMowSchedulingAgentTests : AcceptanceTestBase
 
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search**");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         // Full Page.GotoAsync drops in-memory Blazor auth. Filter within the SPA instead.
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         await Expect(assigneeSelect).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
         await assigneeSelect.SelectOptionAsync("gwillie");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         foreach (var wo in matchingSet)
         {

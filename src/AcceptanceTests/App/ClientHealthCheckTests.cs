@@ -30,7 +30,6 @@ public class ClientHealthCheckTests : AcceptanceTestBase
     public async Task Should_NavigateToHealthCheck_WhenGearIconClicked()
     {
         await Page.GotoAsync("/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Click(nameof(HealthCheckLink.Elements.HealthCheckLink));
 
@@ -47,7 +46,6 @@ public class ClientHealthCheckTests : AcceptanceTestBase
     public async Task FirstStartShouldValidateServerHealthChecks()
     {
         await Page.GotoAsync("/_healthcheck");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var content = await Page.ContentAsync();
         AcceptableHealthStatuses.ShouldContain(s =>
             content.Contains(s, StringComparison.OrdinalIgnoreCase));
@@ -57,7 +55,6 @@ public class ClientHealthCheckTests : AcceptanceTestBase
     public async Task HealthCheckEndpoint_ShouldReturnHealthy()
     {
         await Page.GotoAsync("/_healthcheck");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var content = await Page.ContentAsync();
         AcceptableHealthStatuses.ShouldContain(s =>
             content.Contains(s, StringComparison.OrdinalIgnoreCase));

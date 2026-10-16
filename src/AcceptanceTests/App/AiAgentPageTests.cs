@@ -18,7 +18,6 @@ public class AiAgentPageTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.AiAgent));
         await Page.WaitForURLAsync("**/ai-agent");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var chatInput = Page.GetByTestId(nameof(ApplicationChat.Elements.ChatInput));
         var sendButton = Page.GetByTestId(nameof(ApplicationChat.Elements.SendButton));

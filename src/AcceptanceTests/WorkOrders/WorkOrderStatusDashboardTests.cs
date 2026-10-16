@@ -12,7 +12,6 @@ public class WorkOrderStatusDashboardTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         await Page.GotoAsync("/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var dashboard = Page.GetByTestId(nameof(IndexPage.Elements.StatusDashboard));
         await dashboard.WaitForAsync();
