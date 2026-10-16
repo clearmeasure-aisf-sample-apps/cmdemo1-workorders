@@ -42,4 +42,14 @@ public class McpReferenceResourceTests
         result.ShouldContain("AssignedToInProgressCommand");
         result.ShouldContain("InProgressToCompleteCommand");
     }
+
+    [Test]
+    public void ShouldReturnAllWorkOrderPriorities()
+    {
+        var result = ReferenceResources.GetWorkOrderPriorities();
+
+        result.ShouldContain("Low");
+        result.ShouldContain("Medium");
+        result.ShouldContain("High");
+    }
 }

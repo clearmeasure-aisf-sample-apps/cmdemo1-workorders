@@ -24,6 +24,19 @@ public class ReferenceResources
         return JsonSerializer.Serialize(statuses, JsonOptions);
     }
 
+    [McpServerResource(UriTemplate = "churchbulletin://reference/work-order-priorities", Name = "work-order-priorities"),
+     Description("All valid work order priorities with their name and value.")]
+    public static string GetWorkOrderPriorities()
+    {
+        var priorities = Enum.GetNames<WorkOrderPriority>().Select(name => new
+        {
+            Name = name,
+            Value = (int)Enum.Parse<WorkOrderPriority>(name)
+        }).ToArray();
+
+        return JsonSerializer.Serialize(priorities, JsonOptions);
+    }
+
     [McpServerResource(UriTemplate = "churchbulletin://reference/roles", Name = "roles"),
      Description("All defined roles with their permissions.")]
     public static string GetRoles()
