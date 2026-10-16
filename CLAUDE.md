@@ -154,9 +154,12 @@ Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, 
 | `/api/tools/hash` | POST | SHA-256 of `text` (UTF-8); optional MD5/SHA-1 via `includeMd5`/`includeSha1` flags |
 | `/api/tools/base64` | POST | Base64 encode/decode of `text` (UTF-8); `mode` `encode` (default) or `decode` |
 | `/api/tools/guid-generator` | POST | Generate 1–100 UUIDs; optional `count` query param |
-| `/api/tools/random` | POST | Random integer in `[min, max]` |
+| `/api/tools/random` | GET | Generate plain-text random values; required `type` query param: `number`, `string` (12 alphanumeric characters), `uuid`, or `color` (`#RRGGBB`) |
 | `/api/tools/slugify` | POST | Convert `text` to URL slug (lowercase; non-alphanumeric runs become single `-`) |
-| `/api/tools/timestamp-converter` | GET | Convert Unix timestamps to/from ISO-8601 |
+| `/api/tools/timestamp-converter` | GET | Convert Unix seconds to/from ISO-8601; supply exactly one query param, `unix` or `iso`; returns Unix seconds, ISO-8601 UTC, and a human-readable UTC string |
+| `/api/tools/due-date-check` | GET | Return due-date urgency for required `date` query param (`YYYY-MM-DD`), relative to today in America/Chicago, assuming an open work order |
+| `/api/tools/word-count` | POST | Count words, characters, and lines in JSON body field `text` |
+| `/api/tools/work-order-statuses` | GET | List work order statuses (`code`, `key`, `friendlyName`, `sortBy`) in sort order |
 
 All routes also available under the versioned prefix `/api/v1.0/tools/`.
 
