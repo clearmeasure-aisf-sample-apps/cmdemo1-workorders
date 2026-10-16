@@ -2,33 +2,42 @@
 !include templates/plantuml-theme.puml
 
 scale 2/3
-'left to right direction
 center header
-    C4 Architecture: Component Diagram Header
+    C4 Architecture: Solution Components
 endheader
 
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Component.puml
 
-title Church Bulletin Component diagram 
+title Church Bulletin solution project dependencies
 
 ContainerDb(database, "Database", "SQL Server", "Transactional data store")
 
 Container_Boundary(visualstudiosolution, "ChurchBulletin.sln") {
-    Component(core, "Core", "Class Library / net10.0", "Domain model, interfaces, queries - inner onion layer")
-    Component(dataAccess, "DataAccess", "Class Library / net10.0", "EF Core DbContext, MediatR handlers, NServiceBus messaging")
-    Component(databaseProject, "Database", "Console App / net10.0", "DbUp schema migrations")
-    Component(llmGateway, "LlmGateway", "Class Library / net10.0", "Azure OpenAI integration via Microsoft.Extensions.AI")
-    Component(uiShared, "UI.Shared", "Razor Class Library / net10.0", "Shared Blazor pages and components")
-    Component(uiApi, "UI.Api", "ASP.NET / net10.0", "API controllers and endpoint definitions")
-    Component(uiClient, "UI.Client", "Blazor WebAssembly / net10.0", "Interactive browser application")
-    Component(uiServer, "UI.Server", "ASP.NET / net10.0", "Hosts API, Blazor Server, MCP endpoint")
-    Component(mcpServer, "McpServer", "ASP.NET / net10.0", "Model Context Protocol tools for AI agents")
-    Component(worker, "Worker", "Worker Service / net10.0", "NServiceBus endpoint for async processing")
-    Component(serviceDefaults, "ServiceDefaults", "Aspire Shared / net10.0", "OpenTelemetry and health check defaults")
-    Component(appHost, "AppHost", "Aspire AppHost / net10.0", "Orchestrates UI.Server and Worker")
-    Component(unitTests, "Unit Tests", "NUnit / net10.0", "Tests all in-memory logic")
-    Component(integrationTests, "Integration Tests", "NUnit / net10.0", "Tests logic across memory spaces")
-    Component(acceptanceTests, "Acceptance Tests", "Playwright + NUnit / net10.0", "End-to-end browser tests")
+    Container_Boundary(domainLayer, "Inner onion: domain") {
+        Component(core, "Core", "Class Library / net10.0", "Domain model, interfaces, queries")
+    }
+    Container_Boundary(adapterLayer, "Outer onion: adapters") {
+        Component(dataAccess, "DataAccess", "Class Library / net10.0", "EF Core DbContext, MediatR handlers, NServiceBus messaging")
+        Component(databaseProject, "Database", "Console App / net10.0", "DbUp schema migrations")
+        Component(llmGateway, "LlmGateway", "Class Library / net10.0", "Azure OpenAI integration via Microsoft.Extensions.AI")
+    }
+    Container_Boundary(presentationLayer, "Outer onion: presentation and hosts") {
+        Component(uiShared, "UI.Shared", "Razor Class Library / net10.0", "Shared Blazor pages and components")
+        Component(uiApi, "UI.Api", "ASP.NET / net10.0", "API controllers and endpoint definitions")
+        Component(uiClient, "UI.Client", "Blazor WebAssembly / net10.0", "Interactive browser application")
+        Component(uiServer, "UI.Server", "ASP.NET / net10.0", "Hosts API, Blazor Server, MCP endpoint")
+        Component(mcpServer, "McpServer", "ASP.NET / net10.0", "Model Context Protocol tools for AI agents")
+        Component(worker, "Worker", "Worker Service / net10.0", "NServiceBus endpoint for async processing")
+    }
+    Container_Boundary(operationsLayer, "Operations and orchestration") {
+        Component(serviceDefaults, "ChurchBulletin.ServiceDefaults", "Aspire Shared / net10.0", "OpenTelemetry and health check defaults")
+        Component(appHost, "ChurchBulletin.AppHost", "Aspire AppHost / net10.0", "Orchestrates UI.Server and Worker")
+    }
+    Container_Boundary(testLayer, "Tests") {
+        Component(unitTests, "UnitTests", "NUnit / net10.0", "Tests all in-memory logic")
+        Component(integrationTests, "IntegrationTests", "NUnit / net10.0", "Tests logic across memory spaces")
+        Component(acceptanceTests, "AcceptanceTests", "Playwright + NUnit / net10.0", "End-to-end browser tests")
+    }
 }
 
 Rel(dataAccess, core, "Project Reference")
@@ -44,7 +53,9 @@ Rel(uiServer, llmGateway, "Project Reference")
 Rel(uiServer, mcpServer, "Project Reference")
 Rel(uiServer, uiClient, "Project Reference")
 Rel(uiServer, uiApi, "Project Reference")
+Rel(uiServer, uiShared, "Project Reference")
 Rel(uiServer, serviceDefaults, "Project Reference")
+Rel(mcpServer, serviceDefaults, "Project Reference")
 Rel(mcpServer, core, "Project Reference")
 Rel(mcpServer, dataAccess, "Project Reference")
 Rel(mcpServer, llmGateway, "Project Reference")
@@ -57,6 +68,10 @@ Rel(appHost, worker, "Project Reference")
 Rel(databaseProject, database, "DbUp")
 Rel(dataAccess, database, "ConnectionString")
 Rel(unitTests, core, "Project Reference")
+Rel(unitTests, serviceDefaults, "Project Reference")
+Rel(unitTests, databaseProject, "Project Reference")
+Rel(unitTests, mcpServer, "Project Reference")
+Rel(unitTests, worker, "Project Reference")
 Rel(unitTests, uiClient, "Project Reference")
 Rel(unitTests, uiApi, "Project Reference")
 Rel(unitTests, uiServer, "Project Reference")
@@ -68,6 +83,11 @@ Rel(acceptanceTests, core, "Project Reference")
 Rel(acceptanceTests, integrationTests, "Project Reference")
 Rel(acceptanceTests, mcpServer, "Project Reference")
 
-LEGEND("Legend","Core: Domain model\nDataAccess: EF Core + MediatR handlers\nUI.Server: API + Server host\nUI.Client: Blazor WASM\nWorker: Background processors\nMcpServer: Model Context Protocol host\nLlmGateway: Azure OpenAI adapter")
+legend
+  Project Reference: one arrow per direct .csproj reference
+  Core is the inner onion; adapters and hosts depend inward
+  Operations and tests are shown separately from domain layers
+  DbUp / ConnectionString: runtime database relationships, not project references
+endlegend
 FOOTER()
 @enduml

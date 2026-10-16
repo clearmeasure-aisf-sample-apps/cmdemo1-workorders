@@ -60,7 +60,7 @@ User → Blazor UI → API Controller → IBus.Send(query/command)
 
 **State Commands:** Defined in `src/Core/Model/StateCommands/`. Each command implements `IStateCommand` and mutates the domain model. Flow: `StateCommandHandler` → `command.Execute(workOrder)` → `DataContext.SaveChangesAsync()`.
 
-Work order state transitions: Draft → Assigned → InProgress → Complete (also Cancelled from any state). See `arch/WorflowFor*.md` for sequence diagrams.
+Work order state transitions: Draft → Assigned → InProgress → Complete, with InProgress → Assigned for shelving and cancellation from Assigned or either InProgress substate. InProgress contains active work and WaitingOnVendor (`WaitingOnVendorSince` null or non-null); waiting and resuming do not change the persisted status. Complete and Cancelled are terminal. See `arch/arch-state-workorder.md` for the state diagram and `arch/WorflowFor*.md` for sequence diagrams.
 
 ## Domain Model
 
@@ -68,7 +68,7 @@ Work order state transitions: Draft → Assigned → InProgress → Complete (al
 - **WorkOrderPriority**: enum Low = 1, Medium = 2 (default), High = 3; stored as tinyint
 - **Work Order Search queries**: `WorkOrderSpecificationQuery` (creator, assignee, status, overdue, priority, building, open only, completed within N days, free text; newest first), `WorkOrderSearchSummaryQuery` (summary card and nav badge counts), `WorkOrderBuildingsQuery` (distinct buildings), `BuildingRoomSummaryQuery` (per building and room: open, overdue, completed in the last 30 days and total work orders, grouped by the database with the search's trimming and collation and the summary cards' predicates, so each count equals the matching search), `RecentWorkOrdersQuery` (dashboard recent activity: the last N work orders by their latest created, assigned or completed date). The search page keeps its filters, sort, page and view (table, or a board with a column per status) in the URL (`WorkOrderSearchUrlState`)
 - **Employee**: UserName, FirstName, LastName, EmailAddress, Roles. Methods: `CanCreateWorkOrder()`, `CanFulfillWorkOrder()`
-- **WorkOrderStatus**: Smart enum — Draft, Assigned, InProgress, Complete, Cancelled. Factory methods: `FromCode()`, `FromKey()`
+- **WorkOrderStatus**: Smart enum — Draft, Assigned, InProgress, Complete, Cancelled. WaitingOnVendor is an InProgress substate, not an enum value. Factory methods: `FromCode()`, `FromKey()`
 - **Role**: Name, CanCreateWorkOrder, CanFulfillWorkOrder
 
 ## Database Migrations
@@ -115,35 +115,35 @@ DbUp scripts in `src/Database/scripts/Update/`, numbered sequentially (`###_Desc
 
 **.NET SDK:** 10.0.100 (see `global.json`)
 
-**Core** — MediatR.Contracts 2.0.1, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0
+**Core** — FluentValidation 11.11.0, MediatR.Contracts 2.0.1, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0
 
-**DataAccess** — MediatR 12.4.1, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, NServiceBus.Persistence.Sql.TransactionalSession 8.3.0, ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30
+**DataAccess** — MediatR 12.4.1, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, NServiceBus.Persistence.Sql.TransactionalSession 8.3.0, ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0, SQLitePCLRaw.bundle_e_sqlite3 2.1.12, System.Security.Cryptography.Xml 10.0.11
 
-**Database** — DbUp 5.0.41, dbup-sqlserver 6.0.16, Spectre.Console 0.54.0, Spectre.Console.Cli 0.53.0
+**Database** — DbUp 5.0.41, dbup-sqlserver 6.0.16, JetBrains.Annotations 2025.2.2, Spectre.Console 0.54.0, Spectre.Console.Cli 0.53.0
 
-**UI.Server** — Lamar.Microsoft.DependencyInjection 15.0.1, Microsoft.AspNetCore.Components.WebAssembly.Server 10.0.0, ModelContextProtocol 1.0.0, ModelContextProtocol.AspNetCore 1.0.0, NServiceBus.Extensions.Hosting 3.0.1, OpenTelemetry 1.12.0
+**UI.Server** — Asp.Versioning.Http 8.1.0, FluentValidation.DependencyInjectionExtensions 11.11.0, Asp.Versioning.Mvc 8.1.0, Google.Protobuf 3.27.0, Grpc.AspNetCore 2.70.0, Lamar.Microsoft.DependencyInjection 15.0.1, Microsoft.AspNetCore.Components.WebAssembly.Server 10.0.0, ModelContextProtocol 1.0.0, ModelContextProtocol.AspNetCore 1.0.0, NServiceBus.Extensions.Hosting 3.0.1, OpenTelemetry.Instrumentation.AspNetCore 1.15.2, OpenTelemetry.Instrumentation.Http 1.15.1, OpenTelemetry.Instrumentation.Runtime 1.15.1, OpenTelemetry.Instrumentation.SqlClient 1.15.2
 
-**UI.Client** — BlazorMvc 2.1.1, MediatR 12.4.1, Lamar.Microsoft.DependencyInjection 15.0.1, Microsoft.AspNetCore.Components.WebAssembly 10.0.0, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
+**UI.Client** — BlazorMvc 2.1.1, MediatR 12.4.1, Lamar.Microsoft.DependencyInjection 15.0.1, Microsoft.AspNetCore.Components.WebAssembly 10.0.0, Microsoft.AspNetCore.Components.WebAssembly.DevServer 10.0.0, Microsoft.AspNetCore.Components.Authorization 10.0.0, Microsoft.Extensions.Diagnostics.HealthChecks 10.0.0, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
 
-**UI.Api** — Lamar.Microsoft.DependencyInjection 15.0.1
+**UI.Api** — Asp.Versioning.Abstractions 8.1.0, Lamar.Microsoft.DependencyInjection 15.0.1
 
-**UI.Shared** — BlazorMvc 2.1.1, MediatR 12.4.1, Microsoft.AspNetCore.Components.Authorization 10.0.0, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
+**UI.Shared** — BlazorMvc 2.1.1, MediatR 12.4.1, Microsoft.AspNetCore.Components.Authorization 10.0.0, Microsoft.AspNetCore.Components.Web 10.0.0, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
 
-**LlmGateway** — Azure.AI.OpenAI 2.1.0, MediatR 12.4.1, Microsoft.Extensions.AI 9.7.0, Microsoft.Extensions.AI.OpenAI 9.7.1-preview.1.25365.4, Microsoft.Extensions.AI.Abstractions 9.7.1
+**LlmGateway** — Azure.AI.OpenAI 2.1.0, Azure.Core 1.46.1, MediatR 12.4.1, Microsoft.Extensions.AI 9.7.0, Microsoft.Extensions.AI.OpenAI 9.7.1-preview.1.25365.4, Microsoft.Extensions.AI.Abstractions 9.7.1, Microsoft.Extensions.Diagnostics.HealthChecks 10.0.0, Microsoft.Extensions.Logging.Console 10.0.0
 
-**McpServer** — ModelContextProtocol 1.0.0, ModelContextProtocol.AspNetCore 1.0.0, Lamar.Microsoft.DependencyInjection 15.0.1, MediatR 12.4.1, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0
+**McpServer** — ModelContextProtocol 1.0.0, ModelContextProtocol.AspNetCore 1.0.0, Lamar.Microsoft.DependencyInjection 15.0.1, MediatR 12.4.1, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, SQLitePCLRaw.bundle_e_sqlite3 2.1.12, OpenTelemetry.Instrumentation.AspNetCore 1.15.2, OpenTelemetry.Instrumentation.Http 1.15.1, OpenTelemetry.Instrumentation.Runtime 1.15.1, OpenTelemetry.Instrumentation.SqlClient 1.15.2
 
 **Worker** — ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30, Microsoft.Extensions.Hosting 10.0.2
 
-**AppHost** — Aspire.AppHost.Sdk 13.1.2
+**ChurchBulletin.AppHost** — MessagePack 2.5.302
 
-**ServiceDefaults** — Azure.Monitor.OpenTelemetry.AspNetCore 1.6.0, OpenTelemetry.Exporter.OpenTelemetryProtocol 1.12.0, OpenTelemetry.Extensions.Hosting 1.12.0, Microsoft.Extensions.Http.Resilience 9.9.0, Microsoft.Extensions.ServiceDiscovery 9.5.0
+**ChurchBulletin.ServiceDefaults** — Azure.Monitor.OpenTelemetry.AspNetCore 1.6.0, OpenTelemetry.Api 1.15.3, OpenTelemetry.Exporter.Console 1.15.3, OpenTelemetry.Exporter.OpenTelemetryProtocol 1.15.3, OpenTelemetry.Extensions.Hosting 1.15.3, OpenTelemetry.Instrumentation.AspNetCore 1.15.2, OpenTelemetry.Instrumentation.EntityFrameworkCore 1.0.0-beta.12, OpenTelemetry.Instrumentation.Http 1.15.1, OpenTelemetry.Instrumentation.Runtime 1.15.1, OpenTelemetry.Instrumentation.SqlClient 1.15.2, Microsoft.Extensions.Http.Resilience 9.9.0, Microsoft.Extensions.ServiceDiscovery 9.5.0, Serilog.AspNetCore 9.0.0, Serilog.Formatting.Compact 3.0.0
 
-**UnitTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, Shouldly 4.3.0, bunit 1.40.0, AutoBogus.Conventions 2.13.1, MediatR 12.4.1, coverlet.msbuild 6.0.4, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
+**UnitTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, Shouldly 4.3.0, bunit 2.9.0, AutoBogus.Conventions 2.13.1, MediatR 12.4.1, coverlet.msbuild 6.0.4, coverlet.collector 6.0.4, AngleSharp 1.7.2, Microsoft.AspNetCore.Components.Authorization 10.0.11, Microsoft.AspNetCore.Mvc.Testing 10.0.0, Microsoft.NET.Test.Sdk 17.14.1, Serilog.Formatting.Compact 3.0.0, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
 
-**IntegrationTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, Shouldly 4.3.0, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.Extensions.Hosting 10.0.0, coverlet.msbuild 6.0.4
+**IntegrationTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, Shouldly 4.3.0, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.Extensions.Hosting 10.0.2, coverlet.msbuild 6.0.4, coverlet.collector 6.0.4, Grpc.Net.Client 2.70.0, Microsoft.AspNetCore.Mvc.Testing 10.0.0, Microsoft.NET.Test.Sdk 17.14.1
 
-**AcceptanceTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, microsoft.playwright.nunit 1.54.0, Azure.AI.OpenAI 2.1.0, ModelContextProtocol 1.0.0, Microsoft.Extensions.AI 9.7.0, Microsoft.Extensions.AI.OpenAI 9.7.1-preview.1.25365.4
+**AcceptanceTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, microsoft.playwright.nunit 1.54.0, Azure.AI.OpenAI 2.1.0, ModelContextProtocol 1.0.0, Microsoft.Extensions.AI 9.7.0, Microsoft.Extensions.AI.OpenAI 9.7.1-preview.1.25365.4, coverlet.collector 6.0.4, coverlet.msbuild 6.0.4, Microsoft.NET.Test.Sdk 17.14.1, Microsoft.Extensions.Hosting 10.0.2, OpenTelemetry.Instrumentation.AspNetCore 1.15.2, OpenTelemetry.Instrumentation.Http 1.15.1, OpenTelemetry.Instrumentation.Runtime 1.15.1, OpenTelemetry.Instrumentation.SqlClient 1.15.2
 
 ## API Tools Endpoints
 
@@ -154,9 +154,12 @@ Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, 
 | `/api/tools/hash` | POST | SHA-256 of `text` (UTF-8); optional MD5/SHA-1 via `includeMd5`/`includeSha1` flags |
 | `/api/tools/base64` | POST | Base64 encode/decode of `text` (UTF-8); `mode` `encode` (default) or `decode` |
 | `/api/tools/guid-generator` | POST | Generate 1–100 UUIDs; optional `count` query param |
-| `/api/tools/random` | POST | Random integer in `[min, max]` |
+| `/api/tools/random` | GET | Generate plain-text random values; required `type` query param: `number`, `string` (12 alphanumeric characters), `uuid`, or `color` (`#RRGGBB`) |
 | `/api/tools/slugify` | POST | Convert `text` to URL slug (lowercase; non-alphanumeric runs become single `-`) |
-| `/api/tools/timestamp-converter` | GET | Convert Unix timestamps to/from ISO-8601 |
+| `/api/tools/timestamp-converter` | GET | Convert Unix seconds to/from ISO-8601; supply exactly one query param, `unix` or `iso`; returns Unix seconds, ISO-8601 UTC, and a human-readable UTC string |
+| `/api/tools/due-date-check` | GET | Return due-date urgency for required `date` query param (`YYYY-MM-DD`), relative to today in America/Chicago, assuming an open work order |
+| `/api/tools/word-count` | POST | Count words, characters, and lines in JSON body field `text` |
+| `/api/tools/work-order-statuses` | GET | List work order statuses (`code`, `key`, `friendlyName`, `sortBy`) in sort order |
 
 All routes also available under the versioned prefix `/api/v1.0/tools/`.
 
