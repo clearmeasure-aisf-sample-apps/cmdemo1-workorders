@@ -60,7 +60,7 @@ User → Blazor UI → API Controller → IBus.Send(query/command)
 
 **State Commands:** Defined in `src/Core/Model/StateCommands/`. Each command implements `IStateCommand` and mutates the domain model. Flow: `StateCommandHandler` → `command.Execute(workOrder)` → `DataContext.SaveChangesAsync()`.
 
-Work order state transitions: Draft → Assigned → InProgress → Complete (also Cancelled from any state). See `arch/WorflowFor*.md` for sequence diagrams.
+Work order state transitions: Draft → Assigned → InProgress → Complete, with InProgress → Assigned for shelving and cancellation from Assigned or either InProgress substate. InProgress contains active work and WaitingOnVendor (`WaitingOnVendorSince` null or non-null); waiting and resuming do not change the persisted status. Complete and Cancelled are terminal. See `arch/arch-state-workorder.md` for the state diagram and `arch/WorflowFor*.md` for sequence diagrams.
 
 ## Domain Model
 
@@ -68,7 +68,7 @@ Work order state transitions: Draft → Assigned → InProgress → Complete (al
 - **WorkOrderPriority**: enum Low = 1, Medium = 2 (default), High = 3; stored as tinyint
 - **Work Order Search queries**: `WorkOrderSpecificationQuery` (creator, assignee, status, overdue, priority, building, open only, completed within N days, free text; newest first), `WorkOrderSearchSummaryQuery` (summary card and nav badge counts), `WorkOrderBuildingsQuery` (distinct buildings), `BuildingRoomSummaryQuery` (per building and room: open, overdue, completed in the last 30 days and total work orders, grouped by the database with the search's trimming and collation and the summary cards' predicates, so each count equals the matching search), `RecentWorkOrdersQuery` (dashboard recent activity: the last N work orders by their latest created, assigned or completed date). The search page keeps its filters, sort, page and view (table, or a board with a column per status) in the URL (`WorkOrderSearchUrlState`)
 - **Employee**: UserName, FirstName, LastName, EmailAddress, Roles. Methods: `CanCreateWorkOrder()`, `CanFulfillWorkOrder()`
-- **WorkOrderStatus**: Smart enum — Draft, Assigned, InProgress, Complete, Cancelled. Factory methods: `FromCode()`, `FromKey()`
+- **WorkOrderStatus**: Smart enum — Draft, Assigned, InProgress, Complete, Cancelled. WaitingOnVendor is an InProgress substate, not an enum value. Factory methods: `FromCode()`, `FromKey()`
 - **Role**: Name, CanCreateWorkOrder, CanFulfillWorkOrder
 
 ## Database Migrations
