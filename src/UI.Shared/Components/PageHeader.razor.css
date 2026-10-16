@@ -1,0 +1,81 @@
+/* Shared page header (#260): title, subtitle and action buttons. Colours come from the tokens in app.css. */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.page-heading h1 {
+    margin: 0;
+    font-size: var(--font-size-title);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+}
+
+.page-subtitle {
+    margin: 0.35rem 0 0;
+    color: var(--muted-on-page);
+    font-size: 15px;
+}
+
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+}
+
+.page-actions ::deep .btn-app {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: var(--control-height);
+    padding: 0 1rem;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-border);
+    font: inherit;
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.page-actions ::deep .btn-app--secondary {
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.page-actions ::deep .btn-app--secondary:hover:not(:disabled) {
+    background: var(--color-surface-2);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+}
+
+.page-actions ::deep .btn-app--primary {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    color: var(--color-on-primary);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.page-actions ::deep .btn-app--primary:hover {
+    color: var(--color-on-primary);
+    filter: brightness(1.05);
+}
+
+.page-actions ::deep .btn-app:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.page-actions ::deep .btn-app:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}

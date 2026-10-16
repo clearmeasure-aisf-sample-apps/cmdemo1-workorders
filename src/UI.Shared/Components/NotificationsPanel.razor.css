@@ -1,0 +1,173 @@
+.notifications-panel {
+    position: absolute;
+    top: 60px;
+    right: 16px;
+    width: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-popover);
+    padding: 16px;
+    z-index: 1000;
+    outline: none;
+}
+
+@media (max-width: 480px) {
+    .notifications-panel {
+        width: calc(100vw - 32px);
+        right: 16px;
+        max-height: calc(100vh - 100px);
+    }
+}
+
+.notifications-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.notifications-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.section-title {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted-on-page);
+}
+
+.cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-card {
+    display: block;
+    padding: 12px;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 150ms ease;
+    outline: none;
+}
+
+.notification-card:hover {
+    background: var(--color-row-hover);
+    border-color: var(--color-border-strong);
+}
+
+.notification-card:focus {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.notification-card-header {
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.card-number {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--color-text);
+    text-transform: uppercase;
+}
+
+.card-due-date {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.card-due-date[data-due-urgency="overdue"] {
+    background: var(--status-overdue-bg);
+    color: var(--status-overdue-fg);
+    font-weight: 500;
+}
+
+.card-due-date[data-due-urgency="due-today"] {
+    background: var(--status-inprogress-bg);
+    color: var(--status-inprogress-fg);
+    font-weight: 500;
+}
+
+.card-due-date[data-due-urgency="upcoming"],
+.card-due-date[data-due-urgency="none"] {
+    background: var(--color-border);
+    color: var(--color-muted);
+}
+
+.card-status {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.card-status[data-status="D"] {
+    background: var(--status-draft-bg);
+    color: var(--status-draft-fg);
+}
+
+.card-status[data-status="A"] {
+    background: var(--status-assigned-bg);
+    color: var(--status-assigned-fg);
+}
+
+.card-status[data-status="I"] {
+    background: var(--status-inprogress-bg);
+    color: var(--status-inprogress-fg);
+}
+
+.card-status[data-status="C"] {
+    background: var(--status-complete-bg);
+    color: var(--status-complete-fg);
+}
+
+.card-status[data-status="X"] {
+    background: var(--color-border);
+    color: var(--color-muted);
+}
+
+.card-title {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text);
+    word-wrap: break-word;
+}
+
+.card-footer {
+    font-size: 12px;
+    color: var(--color-muted);
+}
+
+.card-assignee {
+    display: inline-block;
+}
+
+.empty-state {
+    margin: 0;
+    padding: 12px 0;
+    font-size: 13px;
+    color: var(--color-muted);
+    text-align: center;
+    font-style: italic;
+}

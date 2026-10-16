@@ -1,0 +1,128 @@
+/* Shared KPI card (#260): used by Work Order Search and the dashboard. Colours come from the tokens in app.css. */
+.summary-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+a.summary-card {
+    text-decoration: none;
+}
+
+.summary-card:hover {
+    border-color: var(--color-primary-tint-border);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    color: var(--color-text);
+}
+
+.summary-card:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.summary-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.summary-card-label {
+    color: var(--color-muted);
+    font-size: 14px;
+}
+
+.summary-card-value {
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--color-text);
+}
+
+.summary-card-note {
+    font-size: 13px;
+}
+
+.note--success {
+    color: var(--color-success);
+}
+
+.note--warning {
+    color: var(--color-warning);
+}
+
+.note--danger {
+    color: var(--color-danger);
+}
+
+.note--muted {
+    color: var(--color-muted);
+}
+
+.summary-card-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.summary-card--indigo .summary-card-icon {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.summary-card--teal .summary-card-icon {
+    background: var(--color-teal-bg);
+    color: var(--color-teal);
+}
+
+.summary-card--danger .summary-card-icon {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.summary-card--danger .summary-card-value {
+    color: var(--color-danger);
+}
+
+.summary-card--success .summary-card-icon {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.summary-card--status-draft .summary-card-icon,
+.summary-card--status-cancelled .summary-card-icon {
+    background: var(--status-draft-bg);
+    color: var(--status-draft-fg);
+}
+
+.summary-card--status-assigned .summary-card-icon {
+    background: var(--status-assigned-bg);
+    color: var(--status-assigned-fg);
+}
+
+.summary-card--status-in-progress .summary-card-icon {
+    background: var(--status-inprogress-bg);
+    color: var(--status-inprogress-fg);
+}
+
+.summary-card--status-complete .summary-card-icon {
+    background: var(--status-complete-bg);
+    color: var(--status-complete-fg);
+}
