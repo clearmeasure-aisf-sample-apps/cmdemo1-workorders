@@ -27,7 +27,6 @@ public class BuildingsTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/admin/buildings");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Page.EvaluateAsync("() => { document.documentElement.setAttribute('data-theme', 'dark'); }");
         await Task.Delay(500);
@@ -85,7 +84,6 @@ public class BuildingsTests : AcceptanceTestBase
 
         // Navigate to Buildings page
         await Page.GotoAsync("/admin/buildings");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Find the building card for our test building
         var buildingCard = Page.GetByTestId($"building-card-{buildingName}");
@@ -102,7 +100,6 @@ public class BuildingsTests : AcceptanceTestBase
 
         // Click the open link
         await openLink.ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify we're on the search page with the correct filters
         await Page.WaitForURLAsync(url =>
@@ -159,7 +156,6 @@ public class BuildingsTests : AcceptanceTestBase
 
         // Navigate to Buildings page
         await Page.GotoAsync("/admin/buildings");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Find the overdue count link
         var overdueLink = Page.GetByTestId($"room-overdue-link-{buildingName}-{room}");
@@ -170,7 +166,6 @@ public class BuildingsTests : AcceptanceTestBase
 
         // Click the overdue link
         await overdueLink.ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify we're on search page with overdue filter
         await Page.WaitForURLAsync(url =>
@@ -226,7 +221,6 @@ public class BuildingsTests : AcceptanceTestBase
 
         // Navigate to Buildings page
         await Page.GotoAsync("/admin/buildings");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Find the completed count link
         var completedLink = Page.GetByTestId($"room-completed-link-{buildingName}-{room}");
@@ -237,7 +231,6 @@ public class BuildingsTests : AcceptanceTestBase
 
         // Click the completed link
         await completedLink.ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Verify we're on search page with completed filters
         await Page.WaitForURLAsync(url =>

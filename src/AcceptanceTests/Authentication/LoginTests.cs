@@ -10,7 +10,7 @@ public class LoginTests : AcceptanceTestBase
 {
     /// <summary>
     /// The employee &lt;option&gt; elements are rendered only after the Blazor WASM app
-    /// boots interactively and the employee list loads. WaitForLoadStateAsync(NetworkIdle)
+    /// boots interactively and the employee list loads. a network-idle wait
     /// does not guarantee that render has happened, so wait for the option itself.
     /// Options live inside a closed &lt;select&gt; and therefore have no bounding box —
     /// they are never "visible" to Playwright, so wait for Attached, not Visible.
@@ -74,9 +74,9 @@ public class LoginTests : AcceptanceTestBase
 
         await Select(nameof(Login.Elements.User), "hsimpson");
         await Click(nameof(Login.Elements.LoginButton));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeTextLocator).ToBeVisibleAsync();
         await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome hsimpson!");
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
     }
@@ -103,9 +103,9 @@ public class LoginTests : AcceptanceTestBase
 
         await Select(nameof(Login.Elements.User), userName);
         await Click(nameof(Login.Elements.LoginButton));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeTextLocator).ToBeVisibleAsync();
         await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome First Middle Last!");
     }
 
@@ -210,7 +210,12 @@ public class LoginTests : AcceptanceTestBase
     public async Task LoginWithUsernameOnlyForwardsToHomePage()
     {
         await Page.GotoAsync("/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
+        await loginLink.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = 30_000
+        });
         await TakeScreenshotAsync(1);
 
         var logoutLink = Page.GetByTestId(nameof(Logout.Elements.LogoutLink));
@@ -229,10 +234,10 @@ public class LoginTests : AcceptanceTestBase
         await TakeScreenshotAsync(3);
 
         await Click(nameof(Login.Elements.LoginButton));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await TakeScreenshotAsync(4);
 
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeTextLocator).ToBeVisibleAsync();
+        await TakeScreenshotAsync(4);
         await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome hsimpson!");
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
     }
@@ -266,9 +271,9 @@ public class LoginTests : AcceptanceTestBase
         });
 
         await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeTextLocator).ToBeVisibleAsync();
         await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome tlovejoy!");
         await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
     }
@@ -279,7 +284,8 @@ public class LoginTests : AcceptanceTestBase
         await LoginAsLovejoyViaShortcutAsync();
 
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeText).ToBeVisibleAsync();
 
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
@@ -294,9 +300,10 @@ public class LoginTests : AcceptanceTestBase
         await LoginAsLovejoyViaShortcutAsync();
 
         await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
+        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeText).ToBeVisibleAsync();
+        await Expect(welcomeText)
             .ToHaveTextAsync("Welcome tlovejoy!");
         await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
@@ -308,11 +315,14 @@ public class LoginTests : AcceptanceTestBase
         await LoginAsLovejoyViaShortcutAsync();
 
         await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/_healthcheck");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var pageContent = Page.Locator("body");
+        await pageContent.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
+        await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
+        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeText).ToBeVisibleAsync();
+
+        await Expect(welcomeText)
             .ToHaveTextAsync("Welcome tlovejoy!");
         await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
@@ -326,14 +336,13 @@ public class LoginTests : AcceptanceTestBase
         await LogoutViaUserMenu();
         await Page.WaitForURLAsync("**/login");
 
-        await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
+        var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
+        await Expect(loginLink).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToHaveCountAsync(0);
         (await GetPersistedUsernameAsync()).ShouldBeNull();
 
         await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-        await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
+        await Expect(loginLink).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToHaveCountAsync(0);
         (await GetPersistedUsernameAsync()).ShouldBeNull();
     }
@@ -363,11 +372,12 @@ public class LoginTests : AcceptanceTestBase
         (await GetPersistedUsernameAsync()).ShouldBeNull();
 
         await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/_healthcheck");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var pageContent = Page.Locator("body");
+        await pageContent.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
-        await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
+        await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
+        var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
+        await Expect(loginLink).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToHaveCountAsync(0);
         (await GetPersistedUsernameAsync()).ShouldBeNull();
     }
@@ -381,8 +391,8 @@ public class LoginTests : AcceptanceTestBase
         (await GetPersistedUsernameAsync()).ShouldBeNull();
 
         await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
+        var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
+        await Expect(loginLink).ToBeVisibleAsync();
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToHaveCountAsync(0);
 
         await Click(nameof(LoginLink.Elements.LoginLink));
@@ -393,14 +403,15 @@ public class LoginTests : AcceptanceTestBase
         await WaitForEmployeeOptionsRenderedAsync(willieOption);
         await Select(nameof(Login.Elements.User), "gwillie");
         await Click(nameof(Login.Elements.LoginButton));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
+        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeText).ToBeVisibleAsync();
+        await Expect(welcomeText)
             .ToHaveTextAsync("Welcome gwillie!");
         (await GetPersistedUsernameAsync()).ShouldBe("gwillie");
 
         await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await Expect(welcomeText).ToBeVisibleAsync();
 
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome gwillie!");
@@ -435,16 +446,27 @@ public class LoginTests : AcceptanceTestBase
         });
 
         await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
+        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeText).ToBeVisibleAsync();
+        await Expect(welcomeText)
             .ToHaveTextAsync("Welcome tlovejoy!");
     }
 
     private async Task EnsureAnonymousHomeAsync()
     {
         await Page.GotoAsync("/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        // Wait for the page shell to load - check for either login link or user menu
+        var userMenuToggle = Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle));
+        var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
+        try
+        {
+            await userMenuToggle.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 5_000 });
+        }
+        catch (TimeoutException)
+        {
+            await loginLink.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        }
 
         var logoutLink = Page.GetByTestId(nameof(Logout.Elements.LogoutLink));
         if (await logoutLink.CountAsync() > 0)

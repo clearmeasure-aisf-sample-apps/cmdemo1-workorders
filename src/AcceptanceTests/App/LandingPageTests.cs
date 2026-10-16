@@ -8,7 +8,6 @@ public class LandingPageTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Should_ShowDashboardHeader_WithoutHero_WhenSignedOut()
     {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var heading = Page.Locator($"h1[data-testid='{nameof(IndexPage.Elements.HomeHeadingTooltip)}']");
         await heading.WaitForAsync();

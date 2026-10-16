@@ -29,7 +29,6 @@ public class ApplicationChatAgentTests : AcceptanceTestBase
         // Navigate to the AI Agent page
         await Click(nameof(NavMenu.Elements.AiAgent));
         await Page.WaitForURLAsync("**/ai-agent");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Send a prompt that instructs the AI to create a work order and assign it
         const string prompt =
@@ -104,7 +103,6 @@ public class ApplicationChatAgentTests : AcceptanceTestBase
 
         await Click(nameof(NavMenu.Elements.AiAgent));
         await Page.WaitForURLAsync("**/ai-agent");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // When the LLM provider refuses, ApplicationChatHandler returns the friendly message
         // rather than propagating an exception that produces a 500 and an error banner.

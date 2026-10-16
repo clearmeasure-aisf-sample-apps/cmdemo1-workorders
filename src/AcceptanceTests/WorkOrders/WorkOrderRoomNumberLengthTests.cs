@@ -19,7 +19,6 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         order.Number = null;
         order.RoomNumber = room;
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
 
@@ -86,7 +85,6 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
 
         var tooLong = new string('X', WorkOrder.RoomNumberEntryMaxLength + 1);
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
 

@@ -85,7 +85,6 @@ public class AppShellTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.Locator(".grid-data tbody tr")).ToHaveCountAsync(3);
 
         var pageFits = await Page.EvaluateAsync<bool>(
@@ -126,7 +125,6 @@ public class AppShellTests : AcceptanceTestBase
     {
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var filtersCard = Page.Locator(".filters-card");
         var lightCard = await filtersCard.EvaluateAsync<string>("e => getComputedStyle(e).backgroundColor");
         var lightPage = await Page.EvaluateAsync<string>("() => getComputedStyle(document.body).backgroundColor");
@@ -153,7 +151,6 @@ public class AppShellTests : AcceptanceTestBase
     {
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.Locator(".grid-data")).ToBeVisibleAsync();
         var folder = Path.Combine(TestContext.CurrentContext.WorkDirectory, "screenshots");
         Directory.CreateDirectory(folder);

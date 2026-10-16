@@ -24,7 +24,6 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         order.Number = null;
         order.DueDate = null;
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
 
@@ -64,7 +63,6 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         order.Number = null;
         var dueDate = new DateOnly(2026, 9, 12);
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
 
@@ -104,7 +102,6 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var overdueOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] overdue", overdue);
 
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var todayCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + todayOrder.Number);
         var overdueCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + overdueOrder.Number);
@@ -119,10 +116,8 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         // Full Page.ReloadAsync drops in-memory Blazor auth and lands on /login.
         // Soft-navigate within the SPA so search re-queries without losing the session.
         await Page.GotoAsync("/counter");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         todayCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + todayOrder.Number);
         overdueCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + overdueOrder.Number);
@@ -148,7 +143,6 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var futureOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] badge on track", future);
 
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var overdueLocator = Page.GetByTestId(nameof(WorkOrderSearch.Elements.UrgencyBadge) + overdueOrder.Number);
         var todayLocator = Page.GetByTestId(nameof(WorkOrderSearch.Elements.UrgencyBadge) + todayOrder.Number);
@@ -171,7 +165,6 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var order = await CreateDraftNoDueDateAsync($"[{TestTag}] badge no due date");
 
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var badgeLocator = Page.GetByTestId(nameof(WorkOrderSearch.Elements.UrgencyBadge) + order.Number);
         await Expect(badgeLocator).Not.ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
@@ -208,7 +201,8 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
 
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }
 
     private static async Task<string> BackgroundColorAsync(ILocator locator)

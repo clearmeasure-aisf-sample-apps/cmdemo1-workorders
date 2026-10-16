@@ -76,7 +76,6 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
 
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Page.GotoAsync($"/workorder/manage/{workOrderNumber}?mode=Edit");
         await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
@@ -95,7 +94,6 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
             .Not.ToHaveTextAsync(WorkOrderStatus.Cancelled.FriendlyName);
 
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
             .ToHaveTextAsync(WorkOrderStatus.Assigned.FriendlyName);
@@ -103,13 +101,11 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
             .Not.ToBeEmptyAsync();
 
         await LogoutViaUserMenu();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToBeVisibleAsync();
 
         await LoginAsGwillieAsync();
 
         await Click(nameof(NavMenu.Elements.WorkOrdersAssignedToMe));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var assignedLink = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrderNumber);
         await Expect(assignedLink).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
         var assignedRow = Page.Locator("tr", new PageLocatorOptions { Has = assignedLink });
@@ -119,7 +115,6 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
             .Not.ToHaveTextAsync(WorkOrderStatus.Cancelled.FriendlyName);
 
         await assignedLink.ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(woNumberLocator).ToHaveTextAsync(workOrderNumber);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
             .ToHaveTextAsync(WorkOrderStatus.Assigned.FriendlyName);
@@ -130,16 +125,13 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Assignee))).ToHaveValueAsync("gwillie");
 
         await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}")
             .SelectOptionAsync(WorkOrderStatus.Assigned.Key);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrderNumber))
             .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
 
         await Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}")
             .SelectOptionAsync(WorkOrderStatus.Cancelled.Key);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrderNumber))
             .ToHaveCountAsync(0);
 
@@ -190,7 +182,6 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
             Timeout = 90_000
         });
         await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
     }
@@ -201,7 +192,6 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(Login.Elements.User))).ToBeVisibleAsync();
         await Select(nameof(Login.Elements.User), "gwillie");
         await Click(nameof(Login.Elements.LoginButton));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome gwillie!");
     }

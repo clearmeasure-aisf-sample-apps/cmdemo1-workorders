@@ -44,7 +44,6 @@ public class DashboardTests : AcceptanceTestBase
 
         await card.ClickAsync();
         await Page.WaitForURLAsync(new Regex("AssignedToMe=true&OpenOnly=true"));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSummaryCards.Elements.SummaryCardAssignedToMe))
             .Locator(".summary-card-value")).ToHaveTextAsync("2");
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill))).ToHaveTextAsync("2 of 2");
@@ -58,7 +57,6 @@ public class DashboardTests : AcceptanceTestBase
         await Page.GetByTestId(nameof(IndexPage.Elements.StatusCard) + WorkOrderStatus.Cancelled.Key).ClickAsync();
 
         await Page.WaitForURLAsync(new Regex("workorder/search\\?Status=Cancelled"));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}")).ToHaveValueAsync(WorkOrderStatus.Cancelled.Key);
     }
 
@@ -87,7 +85,6 @@ public class DashboardTests : AcceptanceTestBase
         await Page.GetByTestId(nameof(IndexPage.Elements.QuickLinkMyQueue)).ClickAsync();
 
         await Page.WaitForURLAsync(new Regex("workorder/search\\?AssignedToMe=true&OpenOnly=true"));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}")).ToBeCheckedAsync();
     }
 
@@ -112,7 +109,6 @@ public class DashboardTests : AcceptanceTestBase
 
         await Page.GetByTestId(nameof(IndexPage.Elements.QuickLinkWorkOrders)).ClickAsync();
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.NewWorkOrderButton)))
             .ToHaveCSSAsync("color", "rgb(255, 255, 255)");
     }
@@ -121,7 +117,6 @@ public class DashboardTests : AcceptanceTestBase
     public async Task ShouldFillContentArea_WhenSignedOut_At1000Px()
     {
         await SetViewportAndSettleAsync(1000, 800);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(IndexPage.Elements.SignInPrompt))).ToBeVisibleAsync();
 
         var content = await ContentBoxAsync();
@@ -144,7 +139,8 @@ public class DashboardTests : AcceptanceTestBase
 
         await Page.GetByTestId(nameof(IndexPage.Elements.QuickLinkWorkOrders)).ClickAsync();
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await WaitForLayoutSettledAsync();
         var searchHeader = await Page.Locator(".page-header").BoundingBoxAsync();
 
@@ -181,7 +177,6 @@ public class DashboardTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Page.GotoAsync("/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(IndexPage.Elements.StatusDashboard))).ToBeVisibleAsync();
     }
 

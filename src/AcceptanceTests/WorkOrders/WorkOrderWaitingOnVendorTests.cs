@@ -45,9 +45,9 @@ public class WorkOrderWaitingOnVendorTests : AcceptanceTestBase
     private async Task SearchForWorkOrderAsync(string number)
     {
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={Uri.EscapeDataString(number)}");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Page.GetByTestId(nameof(WorkOrderSearch.Elements.StatusCell) + number)
             .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }

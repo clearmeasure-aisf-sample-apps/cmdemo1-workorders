@@ -11,7 +11,6 @@ public class NavRailToggleTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var urlBefore = Page.Url;
         var toggle = Page.GetByTestId(nameof(MainLayout.Elements.NavRailToggle));
@@ -35,7 +34,6 @@ public class NavRailToggleTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var toggle = Page.GetByTestId(nameof(MainLayout.Elements.NavRailToggle));
         (await toggle.GetAttributeAsync("aria-expanded")).ShouldBe("true");
@@ -57,7 +55,6 @@ public class NavRailToggleTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var urlBefore = Page.Url;
         var searchButton = Page.Locator($"#{nameof(WorkOrderSearch.Elements.CreatorSelect)}");
@@ -76,7 +73,6 @@ public class NavRailToggleTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Click(nameof(MainLayout.Elements.NavRailToggle));
 
@@ -99,7 +95,6 @@ public class NavRailToggleTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Hide nav while wide so _navVisible=false; sidebar gets rail-hidden class
         await Click(nameof(MainLayout.Elements.NavRailToggle));
@@ -124,7 +119,6 @@ public class NavRailToggleTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // Hide nav while wide so _navVisible=false; sidebar gets rail-hidden class
         await Click(nameof(MainLayout.Elements.NavRailToggle));
@@ -154,7 +148,6 @@ public class NavRailToggleTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowNavRailToggle_OnAnonymousLandingPage()
     {
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         // First interactive element after a cold anonymous WASM boot: allow generous warmup.
         // browserContext.SetDefaultTimeout does not apply to web-first assertions (they default to

@@ -13,7 +13,6 @@ public class DarkModeTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Settings));
         await Page.WaitForURLAsync("**/settings");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Page.GetByTestId(nameof(Settings.Elements.DarkModeSwitch)).WaitForAsync();
         await Expect(Page.GetByTestId(nameof(Settings.Elements.DarkModeSwitch)))
             .ToHaveAttributeAsync("role", "switch");
@@ -37,7 +36,6 @@ public class DarkModeTests : AcceptanceTestBase
 
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var onSearch = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
@@ -50,7 +48,6 @@ public class DarkModeTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Settings));
         await Page.WaitForURLAsync("**/settings");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var darkSwitch = Page.GetByTestId(nameof(Settings.Elements.DarkModeSwitch));
         await darkSwitch.WaitForAsync();
 
@@ -68,7 +65,6 @@ public class DarkModeTests : AcceptanceTestBase
         stored.ShouldBe("dark");
 
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var afterReload = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
@@ -79,7 +75,6 @@ public class DarkModeTests : AcceptanceTestBase
     public async Task DarkMode_NavBarToggle_ShouldSwitchThemeAndPersist()
     {
         await Page.GotoAsync("/");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         await Page.GetByTestId(nameof(MainLayout.Elements.DarkModeToggle)).WaitForAsync();
 
@@ -96,7 +91,6 @@ public class DarkModeTests : AcceptanceTestBase
         afterToggle.ShouldNotBe(initial);
 
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var afterReload = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");

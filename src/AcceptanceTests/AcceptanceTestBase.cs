@@ -130,7 +130,12 @@ public abstract class AcceptanceTestBase
             {
                 await page.GotoAsync("/");
                 await page.WaitForURLAsync("/");
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                var loginLink = page.GetByTestId("LoginLink");
+                await loginLink.WaitForAsync(new LocatorWaitForOptions
+                {
+                    State = WaitForSelectorState.Visible,
+                    Timeout = 30_000
+                });
                 break;
             }
             catch (PlaywrightException) when (attempt < maxRetries)
@@ -237,11 +242,11 @@ public abstract class AcceptanceTestBase
         // Submit form
         await TakeScreenshotAsync();
         await Click(nameof(Login.Elements.LoginButton));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
+        var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeTextLocator).ToBeVisibleAsync();
         await TakeScreenshotAsync();
         // Assert: Should be redirected to home and see welcome message
-        var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
         // HACK: a double click finishes DOM loading. WelcomeText is visually hidden inside the user menu
         // trigger (#251), so the trigger takes the clicks: the first opens the menu, the second closes it.
@@ -348,7 +353,11 @@ public abstract class AcceptanceTestBase
         if (!await locator.IsEditableAsync())
         {
             await Page.ReloadAsync();
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await locator.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = 30_000
+            });
         }
 
         await Expect(locator).ToBeEditableAsync(new LocatorAssertionsToBeEditableOptions { Timeout = 30_000 });
@@ -367,7 +376,11 @@ public abstract class AcceptanceTestBase
         if (!await locator.IsEditableAsync())
         {
             await Page.ReloadAsync();
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await locator.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = 30_000
+            });
         }
 
         await Expect(locator).ToBeEditableAsync(new LocatorAssertionsToBeEditableOptions { Timeout = 30_000 });
@@ -384,7 +397,6 @@ public abstract class AcceptanceTestBase
         var testInstructions = order.Instructions;
         var testRoomNumber = order.RoomNumber;
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
         await TakeScreenshotAsync(1, "NewWorkOrderPage");
@@ -405,7 +417,12 @@ public abstract class AcceptanceTestBase
         var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = 30_000
+        });
 
         WorkOrder? rehyratedOrder = null;
         for (var attempt = 0; attempt < 10; attempt++)
@@ -428,15 +445,16 @@ public abstract class AcceptanceTestBase
             await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
         }
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var linkTestId = nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number;
         await WaitForWorkOrderLinkAsync(order.Number!, linkTestId);
         await Click(linkTestId);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        await woNumberLocator.WaitForAsync();
+        await woNumberLocator.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = 30_000
+        });
         await Expect(woNumberLocator).ToHaveTextAsync(order.Number!);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         return order;
     }
 
@@ -454,7 +472,12 @@ public abstract class AcceptanceTestBase
         catch (TimeoutException)
         {
             await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={Uri.EscapeDataString(number)}");
-            await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var searchTable = Page.Locator(".grid-data tbody");
+            await searchTable.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = 30_000
+            });
             await link.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 60_000 });
         }
     }
@@ -464,7 +487,7 @@ public abstract class AcceptanceTestBase
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
         await woNumberLocator.WaitForAsync();
         await Expect(woNumberLocator).ToHaveTextAsync(order.Number!);
-        
+
         await Select(nameof(WorkOrderManage.Elements.Assignee), username);
         await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
@@ -472,7 +495,8 @@ public abstract class AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description))).ToHaveValueAsync(order.Description ?? "");
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + DraftToAssignedCommand.Name);
 
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        // Wait for the page to navigate back to search
+        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 30_000 });
 
         WorkOrder rehyratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number!)) ?? throw new InvalidOperationException();
 
@@ -490,7 +514,9 @@ public abstract class AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title))).ToHaveValueAsync(order.Title ?? "");
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description))).ToHaveValueAsync(order.Description ?? "");
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + AssignedToInProgressCommand.Name);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Wait for the page to navigate back to search
+        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 30_000 });
 
         WorkOrder rehyratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number!)) ?? throw new InvalidOperationException();
 
@@ -512,7 +538,10 @@ public abstract class AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title))).ToHaveValueAsync(order.Title ?? "");
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description))).ToHaveValueAsync(order.Description ?? "");
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + InProgressToCompleteCommand.Name);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        // Wait for the page to navigate back to search
+        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 30_000 });
+
         WorkOrder rehyratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number!)) ?? throw new InvalidOperationException();
         return rehyratedOrder;
     }

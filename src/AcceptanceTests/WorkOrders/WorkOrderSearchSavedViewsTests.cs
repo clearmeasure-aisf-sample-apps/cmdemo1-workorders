@@ -24,7 +24,6 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
         await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
         await SelectFilterAsync(WorkOrderSearch.Elements.PrioritySelect, nameof(WorkOrderPriority.High));
         await Page.Locator($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}").CheckAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Rows()).ToHaveCountAsync(1);
 
         var viewName = $"View {TestTag}";
@@ -35,16 +34,13 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.SavedViewNameInput))).ToHaveCountAsync(0);
 
         await Page.ReloadAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Page.Locator($"#{WorkOrderSearch.Elements.ClearFiltersButton}").ClickAsync();
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page).ToHaveURLAsync(new Regex("^(?!.*Priority=)"));
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.PrioritySelect}")).ToHaveValueAsync("");
 
         await Page.GetByTestId(nameof(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync();
         await Page.GetByRole(AriaRole.Menuitem, new() { Name = viewName, Exact = true }).ClickAsync();
         await Page.WaitForURLAsync(new Regex("Priority=High"));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         Page.Url.ShouldContain($"Creator={creator.UserName}");
         Page.Url.ShouldContain("Priority=High");
@@ -62,7 +58,6 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
     {
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search**");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}")).ToBeVisibleAsync();
     }
 
@@ -71,7 +66,8 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
         var locator = Page.Locator($"#{select}");
         await Expect(locator.Locator($"option[value='{value}']")).ToHaveCountAsync(1);
         await locator.SelectOptionAsync(value);
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }
 
     private async Task<Employee> SeedCreatorAsync(string prefix)

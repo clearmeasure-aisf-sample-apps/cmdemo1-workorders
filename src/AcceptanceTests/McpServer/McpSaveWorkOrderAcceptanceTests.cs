@@ -262,7 +262,6 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
             Timeout = 90_000
         });
         await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .ToHaveTextAsync("Welcome tlovejoy!");
     }
@@ -279,7 +278,8 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
     {
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
-        await Page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }
 
     private ILocator SearchRowForWorkOrder(string workOrderNumber)

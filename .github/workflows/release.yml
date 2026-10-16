@@ -58,9 +58,135 @@ jobs:
       - uses: actions/checkout@v6.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Sign in to Octopus
+        uses: OctopusDeploy/login@v2
+        with:
+          server: ${{ vars.OCTOPUS_URL }}
+          service_account_id: ${{ vars.OCTOPUS_SERVICE_ACCOUNT_ID }}
+
+      - name: Check if this commit should skip release
+        id: order
+        env:
+          OCTOPUS_URL: ${{ vars.OCTOPUS_URL }}
+          OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
+          PROJECT: ${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}
+          CURRENT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          # Attempt to fetch the latest release from Octopus
+          # Tolerate API failure by proceeding (warn)
+          # The space is configured by name; the API path needs its id.
+          SPACE_ID=$(curl -fsS --header "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+            "$OCTOPUS_URL/api/spaces?partialName=$(jq -rn --arg s "$OCTOPUS_SPACE" '$s|@uri')&take=100" \
+            | jq -r --arg s "$OCTOPUS_SPACE" '[.Items[] | select(.Name == $s)][0].Id // empty') || SPACE_ID=""
+          if [ -z "$SPACE_ID" ]; then
+            echo "Warning: Could not resolve Octopus space '$OCTOPUS_SPACE'; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RELEASES_JSON=$(curl -fsS \
+            --header "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+            "$OCTOPUS_URL/api/$SPACE_ID/projects/$PROJECT/releases?take=1" \
+            2>&1) || {
+            echo "Warning: Could not reach Octopus API; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          # Extract the first release (newest by assembled date)
+          RELEASE=$(echo "$RELEASES_JSON" | jq -r '.Items[0]' 2>/dev/null) || {
+            echo "Warning: Could not parse Octopus API response; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          # Check if release exists
+          if [ "$RELEASE" = "null" ] || [ -z "$RELEASE" ]; then
+            echo "No previous release found; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Extract release notes and version
+          RELEASE_NOTES=$(echo "$RELEASE" | jq -r '.ReleaseNotes // empty' 2>/dev/null) || {
+            echo "Warning: Could not extract release notes; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          LAST_VERSION=$(echo "$RELEASE" | jq -r '.Version // empty' 2>/dev/null) || {
+            echo "Warning: Could not extract version; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          # Extract commit SHA from release notes: exactly 40 hex digits after " of "
+          LAST_SHA=$(echo "$RELEASE_NOTES" | sed -nE 's/.* of ([0-9a-f]{40}),.*/\1/p' | head -1) || {
+            echo "No commit SHA found in release notes; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+
+          if [ -z "$LAST_SHA" ]; then
+            echo "No commit SHA found in release notes; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Check if SHA is a known object; if not, try to fetch from origin
+          if ! git cat-file -e "$LAST_SHA" 2>/dev/null; then
+            echo "Commit $LAST_SHA not found locally; fetching from origin..."
+            git fetch origin master 2>/dev/null || {
+              echo "Warning: Could not fetch origin master; proceeding with release"
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            }
+          fi
+
+          # Check again if SHA is known after fetch
+          if ! git cat-file -e "$LAST_SHA" 2>/dev/null; then
+            echo "Warning: Commit $LAST_SHA still not found after fetch; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Current commit: $CURRENT_SHA"
+          echo "Last release commit: $LAST_SHA (version $LAST_VERSION)"
+
+          # Decision logic:
+          # - If current SHA equals last SHA: proceed (manual re-release)
+          # - If current SHA is strict ancestor of last SHA: skip
+          # - Otherwise: proceed (newer or unrelated commit)
+
+          if [ "$CURRENT_SHA" = "$LAST_SHA" ]; then
+            echo "Current commit is same as last release; proceeding"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Check if current is an ancestor of last (but not equal)
+          if git merge-base --is-ancestor "$CURRENT_SHA" "$LAST_SHA" 2>/dev/null; then
+            echo "Current commit is older than last release; skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "## Release Skipped"
+              echo ""
+              echo "Commit $CURRENT_SHA is an ancestor of the last released commit $LAST_SHA (version $LAST_VERSION). This release is skipped to prevent a downgrade."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Current commit is newer or unrelated
+          echo "Current commit is newer than last release; proceeding"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Version
         id: version
+        if: steps.order.outputs.skip != 'true'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -71,6 +197,7 @@ jobs:
           "version=$major.$minor.${{ github.event.workflow_run.run_number }}" >> $env:GITHUB_OUTPUT
 
       - name: Download the build's packages
+        if: steps.order.outputs.skip != 'true'
         uses: actions/download-artifact@v8
         with:
           name: churchbulletin-nuget-packages
@@ -79,6 +206,7 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: Extract the UI for the image
+        if: steps.order.outputs.skip != 'true'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -97,7 +225,7 @@ jobs:
       # code from this checkout; tests, coverage, complexity, CRAP and Qodana from the artifacts of the Build run,
       # each null when its artifact is not there. A repository without the script skips the step.
       - name: Stamp the build facts into the image's files
-        if: hashFiles('scripts/Write-BuildFacts.ps1') != ''
+        if: hashFiles('scripts/Write-BuildFacts.ps1') != '' && steps.order.outputs.skip != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -113,7 +241,7 @@ jobs:
       # facts is that command, run by the integration build, at the Build run's address. A Build that keeps no such
       # artifact leaves the facts as they are, with a SKIP line: nothing fails.
       - name: Take the private build's word into the facts
-        if: hashFiles('.github/private-build/add-private-build.ps1') != ''
+        if: hashFiles('.github/private-build/add-private-build.ps1') != '' && steps.order.outputs.skip != 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -122,12 +250,14 @@ jobs:
           ./.github/private-build/add-private-build.ps1 -FactsPath built/build-facts.json -Word word/private-build.json -Run '${{ github.event.workflow_run.html_url }}'
 
       - uses: azure/login@v3
+        if: steps.order.outputs.skip != 'true'
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Build and push the image
+        if: steps.order.outputs.skip != 'true'
         env:
           IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}:${{ steps.version.outputs.version }}
         run: |
@@ -141,6 +271,7 @@ jobs:
           echo "Pushed $IMAGE" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Sign in to Octopus
+        if: steps.order.outputs.skip != 'true'
         uses: OctopusDeploy/login@v2
         with:
           server: ${{ vars.OCTOPUS_URL }}
@@ -149,6 +280,7 @@ jobs:
       # The build's acceptance-test package carries Playwright's Node driver for five platforms (about 1 GB unpacked).
       # Octopus runs the tests on Linux x64 only: keep that driver, drop the rest and the coverage collector.
       - name: Trim the acceptance-test package for Octopus
+        if: steps.order.outputs.skip != 'true'
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -171,6 +303,7 @@ jobs:
           "Acceptance tests: $([Math]::Round($source.Length / 1MB)) MB -> $([Math]::Round((Get-Item $target).Length / 1MB)) MB" >> $env:GITHUB_STEP_SUMMARY
 
       - name: Push the database and acceptance-test packages
+        if: steps.order.outputs.skip != 'true'
         uses: OctopusDeploy/push-package-action@v4
         with:
           packages: |
@@ -183,6 +316,7 @@ jobs:
       # token, which reads this repository and no other.
       - name: Read the commit's time
         id: commit
+        if: steps.order.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -191,6 +325,7 @@ jobs:
           echo "committed=$committed" >> "$GITHUB_OUTPUT"
 
       - name: Create the release
+        if: steps.order.outputs.skip != 'true'
         uses: OctopusDeploy/create-release-action@v4
         with:
           project: ${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}
