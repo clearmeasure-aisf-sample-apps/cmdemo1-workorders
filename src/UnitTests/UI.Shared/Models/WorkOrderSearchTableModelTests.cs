@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
+using Microsoft.VisualBasic.FileIO;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Models;
@@ -186,7 +187,7 @@ public class WorkOrderCsvExporterTests
         {
             WorkOrder = new WorkOrder
             {
-                Number = "38173BA", Title = "Mow grass, north lawn", Status = WorkOrderStatus.Assigned,
+                Number = "38173BA", Title = "Mow grass, north lawn", Description = "Cut to 3 inches", Status = WorkOrderStatus.Assigned,
                 Priority = WorkOrderPriority.High, Building = "Grounds", RoomNumber = "Lawn", DueDate = new DateOnly(2026, 10, 18),
                 CreatedDate = new DateTime(2026, 10, 1, 9, 30, 0),
                 Assignee = new Employee("gw", "Groundskeeper", "Willie", "e"), Creator = new Employee("tl", "Timothy", "Lovejoy", "e")
@@ -195,8 +196,8 @@ public class WorkOrderCsvExporterTests
 
         var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
-        lines[0].ShouldBe("Work Order,Title,Status,Priority,Assignee,Creator,Building,Room,Due Date,Created,Completed");
-        lines[1].ShouldBe("38173BA,\"Mow grass, north lawn\",Assigned,High,Groundskeeper Willie,Timothy Lovejoy,Grounds,Lawn,2026-10-18,2026-10-01 09:30,");
+        lines[0].ShouldBe("Work Order,Title,Description,Status,Priority,Assignee,Creator,Building,Room,Due Date,Created,Completed");
+        lines[1].ShouldBe("38173BA,\"Mow grass, north lawn\",Cut to 3 inches,Assigned,High,Groundskeeper Willie,Timothy Lovejoy,Grounds,Lawn,2026-10-18,2026-10-01 09:30,");
         lines[2].ShouldBe(string.Empty);
     }
 
@@ -217,7 +218,7 @@ public class WorkOrderCsvExporterTests
 
         var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
-        lines[1].ShouldBe("12345CD,Fix roof,Complete,High,John Doe,Admin Bob,Main,Attic,2026-10-18,2026-10-01 09:30,2026-10-10 14:45");
+        lines[1].ShouldBe("12345CD,Fix roof,,Complete,High,John Doe,Admin Bob,Main,Attic,2026-10-18,2026-10-01 09:30,2026-10-10 14:45");
     }
 
     [Test]
@@ -236,7 +237,61 @@ public class WorkOrderCsvExporterTests
 
         var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
-        lines[1].ShouldBe("98765EF,Paint wall,Draft,Medium,Mary Smith,Project Jones,West,Room 101,2026-10-20,2026-10-05 11:15,");
+        lines[1].ShouldBe("98765EF,Paint wall,,Draft,Medium,Mary Smith,Project Jones,West,Room 101,2026-10-20,2026-10-05 11:15,");
+    }
+
+    [TestCase("Replace pane, then say \"done\"\r\nCall vendor first")]
+    [TestCase("Line one, with comma\nLine \"two\"")]
+    [TestCase("Line one, with comma\rLine \"two\"")]
+    public void ToCsv_WithMultiLineDescription_RoundTripsAsOneField(string description)
+    {
+        var csv = WorkOrderCsvExporter.ToCsv([DescriptionRow(description)]);
+
+        var records = ParseCsv(csv);
+
+        records.Count.ShouldBe(2);
+        records[1].Length.ShouldBe(12);
+        records[1][1].ShouldBe("Fix window");
+        records[1][2].ShouldBe(description);
+        records[1][3].ShouldBe("Assigned");
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    public void ToCsv_WithoutDescription_ExportsEmptyField(string? description)
+    {
+        var records = ParseCsv(WorkOrderCsvExporter.ToCsv([DescriptionRow(description)]));
+
+        records[0][2].ShouldBe("Description");
+        records[1].Length.ShouldBe(12);
+        records[1][1].ShouldBe("Fix window");
+        records[1][2].ShouldBe(string.Empty);
+        records[1][3].ShouldBe("Assigned");
+    }
+
+    private static WorkOrderSearchResultRow DescriptionRow(string? description) =>
+        new()
+        {
+            WorkOrder = new WorkOrder
+            {
+                Number = "55555GH", Title = "Fix window", Description = description, Status = WorkOrderStatus.Assigned,
+                Priority = WorkOrderPriority.Low
+            }
+        };
+
+    private static List<string[]> ParseCsv(string csv)
+    {
+        using var parser = new TextFieldParser(new StringReader(csv));
+        parser.SetDelimiters(",");
+        parser.HasFieldsEnclosedInQuotes = true;
+        parser.TrimWhiteSpace = false;
+        var records = new List<string[]>();
+        while (!parser.EndOfData)
+        {
+            records.Add(parser.ReadFields()!);
+        }
+
+        return records;
     }
 
     [TestCase("plain", "plain")]

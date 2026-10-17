@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 public static class WorkOrderCsvExporter
 {
     private static readonly string[] Header =
-        ["Work Order", "Title", "Status", "Priority", "Assignee", "Creator", "Building", "Room", "Due Date", "Created", "Completed"];
+        ["Work Order", "Title", "Description", "Status", "Priority", "Assignee", "Creator", "Building", "Room", "Due Date", "Created", "Completed"];
 
     /// <summary>The CSV text for <paramref name="rows"/>, lines separated by CRLF.</summary>
     public static string ToCsv(IEnumerable<WorkOrderSearchResultRow> rows)
@@ -33,6 +33,7 @@ public static class WorkOrderCsvExporter
     [
         row.Number,
         row.Title,
+        row.WorkOrder.Description,
         row.Status.FriendlyName,
         row.WorkOrder.Priority.ToString(),
         row.Assignee?.GetFullName(),
