@@ -269,6 +269,15 @@ public class WorkOrderCsvExporterTests
         records[1][3].ShouldBe("Assigned");
     }
 
+    [Test]
+    public void ToCsv_WithFormulaDescription_GuardsCellAndKeepsColumns()
+    {
+        var records = ParseCsv(WorkOrderCsvExporter.ToCsv([DescriptionRow("=HYPERLINK(\"http://x\", \"a, b\")")]));
+
+        records[1].Length.ShouldBe(12);
+        records[1][2].ShouldBe("'=HYPERLINK(\"http://x\", \"a, b\")");
+        records[1][3].ShouldBe("Assigned");
+    }
     private static WorkOrderSearchResultRow DescriptionRow(string? description) =>
         new()
         {
