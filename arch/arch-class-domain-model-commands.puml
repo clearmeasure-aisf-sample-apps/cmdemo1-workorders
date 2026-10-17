@@ -1,0 +1,223 @@
+@startuml
+
+scale 2/3
+left to right direction
+center header
+    C4 Architecture: Work Order System — State / Commands
+endheader
+
+!include templates/plantuml-theme.puml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Component.puml
+
+title Work Order System state commands (command objects)
+
+package "Guarded state transitions" {
+interface IStateCommand {
+  +IsValid() : bool
+  +TransitionVerbPresentTense : string
+  +Matches(commandName : string) : bool
+  +GetBeginStatus() : WorkOrderStatus
+  +Execute(context : StateCommandContext) : void
+}
+
+abstract class StateCommandBase <<record>> {
+  +WorkOrder : WorkOrder
+  +CurrentUser : Employee
+  +StateTransitionEvent : IStateTransitionEvent?
+  +TransitionVerbPresentTense : string
+  +TransitionVerbPastTense : string
+  +GetBeginStatus() : WorkOrderStatus
+  #GetEndStatus() : WorkOrderStatus
+  #UserCanExecute(currentUser : Employee) : bool
+  #IsAllowedInCurrentState() : bool
+  +IsValid() : bool
+  +Matches(commandName : string) : bool
+  +Execute(context : StateCommandContext) : void
+}
+
+class SaveDraftCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of SaveDraftCommand
+  Guard: only creator
+  Side-effect: sets CreatedDate when missing
+end note
+
+class DraftToAssignedCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of DraftToAssignedCommand
+  Guard: only creator can assign
+  Side-effect: may create WorkOrderAssignedToBotEvent when assignee has Bot role
+end note
+
+class AssignedToInProgressCommand <<record>> {
+}
+
+note right of AssignedToInProgressCommand
+  Guard: only assignee
+end note
+
+class InProgressToCompleteCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of InProgressToCompleteCommand
+  Guard: only assignee
+  Side-effect: sets CompletedDate
+end note
+
+class InProgressToAssignedCommand <<record>> {
+}
+
+note right of InProgressToAssignedCommand
+  Guard: only assignee
+  Shelve: InProgress -> Assigned
+end note
+
+class AssignedToCancelledCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of AssignedToCancelledCommand
+  Guard: only creator; status Assigned
+  Side-effect: clears AssignedDate and Assignee
+end note
+
+class InProgressToCancelledCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of InProgressToCancelledCommand
+  Guard: only creator; InProgress and not waiting on vendor
+  Side-effect: clears AssignedDate and Assignee
+end note
+
+class WaitingOnVendorToCancelledCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of WaitingOnVendorToCancelledCommand
+  Guard: only creator; InProgress and waiting on vendor
+  Side-effect: clears AssignedDate and Assignee
+end note
+
+class InProgressToWaitingOnVendorCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of InProgressToWaitingOnVendorCommand
+  Guard: only assignee; InProgress and not waiting on vendor
+  Side-effect: sets WaitingOnVendorSince
+  Status remains InProgress
+end note
+
+class WaitingOnVendorToInProgressCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+note right of WaitingOnVendorToInProgressCommand
+  Guard: only assignee; InProgress and waiting on vendor
+  Side-effect: clears WaitingOnVendorSince
+  Status remains InProgress
+end note
+
+class StateCommandResult <<record>> {
+  +WorkOrder : WorkOrder
+  +TransitionVerbPresentTense : string
+  +DebugMessage : string
+}
+}
+
+package "Attachment requests and results (not IStateCommand)" {
+class AddAttachmentMetadataCommand <<record>> {
+  +WorkOrder : WorkOrder
+  +UploadedBy : Employee
+  +FileName : string
+  +ContentType : string
+  +FileSize : long
+  +CreateAttachment(uploadedDate : DateTime) : WorkOrderAttachment
+}
+
+class RemoveAttachmentCommand <<record>> {
+  +WorkOrderId : Guid
+  +AttachmentId : Guid
+  +UserName : string
+  +Validate(workOrder : WorkOrder?, user : Employee?, attachment : WorkOrderAttachment?) : string?
+}
+
+class RemoveAttachmentResult <<record>> {
+  +Succeeded : bool
+  +Error : string?
+}
+}
+
+package "Dated work-order requests and results (not IStateCommand)" {
+class CreateDatedWorkOrdersCommand <<record>> {
+  +CreatorUsername : string
+  +AssigneeUsername : string
+  +Title : string
+  +Description : string
+  +DueDates : IReadOnlyList<DateOnly>
+}
+
+class CreateDatedWorkOrdersResult <<record>> {
+  +Success : bool
+  +Message : string
+  +WorkOrders : IReadOnlyList<CreatedDatedWorkOrder>
+}
+
+class CreatedDatedWorkOrder <<record>> {
+  +Number : string
+  +DueDate : DateOnly
+}
+}
+
+package "Saved-search requests and results (not IStateCommand)" {
+class SaveSearchViewCommand <<record>> {
+  +UserName : string
+  +Name : string
+  +Query : string
+}
+
+class DeleteSearchViewCommand <<record>> {
+  +UserName : string
+  +Id : Guid
+}
+
+class SavedSearchViewResult <<record>> {
+  +Succeeded : bool
+  +Error : string?
+}
+}
+
+' State command inheritance
+StateCommandBase ..|> IStateCommand
+SaveDraftCommand --|> StateCommandBase
+DraftToAssignedCommand --|> StateCommandBase
+AssignedToInProgressCommand --|> StateCommandBase
+InProgressToCompleteCommand --|> StateCommandBase
+InProgressToAssignedCommand --|> StateCommandBase
+AssignedToCancelledCommand --|> StateCommandBase
+InProgressToCancelledCommand --|> StateCommandBase
+WaitingOnVendorToCancelledCommand --|> StateCommandBase
+InProgressToWaitingOnVendorCommand --|> StateCommandBase
+WaitingOnVendorToInProgressCommand --|> StateCommandBase
+
+' Associations
+StateCommandBase --> WorkOrder : operates on
+StateCommandBase --> Employee : CurrentUser
+StateCommandResult --> WorkOrder : contains
+IStateCommand ..> StateCommandResult : IRequest result
+AddAttachmentMetadataCommand ..> WorkOrderAttachment : IRequest result
+RemoveAttachmentCommand ..> RemoveAttachmentResult : IRequest result
+CreateDatedWorkOrdersCommand ..> CreateDatedWorkOrdersResult : IRequest result
+CreateDatedWorkOrdersResult --> CreatedDatedWorkOrder : contains
+SaveSearchViewCommand ..> SavedSearchViewResult : IRequest result
+DeleteSearchViewCommand ..> SavedSearchViewResult : IRequest result
+
+LEGEND("Legend","StateCommandBase: implements IStateCommand; validates and executes guarded transitions\nSaveDraftCommand / DraftToAssignedCommand: save drafts and assign work\nAssignedToInProgressCommand / InProgressToCompleteCommand: begin and complete work\nInProgressToAssignedCommand: shelve work\nCancellation commands: creator cancels Assigned or either InProgress substate\nVendor commands: assignee waits or resumes; status remains InProgress\nOther packages: ordinary MediatR requests/results, not StateCommandBase subclasses")
+FOOTER()
+@enduml

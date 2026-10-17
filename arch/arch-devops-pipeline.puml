@@ -1,0 +1,105 @@
+@startuml
+!include templates/plantuml-theme.puml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Component.puml
+
+title Church Bulletin DevOps Pipeline
+
+Person(dev, "Developer", "Initiates code changes")
+
+System_Boundary(privatebuild, "Private Build (PrivateBuild.ps1, Developer Workstation)") {
+    Component(pb_init, "Init", "PowerShell", "clean + restore")
+    Component(pb_compile, "Compile", ".NET CLI", "warnings-as-errors")
+    Component(pb_unit, "Unit Tests", "NUnit", "NUnit + Shouldly")
+    Component(pb_db, "DB Setup", "Script", "LocalDB / SQLite / Docker")
+    Component(pb_int, "Integration Tests", "NUnit", "")
+    Component(pb_crap, "CRAP Gate", "PowerShell", "run-crap-audit.ps1 -SkipTests -FailOnViolations")
+
+    Rel_R(pb_init, pb_compile, " ")
+    Rel_R(pb_compile, pb_unit, " ")
+    Rel_R(pb_unit, pb_db, " ")
+    Rel_R(pb_db, pb_int, " ")
+    Rel_R(pb_int, pb_crap, " ")
+}
+
+System_Boundary(acceptance, "Acceptance Tests (AcceptanceTests.ps1, Developer Workstation)") {
+    Component(pb_accept, "Acceptance Tests", "Playwright", "Init, Compile, DB Setup, then browser tests")
+}
+
+System_Boundary(github, "GitHub") {
+    Component(feature_push, "Feature Branch", "Git", "push trigger")
+
+    System_Boundary(build_wf, "Build Workflow (.github/workflows/build.yml)") {
+        Component(changes, "Detect code changes", "bash", "docs-only change sets skip the other jobs")
+        Component(build_linux, "Integration Build (SQL container)", "ubuntu-latest", "Build, CRAP gate, Package-Everything")
+        Component(build_sqlite, "Integration Build (SQLite)", "ubuntu-latest", "Build -UseSqlite")
+        Component(build_arm, "Integration Build (ARM SQLite)", "ubuntu-24.04-arm", "Build -UseSqlite")
+        Component(build_win, "Integration Build (Windows LocalDB)", "windows-latest", "Build")
+        Component(code_analysis, "Code Analysis", "dotnet format", "style, analyzers, EnforceCodeStyleInBuild")
+        Component(qodana, "Qodana (Community .NET)", "JetBrains Qodana", "committed baseline, fail threshold 0")
+        Component(ci_cache, "CI Cache", "actions/cache", "NuGet packages, Playwright browsers")
+        Component(at_x86, "Acceptance Tests", "ubuntu-latest, Playwright", "Invoke-AcceptanceTests, SQL container")
+        Component(at_arm, "Acceptance Tests (ARM SQLite)", "ubuntu-24.04-arm, Playwright", "Invoke-AcceptanceTests -UseSqlite")
+        Component(gh_packages, "Publish to GitHub Packages", "NuGet", "needs: build-linux")
+        Component(build_result, "Build result", "bash", "fails unless every gated job succeeded")
+
+        Lay_R(changes, build_linux)
+        Lay_R(build_linux, build_sqlite)
+        Lay_R(build_sqlite, build_arm)
+        Lay_R(build_arm, build_win)
+        Lay_R(build_win, code_analysis)
+        Lay_R(qodana, ci_cache)
+        Lay_R(ci_cache, at_x86)
+        Lay_R(at_x86, at_arm)
+        Lay_R(at_arm, gh_packages)
+        Lay_R(gh_packages, build_result)
+        Lay_D(changes, qodana)
+    }
+
+    Component(render_check, "Render diagrams (check)", "render-diagrams.yml", "pull_request touching arch/**")
+    Component(secret_scan, "secret-scan", "secret-scan.yml, gitleaks", "pull_request and push to master / main")
+    Component(branch_checks, "Pull Request Checks", "GitHub ruleset", "required: Build result and secret-scan")
+    Component(copilot_review, "Copilot Code Review", "GitHub Copilot", "")
+    Component(human_review, "Human Reviewer", "Team Member", "")
+    Component(merge, "Merge to master", "Git", "")
+    Component(master_build, "Build Workflow", "GitHub Actions", "master push")
+
+    Lay_R(render_check, secret_scan)
+    Rel_R(render_check, branch_checks, "check")
+    Rel_R(secret_scan, branch_checks, "required check")
+    Rel_R(branch_checks, copilot_review, " ")
+    Rel_R(copilot_review, human_review, " ")
+    Rel_R(human_review, merge, "approve")
+    Rel_R(merge, master_build, "on: push (master)")
+}
+
+System_Boundary(release_wf, "Release Workflow (.github/workflows/release.yml)") {
+    Component(rel_image, "Build and push the UI image", "docker, az acr", "UI package contents plus build-facts.json; image tag write-locked")
+    Component(rel_octopus, "Push packages, create the release", "Octopus actions", "database and acceptance-test packages to the built-in feed")
+
+    Rel_R(rel_image, rel_octopus, " ")
+}
+
+System_Ext(octopus, "Octopus Deploy (cmdemo1 demo space) and Azure Container Apps tdd / uat / prod", "Not drawn here: the platform's health dashboard draws the deployed runtime")
+
+' Flow
+Rel_D(dev, privatebuild, "PrivateBuild.ps1")
+Rel_D(dev, acceptance, "AcceptanceTests.ps1")
+Lay_R(privatebuild, acceptance)
+Lay_D(pb_int, feature_push)
+Lay_D(pb_accept, feature_push)
+Rel(dev, feature_push, "git push")
+
+Rel_D(feature_push, build_wf, "on: push (all branches)")
+Rel_D(build_result, branch_checks, "required check")
+
+Rel_D(master_build, release_wf, "workflow_run (Build completed, success, master)")
+Rel_R(release_wf, octopus, "release MAJOR.MINOR.run_number")
+
+legend
+|= Topic |= Note |
+| Packages | build.yml publishes the NuGet packages to GitHub Packages. release.yml pushes the UI image to the system's container registry and the database and acceptance-test packages to the Octopus built-in feed |
+| security-scan | the job in build.yml is disabled (if: false); secrets are scanned by secret-scan.yml |
+| Deployment | Octopus Deploy deploys the release (approvals and the GitOps pin are Octopus's). The deployed runtime is drawn by the platform's health dashboard: https:~//blue-bush-041023510.1.azurestaticapps.net/#runtime/prod |
+endlegend
+FOOTER()
+@enduml

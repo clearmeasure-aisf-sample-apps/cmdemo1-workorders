@@ -1,0 +1,196 @@
+/* Sidebar navigation (#251): labelled sections, queue badges, indigo active bar. */
+.nav-scrollable {
+    background: transparent;
+    padding: 0 0.75rem;
+}
+
+.nav-section {
+    margin: 1.25rem 0 0.4rem;
+    padding: 0 0.75rem;
+    font-size: var(--font-size-label);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sidebar-muted);
+}
+
+.nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    margin: 2px 0;
+}
+
+.nav-item ::deep .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 40px;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-control);
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: var(--font-size-body);
+    font-weight: 500;
+    line-height: 1.3;
+    position: relative;
+    background: transparent;
+    border: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-item ::deep .nav-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-strong);
+}
+
+.nav-item ::deep .nav-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-strong);
+    font-weight: 600;
+}
+
+.nav-item ::deep .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--sidebar-accent);
+}
+
+.nav-item ::deep .nav-link:focus-visible {
+    outline: 2px solid var(--sidebar-accent);
+    outline-offset: 1px;
+}
+
+.nav-item ::deep .nav-link--disabled {
+    cursor: default;
+    color: var(--sidebar-muted);
+}
+
+.nav-item ::deep .nav-link--disabled:hover {
+    background: transparent;
+    color: var(--sidebar-muted);
+}
+
+.nav-item ::deep .nav-icon {
+    flex-shrink: 0;
+    width: 1.25rem;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sidebar-muted);
+}
+
+.nav-item ::deep .nav-link:hover .nav-icon,
+.nav-item ::deep .nav-link.active .nav-icon {
+    color: var(--sidebar-accent);
+}
+
+.nav-item ::deep .nav-link--danger .nav-icon {
+    color: #f87171;
+}
+
+.nav-item ::deep .nav-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: inherit;
+}
+
+.nav-item ::deep .nav-badge {
+    flex-shrink: 0;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--sidebar-badge-bg);
+    color: var(--sidebar-text-strong);
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-item ::deep .nav-link.active .nav-badge {
+    background: var(--gradient-primary);
+    color: #ffffff;
+}
+
+.nav-item ::deep .nav-link--danger .nav-badge {
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.nav-item ::deep .nav-tag {
+    flex-shrink: 0;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--sidebar-border);
+    color: var(--sidebar-text);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+/* 769–1023px icon rail: labels are visually hidden (title and accessible name kept), badges become dots */
+@media (min-width: 769px) and (max-width: 1023px) {
+    .nav-scrollable {
+        padding: 0 0.5rem;
+    }
+
+    .nav-section {
+        height: 1px;
+        margin: 0.75rem 0.5rem;
+        padding: 0;
+        overflow: hidden;
+        color: transparent;
+        background: var(--sidebar-border);
+    }
+
+    .nav-item ::deep .nav-link {
+        justify-content: center;
+        padding: 0.6rem 0;
+        gap: 0;
+    }
+
+    .nav-item ::deep .nav-link.active::before {
+        left: -0.5rem;
+    }
+
+    .nav-item ::deep .nav-icon {
+        font-size: 1.1rem;
+    }
+
+    .nav-item ::deep .nav-text,
+    .nav-item ::deep .nav-tag {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .nav-item ::deep .nav-badge {
+        position: absolute;
+        top: 6px;
+        right: 10px;
+        min-width: 0;
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        font-size: 0;
+        overflow: hidden;
+    }
+}
