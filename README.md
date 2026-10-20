@@ -146,7 +146,7 @@ See `CLAUDE.md` for the full environment-variable reference.
 
 Health and URLs
 - The application starts at https://localhost:7174 by default.
-- Health check endpoint: https://localhost:7174/_healthcheck
+- Health check endpoint: `/_healthcheck` (for example, https://localhost:7174/_healthcheck)
 
 Architecture diagrams
 - See the arch/ folder for PlantUML sources and rendered images. The architecture docs (arch/README.md) explain rendering and icon configuration.
