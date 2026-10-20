@@ -56,6 +56,18 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
             : $"{FirstName} {MiddleName} {LastName}";
     }
 
+    /// <summary>
+    /// Returns the uppercase initials of the employee's first and last names.
+    /// </summary>
+    /// <returns>The uppercase first initial followed by the uppercase last initial.</returns>
+    public string GetInitials()
+    {
+        var firstInitial = string.IsNullOrWhiteSpace(FirstName) ? string.Empty : char.ToUpperInvariant(FirstName[0]).ToString();
+        var lastInitial = string.IsNullOrWhiteSpace(LastName) ? string.Empty : char.ToUpperInvariant(LastName[0]).ToString();
+
+        return $"{firstInitial}{lastInitial}";
+    }
+
     public override string ToString()
     {
         return GetFullName();

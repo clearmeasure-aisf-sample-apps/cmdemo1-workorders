@@ -44,6 +44,40 @@ public class EmployeeTests
     }
 
     [Test]
+    public void ShouldGetInitials_FromFirstAndLastNames()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "") { MiddleName = "Ignored" };
+
+        employee.GetInitials().ShouldBe("JD");
+    }
+
+    [Test]
+    public void ShouldGetInitials_WhenNamesAreLowercase_ReturnsUppercase()
+    {
+        var employee = new Employee("jdoe", "jane", "doe", "");
+
+        employee.GetInitials().ShouldBe("JD");
+    }
+
+    [TestCase("")]
+    [TestCase("   ")]
+    [TestCase(null)]
+    public void ShouldGetInitials_WhenLastNameIsBlank_OmitsLastInitial(string? lastName)
+    {
+        var employee = new Employee("jdoe", "Jane", lastName!, "");
+
+        employee.GetInitials().ShouldBe("J");
+    }
+
+    [Test]
+    public void ShouldGetInitials_WhenBothNamesAreBlank_ReturnsEmptyString()
+    {
+        var employee = new Employee("jdoe", null!, " ", "");
+
+        employee.GetInitials().ShouldBe(string.Empty);
+    }
+
+    [Test]
     public void ToString_WithMiddleName_ShouldReturnFullNameWithMiddleName()
     {
         var employee = new Employee("jcamel", "Joe", "Camel", "") { MiddleName = "Big" };
