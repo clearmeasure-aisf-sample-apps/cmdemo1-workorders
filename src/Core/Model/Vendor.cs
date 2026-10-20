@@ -31,6 +31,11 @@ public class Vendor : EntityBase<Vendor>
     public const int PhoneNumberMaxLength = 50;
 
     /// <summary>
+    /// Maximum length of <see cref="Notes"/>.
+    /// </summary>
+    public const int NotesMaxLength = 1000;
+
+    /// <summary>
     /// Creates an empty, active vendor. Used by EF Core and serialization.
     /// </summary>
     public Vendor()
@@ -67,6 +72,11 @@ public class Vendor : EntityBase<Vendor>
     /// Optional phone number of the vendor.
     /// </summary>
     public string? PhoneNumber { get; init; }
+
+    /// <summary>
+    /// Optional notes about the vendor.
+    /// </summary>
+    public string? Notes { get; set; }
 
     /// <summary>
     /// Whether the church still uses this vendor. New vendors are active.
