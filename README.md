@@ -110,6 +110,7 @@ The repository supports three common local development workflows. Pick the one t
      dotnet run --no-launch-profile --urls "https://localhost:7174;http://localhost:5174"
      ```
   Important: use `--no-launch-profile` on Linux/macOS to avoid the Windows LocalDB connection string from launchSettings.json overriding your env vars.
+  Health check: `/_healthcheck` (for example, `https://localhost:7174/_healthcheck`).
 
   Telemetry is OpenTelemetry and needs no setting to run locally. In Azure the platform sets `APPLICATIONINSIGHTS_CONNECTION_STRING` and `OTEL_SERVICE_NAME`, and the Azure Monitor OpenTelemetry exporter sends traces, metrics and logs to Application Insights. Locally, running `src/ChurchBulletin.AppHost` sets `OTEL_EXPORTER_OTLP_ENDPOINT` and the OTLP exporter sends to the Aspire dashboard. Without either variable no exporter runs.
 
