@@ -29,38 +29,39 @@ public class ToolsWordCountEndpointIntegrationTests
         _factory?.Dispose();
     }
 
-    [Test]
-    public async Task Should_Return200WithCounts_When_PostUnversioned()
+    [TestCase("hello world", 2)]
+    [TestCase("", 0)]
+    [TestCase("word", 1)]
+    [TestCase("  one   two\nthree\tfour  ", 4)]
+    [TestCase(" \t\r\n", 0)]
+    public async Task Should_Return200WithWordCount_When_PostUnversioned(string text, int expectedWords)
     {
-        var response = await _client!.PostAsJsonAsync("/api/tools/word-count", new { text = "hello world" });
+        var response = await _client!.PostAsJsonAsync("/api/tools/word-count", new { text });
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        json.GetProperty("wordCount").GetInt32().ShouldBe(2);
-        json.GetProperty("characterCount").GetInt32().ShouldBe(11);
-        json.GetProperty("lineCount").GetInt32().ShouldBe(1);
+        await AssertWordCountAsync(response, expectedWords);
     }
 
-    [Test]
-    public async Task Should_Return200WithCounts_When_PostVersioned()
+    [TestCase("one\ntwo", 2)]
+    [TestCase("", 0)]
+    [TestCase("word", 1)]
+    [TestCase("  one   two\nthree\tfour  ", 4)]
+    [TestCase(" \t\r\n", 0)]
+    public async Task Should_Return200WithWordCount_When_PostVersioned(string text, int expectedWords)
     {
-        var response = await _client!.PostAsJsonAsync("/api/v1.0/tools/word-count", new { text = "one\ntwo" });
+        var response = await _client!.PostAsJsonAsync("/api/v1.0/tools/word-count", new { text });
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        json.GetProperty("wordCount").GetInt32().ShouldBe(2);
-        json.GetProperty("lineCount").GetInt32().ShouldBe(2);
+        await AssertWordCountAsync(response, expectedWords);
     }
 
     [TestCase("/api/tools/word-count")]
     [TestCase("/api/v1.0/tools/word-count")]
-    public async Task Should_Return400_When_TextMissing(string path)
+    public async Task Should_ReturnZeroWords_When_TextMissing(string path)
     {
         var missingField = await _client!.PostAsJsonAsync(path, new { });
-        missingField.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await AssertWordCountAsync(missingField, 0);
 
         var nullText = await _client!.PostAsJsonAsync(path, new { text = (string?)null });
-        nullText.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await AssertWordCountAsync(nullText, 0);
     }
 
     [Test]
@@ -74,5 +75,13 @@ public class ToolsWordCountEndpointIntegrationTests
 
         var versioned = await client.PostAsJsonAsync("/api/v1.0/tools/word-count", new { text = "test" });
         versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    private static async Task AssertWordCountAsync(HttpResponseMessage response, int expectedWords)
+    {
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        json.EnumerateObject().Select(property => property.Name).ShouldBe(new[] { "words" });
+        json.GetProperty("words").GetInt32().ShouldBe(expectedWords);
     }
 }
