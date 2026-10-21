@@ -21,6 +21,7 @@ public class WorkOrderMappingTests
             Description = "Replace broken light bulbs in conference room",
             Instructions = "Lock out panel before work.",
             RoomNumber = "CR-101",
+            ExternalReference = "EXT-12345",
             Status = WorkOrderStatus.Draft,
             Creator = creator
         };
@@ -46,6 +47,7 @@ public class WorkOrderMappingTests
         rehydratedWorkOrder.Description.ShouldBe("Replace broken light bulbs in conference room");
         rehydratedWorkOrder.Instructions.ShouldBe("Lock out panel before work.");
         rehydratedWorkOrder.RoomNumber.ShouldBe("CR-101");
+        rehydratedWorkOrder.ExternalReference.ShouldBe("EXT-12345");
         rehydratedWorkOrder.Status.ShouldBe(WorkOrderStatus.Draft);
         rehydratedWorkOrder.Creator.ShouldNotBeNull();
         rehydratedWorkOrder.Creator!.Id.ShouldBe(creator.Id);

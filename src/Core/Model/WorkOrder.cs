@@ -32,6 +32,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     public const int BuildingMaxLength = 100;
 
     /// <summary>
+    /// Maximum length of an optional external reference.
+    /// </summary>
+    public const int ExternalReferenceMaxLength = 100;
+
+    /// <summary>
     /// Maximum length of <see cref="Title"/> accepted by persistence and the work-order form.
     /// </summary>
     public const int TitleMaxLength = 300;
@@ -79,6 +84,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// Optional name of the building the work happens in (for example "Sanctuary"). Null when unset.
     /// </summary>
     public string? Building { get; set; }
+
+    /// <summary>
+    /// Optional reference to an external system.
+    /// </summary>
+    public string? ExternalReference { get; set; }
 
     /// <summary>
     /// When the assignee started waiting on a vendor (parts, contractor, quote). Set while the assignee
