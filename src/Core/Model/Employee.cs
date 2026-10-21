@@ -56,6 +56,14 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
             : $"{FirstName} {MiddleName} {LastName}";
     }
 
+    /// <summary>
+    /// Returns the uppercase initials of this employee's first and last names.
+    /// </summary>
+    public string GetInitials()
+    {
+        return $"{GetInitial(FirstName)}{GetInitial(LastName)}";
+    }
+
     public override string ToString()
     {
         return GetFullName();
@@ -71,5 +79,10 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
     public void AddRole(Role role)
     {
         Roles.Add(role);
+    }
+
+    private static string GetInitial(string? name)
+    {
+        return string.IsNullOrWhiteSpace(name) ? string.Empty : char.ToUpperInvariant(name.Trim()[0]).ToString();
     }
 }
