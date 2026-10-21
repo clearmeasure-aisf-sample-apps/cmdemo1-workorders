@@ -31,6 +31,11 @@ public class Vendor : EntityBase<Vendor>
     public const int PhoneNumberMaxLength = 50;
 
     /// <summary>
+    /// Maximum length of <see cref="Website"/>.
+    /// </summary>
+    public const int WebsiteMaxLength = 200;
+
+    /// <summary>
     /// Maximum length of <see cref="Notes"/>.
     /// </summary>
     public const int NotesMaxLength = 1000;
@@ -72,6 +77,11 @@ public class Vendor : EntityBase<Vendor>
     /// Optional phone number of the vendor.
     /// </summary>
     public string? PhoneNumber { get; init; }
+
+    /// <summary>
+    /// Optional website of the vendor.
+    /// </summary>
+    public string? Website { get; init; }
 
     /// <summary>
     /// Optional notes about the vendor.

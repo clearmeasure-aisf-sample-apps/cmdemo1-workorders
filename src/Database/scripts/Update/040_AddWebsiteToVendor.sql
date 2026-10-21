@@ -1,0 +1,13 @@
+BEGIN TRY
+	BEGIN TRANSACTION
+	PRINT N'Adding Website column to [dbo].[Vendor]'
+	ALTER TABLE [dbo].[Vendor] ADD [Website] NVARCHAR(200) NULL
+	PRINT 'The database update succeeded'
+	COMMIT TRANSACTION
+END TRY
+BEGIN CATCH
+	IF @@TRANCOUNT > 0
+		ROLLBACK TRANSACTION
+	THROW
+END CATCH
+GO
