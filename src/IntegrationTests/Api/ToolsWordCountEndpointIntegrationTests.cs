@@ -81,7 +81,7 @@ public class ToolsWordCountEndpointIntegrationTests
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var json = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        json.EnumerateObject().Select(property => property.Name).ShouldBe(new[] { "words" });
+        json.EnumerateObject().Select(property => property.Name).ShouldBe(["words"]);
         json.GetProperty("words").GetInt32().ShouldBe(expectedWords);
     }
 }
