@@ -73,7 +73,7 @@ public class TeamVendorMigrationTests
         ColumnsOf("Vendor").ShouldBe([
             "Id|uniqueidentifier||NO", "Name|nvarchar|100|NO", "Trade|nvarchar|100|YES",
             "ContactName|nvarchar|100|YES", "EmailAddress|nvarchar|255|YES", "PhoneNumber|nvarchar|50|YES",
-            "IsActive|bit||NO"
+            "IsActive|bit||NO", "Notes|nvarchar|1000|YES"
         ]);
         ColumnsOf("TeamMember").ShouldBe(["TeamId|uniqueidentifier||NO", "EmployeeId|uniqueidentifier||NO"]);
         Execute("INSERT INTO [dbo].[Vendor] ([Id], [Name]) VALUES (NEWID(), N'Acme')");
