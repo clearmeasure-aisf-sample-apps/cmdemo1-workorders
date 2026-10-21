@@ -14,7 +14,7 @@ public class DashboardTests : AcceptanceTestBase
     {
         await OpenDashboardAsync();
 
-        await Expect(Page.Locator(".page-heading h1")).ToHaveTextAsync("Dashboard");
+        await Expect(Page.Locator(".page-heading h1")).ToHaveTextAsync("TechWeek Work Orders");
         foreach (var card in Enum.GetNames<WorkOrderSummaryCards.Elements>())
         {
             await Expect(Page.GetByTestId(card)).ToBeVisibleAsync();
