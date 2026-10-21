@@ -168,6 +168,7 @@ Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, 
 | `/api/tools/timestamp-converter` | GET | Convert Unix seconds to/from ISO-8601; supply exactly one query param, `unix` or `iso`; returns Unix seconds, ISO-8601 UTC, and a human-readable UTC string |
 | `/api/tools/due-date-check` | GET | Return due-date urgency for required `date` query param (`YYYY-MM-DD`), relative to today in America/Chicago, assuming an open work order |
 | `/api/tools/word-count` | POST | Count words, characters, and lines in JSON body field `text` |
+| `/api/tools/char-count` | POST | Count Unicode text elements and non-whitespace text elements in JSON body field `text` |
 | `/api/tools/work-order-statuses` | GET | List work order statuses (`code`, `key`, `friendlyName`, `sortBy`) in sort order |
 
 All routes also available under the versioned prefix `/api/v1.0/tools/`.
