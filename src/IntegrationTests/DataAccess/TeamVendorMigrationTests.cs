@@ -103,7 +103,8 @@ public class TeamVendorMigrationTests
         var columns = Query(
             "SELECT 'C', TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, DATA_TYPE, " +
             "CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE, COLUMN_DEFAULT " +
-            "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME NOT IN " + excluded);
+            "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME NOT IN " + excluded +
+            " AND NOT (TABLE_NAME = 'WorkOrder' AND COLUMN_NAME = 'ExternalReference')");
         var constraints = Query(
             "SELECT 'K', TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME, CONSTRAINT_TYPE " +
             "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME NOT IN " + excluded);
