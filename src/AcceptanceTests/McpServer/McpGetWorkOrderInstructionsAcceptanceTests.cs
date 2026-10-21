@@ -40,7 +40,7 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
         }
     }
 
-    [Test, Retry(2)]
+    [Test]
     public async Task ShouldMatchGetWorkOrderDetailWithManageWhenInstructionsSet()
     {
         await LoginAsTlovejoyAsync();
@@ -105,8 +105,9 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
 
         var creator = RequiredString(live, "Creator");
         var creatorGroup = Page.Locator(".form-group").Filter(new LocatorFilterOptions { HasText = "Creator" });
-        await Expect(creatorGroup.GetByText(creator, new LocatorGetByTextOptions { Exact = true }))
-            .ToBeVisibleAsync();
+        var creatorValue = creatorGroup.Locator(".value");
+        await Expect(creatorValue).ToBeVisibleAsync();
+        await Expect(creatorValue).ToHaveTextAsync(creator);
 
         var createdDate = live.GetProperty("CreatedDate").GetDateTime();
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.CreatedDate)))
