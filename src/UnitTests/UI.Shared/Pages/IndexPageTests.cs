@@ -63,7 +63,7 @@ public class IndexPageTests
 
         var heading = component.Find(TestId(IndexPage.Elements.HomeHeadingTooltip));
         heading.GetAttribute("title").ShouldBe("Work order home");
-        heading.TextContent.ShouldBe("Dashboard");
+        heading.TextContent.ShouldBe("TechWeek Work Orders");
     }
 
     [Test]

@@ -65,7 +65,7 @@ public class CounterTests : AcceptanceTestBase
         await Page.GotoAsync("/counter");
         await Page.GetByTestId(nameof(Counter.Elements.CounterValue)).WaitForAsync();
 
-        await Expect(Page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("^Counter - Kalahari Church Work Order System$"));
+        await Expect(Page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("^Counter - TechWeek Work Orders$"));
     }
 
     [Test, Retry(2)]
