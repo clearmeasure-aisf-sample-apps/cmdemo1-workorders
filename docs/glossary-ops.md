@@ -14,3 +14,4 @@
 - **Development** — the board column where the change is implemented on a branch and a pull request is opened.
 - **Technical Design** — the board column where the change is designed and its scope is fixed before development starts.
 - **Todo** — the board column where a work item waits before its design starts.
+- **Agent run** — one execution of a cloud coding agent for a single phase of a work item.
