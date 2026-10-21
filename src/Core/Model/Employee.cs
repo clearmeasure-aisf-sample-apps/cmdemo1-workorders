@@ -57,6 +57,20 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
     }
 
     /// <summary>
+    /// Returns the employee's display name as "LastName, FirstName". If either name is missing, returns the other;
+    /// if both names are missing, returns the username.
+    /// </summary>
+    public string GetDisplayName()
+    {
+        if (string.IsNullOrWhiteSpace(FirstName))
+        {
+            return string.IsNullOrWhiteSpace(LastName) ? UserName : LastName;
+        }
+
+        return string.IsNullOrWhiteSpace(LastName) ? FirstName : $"{LastName}, {FirstName}";
+    }
+
+    /// <summary>
     /// Returns the uppercase initials of this employee's first and last names.
     /// </summary>
     public string GetInitials()

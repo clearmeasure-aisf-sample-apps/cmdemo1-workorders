@@ -44,6 +44,51 @@ public class EmployeeTests
     }
 
     [Test]
+    public void GetDisplayName_WithFirstAndLastName_ShouldReturnLastCommaFirstWithoutMiddleName()
+    {
+        var employee = new Employee("jcamel", "Joe", "Camel", "") { MiddleName = "Big" };
+
+        employee.GetDisplayName().ShouldBe("Camel, Joe");
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void GetDisplayName_WithMissingFirstName_ShouldReturnLastName(string? firstName)
+    {
+        var employee = new Employee("jcamel", "Joe", "Camel", "") { FirstName = firstName! };
+
+        employee.GetDisplayName().ShouldBe("Camel");
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public void GetDisplayName_WithMissingLastName_ShouldReturnFirstName(string? lastName)
+    {
+        var employee = new Employee("jcamel", "Joe", "Camel", "") { LastName = lastName! };
+
+        employee.GetDisplayName().ShouldBe("Joe");
+    }
+
+    [TestCase(null, null)]
+    [TestCase("", "")]
+    [TestCase("   ", "   ")]
+    [TestCase(null, "")]
+    [TestCase("", "   ")]
+    [TestCase("  ", null)]
+    public void GetDisplayName_WithBothNamesMissing_ShouldReturnUserName(string? firstName, string? lastName)
+    {
+        var employee = new Employee("jcamel", "Joe", "Camel", "")
+        {
+            FirstName = firstName!,
+            LastName = lastName!
+        };
+
+        employee.GetDisplayName().ShouldBe("jcamel");
+    }
+
+    [Test]
     public void GetInitials_WithFirstAndLastName_ShouldReturnUppercaseInitials()
     {
         var employee = new Employee("jdoe", "jane", "doe", "");
