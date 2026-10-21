@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 
 /// <summary>
-/// Counts words, characters, and lines in submitted text for operators and integrations.
+/// Counts words in submitted text for operators and integrations.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -17,32 +17,20 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 public class ToolsWordCountController : ControllerBase
 {
     /// <summary>
-    /// Returns word, character, and line counts for the submitted <paramref name="request"/>.Text.
+    /// Returns the word count for the submitted <paramref name="request"/>.Text.
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
     [Consumes(MediaTypeNames.Application.Json)]
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(typeof(WordCountResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public IActionResult Post([FromBody] WordCountRequest? request)
     {
-        if (request?.Text is null)
-        {
-            return Problem(
-                detail: "JSON body field 'text' is required.",
-                statusCode: StatusCodes.Status400BadRequest);
-        }
+        var wordCount = request?.Text?
+            .Split((char[])null!, StringSplitOptions.RemoveEmptyEntries)
+            .Length ?? 0;
 
-        var text = request.Text;
-        var wordCount = text.Length == 0
-            ? 0
-            : text.Split((char[])null!, StringSplitOptions.RemoveEmptyEntries).Length;
-        var characterCount = text.Length;
-        // Normalize CRLF to LF, then split on LF to count lines (handles CR, LF, and CRLF).
-        var lineCount = text.Replace("\r\n", "\n").Replace("\r", "\n").Split('\n').Length;
-
-        return Ok(new WordCountResponse(wordCount, characterCount, lineCount));
+        return Ok(new WordCountResponse(wordCount));
     }
 }
 
@@ -54,4 +42,4 @@ public record WordCountRequest(string? Text);
 /// <summary>
 /// JSON payload for <c>POST /api/tools/word-count</c>.
 /// </summary>
-public record WordCountResponse(int WordCount, int CharacterCount, int LineCount);
+public record WordCountResponse(int Words);

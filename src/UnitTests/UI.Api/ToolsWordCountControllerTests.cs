@@ -9,15 +9,13 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 public class ToolsWordCountControllerTests
 {
     [Test]
-    public void Post_Should_ReturnCounts_When_TextProvided()
+    public void Post_Should_ReturnWordCount_When_TextProvided()
     {
         var result = CreateController().Post(new WordCountRequest("hello world\nfoo"));
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         var payload = ok.Value.ShouldBeOfType<WordCountResponse>();
-        payload.WordCount.ShouldBe(3);
-        payload.CharacterCount.ShouldBe(15);
-        payload.LineCount.ShouldBe(2);
+        payload.Words.ShouldBe(3);
     }
 
     [Test]
@@ -27,46 +25,41 @@ public class ToolsWordCountControllerTests
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         var payload = ok.Value.ShouldBeOfType<WordCountResponse>();
-        payload.WordCount.ShouldBe(0);
-        payload.CharacterCount.ShouldBe(0);
-        payload.LineCount.ShouldBe(1);
+        payload.Words.ShouldBe(0);
     }
 
     [Test]
-    public void Post_Should_CountSingleLine_When_NoNewlines()
+    public void Post_Should_ReturnOne_When_SingleWord()
     {
-        var result = CreateController().Post(new WordCountRequest("one two three"));
+        var result = CreateController().Post(new WordCountRequest("word"));
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         var payload = ok.Value.ShouldBeOfType<WordCountResponse>();
-        payload.WordCount.ShouldBe(3);
-        payload.CharacterCount.ShouldBe(13);
-        payload.LineCount.ShouldBe(1);
+        payload.Words.ShouldBe(1);
     }
 
     [Test]
-    public void Post_Should_Return400ProblemDetails_When_TextMissing()
+    public void Post_Should_ReturnZeroWordCount_When_TextMissing()
     {
         var nullBody = CreateController().Post(null);
         var nullText = CreateController().Post(new WordCountRequest(null));
 
         foreach (var result in new[] { nullBody, nullText })
         {
-            var objectResult = result.ShouldBeOfType<ObjectResult>();
-            objectResult.StatusCode.ShouldBe(400);
-            objectResult.Value.ShouldBeOfType<ProblemDetails>();
+            var ok = result.ShouldBeOfType<OkObjectResult>();
+            var payload = ok.Value.ShouldBeOfType<WordCountResponse>();
+            payload.Words.ShouldBe(0);
         }
     }
 
     [Test]
-    public void Post_Should_CountMultipleLines_When_MultipleNewlines()
+    public void Post_Should_CountWhitespaceDelimitedWords_When_MultipleSpacesAndNewlines()
     {
-        var result = CreateController().Post(new WordCountRequest("a\nb\nc"));
+        var result = CreateController().Post(new WordCountRequest("  one   two\nthree\tfour  "));
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         var payload = ok.Value.ShouldBeOfType<WordCountResponse>();
-        payload.WordCount.ShouldBe(3);
-        payload.LineCount.ShouldBe(3);
+        payload.Words.ShouldBe(4);
     }
 
     private static ToolsWordCountController CreateController() =>
