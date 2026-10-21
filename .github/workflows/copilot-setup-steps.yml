@@ -1,6 +1,7 @@
 # Environment of the GitHub Copilot cloud agent (the fworker factory's default worker runtime): the .NET SDK of global.json, so the agent
-# can build and run the unit tests. The integration tests can run on SQLite (DATABASE_ENGINE=SQLite), so no SQL Server is set up here.
-# Approved by the owner as a minimal pipeline file (2026-10-20).
+# runs PrivateBuild.ps1 and AcceptanceTests.ps1 before it pushes. ubuntu-latest brings PowerShell and Docker (build.ps1 starts its SQL Server
+# container when Docker runs, else falls back to SQLite); the Playwright browsers are installed here.
+# Approved by the owner as a minimal pipeline file (2026-10-20; private build and acceptance tests in the session, 2026-10-21).
 name: Copilot Setup Steps
 
 on:
@@ -21,3 +22,5 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet restore src/ChurchBulletin.sln
+      - run: dotnet build src/AcceptanceTests --configuration Debug
+      - run: pwsh src/AcceptanceTests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
