@@ -175,10 +175,26 @@ public class WorkOrderTests
         workOrder.IsOverdue(new DateTime(2026, 10, 21)).ShouldBeFalse();
     }
 
-    [Test]
-    public void IsOverdue_WithPastDueDateAndOpenStatus_IsTrue()
+    [TestCase(0)]
+    [TestCase(12)]
+    [TestCase(23)]
+    public void IsOverdue_WithDueDateToday_IsFalse(int hour)
     {
-        var workOrder = new WorkOrder { DueDate = new DateOnly(2026, 10, 20), Status = WorkOrderStatus.Assigned };
+        var workOrder = new WorkOrder { DueDate = new DateOnly(2026, 10, 21), Status = WorkOrderStatus.Assigned };
+
+        workOrder.IsOverdue(new DateTime(2026, 10, 21, hour, 0, 0)).ShouldBeFalse();
+    }
+
+    [TestCase("Draft")]
+    [TestCase("Assigned")]
+    [TestCase("InProgress")]
+    public void IsOverdue_WithPastDueDateAndOpenStatus_IsTrue(string status)
+    {
+        var workOrder = new WorkOrder
+        {
+            DueDate = new DateOnly(2026, 10, 20),
+            Status = WorkOrderStatus.FromKey(status)
+        };
 
         workOrder.IsOverdue(new DateTime(2026, 10, 21)).ShouldBeTrue();
     }
