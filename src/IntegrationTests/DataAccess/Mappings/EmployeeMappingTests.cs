@@ -89,6 +89,42 @@ public class EmployeeMappingTests
     }
 
     [Test]
+    public void ShouldPersistPhoneNumber()
+    {
+        var emp = new Employee(TestData.UserName("userphone"), "First", "Last", "emailphone@example.com") { PhoneNumber = "555-123-4567" };
+
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(emp);
+            context.SaveChanges();
+        }
+
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            var rehydrated = context.Set<Employee>().Single(e => e.Id == emp.Id);
+            rehydrated.PhoneNumber.ShouldBe("555-123-4567");
+        }
+    }
+
+    [Test]
+    public void ShouldPersistNullPhoneNumber()
+    {
+        var emp = new Employee(TestData.UserName("usernophone"), "First", "Last", "emailnophone@example.com");
+
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(emp);
+            context.SaveChanges();
+        }
+
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            var rehydrated = context.Set<Employee>().Single(e => e.Id == emp.Id);
+            rehydrated.PhoneNumber.ShouldBeNull();
+        }
+    }
+
+    [Test]
     public void ShouldPersistMiddleNameUpTo100Characters()
     {
         var longMiddleName = new string('M', 100);
