@@ -24,6 +24,7 @@ public class VendorMap : IEntityFrameworkMapping
             entity.Property(v => v.ContactName).HasMaxLength(Vendor.ContactNameMaxLength);
             entity.Property(v => v.EmailAddress).HasMaxLength(Vendor.EmailAddressMaxLength);
             entity.Property(v => v.PhoneNumber).HasMaxLength(Vendor.PhoneNumberMaxLength);
+            entity.Property(v => v.Notes).HasMaxLength(Vendor.NotesMaxLength);
             // No HasDefaultValue(true): EF would then omit IsActive = false from the INSERT and the row would
             // be saved as active. The DEFAULT 1 lives only in the SQL script, for raw inserts.
             entity.Property(v => v.IsActive).IsRequired();
