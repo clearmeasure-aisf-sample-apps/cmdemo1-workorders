@@ -63,7 +63,9 @@ public class TeamVendorMigrationTests
 
         full.Successful.ShouldBeTrue(full.Error?.ToString());
         full.Scripts.Select(s => Path.GetFileName(s.Name)).Where(n => string.CompareOrdinal(n, "037_") < 0).ShouldBe([ScriptName]);
-        SnapshotExistingSchema().ShouldBe(schemaBefore);
+        SnapshotExistingSchema().ShouldBe(schemaBefore
+            .Append("C|dbo|Employee|PhoneNumber|8|nvarchar|30|YES|")
+            .OrderBy(row => row, StringComparer.Ordinal).ToArray());
         Query("SELECT [UserName], [FirstName], [LastName], [EmailAddress], [PreferredLanguage] " +
               "FROM [dbo].[Employee] WHERE [Id] = @id",
                 new SqlParameter("@id", SeededEmployeeId))

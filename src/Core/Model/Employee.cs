@@ -34,6 +34,9 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
 
     public string EmailAddress { get; set; }
 
+    /// <summary>
+    /// Optional contact phone number, up to 30 characters.
+    /// </summary>
     public string? PhoneNumber { get; set; }
 
     public string PreferredLanguage { get; set; } = "en-US";

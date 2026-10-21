@@ -103,6 +103,22 @@ public class EmployeeMappingTests
         {
             var rehydrated = context.Set<Employee>().Single(e => e.Id == emp.Id);
             rehydrated.PhoneNumber.ShouldBe("555-123-4567");
+            rehydrated.PhoneNumber = new string('1', 30);
+            context.SaveChanges();
+        }
+
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            var rehydrated = context.Set<Employee>().Single(e => e.Id == emp.Id);
+            rehydrated.PhoneNumber.ShouldBe(new string('1', 30));
+            rehydrated.PhoneNumber = null;
+            context.SaveChanges();
+        }
+
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            var rehydrated = context.Set<Employee>().Single(e => e.Id == emp.Id);
+            rehydrated.PhoneNumber.ShouldBeNull();
         }
     }
 
