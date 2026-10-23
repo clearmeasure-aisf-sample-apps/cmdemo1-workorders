@@ -29,28 +29,36 @@ public class ToolsWordCountEndpointIntegrationTests
         _factory?.Dispose();
     }
 
-    [TestCase("hello world", 2)]
-    [TestCase("", 0)]
-    [TestCase("word", 1)]
-    [TestCase("  one   two\nthree\tfour  ", 4)]
-    [TestCase(" \t\r\n", 0)]
-    public async Task Should_Return200WithWordCount_When_PostUnversioned(string text, int expectedWords)
+    [TestCase("hello world", 2, 11, 1)]
+    [TestCase("", 0, 0, 0)]
+    [TestCase("word", 1, 4, 1)]
+    [TestCase("  one   two\nthree\tfour  ", 4, 24, 2)]
+    [TestCase(" \t\r\n", 0, 4, 2)]
+    [TestCase("   ", 0, 3, 1)]
+    [TestCase("one\ntwo\nthree", 3, 13, 3)]
+    [TestCase("café 東京", 2, 7, 1)]
+    public async Task Should_Return200WithWordCount_When_PostUnversioned(
+        string text, int expectedWords, int expectedCharacters, int expectedLines)
     {
         var response = await _client!.PostAsJsonAsync("/api/tools/word-count", new { text });
 
-        await AssertWordCountAsync(response, expectedWords);
+        await AssertWordCountAsync(response, expectedWords, expectedCharacters, expectedLines);
     }
 
-    [TestCase("one\ntwo", 2)]
-    [TestCase("", 0)]
-    [TestCase("word", 1)]
-    [TestCase("  one   two\nthree\tfour  ", 4)]
-    [TestCase(" \t\r\n", 0)]
-    public async Task Should_Return200WithWordCount_When_PostVersioned(string text, int expectedWords)
+    [TestCase("one\ntwo", 2, 7, 2)]
+    [TestCase("", 0, 0, 0)]
+    [TestCase("word", 1, 4, 1)]
+    [TestCase("  one   two\nthree\tfour  ", 4, 24, 2)]
+    [TestCase(" \t\r\n", 0, 4, 2)]
+    [TestCase("   ", 0, 3, 1)]
+    [TestCase("one\ntwo\nthree", 3, 13, 3)]
+    [TestCase("café 東京", 2, 7, 1)]
+    public async Task Should_Return200WithWordCount_When_PostVersioned(
+        string text, int expectedWords, int expectedCharacters, int expectedLines)
     {
         var response = await _client!.PostAsJsonAsync("/api/v1.0/tools/word-count", new { text });
 
-        await AssertWordCountAsync(response, expectedWords);
+        await AssertWordCountAsync(response, expectedWords, expectedCharacters, expectedLines);
     }
 
     [TestCase("/api/tools/word-count")]
@@ -58,10 +66,10 @@ public class ToolsWordCountEndpointIntegrationTests
     public async Task Should_ReturnZeroWords_When_TextMissing(string path)
     {
         var missingField = await _client!.PostAsJsonAsync(path, new { });
-        await AssertWordCountAsync(missingField, 0);
+        await AssertWordCountAsync(missingField, 0, 0, 0);
 
         var nullText = await _client!.PostAsJsonAsync(path, new { text = (string?)null });
-        await AssertWordCountAsync(nullText, 0);
+        await AssertWordCountAsync(nullText, 0, 0, 0);
     }
 
     [Test]
@@ -77,11 +85,14 @@ public class ToolsWordCountEndpointIntegrationTests
         versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    private static async Task AssertWordCountAsync(HttpResponseMessage response, int expectedWords)
+    private static async Task AssertWordCountAsync(
+        HttpResponseMessage response, int expectedWords, int expectedCharacters, int expectedLines)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var json = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
-        json.EnumerateObject().Select(property => property.Name).ShouldBe(["words"]);
+        json.EnumerateObject().Select(property => property.Name).ShouldBe(["words", "characters", "lines"]);
         json.GetProperty("words").GetInt32().ShouldBe(expectedWords);
+        json.GetProperty("characters").GetInt32().ShouldBe(expectedCharacters);
+        json.GetProperty("lines").GetInt32().ShouldBe(expectedLines);
     }
 }
