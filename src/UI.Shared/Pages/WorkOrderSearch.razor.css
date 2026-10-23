@@ -659,7 +659,7 @@
 }
 
 .col-priority {
-    width: 95px;
+    width: 12rem;
     white-space: nowrap;
 }
 
@@ -801,6 +801,23 @@
 .priority--high .priority-bars { color: var(--priority-high); }
 .priority--medium .priority-bars { color: var(--priority-medium); }
 .priority--low .priority-bars { color: var(--priority-low); }
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: 0.45rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.priority-badge--high {
+    color: var(--priority-high);
+    background: color-mix(in srgb, var(--priority-high) 18%, transparent);
+}
 
 /* Assignee: initials avatar + name */
 .assignee {
