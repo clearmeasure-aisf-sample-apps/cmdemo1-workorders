@@ -43,6 +43,28 @@ public class GlobalSearchBoxTests
         component.Find("kbd").TextContent.ShouldBe("Ctrl K");
     }
 
+    [Test]
+    public async Task ShouldShowSlashHint_WhenRendered_AnnouncesPressSlashToSearch()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<GlobalSearchBox>();
+        var input = component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchInput}']");
+
+        var shortcuts = input.GetAttribute("aria-keyshortcuts");
+        shortcuts.ShouldNotBeNull();
+        shortcuts.ShouldContain("/");
+
+        var hintId = input.GetAttribute("aria-describedby");
+        hintId.ShouldNotBeNullOrWhiteSpace();
+        var announced = component.Find($"#{hintId}");
+        announced.TextContent.ShouldBe("Press / to search");
+        announced.ClassList.ShouldContain("visually-hidden");
+
+        var visible = component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchSlashHint}']");
+        visible.TextContent.ShouldBe("Press / to search");
+        visible.GetAttribute("aria-hidden").ShouldBe("true");
+    }
+
     [TestCase(null, "workorder/search")]
     [TestCase("   ", "workorder/search")]
     [TestCase(" WO-1 ", "workorder/search?Q=WO-1")]
