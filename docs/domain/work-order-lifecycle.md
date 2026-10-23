@@ -38,6 +38,6 @@ terminal: no outgoing lifecycle transitions are defined.
 
 ## References
 
-- [Status descriptions](../work-order-statuses.md)
+- [Status descriptions](work-order-statuses.md)
 - [State diagram](../../arch/arch-state-workorder.md)
 - [State command implementations](../../src/Core/Model/StateCommands/)
