@@ -450,9 +450,7 @@ public class WorkOrderSpecificationHandlerTests
         specification.MatchCreator(employee);
         var orders = await handler.Handle(specification);
 
-        // SQL Server is case-insensitive; SQLite is case-sensitive.
-        // This test should find at least the exact match.
-        orders.Select(o => o.Number).ShouldContain(mixedRoomNumber);
+        orders.Select(o => o.Number).ShouldBe([lowerRoomNumber, upperRoomNumber, mixedRoomNumber], ignoreOrder: true);
     }
 
     [Test]
