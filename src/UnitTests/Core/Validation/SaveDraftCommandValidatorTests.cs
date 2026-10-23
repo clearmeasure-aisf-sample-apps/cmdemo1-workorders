@@ -207,6 +207,37 @@ public class SaveDraftCommandValidatorTests
         result.IsValid.ShouldBeTrue();
     }
 
+    [Test]
+    public void ShouldPass_WhenFloorIsAtMaxLength()
+    {
+        var command = CreateCommandWithFloor(new string('F', WorkOrder.FloorMaxLength));
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public void ShouldFail_WhenFloorExceedsMaxLength()
+    {
+        var command = CreateCommandWithFloor(new string('F', WorkOrder.FloorMaxLength + 1));
+
+        var result = _validator.TestValidate(command);
+
+        result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Floor)
+            .WithErrorMessage("Floor cannot exceed 20 characters.");
+    }
+
+    [Test]
+    public void ShouldPass_WhenFloorIsNull()
+    {
+        var command = CreateCommandWithFloor(null);
+
+        var result = _validator.TestValidate(command);
+
+        result.IsValid.ShouldBeTrue();
+    }
+
     private static SaveDraftCommand CreateCommand(string? title)
     {
         var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
@@ -218,6 +249,13 @@ public class SaveDraftCommandValidatorTests
     {
         var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
         var workOrder = new WorkOrder { Title = "T", Building = building, Creator = creator };
+        return new SaveDraftCommand(workOrder, creator);
+    }
+
+    private static SaveDraftCommand CreateCommandWithFloor(string? floor)
+    {
+        var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
+        var workOrder = new WorkOrder { Title = "T", Floor = floor, Creator = creator };
         return new SaveDraftCommand(workOrder, creator);
     }
 }

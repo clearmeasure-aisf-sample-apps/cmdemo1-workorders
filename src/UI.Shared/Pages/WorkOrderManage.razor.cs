@@ -202,6 +202,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             DueDateInput = workOrder.DueDate,
             Priority = workOrder.Priority,
             Building = workOrder.Building,
+            Floor = workOrder.Floor,
             DueDateDisplay = FormatDueDateDisplay(workOrder.DueDate)
         };
     }
@@ -264,6 +265,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         workOrder.DueDate = Model.DueDateInput;
         workOrder.Priority = Model.Priority;
         workOrder.Building = string.IsNullOrWhiteSpace(Model.Building) ? null : Model.Building.Trim();
+        workOrder.Floor = string.IsNullOrWhiteSpace(Model.Floor) ? null : Model.Floor.Trim();
 
         var matchingCommand = SaveDraftCommand.WithPreviousRoomNumber(
             new StateCommandList().GetMatchingCommand(workOrder, currentUser, SelectedCommand!),

@@ -121,6 +121,13 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="@Elements.Floor" class="form-label">Floor</label>
+                    <div>
+                        <InputText data-testid="@Elements.Floor" id="@Elements.Floor" @bind-Value="Model.Floor" class="form-control input-text" maxlength="@WorkOrder.FloorMaxLength" disabled="@Model.IsReadOnly"/>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="RoomNumber" class="form-label">Room</label>
                     <div>
                         <InputTextArea data-testid="@Elements.RoomNumber" id="RoomNumber" @bind-Value="Model.RoomNumber" class="form-control input-textarea input-room" maxlength="@WorkOrder.RoomNumberEntryMaxLength" disabled="@Model.IsReadOnly"/>
@@ -325,6 +332,7 @@
         ManageHeadingTooltip,
         Priority,
         Building,
+        Floor,
         CopyWorkOrderNumber,
         PrintLink,
         StatusHistory,
