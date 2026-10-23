@@ -64,6 +64,12 @@ public class WorkOrderManageModel : IValidatableObject
     [StringLength(WorkOrder.BuildingMaxLength, ErrorMessage = "Building cannot exceed 100 characters.")]
     public string? Building { get; set; }
 
+    /// <summary>
+    /// Optional floor the work happens on.
+    /// </summary>
+    [StringLength(WorkOrder.FloorMaxLength, ErrorMessage = "Floor cannot exceed 20 characters.")]
+    public string? Floor { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext context)
     {
         // Skip room number entry length validation when the value is unchanged

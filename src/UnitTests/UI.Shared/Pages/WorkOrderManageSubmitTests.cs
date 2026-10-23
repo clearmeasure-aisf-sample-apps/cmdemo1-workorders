@@ -202,6 +202,7 @@ public class WorkOrderManageSubmitTests
         await component.Find($"[data-testid='{WorkOrderManage.Elements.Description}']").ChangeAsync(new() { Value = "Tune it" });
         await component.Find($"[data-testid='{WorkOrderManage.Elements.Priority}']").ChangeAsync(new() { Value = nameof(WorkOrderPriority.High) });
         await component.Find($"[data-testid='{WorkOrderManage.Elements.Building}']").ChangeAsync(new() { Value = "  Sanctuary " });
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Floor}']").ChangeAsync(new() { Value = "  2 " });
 
         await component.Find($"[data-testid='{WorkOrderManage.Elements.CommandButton}Save']").ClickAsync(new());
 
@@ -210,6 +211,7 @@ public class WorkOrderManageSubmitTests
             var command = bus.LastCommand.ShouldBeOfType<SaveDraftCommand>();
             command.WorkOrder.Priority.ShouldBe(WorkOrderPriority.High);
             command.WorkOrder.Building.ShouldBe("Sanctuary");
+            command.WorkOrder.Floor.ShouldBe("2");
         });
     }
 

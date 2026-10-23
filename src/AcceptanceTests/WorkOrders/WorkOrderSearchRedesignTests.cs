@@ -315,6 +315,32 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     }
 
     [Test, Retry(2)]
+    public async Task ShouldFocusGlobalSearch_WhenSlashPressed()
+    {
+        await OpenSearchAsync();
+        await Expect(Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchSlashHint))).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchSlashHint))).ToHaveTextAsync("Press / to search");
+        await Page.Locator("main").ClickAsync(new LocatorClickOptions { Position = new Position { X = 5, Y = 5 } });
+
+        await Page.Keyboard.PressAsync("/");
+
+        await Expect(Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchInput))).ToBeFocusedAsync();
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldTypeSlashInRoomFilter_WhenRoomFilterFocused()
+    {
+        await OpenSearchAsync();
+        var room = Page.Locator($"#{WorkOrderSearch.Elements.RoomInput}");
+        await room.FocusAsync();
+
+        await Page.Keyboard.PressAsync("/");
+
+        await Expect(room).ToBeFocusedAsync();
+        await Expect(room).ToHaveValueAsync("/");
+    }
+
+    [Test, Retry(2)]
     public async Task ShouldShowTableResultsAsBoardCards_WhenMoreThan25Match()
     {
         var creator = await SeedCreatorAsync("board");
