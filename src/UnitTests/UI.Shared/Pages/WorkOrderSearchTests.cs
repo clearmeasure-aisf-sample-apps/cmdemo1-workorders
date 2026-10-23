@@ -1611,7 +1611,7 @@ public class WorkOrderSearchTests
         var card = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WO-HI']");
         var badge = card.QuerySelector("[data-testid='PriorityBadgeWO-HI']");
         badge.ShouldNotBeNull();
-        badge!.ClassList.ShouldContain("priority-badge--high");
+        badge.ClassList.ShouldContain("priority-badge--high");
         badge.TextContent.ShouldBe("High");
         card.QuerySelector(".priority")!.TextContent.Trim().ShouldBe("High");
     }

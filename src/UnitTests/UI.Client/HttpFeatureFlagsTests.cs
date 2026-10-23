@@ -51,6 +51,37 @@ public class HttpFeatureFlagsTests
         handler.Calls.ShouldBe(1);
     }
 
+    [Test]
+    public async Task IsEnabledAsync_Should_UseCatalogDefault_When_BodyIsNotAnObject()
+    {
+        var handler = new StubHandler(HttpStatusCode.OK, "[1,2]");
+        var flags = Client(handler);
+
+        (await flags.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges)).ShouldBeTrue();
+        (await flags.IsEnabledAsync("SampleFeatureA")).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task IsEnabledAsync_Should_UseCatalogDefault_When_BodyIsNotJson()
+    {
+        var handler = new StubHandler(HttpStatusCode.OK, "not-json");
+        var flags = Client(handler);
+
+        (await flags.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges)).ShouldBeTrue();
+        (await flags.IsEnabledAsync("SampleFeatureA")).ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task IsEnabledAsync_Should_IgnoreNonBooleanProperties_When_BodyMixesValues()
+    {
+        var handler = new StubHandler(HttpStatusCode.OK, """{"ShowPriorityBadges":true,"Count":1,"SampleFeatureA":false}""");
+        var flags = Client(handler);
+
+        (await flags.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges)).ShouldBeTrue();
+        (await flags.IsEnabledAsync("Count")).ShouldBeFalse();
+        (await flags.IsEnabledAsync("SampleFeatureA")).ShouldBeFalse();
+    }
+
     private static HttpFeatureFlags Client(StubHandler handler)
     {
         var http = new HttpClient(handler) { BaseAddress = new Uri("http://localhost/") };
