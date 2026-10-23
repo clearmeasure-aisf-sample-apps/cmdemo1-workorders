@@ -28,7 +28,7 @@ public class WorkOrderSearchUrlStateTests
     {
         var state = new WorkOrderSearchUrlState
         {
-            Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key, OverdueOnly = true, WaitingOnVendorOnly = true,
+            Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key, OverdueOnly = true, DueThisWeekOnly = true, WaitingOnVendorOnly = true,
             Priority = WorkOrderPriority.High, Building = "Fellowship Hall", Room = "101", OpenOnly = true, CompletedWithinDays = 30,
             Q = "organ & pipes", Sort = "Priority", Descending = true, Page = 3, View = SearchView.Board
         };
@@ -164,6 +164,7 @@ public class WorkOrderSearchUrlStateTests
     [TestCase("AssignedToMe")]
     [TestCase("OpenOnly")]
     [TestCase("OverdueOnly")]
+    [TestCase("DueThisWeekOnly")]
     [TestCase("WaitingOnVendorOnly")]
     [TestCase("CompletedWithinDays")]
     public void HasAnyFilter_TrueForEachFilter(string key)
@@ -173,7 +174,7 @@ public class WorkOrderSearchUrlStateTests
             "Status" => WorkOrderStatus.Draft.Key,
             "Priority" => "Low",
             "CompletedWithinDays" => "7",
-            "AssignedToMe" or "OpenOnly" or "OverdueOnly" or "WaitingOnVendorOnly" or "NoBuilding" or "NoRoom" => "true",
+            "AssignedToMe" or "OpenOnly" or "OverdueOnly" or "DueThisWeekOnly" or "WaitingOnVendorOnly" or "NoBuilding" or "NoRoom" => "true",
             _ => "x"
         };
 
@@ -193,6 +194,8 @@ public class WorkOrderSearchUrlStateTests
         WorkOrderSearchUrlState.ForCard(SummaryCard.AssignedToMe).ToRelativeUri()
             .ShouldBe("workorder/search?AssignedToMe=true&OpenOnly=true");
         WorkOrderSearchUrlState.ForCard(SummaryCard.Overdue).ToRelativeUri().ShouldBe("workorder/search?OverdueOnly=true");
+        WorkOrderSearchUrlState.ForCard(SummaryCard.DueThisWeek).ToRelativeUri()
+            .ShouldBe("workorder/search?DueThisWeekOnly=true");
         WorkOrderSearchUrlState.ForCard(SummaryCard.Completed).ToRelativeUri()
             .ShouldBe("workorder/search?Status=Complete&CompletedWithinDays=30");
     }

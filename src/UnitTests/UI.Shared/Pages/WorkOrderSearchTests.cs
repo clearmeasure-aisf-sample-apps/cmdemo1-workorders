@@ -886,6 +886,36 @@ public class WorkOrderSearchTests
     }
 
     [Test]
+    public async Task ClickingDueThisWeekCard_AppliesOnlyDueThisWeekFilter()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("workorder/search?Creator=tlovejoy&Priority=Low");
+        var component = ctx.Render<WorkOrderSearch>();
+
+        await component.Find("[data-testid='SummaryCardDueThisWeek']").ClickAsync(new());
+
+        bus.LastSpecification!.DueThisWeekOnly.ShouldBeTrue();
+        bus.LastSpecification.Creator.ShouldBeNull();
+        bus.LastSpecification.Priority.ShouldBeNull();
+        navigation.Uri.ShouldEndWith("/workorder/search?DueThisWeekOnly=true");
+    }
+
+    [Test]
+    public async Task QueryString_DueThisWeekOnly_AppliedOnLoad()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        ctx.Services.GetRequiredService<NavigationManager>()
+            .NavigateTo("workorder/search?DueThisWeekOnly=true");
+
+        ctx.Render<WorkOrderSearch>();
+
+        bus.LastSpecification!.DueThisWeekOnly.ShouldBeTrue();
+    }
+
+    [Test]
     public async Task SessionAssignedToMe_OnBareUrl_DoesNotRewriteUrl()
     {
         var bus = new StubBusWithAssigneeCapture();
@@ -1098,13 +1128,14 @@ public class WorkOrderSearchTests
     [Test]
     public async Task ShouldRenderSummaryCardsFromSummaryQuery()
     {
-        var bus = new StubBus { Summary = new WorkOrderSearchSummary { OpenCount = 24, OverdueCount = 3 } };
+        var bus = new StubBus { Summary = new WorkOrderSearchSummary { OpenCount = 24, OverdueCount = 3, DueThisWeekCount = 5 } };
         await using var ctx = CreateContext(bus);
 
         var component = ctx.Render<WorkOrderSearch>();
 
         component.Find("[data-testid='SummaryCardOpen'] .summary-card-value").TextContent.ShouldBe("24");
         component.Find("[data-testid='SummaryCardOverdue'] .summary-card-value").TextContent.ShouldBe("3");
+        component.Find("[data-testid='SummaryCardDueThisWeek'] .summary-card-value").TextContent.ShouldBe("5");
     }
 
     [Test]

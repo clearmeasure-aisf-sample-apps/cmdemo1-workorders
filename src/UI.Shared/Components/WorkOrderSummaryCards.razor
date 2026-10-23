@@ -15,6 +15,10 @@
              Note="Needs attention" Tone="summary-card--danger"
              Icon="bi-exclamation-triangle" NoteTone="note--danger" Href="@HrefFor(SummaryCard.Overdue)"
              OnSelected="() => OnCardSelected.InvokeAsync(SummaryCard.Overdue)"/>
+    <KpiCard TestId="@nameof(Elements.SummaryCardDueThisWeek)" Label="Due this week" Count="Summary?.DueThisWeekCount"
+             Note="Includes today" Tone="summary-card--teal"
+             Icon="bi-calendar-week" NoteTone="note--warning" Href="@HrefFor(SummaryCard.DueThisWeek)"
+             OnSelected="() => OnCardSelected.InvokeAsync(SummaryCard.DueThisWeek)"/>
     <KpiCard TestId="@nameof(Elements.SummaryCardCompleted)" Label="Completed (30 days)" Count="Summary?.CompletedLast30Days"
              Note="@AverageNote" Tone="summary-card--success"
              Icon="bi-check2-circle" NoteTone="note--muted" Href="@HrefFor(SummaryCard.Completed)"
@@ -36,6 +40,7 @@
         SummaryCardOpen,
         SummaryCardAssignedToMe,
         SummaryCardOverdue,
+        SummaryCardDueThisWeek,
         SummaryCardCompleted
     }
 

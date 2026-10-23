@@ -55,6 +55,7 @@ public partial class WorkOrderSearch : AppComponentBase
     [SupplyParameterFromQuery] public string? Assignee { get; set; }
     [SupplyParameterFromQuery] public string? Status { get; set; }
     [SupplyParameterFromQuery] public string? OverdueOnly { get; set; }
+    [SupplyParameterFromQuery] public string? DueThisWeekOnly { get; set; }
     [SupplyParameterFromQuery] public string? WaitingOnVendorOnly { get; set; }
     [SupplyParameterFromQuery] public string? Priority { get; set; }
     [SupplyParameterFromQuery] public string? Building { get; set; }
@@ -115,6 +116,7 @@ public partial class WorkOrderSearch : AppComponentBase
         [nameof(Assignee)] = Assignee,
         [nameof(Status)] = Status,
         [nameof(OverdueOnly)] = OverdueOnly,
+        [nameof(DueThisWeekOnly)] = DueThisWeekOnly,
         [nameof(WaitingOnVendorOnly)] = WaitingOnVendorOnly,
         [nameof(Priority)] = Priority,
         [nameof(Building)] = Building,
@@ -360,6 +362,7 @@ public partial class WorkOrderSearch : AppComponentBase
         specification.MatchAssignee(await FindEmployeeAsync(Model.Filters.Assignee));
         specification.MatchStatus(_state.Status == null ? null : WorkOrderStatus.FromKey(_state.Status));
         specification.MatchOverdueOnly(_state.OverdueOnly);
+        specification.MatchDueThisWeekOnly(_state.DueThisWeekOnly);
         specification.MatchWaitingOnVendorOnly(_state.WaitingOnVendorOnly);
         specification.MatchPriority(_state.Priority);
         specification.MatchBuilding(_state.Building);

@@ -32,6 +32,7 @@ internal static class WorkOrderQueryFilters
     {
         query = ApplyBasics(query, specification.Assignee, specification.Creator, specification.Status);
         query = ApplyOverdue(query, specification.OverdueOnly, ChurchTimeZone.Today(time));
+        query = ApplyDueThisWeek(query, specification.DueThisWeekOnly, ChurchTimeZone.Today(time));
         query = ApplyPriority(query, specification.Priority);
         query = ApplyBuilding(query, specification.Building, specification.NoBuilding);
         query = ApplyRoom(query, specification.Room, specification.NoRoom);
@@ -47,6 +48,10 @@ internal static class WorkOrderQueryFilters
     /// <summary>Open work orders whose due date is before <paramref name="today"/>.</summary>
     public static IQueryable<WorkOrder> Overdue(IQueryable<WorkOrder> query, DateOnly today) =>
         query.Where(IsOverdue(today));
+
+    /// <summary>Open work orders due from <paramref name="today"/> through the next six days.</summary>
+    public static IQueryable<WorkOrder> DueThisWeek(IQueryable<WorkOrder> query, DateOnly today) =>
+        query.Where(IsDueThisWeek(today));
 
     /// <summary>Completed work orders whose completion is within the last <paramref name="days"/> days.</summary>
     public static IQueryable<WorkOrder> CompletedWithin(IQueryable<WorkOrder> query, int days, TimeProvider time) =>
@@ -64,6 +69,13 @@ internal static class WorkOrderQueryFilters
     /// <summary>Predicate of an open work order whose due date is before <paramref name="today"/>.</summary>
     public static Expression<Func<WorkOrder, bool>> IsOverdue(DateOnly today) =>
         AndAlso(IsOpen(), wo => wo.DueDate < today);
+
+    /// <summary>Predicate of an open work order due from <paramref name="today"/> through the next six days.</summary>
+    private static Expression<Func<WorkOrder, bool>> IsDueThisWeek(DateOnly today)
+    {
+        var lastDay = today.AddDays(6);
+        return AndAlso(IsOpen(), wo => wo.DueDate >= today && wo.DueDate <= lastDay);
+    }
 
     /// <summary>Predicate of a work order completed within the last <paramref name="days"/> days.</summary>
     public static Expression<Func<WorkOrder, bool>> IsCompletedWithin(int days, TimeProvider time)
@@ -131,6 +143,9 @@ internal static class WorkOrderQueryFilters
 
     private static IQueryable<WorkOrder> ApplyOverdue(IQueryable<WorkOrder> query, bool overdueOnly, DateOnly today) =>
         overdueOnly ? Overdue(query, today) : query;
+
+    private static IQueryable<WorkOrder> ApplyDueThisWeek(IQueryable<WorkOrder> query, bool dueThisWeekOnly, DateOnly today) =>
+        dueThisWeekOnly ? DueThisWeek(query, today) : query;
 
     private static IQueryable<WorkOrder> ApplyPriority(IQueryable<WorkOrder> query, WorkOrderPriority? priority) =>
         priority == null ? query : query.Where(wo => wo.Priority == priority);

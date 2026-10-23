@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Microsoft.EntityFrameworkCore;
@@ -297,6 +298,48 @@ public class WorkOrderSpecificationHandlerTests
         orders.Length.ShouldBe(1);
         orders[0].Number.ShouldBe(overdueOrderNumber);
     }
+
+    [Test]
+    public async Task ShouldReturnOnlyDueThisWeekWorkOrders_AroundTheSevenDayBoundary()
+    {
+        var clock = TestData.FixedClock(new DateTimeOffset(2026, 6, 15, 18, 0, 0, TimeSpan.Zero));
+        var today = ChurchTimeZone.Today(clock);
+        var employee = new Employee(TestData.UserName("dueweek"), "1", "1", "1");
+        var includedToday = OrderFor(employee, WorkOrderStatus.Assigned, today);
+        var includedLastDay = OrderFor(employee, WorkOrderStatus.InProgress, today.AddDays(6));
+        var yesterday = OrderFor(employee, WorkOrderStatus.Draft, today.AddDays(-1));
+        var nextWeek = OrderFor(employee, WorkOrderStatus.Assigned, today.AddDays(7));
+        var noDate = OrderFor(employee, WorkOrderStatus.Draft, null);
+        var completed = OrderFor(employee, WorkOrderStatus.Complete, today);
+        var cancelled = OrderFor(employee, WorkOrderStatus.Cancelled, today.AddDays(1));
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(employee);
+            context.AddRange(includedToday, includedLastDay, yesterday, nextWeek, noDate, completed, cancelled);
+            await context.SaveChangesAsync();
+        }
+
+        var repository = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), clock);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchDueThisWeekOnly(true);
+        specification.MatchCreator(employee);
+        var orders = await repository.Handle(specification);
+
+        orders.Length.ShouldBe(2);
+        orders.Select(o => o.Number).ShouldContain(includedToday.Number);
+        orders.Select(o => o.Number).ShouldContain(includedLastDay.Number);
+    }
+
+    private static WorkOrder OrderFor(Employee creator, WorkOrderStatus status, DateOnly? due) =>
+        new()
+        {
+            Creator = creator,
+            Number = TestData.Number("S"),
+            Status = status,
+            DueDate = due
+        };
+
     [Test]
     public async Task ShouldReturnEachWorkOrderOnce_WhenSearchingByCreatorWithSeveralRoles()
     {

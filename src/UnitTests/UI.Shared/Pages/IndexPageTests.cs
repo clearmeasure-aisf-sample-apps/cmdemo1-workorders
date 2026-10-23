@@ -75,7 +75,7 @@ public class IndexPageTests
 
         component.FindComponents<PageHeader>().Count.ShouldBe(1);
         component.FindComponents<WorkOrderSummaryCards>().Count.ShouldBe(1);
-        component.FindComponents<KpiCard>().Count.ShouldBe(9);
+        component.FindComponents<KpiCard>().Count.ShouldBe(10);
     }
 
     [Test]
@@ -92,13 +92,16 @@ public class IndexPageTests
     [Test]
     public async Task ShouldSendSearchSummaryForSignedInUser_AndLinkCards()
     {
-        var bus = new StubBus { Summary = new() { AssignedToMeCount = 4 } };
+        var bus = new StubBus { Summary = new() { AssignedToMeCount = 4, DueThisWeekCount = 5 } };
         await using var ctx = CreateContext(bus, User(true));
 
         var component = ctx.Render<IndexPage>();
 
         bus.LastSummaryUserName.ShouldBe("tlovejoy");
         component.Find("[data-testid='SummaryCardAssignedToMe'] .summary-card-value").TextContent.ShouldBe("4");
+        component.Find("[data-testid='SummaryCardDueThisWeek'] .summary-card-value").TextContent.ShouldBe("5");
+        component.Find("[data-testid='SummaryCardDueThisWeek']").GetAttribute("href")
+            .ShouldBe("workorder/search?DueThisWeekOnly=true");
         foreach (var card in Enum.GetValues<SummaryCard>())
         {
             component.Find($"[data-testid='SummaryCard{card}']").GetAttribute("href")

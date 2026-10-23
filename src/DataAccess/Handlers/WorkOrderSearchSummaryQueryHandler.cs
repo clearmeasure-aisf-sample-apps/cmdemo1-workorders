@@ -31,6 +31,7 @@ public class WorkOrderSearchSummaryQueryHandler(DataContext context, TimeProvide
             OpenCount = await open.CountAsync(cancellationToken),
             OpenedLast7Days = await open.CountAsync(wo => wo.CreatedDate >= openedSince, cancellationToken),
             OverdueCount = await WorkOrderQueryFilters.Overdue(orders, today).CountAsync(cancellationToken),
+            DueThisWeekCount = await WorkOrderQueryFilters.DueThisWeek(orders, today).CountAsync(cancellationToken),
             InProgressCount = await orders.CountAsync(wo => wo.Status == inProgress, cancellationToken)
         };
 

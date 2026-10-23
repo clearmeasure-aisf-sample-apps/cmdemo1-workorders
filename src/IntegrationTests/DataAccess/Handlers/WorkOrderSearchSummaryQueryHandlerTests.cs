@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,27 @@ public class WorkOrderSearchSummaryQueryHandlerTests
         summary.CompletedLast30Days.ShouldBe(1);
         summary.AssignedToMeCount.ShouldBe(0);
         summary.CreatedByMeCount.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ShouldCountDueThisWeek_AroundTheSevenDayBoundary()
+    {
+        var clock = TestData.FutureClock();
+        var today = ChurchTimeZone.Today(clock);
+        var before = await Handle(null, clock);
+        var creator = NewEmployee("dueweek");
+        await SaveAsync(creator,
+            Order(creator, WorkOrderStatus.Draft, due: today.AddDays(-1)),
+            Order(creator, WorkOrderStatus.Assigned, due: today),
+            Order(creator, WorkOrderStatus.InProgress, due: today.AddDays(6)),
+            Order(creator, WorkOrderStatus.Assigned, due: today.AddDays(7)),
+            Order(creator, WorkOrderStatus.Draft),
+            Order(creator, WorkOrderStatus.Complete, due: today),
+            Order(creator, WorkOrderStatus.Cancelled, due: today.AddDays(1)));
+
+        var summary = await Handle(null, clock);
+
+        (summary.DueThisWeekCount - before.DueThisWeekCount).ShouldBe(2);
     }
 
     [Test]
