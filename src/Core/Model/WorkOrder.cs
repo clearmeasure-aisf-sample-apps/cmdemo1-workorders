@@ -37,6 +37,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     public const int ExternalReferenceMaxLength = 100;
 
     /// <summary>
+    /// Maximum length of optional notes on how to reach the room. The limit is 500 characters.
+    /// </summary>
+    public const int AccessNotesMaxLength = 500;
+
+    /// <summary>
     /// Maximum length of <see cref="Title"/> accepted by persistence and the work-order form.
     /// </summary>
     public const int TitleMaxLength = 300;
@@ -89,6 +94,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// Optional reference to an external system.
     /// </summary>
     public string? ExternalReference { get; set; }
+
+    /// <summary>
+    /// Optional notes on how to reach the room. Null when unset.
+    /// </summary>
+    public string? AccessNotes { get; set; }
 
     /// <summary>
     /// When the assignee started waiting on a vendor (parts, contractor, quote). Set while the assignee

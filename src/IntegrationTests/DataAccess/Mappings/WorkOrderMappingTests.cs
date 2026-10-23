@@ -470,6 +470,30 @@ public class WorkOrderMappingTests
     }
 
     [Test]
+    public void ShouldPersistAccessNotes()
+    {
+        var notedNumber = TestData.Number("M");
+        var unsetNumber = TestData.Number("M");
+
+        var creator = new Employee(TestData.UserName("access"), "Access", "Creator", "access@example.com");
+        var noted = new WorkOrder { Number = notedNumber, Title = "Noted", Creator = creator, AccessNotes = "Use the side door" };
+        var unset = new WorkOrder { Number = unsetNumber, Title = "Unset", Creator = creator };
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.AddRange(noted, unset);
+            context.SaveChanges();
+        }
+
+        using var readContext = TestHost.GetRequiredService<DbContext>();
+        var rehydrated = readContext.Set<WorkOrder>().Single(wo => wo.Id == noted.Id);
+        var rehydratedUnset = readContext.Set<WorkOrder>().Single(wo => wo.Id == unset.Id);
+
+        rehydrated.AccessNotes.ShouldBe("Use the side door");
+        rehydratedUnset.AccessNotes.ShouldBeNull();
+    }
+
+    [Test]
     public void ShouldPersistWaitingOnVendorSince()
     {
         var creator = new Employee(TestData.UserName("creator"), "John", "Doe", "john@example.com");
