@@ -6,22 +6,29 @@
 <div class="global-search" role="search">
     <label for="@InputId" class="visually-hidden">Search work orders</label>
     <i class="bi bi-search global-search-icon" aria-hidden="true"></i>
-    <input id="@InputId"
-           data-testid="@Elements.GlobalSearchInput"
-           type="search"
-           class="global-search-input"
-           placeholder="Search work orders, rooms, people…"
-           maxlength="200"
-           aria-keyshortcuts="Control+K"
-           @bind="_text"
-           @bind:event="oninput"
-           @onkeydown="HandleKeyDown" />
-    <kbd class="global-search-hint" aria-hidden="true">Ctrl K</kbd>
+    <div class="global-search-field">
+        <input id="@InputId"
+               data-testid="@Elements.GlobalSearchInput"
+               type="search"
+               class="global-search-input"
+               placeholder="Search work orders, rooms, people…"
+               maxlength="200"
+               aria-keyshortcuts="Control+K /"
+               aria-describedby="@SlashHintId"
+               @bind="_text"
+               @bind:event="oninput"
+               @onkeydown="HandleKeyDown" />
+        <kbd class="global-search-hint" aria-hidden="true">Ctrl K</kbd>
+    </div>
+    <span id="@SlashHintId" class="visually-hidden">Press / to search</span>
+    <span class="global-search-slash-hint" data-testid="@Elements.GlobalSearchSlashHint" aria-hidden="true">Press / to search</span>
 </div>
 
 @code {
     /// <summary>DOM id of the search input; the Ctrl+K listener focuses it.</summary>
     public const string InputId = "GlobalSearchInput";
+
+    private const string SlashHintId = "GlobalSearchSlashHintText";
 
     private string? _text;
     private IJSObjectReference? _module;
@@ -29,7 +36,8 @@
 
     public enum Elements
     {
-        GlobalSearchInput
+        GlobalSearchInput,
+        GlobalSearchSlashHint
     }
 
     private void HandleKeyDown(KeyboardEventArgs e)
