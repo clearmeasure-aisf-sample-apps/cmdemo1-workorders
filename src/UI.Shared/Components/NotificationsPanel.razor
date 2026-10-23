@@ -24,7 +24,7 @@
                             <div class="card-footer">
                                 @if (order.Assignee != null)
                                 {
-                                    <span class="card-assignee">@order.Assignee.GetFullName()</span>
+                                    <span class="card-assignee">@order.Assignee.DisplayName</span>
                                 }
                             </div>
                         </a>
@@ -53,7 +53,7 @@
                             <div class="card-footer">
                                 @if (order.Assignee != null)
                                 {
-                                    <span class="card-assignee">@order.Assignee.GetFullName()</span>
+                                    <span class="card-assignee">@order.Assignee.DisplayName</span>
                                 }
                             </div>
                         </a>
@@ -82,7 +82,7 @@
                             <div class="card-footer">
                                 @if (order.Assignee != null)
                                 {
-                                    <span class="card-assignee">Assigned to: @order.Assignee.GetFullName()</span>
+                                    <span class="card-assignee">Assigned to: @order.Assignee.DisplayName</span>
                                 }
                                 else
                                 {

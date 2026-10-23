@@ -57,6 +57,30 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
     }
 
     /// <summary>
+    /// Returns "First Last" when both names are set, the one name that is set, or the user name when both are empty.
+    /// A null, empty, or whitespace-only name counts as empty. The middle name is omitted.
+    /// </summary>
+    public string DisplayName
+    {
+        get
+        {
+            var hasFirst = !string.IsNullOrWhiteSpace(FirstName);
+            var hasLast = !string.IsNullOrWhiteSpace(LastName);
+            if (hasFirst && hasLast)
+            {
+                return $"{FirstName.Trim()} {LastName.Trim()}";
+            }
+
+            if (hasFirst)
+            {
+                return FirstName.Trim();
+            }
+
+            return hasLast ? LastName.Trim() : UserName;
+        }
+    }
+
+    /// <summary>
     /// Returns the employee's display name as "LastName, FirstName". If either name is missing, returns the other;
     /// if both names are missing, returns the username.
     /// </summary>

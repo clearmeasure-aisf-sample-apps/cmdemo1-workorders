@@ -72,7 +72,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}")).ToHaveValueAsync(creator.UserName);
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.PrioritySelect}")).ToHaveValueAsync(nameof(WorkOrderPriority.High));
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}")).ToBeCheckedAsync();
-        await Expect(Chip("Creator")).ToContainTextAsync(creator.GetFullName());
+        await Expect(Chip("Creator")).ToContainTextAsync(creator.DisplayName);
         await Expect(Chip("Priority")).ToContainTextAsync("Priority: High");
         await Expect(Rows()).ToHaveCountAsync(1);
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + overdueHigh.Number)).ToHaveCountAsync(1);
@@ -155,7 +155,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         {
             await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.StatusCell}{order.Number}").Locator(".status-badge"))
                 .ToHaveTextAsync(WorkOrderStatus.Assigned.FriendlyName);
-            await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.AssigneeCell}{order.Number}")).ToContainTextAsync(fixer.GetFullName());
+            await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.AssigneeCell}{order.Number}")).ToContainTextAsync(fixer.DisplayName);
             var saved = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
             saved!.Status.ShouldBe(WorkOrderStatus.Assigned);
             saved.Assignee!.UserName.ShouldBe(fixer.UserName);

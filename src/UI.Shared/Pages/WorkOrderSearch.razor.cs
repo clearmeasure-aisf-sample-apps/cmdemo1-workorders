@@ -89,7 +89,7 @@ public partial class WorkOrderSearch : AppComponentBase
     {
         StatusOptions = WorkOrderStatus.GetAllItems().Select(s => new SelectListItem(s.Key, s.FriendlyName)).ToList();
         var employees = await Bus.Send(new EmployeeGetAllQuery());
-        UserOptions = employees.Select(e => new SelectListItem(e.UserName, e.GetFullName())).ToList();
+        UserOptions = employees.Select(e => new SelectListItem(e.UserName, e.DisplayName)).ToList();
         BuildingOptions = (await Bus.Send(new WorkOrderBuildingsQuery())).ToList();
         _currentUserName = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity?.Name;
         await LoadUserViewsAsync();
@@ -445,7 +445,7 @@ public partial class WorkOrderSearch : AppComponentBase
 
     /// <summary>Screen-reader text next to a board card's avatar.</summary>
     private static string AssigneeText(WorkOrderSearchResultRow card) =>
-        card.Assignee is null ? "Unassigned" : $"Assigned to {card.Assignee.GetFullName()}";
+        card.Assignee is null ? "Unassigned" : $"Assigned to {card.Assignee.DisplayName}";
 
     /// <summary>Switches between the table and the board without a new search; the view is kept in the URL.</summary>
     private void HandleViewSelected(SearchView view)
