@@ -1,0 +1,48 @@
+@inherits ComponentBase
+@using System.Globalization
+@using ClearMeasure.Bootcamp.Core.Queries
+
+<section class="summary-cards" aria-label="Work order summary">
+    <KpiCard TestId="@nameof(Elements.SummaryCardOpen)" Label="Open work orders" Count="Summary?.OpenCount"
+             Note="@($"+{Summary?.OpenedLast7Days ?? 0} this week")" Tone="summary-card--indigo"
+             Icon="bi-clipboard2-data" NoteTone="note--success" Href="@HrefFor(SummaryCard.Open)"
+             OnSelected="() => OnCardSelected.InvokeAsync(SummaryCard.Open)"/>
+    <KpiCard TestId="@nameof(Elements.SummaryCardAssignedToMe)" Label="Assigned to me" Count="Summary?.AssignedToMeCount"
+             Note="@($"{Summary?.AssignedToMeDueToday ?? 0} due today")" Tone="summary-card--teal"
+             Icon="bi-person-check" NoteTone="note--warning" Href="@HrefFor(SummaryCard.AssignedToMe)"
+             OnSelected="() => OnCardSelected.InvokeAsync(SummaryCard.AssignedToMe)"/>
+    <KpiCard TestId="@nameof(Elements.SummaryCardOverdue)" Label="Overdue" Count="Summary?.OverdueCount"
+             Note="Needs attention" Tone="summary-card--danger"
+             Icon="bi-exclamation-triangle" NoteTone="note--danger" Href="@HrefFor(SummaryCard.Overdue)"
+             OnSelected="() => OnCardSelected.InvokeAsync(SummaryCard.Overdue)"/>
+    <KpiCard TestId="@nameof(Elements.SummaryCardCompleted)" Label="Completed (30 days)" Count="Summary?.CompletedLast30Days"
+             Note="@AverageNote" Tone="summary-card--success"
+             Icon="bi-check2-circle" NoteTone="note--muted" Href="@HrefFor(SummaryCard.Completed)"
+             OnSelected="() => OnCardSelected.InvokeAsync(SummaryCard.Completed)"/>
+</section>
+
+@code {
+    /// <summary>Counts to show; null renders dashes while loading.</summary>
+    [Parameter] public WorkOrderSearchSummary? Summary { get; set; }
+
+    /// <summary>Raised with the card the user clicked (button cards only).</summary>
+    [Parameter] public EventCallback<SummaryCard> OnCardSelected { get; set; }
+
+    /// <summary>When true, each card is a link to Work Order Search with the card's filter instead of a button.</summary>
+    [Parameter] public bool LinkToSearch { get; set; }
+
+    public enum Elements
+    {
+        SummaryCardOpen,
+        SummaryCardAssignedToMe,
+        SummaryCardOverdue,
+        SummaryCardCompleted
+    }
+
+    private string AverageNote => Summary?.AverageDaysToClose is { } days
+        ? $"Avg. {days.ToString("0.0", CultureInfo.InvariantCulture)} days to close"
+        : "No recent closures";
+
+    private string? HrefFor(SummaryCard card) =>
+        LinkToSearch ? WorkOrderSearchUrlState.ForCard(card).ToRelativeUri() : null;
+}
