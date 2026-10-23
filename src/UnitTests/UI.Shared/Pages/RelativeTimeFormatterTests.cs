@@ -102,6 +102,14 @@ public class RelativeTimeFormatterTests
         RelativeTimeFormatter.Format(created, Clock()).ShouldBe("3 days ago");
     }
 
+    [Test]
+    public void Format_WhenCreatedIsLocal_ConvertsToUtc()
+    {
+        var created = Now.UtcDateTime.AddDays(-3).ToLocalTime();
+
+        RelativeTimeFormatter.Format(created, Clock()).ShouldBe("3 days ago");
+    }
+
     private static TimeProvider Clock() => new FixedTimeProvider(Now);
 
     private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider

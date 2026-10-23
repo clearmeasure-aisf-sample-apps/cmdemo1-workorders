@@ -15,6 +15,11 @@ internal static class RelativeTimeFormatter
             elapsed = TimeSpan.Zero;
         }
 
+        return Phrase(elapsed);
+    }
+
+    private static string Phrase(TimeSpan elapsed)
+    {
         if (elapsed.TotalSeconds < 60)
         {
             return "just now";
@@ -30,6 +35,11 @@ internal static class RelativeTimeFormatter
             return Ago((int)elapsed.TotalHours, "hour");
         }
 
+        return DayOrMonth(elapsed);
+    }
+
+    private static string DayOrMonth(TimeSpan elapsed)
+    {
         var days = (int)elapsed.TotalDays;
         if (days < 30)
         {
