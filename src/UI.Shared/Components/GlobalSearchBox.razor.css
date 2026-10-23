@@ -13,6 +13,14 @@
     pointer-events: none;
 }
 
+.global-search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .global-search-input {
     width: 100%;
     height: var(--control-height);
@@ -39,6 +47,16 @@
 .global-search-input:focus-visible {
     outline: var(--focus-ring);
     outline-offset: 1px;
+}
+
+.global-search-slash-hint {
+    flex: 0 0 auto;
+    margin-left: 0.5rem;
+    color: var(--color-muted);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
 }
 
 .global-search-hint {
