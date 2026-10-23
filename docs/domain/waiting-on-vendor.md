@@ -1,5 +1,5 @@
 # Waiting on a Vendor
 
-WaitingOnVendor is a substate of **InProgress**, not a separate work order status. The work order's status remains InProgress while the assignee waits for vendor work, parts, or a quote.
+WaitingOnVendor is a substate of **InProgress**, not a work order status. The persisted statuses are Draft, Assigned, InProgress, Complete, and Cancelled. `WaitingOnVendorSince` is that substate: set while the assignee waits on a vendor (parts, contractor, or quote), and null during active InProgress. `IsWaitingOnVendor` is true only when the status is InProgress and the timestamp is set; a timestamp on any other status is ignored. The database column is a nullable `WaitingOnVendorSince`, not a status.
 
-The substate is represented by `WaitingOnVendorSince`: it is set when waiting begins and cleared when the assignee resumes work. Both transitions keep the status as InProgress, so waiting and resuming do not change the persisted status.
+Wait on vendor sets `WaitingOnVendorSince` to the command time, and Resume clears it. Only the assignee can run either command. Both begin and end as InProgress, so the persisted status does not change and no status-history row is written. `ChangeStatus` clears the timestamp only when the new status is not InProgress.
