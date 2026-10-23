@@ -136,6 +136,11 @@
                             }
                         </InputSelect>
                     </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="@Elements.RoomInput">Room</label>
+                        <InputText id="@Elements.RoomInput" @bind-Value="Model.Filters.Room" @bind-Value:after="HandleFiltersChanged" class="@RoomInputClass(Model.Filters.Room)" maxlength="@WorkOrder.RoomNumberMaxLength" />
+                    </div>
                 </div>
             </EditForm>
         </section>
@@ -439,6 +444,7 @@
         BulkOutcome,
         PrioritySelect,
         BuildingSelect,
+        RoomInput,
         ActiveFilters,
         ActiveFilterChip,
         ExportButton,

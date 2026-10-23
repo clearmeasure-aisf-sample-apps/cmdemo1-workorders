@@ -23,6 +23,9 @@ public class WorkOrderSearchModel
 
         /// <summary>Selected building or empty for all.</summary>
         public string? Building { get; set; }
+
+        /// <summary>Room number to match exactly, or empty for every room.</summary>
+        public string? Room { get; set; }
     }
 }
 

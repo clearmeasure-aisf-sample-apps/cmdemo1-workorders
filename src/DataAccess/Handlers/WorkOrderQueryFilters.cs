@@ -155,8 +155,8 @@ internal static class WorkOrderQueryFilters
     {
         if (!string.IsNullOrWhiteSpace(room))
         {
-            var trimmed = room.Trim();
-            return query.Where(wo => wo.RoomNumber != null && wo.RoomNumber.Trim() == trimmed);
+            var trimmed = room.Trim().ToLower();
+            return query.Where(wo => wo.RoomNumber != null && wo.RoomNumber.Trim().ToLower() == trimmed);
         }
 
         if (noRoom)

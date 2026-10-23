@@ -151,6 +151,7 @@ public partial class WorkOrderSearch : AppComponentBase
         Model.Filters.WaitingOnVendorOnly = state.WaitingOnVendorOnly;
         Model.Filters.Priority = state.Priority?.ToString();
         Model.Filters.Building = state.Building;
+        Model.Filters.Room = state.Room;
         await SearchWorkOrders();
     }
 
@@ -175,6 +176,7 @@ public partial class WorkOrderSearch : AppComponentBase
         Status = NullIfBlank(Model.Filters.Status),
         Priority = Enum.TryParse<WorkOrderPriority>(Model.Filters.Priority, out var priority) ? priority : null,
         Building = NullIfBlank(Model.Filters.Building),
+        Room = NullIfBlank(Model.Filters.Room),
         OverdueOnly = Model.Filters.OverdueOnly,
         WaitingOnVendorOnly = Model.Filters.WaitingOnVendorOnly,
         AssignedToMe = _assignedToMe,
@@ -333,6 +335,9 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private static string SelectClass(string? value) =>
         string.IsNullOrEmpty(value) ? "form-select filter-select" : "form-select filter-select has-value";
+
+    private static string RoomInputClass(string? value) =>
+        string.IsNullOrEmpty(value) ? "form-control filter-select" : "form-control filter-select has-value";
 
     private async Task SearchWorkOrders()
     {
