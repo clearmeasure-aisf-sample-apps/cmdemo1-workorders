@@ -37,6 +37,7 @@ public class UIClientServiceRegistry : ServiceRegistry
         this.AddTransient<WorkOrderTool>();
         this.AddSingleton<ThemePreferenceService>();
         this.AddSingleton<WorkOrderSearchState>();
+        this.AddScoped<IFeatureFlags, HttpFeatureFlags>();
         this.AddTransient<WorkOrderBulkActionService>();
         this.AddSingleton(TimeProvider.System);
 
