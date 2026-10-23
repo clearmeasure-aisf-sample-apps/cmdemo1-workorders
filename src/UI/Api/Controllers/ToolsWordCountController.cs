@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 
 /// <summary>
-/// Counts words in submitted text for operators and integrations.
+/// Counts words, characters, and lines in submitted text for operators and integrations.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -17,7 +17,7 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 public class ToolsWordCountController : ControllerBase
 {
     /// <summary>
-    /// Returns the word count for the submitted <paramref name="request"/>.Text.
+    /// Returns word, character, and line counts for the submitted <paramref name="request"/>.Text.
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
@@ -26,11 +26,25 @@ public class ToolsWordCountController : ControllerBase
     [ProducesResponseType(typeof(WordCountResponse), StatusCodes.Status200OK)]
     public IActionResult Post([FromBody] WordCountRequest? request)
     {
-        var wordCount = request?.Text?
-            .Split((char[])null!, StringSplitOptions.RemoveEmptyEntries)
-            .Length ?? 0;
+        var text = request?.Text;
+        return Ok(new WordCountResponse(CountWords(text), CountCharacters(text), CountLines(text)));
+    }
 
-        return Ok(new WordCountResponse(wordCount));
+    private static int CountWords(string? text) =>
+        text?.Split((char[])null!, StringSplitOptions.RemoveEmptyEntries).Length ?? 0;
+
+    private static int CountCharacters(string? text) => text?.Length ?? 0;
+
+    private static int CountLines(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        return text.Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n').Length;
     }
 }
 
@@ -40,6 +54,6 @@ public class ToolsWordCountController : ControllerBase
 public record WordCountRequest(string? Text);
 
 /// <summary>
-/// JSON payload for <c>POST /api/tools/word-count</c>.
+/// JSON payload for <c>POST /api/tools/word-count</c>: words, characters, and lines.
 /// </summary>
-public record WordCountResponse(int Words);
+public record WordCountResponse(int Words, int Characters, int Lines);
