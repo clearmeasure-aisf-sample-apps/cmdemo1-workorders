@@ -1,0 +1,509 @@
+<PageTitle>Search - TechWeek Work Orders</PageTitle>
+
+<div class="search-page">
+    <div class="search-container">
+        <PageHeader Title="Work Order Search" TitleTooltip="Search every work order"
+                    TitleTestId="@nameof(Elements.SearchHeadingTooltip)"
+                    Subtitle="Find, triage and track maintenance requests across all church facilities."
+                    SubtitleTestId="@nameof(Elements.SearchHint)">
+            <Actions>
+                <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.ExportButton"
+                        disabled="@(Model.Results.Length == 0)" title="Download the filtered work orders as CSV" @onclick="ExportAllAsync">
+                    <i class="bi bi-download" aria-hidden="true"></i> Export
+                </button>
+                <div class="menu-anchor" @onkeydown="HandleSavedViewsKeyDown">
+                    <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.SavedViewsButton"
+                            aria-haspopup="menu" aria-expanded="@(_savedViewsOpen ? "true" : "false")" aria-controls="saved-views-menu"
+                            @ref="_savedViewsButton" @onclick="ToggleSavedViews">
+                        <i class="bi bi-bookmark" aria-hidden="true"></i> Saved views
+                    </button>
+                    <ul id="saved-views-menu" class="popover-menu" role="menu" aria-label="Saved views" hidden="@(!_savedViewsOpen || _saveFormOpen)">
+                        @foreach (var view in SavedViews)
+                        {
+                            <li role="presentation">
+                                <a role="menuitem" class="popover-menu-item" href="@view.Href" @onclick="CloseSavedViews">@view.Name</a>
+                            </li>
+                        }
+                        <li role="separator" class="popover-menu-separator"></li>
+                        @foreach (var view in _userViews)
+                        {
+                            <li role="presentation" class="user-view-item">
+                                <a role="menuitem" class="popover-menu-item" data-testid="@($"{Elements.UserSavedViewLink}{view.Name}")"
+                                   href="@WorkOrderSearchUrlState.RelativeUriForQuery(view.Query)" @onclick="CloseSavedViews">@view.Name</a>
+                                <button type="button" role="menuitem" class="user-view-delete" data-testid="@($"{Elements.UserSavedViewDeleteButton}{view.Name}")"
+                                        aria-label="@($"Delete saved view {view.Name}")" title="Delete" @onclick="() => HandleDeleteView(view)">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                </button>
+                            </li>
+                        }
+                        @if (_deleteViewError is not null)
+                        {
+                            <li role="alert" class="save-view-error" data-testid="@Elements.SavedViewDeleteError">@_deleteViewError</li>
+                        }
+                        <li role="presentation">
+                            <button type="button" role="menuitem" class="popover-menu-item" data-testid="@Elements.SaveCurrentViewButton"
+                                    @onclick="OpenSaveForm">Save current view…</button>
+                        </li>
+                    </ul>
+                    @if (_savedViewsOpen && _saveFormOpen)
+                    {
+                        <form class="save-view-form" @onsubmit="HandleSaveView" @onsubmit:preventDefault>
+                            <label for="saved-view-name" class="form-label">View name</label>
+                            <input id="saved-view-name" type="text" class="form-control" maxlength="100"
+                                   data-testid="@Elements.SavedViewNameInput" @ref="_saveViewNameInput" @bind="_newViewName" @bind:event="oninput" />
+                            @if (_saveViewError is not null)
+                            {
+                                <div class="save-view-error" role="alert" data-testid="@Elements.SavedViewError">@_saveViewError</div>
+                            }
+                            <div class="save-view-actions">
+                                <button type="submit" class="btn-app btn-app--primary" data-testid="@Elements.SavedViewSaveButton">Save</button>
+                                <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.SavedViewCancelButton" @onclick="CancelSaveForm">Cancel</button>
+                            </div>
+                        </form>
+                    }
+                </div>
+                @if (_canCreate)
+                {
+                    <a class="btn-app btn-app--primary" data-testid="@Elements.NewWorkOrderButton" href="workorder/manage?mode=New">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> New Work Order
+                    </a>
+                }
+            </Actions>
+        </PageHeader>
+
+        <WorkOrderSummaryCards Summary="_summary" OnCardSelected="HandleCardSelected"/>
+
+        <section class="filters-card" aria-labelledby="filters-heading">
+            <div class="filters-card-header">
+                <h2 id="filters-heading" class="card-title">Filters</h2>
+                <button id="@Elements.ClearFiltersButton" type="button" class="link-button" disabled="@(!HasActiveFilters)" @onclick="HandleClearFilters">
+                    Clear all
+                </button>
+            </div>
+            <EditForm Model="@Model">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label" for="@Elements.CreatorSelect">Creator</label>
+                        <InputSelect id="@Elements.CreatorSelect" @bind-Value="Model.Filters.Creator" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Creator)">
+                            <option value="">Anyone</option>
+                            @foreach (var user in UserOptions)
+                            {
+                                <option value="@user.Value">@user.Text</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="@Elements.AssigneeSelect">Assignee</label>
+                        <InputSelect id="@Elements.AssigneeSelect" @bind-Value="Model.Filters.Assignee" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(_assignedToMe ? null : Model.Filters.Assignee)" disabled="@_assignedToMe">
+                            <option value="">Anyone</option>
+                            @foreach (var user in UserOptions)
+                            {
+                                <option value="@user.Value">@user.Text</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="@Elements.StatusSelect">Status</label>
+                        <InputSelect id="@Elements.StatusSelect" @bind-Value="Model.Filters.Status" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Status)">
+                            <option value="">All statuses</option>
+                            @foreach (var status in StatusOptions)
+                            {
+                                <option value="@status.Value">@status.Text</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="@Elements.PrioritySelect">Priority</label>
+                        <InputSelect id="@Elements.PrioritySelect" @bind-Value="Model.Filters.Priority" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Priority)">
+                            <option value="">All priorities</option>
+                            @foreach (var priority in PriorityOptions)
+                            {
+                                <option value="@priority">@priority</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" for="@Elements.BuildingSelect">Building</label>
+                        <InputSelect id="@Elements.BuildingSelect" @bind-Value="Model.Filters.Building" @bind-Value:after="HandleFiltersChanged" class="@SelectClass(Model.Filters.Building)">
+                            <option value="">All buildings</option>
+                            @foreach (var building in BuildingOptions)
+                            {
+                                <option value="@building">@building</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            </EditForm>
+        </section>
+
+        <div class="active-filters-row">
+            <div class="active-filters" data-testid="@Elements.ActiveFilters">
+                <span class="active-filters-label">Active:</span>
+                @if (Chips.Count == 0)
+                {
+                    <span class="active-filters-none">None</span>
+                }
+                @foreach (var chip in Chips)
+                {
+                    <button type="button" class="filter-chip" data-testid="@($"{Elements.ActiveFilterChip}{chip.Key}")"
+                            aria-label="@($"Remove filter {chip.Label}")" @onclick="() => HandleChipRemoved(chip.Key)">
+                        <span>@chip.Label</span>
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                }
+            </div>
+            <div class="filter-switches">
+                <label class="switch" for="@Elements.AssignedToMeCheckbox">
+                    <input type="checkbox" role="@SwitchRole" id="@Elements.AssignedToMeCheckbox" class="switch-input"
+                           @bind="_assignedToMe" @bind:after="HandleAssignedToMeChanged"/>
+                    <span class="switch-label">Assigned to me</span>
+                </label>
+                <label class="switch" for="@Elements.OverdueOnlyToggle">
+                    <input type="checkbox" role="@SwitchRole" id="@Elements.OverdueOnlyToggle" class="switch-input"
+                           @bind="Model.Filters.OverdueOnly" @bind:after="HandleFiltersChanged"/>
+                    <span class="switch-label">Overdue only</span>
+                </label>
+                <label class="switch" for="@Elements.WaitingOnVendorOnlyToggle">
+                    <input type="checkbox" role="@SwitchRole" id="@Elements.WaitingOnVendorOnlyToggle" class="switch-input"
+                           @bind="Model.Filters.WaitingOnVendorOnly" @bind:after="HandleFiltersChanged"/>
+                    <span class="switch-label">Waiting on vendor</span>
+                </label>
+            </div>
+        </div>
+
+        <section class="results-card" aria-labelledby="results-heading">
+            <div class="results-header">
+                <div class="results-title">
+                    <h2 id="results-heading" class="card-title">Results</h2>
+                    <span class="count-pill" data-testid="@Elements.ResultsCountPill" aria-live="polite">@CountPillText</span>
+                </div>
+                <div class="results-tools">
+                    <label for="@Elements.SortSelect" class="visually-hidden">Sort results</label>
+                    <select id="@Elements.SortSelect" data-testid="@Elements.SortSelect" class="form-select sort-select" @onchange="HandleSortSelected">
+                        @foreach (var option in SortOptions)
+                        {
+                            <option value="@option.Value" selected="@(option.Value == SortValue)">@option.Text</option>
+                        }
+                    </select>
+                    <div class="view-switch" role="group" aria-label="View">
+                        <button type="button" class="@ViewButtonClass(SearchView.Table)" data-testid="@Elements.TableViewButton"
+                                aria-pressed="@ViewPressed(SearchView.Table)" @onclick="() => HandleViewSelected(SearchView.Table)">
+                            <i class="bi bi-list-ul" aria-hidden="true"></i> Table
+                        </button>
+                        <button type="button" class="@ViewButtonClass(SearchView.Board)" data-testid="@Elements.BoardViewButton"
+                                aria-pressed="@ViewPressed(SearchView.Board)" @onclick="() => HandleViewSelected(SearchView.Board)">
+                            <i class="bi bi-kanban" aria-hidden="true"></i> Board
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Results.Length == 0)
+            {
+                <div class="empty-results">
+                    <div class="empty-results-icon">
+                        <i class="bi bi-inbox" aria-hidden="true"></i>
+                    </div>
+                    <p>No work orders found matching your search criteria.</p>
+                    <p>Try adjusting your filters or create a new work order.</p>
+                </div>
+            }
+            else if (_state.View == SearchView.Board)
+            {
+                <div class="board-scroll">
+                    <div class="board" data-testid="@Elements.BoardView">
+                        @foreach (var column in BoardColumns)
+                        {
+                            var key = column.Status.Key;
+                            var headingId = $"board-column-{key}";
+                            <section class="board-column" data-testid="@($"{Elements.BoardColumn}{key}")" aria-labelledby="@headingId">
+                                <h3 id="@headingId" class="board-column-heading">
+                                    <span class="@column.Pill.CssClass">@column.Pill.Text</span>
+                                    <span class="board-column-count" data-testid="@($"{Elements.BoardColumnCount}{key}")">@column.Cards.Length</span>
+                                </h3>
+                                @if (column.Cards.Length == 0)
+                                {
+                                    <p class="board-column-empty" data-testid="@($"{Elements.BoardColumnEmpty}{key}")">No work orders</p>
+                                }
+                                else
+                                {
+                                    <ul class="board-cards">
+                                        @foreach (var card in column.Cards)
+                                        {
+                                            <li>
+                                                <a class="board-card" data-testid="@(Elements.BoardCard + card.Number)" href="/workorder/manage/@card.Number?mode=Edit">
+                                                    <span class="board-card-number">@card.DisplayNumber</span>
+                                                    <span class="board-card-title">@card.Title</span>
+                                                    @if (card.WorkOrder.IsWaitingOnVendor)
+                                                    {
+                                                        <span class="@card.StatusPill.CssClass">@card.StatusPill.Text</span>
+                                                    }
+                                                    <span class="board-card-meta">
+                                                        @PriorityView(card)
+                                                        <span class="board-card-assignee">@AvatarView(card)<span class="visually-hidden">@AssigneeText(card)</span></span>
+                                                        @if (string.IsNullOrWhiteSpace(card.WorkOrder.RoomNumber))
+                                                        {
+                                                            <span class="board-card-room muted-cell" aria-label="No room">–</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="board-card-room">@card.WorkOrder.RoomNumber</span>
+                                                        }
+                                                    </span>
+                                                    <span class="board-card-due">@DueDateView(card)</span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </section>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="table-scroll">
+                    <table class="grid-data">
+                        <thead>
+                        <tr>
+                            <th class="col-select" scope="col">
+                                <input type="checkbox" id="@Elements.SelectAllCheckbox" data-testid="@Elements.SelectAllCheckbox"
+                                       class="row-checkbox" aria-label="Select all work orders on this page"
+                                       checked="@_selection.AllSelected(PageNumbers)" @ref="_selectAllCheckbox"
+                                       @onchange="HandleSelectAllChanged"/>
+                            </th>
+                            @SortHeader(SortColumns.Number, Elements.SortByNumberButton, "Work Order", "col-number")
+                            @SortHeader(SortColumns.Title, Elements.SortByTitleButton, "Title", "col-title")
+                            @SortHeader(SortColumns.Status, Elements.SortByStatusButton, "Status", "col-status")
+                            @SortHeader(SortColumns.Priority, Elements.SortByPriorityButton, "Priority", "col-priority")
+                            @SortHeader(SortColumns.Assignee, Elements.SortByAssigneeButton, "Assignee", "col-assignee")
+                            @SortHeader(SortColumns.Room, Elements.SortByRoomButton, "Room", "col-room")
+                            @SortHeader(SortColumns.DueDate, Elements.SortByDueDateButton, "Due Date", "col-due")
+                            <th class="col-actions" scope="col"><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var order in CurrentPage.Rows)
+                        {
+                            var number = order.Number;
+                            var pill = order.StatusPill;
+                            <tr class="@RowClass(order)">
+                                <td class="col-select">
+                                    <input type="checkbox" data-testid="@($"{Elements.RowCheckbox}{number}")" class="row-checkbox"
+                                           aria-label="@($"Select {order.DisplayNumber}")" checked="@_selection.IsSelected(number)"
+                                           @onchange="() => HandleRowToggled(number)"/>
+                                </td>
+                                <td class="col-number">
+                                    <a data-testid="@(Elements.WorkOrderLink + number)" href="/workorder/manage/@number?mode=Edit">@order.DisplayNumber</a>
+                                </td>
+                                <td class="col-title" data-testid="@($"{Elements.TitleCell}{number}")">@order.Title</td>
+                                <td class="col-status" data-testid="@($"{Elements.StatusCell}{number}")">
+                                    <span class="@pill.CssClass">@pill.Text</span>@if (pill.HiddenText != null)
+                                    {
+                                        <span class="visually-hidden">@pill.HiddenText</span>
+                                    }
+                                </td>
+                                <td class="col-priority" data-testid="@($"{Elements.PriorityCell}{number}")">
+                                    @PriorityView(order)
+                                </td>
+                                <td class="col-assignee" data-testid="@($"{Elements.AssigneeCell}{number}")">
+                                    @if (order.Assignee is null)
+                                    {
+                                        <span class="assignee assignee--none">@AvatarView(order)<span class="muted-cell">Unassigned</span></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="assignee">@AvatarView(order)<span>@order.Assignee.GetFullName()</span></span>
+                                    }
+                                </td>
+                                <td class="col-room" data-testid="@($"{Elements.RoomCell}{number}")">
+                                    @if (string.IsNullOrWhiteSpace(order.WorkOrder.RoomNumber))
+                                    {
+                                        <span class="muted-cell" aria-label="No room">–</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="room-text" title="@order.WorkOrder.RoomNumber">@order.WorkOrder.RoomNumber</span>
+                                    }
+                                </td>
+                                <td class="col-due">
+                                    @DueDateView(order)
+                                </td>
+                                <td class="col-actions">
+                                    <div class="menu-anchor" @onkeydown="HandleRowMenuKeyDown">
+                                        <button type="button" class="row-menu-button" id="@($"row-menu-{number}")" data-testid="@($"{Elements.RowMenu}{number}")"
+                                                aria-haspopup="menu" aria-expanded="@(_openRowMenu == number ? "true" : "false")"
+                                                aria-label="@($"Actions for {order.DisplayNumber}")" @onclick="() => ToggleRowMenu(number)">
+                                            <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                        </button>
+                                        @if (_openRowMenu == number)
+                                        {
+                                            <ul class="popover-menu" role="menu" aria-label="@($"Actions for {order.DisplayNumber}")">
+                                                <li role="presentation">
+                                                    <a role="menuitem" class="popover-menu-item" data-testid="@($"{Elements.RowMenuOpen}{number}")"
+                                                       href="/workorder/manage/@number?mode=Edit">Open</a>
+                                                </li>
+                                            </ul>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (_state.View == SearchView.Table)
+            {
+                <div class="results-footer">
+                    <span class="results-range" data-testid="@Elements.ResultsRangeText">@CurrentPage.RangeText · @_selection.Count selected</span>
+                    @if (_selection.Count > 0)
+                    {
+                        <WorkOrderBulkActionBar SelectedCount="_selection.Count"
+                                                UserOptions="UserOptions"
+                                                StatusOptions="BulkStatusOptions"
+                                                OnAssign="HandleBulkAssign"
+                                                OnChangeStatus="HandleBulkChangeStatus"
+                                                OnExportSelected="ExportSelectedAsync"
+                                                OnClearSelection="HandleClearSelection"/>
+                    }
+                    <nav aria-label="Pagination" class="pagination-nav">
+                        <button type="button" class="page-button" data-testid="@Elements.PagePrevButton" disabled="@(!CurrentPage.HasPrevious)"
+                                @onclick="() => HandlePageSelected(CurrentPage.Page - 1)">
+                            <i class="bi bi-chevron-left" aria-hidden="true"></i> Prev
+                        </button>
+                        @foreach (var pageNumber in CurrentPage.PageNumbers)
+                        {
+                            var isCurrent = pageNumber == CurrentPage.Page;
+                            <button type="button" class="@(isCurrent ? "page-button page-number is-current" : "page-button page-number")"
+                                    data-testid="@($"{Elements.PageButton}{pageNumber}")" aria-current="@(isCurrent ? "page" : null)"
+                                    aria-label="@($"Page {pageNumber}")" @onclick="() => HandlePageSelected(pageNumber)">@pageNumber</button>
+                        }
+                        <button type="button" class="page-button" data-testid="@Elements.PageNextButton" disabled="@(!CurrentPage.HasNext)"
+                                @onclick="() => HandlePageSelected(CurrentPage.Page + 1)">
+                            Next <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        </button>
+                    </nav>
+                </div>
+            }
+            <p class="visually-hidden" aria-live="polite" data-testid="@Elements.BulkOutcome">@_bulkOutcome</p>
+        </section>
+    </div>
+</div>
+
+@code {
+
+    public enum Elements
+    {
+        CreatorSelect,
+        AssigneeSelect,
+        StatusSelect,
+        OverdueOnlyToggle,
+        ClearFiltersButton,
+        WorkOrderLink,
+        DueDateCell,
+        UrgencyBadge,
+        SortByStatusButton,
+        SortByDueDateButton,
+        SortByTitleButton,
+        SortByRoomButton,
+        AssignedToMeCheckbox,
+        SearchHint,
+        SearchHeadingTooltip,
+        SortByNumberButton,
+        SortByPriorityButton,
+        SortByAssigneeButton,
+        SortSelect,
+        TableViewButton,
+        BoardViewButton,
+        ResultsCountPill,
+        ResultsRangeText,
+        SelectAllCheckbox,
+        RowCheckbox,
+        TitleCell,
+        StatusCell,
+        PriorityCell,
+        AssigneeCell,
+        RoomCell,
+        RowMenu,
+        RowMenuOpen,
+        PagePrevButton,
+        PageButton,
+        PageNextButton,
+        BulkOutcome,
+        PrioritySelect,
+        BuildingSelect,
+        ActiveFilters,
+        ActiveFilterChip,
+        ExportButton,
+        SavedViewsButton,
+        SaveCurrentViewButton,
+        SavedViewNameInput,
+        SavedViewSaveButton,
+        SavedViewCancelButton,
+        SavedViewError,
+        SavedViewDeleteError,
+        UserSavedViewLink,
+        UserSavedViewDeleteButton,
+        NewWorkOrderButton,
+        BoardView,
+        BoardColumn,
+        BoardColumnCount,
+        BoardColumnEmpty,
+        BoardCard,
+        WaitingOnVendorOnlyToggle
+    }
+
+    // ARIA 1.1 role; bound from a constant because the HTML inspector does not know the value.
+    private const string SwitchRole = "switch";
+
+    public WorkOrderSearchModel Model { get; set; } = new();
+
+    private RenderFragment SortHeader(string column, Elements testId, string label, string cssClass) =>
+        @<th class="@cssClass" scope="col" aria-sort="@AriaSort(column)">
+            <button id="@testId" type="button" class="@(_state.Sort == column ? "sort-btn sort-active" : "sort-btn")" @onclick="() => HandleSortBy(column)">
+                @SortLabel(column, label)
+            </button>
+        </th>;
+
+    private static readonly RenderFragment<WorkOrderSearchResultRow> PriorityView = order =>
+        @<span class="priority @order.PriorityCssClass">
+            <span class="priority-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            @order.WorkOrder.Priority
+        </span>;
+
+    private static readonly RenderFragment<WorkOrderSearchResultRow> AvatarView = order =>
+        @<text>@if (order.Assignee is null)
+        {
+            <span class="avatar avatar--empty" aria-hidden="true"></span>
+        }
+        else
+        {
+            <span class="avatar @order.AvatarCssClass" aria-hidden="true">@order.AssigneeInitials</span>
+        }</text>;
+
+    private static readonly RenderFragment<WorkOrderSearchResultRow> DueDateView = order =>
+        @<text><span data-testid="@(Elements.DueDateCell + order.Number)" class="@(string.IsNullOrEmpty(order.DueDateDisplay) ? "muted-cell" : order.DueDateCssClass)">@(string.IsNullOrEmpty(order.DueDateDisplay) ? "–" : order.DueDateDisplay)@if (!string.IsNullOrEmpty(order.DueDateUrgencyText))
+            {
+                <span class="visually-hidden">@order.DueDateUrgencyText</span>
+            }</span>@if (string.IsNullOrEmpty(order.DueDateDisplay))
+        {
+            <span class="visually-hidden">No due date</span>
+        }
+        @if (DueDateUrgencyCalculator.BadgeText(order.Urgency, order.WorkOrder.DueDate) is { } badgeText)
+        {
+            var badgeCss = string.IsNullOrEmpty(order.DueDateCssClass) ? "on-track" : order.DueDateCssClass;
+            <span class="urgency-badge @badgeCss"
+                  data-testid="@(Elements.UrgencyBadge + order.Number)"
+                  aria-label="@badgeText">@badgeText</span>
+        }</text>;
+
+    public List<SelectListItem> UserOptions { get; set; } = new();
+    public List<SelectListItem> StatusOptions { get; set; } = new();
+}
