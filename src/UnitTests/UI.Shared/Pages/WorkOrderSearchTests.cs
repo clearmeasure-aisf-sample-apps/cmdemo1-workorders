@@ -185,6 +185,7 @@ public class WorkOrderSearchTests
         AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.StatusSelect);
         AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.PrioritySelect);
         AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.BuildingSelect);
+        AssertLabelForMatchesSelectId(component, WorkOrderSearch.Elements.RoomInput);
     }
 
     private static void AssertLabelForMatchesSelectId(IRenderedComponent<WorkOrderSearch> component, WorkOrderSearch.Elements element)
@@ -782,6 +783,39 @@ public class WorkOrderSearchTests
         bus.LastSpecification!.Creator.ShouldNotBeNull();
         navigation.Uri.ShouldEndWith("/workorder/search?Creator=tlovejoy");
         ((BunitNavigationManager)navigation).History.First().Options.ReplaceHistoryEntry.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ChangingRoom_RunsSearchAndReplacesUrl()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("workorder/search?Creator=tlovejoy");
+        var component = ctx.Render<WorkOrderSearch>();
+        var sendsBefore = bus.SendCallCount;
+
+        await component.Find($"#{WorkOrderSearch.Elements.RoomInput}").ChangeAsync(new() { Value = "101" });
+
+        bus.SendCallCount.ShouldBeGreaterThan(sendsBefore);
+        bus.LastSpecification!.Room.ShouldBe("101");
+        bus.LastSpecification.Creator.ShouldNotBeNull();
+        navigation.Uri.ShouldEndWith("/workorder/search?Creator=tlovejoy&Room=101");
+        ((BunitNavigationManager)navigation).History.First().Options.ReplaceHistoryEntry.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task QueryString_Room_ShowsValueAndFilters()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus);
+        ctx.Services.GetRequiredService<NavigationManager>()
+            .NavigateTo("workorder/search?Room=101");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        bus.LastSpecification!.Room.ShouldBe("101");
+        component.Find($"#{WorkOrderSearch.Elements.RoomInput}").GetAttribute("value").ShouldBe("101");
     }
 
     [Test]
