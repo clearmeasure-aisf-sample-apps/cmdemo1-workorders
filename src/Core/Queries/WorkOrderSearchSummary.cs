@@ -25,6 +25,10 @@ public class WorkOrderSearchSummary
     /// <summary>Open work orders whose due date is before today.</summary>
     public int OverdueCount { get; set; }
 
+    /// <summary>Open work orders whose due date is today through the next six days.</summary>
+    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- System.Text.Json round-trip serialization (remoting protocol) requires a mutable setter
+    public int DueThisWeekCount { get; set; }
+
     /// <summary>Work orders completed in the last 30 days.</summary>
     public int CompletedLast30Days { get; set; }
 

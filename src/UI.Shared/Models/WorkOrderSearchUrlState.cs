@@ -9,6 +9,7 @@ public enum SummaryCard
     Open,
     AssignedToMe,
     Overdue,
+    DueThisWeek,
     Completed
 }
 
@@ -37,6 +38,9 @@ public sealed record WorkOrderSearchUrlState
     public string? Assignee { get; init; }
     public string? Status { get; init; }
     public bool OverdueOnly { get; init; }
+
+    /// <summary>When true only open work orders due from today through the next six days match.</summary>
+    public bool DueThisWeekOnly { get; init; }
 
     /// <summary>When true only In Progress work orders waiting on a vendor match.</summary>
     public bool WaitingOnVendorOnly { get; init; }
@@ -68,7 +72,8 @@ public sealed record WorkOrderSearchUrlState
 
     private bool HasLocationFilter => HasText(Building) || HasText(Room) || NoBuilding || NoRoom;
 
-    private bool HasFlagFilter => OverdueOnly || WaitingOnVendorOnly || OpenOnly || CompletedWithinDays.HasValue;
+    private bool HasFlagFilter =>
+        OverdueOnly || DueThisWeekOnly || WaitingOnVendorOnly || OpenOnly || CompletedWithinDays.HasValue;
 
     /// <summary>
     /// Builds the state from query values keyed by parameter name (case-insensitive).
@@ -83,6 +88,7 @@ public sealed record WorkOrderSearchUrlState
             Assignee = Text(values, nameof(Assignee)),
             Status = ParseStatus(Text(values, nameof(Status))),
             OverdueOnly = Flag(values, nameof(OverdueOnly)),
+            DueThisWeekOnly = Flag(values, nameof(DueThisWeekOnly)),
             WaitingOnVendorOnly = Flag(values, nameof(WaitingOnVendorOnly)),
             Priority = ParsePriority(Text(values, nameof(Priority))),
             Building = Text(values, nameof(Building)),
@@ -129,6 +135,7 @@ public sealed record WorkOrderSearchUrlState
     {
         SummaryCard.AssignedToMe => new WorkOrderSearchUrlState { AssignedToMe = true, OpenOnly = true },
         SummaryCard.Overdue => new WorkOrderSearchUrlState { OverdueOnly = true },
+        SummaryCard.DueThisWeek => new WorkOrderSearchUrlState { DueThisWeekOnly = true },
         SummaryCard.Completed => new WorkOrderSearchUrlState
         {
             Status = WorkOrderStatus.Complete.Key,
@@ -150,6 +157,7 @@ public sealed record WorkOrderSearchUrlState
         yield return Pair(nameof(AssignedToMe), FlagText(AssignedToMe));
         yield return Pair(nameof(OpenOnly), FlagText(OpenOnly));
         yield return Pair(nameof(OverdueOnly), FlagText(OverdueOnly));
+        yield return Pair(nameof(DueThisWeekOnly), FlagText(DueThisWeekOnly));
         yield return Pair(nameof(WaitingOnVendorOnly), FlagText(WaitingOnVendorOnly));
         yield return Pair(nameof(CompletedWithinDays), CompletedWithinDays?.ToString(CultureInfo.InvariantCulture));
         yield return Pair(nameof(Q), Q);

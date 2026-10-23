@@ -59,6 +59,7 @@ public class RemotableRequestTests
         query.MatchPriority(WorkOrderPriority.High);
         query.MatchBuilding("Sanctuary");
         query.MatchOpenOnly(true);
+        query.MatchDueThisWeekOnly(true);
         query.MatchCompletedWithinDays(30);
         query.MatchSearchText("organ");
 
@@ -67,6 +68,7 @@ public class RemotableRequestTests
         rehydrated.Priority.ShouldBe(WorkOrderPriority.High);
         rehydrated.Building.ShouldBe("Sanctuary");
         rehydrated.OpenOnly.ShouldBeTrue();
+        rehydrated.DueThisWeekOnly.ShouldBeTrue();
         rehydrated.CompletedWithinDays.ShouldBe(30);
         rehydrated.SearchText.ShouldBe("organ");
         rehydrated.ShouldBe(query);
@@ -84,7 +86,7 @@ public class RemotableRequestTests
         var summary = new WorkOrderSearchSummary
         {
             OpenCount = 24, OpenedLast7Days = 3, AssignedToMeCount = 2, AssignedToMeTotal = 4,
-            AssignedToMeDueToday = 1, OverdueCount = 3, CompletedLast30Days = 41, AverageDaysToClose = 2.4,
+            AssignedToMeDueToday = 1, OverdueCount = 3, DueThisWeekCount = 6, CompletedLast30Days = 41, AverageDaysToClose = 2.4,
             CreatedByMeCount = 7, InProgressCount = 5
         };
 

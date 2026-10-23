@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -47,6 +48,27 @@ public class DashboardTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderSummaryCards.Elements.SummaryCardAssignedToMe))
             .Locator(".summary-card-value")).ToHaveTextAsync("2");
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill))).ToHaveTextAsync("2 of 2");
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldShowDueThisWeekCount_MatchingTheSearchItOpens()
+    {
+        var today = ChurchTimeZone.Today(TimeProvider.System);
+        var creator = await SeedCreatorAsync("dueweek");
+        await SeedOrderAsync(creator, WorkOrderStatus.Assigned, CurrentUser, dueDate: today);
+        await SeedOrderAsync(creator, WorkOrderStatus.Assigned, CurrentUser, dueDate: today.AddDays(7));
+
+        await OpenDashboardAsync();
+        var card = Page.GetByTestId(nameof(WorkOrderSummaryCards.Elements.SummaryCardDueThisWeek));
+        await Expect(card).ToBeVisibleAsync();
+        var count = (await card.Locator(".summary-card-value").InnerTextAsync()).Trim();
+
+        await card.ClickAsync();
+        await Page.WaitForURLAsync(new Regex("DueThisWeekOnly=true"));
+        await Expect(Page.GetByTestId(nameof(WorkOrderSummaryCards.Elements.SummaryCardDueThisWeek))
+            .Locator(".summary-card-value")).ToHaveTextAsync(count);
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill)))
+            .ToHaveTextAsync(new Regex("^\\d+ of " + Regex.Escape(count) + "$"));
     }
 
     [Test, Retry(2)]
@@ -191,7 +213,7 @@ public class DashboardTests : AcceptanceTestBase
     }
 
     private async Task<WorkOrder> SeedOrderAsync(Employee creator, WorkOrderStatus status, Employee assignee,
-        DateTime? completedDate = null)
+        DateTime? completedDate = null, DateOnly? dueDate = null)
     {
         var order = Faker<WorkOrder>();
         order.Creator = creator;
@@ -200,6 +222,11 @@ public class DashboardTests : AcceptanceTestBase
         order.CreatedDate = DateTime.UtcNow.AddDays(-3);
         order.AssignedDate = DateTime.UtcNow.AddDays(-2);
         order.CompletedDate = completedDate;
+        if (dueDate.HasValue)
+        {
+            order.DueDate = dueDate;
+        }
+
         order.Title = $"[{TestTag}] dashboard {status.FriendlyName}";
         await using var context = TestHost.NewDbContext();
         context.Attach(creator);
