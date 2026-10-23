@@ -223,7 +223,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await OpenSearchAsync();
         await SelectFilterAsync(WorkOrderSearch.Elements.CreatorSelect, creator.UserName);
         var sort = Page.Locator($"#{WorkOrderSearch.Elements.SortByPriorityButton}");
-        var firstPriority = Rows().First.Locator($"[data-testid^='{WorkOrderSearch.Elements.PriorityCell}']");
+        var firstPriority = Rows().First.Locator($"[data-testid^='{WorkOrderSearch.Elements.PriorityCell}'] .priority");
 
         await sort.ClickAsync();
         await Expect(sort).ToHaveTextAsync("Priority ▲");

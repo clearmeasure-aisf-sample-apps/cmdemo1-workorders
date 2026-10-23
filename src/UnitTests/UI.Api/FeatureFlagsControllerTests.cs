@@ -37,6 +37,12 @@ public class FeatureFlagsControllerTests
     }
 
     [Test]
+    public void All_Should_EnableShowPriorityBadges_When_CatalogRead()
+    {
+        FeatureFlagsCatalog.All["ShowPriorityBadges"].ShouldBeTrue();
+    }
+
+    [Test]
     public void All_Should_BeNonNull_When_CatalogAccessed()
     {
         FeatureFlagsCatalog.All.ShouldNotBeNull();
