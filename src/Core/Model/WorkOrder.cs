@@ -32,6 +32,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     public const int BuildingMaxLength = 100;
 
     /// <summary>
+    /// Maximum length of <see cref="Floor"/> accepted by persistence and the work-order form.
+    /// </summary>
+    public const int FloorMaxLength = 20;
+
+    /// <summary>
     /// Maximum length of an optional external reference.
     /// </summary>
     public const int ExternalReferenceMaxLength = 100;
@@ -84,6 +89,11 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// Optional name of the building the work happens in (for example "Sanctuary"). Null when unset.
     /// </summary>
     public string? Building { get; set; }
+
+    /// <summary>
+    /// Optional floor the work happens on. Null when unset.
+    /// </summary>
+    public string? Floor { get; set; }
 
     /// <summary>
     /// Optional reference to an external system.
