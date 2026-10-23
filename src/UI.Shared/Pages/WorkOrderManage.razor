@@ -10,9 +10,10 @@
             {
                 <button type="button" data-testid="@Elements.CopyWorkOrderNumber" class="btn btn-copy-number" aria-label="Copy work order number" @onclick="CopyWorkOrderNumberAsync">
                     <i class="@(_copyButtonShowSuccess ? "bi bi-check2" : "bi bi-clipboard")"></i>
+                    Copy
                 </button>
-                <span role="status" aria-live="polite" aria-atomic="true" class="visually-hidden" id="copy-status">
-                    @if (_copyButtonShowSuccess) { <text>Copied to clipboard</text> }
+                <span role="status" aria-live="polite" aria-atomic="true" id="copy-status">
+                    @if (_copyButtonShowSuccess) { <text>Copied</text> }
                 </span>
             }
             <span class="status-badge @CurrentStatusBadgeCssClass" data-testid="@Elements.Status">@Model.Status</span>

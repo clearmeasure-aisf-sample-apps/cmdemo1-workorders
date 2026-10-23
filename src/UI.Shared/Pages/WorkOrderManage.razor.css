@@ -305,7 +305,8 @@
     align-items: center;
     justify-content: center;
     min-width: 2rem;
-    height: 2rem;
+    height: auto;
+    min-height: 2rem;
 }
 
 .btn-copy-number:hover {
