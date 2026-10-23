@@ -44,6 +44,12 @@ public class FeatureFlagsControllerTests
     }
 
     [Test]
+    public void All_Should_EnableShowPriorityBadges_When_CatalogRead()
+    {
+        FeatureFlagsCatalog.All["ShowPriorityBadges"].ShouldBeTrue();
+    }
+
+    [Test]
     public void Get_Should_SerializeFlagKeysAsCatalogNames_When_UsingWebJsonDefaults()
     {
         var controller = new FeatureFlagsController

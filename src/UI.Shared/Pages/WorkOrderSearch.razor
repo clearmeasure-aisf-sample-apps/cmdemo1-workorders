@@ -429,6 +429,7 @@
         TitleCell,
         StatusCell,
         PriorityCell,
+        PriorityBadge,
         AssigneeCell,
         RoomCell,
         RowMenu,
@@ -472,11 +473,18 @@
             </button>
         </th>;
 
-    private static readonly RenderFragment<WorkOrderSearchResultRow> PriorityView = order =>
-        @<span class="priority @order.PriorityCssClass">
-            <span class="priority-bars" aria-hidden="true"><i></i><i></i><i></i></span>
-            @order.WorkOrder.Priority
-        </span>;
+    private RenderFragment PriorityView(WorkOrderSearchResultRow order) =>
+        @<text>
+            <span class="priority @order.PriorityCssClass">
+                <span class="priority-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+                @order.WorkOrder.Priority
+            </span>
+            @if (_showPriorityBadges && order.WorkOrder.Priority == WorkOrderPriority.High)
+            {
+                <span class="priority-badge priority-badge--high"
+                      data-testid="@(Elements.PriorityBadge + order.Number)">High</span>
+            }
+        </text>;
 
     private static readonly RenderFragment<WorkOrderSearchResultRow> AvatarView = order =>
         @<text>@if (order.Assignee is null)

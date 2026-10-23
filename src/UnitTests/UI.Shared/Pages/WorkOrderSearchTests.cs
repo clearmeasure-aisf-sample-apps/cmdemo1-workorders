@@ -25,7 +25,7 @@ public class WorkOrderSearchTests
     private const string CurrentUsername = "jpalermo";
 
     private static BunitContext CreateContext(IBus? bus = null, string loggedInAs = CurrentUsername,
-        WorkOrderSearchState? searchState = null, Employee? currentUser = null)
+        WorkOrderSearchState? searchState = null, Employee? currentUser = null, bool showPriorityBadges = true)
     {
         var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
@@ -37,6 +37,7 @@ public class WorkOrderSearchTests
         ctx.Services.AddSingleton(new WorkOrderBulkActionService(theBus, uiBus));
         ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton(searchState ?? new WorkOrderSearchState());
+        ctx.Services.AddSingleton<IFeatureFlags>(new StubFeatureFlags(showPriorityBadges));
 
         var store = new StubUserSessionStore { Username = loggedInAs };
         var authProvider = new CustomAuthenticationStateProvider(store);
@@ -1127,6 +1128,75 @@ public class WorkOrderSearchTests
         priority.ClassList.ShouldContain("priority--high");
         priority.TextContent.Trim().ShouldBe("High");
         component.Find($"[data-testid='{WorkOrderSearch.Elements.StatusCell}WO-AS'] .status-badge").TextContent.ShouldBe("Assigned");
+    }
+
+    [Test]
+    public async Task ShouldShowHighPriorityBadge_WhenFlagOn()
+    {
+        var order = new WorkOrder
+        {
+            Number = "WO-H", Title = "H", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.High
+        };
+        await using var ctx = CreateContext(new StubBus([order]), showPriorityBadges: true);
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var badge = component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityBadge}WO-H']");
+        badge.TextContent.ShouldBe("High");
+        badge.ClassList.ShouldContain("priority-badge--high");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityCell}WO-H'] .priority").TextContent.Trim().ShouldBe("High");
+    }
+
+    [Test]
+    public async Task ShouldOmitHighPriorityBadge_WhenFlagOff()
+    {
+        var order = new WorkOrder
+        {
+            Number = "WO-H", Title = "H", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.High
+        };
+        await using var ctx = CreateContext(new StubBus([order]), showPriorityBadges: false);
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.PriorityBadge}WO-H']").Count.ShouldBe(0);
+        component.FindAll(".priority-badge").Count.ShouldBe(0);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityCell}WO-H'] .priority").TextContent.Trim().ShouldBe("High");
+    }
+
+    [Test]
+    public async Task ShouldOmitPriorityBadge_ForLowAndMedium_WhenFlagOn()
+    {
+        var orders = new[]
+        {
+            new WorkOrder { Number = "WO-L", Title = "L", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.Low },
+            new WorkOrder { Number = "WO-M", Title = "M", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.Medium }
+        };
+        await using var ctx = CreateContext(new StubBus(orders), showPriorityBadges: true);
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        component.FindAll(".priority-badge").Count.ShouldBe(0);
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityCell}WO-L'] .priority").TextContent.Trim().ShouldBe("Low");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityCell}WO-M'] .priority").TextContent.Trim().ShouldBe("Medium");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityCell}WO-L'] .priority").ClassList.ShouldContain("priority--low");
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.PriorityCell}WO-M'] .priority").ClassList.ShouldContain("priority--medium");
+    }
+
+    [Test]
+    public async Task ShouldShowHighPriorityBadgeOnBoardCard_WhenFlagOn()
+    {
+        var order = new WorkOrder
+        {
+            Number = "WO-H", Title = "Organ", Status = WorkOrderStatus.Assigned, Priority = WorkOrderPriority.High
+        };
+        await using var ctx = CreateContext(new StubBus([order]), showPriorityBadges: true);
+        ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        var card = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WO-H']");
+        card.QuerySelector($"[data-testid='{WorkOrderSearch.Elements.PriorityBadge}WO-H']")!.TextContent.ShouldBe("High");
+        card.QuerySelector(".priority")!.TextContent.Trim().ShouldBe("High");
     }
 
     [Test]
