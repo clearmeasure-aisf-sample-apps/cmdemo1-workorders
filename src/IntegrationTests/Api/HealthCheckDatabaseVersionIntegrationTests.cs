@@ -82,14 +82,9 @@ public class HealthCheckDatabaseVersionIntegrationTests
         lines[1].ShouldBe("databaseVersion: 40");
         response.Content.Headers.ContentType?.MediaType.ShouldBe("text/plain");
         response.Content.Headers.ContentType?.CharSet.ShouldBe("utf-8");
-        if (lines[0] is "Healthy" or "Degraded")
-        {
-            response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        }
-        else
-        {
-            response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
-        }
+        response.StatusCode.ShouldBe(lines[0] is "Healthy" or "Degraded"
+            ? HttpStatusCode.OK
+            : HttpStatusCode.ServiceUnavailable);
     }
 
     [Test]

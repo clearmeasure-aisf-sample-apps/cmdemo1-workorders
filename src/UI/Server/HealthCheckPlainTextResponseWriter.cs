@@ -1,6 +1,5 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.DataAccess;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
