@@ -42,8 +42,10 @@ public partial class WorkOrderSearch : AppComponentBase
     private WorkOrderSearchUrlState _state = WorkOrderSearchUrlState.Default;
     private WorkOrderSearchUrlState? _lastUrlState;
     private int _searchVersion;
+    private bool _showPriorityBadges;
 
     [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
+    [Inject] private IFeatureFlags FeatureFlags { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
     [Inject] private WorkOrderSearchState SearchState { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
@@ -87,6 +89,7 @@ public partial class WorkOrderSearch : AppComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        _showPriorityBadges = await FeatureFlags.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges);
         StatusOptions = WorkOrderStatus.GetAllItems().Select(s => new SelectListItem(s.Key, s.FriendlyName)).ToList();
         var employees = await Bus.Send(new EmployeeGetAllQuery());
         UserOptions = employees.Select(e => new SelectListItem(e.UserName, e.DisplayName)).ToList();
