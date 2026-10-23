@@ -23,6 +23,7 @@ internal class BogusOverrides : AutoGeneratorOverride
                 order.Description = order.Description.ClampLength(1, 4000); // HasMaxLength(4000)
                 order.RoomNumber = order.RoomNumber.ClampLength(1, WorkOrder.RoomNumberMaxLength);
                 order.Building = order.Building.ClampLength(1, WorkOrder.BuildingMaxLength);
+                order.Floor = order.Floor.ClampLength(1, WorkOrder.FloorMaxLength);
                 order.Priority = context.Faker.PickRandom(WorkOrderPriority.Low, WorkOrderPriority.Medium, WorkOrderPriority.High);
                 order.DueDate = context.Faker.Random.Bool()
                     ? DateOnly.FromDateTime(context.Faker.Date.Past())

@@ -9,8 +9,9 @@ namespace ClearMeasure.Bootcamp.Core.Validation;
 /// <summary>
 /// Validator for <see cref="SaveDraftCommand"/>: rejects a work order title longer than
 /// <see cref="WorkOrder.TitleMaxLength"/>, a changed room number longer than
-/// <see cref="WorkOrder.RoomNumberEntryMaxLength"/> and a building longer than
-/// <see cref="WorkOrder.BuildingMaxLength"/> before it reaches persistence.
+/// <see cref="WorkOrder.RoomNumberEntryMaxLength"/>, a building longer than
+/// <see cref="WorkOrder.BuildingMaxLength"/> and a floor longer than
+/// <see cref="WorkOrder.FloorMaxLength"/> before it reaches persistence.
 /// </summary>
 public sealed class SaveDraftCommandValidator : AbstractValidator<SaveDraftCommand>
 {
@@ -32,5 +33,9 @@ public sealed class SaveDraftCommandValidator : AbstractValidator<SaveDraftComma
         RuleFor(x => x.WorkOrder.Building)
             .MaximumLength(WorkOrder.BuildingMaxLength)
             .WithMessage($"Building cannot exceed {WorkOrder.BuildingMaxLength} characters.");
+
+        RuleFor(x => x.WorkOrder.Floor)
+            .MaximumLength(WorkOrder.FloorMaxLength)
+            .WithMessage($"Floor cannot exceed {WorkOrder.FloorMaxLength} characters.");
     }
 }

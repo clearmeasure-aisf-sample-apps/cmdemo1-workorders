@@ -470,6 +470,30 @@ public class WorkOrderMappingTests
     }
 
     [Test]
+    public void ShouldPersistFloor()
+    {
+        var setNumber = TestData.Number("M");
+        var unsetNumber = TestData.Number("M");
+
+        var creator = new Employee(TestData.UserName("floor"), "Floor", "Creator", "floor@example.com");
+        var withFloor = new WorkOrder { Number = setNumber, Title = "Upstairs", Creator = creator, Floor = "2" };
+        var withoutFloor = new WorkOrder { Number = unsetNumber, Title = "Unset", Creator = creator };
+        using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.AddRange(withFloor, withoutFloor);
+            context.SaveChanges();
+        }
+
+        using var readContext = TestHost.GetRequiredService<DbContext>();
+        var rehydratedSet = readContext.Set<WorkOrder>().Single(wo => wo.Id == withFloor.Id);
+        var rehydratedUnset = readContext.Set<WorkOrder>().Single(wo => wo.Id == withoutFloor.Id);
+
+        rehydratedSet.Floor.ShouldBe("2");
+        rehydratedUnset.Floor.ShouldBeNull();
+    }
+
+    [Test]
     public void ShouldPersistAccessNotes()
     {
         var notedNumber = TestData.Number("M");
