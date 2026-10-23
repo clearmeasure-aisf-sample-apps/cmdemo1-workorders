@@ -27,6 +27,7 @@ public class WorkOrderMap : IEntityFrameworkMapping
             entity.Property(e => e.Priority).HasConversion<byte>().IsRequired();
             entity.Property(e => e.Building).HasMaxLength(WorkOrder.BuildingMaxLength);
             entity.Property(e => e.ExternalReference).HasMaxLength(WorkOrder.ExternalReferenceMaxLength);
+            entity.Property(e => e.AccessNotes).HasMaxLength(WorkOrder.AccessNotesMaxLength);
             entity.Property(e => e.WaitingOnVendorSince).IsRequired(false);
 
             // Configure relationships

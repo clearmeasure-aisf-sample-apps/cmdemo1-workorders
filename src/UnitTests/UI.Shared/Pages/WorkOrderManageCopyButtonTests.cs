@@ -53,6 +53,7 @@ public class WorkOrderManageCopyButtonTests
             $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
         copyButton.ShouldNotBeNull();
         copyButton.GetAttribute("aria-label").ShouldBe("Copy work order number");
+        copyButton.TextContent.ShouldContain("Copy");
     }
 
     [Test]
@@ -108,10 +109,11 @@ public class WorkOrderManageCopyButtonTests
         ctx.Services.AddSingleton<IBus>(new StubWorkOrderManageBus(workOrder));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);
-        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator));
+        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId, creator, number: "WO-456"));
+        var js = new StubJsRuntime();
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(creator));
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
-        ctx.Services.AddSingleton<IJSRuntime>(new StubJsRuntime());
+        ctx.Services.AddSingleton<IJSRuntime>(js);
         ctx.Services.AddSpeechSynthesis();
         ctx.Services.AddSpeechRecognition();
 
@@ -124,7 +126,13 @@ public class WorkOrderManageCopyButtonTests
             $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
         copyButton.ShouldNotBeNull();
 
-        await copyButton.ClickAsync(new());
+        var click = copyButton.ClickAsync(new());
+        await component.WaitForAssertionAsync(() =>
+        {
+            js.LastCopiedText.ShouldBe("WO-456");
+            component.Find("#copy-status").TextContent.ShouldContain("Copied");
+        });
+        await click;
     }
 
     [Test]
@@ -165,7 +173,7 @@ public class WorkOrderManageCopyButtonTests
         await copyButton.ClickAsync(new());
 
         var statusElement = component.Find("#copy-status");
-        statusElement.TextContent.ShouldNotContain("Copied to clipboard");
+        statusElement.TextContent.ShouldNotContain("Copied");
     }
 
     [Test]
@@ -206,7 +214,7 @@ public class WorkOrderManageCopyButtonTests
         await copyButton.ClickAsync(new());
 
         var statusElement = component.Find("#copy-status");
-        statusElement.TextContent.ShouldNotContain("Copied to clipboard");
+        statusElement.TextContent.ShouldNotContain("Copied");
     }
 
     private class StubWorkOrderManageBus(WorkOrder? workOrder = null) : Bus(null!)
@@ -240,14 +248,14 @@ public class WorkOrderManageCopyButtonTests
         }
     }
 
-    private class StubWorkOrderBuilder(Guid workOrderId, Employee creator, bool isNewMode = false) : IWorkOrderBuilder
+    private class StubWorkOrderBuilder(Guid workOrderId, Employee creator, bool isNewMode = false, string number = "WO-NEW") : IWorkOrderBuilder
     {
         public WorkOrder CreateNewWorkOrder(Employee currentUser)
         {
             return new WorkOrder
             {
                 Id = isNewMode ? Guid.Empty : workOrderId,
-                Number = "WO-NEW",
+                Number = number,
                 Status = WorkOrderStatus.Draft,
                 Creator = creator,
                 Title = "New Work Order"
@@ -270,12 +278,15 @@ public class WorkOrderManageCopyButtonTests
 
     private class StubJsRuntime(bool throwJsException = false, bool throwDisconnectedException = false) : IJSRuntime
     {
+        private readonly StubClipboardModule _module = new(throwJsException, throwDisconnectedException);
+
+        public string? LastCopiedText => _module.LastCopiedText;
+
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && typeof(TValue) == typeof(IJSObjectReference))
             {
-                var module = new StubClipboardModule(throwJsException, throwDisconnectedException);
-                return ValueTask.FromResult((TValue)(object)module);
+                return ValueTask.FromResult((TValue)(object)_module);
             }
 
             throw new InvalidOperationException($"Unexpected InvokeAsync: {identifier}");
@@ -288,10 +299,17 @@ public class WorkOrderManageCopyButtonTests
 
     private class StubClipboardModule(bool throwJsException = false, bool throwDisconnectedException = false) : IJSObjectReference
     {
+        public string? LastCopiedText { get; private set; }
+
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "copyToClipboard")
             {
+                if (args is [string copied, ..])
+                {
+                    LastCopiedText = copied;
+                }
+
                 if (throwJsException)
                 {
                     throw new JSException("Clipboard permission denied");
