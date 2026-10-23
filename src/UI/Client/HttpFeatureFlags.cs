@@ -29,12 +29,14 @@ public sealed class HttpFeatureFlags(HttpClient httpClient) : IFeatureFlags
     {
         try
         {
+            // ReSharper disable once MethodSupportsCancellation -- IFeatureFlags has no CancellationToken
             using var response = await httpClient.GetAsync("api/features/flags");
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
+            // ReSharper disable once MethodSupportsCancellation -- IFeatureFlags has no CancellationToken
             var json = await response.Content.ReadAsStringAsync();
             return Parse(json);
         }
