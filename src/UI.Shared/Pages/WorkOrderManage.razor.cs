@@ -197,6 +197,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             RoomNumber = workOrder.RoomNumber,
             OriginalRoomNumber = workOrder.RoomNumber,
             CreatedDate = workOrder.CreatedDate?.ToString("G", CultureInfo.CurrentCulture),
+            CreatedRelativeTime = RelativeTimeFormatter.Format(workOrder.CreatedDate, Clock),
             AssignedDate = workOrder.AssignedDate?.ToString("G", CultureInfo.CurrentCulture),
             CompletedDate = workOrder.CompletedDate?.ToString("G", CultureInfo.CurrentCulture),
             DueDateInput = workOrder.DueDate,

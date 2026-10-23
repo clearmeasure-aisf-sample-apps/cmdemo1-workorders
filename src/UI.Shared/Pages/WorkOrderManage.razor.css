@@ -116,6 +116,16 @@
     border: 2px solid #e2e8f0;
 }
 
+.created-date-values {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.created-relative-time {
+    margin-left: 0.75rem;
+}
+
 .readonly-info {
     display: grid;
     gap: 2rem;

@@ -138,7 +138,13 @@
             <div class="readonly-info">
                 <div class="form-group">
                     <label class="form-label">Created Date</label>
-                    <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
+                    <div class="created-date-values">
+                        <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
+                        @if (Model.CreatedRelativeTime is not null)
+                        {
+                            <span data-testid="@Elements.CreatedRelativeTime" class="value created-relative-time" title="@Model.CreatedDate">@Model.CreatedRelativeTime</span>
+                        }
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -305,6 +311,7 @@
         AssignedDate,
         CompletedDate,
         CreatedDate,
+        CreatedRelativeTime,
         DueDate,
         DueDateDisplay,
         ReadOnlyMessage,
