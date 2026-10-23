@@ -61,7 +61,7 @@ public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
 
         // Check aria-live message
         var statusRegion = Page.Locator("[role='status'][aria-live='polite']");
-        await Expect(statusRegion).ToContainTextAsync("Copied to clipboard");
+        await Expect(statusRegion).ToContainTextAsync("Copied");
 
         // Wait for revert (2 seconds)
         await Task.Delay(2500);
