@@ -24,8 +24,8 @@ else
         <dt>Room</dt><dd data-testid="@Elements.RoomNumber">@Or(_workOrder.RoomNumber)</dd>
         <dt>Due date</dt>
         <dd data-testid="@Elements.DueDate">@DueDateText</dd>
-        <dt>Creator</dt><dd data-testid="@Elements.Creator">@Or(_workOrder.Creator?.GetFullName())</dd>
-        <dt>Assignee</dt><dd data-testid="@Elements.Assignee">@Or(_workOrder.Assignee?.GetFullName())</dd>
+        <dt>Creator</dt><dd data-testid="@Elements.Creator">@Or(_workOrder.Creator?.DisplayName)</dd>
+        <dt>Assignee</dt><dd data-testid="@Elements.Assignee">@Or(_workOrder.Assignee?.DisplayName)</dd>
         <dt>Created</dt><dd data-testid="@Elements.CreatedDate">@ChurchTime(_workOrder.CreatedDate)</dd>
         <dt>Assigned</dt><dd data-testid="@Elements.AssignedDate">@ChurchTime(_workOrder.AssignedDate)</dd>
         <dt>Completed</dt><dd data-testid="@Elements.CompletedDate">@ChurchTime(_workOrder.CompletedDate)</dd>

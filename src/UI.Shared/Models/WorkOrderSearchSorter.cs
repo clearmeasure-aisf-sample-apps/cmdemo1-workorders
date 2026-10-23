@@ -30,7 +30,7 @@ public static class WorkOrderSearchSorter
             [SortColumns.Title] = (rows, desc) => By(rows, r => r.Title, desc, Text),
             [SortColumns.Status] = (rows, desc) => By(rows, r => r.Status.FriendlyName, desc, Text),
             [SortColumns.Priority] = (rows, desc) => By(rows, r => (int)r.WorkOrder.Priority, desc, Comparer<int>.Default),
-            [SortColumns.Assignee] = (rows, desc) => By(rows, r => r.Assignee?.GetFullName(), desc, Text),
+            [SortColumns.Assignee] = (rows, desc) => By(rows, r => r.Assignee?.DisplayName, desc, Text),
             [SortColumns.Room] = (rows, desc) => By(rows, r => r.WorkOrder.RoomNumber, desc, Text),
             [SortColumns.DueDate] = SortByDueDate
         };
