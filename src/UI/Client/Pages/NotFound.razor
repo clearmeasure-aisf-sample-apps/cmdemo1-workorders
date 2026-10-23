@@ -1,0 +1,14 @@
+@page "/not-found"
+@layout MainLayout
+
+<PageTitle>Not Found - TechWeek Work Orders</PageTitle>
+<p role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true" data-testid="@Elements.NotFoundIcon"></i> Sorry, there's nothing at this address.</p>
+<a href="/" data-testid="@Elements.NotFoundHomeLink">Return to the home page</a>
+
+@code {
+    public enum Elements
+    {
+        NotFoundHomeLink,
+        NotFoundIcon
+    }
+}
