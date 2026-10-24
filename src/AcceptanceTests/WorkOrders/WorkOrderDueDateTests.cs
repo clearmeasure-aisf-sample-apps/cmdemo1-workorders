@@ -79,7 +79,7 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
-        var expectedDisplay = dueDate.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
+        var expectedDisplay = dueDate.ToString("d", CultureInfo.GetCultureInfo("en-US"));
         var dueDateCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + order.Number);
         await Expect(dueDateCell).ToContainTextAsync(expectedDisplay);
 
@@ -126,8 +126,8 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Expect(overdueCell).ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
         await Expect(todayCell).Not.ToHaveClassAsync(new Regex("due-date-today|due-date-overdue"));
         await Expect(overdueCell).Not.ToHaveClassAsync(new Regex("due-date-today|due-date-overdue"));
-        await Expect(todayCell).ToContainTextAsync(today.ToString("MMM d, yyyy", CultureInfo.InvariantCulture));
-        await Expect(overdueCell).ToContainTextAsync(overdue.ToString("MMM d, yyyy", CultureInfo.InvariantCulture));
+        await Expect(todayCell).ToContainTextAsync(today.ToString("d", CultureInfo.GetCultureInfo("en-US")));
+        await Expect(overdueCell).ToContainTextAsync(overdue.ToString("d", CultureInfo.GetCultureInfo("en-US")));
     }
 
     [Test, Retry(2)]

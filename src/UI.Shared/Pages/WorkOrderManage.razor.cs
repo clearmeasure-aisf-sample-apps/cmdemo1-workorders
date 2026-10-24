@@ -7,7 +7,6 @@ using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Palermo.BlazorMvc;
 using Microsoft.JSInterop;
-using System.Globalization;
 using Toolbelt.Blazor.SpeechRecognition;
 using Toolbelt.Blazor.SpeechSynthesis;
 
@@ -201,20 +200,17 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             Instructions = workOrder.Instructions,
             RoomNumber = workOrder.RoomNumber,
             OriginalRoomNumber = workOrder.RoomNumber,
-            CreatedDate = workOrder.CreatedDate?.ToString("G", CultureInfo.CurrentCulture),
+            CreatedDate = ClientDateFormatter.Format(workOrder.CreatedDate),
             CreatedRelativeTime = RelativeTimeFormatter.Format(workOrder.CreatedDate, Clock),
-            AssignedDate = workOrder.AssignedDate?.ToString("G", CultureInfo.CurrentCulture),
-            CompletedDate = workOrder.CompletedDate?.ToString("G", CultureInfo.CurrentCulture),
+            AssignedDate = ClientDateFormatter.Format(workOrder.AssignedDate),
+            CompletedDate = ClientDateFormatter.Format(workOrder.CompletedDate),
             DueDateInput = workOrder.DueDate,
             Priority = workOrder.Priority,
             Building = workOrder.Building,
             Floor = workOrder.Floor,
-            DueDateDisplay = FormatDueDateDisplay(workOrder.DueDate)
+            DueDateDisplay = ClientDateFormatter.Format(workOrder.DueDate)
         };
     }
-
-    private static string? FormatDueDateDisplay(DateOnly? dueDate) =>
-        dueDate?.ToString("MMM d, yyyy", CultureInfo.InvariantCulture);
 
     private async Task LoadUserOptions()
     {

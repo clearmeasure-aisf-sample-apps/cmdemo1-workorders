@@ -96,6 +96,7 @@ public abstract class AcceptanceTestBase
         var browserContext = await browser.NewContextAsync(new BrowserNewContextOptions
         {
             BaseURL = ServerFixture.ApplicationBaseUrl,
+            Locale = "en-US",
             IgnoreHTTPSErrors = true,
             Permissions = ["clipboard-read", "clipboard-write"],
             ViewportSize = new ViewportSize { Width = 800, Height = 600 }
