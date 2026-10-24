@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Server;
 using Microsoft.AspNetCore.Http;
@@ -276,5 +277,46 @@ public class DetailedHealthCheckResponseWriterTests
         var processStartUtc = doc.RootElement.GetProperty("processStartUtc").GetDateTimeOffset();
         var serverUtc = doc.RootElement.GetProperty("serverUtc").GetDateTimeOffset();
         processStartUtc.ShouldBeLessThanOrEqualTo(serverUtc);
+    }
+
+    [Test]
+    public async Task WriteAsync_Should_IncludeAssemblyInformationalVersion_When_ResponseWritten()
+    {
+        var context = new DefaultHttpContext
+        {
+            Response = { Body = new MemoryStream() }
+        };
+
+        using var doc = await WriteAndParseAsync(context, CreateMinimalReport());
+
+        doc.RootElement.TryGetProperty("version", out var version).ShouldBeTrue();
+        var expected = ExpectedAssemblyVersion();
+        if (expected is null)
+        {
+            version.ValueKind.ShouldBe(JsonValueKind.Null);
+        }
+        else
+        {
+            version.GetString().ShouldBe(expected);
+        }
+    }
+
+    private static string? ExpectedAssemblyVersion()
+    {
+        var informationalVersion = typeof(DetailedHealthCheckResponseWriter).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (string.IsNullOrWhiteSpace(informationalVersion))
+        {
+            return null;
+        }
+
+        var metadata = informationalVersion.IndexOf('+');
+        if (metadata < 0)
+        {
+            return informationalVersion;
+        }
+
+        var version = informationalVersion[..metadata];
+        return string.IsNullOrWhiteSpace(version) ? null : version;
     }
 }
