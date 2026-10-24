@@ -206,6 +206,8 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             AssignedDate = workOrder.AssignedDate?.ToString("G", CultureInfo.CurrentCulture),
             CompletedDate = workOrder.CompletedDate?.ToString("G", CultureInfo.CurrentCulture),
             DueDateInput = workOrder.DueDate,
+            OriginalDueDate = workOrder.DueDate,
+            ChurchToday = ChurchTimeZone.Today(Clock),
             Priority = workOrder.Priority,
             Building = workOrder.Building,
             Floor = workOrder.Floor,
@@ -268,6 +270,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         workOrder.Description = Model.Description;
         workOrder.Instructions = Model.Instructions;
         workOrder.RoomNumber = Model.RoomNumber;
+        var previousDueDate = Model.OriginalDueDate;
         workOrder.DueDate = Model.DueDateInput;
         workOrder.Priority = Model.Priority;
         workOrder.Building = string.IsNullOrWhiteSpace(Model.Building) ? null : Model.Building.Trim();
@@ -276,6 +279,10 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         var matchingCommand = CommandWithShelveReason(SaveDraftCommand.WithPreviousRoomNumber(
             new StateCommandList().GetMatchingCommand(workOrder, currentUser, SelectedCommand!),
             Model.OriginalRoomNumber));
+        if (matchingCommand is SaveDraftCommand saveDraft)
+        {
+            matchingCommand = saveDraft with { PreviousDueDate = previousDueDate };
+        }
 
         await SendIfReady(matchingCommand);
     }

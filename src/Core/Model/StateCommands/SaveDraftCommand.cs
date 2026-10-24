@@ -13,6 +13,12 @@ StateCommandBase(WorkOrder, CurrentUser)
     /// </summary>
     public string? PreviousRoomNumber { get; init; }
 
+    /// <summary>
+    /// The due date persisted on the work order before this command was created.
+    /// An unchanged value is allowed even when it is earlier than today.
+    /// </summary>
+    public DateOnly? PreviousDueDate { get; init; }
+
     /// <summary>Returns <paramref name="command"/> with <see cref="PreviousRoomNumber"/> set when it is a Save command; any other command unchanged.</summary>
     public static IStateCommand WithPreviousRoomNumber(IStateCommand command, string? previousRoomNumber) =>
         command is SaveDraftCommand save ? save with { PreviousRoomNumber = previousRoomNumber } : command;
