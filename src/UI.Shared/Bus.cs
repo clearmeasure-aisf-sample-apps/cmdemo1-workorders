@@ -72,6 +72,11 @@ public class Bus : IBus
         {
             new SaveDraftCommandValidator().ValidateAndThrow(saveDraft);
         }
+
+        if (request is InProgressToAssignedCommand shelve)
+        {
+            new InProgressToAssignedCommandValidator().ValidateAndThrow(shelve);
+        }
     }
 
     private static Activity? StartActivity(object message, string operation = "Send")

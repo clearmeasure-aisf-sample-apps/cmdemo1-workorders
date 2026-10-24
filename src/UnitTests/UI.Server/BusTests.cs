@@ -131,6 +131,53 @@ public class BusTests
         stubMediator.LastRequest.ShouldBeNull();
     }
 
+    [Test]
+    public async Task ShouldThrowValidationException_WhenShelveReasonIsEmpty()
+    {
+        var stubMediator = new StubMediator();
+        var bus = new Bus(stubMediator);
+        var command = ShelveCommand("  ");
+
+        var ex = await Should.ThrowAsync<ValidationException>(() => bus.Send(command));
+
+        ex.Errors.ShouldContain(failure => failure.PropertyName == "Reason");
+        stubMediator.LastRequest.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldThrowValidationException_WhenShelveReasonExceedsMaxLength()
+    {
+        var stubMediator = new StubMediator();
+        var bus = new Bus(stubMediator);
+        var command = ShelveCommand(new string('r', InProgressToAssignedCommand.ReasonMaxLength + 1));
+
+        await Should.ThrowAsync<ValidationException>(() => bus.Send(command));
+
+        stubMediator.LastRequest.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldSendShelve_WhenReasonIsAtMaxLength()
+    {
+        var stubMediator = new StubMediator();
+        var command = ShelveCommand(new string('r', InProgressToAssignedCommand.ReasonMaxLength));
+        var expected = new StateCommandResult(command.WorkOrder);
+        stubMediator.SetResponse(expected);
+        var bus = new Bus(stubMediator);
+
+        var result = await bus.Send(command);
+
+        result.ShouldBe(expected);
+        stubMediator.LastRequest.ShouldBe(command);
+    }
+
+    private static InProgressToAssignedCommand ShelveCommand(string? reason)
+    {
+        var employee = new Employee();
+        var order = new WorkOrder { Status = WorkOrderStatus.InProgress, Assignee = employee };
+        return new InProgressToAssignedCommand(order, employee) { Reason = reason };
+    }
+
     private static SaveDraftCommand CreateSaveDraftCommand(int titleLength)
     {
         var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");

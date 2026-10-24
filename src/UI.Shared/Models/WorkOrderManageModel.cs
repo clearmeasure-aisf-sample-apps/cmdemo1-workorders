@@ -75,6 +75,11 @@ public class WorkOrderManageModel : IValidatableObject
     [StringLength(WorkOrder.FloorMaxLength, ErrorMessage = "Floor cannot exceed 20 characters.")]
     public string? Floor { get; set; }
 
+    /// <summary>
+    /// Reason typed when shelving an in-progress work order. At most 200 characters.
+    /// </summary>
+    public string? ShelveReason { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext context)
     {
         // Skip room number entry length validation when the value is unchanged

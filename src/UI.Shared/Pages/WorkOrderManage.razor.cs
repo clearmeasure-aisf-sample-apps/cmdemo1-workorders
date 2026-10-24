@@ -23,6 +23,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private bool _canRemoveAttachments;
     private Guid? _pendingRemoveId;
     private string? _removeAttachmentError;
+    private string? _shelveReasonError;
     private string _currentUserName = string.Empty;
     private string _preferredLanguage = "en-US";
     private DictationTarget _dictationTarget = DictationTarget.None;
@@ -57,6 +58,10 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     public WorkOrderManageModel Model { get; set; } = new();
     private List<SelectListItem> UserOptions { get; set; } = new();
     private IEnumerable<IStateCommand> ValidCommands { get; set; } = new List<IStateCommand>();
+
+    private bool ShowShelveReason =>
+        ValidCommands.Any(command => command.TransitionVerbPresentTense == InProgressToAssignedCommand.Name);
+
     private string? SelectedCommand { get; set; }
     private List<string>? _validCommandNames;
 
@@ -268,13 +273,53 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         workOrder.Building = string.IsNullOrWhiteSpace(Model.Building) ? null : Model.Building.Trim();
         workOrder.Floor = string.IsNullOrWhiteSpace(Model.Floor) ? null : Model.Floor.Trim();
 
-        var matchingCommand = SaveDraftCommand.WithPreviousRoomNumber(
+        var matchingCommand = CommandWithShelveReason(SaveDraftCommand.WithPreviousRoomNumber(
             new StateCommandList().GetMatchingCommand(workOrder, currentUser, SelectedCommand!),
-            Model.OriginalRoomNumber);
+            Model.OriginalRoomNumber));
 
-        var result = await Bus.Send(matchingCommand);
+        await SendIfReady(matchingCommand);
+    }
+
+    private IStateCommand? CommandWithShelveReason(IStateCommand command)
+    {
+        if (command is not InProgressToAssignedCommand shelve)
+        {
+            return command;
+        }
+
+        return ShelvedCommand(shelve);
+    }
+
+    private InProgressToAssignedCommand? ShelvedCommand(InProgressToAssignedCommand shelve)
+    {
+        var reason = Model.ShelveReason?.Trim() ?? "";
+        if (!ShelveReasonLengthIsValid(reason))
+        {
+            _shelveReasonError = ShelveReasonMessage(reason);
+            return null;
+        }
+
+        _shelveReasonError = null;
+        return shelve with { Reason = reason };
+    }
+
+    private static bool ShelveReasonLengthIsValid(string reason) =>
+        reason is { Length: > 0 and <= InProgressToAssignedCommand.ReasonMaxLength };
+
+    private static string ShelveReasonMessage(string reason) =>
+        reason.Length == 0
+            ? "A reason is required to shelve a work order."
+            : $"Reason cannot exceed {InProgressToAssignedCommand.ReasonMaxLength} characters.";
+
+    private async Task SendIfReady(IStateCommand? command)
+    {
+        if (command == null)
+        {
+            return;
+        }
+
+        var result = await Bus.Send(command);
         EventBus.Notify(new WorkOrderChangedEvent(result));
-
         NavigationManager!.NavigateTo("/workorder/search");
     }
 
