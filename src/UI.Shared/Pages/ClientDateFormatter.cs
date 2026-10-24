@@ -3,8 +3,8 @@ using System.Globalization;
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 /// <summary>
-/// Formats work-order dates with the client culture. On the WebAssembly host that culture
-/// is the browser language applied at startup.
+/// Formats work-order dates with the client culture. On the WebAssembly host the layout
+/// applies the browser language once the host is running.
 /// </summary>
 internal static class ClientDateFormatter
 {

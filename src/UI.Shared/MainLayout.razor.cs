@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -107,6 +108,7 @@ public partial class MainLayout : IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        await ApplyBrowserCultureAsync();
         Navigation.LocationChanged += OnLocationChanged;
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
 
@@ -128,6 +130,19 @@ public partial class MainLayout : IAsyncDisposable
         }
 
         await LoadNotificationsAsync();
+    }
+
+    private async Task ApplyBrowserCultureAsync()
+    {
+        try
+        {
+            var language = await Js.InvokeAsync<string>("churchBulletinBrowserCulture");
+            ClientDateFormatter.ApplyBrowserCulture(language);
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException)
+        {
+            // The shell still renders when the browser language cannot be read.
+        }
     }
 
     /// <summary>
