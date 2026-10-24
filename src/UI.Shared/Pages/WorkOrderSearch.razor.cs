@@ -375,6 +375,7 @@ public partial class WorkOrderSearch : AppComponentBase
         specification.MatchOpenOnly(_state.OpenOnly);
         specification.MatchCompletedWithinDays(_state.CompletedWithinDays);
         specification.MatchSearchText(_state.Q);
+        specification.MatchDueDateOrder(_state.Sort == SortColumns.DueDate, _state.Descending);
         return specification;
     }
 
