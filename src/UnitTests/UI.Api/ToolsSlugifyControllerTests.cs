@@ -59,6 +59,29 @@ public class ToolsSlugifyControllerTests
     }
 
     [Test]
+    public void Post_Should_CutSlugAt80Characters_When_AlphanumericTextIsLong()
+    {
+        var result = CreateController().Post(new SlugifyRequest(new string('A', 100)));
+
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
+        payload.Slug.ShouldBe(new string('a', 80));
+        payload.Slug.ShouldNotEndWith("-");
+    }
+
+    [Test]
+    public void Post_Should_DropTrailingHyphen_When_CutLandsOnSeparator()
+    {
+        var result = CreateController().Post(new SlugifyRequest(string.Join(' ', Enumerable.Repeat("word", 20))));
+
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
+        payload.Slug.ShouldBe(string.Join('-', Enumerable.Repeat("word", 16)));
+        payload.Slug.Length.ShouldBeLessThanOrEqualTo(80);
+        payload.Slug.ShouldNotEndWith("-");
+    }
+
+    [Test]
     public void Post_Should_Return400ProblemDetails_When_TextNull()
     {
         var nullBody = CreateController().Post(null);

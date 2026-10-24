@@ -17,8 +17,11 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 [EnableRateLimiting(ApiRateLimiting.PolicyName)]
 public class ToolsSlugifyController : ControllerBase
 {
+    private const int MaxSlugLength = 80;
+
     /// <summary>
     /// Returns a URL slug derived from the submitted <paramref name="request"/>.Text.
+    /// The slug is at most 80 characters and does not end with <c>-</c>.
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
@@ -50,7 +53,12 @@ public class ToolsSlugifyController : ControllerBase
         var slug = Regex.Replace(text, "[^a-zA-Z0-9]+", "-");
         slug = slug.Trim('-');
         slug = slug.ToLowerInvariant();
-        return slug;
+        if (slug.Length <= MaxSlugLength)
+        {
+            return slug;
+        }
+
+        return slug.Substring(0, MaxSlugLength).TrimEnd('-');
     }
 }
 
