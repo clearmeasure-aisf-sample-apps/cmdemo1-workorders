@@ -1742,7 +1742,7 @@ public class WorkOrderSearchTests
                 return await base.Send(request);
             }
 
-            _ = await base.Send<TResponse>(request);
+            _ = await base.Send(request);
             var rows = specification.StatusKey == WorkOrderStatus.Assigned.Key
                 ? new[] { matching }
                 : new[] { matching, other };
