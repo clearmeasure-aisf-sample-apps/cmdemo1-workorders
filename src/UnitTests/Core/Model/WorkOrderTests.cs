@@ -158,4 +158,44 @@ public class WorkOrderTests
 
         workOrder.WaitingOnVendorSince.ShouldBeNull();
     }
+
+    [Test]
+    public void IsOverdue_WithNoDueDate_IsFalse()
+    {
+        var workOrder = new WorkOrder { Status = WorkOrderStatus.Assigned };
+
+        workOrder.IsOverdue(new DateTime(2026, 10, 21)).ShouldBeFalse();
+    }
+
+    [Test]
+    public void IsOverdue_WithFutureDueDate_IsFalse()
+    {
+        var workOrder = new WorkOrder { DueDate = new DateOnly(2026, 10, 22), Status = WorkOrderStatus.Assigned };
+
+        workOrder.IsOverdue(new DateTime(2026, 10, 21)).ShouldBeFalse();
+    }
+
+    [Test]
+    public void IsOverdue_WithPastDueDateAndOpenStatus_IsTrue()
+    {
+        var workOrder = new WorkOrder { DueDate = new DateOnly(2026, 10, 20), Status = WorkOrderStatus.Assigned };
+
+        workOrder.IsOverdue(new DateTime(2026, 10, 21)).ShouldBeTrue();
+    }
+
+    [Test]
+    public void IsOverdue_WithPastDueDateAndCompleteStatus_IsFalse()
+    {
+        var workOrder = new WorkOrder { DueDate = new DateOnly(2026, 10, 20), Status = WorkOrderStatus.Complete };
+
+        workOrder.IsOverdue(new DateTime(2026, 10, 21)).ShouldBeFalse();
+    }
+
+    [Test]
+    public void IsOverdue_WithPastDueDateAndCancelledStatus_IsFalse()
+    {
+        var workOrder = new WorkOrder { DueDate = new DateOnly(2026, 10, 20), Status = WorkOrderStatus.Cancelled };
+
+        workOrder.IsOverdue(new DateTime(2026, 10, 21)).ShouldBeFalse();
+    }
 }

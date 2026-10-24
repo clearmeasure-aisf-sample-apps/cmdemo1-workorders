@@ -194,5 +194,15 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public bool IsOverdue() => GetDueDateUrgency() == DueDateUrgency.Overdue;
 
+    /// <summary>
+    /// Returns <c>true</c> when this work order's due date is before <paramref name="now"/>
+    /// and the work order is neither complete nor cancelled.
+    /// </summary>
+    public bool IsOverdue(DateTime now) =>
+        DueDate is { } dueDate &&
+        dueDate < DateOnly.FromDateTime(now) &&
+        Status != WorkOrderStatus.Complete &&
+        Status != WorkOrderStatus.Cancelled;
+
     public ICollection<WorkOrderAttachment> Attachments { get; set; } = new List<WorkOrderAttachment>();
 }
