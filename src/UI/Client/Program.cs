@@ -26,19 +26,21 @@ builder.ConfigureContainer<ServiceRegistry>(
 
 
 var app = builder.Build();
+ApplyBrowserCulture(app.Services);
 await app.Services.GetRequiredService<HealthCheckService>().CheckHealthAsync();
-await ApplyBrowserCultureAsync(app.Services);
 await app.RunAsync();
 
-static async Task ApplyBrowserCultureAsync(IServiceProvider services)
+static void ApplyBrowserCulture(IServiceProvider services)
 {
     try
     {
-        var js = services.GetRequiredService<IJSRuntime>();
-        var language = await js.InvokeAsync<string>("churchBulletinBrowserCulture");
-        ClientDateFormatter.ApplyBrowserCulture(language);
+        if (services.GetService<IJSRuntime>() is IJSInProcessRuntime js)
+        {
+            var language = js.Invoke<string>("churchBulletinBrowserCulture");
+            ClientDateFormatter.ApplyBrowserCulture(language);
+        }
     }
-    catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException)
+    catch (Exception ex) when (ex is JSException or InvalidOperationException)
     {
         // The page still loads when the browser language cannot be read.
     }
