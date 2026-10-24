@@ -41,37 +41,7 @@ internal static class ClientDateFormatter
             return null;
         }
 
-        return Match(language.Trim());
-    }
-
-    private static CultureInfo? Match(string tag)
-    {
-        var direct = TryGet(tag);
-        if (direct is not null)
-        {
-            return direct;
-        }
-
-        return MatchParts(tag.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-    }
-
-    private static CultureInfo? MatchParts(string[] parts)
-    {
-        if (parts.Length >= 2)
-        {
-            var region = TryGet($"{parts[0]}-{parts[1]}");
-            if (region is not null)
-            {
-                return region;
-            }
-        }
-
-        if (parts.Length >= 1)
-        {
-            return TryGet(parts[0]);
-        }
-
-        return null;
+        return TryGet(language.Trim());
     }
 
     private static CultureInfo? TryGet(string name)
