@@ -152,6 +152,20 @@ public class WorkOrderSearchUrlStateTests
         new WorkOrderSearchUrlState { Sort = "Title" }.ToRelativeUri().ShouldBe("workorder/search?Sort=Title");
     }
 
+    [Test]
+    public void DueDateSort_RoundTripsThroughUrl_AndUnknownSortIsDropped()
+    {
+        var ascending = new WorkOrderSearchUrlState { Sort = "DueDate" };
+        ascending.ToRelativeUri().ShouldBe("workorder/search?Sort=DueDate");
+        WorkOrderSearchUrlState.FromQuery(ParseQuery(ascending.ToRelativeUri())).ShouldBe(ascending);
+
+        var descending = new WorkOrderSearchUrlState { Sort = "DueDate", Descending = true };
+        descending.ToRelativeUri().ShouldBe("workorder/search?Sort=DueDate&Dir=desc");
+        WorkOrderSearchUrlState.FromQuery(ParseQuery(descending.ToRelativeUri())).ShouldBe(descending);
+
+        WorkOrderSearchUrlState.FromQuery(new Dictionary<string, string?> { ["Sort"] = "NotAColumn" }).Sort.ShouldBeNull();
+    }
+
     [TestCase("Creator")]
     [TestCase("Assignee")]
     [TestCase("Status")]

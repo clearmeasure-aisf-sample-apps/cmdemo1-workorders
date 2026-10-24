@@ -62,6 +62,7 @@ public class RemotableRequestTests
         query.MatchDueThisWeekOnly(true);
         query.MatchCompletedWithinDays(30);
         query.MatchSearchText("organ");
+        query.MatchDueDateOrder(true, true);
 
         var rehydrated = SimulateRemoteObject(query);
 
@@ -71,6 +72,8 @@ public class RemotableRequestTests
         rehydrated.DueThisWeekOnly.ShouldBeTrue();
         rehydrated.CompletedWithinDays.ShouldBe(30);
         rehydrated.SearchText.ShouldBe("organ");
+        rehydrated.OrderByDueDate.ShouldBeTrue();
+        rehydrated.DueDateDescending.ShouldBeTrue();
         rehydrated.ShouldBe(query);
     }
 

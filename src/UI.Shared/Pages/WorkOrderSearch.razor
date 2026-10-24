@@ -9,7 +9,7 @@
             <Actions>
                 <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.ExportButton"
                         disabled="@(Model.Results.Length == 0)" title="Download the filtered work orders as CSV" @onclick="ExportAllAsync">
-                    <i class="bi bi-download" aria-hidden="true"></i> Export
+                    <i class="bi bi-download" aria-hidden="true"></i> Export CSV
                 </button>
                 <div class="menu-anchor" @onkeydown="HandleSavedViewsKeyDown">
                     <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.SavedViewsButton"
