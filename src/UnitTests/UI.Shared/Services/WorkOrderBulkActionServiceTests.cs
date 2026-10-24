@@ -77,7 +77,8 @@ public class WorkOrderBulkActionServiceTests
         options.ShouldNotContain(SaveDraftCommand.Name);
         options.ShouldNotContain(DraftToAssignedCommand.Name);
         // #288: an In Progress order that is not waiting also offers "Wait on vendor" (not "Resume").
-        options.ShouldBe([AssignedToCancelledCommand.Name, InProgressToWaitingOnVendorCommand.Name, InProgressToAssignedCommand.Name, InProgressToCompleteCommand.Name], ignoreOrder: true);
+        options.ShouldBe([AssignedToCancelledCommand.Name, InProgressToWaitingOnVendorCommand.Name, InProgressToCompleteCommand.Name], ignoreOrder: true);
+        options.ShouldNotContain(InProgressToAssignedCommand.Name);
     }
 
     [Test]

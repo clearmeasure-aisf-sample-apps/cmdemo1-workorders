@@ -23,6 +23,7 @@ public class WorkOrderShelvedTests : AcceptanceTestBase
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title))).ToHaveValueAsync(order.Title);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description))).ToHaveValueAsync(order.Description);
+        await Input(nameof(WorkOrderManage.Elements.ShelveReason), "Waiting on parts");
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + InProgressToAssignedCommand.Name);
         order = await ClickWorkOrderNumberFromSearchPage(order);
 
@@ -30,5 +31,27 @@ public class WorkOrderShelvedTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description))).ToHaveValueAsync(order.Description!);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Assignee))).ToHaveValueAsync(CurrentUser.UserName);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status))).ToHaveTextAsync(WorkOrderStatus.Assigned.FriendlyName);
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldShelveInProgressWorkOrderWithReason()
+    {
+        await LoginAsCurrentUser();
+
+        var order = await CreateAndSaveNewWorkOrder();
+        order = await ClickWorkOrderNumberFromSearchPage(order);
+        order = await AssignExistingWorkOrder(order, CurrentUser.UserName);
+        order = await ClickWorkOrderNumberFromSearchPage(order);
+        order = await BeginExistingWorkOrder(order);
+        order = await ClickWorkOrderNumberFromSearchPage(order);
+
+        await Input(nameof(WorkOrderManage.Elements.ShelveReason), "Waiting on parts");
+        await Click(nameof(WorkOrderManage.Elements.CommandButton) + InProgressToAssignedCommand.Name);
+        await ClickWorkOrderNumberFromSearchPage(order);
+
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
+            .ToHaveTextAsync(WorkOrderStatus.Assigned.FriendlyName);
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.StatusHistoryReason)).First)
+            .ToHaveTextAsync("Waiting on parts");
     }
 }

@@ -85,8 +85,15 @@ internal static class WorkOrderCommandExecutor
         string workOrderNumber,
         string commandName,
         string executingUsername,
-        string? assigneeUsername)
+        string? assigneeUsername,
+        string? reason = null)
     {
+        var (reasonError, trimmedReason) = PrepareShelveReason(commandName, reason);
+        if (reasonError != null)
+        {
+            return reasonError;
+        }
+
         var prepared = await TryPrepareCommandContextAsync(
             bus,
             workOrderNumber,
@@ -98,7 +105,28 @@ internal static class WorkOrderCommandExecutor
             return prepared.Error;
         }
 
-        return await RunPreparedCommandAsync(bus, commandName, prepared.WorkOrder!, prepared.User!);
+        return await RunPreparedCommandAsync(bus, commandName, prepared.WorkOrder!, prepared.User!, trimmedReason);
+    }
+
+    private static (string? Error, string? Trimmed) PrepareShelveReason(string commandName, string? reason)
+    {
+        if (commandName is not ("Shelve" or "InProgressToAssignedCommand"))
+        {
+            return (null, null);
+        }
+
+        var trimmed = reason?.Trim() ?? "";
+        if (trimmed.Length == 0)
+        {
+            return ("Shelve requires a reason.", null);
+        }
+
+        if (trimmed.Length > InProgressToAssignedCommand.ReasonMaxLength)
+        {
+            return ($"Reason cannot exceed {InProgressToAssignedCommand.ReasonMaxLength} characters.", null);
+        }
+
+        return (null, trimmed);
     }
 
     private static async Task<(WorkOrder? WorkOrder, Employee? User, string? Error)> TryPrepareCommandContextAsync(
@@ -139,7 +167,8 @@ internal static class WorkOrderCommandExecutor
         IBus bus,
         string commandName,
         WorkOrder workOrder,
-        Employee user)
+        Employee user,
+        string? trimmedReason)
     {
         var command = CreateCommand(commandName, workOrder, user);
         if (command == null)
@@ -150,6 +179,11 @@ internal static class WorkOrderCommandExecutor
         if (!command.IsValid())
         {
             return FormatInvalidCommand(commandName, workOrder, command);
+        }
+
+        if (command is InProgressToAssignedCommand shelve)
+        {
+            command = shelve with { Reason = trimmedReason };
         }
 
         var result = await bus.Send(command);

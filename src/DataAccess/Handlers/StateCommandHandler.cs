@@ -34,7 +34,7 @@ public class StateCommandHandler(
             order.Assignee = order.Creator; //EFCore reference checking
         }
 
-        var persisted = await PersistAsync(order, beginStatus, request.CurrentUser, currentDateTime, cancellationToken);
+        var persisted = await PersistAsync(order, beginStatus, request.CurrentUser, currentDateTime, request, cancellationToken);
 
         var loweredTransitionVerb = request.TransitionVerbPastTense.ToLower();
         var workOrderNumber = persisted.Number;
@@ -55,14 +55,15 @@ public class StateCommandHandler(
         WorkOrderStatus beginStatus,
         Employee changedBy,
         DateTime changedDate,
+        StateCommandBase request,
         CancellationToken cancellationToken)
     {
         if (order.Id == Guid.Empty)
         {
-            return await InsertNewAsync(order, beginStatus, changedBy, changedDate, cancellationToken);
+            return await InsertNewAsync(order, beginStatus, changedBy, changedDate, request, cancellationToken);
         }
 
-        return await UpdateExistingAsync(order, beginStatus, changedBy, changedDate, cancellationToken);
+        return await UpdateExistingAsync(order, beginStatus, changedBy, changedDate, request, cancellationToken);
     }
 
     private async Task<WorkOrder> InsertNewAsync(
@@ -70,6 +71,7 @@ public class StateCommandHandler(
         WorkOrderStatus beginStatus,
         Employee changedBy,
         DateTime changedDate,
+        StateCommandBase request,
         CancellationToken cancellationToken)
     {
         dbContext.ChangeTracker.Clear();
@@ -91,7 +93,8 @@ public class StateCommandHandler(
                 FromStatus = beginStatus,
                 ToStatus = order.Status,
                 ChangedById = changedBy.Id,
-                ChangedDate = changedDate
+                ChangedDate = changedDate,
+                Reason = ShelveReason(request)
             };
             dbContext.Add(statusChange);
         }
@@ -105,6 +108,7 @@ public class StateCommandHandler(
         WorkOrderStatus beginStatus,
         Employee changedBy,
         DateTime changedDate,
+        StateCommandBase request,
         CancellationToken cancellationToken)
     {
         dbContext.ChangeTracker.Clear();
@@ -126,13 +130,25 @@ public class StateCommandHandler(
                 FromStatus = beginStatus,
                 ToStatus = existing.Status,
                 ChangedById = changedBy.Id,
-                ChangedDate = changedDate
+                ChangedDate = changedDate,
+                Reason = ShelveReason(request)
             };
             dbContext.Add(statusChange);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return existing;
+    }
+
+    private static string? ShelveReason(StateCommandBase request)
+    {
+        if (request is not InProgressToAssignedCommand { Reason: { } reason })
+        {
+            return null;
+        }
+
+        var trimmed = reason.Trim();
+        return trimmed.Length == 0 ? null : trimmed;
     }
 
     private async Task ApplyRelationshipsAsync(

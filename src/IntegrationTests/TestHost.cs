@@ -206,12 +206,13 @@ public static class TestHost
                     "Creates multiple dated assigned work orders in one transaction."),
                 AIFunctionFactory.Create(
                     ([System.ComponentModel.Description("Work order number")] string workOrderNumber,
-                     [System.ComponentModel.Description("Command name")] string commandName ,
+                     [System.ComponentModel.Description("Command name")] string commandName,
                      [System.ComponentModel.Description("Executing username")] string executingUsername,
-                     [System.ComponentModel.Description("Assignee username")] string? assigneeUsername = null)
-                        => WorkOrderTools.ExecuteWorkOrderCommand(CreateScopedBus(), workOrderNumber, commandName, executingUsername, assigneeUsername),
+                     [System.ComponentModel.Description("Assignee username")] string? assigneeUsername = null,
+                     [System.ComponentModel.Description("Reason required when shelving, at most 200 characters")] string? reason = null)
+                        => WorkOrderTools.ExecuteWorkOrderCommand(CreateScopedBus(), workOrderNumber, commandName, executingUsername, assigneeUsername, reason),
                     "ExecuteWorkOrderCommand",
-                    "Executes a state command on a work order."),
+                    "Executes a state command on a work order. Shelve requires a reason of at most 200 characters."),
                 AIFunctionFactory.Create(
                     () => EmployeeTools.ListEmployees(CreateScopedBus()),
                     "ListEmployees",

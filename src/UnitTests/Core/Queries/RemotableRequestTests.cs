@@ -190,6 +190,31 @@ public class RemotableRequestTests
         AssertRemotable(vendor);
     }
 
+    [Test]
+    public void ShouldRoundTripShelveReason()
+    {
+        var order = ObjectMother.Faker<WorkOrder>();
+        var employee = ObjectMother.Faker<Employee>();
+        var command = new InProgressToAssignedCommand(order, employee) { Reason = "Waiting on parts" };
+
+        var rehydrated = SimulateRemoteObject(command);
+
+        rehydrated.Reason.ShouldBe("Waiting on parts");
+
+        var change = new WorkOrderStatusChange
+        {
+            Id = Guid.NewGuid(),
+            WorkOrderId = order.Id,
+            FromStatus = WorkOrderStatus.InProgress,
+            ToStatus = WorkOrderStatus.Assigned,
+            ChangedById = employee.Id,
+            ChangedDate = new DateTime(2026, 10, 24, 12, 0, 0, DateTimeKind.Utc),
+            Reason = "Waiting on parts"
+        };
+        var rehydratedChange = SimulateRemoteObject(change);
+        rehydratedChange.Reason.ShouldBe("Waiting on parts");
+    }
+
     public static object AssertRemotable(object theObject)
     {
         var rehydratedQuery = SimulateRemoteObject(theObject);

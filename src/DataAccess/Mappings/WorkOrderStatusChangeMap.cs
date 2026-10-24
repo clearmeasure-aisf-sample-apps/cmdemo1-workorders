@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Mappings;
@@ -28,6 +29,8 @@ public class WorkOrderStatusChangeMap : IEntityFrameworkMapping
                 .IsRequired();
             entity.Property(e => e.ChangedById).IsRequired();
             entity.Property(e => e.ChangedDate).IsRequired();
+            entity.Property(e => e.Reason)
+                .HasMaxLength(InProgressToAssignedCommand.ReasonMaxLength);
 
             // Configure relationships
             entity.HasOne(e => e.ChangedBy)

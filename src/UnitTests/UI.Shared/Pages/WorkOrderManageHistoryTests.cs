@@ -98,6 +98,51 @@ public class WorkOrderManageHistoryTests
 
         var changedByCells = component.FindAll($"[data-testid='{WorkOrderManage.Elements.StatusHistoryChangedBy}']");
         changedByCells[0].TextContent.ShouldContain("Homer Simpson");
+
+        var reasonCells = component.FindAll($"[data-testid='{WorkOrderManage.Elements.StatusHistoryReason}']");
+        reasonCells[0].TextContent.Trim().ShouldBe("");
+    }
+
+    [Test]
+    public async Task WorkOrderManage_ShouldRenderShelveReason_WhenHistoryHasReason()
+    {
+        var workOrderId = Guid.NewGuid();
+        var history = new[]
+        {
+            new WorkOrderStatusChange
+            {
+                Id = Guid.NewGuid(),
+                WorkOrderId = workOrderId,
+                FromStatus = WorkOrderStatus.InProgress,
+                ToStatus = WorkOrderStatus.Assigned,
+                ChangedById = Assignee.Id,
+                ChangedBy = Assignee,
+                ChangedDate = new DateTime(2025, 3, 1, 10, 0, 0),
+                Reason = "Waiting on parts"
+            }
+        };
+        var workOrder = new WorkOrder
+        {
+            Id = workOrderId,
+            Number = "WO-001",
+            Title = "Test",
+            Description = "Test",
+            Status = WorkOrderStatus.Assigned,
+            Creator = Creator,
+            Assignee = Assignee,
+            CreatedDate = DateTime.UtcNow
+        };
+        var bus = new StubWorkOrderManageBusWithHistory(workOrder, history);
+        await using var ctx = CreateContext(bus, Creator);
+
+        var component = ctx.Render<WorkOrderManage>();
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var reasonCells = component.FindAll($"[data-testid='{WorkOrderManage.Elements.StatusHistoryReason}']");
+            reasonCells.Count.ShouldBe(1);
+            reasonCells[0].TextContent.ShouldContain("Waiting on parts");
+        });
     }
 
     [Test]
