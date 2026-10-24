@@ -215,6 +215,105 @@ public class WorkOrderManageSubmitTests
         });
     }
 
+    [Test]
+    public async Task ShouldStayOnPage_WhenShelveReasonIsEmpty()
+    {
+        await using var ctx = new BunitContext();
+        var user = Assignee("shelver");
+        var existing = InProgressOrder(user);
+        var bus = new StubSubmitBus(existing);
+        RegisterServices(ctx, bus, user);
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo("http://localhost/?Mode=Edit&Id=WO-SHELVE");
+
+        var component = ctx.Render<WorkOrderManage>(parameters => parameters.Add(p => p.Id, "WO-SHELVE"));
+        await component.WaitForAssertionAsync(() =>
+            component.Find($"[data-testid='{WorkOrderManage.Elements.ShelveReason}']").ShouldNotBeNull());
+
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.CommandButton}Shelve']").ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            bus.LastCommand.ShouldBeNull();
+            component.Find($"[data-testid='{WorkOrderManage.Elements.ShelveReasonError}']").TextContent
+                .ShouldContain("A reason is required");
+            navigationManager.Uri.ShouldNotContain("/workorder/search");
+        });
+    }
+
+    [Test]
+    public async Task ShouldStayOnPage_WhenShelveReasonIsTooLong()
+    {
+        await using var ctx = new BunitContext();
+        var user = Assignee("shelver");
+        var existing = InProgressOrder(user);
+        var bus = new StubSubmitBus(existing);
+        RegisterServices(ctx, bus, user);
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo("http://localhost/?Mode=Edit&Id=WO-SHELVE");
+
+        var component = ctx.Render<WorkOrderManage>(parameters => parameters.Add(p => p.Id, "WO-SHELVE"));
+        await component.WaitForAssertionAsync(() =>
+            component.Find($"[data-testid='{WorkOrderManage.Elements.ShelveReason}']").ShouldNotBeNull());
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.ShelveReason}']")
+            .ChangeAsync(new() { Value = new string('r', InProgressToAssignedCommand.ReasonMaxLength + 1) });
+
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.CommandButton}Shelve']").ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            bus.LastCommand.ShouldBeNull();
+            component.Find($"[data-testid='{WorkOrderManage.Elements.ShelveReasonError}']").TextContent
+                .ShouldContain("cannot exceed");
+        });
+    }
+
+    [Test]
+    public async Task ShouldSendTrimmedReason_WhenShelveReasonIsValid()
+    {
+        await using var ctx = new BunitContext();
+        var user = Assignee("shelver");
+        var existing = InProgressOrder(user);
+        var bus = new StubSubmitBus(existing);
+        RegisterServices(ctx, bus, user);
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo("http://localhost/?Mode=Edit&Id=WO-SHELVE");
+
+        var component = ctx.Render<WorkOrderManage>(parameters => parameters.Add(p => p.Id, "WO-SHELVE"));
+        await component.WaitForAssertionAsync(() =>
+            component.Find($"[data-testid='{WorkOrderManage.Elements.ShelveReason}']").ShouldNotBeNull());
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.ShelveReason}']")
+            .ChangeAsync(new() { Value = "  Waiting on parts  " });
+
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.CommandButton}Shelve']").ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var command = bus.LastCommand.ShouldBeOfType<InProgressToAssignedCommand>();
+            command.Reason.ShouldBe("Waiting on parts");
+            navigationManager.Uri.ShouldContain("/workorder/search");
+        });
+    }
+
+    private static Employee Assignee(string userName)
+    {
+        var user = new Employee(userName, "Shel", "Ver", $"{userName}@example.com") { Id = Guid.NewGuid() };
+        user.AddRole(new Role("fulfiller", false, true));
+        return user;
+    }
+
+    private static WorkOrder InProgressOrder(Employee user) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            Number = "WO-SHELVE",
+            Title = "Existing",
+            Description = "Desc",
+            Status = WorkOrderStatus.InProgress,
+            Creator = user,
+            Assignee = user
+        };
+
     private static void RegisterServices(BunitContext ctx, IBus bus, Employee user)
     {
         ctx.Services.AddSingleton(bus);
@@ -255,6 +354,11 @@ public class WorkOrderManageSubmitTests
 
             if (request is EmployeeByUserNameQuery byUser)
             {
+                if (existing?.Assignee?.UserName == byUser.Username)
+                {
+                    return Task.FromResult((TResponse)(object)existing.Assignee);
+                }
+
                 var employee = new Employee(byUser.Username, "A", "B", "a@b.com");
                 return Task.FromResult((TResponse)(object)employee);
             }
