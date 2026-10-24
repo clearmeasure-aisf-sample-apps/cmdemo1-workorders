@@ -1380,19 +1380,37 @@ public class WorkOrderSearchTests
     [Test]
     public async Task Export_DownloadsCsvOfFilteredRows()
     {
-        await using var ctx = CreateContext();
+        var matching = new WorkOrder
+        {
+            Number = "WO-KEEP",
+            Title = "Say \"hi\", now",
+            Status = WorkOrderStatus.Assigned
+        };
+        var other = new WorkOrder
+        {
+            Number = "WO-DROP",
+            Title = "Leave this out",
+            Status = WorkOrderStatus.Draft
+        };
+        var bus = new StubStatusFilteredBus(matching, other);
+        await using var ctx = CreateContext(bus);
         var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js");
         module.SetupVoid("downloadCsv", _ => true).SetVoidResult();
         module.SetupVoid("setIndeterminate", _ => true).SetVoidResult();
         var component = ctx.Render<WorkOrderSearch>();
 
+        component.Find($"[data-testid='{WorkOrderSearch.Elements.ExportButton}']").TextContent.ShouldContain("Export CSV");
+        await component.Find($"#{WorkOrderSearch.Elements.StatusSelect}").ChangeAsync(new() { Value = WorkOrderStatus.Assigned.Key });
+
+        bus.LastSpecification!.StatusKey.ShouldBe(WorkOrderStatus.Assigned.Key);
         await component.Find($"[data-testid='{WorkOrderSearch.Elements.ExportButton}']").ClickAsync(new());
 
         var invocation = module.VerifyInvoke("downloadCsv");
         invocation.Arguments[0]!.ToString()!.ShouldStartWith("work-orders-");
         var csv = invocation.Arguments[1]!.ToString()!;
-        csv.ShouldContain("WO-001");
-        csv.ShouldContain("WO-002");
+        csv.ShouldContain("WO-KEEP");
+        csv.ShouldNotContain("WO-DROP");
+        csv.ShouldContain("\"Say \"\"hi\"\", now\"");
     }
 
     [Test]
@@ -1713,6 +1731,23 @@ public class WorkOrderSearchTests
         component.Find(".empty-results").TextContent.ShouldContain("No work orders found");
         component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardView}']").Count.ShouldBe(0);
         component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("0 of 0");
+    }
+
+    private sealed class StubStatusFilteredBus(WorkOrder matching, WorkOrder other) : StubBus
+    {
+        public override async Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        {
+            if (request is not WorkOrderSpecificationQuery specification)
+            {
+                return await base.Send(request);
+            }
+
+            _ = await base.Send<TResponse>(request);
+            var rows = specification.StatusKey == WorkOrderStatus.Assigned.Key
+                ? new[] { matching }
+                : new[] { matching, other };
+            return (TResponse)(object)rows;
+        }
     }
 
     private sealed class StubHeldSearchBus : StubBus
