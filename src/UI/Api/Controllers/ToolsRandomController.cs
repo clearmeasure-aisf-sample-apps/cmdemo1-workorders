@@ -77,27 +77,27 @@ public class ToolsRandomController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public IActionResult Post([FromQuery] int? min, [FromQuery] int? max)
     {
-        if (min is not int lower || max is not int upper)
+        if (min is not null && max is not null)
         {
-            return Problem(
-                detail: "Query parameters 'min' and 'max' are required.",
-                statusCode: StatusCodes.Status400BadRequest);
+            if (min.Value > max.Value)
+            {
+                return Problem(
+                    detail: "Query parameter 'min' must be less than or equal to 'max'.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var value = min.Value == max.Value ? min.Value : NextInclusive(min.Value, max.Value);
+            return new ContentResult
+            {
+                Content = value.ToString(CultureInfo.InvariantCulture),
+                ContentType = "text/plain; charset=utf-8",
+                StatusCode = StatusCodes.Status200OK
+            };
         }
 
-        if (lower > upper)
-        {
-            return Problem(
-                detail: "Query parameter 'min' must be less than or equal to 'max'.",
-                statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        var value = lower == upper ? lower : NextInclusive(lower, upper);
-        return new ContentResult
-        {
-            Content = value.ToString(CultureInfo.InvariantCulture),
-            ContentType = "text/plain; charset=utf-8",
-            StatusCode = StatusCodes.Status200OK
-        };
+        return Problem(
+            detail: "Query parameters 'min' and 'max' are required.",
+            statusCode: StatusCodes.Status400BadRequest);
     }
 
     private static int NextInclusive(int lower, int upper)
