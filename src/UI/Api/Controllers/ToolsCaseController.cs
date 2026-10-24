@@ -17,6 +17,16 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 [EnableRateLimiting(ApiRateLimiting.PolicyName)]
 public class ToolsCaseController : ControllerBase
 {
+    private static readonly Dictionary<string, Func<string, string>> CaseConverters =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["upper"] = static text => text.ToUpperInvariant(),
+            ["lower"] = static text => text.ToLowerInvariant(),
+            ["title"] = ToTitleCase,
+            ["kebab"] = static text => ToSeparated(text, '-'),
+            ["snake"] = static text => ToSeparated(text, '_')
+        };
+
     /// <summary>
     /// Returns <paramref name="request"/>.Text converted to the case named by <paramref name="request"/>.To.
     /// </summary>
@@ -30,22 +40,33 @@ public class ToolsCaseController : ControllerBase
     {
         if (request?.Text is null)
         {
-            return Problem(
-                detail: "JSON body field 'text' is required.",
-                statusCode: StatusCodes.Status400BadRequest);
+            return MissingText();
         }
 
-        var to = request.To?.Trim().ToLowerInvariant();
-        return to switch
+        if (!TryConvert(request.Text, request.To, out var converted))
         {
-            "upper" => Ok(new CaseResponse(request.Text.ToUpperInvariant())),
-            "lower" => Ok(new CaseResponse(request.Text.ToLowerInvariant())),
-            "title" => Ok(new CaseResponse(ToTitleCase(request.Text))),
-            "kebab" => Ok(new CaseResponse(ToSeparated(request.Text, '-'))),
-            "snake" => Ok(new CaseResponse(ToSeparated(request.Text, '_'))),
-            _ => UnknownTo()
-        };
+            return UnknownTo();
+        }
+
+        return Ok(new CaseResponse(converted));
     }
+
+    private static bool TryConvert(string text, string? to, out string converted)
+    {
+        converted = string.Empty;
+        if (string.IsNullOrWhiteSpace(to) || !CaseConverters.TryGetValue(to.Trim(), out var convert))
+        {
+            return false;
+        }
+
+        converted = convert(text);
+        return true;
+    }
+
+    private IActionResult MissingText() =>
+        Problem(
+            detail: "JSON body field 'text' is required.",
+            statusCode: StatusCodes.Status400BadRequest);
 
     private IActionResult UnknownTo() =>
         Problem(
