@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -73,6 +74,47 @@ public class ToolsRandomEndpointIntegrationTests
 
         var versioned = await client.GetAsync("/api/v1.0/tools/random?type=color");
         await AssertValidPayloadAsync(versioned, "color");
+    }
+
+    [TestCase("/api/tools/random?min=5&max=1")]
+    [TestCase("/api/v1.0/tools/random?min=9&max=2")]
+    public async Task Should_Return400_When_MinGreaterThanMax(string path)
+    {
+        var response = await _client!.PostAsync(path, content: null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("Query parameter 'min' must be less than or equal to 'max'.");
+    }
+
+    [TestCase("/api/tools/random?min=7&max=7", "7")]
+    [TestCase("/api/v1.0/tools/random?min=-3&max=-3", "-3")]
+    public async Task Should_ReturnThatValue_When_MinEqualsMax(string path, string expected)
+    {
+        var response = await _client!.PostAsync(path, content: null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        mediaType.ShouldNotBeNull();
+        mediaType.ShouldContain("text/plain");
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldBe(expected);
+    }
+
+    [TestCase("/api/tools/random?min=10&max=12", 10, 12)]
+    [TestCase("/api/v1.0/tools/random?min=-2&max=2", -2, 2)]
+    public async Task Should_ReturnValueInsideInclusiveRange_When_NormalRange(string path, int min, int max)
+    {
+        var response = await _client!.PostAsync(path, content: null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        mediaType.ShouldNotBeNull();
+        mediaType.ShouldContain("text/plain");
+        var body = await response.Content.ReadAsStringAsync();
+        int.TryParse(body, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value).ShouldBeTrue();
+        value.ShouldBeGreaterThanOrEqualTo(min);
+        value.ShouldBeLessThanOrEqualTo(max);
     }
 
     private static async Task AssertValidPayloadAsync(HttpResponseMessage response, string type)

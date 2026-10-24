@@ -65,6 +65,47 @@ public class ToolsRandomController : ControllerBase
         };
     }
 
+    /// <summary>
+    /// Returns a random integer in the inclusive range from <paramref name="min"/> to <paramref name="max"/> as plain text.
+    /// </summary>
+    /// <param name="min">Inclusive lower bound. Required.</param>
+    /// <param name="max">Inclusive upper bound. Required.</param>
+    [HttpPost]
+    [AllowAnonymous]
+    [Produces(MediaTypeNames.Text.Plain)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public IActionResult Post([FromQuery] int? min, [FromQuery] int? max)
+    {
+        if (min is not null && max is not null)
+        {
+            if (min.Value > max.Value)
+            {
+                return Problem(
+                    detail: "Query parameter 'min' must be less than or equal to 'max'.",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var value = min.Value == max.Value ? min.Value : NextInclusive(min.Value, max.Value);
+            return new ContentResult
+            {
+                Content = value.ToString(CultureInfo.InvariantCulture),
+                ContentType = "text/plain; charset=utf-8",
+                StatusCode = StatusCodes.Status200OK
+            };
+        }
+
+        return Problem(
+            detail: "Query parameters 'min' and 'max' are required.",
+            statusCode: StatusCodes.Status400BadRequest);
+    }
+
+    private static int NextInclusive(int lower, int upper)
+    {
+        var span = (long)upper - lower + 1;
+        return (int)(lower + Random.Shared.NextInt64(span));
+    }
+
     private static string GenerateAlphanumeric()
     {
         var buffer = new StringBuilder(AlphanumericLength);
