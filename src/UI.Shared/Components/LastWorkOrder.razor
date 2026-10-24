@@ -1,0 +1,32 @@
+﻿@implements Palermo.BlazorMvc.IListener<WorkOrderChangedEvent>
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits AppComponentBase
+
+@if (WorkOrderLastChanged != null)
+{
+    <NavLink href="@($"/workorder/manage/{WorkOrderLastChanged?.Number}?mode=Edit")"
+             class="nav-link"
+             title="Most recently viewed work order"
+             data-testid="@nameof(Elements.LastWorkOrderTooltip)">
+        <i class="bi bi-clock-history nav-icon" aria-hidden="true"></i>
+        <span class="nav-text">@WorkOrderLastChanged?.Number</span>
+    </NavLink>
+}
+
+@code {
+
+    private WorkOrder? WorkOrderLastChanged { get; set; }
+
+    public void Handle(WorkOrderChangedEvent theEvent)
+    {
+        var order = theEvent.Result.WorkOrder;
+        WorkOrderLastChanged = order;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public enum Elements
+    {
+        LastWorkOrderTooltip
+    }
+
+}
