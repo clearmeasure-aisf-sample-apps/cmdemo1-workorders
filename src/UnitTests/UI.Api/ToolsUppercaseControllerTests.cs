@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using Microsoft.AspNetCore.Authorization;
@@ -48,11 +49,20 @@ public class ToolsUppercaseControllerTests
     }
 
     [Test]
-    public void Post_Should_UseInvariantCulture_When_TurkishI()
+    public void Post_Should_UseInvariantCulture_When_CultureIsTurkish()
     {
-        var payload = ReadPayload(CreateController().Post(new UppercaseRequest("i")));
-
-        payload.Text.ShouldBe("I");
+        var previous = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+        try
+        {
+            "i".ToUpper(CultureInfo.CurrentCulture).ShouldBe("İ");
+            var payload = ReadPayload(CreateController().Post(new UppercaseRequest("i")));
+            payload.Text.ShouldBe("I");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Test]
