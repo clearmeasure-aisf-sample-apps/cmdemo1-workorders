@@ -1,6 +1,7 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -57,10 +58,33 @@ public static class DetailedHealthCheckResponseWriter
                         : null,
                     Tags = pair.Value.Tags.Any() ? pair.Value.Tags.ToList() : null
                 })
-                .ToList()
+                .ToList(),
+            Version = AssemblyVersion()
         };
 
         await context.Response.WriteAsJsonAsync(response, JsonOptions);
+    }
+
+    /// <summary>
+    /// Assembly informational version of this server, with the source-revision suffix after <c>+</c> removed.
+    /// </summary>
+    private static string? AssemblyVersion()
+    {
+        var informationalVersion = typeof(DetailedHealthCheckResponseWriter).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (string.IsNullOrWhiteSpace(informationalVersion))
+        {
+            return null;
+        }
+
+        var metadata = informationalVersion.IndexOf('+');
+        if (metadata < 0)
+        {
+            return informationalVersion;
+        }
+
+        var version = informationalVersion[..metadata];
+        return string.IsNullOrWhiteSpace(version) ? null : version;
     }
 
     internal sealed class DetailedHealthCheckResponse
@@ -85,6 +109,13 @@ public static class DetailedHealthCheckResponseWriter
 
         /// <summary>Per-component health check results with full diagnostic context.</summary>
         public required IReadOnlyList<DetailedHealthCheckEntry> Entries { get; init; }
+
+        /// <summary>
+        /// Assembly informational version of this server, with the source-revision suffix after <c>+</c> removed.
+        /// Null when the assembly names none. Always written, including when null.
+        /// </summary>
+        [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
+        public string? Version { get; init; }
     }
 
     internal sealed class DetailedHealthCheckEntry
