@@ -5,9 +5,11 @@ The UI.Server exposes these GET endpoints at its base URL for deployment checks 
 
 ## `/_healthcheck`
 
-Returns the overall status of the registered application health checks as plain text: `Healthy`, `Degraded`, or `Unhealthy`.
-Checks cover dependencies and process health, including the LLM gateway, database, API, and server. Healthy and degraded
-responses use HTTP 200; unhealthy responses use HTTP 503. This endpoint is available to unauthenticated health probes.
+Returns the overall status of the registered application health checks as plain text. The first line is `Healthy`,
+`Degraded`, or `Unhealthy`. The second line is `databaseVersion:` followed by the highest applied DbUp script number, or
+`null` when the journal cannot be read. Checks cover dependencies and process health, including the LLM gateway, database,
+API, and server. Healthy and degraded responses use HTTP 200; unhealthy responses use HTTP 503. This endpoint is available
+to unauthenticated health probes.
 
 ## `/_build`
 

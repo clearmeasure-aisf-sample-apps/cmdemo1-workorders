@@ -88,6 +88,16 @@ public record WorkOrderSpecificationQuery : IRequest<WorkOrder[]>, IRemotableReq
         SearchText = searchText;
     }
 
+    /// <summary>
+    /// When <paramref name="orderByDueDate"/> is true, results are ordered by due date with
+    /// work orders that have no due date last. Otherwise the handler keeps newest-first order.
+    /// </summary>
+    public void MatchDueDateOrder(bool orderByDueDate, bool descending = false)
+    {
+        OrderByDueDate = orderByDueDate;
+        DueDateDescending = orderByDueDate && descending;
+    }
+
     public string? StatusKey { get; set; }
 
     // ReSharper disable once MemberCanBePrivate.Global -- required for System.Text.Json round-trip serialization (remoting protocol)
@@ -130,6 +140,12 @@ public record WorkOrderSpecificationQuery : IRequest<WorkOrder[]>, IRemotableReq
 
     /// <summary>Free text matched against number, title, room, creator and assignee names.</summary>
     public string? SearchText { get; set; }
+
+    /// <summary>When true, order by due date with work orders that have no due date last.</summary>
+    public bool OrderByDueDate { get; set; }
+
+    /// <summary>When <see cref="OrderByDueDate"/> is true, latest due date first. Undated work orders stay last.</summary>
+    public bool DueDateDescending { get; set; }
 
     public WorkOrderStatus? Status => StatusKey != null ? WorkOrderStatus.FromKey(StatusKey) : null;
 }

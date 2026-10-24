@@ -405,6 +405,80 @@ public class WorkOrderSpecificationHandlerTests
     }
 
     [Test]
+    public async Task ShouldOrderByDueDateAscendingWithNullsLast()
+    {
+        var creator = new Employee(TestData.UserName("dueasc"), "Due", "Ascending", "dueasc@example.com");
+        var numbers = TestData.NumberSeries(3);
+        var early = new WorkOrder
+        {
+            Creator = creator, Number = numbers[0], DueDate = new DateOnly(2026, 1, 15),
+            CreatedDate = new DateTime(2026, 1, 1)
+        };
+        var later = new WorkOrder
+        {
+            Creator = creator, Number = numbers[1], DueDate = new DateOnly(2026, 6, 15),
+            CreatedDate = new DateTime(2026, 2, 1)
+        };
+        var undated = new WorkOrder
+        {
+            Creator = creator, Number = numbers[2], DueDate = null,
+            CreatedDate = new DateTime(2026, 3, 1)
+        };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.AddRange(early, later, undated);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchCreator(creator);
+        specification.MatchDueDateOrder(true);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe([early.Number, later.Number, undated.Number]);
+    }
+
+    [Test]
+    public async Task ShouldOrderByDueDateDescendingWithNullsLast()
+    {
+        var creator = new Employee(TestData.UserName("duedesc"), "Due", "Descending", "duedesc@example.com");
+        var numbers = TestData.NumberSeries(3);
+        var early = new WorkOrder
+        {
+            Creator = creator, Number = numbers[0], DueDate = new DateOnly(2026, 1, 15),
+            CreatedDate = new DateTime(2026, 3, 1)
+        };
+        var later = new WorkOrder
+        {
+            Creator = creator, Number = numbers[1], DueDate = new DateOnly(2026, 6, 15),
+            CreatedDate = new DateTime(2026, 2, 1)
+        };
+        var undated = new WorkOrder
+        {
+            Creator = creator, Number = numbers[2], DueDate = null,
+            CreatedDate = new DateTime(2026, 1, 1)
+        };
+
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.AddRange(early, later, undated);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchCreator(creator);
+        specification.MatchDueDateOrder(true, true);
+        var orders = await handler.Handle(specification);
+
+        orders.Select(o => o.Number).ShouldBe([later.Number, early.Number, undated.Number]);
+    }
+
+    [Test]
     public async Task ShouldMatchSearchTextCaseInsensitively()
     {
         var byTitleNumber = TestData.Number("S");
