@@ -1,0 +1,374 @@
+@using ClearMeasure.Bootcamp.Core.Model.StateCommands
+@using ClearMeasure.Bootcamp.Core.Services.Impl
+
+<PageTitle>@(Model.Mode == EditMode.New ? "New Work Order" : $"Work Order {Model.WorkOrderNumber}") - TechWeek Work Orders</PageTitle>
+
+<div class="work-order-container">
+    <div class="work-order-header">
+        <h2 title="Create or edit a work order" data-testid="@Elements.ManageHeadingTooltip">
+            Work Order #<span data-testid="@Elements.WorkOrderNumber">@Model.WorkOrderNumber</span>
+            @if (_workOrder != null && _workOrder.Id != Guid.Empty)
+            {
+                <button type="button" data-testid="@Elements.CopyWorkOrderNumber" class="btn btn-copy-number" aria-label="Copy work order number" @onclick="CopyWorkOrderNumberAsync">
+                    <i class="@(_copyButtonShowSuccess ? "bi bi-check2" : "bi bi-clipboard")"></i>
+                    Copy
+                </button>
+                <span role="status" aria-live="polite" aria-atomic="true" id="copy-status">
+                    @if (_copyButtonShowSuccess) { <text>Copied</text> }
+                </span>
+            }
+            <span class="status-badge @CurrentStatusBadgeCssClass" data-testid="@Elements.Status">@Model.Status</span>
+        </h2>
+        @if (Model.Mode != EditMode.New)
+        {
+            <a data-testid="@Elements.PrintLink" href="/workorder/print/@Model.WorkOrderNumber" target="_blank">Print</a>
+        }
+        <p data-testid="@Elements.RequiredFieldsNote">Fields marked with * are required.</p>
+    </div>
+
+    <EditForm Model="@Model" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+
+        <div class="form-container">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Creator</label>
+                    <div>
+                        <span class="value">@Model.CreatorFullName</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="AssignedToUserName" class="form-label">Assigned To</label>
+                    <div>
+                        @if (!Model.IsReadOnly)
+                        {
+                            <InputSelect data-testid="@Elements.Assignee" id="AssignedToUserName"
+                                         @bind-Value="Model.AssignedToUserName"
+                                         disabled="@(Model.WorkOrder != null && !Model.WorkOrder.CanReassign())"
+                                         class="form-control input-select">
+                                @foreach (var user in UserOptions)
+                                {
+                                    <option value="@user.Value">@user.Text</option>
+                                }
+                            </InputSelect>
+                        }
+                        else
+                        {
+                            <span data-testid="@Elements.AssigneeFullName" class="value">@Model.WorkOrder?.Assignee?.DisplayName</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="Title" class="form-label">Title <span class="required-indicator">*</span></label>
+                    <div>
+                        <InputText data-testid="@Elements.Title" id="Title" @bind-Value="Model.Title" class="form-control input-text" maxlength="@WorkOrder.TitleMaxLength" disabled="@Model.IsReadOnly"/>
+                        <button type="button" data-testid="@Elements.SpeakTitle" class="btn btn-sm btn-outline-secondary" aria-label="Speak title" title="Speak title" @onclick="SpeakTitleAsync">&#x1F50A;</button>
+                        @if (!Model.IsReadOnly)
+                        {
+                            <button type="button" data-testid="@Elements.DictateTitle" class="@DictateButtonClass(DictationTarget.Title)" aria-label="Dictate title" title="Dictate title" aria-pressed="@DictateAriaPressed(DictationTarget.Title)" @onclick="DictateTitleAsync">&#x1F3A4;</button>
+                            var titleRemaining = WorkOrder.TitleMaxLength - (Model.Title?.Length ?? 0);
+                            <small data-testid="@Elements.TitleCharCount"
+                                   class="@(titleRemaining == 0 ? "text-danger" : "text-muted")">
+                                @titleRemaining characters remaining
+                            </small>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="Description" class="form-label">Description <span class="required-indicator">*</span></label>
+                    <div>
+                        <InputTextArea data-testid="@Elements.Description" id="Description" @bind-Value="Model.Description" class="form-control input-textarea" maxlength="@WorkOrder.DescriptionMaxLength" disabled="@Model.IsReadOnly"/>
+                        <button type="button" data-testid="@Elements.SpeakDescription" class="btn btn-sm btn-outline-secondary" aria-label="Speak description" title="Speak description" @onclick="SpeakDescriptionAsync">&#x1F50A;</button>
+                        @if (!Model.IsReadOnly)
+                        {
+                            <button type="button" data-testid="@Elements.DictateDescription" class="@DictateButtonClass(DictationTarget.Description)" aria-label="Dictate description" title="Dictate description" aria-pressed="@DictateAriaPressed(DictationTarget.Description)" @onclick="DictateDescriptionAsync">&#x1F3A4;</button>
+                            var remaining = WorkOrder.DescriptionMaxLength - (Model.Description?.Length ?? 0);
+                            <small data-testid="@Elements.DescriptionCharCount"
+                                   class="@(remaining == 0 ? "text-danger" : "text-muted")">
+                                @remaining characters remaining
+                            </small>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="Instructions" class="form-label">Risks</label>
+                    <div>
+                        <InputTextArea data-testid="@Elements.Instructions" id="Instructions" @bind-Value="Model.Instructions" class="form-control input-textarea" maxlength="@WorkOrder.InstructionsMaxLength" disabled="@Model.IsReadOnly"/>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="@Elements.Priority" class="form-label">Priority</label>
+                    <div>
+                        <InputSelect data-testid="@Elements.Priority" id="@Elements.Priority" @bind-Value="Model.Priority" class="form-control input-select" disabled="@Model.IsReadOnly">
+                            @foreach (var priority in Enum.GetValues<WorkOrderPriority>())
+                            {
+                                <option value="@priority">@priority</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="@Elements.Building" class="form-label">Building</label>
+                    <div>
+                        <InputText data-testid="@Elements.Building" id="@Elements.Building" @bind-Value="Model.Building" class="form-control input-text" maxlength="@WorkOrder.BuildingMaxLength" disabled="@Model.IsReadOnly"/>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="@Elements.Floor" class="form-label">Floor</label>
+                    <div>
+                        <InputText data-testid="@Elements.Floor" id="@Elements.Floor" @bind-Value="Model.Floor" class="form-control input-text" maxlength="@WorkOrder.FloorMaxLength" disabled="@Model.IsReadOnly"/>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="RoomNumber" class="form-label">Room</label>
+                    <div>
+                        <InputTextArea data-testid="@Elements.RoomNumber" id="RoomNumber" @bind-Value="Model.RoomNumber" class="form-control input-textarea input-room" maxlength="@WorkOrder.RoomNumberEntryMaxLength" disabled="@Model.IsReadOnly"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="readonly-info">
+                <div class="form-group">
+                    <label class="form-label">Created Date</label>
+                    <div class="created-date-values">
+                        <span data-testid="@Elements.CreatedDate" class="value">@Model.CreatedDate</span>
+                        @if (Model.CreatedRelativeTime is not null)
+                        {
+                            <span data-testid="@Elements.CreatedRelativeTime" class="value created-relative-time" title="@Model.CreatedDate">@Model.CreatedRelativeTime</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Assigned Date</label>
+                    <span data-testid="@Elements.AssignedDate" class="value">@Model.AssignedDate</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Completed Date</label>
+                    <span data-testid="@Elements.CompletedDate" class="value">@Model.CompletedDate</span>
+                </div>
+
+                <div class="due-date-field form-group">
+                    @if (!Model.IsReadOnly)
+                    {
+                        <label for="DueDate" class="form-label">Due Date</label>
+                        <InputDate TValue="DateOnly?" data-testid="@Elements.DueDate" id="DueDate"
+                                   @bind-Value="Model.DueDateInput"
+                                   class="@($"form-control input-date {CurrentDueDateCssClass}")" />
+                        <ValidationMessage For="@(() => Model.DueDateInput)" data-testid="@Elements.DueDateValidation" />
+                        @if (!string.IsNullOrEmpty(CurrentDueDateUrgencyText))
+                        {
+                            <span class="visually-hidden">@CurrentDueDateUrgencyText</span>
+                        }
+                    }
+                    else
+                    {
+                        <label class="form-label">Due Date</label>
+                        <span data-testid="@Elements.DueDateDisplay" class="value @CurrentDueDateCssClass">@Model.DueDateDisplay@if (!string.IsNullOrEmpty(CurrentDueDateUrgencyText))
+                            {
+                                <span class="visually-hidden">@CurrentDueDateUrgencyText</span>
+                            }</span>
+                    }
+                </div>
+            </div>
+            
+            @if (_workOrder != null)
+            {
+                <WorkOrderChat/>
+            }
+
+            @if (_attachments.Length > 0)
+            {
+                <div class="attachments-section" data-testid="@Elements.AttachmentsSection">
+                    <h4>Attachments</h4>
+                    @if (_removeAttachmentError is not null)
+                    {
+                        <div role="alert" class="text-danger" data-testid="@Elements.AttachmentRemoveError">@_removeAttachmentError</div>
+                    }
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Content Type</th>
+                                <th>Size</th>
+                                <th>Uploaded By</th>
+                                <th>Upload Date</th>
+                                @if (_canRemoveAttachments)
+                                {
+                                    <th></th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var attachment in _attachments)
+                            {
+                                <tr data-testid="@Elements.AttachmentRow">
+                                    <td data-testid="@Elements.AttachmentFileName">@attachment.FileName</td>
+                                    <td data-testid="@Elements.AttachmentContentType">@attachment.ContentType</td>
+                                    <td data-testid="@Elements.AttachmentFileSize">@attachment.FileSize</td>
+                                    <td data-testid="@Elements.AttachmentUploadedBy">@attachment.UploadedBy?.GetFullName()</td>
+                                    <td data-testid="@Elements.AttachmentUploadedDate">@ClientDateFormatter.Format(attachment.UploadedDate)</td>
+                                    @if (_canRemoveAttachments)
+                                    {
+                                        <td>
+                                            @if (_pendingRemoveId == attachment.Id)
+                                            {
+                                                <span>Remove @attachment.FileName?</span>
+                                                <button type="button" class="btn btn-sm btn-danger" data-testid="@Elements.AttachmentRemoveConfirm" @onclick="() => ConfirmRemoveAttachmentAsync(attachment)">Confirm</button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" data-testid="@Elements.AttachmentRemoveCancel" @onclick="CancelRemoveAttachment">Cancel</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-testid="@Elements.AttachmentRemove" aria-label="@($"Remove attachment {attachment.FileName}")" @onclick="() => BeginRemoveAttachment(attachment)">Remove</button>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (_statusHistory.Length == 0)
+            {
+                <div class="status-history-section" data-testid="@Elements.StatusHistory">
+                    <h4>Status Change History</h4>
+                    <p data-testid="@Elements.StatusHistory">No status changes recorded.</p>
+                </div>
+            }
+            else
+            {
+                <div class="status-history-section" data-testid="@Elements.StatusHistory">
+                    <h4>Status Change History</h4>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>From Status</th>
+                                <th>To Status</th>
+                                <th>Changed By</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var change in _statusHistory)
+                            {
+                                <tr data-testid="@Elements.StatusHistoryRow">
+                                    <td data-testid="@Elements.StatusHistoryDate">@ClientDateFormatter.Format(TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago))</td>
+                                    <td data-testid="@Elements.StatusHistoryFromStatus">@change.FromStatus</td>
+                                    <td data-testid="@Elements.StatusHistoryToStatus">@change.ToStatus</td>
+                                    <td data-testid="@Elements.StatusHistoryChangedBy">@change.ChangedBy?.GetFullName()</td>
+                                    <td data-testid="@Elements.StatusHistoryReason">@change.Reason</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <div class="action-section">
+            @if (Model.IsReadOnly)
+            {
+                <div data-testid="@Elements.ReadOnlyMessage" class="readonly-message">This work order is read-only for you at this time.</div>
+            }
+            else
+            {
+                @if (ShowShelveReason)
+                {
+                    <div class="form-group">
+                        <label for="ShelveReason" class="form-label">Shelve reason <span class="required-indicator">*</span></label>
+                        <InputText id="ShelveReason" data-testid="@Elements.ShelveReason"
+                                   @bind-Value="Model.ShelveReason"
+                                   class="form-control input-text"
+                                   maxlength="@InProgressToAssignedCommand.ReasonMaxLength" />
+                        @if (!string.IsNullOrEmpty(_shelveReasonError))
+                        {
+                            <div role="alert" class="text-danger" data-testid="@Elements.ShelveReasonError">@_shelveReasonError</div>
+                        }
+                    </div>
+                }
+                <div class="action-buttons">
+                    @foreach (var command in SortedValidCommands)
+                    {
+                        var buttonTestId = Elements.CommandButton + command.TransitionVerbPresentTense;
+                        var buttonStyle = CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, ValidCommandNames);
+                        var buttonClass = "btn " + buttonStyle;
+                        <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLower()}")" type="submit" disabled="@_isSubmitting" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
+                            @command.TransitionVerbPresentTense
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </EditForm>
+</div>
+
+@code
+{
+
+    public enum Elements
+    {
+        Assignee,
+        Title,
+        AssigneeFullName,
+        RoomNumber,
+        Description,
+        Instructions,
+        AssignedDate,
+        CompletedDate,
+        CreatedDate,
+        CreatedRelativeTime,
+        DueDate,
+        DueDateValidation,
+        DueDateDisplay,
+        ReadOnlyMessage,
+        CommandButton,
+        WorkOrderNumber,
+        Status,
+        AttachmentsSection,
+        AttachmentRow,
+        AttachmentFileName,
+        AttachmentContentType,
+        AttachmentFileSize,
+        AttachmentUploadedBy,
+        AttachmentUploadedDate,
+        AttachmentRemove,
+        AttachmentRemoveConfirm,
+        AttachmentRemoveCancel,
+        AttachmentRemoveError,
+        SpeakTitle,
+        SpeakDescription,
+        DictateTitle,
+        DictateDescription,
+        DescriptionCharCount,
+        TitleCharCount,
+        RequiredFieldsNote,
+        ManageHeadingTooltip,
+        Priority,
+        Building,
+        Floor,
+        CopyWorkOrderNumber,
+        PrintLink,
+        StatusHistory,
+        StatusHistoryRow,
+        StatusHistoryDate,
+        StatusHistoryFromStatus,
+        StatusHistoryToStatus,
+        StatusHistoryChangedBy,
+        StatusHistoryReason,
+        ShelveReason,
+        ShelveReasonError
+    }
+}
