@@ -114,6 +114,20 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
     /// </summary>
     public bool CanFulfillWorkOrder() => Roles.Any(role => role.CanFulfillWorkOrder);
 
+    /// <summary>
+    /// Returns true when any role's name equals <paramref name="roleName"/>, ignoring case.
+    /// Returns false when <paramref name="roleName"/> is null or empty.
+    /// </summary>
+    public bool HasRole(string? roleName)
+    {
+        if (string.IsNullOrEmpty(roleName))
+        {
+            return false;
+        }
+
+        return Roles.Any(role => string.Equals(role.Name, roleName, StringComparison.OrdinalIgnoreCase));
+    }
+
     public void AddRole(Role role)
     {
         Roles.Add(role);
