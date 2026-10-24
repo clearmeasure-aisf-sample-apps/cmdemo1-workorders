@@ -162,9 +162,7 @@ public class WorkOrderTests
     [Test]
     public void ShouldTrimLeadingWhitespace_WhenTitleIsSet()
     {
-        var workOrder = new WorkOrder();
-
-        workOrder.Title = "  Fix the door";
+        var workOrder = new WorkOrder { Title = "  Fix the door" };
 
         workOrder.Title.ShouldBe("Fix the door");
     }
@@ -172,9 +170,7 @@ public class WorkOrderTests
     [Test]
     public void ShouldTrimTrailingWhitespace_WhenTitleIsSet()
     {
-        var workOrder = new WorkOrder();
-
-        workOrder.Title = "Fix the door  ";
+        var workOrder = new WorkOrder { Title = "Fix the door  " };
 
         workOrder.Title.ShouldBe("Fix the door");
     }
@@ -182,9 +178,7 @@ public class WorkOrderTests
     [Test]
     public void ShouldKeepInnerWhitespace_WhenTitleIsSet()
     {
-        var workOrder = new WorkOrder();
-
-        workOrder.Title = "Fix  the door";
+        var workOrder = new WorkOrder { Title = "Fix  the door" };
 
         workOrder.Title.ShouldBe("Fix  the door");
     }
