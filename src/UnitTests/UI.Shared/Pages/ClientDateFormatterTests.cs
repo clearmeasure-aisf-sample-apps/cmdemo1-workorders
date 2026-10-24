@@ -93,6 +93,48 @@ public class ClientDateFormatterTests
     }
 
     [Test]
+    public void ShouldFormatEnGbShortDate_WhenBrowserLanguageFallsBackToRegion()
+    {
+        var previous = CultureInfo.CurrentCulture;
+        var previousUi = CultureInfo.CurrentUICulture;
+        var previousDefault = CultureInfo.DefaultThreadCurrentCulture;
+        var previousDefaultUi = CultureInfo.DefaultThreadCurrentUICulture;
+        try
+        {
+            ClientDateFormatter.ApplyBrowserCulture("en-GB-not-a-culture");
+            ClientDateFormatter.Format(Due).ShouldBe("23/10/2026");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+            CultureInfo.CurrentUICulture = previousUi;
+            CultureInfo.DefaultThreadCurrentCulture = previousDefault;
+            CultureInfo.DefaultThreadCurrentUICulture = previousDefaultUi;
+        }
+    }
+
+    [Test]
+    public void ShouldFormatEnglishShortDate_WhenBrowserLanguageFallsBackToLanguage()
+    {
+        var previous = CultureInfo.CurrentCulture;
+        var previousUi = CultureInfo.CurrentUICulture;
+        var previousDefault = CultureInfo.DefaultThreadCurrentCulture;
+        var previousDefaultUi = CultureInfo.DefaultThreadCurrentUICulture;
+        try
+        {
+            ClientDateFormatter.ApplyBrowserCulture("en-ZZZZ");
+            ClientDateFormatter.Format(Due).ShouldBe("10/23/2026");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+            CultureInfo.CurrentUICulture = previousUi;
+            CultureInfo.DefaultThreadCurrentCulture = previousDefault;
+            CultureInfo.DefaultThreadCurrentUICulture = previousDefaultUi;
+        }
+    }
+
+    [Test]
     public void ShouldFormatEnGbShortDate_WhenBrowserLanguageHasExtraSubtag()
     {
         var previous = CultureInfo.CurrentCulture;

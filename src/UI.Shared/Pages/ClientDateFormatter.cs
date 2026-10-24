@@ -41,21 +41,34 @@ internal static class ClientDateFormatter
             return null;
         }
 
-        var tag = language.Trim();
-        if (TryGet(tag) is { } culture)
+        return Match(language.Trim());
+    }
+
+    private static CultureInfo? Match(string tag)
+    {
+        var direct = TryGet(tag);
+        if (direct is not null)
         {
-            return culture;
+            return direct;
         }
 
-        var parts = tag.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length >= 2 && TryGet($"{parts[0]}-{parts[1]}") is { } region)
+        return MatchParts(tag.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+    }
+
+    private static CultureInfo? MatchParts(string[] parts)
+    {
+        if (parts.Length >= 2)
         {
-            return region;
+            var region = TryGet($"{parts[0]}-{parts[1]}");
+            if (region is not null)
+            {
+                return region;
+            }
         }
 
-        if (parts.Length >= 1 && TryGet(parts[0]) is { } languageOnly)
+        if (parts.Length >= 1)
         {
-            return languageOnly;
+            return TryGet(parts[0]);
         }
 
         return null;
