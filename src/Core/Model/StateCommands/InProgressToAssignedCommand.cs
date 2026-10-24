@@ -5,6 +5,15 @@ public record InProgressToAssignedCommand(WorkOrder WorkOrder, Employee CurrentU
 {
     public const string Name = "Shelve";
 
+    /// <summary>Maximum length of <see cref="Reason"/>.</summary>
+    public const int ReasonMaxLength = 200;
+
+    /// <summary>
+    /// Why the work order is shelved. Required when the command is sent, at most
+    /// <see cref="ReasonMaxLength"/> characters after trimming.
+    /// </summary>
+    public string? Reason { get; init; }
+
     public override WorkOrderStatus GetBeginStatus()
     {
         return WorkOrderStatus.InProgress;

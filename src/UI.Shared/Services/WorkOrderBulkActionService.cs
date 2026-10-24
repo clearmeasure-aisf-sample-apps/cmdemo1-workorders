@@ -22,11 +22,12 @@ public sealed record BulkActionOutcome(int Updated, int Skipped)
 /// </summary>
 public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
 {
-    private static readonly HashSet<string> ExcludedFromChangeStatus = [SaveDraftCommand.Name, DraftToAssignedCommand.Name];
+    private static readonly HashSet<string> ExcludedFromChangeStatus =
+        [SaveDraftCommand.Name, DraftToAssignedCommand.Name, InProgressToAssignedCommand.Name];
 
     /// <summary>
     /// The status changes offered for the selection: every verb valid for at least one of
-    /// <paramref name="workOrders"/>, except Save and Assign (Assign needs an assignee and is its own action).
+    /// <paramref name="workOrders"/>, except Save, Assign (needs an assignee) and Shelve (needs a reason).
     /// </summary>
     public static IReadOnlyList<string> ChangeStatusOptions(IEnumerable<WorkOrder> workOrders, Employee currentUser) =>
         workOrders

@@ -256,19 +256,21 @@ public class WorkOrderTools
             new JsonSerializerOptions { WriteIndented = true });
     }
 
-    [McpServerTool(Name = "execute-work-order-command"), Description("Executes a state command on a work order. Available commands: DraftToAssignedCommand (requires assigneeUsername), AssignedToInProgressCommand, InProgressToAssignedCommand, Shelve, InProgressToCompleteCommand, AssignedToCancelledCommand.")]
+    [McpServerTool(Name = "execute-work-order-command"), Description("Executes a state command on a work order. Available commands: DraftToAssignedCommand (requires assigneeUsername), AssignedToInProgressCommand, InProgressToAssignedCommand, Shelve, InProgressToCompleteCommand, AssignedToCancelledCommand. Shelve and InProgressToAssignedCommand require a reason of at most 200 characters.")]
     public static Task<string> ExecuteWorkOrderCommand(
         IBus bus,
         [Description("The work order number")] string workOrderNumber,
         [Description("The command name (e.g., DraftToAssignedCommand)")] string commandName,
         [Description("Username of the employee executing the command")] string executingUsername,
-        [Description("Username of the employee to assign the work order to (required for DraftToAssignedCommand)")] string? assigneeUsername = null) =>
+        [Description("Username of the employee to assign the work order to (required for DraftToAssignedCommand)")] string? assigneeUsername = null,
+        [Description("Reason for shelving (required for Shelve and InProgressToAssignedCommand, at most 200 characters)")] string? reason = null) =>
         WorkOrderCommandExecutor.ExecuteCommandAsync(
             bus,
             workOrderNumber,
             commandName,
             executingUsername,
-            assigneeUsername);
+            assigneeUsername,
+            reason);
 
     [McpServerTool(Name = "list-work-order-attachments"), Description("Lists all attachment metadata for a given work order by its number.")]
     public static async Task<string> ListWorkOrderAttachments(

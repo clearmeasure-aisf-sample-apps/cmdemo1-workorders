@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using Microsoft.EntityFrameworkCore;
@@ -414,13 +415,16 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "InProgressToAssignedCommand", assigneeUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(
+            bus, workOrderNumber, "InProgressToAssignedCommand", assigneeUserName, reason: "Waiting on parts");
 
         await using var context2 = TestHost.GetRequiredService<DbContext>();
         var wo = context2.Set<WorkOrder>().Single(w => w.Number == workOrderNumber);
 
         wo.Status.ShouldBe(WorkOrderStatus.Assigned);
         result.ShouldContain("Assigned");
+        var change = context2.Set<WorkOrderStatusChange>().Single(row => row.WorkOrderId == wo.Id);
+        change.Reason.ShouldBe("Waiting on parts");
     }
 
     [Test]
@@ -476,13 +480,53 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "Shelve", assigneeUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(
+            bus, workOrderNumber, "Shelve", assigneeUserName, reason: "Waiting on parts");
 
         await using var context2 = TestHost.GetRequiredService<DbContext>();
         var wo = await context2.Set<WorkOrder>().SingleAsync(w => w.Number == workOrderNumber);
 
         wo.Status.ShouldBe(WorkOrderStatus.Assigned);
         result.ShouldContain("Assigned");
+        var change = context2.Set<WorkOrderStatusChange>().Single(row => row.WorkOrderId == wo.Id);
+        change.Reason.ShouldBe("Waiting on parts");
+    }
+
+    [Test]
+    public async Task ShouldRefuseShelveWithoutReason()
+    {
+        var assigneeUserName = TestData.UserName("gw");
+        var workOrderNumber = TestData.Number("W");
+        var assignee = new Employee(assigneeUserName, "Groundskeeper Willie", "MacDougal", "willie@test.com");
+        var inProgressOrder = new WorkOrder
+        {
+            Creator = assignee,
+            Assignee = assignee,
+            Number = workOrderNumber,
+            Title = "Needs a reason",
+            Status = WorkOrderStatus.InProgress
+        };
+
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(assignee);
+        context.Add(inProgressOrder);
+        await context.SaveChangesAsync();
+
+        var bus = TestHost.GetRequiredService<IBus>();
+        var missing = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "Shelve", assigneeUserName);
+        var tooLong = await WorkOrderTools.ExecuteWorkOrderCommand(
+            bus,
+            workOrderNumber,
+            "Shelve",
+            assigneeUserName,
+            reason: new string('x', InProgressToAssignedCommand.ReasonMaxLength + 1));
+
+        missing.ShouldBe("Shelve requires a reason.");
+        tooLong.ShouldBe($"Reason cannot exceed {InProgressToAssignedCommand.ReasonMaxLength} characters.");
+
+        await using var context2 = TestHost.GetRequiredService<DbContext>();
+        var wo = context2.Set<WorkOrder>().Single(w => w.Number == workOrderNumber);
+        wo.Status.ShouldBe(WorkOrderStatus.InProgress);
     }
 
     [Test]

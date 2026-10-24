@@ -1,3 +1,4 @@
+@using ClearMeasure.Bootcamp.Core.Model.StateCommands
 @using ClearMeasure.Bootcamp.Core.Services.Impl
 
 <PageTitle>@(Model.Mode == EditMode.New ? "New Work Order" : $"Work Order {Model.WorkOrderNumber}") - TechWeek Work Orders</PageTitle>
@@ -256,6 +257,7 @@
                                 <th>From Status</th>
                                 <th>To Status</th>
                                 <th>Changed By</th>
+                                <th>Reason</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -266,6 +268,7 @@
                                     <td data-testid="@Elements.StatusHistoryFromStatus">@change.FromStatus</td>
                                     <td data-testid="@Elements.StatusHistoryToStatus">@change.ToStatus</td>
                                     <td data-testid="@Elements.StatusHistoryChangedBy">@change.ChangedBy?.GetFullName()</td>
+                                    <td data-testid="@Elements.StatusHistoryReason">@change.Reason</td>
                                 </tr>
                             }
                         </tbody>
@@ -281,6 +284,20 @@
             }
             else
             {
+                @if (ShowShelveReason)
+                {
+                    <div class="form-group">
+                        <label for="ShelveReason" class="form-label">Shelve reason <span class="required-indicator">*</span></label>
+                        <InputText id="ShelveReason" data-testid="@Elements.ShelveReason"
+                                   @bind-Value="Model.ShelveReason"
+                                   class="form-control input-text"
+                                   maxlength="@InProgressToAssignedCommand.ReasonMaxLength" />
+                        @if (!string.IsNullOrEmpty(_shelveReasonError))
+                        {
+                            <div role="alert" class="text-danger" data-testid="@Elements.ShelveReasonError">@_shelveReasonError</div>
+                        }
+                    </div>
+                }
                 <div class="action-buttons">
                     @foreach (var command in SortedValidCommands)
                     {
@@ -347,6 +364,9 @@
         StatusHistoryDate,
         StatusHistoryFromStatus,
         StatusHistoryToStatus,
-        StatusHistoryChangedBy
+        StatusHistoryChangedBy,
+        StatusHistoryReason,
+        ShelveReason,
+        ShelveReasonError
     }
 }

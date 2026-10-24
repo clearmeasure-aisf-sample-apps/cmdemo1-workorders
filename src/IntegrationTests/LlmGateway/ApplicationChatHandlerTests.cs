@@ -333,7 +333,8 @@ public class ApplicationChatHandlerTests : LlmTestBase
                     bus,
                     workOrderNumber,
                     "Shelve",
-                    "gwillie");
+                    "gwillie",
+                    reason: "Waiting on parts");
                 await TestContext.Out.WriteLineAsync($"Deterministic shelve fallback: {fallbackResult}");
                 fallbackResult.ShouldNotContain("cannot be executed");
                 fallbackResult.ShouldNotContain("No work order found");

@@ -23,6 +23,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private bool _canRemoveAttachments;
     private Guid? _pendingRemoveId;
     private string? _removeAttachmentError;
+    private string? _shelveReasonError;
     private string _currentUserName = string.Empty;
     private string _preferredLanguage = "en-US";
     private DictationTarget _dictationTarget = DictationTarget.None;
@@ -57,6 +58,10 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     public WorkOrderManageModel Model { get; set; } = new();
     private List<SelectListItem> UserOptions { get; set; } = new();
     private IEnumerable<IStateCommand> ValidCommands { get; set; } = new List<IStateCommand>();
+
+    private bool ShowShelveReason =>
+        ValidCommands.Any(command => command.TransitionVerbPresentTense == InProgressToAssignedCommand.Name);
+
     private string? SelectedCommand { get; set; }
     private List<string>? _validCommandNames;
 
@@ -271,6 +276,21 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         var matchingCommand = SaveDraftCommand.WithPreviousRoomNumber(
             new StateCommandList().GetMatchingCommand(workOrder, currentUser, SelectedCommand!),
             Model.OriginalRoomNumber);
+
+        if (matchingCommand is InProgressToAssignedCommand shelve)
+        {
+            var reason = Model.ShelveReason?.Trim() ?? "";
+            if (reason.Length == 0 || reason.Length > InProgressToAssignedCommand.ReasonMaxLength)
+            {
+                _shelveReasonError = reason.Length == 0
+                    ? "A reason is required to shelve a work order."
+                    : $"Reason cannot exceed {InProgressToAssignedCommand.ReasonMaxLength} characters.";
+                return;
+            }
+
+            _shelveReasonError = null;
+            matchingCommand = shelve with { Reason = reason };
+        }
 
         var result = await Bus.Send(matchingCommand);
         EventBus.Notify(new WorkOrderChangedEvent(result));
