@@ -189,6 +189,12 @@ public class WorkOrder : EntityBase<WorkOrder>
         DueDateUrgencyCalculator.Calculate(this, TimeProvider.System);
 
     /// <summary>
+    /// Returns <c>true</c> unless the status is Complete or Cancelled.
+    /// </summary>
+    public bool IsOpen() =>
+        Status != WorkOrderStatus.Complete && Status != WorkOrderStatus.Cancelled;
+
+    /// <summary>
     /// Returns <c>true</c> when this work order's due date has passed and the work order
     /// is still open.
     /// </summary>
