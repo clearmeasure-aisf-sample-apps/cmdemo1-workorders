@@ -205,9 +205,14 @@ public class WorkOrderTools
         }
 
         var originalRoomNumber = workOrder.RoomNumber;
+        var originalDueDate = workOrder.DueDate;
         ApplySavePatches(workOrder, title, description, instructions, roomNumber, dueDate);
 
-        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser) { PreviousRoomNumber = originalRoomNumber });
+        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser)
+        {
+            PreviousRoomNumber = originalRoomNumber,
+            PreviousDueDate = originalDueDate
+        });
         return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
             new JsonSerializerOptions { WriteIndented = true });
     }
@@ -249,9 +254,13 @@ public class WorkOrderTools
             return validationError;
         }
 
+        var originalDueDate = workOrder.DueDate;
         ApplyUpdatePatches(workOrder, priority, building, roomNumber, dueDate);
 
-        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser));
+        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser)
+        {
+            PreviousDueDate = originalDueDate
+        });
         return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
             new JsonSerializerOptions { WriteIndented = true });
     }
