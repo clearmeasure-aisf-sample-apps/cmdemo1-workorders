@@ -164,7 +164,7 @@ Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, 
 | `/api/tools/base64` | POST | Base64 encode/decode of `text` (UTF-8); `mode` `encode` (default) or `decode` |
 | `/api/tools/guid-generator` | POST | Generate 1–100 UUIDs; optional `count` query param |
 | `/api/tools/random` | GET | Generate plain-text random values; required `type` query param: `number`, `string` (12 alphanumeric characters), `uuid`, or `color` (`#RRGGBB`) |
-| `/api/tools/slugify` | POST | Convert `text` to URL slug (lowercase; non-alphanumeric runs become single `-`) |
+| `/api/tools/slugify` | POST | Convert `text` to URL slug (lowercase; non-alphanumeric runs become single `-`; at most 80 characters, never ending in `-`) |
 | `/api/tools/case` | POST | Convert JSON `text` to the case named by `to` (`upper`, `lower`, `title`, `kebab`, or `snake`); an unknown `to` returns 400 |
 | `/api/tools/timestamp-converter` | GET | Convert Unix seconds to/from ISO-8601; supply exactly one query param, `unix` or `iso`; returns Unix seconds, ISO-8601 UTC, and a human-readable UTC string |
 | `/api/tools/due-date-check` | GET | Return due-date urgency for required `date` query param (`YYYY-MM-DD`), relative to today in America/Chicago, assuming an open work order |
