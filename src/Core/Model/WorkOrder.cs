@@ -170,6 +170,18 @@ public class WorkOrder : EntityBase<WorkOrder>
     }
 
     /// <summary>
+    /// Message shown when a newly chosen due date is earlier than today.
+    /// </summary>
+    public const string DueDateInThePastMessage = "The due date cannot be in the past.";
+
+    /// <summary>
+    /// A due date earlier than <paramref name="today"/> is refused when it differs from
+    /// <paramref name="previousDueDate"/>. A null date and an unchanged date stay allowed.
+    /// </summary>
+    public static bool IsNewlySetPastDueDate(DateOnly? dueDate, DateOnly? previousDueDate, DateOnly today) =>
+        dueDate is not null && dueDate != previousDueDate && dueDate.Value < today;
+
+    /// <summary>
     /// Returns the urgency classification for this work order's due date relative to today
     /// in America/Chicago.
     /// </summary>

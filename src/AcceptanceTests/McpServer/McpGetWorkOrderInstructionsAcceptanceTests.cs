@@ -49,7 +49,7 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
         const string description = "Mow the front lawn";
         const string instructions = "preschool quiet";
         const string room = "Front lawn";
-        const string dueDate = "2026-09-12";
+        const string dueDate = "2027-06-15";
         var createResult = await Helper.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {

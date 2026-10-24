@@ -48,7 +48,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
 
         const string instructions = "Watch for preschool play area";
         const string room = "Front lawn";
-        const string dueDate = "2026-09-12";
+        const string dueDate = "2027-06-15";
         var createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
