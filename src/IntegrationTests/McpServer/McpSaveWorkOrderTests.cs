@@ -31,7 +31,7 @@ public class McpSaveWorkOrderTests
             "Weekly mowing",
             creatorUserName,
             roomNumber: room,
-            dueDate: "2026-09-12",
+            dueDate: "2027-06-15",
             instructions: instructions);
 
         var number = ExtractWorkOrderNumber(createResult);
