@@ -61,7 +61,7 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var order = Faker<WorkOrder>();
         order.Title = $"[{TestTag}] set due date";
         order.Number = null;
-        var dueDate = new DateOnly(2026, 9, 12);
+        var dueDate = ChurchTimeZone.Today(TimeProvider.System).AddDays(7);
 
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
@@ -89,6 +89,44 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
 
         var rehydrated = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
         rehydrated!.DueDate.ShouldBe(dueDate);
+    }
+
+    [Test, Retry(2)]
+    public async Task ShouldRefusePastDueDateOnCreateThenSaveToday()
+    {
+        await LoginAsCurrentUser();
+
+        var order = Faker<WorkOrder>();
+        order.Title = $"[{TestTag}] past due date refused";
+        order.Number = null;
+
+        await Click(nameof(NavMenu.Elements.NewWorkOrder));
+        await Page.WaitForURLAsync("**/workorder/manage?mode=New");
+
+        var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
+        await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
+        order.Number = await woNumberLocator.InnerTextAsync();
+
+        await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
+        await Input(nameof(WorkOrderManage.Elements.Description), order.Description ?? "desc");
+
+        var today = ChurchTimeZone.Today(TimeProvider.System);
+        var dueDateInput = Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate));
+        await dueDateInput.FillAsync(today.AddDays(-1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        await Click(saveButtonTestId);
+
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDateValidation)))
+            .ToContainTextAsync(WorkOrder.DueDateInThePastMessage);
+        await Page.WaitForURLAsync("**/workorder/manage?mode=New");
+
+        await dueDateInput.FillAsync(today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        await Click(saveButtonTestId);
+        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
+
+        var dueDateCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + order.Number);
+        await Expect(dueDateCell).ToContainTextAsync(today.ToString("d", CultureInfo.GetCultureInfo("en-US")));
     }
 
     [Test, Retry(2)]
@@ -229,21 +267,39 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
 
         await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description ?? "desc");
-        var dueDateInput = Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate));
-        await dueDateInput.FillAsync(dueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-        var expectedUrgency = DueDateUrgencyCalculator.Calculate(
-            dueDate,
-            WorkOrderStatus.Draft,
-            TimeProvider.System);
-        var expectedCssClass = DueDateUrgencyCalculator.CssClass(expectedUrgency);
-        if (!string.IsNullOrEmpty(expectedCssClass))
+
+        var today = ChurchTimeZone.Today(TimeProvider.System);
+        if (dueDate >= today)
         {
-            await Expect(dueDateInput).ToHaveClassAsync(new Regex(expectedCssClass));
+            var dueDateInput = Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate));
+            await dueDateInput.FillAsync(dueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            var expectedUrgency = DueDateUrgencyCalculator.Calculate(
+                dueDate,
+                WorkOrderStatus.Draft,
+                TimeProvider.System);
+            var expectedCssClass = DueDateUrgencyCalculator.CssClass(expectedUrgency);
+            if (!string.IsNullOrEmpty(expectedCssClass))
+            {
+                await Expect(dueDateInput).ToHaveClassAsync(new Regex(expectedCssClass));
+            }
         }
 
         var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
+
+        if (dueDate < today)
+        {
+            await using var context = TestHost.NewDbContext();
+            var stored = await context.Set<WorkOrder>().SingleAsync(w => w.Number == order.Number);
+            stored.DueDate = dueDate;
+            await context.SaveChangesAsync();
+
+            await Page.GotoAsync("/counter");
+            await Click(nameof(NavMenu.Elements.Search));
+            await Page.WaitForURLAsync("**/workorder/search");
+        }
+
         return order;
     }
 

@@ -25,8 +25,9 @@ internal class BogusOverrides : AutoGeneratorOverride
                 order.Building = order.Building.ClampLength(1, WorkOrder.BuildingMaxLength);
                 order.Floor = order.Floor.ClampLength(1, WorkOrder.FloorMaxLength);
                 order.Priority = context.Faker.PickRandom(WorkOrderPriority.Low, WorkOrderPriority.Medium, WorkOrderPriority.High);
+                // SaveDraft refuses a newly set past due date, so generated dates stay null or in the future.
                 order.DueDate = context.Faker.Random.Bool()
-                    ? DateOnly.FromDateTime(context.Faker.Date.Past())
+                    ? DateOnly.FromDateTime(context.Faker.Date.Future())
                     : null;
                 break;
             case WorkOrderStatus:

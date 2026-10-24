@@ -31,7 +31,7 @@ public class McpSaveWorkOrderTests
             "Weekly mowing",
             creatorUserName,
             roomNumber: room,
-            dueDate: "2026-09-12",
+            dueDate: "2027-06-15",
             instructions: instructions);
 
         var number = ExtractWorkOrderNumber(createResult);
@@ -68,7 +68,7 @@ public class McpSaveWorkOrderTests
         const string title = "Original title";
         const string description = "Original description";
         const string instructions = "Original instructions";
-        var dueDate = new DateOnly(2026, 10, 4);
+        var dueDate = new DateOnly(2027, 6, 15);
 
         var createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
@@ -161,7 +161,7 @@ public class McpSaveWorkOrderTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var originalDueDate = new DateOnly(2026, 8, 30);
+        var originalDueDate = new DateOnly(2027, 6, 15);
 
         var createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
@@ -192,7 +192,7 @@ public class McpSaveWorkOrderTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var originalDueDate = new DateOnly(2026, 9, 1);
+        var originalDueDate = new DateOnly(2027, 6, 15);
 
         var createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
@@ -224,7 +224,7 @@ public class McpSaveWorkOrderTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var originalDueDate = new DateOnly(2026, 9, 2);
+        var originalDueDate = new DateOnly(2027, 6, 15);
 
         var createResult = await WorkOrderTools.CreateWorkOrder(
             bus,

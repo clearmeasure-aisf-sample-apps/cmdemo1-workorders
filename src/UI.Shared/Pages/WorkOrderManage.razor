@@ -165,6 +165,7 @@
                         <InputDate TValue="DateOnly?" data-testid="@Elements.DueDate" id="DueDate"
                                    @bind-Value="Model.DueDateInput"
                                    class="@($"form-control input-date {CurrentDueDateCssClass}")" />
+                        <ValidationMessage For="@(() => Model.DueDateInput)" data-testid="@Elements.DueDateValidation" />
                         @if (!string.IsNullOrEmpty(CurrentDueDateUrgencyText))
                         {
                             <span class="visually-hidden">@CurrentDueDateUrgencyText</span>
@@ -330,6 +331,7 @@
         CreatedDate,
         CreatedRelativeTime,
         DueDate,
+        DueDateValidation,
         DueDateDisplay,
         ReadOnlyMessage,
         CommandButton,

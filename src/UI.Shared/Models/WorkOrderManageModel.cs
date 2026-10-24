@@ -2,6 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
@@ -46,6 +47,16 @@ public class WorkOrderManageModel : IValidatableObject
     public DateOnly? DueDateInput { get; set; }
 
     /// <summary>
+    /// Due date loaded with the work order. An unchanged value is allowed even when it is before today.
+    /// </summary>
+    public DateOnly? OriginalDueDate { get; init; }
+
+    /// <summary>
+    /// Church calendar day the form validates against. The system clock is used when unset.
+    /// </summary>
+    public DateOnly? ChurchToday { get; init; }
+
+    /// <summary>
     /// Display text for the due date in the client culture's short-date pattern, when set.
     /// </summary>
     public string? DueDateDisplay { get; set; }
@@ -88,6 +99,14 @@ public class WorkOrderManageModel : IValidatableObject
             yield return new ValidationResult(
                 "Room number cannot exceed 50 characters.",
                 [nameof(RoomNumber)]);
+        }
+
+        var today = ChurchToday ?? ChurchTimeZone.Today(TimeProvider.System);
+        if (WorkOrder.IsNewlySetPastDueDate(DueDateInput, OriginalDueDate, today))
+        {
+            yield return new ValidationResult(
+                WorkOrder.DueDateInThePastMessage,
+                [nameof(DueDateInput)]);
         }
     }
 }
