@@ -51,7 +51,15 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public const int TitleMaxLength = 300;
 
-    public string? Title { get; set; } = "";
+    /// <summary>
+    /// Title of the work order. Leading and trailing whitespace is removed when the value is set,
+    /// which is the value stored on save. Whitespace between words is kept. A null value stays null.
+    /// </summary>
+    public string? Title
+    {
+        get;
+        set => field = value?.Trim();
+    } = "";
 
     public string? Description { get; set; } = "";
 
