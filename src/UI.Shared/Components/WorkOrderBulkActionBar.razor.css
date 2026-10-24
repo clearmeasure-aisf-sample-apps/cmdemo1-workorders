@@ -1,0 +1,107 @@
+/* Floating dark toolbar shown while rows are selected (#251) */
+.bulk-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.45rem 0.6rem 0.45rem 1rem;
+    border-radius: 10px;
+    background: #0f172a;
+    color: #f8fafc;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.3);
+}
+
+.bulk-count {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.bulk-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.bulk-select {
+    height: 32px;
+    max-width: 180px;
+    padding: 0 0.5rem;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    background: #1e293b;
+    color: #f8fafc;
+    font: inherit;
+    font-size: 13px;
+}
+
+.bulk-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding: 0 0.7rem;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    background: transparent;
+    color: #f8fafc;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bulk-button:hover:not(:disabled) {
+    background: #1e293b;
+}
+
+.bulk-button:disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.bulk-select:focus-visible,
+.bulk-button:focus-visible,
+.bulk-menu-item:focus-visible {
+    outline: 2px solid #a5b4fc;
+    outline-offset: 2px;
+}
+
+.bulk-more {
+    position: relative;
+}
+
+.bulk-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 6px);
+    z-index: 60;
+    min-width: 170px;
+    margin: 0;
+    padding: 0.35rem;
+    list-style: none;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    box-shadow: var(--shadow-popover);
+}
+
+.bulk-menu[hidden] {
+    display: none;
+}
+
+.bulk-menu-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.bulk-menu-item:hover {
+    background: var(--color-surface-2);
+}
