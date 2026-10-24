@@ -61,6 +61,8 @@ public class UiServiceRegistry : ServiceRegistry
             scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
         });
 
+        this.AddScoped<DatabaseMigrationVersionReader>();
+
         this.AddHealthChecks()
             .AddCheck<CanConnectToLlmServerHealthCheck>("LlmGateway")
             .AddCheck<CanConnectToDatabaseHealthCheck>("DataAccess")

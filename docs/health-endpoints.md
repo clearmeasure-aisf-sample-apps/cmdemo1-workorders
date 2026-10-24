@@ -5,9 +5,10 @@ checks and health dashboards.
 
 ## `/_healthcheck`
 
-Returns the overall status of the registered application health checks as plain text: `Healthy`, `Degraded`, or `Unhealthy`.
-The checks cover dependencies and process health, including the LLM gateway, database, API, and server. An unhealthy result
-is returned with an HTTP 503 status; healthy and degraded results use HTTP 200.
+Returns the overall status of the registered application health checks as plain text. The first line is `Healthy`,
+`Degraded`, or `Unhealthy`. The second line is `databaseVersion:` followed by the highest applied DbUp script number, or
+`null` when the journal cannot be read. The checks cover dependencies and process health, including the LLM gateway,
+database, API, and server. An unhealthy result is returned with an HTTP 503 status; healthy and degraded results use HTTP 200.
 
 ## `/_build`
 

@@ -236,7 +236,10 @@ public static class ServerApplication
         }).CacheOutput(OutputCachePolicyNames.VersionMetadata);
         app.MapLiveTelemetry();
         app.MapBuildFacts();
-        app.MapHealthChecks("_healthcheck");
+        app.MapHealthChecks("_healthcheck", new HealthCheckOptions
+        {
+            ResponseWriter = HealthCheckPlainTextResponseWriter.WriteAsync
+        });
         app.MapHealthChecks("_healthcheck/detailed", new HealthCheckOptions
         {
             ResponseWriter = DetailedHealthCheckResponseWriter.WriteAsync
