@@ -36,6 +36,11 @@ public class WorkOrderManageModel : IValidatableObject
     public string? CreatedDate { get; set; }
 
     /// <summary>
+    /// How long ago the work order was created, such as "3 days ago". Null when there is no created date.
+    /// </summary>
+    public string? CreatedRelativeTime { get; init; }
+
+    /// <summary>
     /// Optional due date bound to the native date picker. Null when unset.
     /// </summary>
     public DateOnly? DueDateInput { get; set; }
