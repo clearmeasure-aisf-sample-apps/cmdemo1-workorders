@@ -359,4 +359,86 @@ public class EmployeeTests
         var employee = new Employee() { PreferredLanguage = "de-DE" };
         employee.PreferredLanguage.ShouldBe("de-DE");
     }
+
+    [Test]
+    public void HasRole_WhenNameMatches_ShouldReturnTrue()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role("Manager", false, false));
+
+        employee.HasRole("Manager").ShouldBeTrue();
+    }
+
+    [Test]
+    public void HasRole_WhenNameDiffersOnlyByCase_ShouldReturnTrue()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role("Manager", false, false));
+
+        employee.HasRole("manager").ShouldBeTrue();
+    }
+
+    [Test]
+    public void HasRole_WhenEmployeeHasNoRoles_ShouldReturnFalse()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+
+        employee.HasRole("Manager").ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasRole_WhenRoleNameIsNull_ShouldReturnFalse()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role("Manager", false, false));
+
+        employee.HasRole(null).ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasRole_WhenRoleNameIsEmpty_ShouldReturnFalse()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role("Manager", false, false));
+
+        employee.HasRole(string.Empty).ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasRole_WhenNoRoleNameEquals_ShouldReturnFalse()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role("Worker", false, true));
+
+        employee.HasRole("Manager").ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasRole_WhenALaterRoleMatches_ShouldReturnTrue()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role("Worker", false, true));
+        employee.AddRole(new Role("Manager", true, false));
+
+        employee.HasRole("manager").ShouldBeTrue();
+    }
+
+    [Test]
+    public void HasRole_WhenRoleNameIsWhitespace_ShouldMatchOnlyThatName()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role(" ", false, false));
+
+        employee.HasRole(" ").ShouldBeTrue();
+        employee.HasRole("Manager").ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasRole_WhenStoredRoleNameIsNull_ShouldReturnFalse()
+    {
+        var employee = new Employee("jdoe", "Jane", "Doe", "jane@example.com");
+        employee.AddRole(new Role(null!, false, false));
+
+        employee.HasRole("Manager").ShouldBeFalse();
+    }
 }
