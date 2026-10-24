@@ -1,0 +1,50 @@
+@page "/workorder/print/{Number}"
+@layout PrintLayout
+
+<PageTitle>Print Work Order @Number</PageTitle>
+
+<div class="print-page">
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else if (_workOrder == null)
+{
+    <p data-testid="@Elements.NotFound">Work order not found</p>
+}
+else
+{
+    <button type="button" data-testid="@Elements.PrintButton" class="print-button" @onclick="PrintAsync">Print</button>
+    <h1>Work Order <span data-testid="@Elements.Number">@_workOrder.Number</span></h1>
+    <dl>
+        <dt>Title</dt><dd data-testid="@Elements.Title">@Or(_workOrder.Title)</dd>
+        <dt>Status</dt><dd data-testid="@Elements.Status">@_workOrder.FriendlyStatus</dd>
+        <dt>Priority</dt><dd data-testid="@Elements.Priority">@_workOrder.Priority</dd>
+        <dt>Building</dt><dd data-testid="@Elements.Building">@Or(_workOrder.Building)</dd>
+        <dt>Room</dt><dd data-testid="@Elements.RoomNumber">@Or(_workOrder.RoomNumber)</dd>
+        <dt>Due date</dt>
+        <dd data-testid="@Elements.DueDate">@DueDateText</dd>
+        <dt>Creator</dt><dd data-testid="@Elements.Creator">@Or(_workOrder.Creator?.DisplayName)</dd>
+        <dt>Assignee</dt><dd data-testid="@Elements.Assignee">@Or(_workOrder.Assignee?.DisplayName)</dd>
+        <dt>Created</dt><dd data-testid="@Elements.CreatedDate">@ChurchTime(_workOrder.CreatedDate)</dd>
+        <dt>Assigned</dt><dd data-testid="@Elements.AssignedDate">@ChurchTime(_workOrder.AssignedDate)</dd>
+        <dt>Completed</dt><dd data-testid="@Elements.CompletedDate">@ChurchTime(_workOrder.CompletedDate)</dd>
+        <dt>Description</dt><dd data-testid="@Elements.Description">@Or(_workOrder.Description)</dd>
+        <dt>Instructions</dt><dd data-testid="@Elements.Instructions">@Or(_workOrder.Instructions)</dd>
+    </dl>
+    <h2>Attachments</h2>
+    @if (_attachments.Length == 0)
+    {
+        <p data-testid="@Elements.AttachmentsNone">None</p>
+    }
+    else
+    {
+        <ul data-testid="@Elements.Attachments">
+            @foreach (var attachment in _attachments)
+            {
+                <li data-testid="@Elements.AttachmentFileName">@attachment.FileName</li>
+            }
+        </ul>
+    }
+}
+</div>
