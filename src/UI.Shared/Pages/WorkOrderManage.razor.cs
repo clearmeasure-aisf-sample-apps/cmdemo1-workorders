@@ -304,7 +304,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     }
 
     private static bool ShelveReasonLengthIsValid(string reason) =>
-        reason.Length > 0 && reason.Length <= InProgressToAssignedCommand.ReasonMaxLength;
+        reason is { Length: > 0 and <= InProgressToAssignedCommand.ReasonMaxLength };
 
     private static string ShelveReasonMessage(string reason) =>
         reason.Length == 0
