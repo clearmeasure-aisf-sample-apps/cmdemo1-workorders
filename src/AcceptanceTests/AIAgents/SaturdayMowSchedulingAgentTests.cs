@@ -122,7 +122,7 @@ public class SaturdayMowSchedulingAgentTests : AcceptanceTestBase
             var cell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + wo.Number);
             await Expect(cell).ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
             await Expect(cell).ToContainTextAsync(
-                wo.DueDate!.Value.ToString("MMM d, yyyy", CultureInfo.InvariantCulture));
+                wo.DueDate!.Value.ToString("d", CultureInfo.GetCultureInfo("en-US")));
         }
     }
 

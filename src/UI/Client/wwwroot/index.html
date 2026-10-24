@@ -40,6 +40,11 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="js/chat.js"></script>
+    <script>
+        window.churchBulletinBrowserCulture = function () {
+            try { return navigator.language || ""; } catch (e) { return ""; }
+        };
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 

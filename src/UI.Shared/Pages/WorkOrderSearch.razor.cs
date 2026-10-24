@@ -1,4 +1,3 @@
-using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
@@ -575,7 +574,7 @@ public partial class WorkOrderSearch : AppComponentBase
         return new WorkOrderSearchResultRow
         {
             WorkOrder = workOrder,
-            DueDateDisplay = workOrder.DueDate?.ToString("MMM d, yyyy", CultureInfo.InvariantCulture),
+            DueDateDisplay = ClientDateFormatter.Format(workOrder.DueDate),
             DueDateCssClass = DueDateUrgencyCalculator.CssClass(urgency),
             DueDateUrgencyText = DueDateUrgencyCalculator.ScreenReaderText(urgency),
             Urgency = urgency

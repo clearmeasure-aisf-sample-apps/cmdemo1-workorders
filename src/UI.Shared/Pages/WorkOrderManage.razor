@@ -217,7 +217,7 @@
                                     <td data-testid="@Elements.AttachmentContentType">@attachment.ContentType</td>
                                     <td data-testid="@Elements.AttachmentFileSize">@attachment.FileSize</td>
                                     <td data-testid="@Elements.AttachmentUploadedBy">@attachment.UploadedBy?.GetFullName()</td>
-                                    <td data-testid="@Elements.AttachmentUploadedDate">@attachment.UploadedDate.ToString("G")</td>
+                                    <td data-testid="@Elements.AttachmentUploadedDate">@ClientDateFormatter.Format(attachment.UploadedDate)</td>
                                     @if (_canRemoveAttachments)
                                     {
                                         <td>
@@ -265,7 +265,7 @@
                             @foreach (var change in _statusHistory)
                             {
                                 <tr data-testid="@Elements.StatusHistoryRow">
-                                    <td data-testid="@Elements.StatusHistoryDate">@TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago).ToString("G")</td>
+                                    <td data-testid="@Elements.StatusHistoryDate">@ClientDateFormatter.Format(TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago))</td>
                                     <td data-testid="@Elements.StatusHistoryFromStatus">@change.FromStatus</td>
                                     <td data-testid="@Elements.StatusHistoryToStatus">@change.ToStatus</td>
                                     <td data-testid="@Elements.StatusHistoryChangedBy">@change.ChangedBy?.GetFullName()</td>

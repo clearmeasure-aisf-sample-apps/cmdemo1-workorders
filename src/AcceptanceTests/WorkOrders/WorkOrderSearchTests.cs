@@ -758,13 +758,13 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         await Expect(dueDateSortBtn).ToHaveTextAsync("Due Date ▲");
         var firstDueDate = FirstRowCell(WorkOrderSearch.Elements.DueDateCell);
-        await Expect(firstDueDate).ToContainTextAsync("Jan");
+        await Expect(firstDueDate).ToContainTextAsync("1/1/2099");
 
         await dueDateSortBtn.ClickAsync();
         await TakeScreenshotAsync(4, "SortedDescending");
 
         await Expect(dueDateSortBtn).ToHaveTextAsync("Due Date ▼");
-        await Expect(firstDueDate).ToContainTextAsync("Dec");
+        await Expect(firstDueDate).ToContainTextAsync("12/31/2099");
     }
 
     [Test, Retry(2)]

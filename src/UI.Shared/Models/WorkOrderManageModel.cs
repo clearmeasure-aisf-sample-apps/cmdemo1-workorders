@@ -57,7 +57,7 @@ public class WorkOrderManageModel : IValidatableObject
     public DateOnly? ChurchToday { get; init; }
 
     /// <summary>
-    /// Display text for due date (MMM d, yyyy) when set.
+    /// Display text for the due date in the client culture's short-date pattern, when set.
     /// </summary>
     public string? DueDateDisplay { get; set; }
 
