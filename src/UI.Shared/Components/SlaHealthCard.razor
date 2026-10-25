@@ -1,0 +1,69 @@
+@implements Palermo.BlazorMvc.IListener<WorkOrderChangedEvent>
+@using ClearMeasure.Bootcamp.Core.Queries
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits AppComponentBase
+
+<div class="sla-health-card" data-testid="@Elements.SlaHealthCard">
+    @if (_health == null)
+    {
+        <div class="sla-health-loading">Loading...</div>
+    }
+    else if (_health.CurrentMonthPercentage is null)
+    {
+        <div class="sla-health-no-data">No data</div>
+    }
+    else
+    {
+        <div class="sla-health-content">
+            <div class="sla-health-header">
+                <h3 class="sla-health-title">This Month</h3>
+                @if (!string.IsNullOrEmpty(_trendText))
+                {
+                    <span class="sla-health-trend" title="@_trendText">@_trendText</span>
+                }
+            </div>
+            <div class="sla-health-value">@_health.CurrentMonthPercentage?.ToString("F0")%</div>
+            <div class="sla-health-progress">
+                <div class="sla-health-bar" role="progressbar" aria-valuenow="@((int?)_health.CurrentMonthPercentage)" aria-valuemin="0" aria-valuemax="100"
+                     style="width: @($"{_health.CurrentMonthPercentage:F0}%")">
+                </div>
+            </div>
+            <div class="sla-health-subtitle">@_health.CurrentMonthOrderCount work order@(_health.CurrentMonthOrderCount == 1 ? "" : "s")</div>
+        </div>
+    }
+</div>
+
+@code {
+    private SlaHealth? _health;
+    private string? _trendText;
+
+    public enum Elements
+    {
+        SlaHealthCard
+    }
+
+    public void Handle(WorkOrderChangedEvent theEvent)
+    {
+        InvokeAsync(LoadHealthAsync);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHealthAsync();
+    }
+
+    private async Task LoadHealthAsync()
+    {
+        try
+        {
+            _health = await Bus.Send(new SlaHealthQuery());
+        }
+        catch (Exception)
+        {
+            // Sidebar card is non-critical: never let a failed metrics query break the app shell.
+            _health = new SlaHealth();
+        }
+        _trendText = SlaHealth.TrendText(_health?.CurrentMonthPercentage, _health?.LastMonthPercentage);
+        await InvokeAsync(StateHasChanged);
+    }
+}
