@@ -1,4 +1,4 @@
-/* User menu (#251): initials avatar, name and roles; the menu holds Logout. */
+/* User menu (issue 251): initials avatar, name and roles; the menu holds Logout. */
 .user-menu {
     position: relative;
 }
@@ -32,8 +32,8 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    color: #ffffff;
+    background: var(--gradient-user-avatar);
+    color: var(--color-on-primary);
     display: inline-flex;
     align-items: center;
     justify-content: center;
