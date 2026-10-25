@@ -56,4 +56,28 @@ public class WorkOrderChatTests
         component.FindAll($"[data-testid='{nameof(WorkOrderChat.Elements.WorkOrderChatTooltip)}']")
             .ShouldBeEmpty();
     }
+
+    [Test]
+    public async Task ShouldUseAppPrimaryButtonOnWorkOrderChatSend()
+    {
+        await using var ctx = new BunitContext();
+
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var component = ctx.Render<WorkOrderChat>();
+
+        var workOrder = new WorkOrder
+        {
+            Number = "WO-003",
+            Assignee = new Employee("jpalermo", "Jeffrey", "Palermo", "jeffrey@example.com")
+        };
+        await component.InvokeAsync(() => component.Instance.Handle(new WorkOrderSelectedEvent(workOrder)));
+        component.Render();
+
+        var send = component.Find($"[data-testid='{nameof(WorkOrderChat.Elements.SendButton)}']");
+        send.ClassList.ShouldContain("btn-app");
+        send.ClassList.ShouldContain("btn-app--primary");
+        send.ClassList.ShouldNotContain("btn-secondary");
+    }
 }
