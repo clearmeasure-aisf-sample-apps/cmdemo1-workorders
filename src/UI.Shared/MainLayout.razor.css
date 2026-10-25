@@ -494,6 +494,33 @@
 }
 
 @media (max-width: 480px) {
+    .header-content {
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .header-leading {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .header-title {
+        overflow: hidden;
+    }
+
+    .header-title ::deep .breadcrumbs ol {
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+
+    .header-search {
+        order: 0;
+        flex: 0 0 auto;
+        max-width: none;
+        margin: 0;
+    }
+
     .content-wrapper {
         padding: 0.5rem;
     }
