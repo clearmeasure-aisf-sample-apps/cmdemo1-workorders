@@ -62,4 +62,50 @@ public class NavRailCssTests
         NavRailCss.SidebarClass(isNarrowViewport: false, navVisible: true).ShouldBe("modern-sidebar");
         NavRailCss.SidebarClass(isNarrowViewport: true, navVisible: false).ShouldBe("modern-sidebar");
     }
+
+    [Test]
+    public void ShouldStretchInFlowSidebar_AndKeepViewportOverlay()
+    {
+        var cssPath = Path.GetFullPath(Path.Combine(
+            TestContext.CurrentContext.TestDirectory,
+            "..", "..", "..", "..", "UI.Shared", "MainLayout.razor.css"));
+        var css = File.ReadAllText(cssPath);
+
+        var baseRule = CssRuleBlock(css, ".modern-sidebar");
+        baseRule.ShouldContain("min-height: 100vh");
+        baseRule.Replace("min-height: 100vh", "", StringComparison.Ordinal).ShouldNotContain("height: 100vh");
+
+        CssRuleBlock(css, ".modern-sidebar.rail-hidden").ShouldContain("height: 100vh");
+        CssRuleBlock(css, "@media (max-width: 768px)").ShouldContain("height: 100vh");
+
+        var iconRail = CssRuleBlock(css, "@media (min-width: 769px) and (max-width: 1023px)");
+        iconRail.ShouldContain("width: 72px");
+        iconRail.ShouldContain("margin-left: 0");
+    }
+
+    private static string CssRuleBlock(string css, string header)
+    {
+        var token = header + " {";
+        var start = css.IndexOf(token, StringComparison.Ordinal);
+        start.ShouldBeGreaterThanOrEqualTo(0);
+        var depth = 0;
+        var bodyStart = start + token.Length;
+        for (var i = bodyStart - 1; i < css.Length; i++)
+        {
+            if (css[i] == '{')
+            {
+                depth++;
+            }
+            else if (css[i] == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return css.Substring(bodyStart, i - bodyStart);
+                }
+            }
+        }
+
+        return "";
+    }
 }
