@@ -13,6 +13,7 @@ public record WeatherForecast
 
     public string? Summary { get; set; }
 
+    // ReSharper disable once UnusedMember.Global -- JSON field of the weather forecast API; the removed template page was its only C# reader
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 
 }
