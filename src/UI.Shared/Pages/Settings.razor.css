@@ -1,6 +1,11 @@
+/* Settings. Colours come from the tokens in app.css, including dark mode. */
+
 .settings-page {
     min-height: 100%;
     padding: 2rem 1rem 3rem;
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-body);
 }
 
 .settings-container {
@@ -8,36 +13,22 @@
     margin: 0 auto;
 }
 
-.settings-header {
-    margin-bottom: 2rem;
-}
-
-.settings-header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #2d3748;
-    margin: 0 0 0.5rem;
-    font-family: 'Georgia', serif;
-}
-
-.settings-subtitle {
-    margin: 0;
-    color: #718096;
-    font-size: 1rem;
+.settings-section {
+    margin-top: 2rem;
 }
 
 .settings-section-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #2d3748;
+    color: var(--color-text);
     margin: 0 0 1rem;
 }
 
-.settings-card {
-    background: white;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+.token-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
     padding: 1.5rem;
 }
 
@@ -60,11 +51,12 @@
 .settings-switch-labels {
     flex: 1;
     min-width: 0;
+    color: var(--color-text);
 }
 
 .settings-switch-labels .form-check-label {
     font-weight: 600;
-    color: #2d3748;
+    color: var(--color-text);
     cursor: pointer;
     display: block;
     margin-bottom: 0.35rem;
@@ -73,7 +65,7 @@
 .settings-helper {
     margin: 0;
     font-size: 0.9rem;
-    color: #718096;
+    color: var(--muted-on-page);
     line-height: 1.5;
 }
 
@@ -86,21 +78,4 @@
     .settings-dark-switch-row .form-check-input {
         align-self: flex-start;
     }
-}
-
-:global(html[data-theme="dark"]) .settings-header h1,
-:global(html[data-theme="dark"]) .settings-section-title,
-:global(html[data-theme="dark"]) .settings-switch-labels .form-check-label {
-    color: #f7fafc;
-}
-
-:global(html[data-theme="dark"]) .settings-subtitle,
-:global(html[data-theme="dark"]) .settings-helper {
-    color: #a0aec0;
-}
-
-:global(html[data-theme="dark"]) .settings-card {
-    background: #2d3748;
-    border-color: #4a5568;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
