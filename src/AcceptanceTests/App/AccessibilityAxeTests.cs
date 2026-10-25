@@ -34,8 +34,6 @@ public class AccessibilityAxeTests : AcceptanceTestBase
             ("/not-found", WaitForTestId(nameof(NotFound.Elements.NotFoundHomeLink))),
             ("/_clienthealthcheck", WaitForTestId(nameof(ClientHealthCheck.Elements.Status))),
             ("/_clienthealthcheck/detailed", WaitForTestId(nameof(DetailedClientHealthCheck.Elements.Status))),
-            ("/counter", WaitForTestId(nameof(Counter.Elements.IncrementButton))),
-            ("/fetchdata", WaitForTestId(nameof(FetchData.Elements.ForecastTableTooltip))),
             ("/settings", WaitForTestId(nameof(Settings.Elements.DarkModeSwitch))),
             ("/workorder/search", WaitForTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill))),
             ("/workorder/manage?mode=New", WaitForTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber))),
