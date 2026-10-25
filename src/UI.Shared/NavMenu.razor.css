@@ -1,4 +1,4 @@
-/* Sidebar navigation (#251): labelled sections, queue badges, indigo active bar. */
+/* Sidebar navigation (issue 251): labelled sections, queue badges, indigo active bar. */
 .nav-scrollable {
     background: transparent;
     padding: 0 0.75rem;
@@ -95,7 +95,7 @@
 }
 
 .nav-item ::deep .nav-link--danger .nav-icon {
-    color: #f87171;
+    color: var(--sidebar-danger);
 }
 
 .nav-item ::deep .nav-text {
@@ -124,12 +124,12 @@
 
 .nav-item ::deep .nav-link.active .nav-badge {
     background: var(--gradient-primary);
-    color: #ffffff;
+    color: var(--color-on-primary);
 }
 
 .nav-item ::deep .nav-link--danger .nav-badge {
-    background: #dc2626;
-    color: #ffffff;
+    background: var(--sidebar-danger-bg);
+    color: var(--color-on-primary);
 }
 
 .nav-item ::deep .nav-tag {

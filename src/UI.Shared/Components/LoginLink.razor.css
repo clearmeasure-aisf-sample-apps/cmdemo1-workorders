@@ -9,34 +9,29 @@
 	pseudo-class, so browsers drop any rule that uses it. Ancestor selectors
 	are written plainly instead; Razor only appends the scope identifier to
 	the last compound selector.
+
+	Blink colours are the `--login-link-bright` and `--login-link-dim` tokens
+	in app.css, including the dark-theme values.
 */
 a.login-link-blink,
 .auth-section a.login-link-blink {
-	--login-blink-bright: #2b6cb0;
-	--login-blink-dim: #4a5568;
 	font-weight: 600;
-	color: var(--login-blink-bright);
+	color: var(--login-link-bright);
 	opacity: 1;
 	transition: background-color 0.3s ease;
 	animation: login-link-blink-pulse 1.5s ease-in-out infinite;
-}
-
-html[data-theme="dark"] a.login-link-blink,
-html[data-theme="dark"] .auth-section a.login-link-blink {
-	--login-blink-bright: #90cdf4;
-	--login-blink-dim: #a0aec0;
 }
 
 @keyframes login-link-blink-pulse {
 	0%,
 	100% {
 		opacity: 1;
-		color: var(--login-blink-bright);
+		color: var(--login-link-bright);
 	}
 
 	50% {
 		opacity: 0.55;
-		color: var(--login-blink-dim);
+		color: var(--login-link-dim);
 	}
 }
 
@@ -45,7 +40,7 @@ html[data-theme="dark"] .auth-section a.login-link-blink {
 	.auth-section a.login-link-blink {
 		animation: none;
 		opacity: 1;
-		color: var(--login-blink-bright);
+		color: var(--login-link-bright);
 		font-weight: 700;
 		text-decoration: underline;
 		text-underline-offset: 0.2em;
@@ -53,7 +48,7 @@ html[data-theme="dark"] .auth-section a.login-link-blink {
 
 	.auth-section a.login-link-blink:hover,
 	.auth-section a.login-link-blink:focus {
-		color: var(--login-blink-bright);
+		color: var(--login-link-bright);
 		text-decoration: underline;
 		text-underline-offset: 0.2em;
 		opacity: 1;
