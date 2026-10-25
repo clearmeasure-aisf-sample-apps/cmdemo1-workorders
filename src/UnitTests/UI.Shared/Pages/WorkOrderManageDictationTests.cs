@@ -66,7 +66,7 @@ public class WorkOrderManageDictationTests
         {
             var element = component.Find($"[data-testid='{WorkOrderManage.Elements.DictateTitle}']");
             element.GetAttribute("aria-pressed").ShouldBe("true");
-            element.GetAttribute("class").ShouldNotBeNull().ShouldContain("btn-danger");
+            element.GetAttribute("class").ShouldNotBeNull().ShouldContain("btn-app--danger");
         });
 
         await component.Find($"[data-testid='{WorkOrderManage.Elements.DictateTitle}']").ClickAsync(new());
@@ -75,7 +75,7 @@ public class WorkOrderManageDictationTests
         {
             var element = component.Find($"[data-testid='{WorkOrderManage.Elements.DictateTitle}']");
             element.GetAttribute("aria-pressed").ShouldBe("false");
-            element.GetAttribute("class").ShouldNotBeNull().ShouldContain("btn-outline-secondary");
+            element.GetAttribute("class").ShouldNotBeNull().ShouldContain("btn-app--secondary");
         });
     }
 
