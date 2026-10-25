@@ -1,6 +1,8 @@
+using System.Text.RegularExpressions;
 using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
+using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -100,6 +102,40 @@ public class SettingsTests
             var status = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeStatus)}']");
             status.TextContent.ShouldBe("Dark mode is on.");
         });
+    }
+
+    [Test]
+    public async Task Settings_AuthenticatedUser_ShouldRenderPageHeaderAndTokenCard()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule(ThemePreferenceService.ThemeJsModulePath);
+        module.Setup<string>("getTheme").SetResult("light");
+        module.SetupVoid("syncDomFromTheme", _ => true).SetVoidResult();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Settings>());
+
+        component.FindComponents<PageHeader>().Count.ShouldBe(1);
+        component.Find("h1").TextContent.ShouldBe("Settings");
+        component.Find(".token-card").ShouldNotBeNull();
+        component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeSwitch)}']").GetAttribute("role").ShouldBe("switch");
+    }
+
+    [Test]
+    public void Settings_Stylesheet_ShouldUseDesignTokensWithoutDarkOverrides()
+    {
+        var path = Path.GetFullPath(Path.Combine(
+            NUnit.Framework.TestContext.CurrentContext.TestDirectory,
+            "..", "..", "..", "..", "UI.Shared", "Pages", "Settings.razor.css"));
+        File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
+        var css = File.ReadAllText(path);
+
+        css.ShouldContain(".token-card");
+        css.ShouldContain("var(--color-surface)");
+        css.ShouldContain("var(--color-text)");
+        css.ShouldContain("var(--font-sans)");
+        css.ShouldNotContain("Georgia");
+        css.ShouldNotContain("html[data-theme=\"dark\"]");
+        Regex.IsMatch(css, "#[0-9a-fA-F]{3,8}").ShouldBeFalse();
     }
 
     private static BunitContext CreateContext()

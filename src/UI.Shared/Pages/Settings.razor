@@ -2,14 +2,13 @@
 
 <div class="settings-page">
     <div class="settings-container">
-        <header class="settings-header">
-            <h1>Settings</h1>
-            <p class="settings-subtitle" data-testid="@nameof(Elements.SettingsSubtitle)">Manage display preferences for this browser.</p>
-        </header>
+        <PageHeader Title="Settings"
+                    Subtitle="Manage display preferences for this browser."
+                    SubtitleTestId="@nameof(Elements.SettingsSubtitle)" />
 
         <section class="settings-section" aria-labelledby="appearance-heading">
             <h2 id="appearance-heading" class="settings-section-title">Appearance</h2>
-            <div class="settings-card">
+            <div class="token-card">
                 <div class="form-check form-switch settings-dark-switch-row">
                     <input class="form-check-input"
                            type="checkbox"
