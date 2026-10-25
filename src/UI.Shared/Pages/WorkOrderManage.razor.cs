@@ -49,10 +49,10 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private string? CurrentDueDateUrgencyText =>
         DueDateUrgencyCalculator.ScreenReaderText(CurrentDueDateUrgency);
 
-    private string CurrentStatusBadgeCssClass =>
+    private StatusPill? CurrentStatusPill =>
         _workOrder == null
-            ? string.Empty
-            : StatusBadgeCssClassMapper.CssClass(_workOrder.Status);
+            ? null
+            : StatusPillPresenter.Present(_workOrder, CurrentDueDateUrgency == DueDateUrgency.Overdue);
 
     public WorkOrderManageModel Model { get; set; } = new();
     private List<SelectListItem> UserOptions { get; set; } = new();
@@ -192,7 +192,6 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             WorkOrder = workOrder,
             Mode = mode,
             WorkOrderNumber = workOrder.Number,
-            Status = workOrder.Status.FriendlyName,
             CreatorFullName = workOrder.Creator!.DisplayName,
             AssignedToUserName = workOrder.Assignee?.UserName,
             Title = workOrder.Title,
@@ -450,8 +449,18 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     private string DictateButtonClass(DictationTarget target)
     {
-        return _dictationTarget == target ? "btn btn-sm btn-danger" : "btn btn-sm btn-outline-secondary";
+        return _dictationTarget == target
+            ? "btn-app btn-app--danger btn-app--icon"
+            : "btn-app btn-app--secondary btn-app--icon";
     }
+
+    private static string CommandAppButtonClass(string commandStyle) =>
+        commandStyle switch
+        {
+            "btn-primary" => "btn-app btn-app--primary",
+            "btn-outline-danger" => "btn-app btn-app--danger",
+            _ => "btn-app btn-app--secondary"
+        };
 
     private string DictateAriaPressed(DictationTarget target)
     {

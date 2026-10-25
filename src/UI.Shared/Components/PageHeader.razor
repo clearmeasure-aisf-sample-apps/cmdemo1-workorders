@@ -2,7 +2,7 @@
 
 <header class="page-header">
     <div class="page-heading">
-        <h1 title="@TitleTooltip" data-testid="@TitleTestId">@Title</h1>
+        <h1 title="@TitleTooltip" data-testid="@TitleTestId">@Title@TitleAddon</h1>
         @if (Subtitle != null)
         {
             <p class="page-subtitle" data-testid="@SubtitleTestId">@Subtitle</p>
@@ -16,6 +16,9 @@
 @code {
     /// <summary>The page title shown in the h1.</summary>
     [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>Optional markup inside the title, after the title text. Omitted when null.</summary>
+    [Parameter] public RenderFragment? TitleAddon { get; set; }
 
     /// <summary>Tooltip text on the title.</summary>
     [Parameter] public string? TitleTooltip { get; set; }
