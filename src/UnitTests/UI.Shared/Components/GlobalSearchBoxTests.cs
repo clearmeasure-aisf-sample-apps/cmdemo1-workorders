@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
@@ -83,6 +84,52 @@ public class GlobalSearchBoxTests
         ctx.Render<GlobalSearchBox>();
 
         module.VerifyInvoke("initGlobalSearchShortcut");
+    }
+
+    [Test]
+    public async Task ShouldKeepSearchTestIds_WhenToggleClicked_AndNotNavigate()
+    {
+        await using var ctx = CreateContext();
+        var navigation = ctx.Services.GetRequiredService<NavigationManager>();
+        var before = navigation.Uri;
+        var component = ctx.Render<GlobalSearchBox>();
+
+        var toggle = component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchToggle}']");
+        toggle.GetAttribute("type").ShouldBe("button");
+        toggle.GetAttribute("aria-label").ShouldBe("Search work orders");
+        toggle.InnerHtml.ShouldContain("bi-search");
+        component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchInput}']").ShouldNotBeNull();
+        component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchSlashHint}']").TextContent.ShouldBe("Press / to search");
+
+        await toggle.ClickAsync(new MouseEventArgs());
+
+        navigation.Uri.ShouldBe(before);
+        component.Find($"#{GlobalSearchBox.InputId}").ShouldNotBeNull();
+    }
+
+    [Test]
+    public void ShouldCollapseSearchWithoutNewColors_InPhoneWidthStyles()
+    {
+        var searchCss = File.ReadAllText(RepoFile("UI.Shared", "Components", "GlobalSearchBox.razor.css"));
+        var layoutCss = File.ReadAllText(RepoFile("UI.Shared", "MainLayout.razor.css"));
+
+        searchCss.ShouldContain(".global-search-toggle");
+        searchCss.ShouldContain("max-width: 480px");
+        searchCss.ShouldContain(".global-search:focus-within .global-search-field");
+        searchCss.ShouldContain("var(--color-surface)");
+        searchCss.ShouldContain("var(--shadow-popover)");
+        Regex.IsMatch(searchCss, "#[0-9a-fA-F]{3,8}").ShouldBeFalse();
+
+        layoutCss.ShouldContain("flex-wrap: nowrap");
+        layoutCss.ShouldContain("order: 0");
+    }
+
+    private static string RepoFile(params string[] parts)
+    {
+        var path = Path.GetFullPath(Path.Combine(
+            new[] { NUnit.Framework.TestContext.CurrentContext.TestDirectory, "..", "..", "..", ".." }.Concat(parts).ToArray()));
+        File.Exists(path).ShouldBeTrue(path);
+        return path;
     }
 
     private static BunitContext CreateContext()
