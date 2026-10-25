@@ -27,7 +27,7 @@ public class WorkOrderManageDescriptionCharCountTests
         var caption = await component.WaitForElementAsync(
             $"[data-testid='{WorkOrderManage.Elements.DescriptionCharCount}']");
         caption.TextContent.Trim().ShouldBe("4000 characters remaining");
-        caption.ClassList.ShouldContain("text-muted");
+        caption.ClassList.ShouldContain("char-count");
     }
 
     [Test]

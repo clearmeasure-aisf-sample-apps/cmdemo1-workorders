@@ -65,7 +65,9 @@ public class AppCssLegacyRetirementTests
     [Test]
     public void IndexHtml_AppStylesheet_ShouldCacheBustThisChange()
     {
-        _indexHtml.ShouldContain("css/app.css?v=715");
+        _indexHtml.ShouldContain("css/app.css?v=716");
+        _appCss.ShouldContain("--color-primary-fill: #4f46e5");
+        _appCss.ShouldContain("--color-primary-fill-hover: #4338ca");
     }
 
     private string Rule(string selector)
