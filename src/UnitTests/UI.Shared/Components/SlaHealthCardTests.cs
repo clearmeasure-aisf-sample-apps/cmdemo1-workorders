@@ -216,6 +216,70 @@ public class SlaHealthCardTests
         trendElement.TextContent.ShouldBe("— flat at 75%");
     }
 
+    [Test]
+    public async Task ShouldRenderLoadedState_WithPercentageTrendAndBar()
+    {
+        var health = new SlaHealth
+        {
+            CurrentMonthPercentage = 85m,
+            LastMonthPercentage = 75m,
+            CurrentMonthOrderCount = 20,
+            LastMonthOrderCount = 20
+        };
+
+        var ctx = CreateContext(health);
+        var component = ctx.Render<SlaHealthCard>();
+
+        await Task.Delay(100);
+
+        var root = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']");
+        var className = root.GetAttribute("class");
+        className.ShouldNotBeNull();
+        className.ShouldContain("sla-health-card--loaded");
+        className.ShouldNotContain("sla-health-card--empty");
+        component.Find(".sla-health-value").TextContent.ShouldBe("85%");
+        component.Find(".sla-health-trend").TextContent.ShouldBe(SlaHealth.TrendText(85m, 75m));
+        var bar = component.Find(".sla-health-bar");
+        bar.GetAttribute("role").ShouldBe("progressbar");
+        bar.GetAttribute("style").ShouldNotBeNull().ShouldContain("width: 85%");
+    }
+
+    [Test]
+    public async Task ShouldRenderEmptyStateClass_WhenCurrentMonthPercentageIsNull()
+    {
+        var ctx = CreateContext(new SlaHealth { CurrentMonthPercentage = null });
+        var component = ctx.Render<SlaHealthCard>();
+
+        await Task.Delay(100);
+
+        var root = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']");
+        var className = root.GetAttribute("class");
+        className.ShouldNotBeNull();
+        className.ShouldContain("sla-health-card--empty");
+        className.ShouldNotContain("sla-health-card--loaded");
+        component.Find(".sla-health-no-data").TextContent.ShouldBe("No data");
+        component.FindAll(".sla-health-value").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public void ShouldStyleCardWithSidebarTokens_InsteadOfSuccessFill()
+    {
+        var path = Path.GetFullPath(Path.Combine(
+            NUnit.Framework.TestContext.CurrentContext.TestDirectory,
+            "..", "..", "..", "..", "UI.Shared", "Components", "SlaHealthCard.razor.css"));
+        File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
+        var css = File.ReadAllText(path);
+
+        css.ShouldContain(".sla-health-card--empty");
+        css.ShouldContain("color: var(--sidebar-muted)");
+        css.ShouldContain("border: 1px solid var(--sidebar-border)");
+        css.ShouldContain("background: var(--sidebar-badge-bg)");
+        css.ShouldContain("background: var(--sidebar-accent)");
+        css.ShouldNotContain("var(--status-complete-bg)");
+        css.ShouldNotContain("rgba(4, 120, 87, 0.2)");
+        css.ShouldNotContain("var(--font-size-small)");
+    }
+
     private static BunitContext CreateContext(SlaHealth? health = null)
     {
         var ctx = new BunitContext();

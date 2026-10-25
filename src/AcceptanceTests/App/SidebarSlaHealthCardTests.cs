@@ -12,6 +12,9 @@ public class SidebarSlaHealthCardTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         var card = Page.GetByTestId(nameof(SlaHealthCard.Elements.SlaHealthCard));
+        await Page.EvaluateAsync("() => { document.documentElement.setAttribute('data-theme', 'light'); }");
+        await Expect(card).ToBeVisibleAsync();
+        await Page.EvaluateAsync("() => { document.documentElement.setAttribute('data-theme', 'dark'); }");
         await Expect(card).ToBeVisibleAsync();
     }
 }
