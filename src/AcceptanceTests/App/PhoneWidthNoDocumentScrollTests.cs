@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.UI.Client.Pages;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using HomePage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
@@ -20,7 +21,7 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         var number = await SeedWorkOrderAsync();
 
-        await OpenAndAssertFitsAsync("/", Page.GetByTestId(nameof(Index.Elements.HomeTagline)));
+        await OpenAndAssertFitsAsync("/", Page.GetByTestId(nameof(HomePage.Elements.HomeTagline)));
         await OpenAndAssertFitsAsync("/workorder/search", Page.Locator(".table-scroll"));
         await AssertScrollsInsideAsync(".table-scroll");
         await AssertTopBarWrapsAsync();
