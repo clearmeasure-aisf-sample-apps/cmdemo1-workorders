@@ -7,16 +7,16 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 public class LoginLinkBlinkStyleTests
 {
     [Test]
-    public void ShouldPulseOpacityBetweenFullAndPartial_SoTheBlinkIsVisible()
+    public void ShouldKeepLoginLinkOpaque_SoContrastHoldsWhileTheColorPulses()
     {
         var css = ReadLoginLinkCss();
 
         var trough = Regex.Match(css, @"50%\s*\{[^}]*opacity:\s*(?<opacity>[\d.]+)");
         trough.Success.ShouldBeTrue("Expected a 50% keyframe declaring opacity");
+        double.Parse(trough.Groups["opacity"].Value).ShouldBe(1);
 
-        var opacity = double.Parse(trough.Groups["opacity"].Value);
-        opacity.ShouldBeGreaterThanOrEqualTo(0.55);
-        opacity.ShouldBeLessThanOrEqualTo(0.6);
+        css.ShouldContain("color: var(--login-link-bright)");
+        css.ShouldContain("color: var(--login-link-dim)");
     }
 
     [Test]

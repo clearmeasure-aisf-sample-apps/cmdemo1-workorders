@@ -30,7 +30,7 @@ a.login-link-blink,
 	}
 
 	50% {
-		opacity: 0.55;
+		opacity: 1;
 		color: var(--login-link-dim);
 	}
 }
