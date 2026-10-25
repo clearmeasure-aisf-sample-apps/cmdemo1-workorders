@@ -128,7 +128,7 @@
 
 .bar-item {
     display: grid;
-    grid-template-columns: 60px 1fr 30px;
+    grid-template-columns: 60px minmax(0, 1fr) 30px;
     gap: 0.75rem;
     align-items: center;
     font-size: 0.875rem;
@@ -200,7 +200,7 @@
 /* Charts Section */
 .reports-charts {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     gap: 1rem;
     min-width: 0;
     max-width: 100%;
@@ -225,8 +225,10 @@
 
 .chart-container {
     overflow-x: auto;
+    width: 100%;
     min-width: 0;
     max-width: 100%;
+    contain: paint;
     background: var(--color-background);
     border-radius: 6px;
     padding: 1.5rem;
@@ -338,7 +340,7 @@
     }
 
     .reports-charts {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 
@@ -357,15 +359,15 @@
     }
 
     .summary-cards {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .reports-charts {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .bar-item {
-        grid-template-columns: 50px 1fr 25px;
+        grid-template-columns: 50px minmax(0, 1fr) 25px;
         font-size: 0.75rem;
     }
 

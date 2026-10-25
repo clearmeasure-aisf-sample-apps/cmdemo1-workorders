@@ -52,8 +52,10 @@
 
 .table-scroll {
     overflow-x: auto;
+    width: 100%;
     max-width: 100%;
     min-width: 0;
+    contain: paint;
 }
 
 .teams-table {
@@ -434,10 +436,10 @@
     }
 
     .teams-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .vendors-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 }
