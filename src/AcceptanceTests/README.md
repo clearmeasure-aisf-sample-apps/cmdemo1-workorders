@@ -41,8 +41,8 @@ Not covered after a deployment:
 - **gRPC** (`WorkOrdersGrpcService`) and the WebSocket notifications (`/ws/notifications`): no acceptance tests.
 - **Chat client** (AI Agent and work order chat, the MCP tests with an LLM): they skip without `AI_OpenAI_ApiKey`.
 - **Telemetry export**: not visible to a browser.
-- Pages with no link in the app: `/counter` (`CounterTests`, full suite only), `/fetchdata` and
-  `/_clienthealthcheck/detailed` (no test opens them).
+- Pages with no link in the app: `/_clienthealthcheck/detailed` (no test opens it). `/counter` and
+  `/fetchdata` are removed; `RemovedTemplatePageTests` opens both and expects the Not Found page.
 
 Keep the set small. A new screen or a new connection gets one smoke test, the cheapest existing test that proves it;
 change this table in the same pull request. A filter that matches no test fails the deployment.
