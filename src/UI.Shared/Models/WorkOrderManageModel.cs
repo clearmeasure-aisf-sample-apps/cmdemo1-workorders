@@ -13,8 +13,6 @@ public class WorkOrderManageModel : IValidatableObject
 
     public string? WorkOrderNumber { get; set; }
 
-    public string? Status { get; set; }
-
     public string? CreatorFullName { get; set; }
 
     public string? AssignedToUserName { get; set; }
