@@ -519,8 +519,8 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
                         return box.top + box.height / 2;
                     });
                 const search = header.querySelector('.header-search').getBoundingClientRect();
-                const input = document.getElementById('GlobalSearchInput').getBoundingClientRect();
-                return [rect.height, Math.max(...mids) - Math.min(...mids), search.width, input.width];
+                const field = header.querySelector('.global-search-field').getBoundingClientRect();
+                return [rect.height, Math.max(...mids) - Math.min(...mids), search.width, field.width];
             }
             """);
 
