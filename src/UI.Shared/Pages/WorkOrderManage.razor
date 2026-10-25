@@ -84,7 +84,7 @@
                             <button type="button" data-testid="@Elements.DictateTitle" class="@DictateButtonClass(DictationTarget.Title)" aria-label="Dictate title" title="Dictate title" aria-pressed="@DictateAriaPressed(DictationTarget.Title)" @onclick="DictateTitleAsync"><i class="bi bi-mic" aria-hidden="true"></i></button>
                             var titleRemaining = WorkOrder.TitleMaxLength - (Model.Title?.Length ?? 0);
                             <small data-testid="@Elements.TitleCharCount"
-                                   class="@(titleRemaining == 0 ? "text-danger" : "text-muted")">
+                                   class="@(titleRemaining == 0 ? "text-danger" : "char-count")">
                                 @titleRemaining characters remaining
                             </small>
                         }
@@ -101,7 +101,7 @@
                             <button type="button" data-testid="@Elements.DictateDescription" class="@DictateButtonClass(DictationTarget.Description)" aria-label="Dictate description" title="Dictate description" aria-pressed="@DictateAriaPressed(DictationTarget.Description)" @onclick="DictateDescriptionAsync"><i class="bi bi-mic" aria-hidden="true"></i></button>
                             var remaining = WorkOrder.DescriptionMaxLength - (Model.Description?.Length ?? 0);
                             <small data-testid="@Elements.DescriptionCharCount"
-                                   class="@(remaining == 0 ? "text-danger" : "text-muted")">
+                                   class="@(remaining == 0 ? "text-danger" : "char-count")">
                                 @remaining characters remaining
                             </small>
                         }

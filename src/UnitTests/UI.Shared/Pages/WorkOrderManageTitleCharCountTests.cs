@@ -27,7 +27,7 @@ public class WorkOrderManageTitleCharCountTests
         var caption = await component.WaitForElementAsync(
             $"[data-testid='{WorkOrderManage.Elements.TitleCharCount}']");
         caption.TextContent.Trim().ShouldBe("300 characters remaining");
-        caption.ClassList.ShouldContain("text-muted");
+        caption.ClassList.ShouldContain("char-count");
     }
 
     [Test]

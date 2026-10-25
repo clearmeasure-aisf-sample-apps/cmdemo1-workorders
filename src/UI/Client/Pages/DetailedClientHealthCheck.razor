@@ -3,17 +3,17 @@
 
 <style>
     .health-status-healthy {
-        color: green;
+        color: var(--color-success);
         font-weight: bold;
     }
 
     .health-status-degraded {
-        color: #ffa500;
+        color: var(--color-warning);
         font-weight: bold;
     }
 
     .health-status-unhealthy {
-        color: red;
+        color: var(--color-danger);
         font-weight: bold;
     }
 
@@ -78,7 +78,7 @@ else
                 @if (entry.Value.Exception != null)
                 {
                     <div>
-                        <strong style="color:red">Exception:</strong>
+                        <strong class="health-status-unhealthy">Exception:</strong>
                         <div class="diagnostic-section">@entry.Value.Exception.ToString()</div>
                     </div>
                 }
