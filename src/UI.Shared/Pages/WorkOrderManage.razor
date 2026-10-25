@@ -4,33 +4,46 @@
 <PageTitle>@(Model.Mode == EditMode.New ? "New Work Order" : $"Work Order {Model.WorkOrderNumber}") - TechWeek Work Orders</PageTitle>
 
 <div class="work-order-container">
-    <div class="work-order-header">
-        <h2 title="Create or edit a work order" data-testid="@Elements.ManageHeadingTooltip">
-            Work Order #<span data-testid="@Elements.WorkOrderNumber">@Model.WorkOrderNumber</span>
+    <PageHeader Title="Work Order #" TitleTooltip="Create or edit a work order"
+                TitleTestId="@nameof(Elements.ManageHeadingTooltip)"
+                Subtitle="Fields marked with * are required."
+                SubtitleTestId="@nameof(Elements.RequiredFieldsNote)">
+        <TitleAddon>
+            <span data-testid="@Elements.WorkOrderNumber">@Model.WorkOrderNumber</span>
+        </TitleAddon>
+        <Actions>
+            @if (CurrentStatusPill is { } statusPill)
+            {
+                <span class="@statusPill.CssClass" data-testid="@Elements.Status">@statusPill.Text</span>
+                @if (statusPill.HiddenText is not null)
+                {
+                    <span class="visually-hidden">@statusPill.HiddenText</span>
+                }
+            }
             @if (_workOrder != null && _workOrder.Id != Guid.Empty)
             {
-                <button type="button" data-testid="@Elements.CopyWorkOrderNumber" class="btn btn-copy-number" aria-label="Copy work order number" @onclick="CopyWorkOrderNumberAsync">
-                    <i class="@(_copyButtonShowSuccess ? "bi bi-check2" : "bi bi-clipboard")"></i>
+                <button type="button" data-testid="@Elements.CopyWorkOrderNumber" class="btn-app btn-app--secondary" aria-label="Copy work order number" @onclick="CopyWorkOrderNumberAsync">
+                    <i class="@(_copyButtonShowSuccess ? "bi bi-check2" : "bi bi-clipboard")" aria-hidden="true"></i>
                     Copy
                 </button>
-                <span role="status" aria-live="polite" aria-atomic="true" id="copy-status">
+                <span role="status" aria-live="polite" aria-atomic="true" id="copy-status" class="copy-status">
                     @if (_copyButtonShowSuccess) { <text>Copied</text> }
                 </span>
             }
-            <span class="status-badge @CurrentStatusBadgeCssClass" data-testid="@Elements.Status">@Model.Status</span>
-        </h2>
-        @if (Model.Mode != EditMode.New)
-        {
-            <a data-testid="@Elements.PrintLink" href="/workorder/print/@Model.WorkOrderNumber" target="_blank">Print</a>
-        }
-        <p data-testid="@Elements.RequiredFieldsNote">Fields marked with * are required.</p>
-    </div>
+            @if (Model.Mode != EditMode.New)
+            {
+                <a data-testid="@Elements.PrintLink" class="btn-app btn-app--secondary" href="/workorder/print/@Model.WorkOrderNumber" target="_blank">
+                    <i class="bi bi-printer" aria-hidden="true"></i> Print
+                </a>
+            }
+        </Actions>
+    </PageHeader>
 
     <EditForm Model="@Model" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator/>
         <ValidationSummary/>
 
-        <div class="form-container">
+        <div class="form-container token-card">
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">Creator</label>
@@ -63,12 +76,12 @@
 
                 <div class="form-group">
                     <label for="Title" class="form-label">Title <span class="required-indicator">*</span></label>
-                    <div>
+                    <div class="control-row">
                         <InputText data-testid="@Elements.Title" id="Title" @bind-Value="Model.Title" class="form-control input-text" maxlength="@WorkOrder.TitleMaxLength" disabled="@Model.IsReadOnly"/>
-                        <button type="button" data-testid="@Elements.SpeakTitle" class="btn btn-sm btn-outline-secondary" aria-label="Speak title" title="Speak title" @onclick="SpeakTitleAsync">&#x1F50A;</button>
+                        <button type="button" data-testid="@Elements.SpeakTitle" class="btn-app btn-app--secondary btn-app--icon" aria-label="Speak title" title="Speak title" @onclick="SpeakTitleAsync"><i class="bi bi-volume-up" aria-hidden="true"></i></button>
                         @if (!Model.IsReadOnly)
                         {
-                            <button type="button" data-testid="@Elements.DictateTitle" class="@DictateButtonClass(DictationTarget.Title)" aria-label="Dictate title" title="Dictate title" aria-pressed="@DictateAriaPressed(DictationTarget.Title)" @onclick="DictateTitleAsync">&#x1F3A4;</button>
+                            <button type="button" data-testid="@Elements.DictateTitle" class="@DictateButtonClass(DictationTarget.Title)" aria-label="Dictate title" title="Dictate title" aria-pressed="@DictateAriaPressed(DictationTarget.Title)" @onclick="DictateTitleAsync"><i class="bi bi-mic" aria-hidden="true"></i></button>
                             var titleRemaining = WorkOrder.TitleMaxLength - (Model.Title?.Length ?? 0);
                             <small data-testid="@Elements.TitleCharCount"
                                    class="@(titleRemaining == 0 ? "text-danger" : "text-muted")">
@@ -80,12 +93,12 @@
 
                 <div class="form-group">
                     <label for="Description" class="form-label">Description <span class="required-indicator">*</span></label>
-                    <div>
+                    <div class="control-row">
                         <InputTextArea data-testid="@Elements.Description" id="Description" @bind-Value="Model.Description" class="form-control input-textarea" maxlength="@WorkOrder.DescriptionMaxLength" disabled="@Model.IsReadOnly"/>
-                        <button type="button" data-testid="@Elements.SpeakDescription" class="btn btn-sm btn-outline-secondary" aria-label="Speak description" title="Speak description" @onclick="SpeakDescriptionAsync">&#x1F50A;</button>
+                        <button type="button" data-testid="@Elements.SpeakDescription" class="btn-app btn-app--secondary btn-app--icon" aria-label="Speak description" title="Speak description" @onclick="SpeakDescriptionAsync"><i class="bi bi-volume-up" aria-hidden="true"></i></button>
                         @if (!Model.IsReadOnly)
                         {
-                            <button type="button" data-testid="@Elements.DictateDescription" class="@DictateButtonClass(DictationTarget.Description)" aria-label="Dictate description" title="Dictate description" aria-pressed="@DictateAriaPressed(DictationTarget.Description)" @onclick="DictateDescriptionAsync">&#x1F3A4;</button>
+                            <button type="button" data-testid="@Elements.DictateDescription" class="@DictateButtonClass(DictationTarget.Description)" aria-label="Dictate description" title="Dictate description" aria-pressed="@DictateAriaPressed(DictationTarget.Description)" @onclick="DictateDescriptionAsync"><i class="bi bi-mic" aria-hidden="true"></i></button>
                             var remaining = WorkOrder.DescriptionMaxLength - (Model.Description?.Length ?? 0);
                             <small data-testid="@Elements.DescriptionCharCount"
                                    class="@(remaining == 0 ? "text-danger" : "text-muted")">
@@ -189,8 +202,8 @@
 
             @if (_attachments.Length > 0)
             {
-                <div class="attachments-section" data-testid="@Elements.AttachmentsSection">
-                    <h4>Attachments</h4>
+                <div class="attachments-section token-card" data-testid="@Elements.AttachmentsSection">
+                    <h2 class="card-title">Attachments</h2>
                     @if (_removeAttachmentError is not null)
                     {
                         <div role="alert" class="text-danger" data-testid="@Elements.AttachmentRemoveError">@_removeAttachmentError</div>
@@ -224,12 +237,12 @@
                                             @if (_pendingRemoveId == attachment.Id)
                                             {
                                                 <span>Remove @attachment.FileName?</span>
-                                                <button type="button" class="btn btn-sm btn-danger" data-testid="@Elements.AttachmentRemoveConfirm" @onclick="() => ConfirmRemoveAttachmentAsync(attachment)">Confirm</button>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" data-testid="@Elements.AttachmentRemoveCancel" @onclick="CancelRemoveAttachment">Cancel</button>
+                                                <button type="button" class="btn-app btn-app--danger" data-testid="@Elements.AttachmentRemoveConfirm" @onclick="() => ConfirmRemoveAttachmentAsync(attachment)">Confirm</button>
+                                                <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.AttachmentRemoveCancel" @onclick="CancelRemoveAttachment">Cancel</button>
                                             }
                                             else
                                             {
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-testid="@Elements.AttachmentRemove" aria-label="@($"Remove attachment {attachment.FileName}")" @onclick="() => BeginRemoveAttachment(attachment)">Remove</button>
+                                                <button type="button" class="btn-app btn-app--danger" data-testid="@Elements.AttachmentRemove" aria-label="@($"Remove attachment {attachment.FileName}")" @onclick="() => BeginRemoveAttachment(attachment)">Remove</button>
                                             }
                                         </td>
                                     }
@@ -242,15 +255,15 @@
 
             @if (_statusHistory.Length == 0)
             {
-                <div class="status-history-section" data-testid="@Elements.StatusHistory">
-                    <h4>Status Change History</h4>
+                <div class="status-history-section token-card" data-testid="@Elements.StatusHistory">
+                    <h2 class="card-title">Status Change History</h2>
                     <p data-testid="@Elements.StatusHistory">No status changes recorded.</p>
                 </div>
             }
             else
             {
-                <div class="status-history-section" data-testid="@Elements.StatusHistory">
-                    <h4>Status Change History</h4>
+                <div class="status-history-section token-card" data-testid="@Elements.StatusHistory">
+                    <h2 class="card-title">Status Change History</h2>
                     <table class="table table-sm">
                         <thead>
                             <tr>
@@ -278,7 +291,7 @@
             }
         </div>
 
-        <div class="action-section">
+        <div class="action-section token-card">
             @if (Model.IsReadOnly)
             {
                 <div data-testid="@Elements.ReadOnlyMessage" class="readonly-message">This work order is read-only for you at this time.</div>
@@ -304,7 +317,7 @@
                     {
                         var buttonTestId = Elements.CommandButton + command.TransitionVerbPresentTense;
                         var buttonStyle = CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, ValidCommandNames);
-                        var buttonClass = "btn " + buttonStyle;
+                        var buttonClass = CommandAppButtonClass(buttonStyle);
                         <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLower()}")" type="submit" disabled="@_isSubmitting" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
                             @command.TransitionVerbPresentTense
                         </button>

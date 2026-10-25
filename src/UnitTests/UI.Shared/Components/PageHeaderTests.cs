@@ -57,4 +57,25 @@ public class PageHeaderTests
 
         component.FindAll(".page-subtitle").Count.ShouldBe(0);
     }
+
+    [Test]
+    public async Task ShouldRenderTitleAddonInsideHeading()
+    {
+        await using var ctx = new BunitContext();
+        RenderFragment addon = builder =>
+        {
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "data-testid", "NumberId");
+            builder.AddContent(2, "42");
+            builder.CloseElement();
+        };
+
+        var component = ctx.Render<PageHeader>(p => p
+            .Add(c => c.Title, "Work Order #")
+            .Add(c => c.TitleAddon, addon));
+
+        var heading = component.Find("header.page-header .page-heading h1");
+        heading.TextContent.ShouldBe("Work Order #42");
+        component.Find("h1 [data-testid='NumberId']").TextContent.ShouldBe("42");
+    }
 }
