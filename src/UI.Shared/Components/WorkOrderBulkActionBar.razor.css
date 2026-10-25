@@ -1,4 +1,4 @@
-/* Floating dark toolbar shown while rows are selected (#251) */
+/* Floating dark toolbar shown while rows are selected (issue 251) */
 .bulk-bar {
     display: inline-flex;
     align-items: center;
@@ -6,9 +6,9 @@
     flex-wrap: wrap;
     padding: 0.45rem 0.6rem 0.45rem 1rem;
     border-radius: 10px;
-    background: #0f172a;
-    color: #f8fafc;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.3);
+    background: var(--bulk-bg);
+    color: var(--bulk-fg);
+    box-shadow: var(--shadow-bulk);
 }
 
 .bulk-count {
@@ -26,10 +26,10 @@
     height: 32px;
     max-width: 180px;
     padding: 0 0.5rem;
-    border: 1px solid #334155;
+    border: 1px solid var(--bulk-border);
     border-radius: 6px;
-    background: #1e293b;
-    color: #f8fafc;
+    background: var(--bulk-control-bg);
+    color: var(--bulk-fg);
     font: inherit;
     font-size: 13px;
 }
@@ -40,10 +40,10 @@
     justify-content: center;
     height: 32px;
     padding: 0 0.7rem;
-    border: 1px solid #334155;
+    border: 1px solid var(--bulk-border);
     border-radius: 6px;
     background: transparent;
-    color: #f8fafc;
+    color: var(--bulk-fg);
     font: inherit;
     font-size: 13px;
     font-weight: 600;
@@ -51,18 +51,18 @@
 }
 
 .bulk-button:hover:not(:disabled) {
-    background: #1e293b;
+    background: var(--bulk-control-bg);
 }
 
 .bulk-button:disabled {
-    color: #94a3b8;
+    color: var(--bulk-muted);
     cursor: not-allowed;
 }
 
 .bulk-select:focus-visible,
 .bulk-button:focus-visible,
 .bulk-menu-item:focus-visible {
-    outline: 2px solid #a5b4fc;
+    outline: 2px solid var(--bulk-focus);
     outline-offset: 2px;
 }
 
