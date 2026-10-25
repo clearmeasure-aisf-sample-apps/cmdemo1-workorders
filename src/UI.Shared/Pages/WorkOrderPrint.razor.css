@@ -1,4 +1,4 @@
-.print-page { background: #fff; color: #000; padding: 1.5rem; min-height: 100vh; }
+.print-page { background: #fff; color: #000; padding: 1.5rem; min-height: 100vh; min-width: 0; max-width: 100%; }
 .print-page dt { font-weight: bold; margin-top: .5rem; }
 .print-page dd { margin: 0; }
 @media print {

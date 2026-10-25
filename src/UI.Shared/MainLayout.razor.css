@@ -460,6 +460,26 @@
         padding: 0.5rem 0.75rem;
     }
 
+    .header-leading {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .header-actions {
+        flex-wrap: wrap;
+        flex-shrink: 1;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .header-actions ::deep .user-name,
+    .header-actions ::deep .user-roles {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 9rem;
+    }
+
     .header-search {
         order: 3;
         flex: 1 1 100%;

@@ -2,6 +2,8 @@
 .teams-page {
     color: var(--color-text);
     font-size: var(--font-size-body);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .teams-container {
@@ -50,6 +52,8 @@
 
 .table-scroll {
     overflow-x: auto;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .teams-table {

@@ -2,11 +2,14 @@
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     min-height: 100vh;
     padding: 2rem;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .weather-container {
-    max-width: 1200px;
+    max-width: min(1200px, 100%);
     margin: 0 auto;
+    min-width: 0;
 }
 
 .weather-header {
@@ -68,6 +71,8 @@
 
 .table-responsive {
     overflow-x: auto;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .weather-table {

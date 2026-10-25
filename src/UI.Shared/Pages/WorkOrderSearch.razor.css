@@ -3,6 +3,8 @@
 .search-page {
     color: var(--color-text);
     font-size: var(--font-size-body);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .search-container {
@@ -137,6 +139,8 @@
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
     padding: 1.25rem 1.5rem 1.5rem;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .filters-card-header {
@@ -353,6 +357,10 @@
     .filters-grid {
         grid-template-columns: 1fr;
     }
+
+    .filter-switches {
+        flex-wrap: wrap;
+    }
 }
 
 /* Results card: header, table, footer with bulk bar and pagination */
@@ -463,11 +471,15 @@
 /* Below the full-width layout the table scrolls inside its card instead of the page */
 .table-scroll {
     overflow-x: auto;
+    max-width: 100%;
+    min-width: 0;
 }
 
 /* Board view: a column per status; narrow widths scroll inside the card instead of the page */
 .board-scroll {
     overflow-x: auto;
+    max-width: 100%;
+    min-width: 0;
     padding: 0 1.5rem 1.5rem;
 }
 
