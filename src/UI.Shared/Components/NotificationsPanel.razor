@@ -1,0 +1,102 @@
+@namespace ClearMeasure.Bootcamp.UI.Shared.Components
+@inherits Microsoft.AspNetCore.Components.ComponentBase
+
+@if (IsOpen)
+{
+    <div class="notifications-panel"
+         tabindex="-1">
+
+        <section class="notifications-section" aria-labelledby="section-overdue">
+            <h3 id="section-overdue" class="section-title">Overdue & Due Today</h3>
+            @if (Data?.OverdueAndDueToday.Length > 0)
+            {
+                <div class="cards-container">
+                    @foreach (var order in Data.OverdueAndDueToday)
+                    {
+                        <a href="/workorder/manage/@order.Number?mode=Edit" class="notification-card" @onclick="OnClose">
+                            <div class="notification-card-header">
+                                <span class="card-number">@order.Number</span>
+                                <span class="card-due-date" data-due-urgency="@GetDueUrgency(order)">
+                                    @GetDueDateText(order.DueDate)
+                                </span>
+                            </div>
+                            <p class="card-title">@order.Title</p>
+                            <div class="card-footer">
+                                @if (order.Assignee != null)
+                                {
+                                    <span class="card-assignee">@order.Assignee.DisplayName</span>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="empty-state">No overdue or due-today work orders</p>
+            }
+        </section>
+
+        <section class="notifications-section" aria-labelledby="section-new">
+            <h3 id="section-new" class="section-title">Newly Assigned (Last 7 Days)</h3>
+            @if (Data?.NewlyAssignedLast7Days.Length > 0)
+            {
+                <div class="cards-container">
+                    @foreach (var order in Data.NewlyAssignedLast7Days)
+                    {
+                        <a href="/workorder/manage/@order.Number?mode=Edit" class="notification-card" @onclick="OnClose">
+                            <div class="notification-card-header">
+                                <span class="card-number">@order.Number</span>
+                                <span class="card-status" data-status="@order.Status.Key">@order.Status</span>
+                            </div>
+                            <p class="card-title">@order.Title</p>
+                            <div class="card-footer">
+                                @if (order.Assignee != null)
+                                {
+                                    <span class="card-assignee">@order.Assignee.DisplayName</span>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="empty-state">No newly assigned work orders</p>
+            }
+        </section>
+
+        <section class="notifications-section" aria-labelledby="section-changed">
+            <h3 id="section-changed" class="section-title">Status Changed (Last 7 Days)</h3>
+            @if (Data?.CreatedByMeStatusChangedLast7Days.Length > 0)
+            {
+                <div class="cards-container">
+                    @foreach (var order in Data.CreatedByMeStatusChangedLast7Days)
+                    {
+                        <a href="/workorder/manage/@order.Number?mode=Edit" class="notification-card" @onclick="OnClose">
+                            <div class="notification-card-header">
+                                <span class="card-number">@order.Number</span>
+                                <span class="card-status" data-status="@order.Status.Key">@order.Status</span>
+                            </div>
+                            <p class="card-title">@order.Title</p>
+                            <div class="card-footer">
+                                @if (order.Assignee != null)
+                                {
+                                    <span class="card-assignee">Assigned to: @order.Assignee.DisplayName</span>
+                                }
+                                else
+                                {
+                                    <span class="card-assignee">Unassigned</span>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="empty-state">No work orders with status changes</p>
+            }
+        </section>
+    </div>
+}
