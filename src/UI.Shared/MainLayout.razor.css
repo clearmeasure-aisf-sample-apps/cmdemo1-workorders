@@ -1,0 +1,536 @@
+/* App shell (#251): navy sidebar, light content area, top bar with breadcrumbs, search and user menu.
+   Colours come from the tokens in app.css so dark mode needs no per-rule overrides. */
+.modern-app {
+    display: flex;
+    min-height: 100vh;
+    background: var(--color-page);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+}
+
+/* Sidebar */
+.modern-sidebar {
+    width: 260px;
+    flex: 0 0 260px;
+    align-self: stretch;
+    background: linear-gradient(180deg, var(--sidebar-from) 0%, var(--sidebar-to) 100%);
+    color: var(--sidebar-text);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 100vh;
+    height: auto;
+    z-index: 1000;
+    overflow-y: auto;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, width 0.2s ease;
+}
+
+.modern-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modern-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modern-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar-header {
+    padding: 1.25rem 1rem 1rem;
+    margin: 0 0.75rem;
+    border-bottom: 1px solid var(--sidebar-border);
+}
+
+.church-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.church-icon.brand-mark {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--gradient-primary);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.brand-block {
+    min-width: 0;
+}
+
+.brand-text h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.25;
+    font-family: var(--font-sans);
+    color: var(--sidebar-text-strong);
+}
+
+.brand-subtitle {
+    margin: 0.15rem 0 0;
+    font-size: 12px;
+    color: var(--sidebar-muted);
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 0.5rem 0 1rem;
+}
+
+.sidebar-footer {
+    padding: 0.75rem 1rem;
+    margin: 0 0.75rem;
+    border-top: 1px solid var(--sidebar-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.sidebar-footer ::deep a,
+.health-check-link {
+    color: var(--sidebar-muted) !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding: 0.4rem 0.5rem !important;
+    border-radius: var(--radius-control) !important;
+    position: static !important;
+}
+
+.sidebar-footer ::deep a:hover,
+.health-check-link:hover {
+    color: var(--sidebar-text-strong) !important;
+    background: var(--sidebar-hover) !important;
+}
+
+/* Main column */
+.main-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-width: 0;
+    transition: margin-left 0.25s ease;
+}
+
+.modern-app.rail-collapsed .main-container {
+    margin-left: 0;
+}
+
+.modern-sidebar.rail-hidden {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    box-shadow: none;
+}
+
+/* Top bar */
+.modern-header {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    min-height: 64px;
+    max-width: 100%;
+}
+
+.header-leading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.header-title {
+    min-width: 0;
+}
+
+.header-search {
+    flex: 1 1 320px;
+    max-width: 480px;
+    min-width: 0;
+    margin: 0 auto;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.nav-rail-toggle,
+.icon-button {
+    position: relative;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height);
+    height: var(--control-height);
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--muted-on-page);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-rail-toggle:hover,
+.icon-button:hover {
+    background: var(--color-surface-2);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+}
+
+.icon-button[aria-disabled="true"] {
+    cursor: default;
+}
+
+.icon-button[aria-disabled="true"]:hover {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--muted-on-page);
+}
+
+.nav-rail-toggle:focus-visible,
+.icon-button:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.nav-rail-toggle i,
+.icon-button i {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.badge-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    background: var(--color-danger);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.user-section, .auth-section {
+    display: flex;
+    align-items: center;
+    padding-left: 0.75rem;
+    margin-left: 0.25rem;
+    border-left: 1px solid var(--color-border);
+}
+
+.auth-section ::deep a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-control);
+}
+
+.auth-section ::deep a:hover {
+    background: var(--color-primary-tint);
+}
+
+/* Content */
+.modern-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-page);
+}
+
+.content-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1.75rem 2rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Site copyright footer (main column, below page body) */
+.site-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.site-footer-inner {
+    padding: 0.75rem 2rem;
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.footer-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* The version line is short; it keeps its width and the left side wraps instead. */
+.footer-right {
+    flex: 0 0 auto;
+    max-width: 50%;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.site-footer-line {
+    display: block;
+    font-size: 13px;
+    color: var(--muted-on-page);
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.site-footer-link {
+    margin-left: 0.35rem;
+    color: var(--muted-on-page);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.site-footer-link:hover {
+    color: var(--color-text);
+}
+
+.site-footer-link:focus {
+    outline: none;
+}
+
+.site-footer-link:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.site-footer-note {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 12px;
+    color: var(--muted-on-page);
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 999;
+    display: block;
+}
+
+/* Below 1024px the search box narrows before anything wraps */
+@media (max-width: 1023px) {
+    .header-content {
+        padding: 0.75rem 1rem;
+    }
+
+    .header-search {
+        flex-basis: 200px;
+    }
+
+    .content-wrapper {
+        padding: 1.25rem;
+    }
+}
+
+/* 769–1023px: the sidebar collapses to an icon rail; labels stay in the accessibility tree */
+@media (min-width: 769px) and (max-width: 1023px) {
+    .modern-sidebar {
+        width: 72px;
+        flex: 0 0 72px;
+    }
+
+    .main-container {
+        margin-left: 0;
+    }
+
+    .sidebar-header {
+        margin: 0 0.5rem;
+        padding: 1rem 0;
+    }
+
+    .church-brand {
+        justify-content: center;
+    }
+
+    .brand-block {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .sidebar-footer {
+        margin: 0 0.5rem;
+        padding: 0.75rem 0;
+        align-items: center;
+    }
+
+    .sidebar-footer ::deep a,
+    .health-check-link {
+        font-size: 0 !important;
+        padding: 0.5rem !important;
+    }
+
+    .sidebar-footer ::deep a i {
+        font-size: 1rem;
+    }
+}
+
+/* Narrow viewport: the sidebar becomes an overlay with a backdrop (MainLayout.NavRailBreakpointMediaQuery) */
+@media (max-width: 768px) {
+    .modern-sidebar {
+        width: 100%;
+        max-width: 280px;
+        transform: translateX(-100%);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        flex: none;
+    }
+
+    .modern-sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-popover);
+    }
+
+    .modern-sidebar.rail-hidden {
+        transform: translateX(-100%);
+    }
+
+    .main-container {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .header-content {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .header-search {
+        order: 3;
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    .content-wrapper {
+        padding: 1rem;
+    }
+
+    .site-footer-inner {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-left, .footer-right {
+        flex-shrink: 0;
+        max-width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .header-leading {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .header-title {
+        overflow: hidden;
+    }
+
+    .header-title ::deep .breadcrumbs ol {
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+
+    .header-search {
+        order: 0;
+        flex: 0 0 auto;
+        max-width: none;
+        margin: 0;
+    }
+
+    .content-wrapper {
+        padding: 0.5rem;
+    }
+
+    .site-footer-inner {
+        padding: 0.5rem 0.5rem 0.75rem;
+    }
+}
+
+/* Dark theme: the sidebar keeps its navy gradient (tokens), only shadows change */
+:global(html[data-theme="dark"]) .modern-sidebar {
+    box-shadow: 1px 0 0 var(--color-border);
+}
