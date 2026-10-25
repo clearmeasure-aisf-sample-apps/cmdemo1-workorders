@@ -51,17 +51,13 @@ public class NotFoundPageTests
         var component = ctx.Render<NotFound>();
 
         component.Find("h1").TextContent.ShouldBe("Not found");
-        var card = component.Find("section.not-found-card");
-        var dashboard = card.QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundDashboardLink)}']");
-        dashboard.ShouldNotBeNull();
-        dashboard!.TextContent.ShouldBe("Dashboard");
+        var dashboard = component.Find($"section.not-found-card [data-testid='{nameof(NotFound.Elements.NotFoundDashboardLink)}']");
+        dashboard.TextContent.ShouldBe("Dashboard");
         dashboard.GetAttribute("href").ShouldBe("/");
-        var workOrders = card.QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundWorkOrdersLink)}']");
-        workOrders.ShouldNotBeNull();
-        workOrders!.TextContent.ShouldBe("Work Orders");
+        var workOrders = component.Find($"section.not-found-card [data-testid='{nameof(NotFound.Elements.NotFoundWorkOrdersLink)}']");
+        workOrders.TextContent.ShouldBe("Work Orders");
         workOrders.GetAttribute("href").ShouldBe("/workorder/search");
-        var home = card.QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundHomeLink)}']");
-        home.ShouldNotBeNull();
-        home!.GetAttribute("href").ShouldBe("/");
+        var home = component.Find($"section.not-found-card [data-testid='{nameof(NotFound.Elements.NotFoundHomeLink)}']");
+        home.GetAttribute("href").ShouldBe("/");
     }
 }
