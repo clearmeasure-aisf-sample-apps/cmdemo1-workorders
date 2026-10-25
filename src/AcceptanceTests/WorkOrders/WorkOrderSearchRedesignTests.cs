@@ -443,6 +443,13 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(input).ToBeVisibleAsync();
 
         await Page.SetViewportSizeAsync(480, 800);
+        var backdrop = Page.Locator(".nav-backdrop");
+        if (await backdrop.IsVisibleAsync())
+        {
+            await backdrop.ClickAsync(new LocatorClickOptions { Position = new Position { X = 420, Y = 500 } });
+            await Expect(Page.Locator(".modern-sidebar.open")).ToHaveCountAsync(0);
+        }
+
         foreach (var theme in new[] { "light", "dark" })
         {
             await EnsureThemeAsync(theme);
