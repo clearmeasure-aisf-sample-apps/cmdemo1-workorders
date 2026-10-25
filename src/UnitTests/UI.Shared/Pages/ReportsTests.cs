@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
+using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -39,6 +40,23 @@ public class ReportsTests
     }
 
     [Test]
+    public async Task Reports_OnInitialize_ShouldRenderPageHeaderAndThemedExportButton()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Reports>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.FindComponents<PageHeader>().Count.ShouldBe(1);
+            var button = component.Find($"[data-testid='{nameof(Reports.Elements.ExportButton)}']");
+            button.ClassList.ShouldContain("btn-app");
+            button.ClassList.ShouldContain("btn-app--secondary");
+            component.Find($".page-actions [data-testid='{nameof(Reports.Elements.ExportButton)}']").ShouldNotBeNull();
+            component.Find(".chart-bars--status").ShouldNotBeNull();
+        });
+    }
+
+    [Test]
     public async Task Reports_OnInitialize_ShouldRenderPageSubtitle()
     {
         await using var ctx = CreateContext();
@@ -59,7 +77,7 @@ public class ReportsTests
         card.TextContent.ShouldContain("Open by Status");
         card.TextContent.ShouldContain("Draft");
         card.TextContent.ShouldContain("Assigned");
-        card.TextContent.ShouldContain("InProgress");
+        card.TextContent.ShouldContain("In Progress");
     }
 
     [Test]
