@@ -433,6 +433,100 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         Assert.Fail($"{selector} was not reached within {maxTabs} Tab presses");
     }
 
+    [Test, Retry(2)]
+    public async Task ShouldCollapseSearchToOneRow_AtPhoneWidth_InLightAndDark()
+    {
+        await Page.SetViewportSizeAsync(800, 800);
+        var toggle = Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchToggle));
+        var input = Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchInput));
+        await Expect(toggle).ToBeHiddenAsync();
+        await Expect(input).ToBeVisibleAsync();
+
+        await Page.SetViewportSizeAsync(480, 800);
+        foreach (var theme in new[] { "light", "dark" })
+        {
+            await EnsureThemeAsync(theme);
+            await ExpectPhoneHeaderCollapsedAsync();
+            (await ToggleMatchesHeaderSurfaceAsync()).ShouldBeTrue();
+
+            await toggle.ClickAsync();
+            await Expect(input).ToBeFocusedAsync();
+            (await PhoneHeaderMetricsAsync())[3].ShouldBeGreaterThan(120);
+            await ExpectPhoneHeaderIsOneRowAsync();
+
+            await BlurSearchAsync();
+            await Expect(input).Not.ToBeFocusedAsync();
+            await ExpectPhoneHeaderCollapsedAsync();
+
+            await Page.Keyboard.PressAsync("Control+k");
+            await Expect(input).ToBeFocusedAsync();
+            (await PhoneHeaderMetricsAsync())[3].ShouldBeGreaterThan(120);
+            await ExpectPhoneHeaderIsOneRowAsync();
+
+            await BlurSearchAsync();
+            await ExpectPhoneHeaderCollapsedAsync();
+        }
+    }
+
+    private async Task EnsureThemeAsync(string theme)
+    {
+        var current = await Page.EvaluateAsync<string>(
+            "() => document.documentElement.getAttribute('data-theme') ?? 'light'");
+        if (current == theme)
+        {
+            return;
+        }
+
+        await Click(nameof(MainLayout.Elements.DarkModeToggle));
+        await Page.WaitForFunctionAsync(
+            "t => (document.documentElement.getAttribute('data-theme') ?? 'light') === t",
+            theme);
+    }
+
+    private async Task ExpectPhoneHeaderCollapsedAsync()
+    {
+        await Expect(Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchToggle))).ToBeVisibleAsync();
+        var metrics = await PhoneHeaderMetricsAsync();
+        metrics[0].ShouldBeLessThanOrEqualTo(96);
+        metrics[1].ShouldBeLessThan(4);
+        metrics[2].ShouldBeLessThanOrEqualTo(48);
+        metrics[3].ShouldBeLessThan(20);
+    }
+
+    private async Task ExpectPhoneHeaderIsOneRowAsync()
+    {
+        var metrics = await PhoneHeaderMetricsAsync();
+        metrics[0].ShouldBeLessThanOrEqualTo(96);
+        metrics[1].ShouldBeLessThan(4);
+    }
+
+    private async Task<bool> ToggleMatchesHeaderSurfaceAsync() =>
+        await Page.EvaluateAsync<bool>(
+            """
+            () => getComputedStyle(document.querySelector('.global-search-toggle')).backgroundColor
+                === getComputedStyle(document.querySelector('.modern-header')).backgroundColor
+            """);
+
+    private async Task<double[]> PhoneHeaderMetricsAsync() =>
+        await Page.EvaluateAsync<double[]>(
+            """
+            () => {
+                const header = document.querySelector('.header-content');
+                const rect = header.getBoundingClientRect();
+                const mids = ['.header-leading', '.header-search', '.header-actions']
+                    .map(sel => {
+                        const box = header.querySelector(sel).getBoundingClientRect();
+                        return box.top + box.height / 2;
+                    });
+                const search = header.querySelector('.header-search').getBoundingClientRect();
+                const input = document.getElementById('GlobalSearchInput').getBoundingClientRect();
+                return [rect.height, Math.max(...mids) - Math.min(...mids), search.width, input.width];
+            }
+            """);
+
+    private async Task BlurSearchAsync() =>
+        await Page.Locator("main").ClickAsync(new LocatorClickOptions { Position = new Position { X = 8, Y = 200 } });
+
     private async Task<double> FocusedOutlineWidthAsync() =>
         await Page.EvaluateAsync<double>("() => parseFloat(getComputedStyle(document.activeElement).outlineWidth) || 0");
 
