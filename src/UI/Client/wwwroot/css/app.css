@@ -184,39 +184,41 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #7b68ee;
+    color: var(--color-primary);
     transition: all 0.3s ease;
 }
 
 a:hover, .btn-link:hover {
-    color: #6a5acd;
+    color: var(--color-primary-strong);
     text-decoration: none;
 }
 
 .btn-primary {
-    color: #fff;
-    background: linear-gradient(135deg, #7b68ee 0%, #4a90e2 100%);
+    color: var(--color-on-primary);
+    background: var(--gradient-primary);
     border: none;
-    border-radius: 12px;
+    border-radius: var(--radius-control);
     padding: 0.75rem 1.5rem;
     font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(123, 104, 238, 0.3);
+    box-shadow: var(--shadow-card);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(123, 104, 238, 0.4);
-    background: linear-gradient(135deg, #6a5acd 0%, #4169e1 100%);
+    box-shadow: var(--shadow-card);
+    background: var(--gradient-primary);
 }
 
 .btn-primary:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(123, 104, 238, 0.3);
+    box-shadow: var(--shadow-card);
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #7b68ee;
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+    box-shadow: none;
 }
 
 .content {
@@ -296,14 +298,14 @@ a:hover, .btn-link:hover {
 
 .loading-progress circle {
     fill: none;
-    stroke: #e0e0e0;
+    stroke: var(--color-border);
     stroke-width: 0.6rem;
     transform-origin: 50% 50%;
     transform: rotate(-90deg);
 }
 
 .loading-progress circle:last-child {
-    stroke: #7b68ee;
+    stroke: var(--color-primary);
     stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
     transition: stroke-dasharray 0.05s ease-in-out;
 }
@@ -313,7 +315,7 @@ a:hover, .btn-link:hover {
     text-align: center;
     font-weight: bold;
     inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
-    color: #7b68ee;
+    color: var(--color-primary);
     font-size: 1.1rem;
 }
 
@@ -323,46 +325,44 @@ a:hover, .btn-link:hover {
 
 /* Form Controls Global Styling */
 .form-control {
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-control);
     padding: 0.75rem 1rem;
     font-size: 1rem;
     transition: all 0.3s ease;
-    background: #f8fafc;
-    color: #2d3748;
+    background: var(--color-surface-2);
+    color: var(--color-text);
     font-family: inherit;
 }
 
 .form-control:focus {
-    border-color: #7b68ee;
-    box-shadow: 0 0 0 0.2rem rgba(123, 104, 238, 0.25);
-    background: white;
-    outline: none;
+    border-color: var(--color-primary);
+    background: var(--color-surface);
 }
 
 .form-control:hover:not(:disabled) {
-    border-color: #cbd5e0;
-    background: white;
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
 }
 
 .form-control:disabled {
-    background: #f1f5f9;
-    color: #718096;
+    background: var(--color-surface-2);
+    color: var(--color-muted);
     cursor: not-allowed;
 }
 
 /* Card Components */
 .card {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border: 1px solid #e2e8f0;
+    background: var(--color-surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-border);
     overflow: hidden;
 }
 
 .card-header {
-    background: linear-gradient(135deg, #7b68ee 0%, #4a90e2 100%);
-    color: white;
+    background: var(--gradient-primary);
+    color: var(--color-on-primary);
     padding: 1.5rem 2rem;
     border-bottom: none;
 }
@@ -373,7 +373,7 @@ a:hover, .btn-link:hover {
 
 /* Alert Components */
 .alert {
-    border-radius: 12px;
+    border-radius: var(--radius-card);
     padding: 1rem 1.5rem;
     margin: 1rem 0;
     font-weight: 500;
@@ -381,24 +381,21 @@ a:hover, .btn-link:hover {
 }
 
 .alert-danger {
-    background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-    border-color: #fc8181;
-    color: #c53030;
-    box-shadow: 0 2px 8px rgba(252, 129, 129, 0.2);
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 .alert-success {
-    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
-    border-color: #68d391;
-    color: #276749;
-    box-shadow: 0 2px 8px rgba(104, 211, 145, 0.2);
+    background: var(--color-success-bg);
+    border-color: var(--color-success);
+    color: var(--color-success);
 }
 
 .alert-info {
-    background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
-    border-color: #63b3ed;
-    color: #2c5282;
-    box-shadow: 0 2px 8px rgba(99, 179, 237, 0.2);
+    background: var(--color-info-bg);
+    border-color: var(--color-info);
+    color: var(--color-info);
 }
 
 /* Utility Classes */
@@ -460,24 +457,6 @@ html[data-theme="dark"] body {
     color: #e2e8f0;
 }
 
-html[data-theme="dark"] a,
-html[data-theme="dark"] .btn-link {
-    color: #a3bffa;
-}
-
-html[data-theme="dark"] a:hover,
-html[data-theme="dark"] .btn-link:hover {
-    color: #c3dafe;
-}
-
-html[data-theme="dark"] .btn:focus,
-html[data-theme="dark"] .btn:active:focus,
-html[data-theme="dark"] .btn-link.nav-link:focus,
-html[data-theme="dark"] .form-control:focus,
-html[data-theme="dark"] .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem #2d3748, 0 0 0 0.25rem #7b68ee;
-}
-
 html[data-theme="dark"] #blazor-error-ui {
     background: linear-gradient(135deg, #742a2a 0%, #9b2c2c 100%);
     color: #fed7d7;
@@ -487,62 +466,6 @@ html[data-theme="dark"] #blazor-error-ui {
 html[data-theme="dark"] #blazor-error-ui .dismiss {
     color: #fed7d7;
     background: #2d3748;
-}
-
-html[data-theme="dark"] .loading-progress circle {
-    stroke: #4a5568;
-}
-
-html[data-theme="dark"] .loading-progress circle:last-child {
-    stroke: #a3bffa;
-}
-
-html[data-theme="dark"] .loading-progress-text {
-    color: #a3bffa;
-}
-
-html[data-theme="dark"] .form-control {
-    background: #2d3748;
-    border-color: #4a5568;
-    color: #f7fafc;
-}
-
-html[data-theme="dark"] .form-control:focus {
-    background: #374151;
-}
-
-html[data-theme="dark"] .form-control:hover:not(:disabled) {
-    background: #374151;
-    border-color: #718096;
-}
-
-html[data-theme="dark"] .form-control:disabled {
-    background: #1a202c;
-    color: #a0aec0;
-}
-
-html[data-theme="dark"] .card {
-    background: #2d3748;
-    border-color: #4a5568;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-}
-
-html[data-theme="dark"] .alert-danger {
-    background: linear-gradient(135deg, #742a2a 0%, #9b2c2c 100%);
-    border-color: #fc8181;
-    color: #fed7d7;
-}
-
-html[data-theme="dark"] .alert-success {
-    background: linear-gradient(135deg, #22543d 0%, #276749 100%);
-    border-color: #68d391;
-    color: #c6f6d5;
-}
-
-html[data-theme="dark"] .alert-info {
-    background: linear-gradient(135deg, #2c5282 0%, #2b6cb0 100%);
-    border-color: #63b3ed;
-    color: #bee3f8;
 }
 
 html[data-theme="dark"] :focus-visible {
