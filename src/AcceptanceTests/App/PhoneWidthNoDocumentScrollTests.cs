@@ -75,9 +75,23 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
     private async Task AssertDocumentFitsAsync(string url)
     {
         var measured = await Page.EvaluateAsync<string>(
-            "() => document.documentElement.scrollWidth + ':' + window.innerWidth");
+            """
+            () => {
+                let widest = '';
+                let right = 0;
+                for (const el of document.querySelectorAll('body *')) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.width < 1 || rect.height < 1 || rect.right <= right) continue;
+                    right = rect.right;
+                    const testId = el.getAttribute('data-testid') || '';
+                    const className = typeof el.className === 'string' ? el.className.split(' ')[0] : '';
+                    widest = el.tagName + (className ? '.' + className : '') + (testId ? '#' + testId : '') + '@' + Math.round(rect.right);
+                }
+                return document.documentElement.scrollWidth + ':' + window.innerWidth + ':' + widest;
+            }
+            """);
         var parts = measured.Split(':');
-        parts[0].ShouldBe(parts[1], url);
+        parts[0].ShouldBe(parts[1], $"{url} widest={parts[2]}");
     }
 
     private async Task AssertScrollsInsideAsync(string selector)
