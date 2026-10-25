@@ -1,8 +1,10 @@
+using System.Text.RegularExpressions;
 using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
+using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
 using Microsoft.AspNetCore.Components.Web;
@@ -108,6 +110,45 @@ public class ApplicationChatTests
             component.FindAll(".chat-message").Count.ShouldBeGreaterThanOrEqualTo(1);
             component.Markup.ShouldContain("test prompt via enter");
         });
+    }
+
+    [Test]
+    public async Task ShouldRenderPageHeaderTokenCardAndAppStyleSendButton()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<ApplicationChat>();
+
+        component.FindComponent<PageHeader>().ShouldNotBeNull();
+        var heading = component.Find($"[data-testid='{ApplicationChat.Elements.ChatHeadingTooltip}']");
+        heading.TagName.ShouldBe("H1", StringCompareShould.IgnoreCase);
+        heading.GetAttribute("title").ShouldBe("Chat with the application assistant");
+        heading.TextContent.ShouldBe("AI Agent");
+        component.Find($"[data-testid='{ApplicationChat.Elements.ChatHint}']")
+            .TextContent.ShouldBe("Ask a question about the application.");
+        component.Markup.ShouldNotContain("🤖");
+        component.Markup.ShouldContain("Ask questions about work orders, employees, or general assistance");
+
+        component.Find($"[data-testid='{ApplicationChat.Elements.SendButton}']").GetAttribute("class")
+            .ShouldBe("btn-app btn-app--primary");
+        var cardClass = component.Find($"[data-testid='{ApplicationChat.Elements.ChatContainer}']").GetAttribute("class") ?? "";
+        cardClass.ShouldContain("token-card");
+    }
+
+    [Test]
+    public void ShouldKeepAssistantStylesheetFreeOfHexColours()
+    {
+        var path = Path.GetFullPath(Path.Combine(
+            NUnit.Framework.TestContext.CurrentContext.TestDirectory,
+            "..", "..", "..", "..", "UI.Shared", "Pages", "ApplicationChat.razor.css"));
+        File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
+        var css = File.ReadAllText(path);
+
+        Regex.IsMatch(css, "#[0-9a-fA-F]{3,8}").ShouldBeFalse();
+        css.ShouldNotContain("rgba(");
+        css.ShouldNotContain("hsl(");
+        css.ShouldContain(".token-card");
+        css.ShouldContain(".btn-app--primary");
     }
 
     private static BunitContext CreateContext()
