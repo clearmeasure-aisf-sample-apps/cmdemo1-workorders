@@ -40,4 +40,24 @@ public class NotFoundPageTests
         icon.GetAttribute("aria-hidden").ShouldBe("true");
         icon.GetAttribute("data-testid").ShouldBe(nameof(NotFound.Elements.NotFoundIcon));
     }
+
+    [Test]
+    public void Should_RenderPageHeaderAndCardLinks_WithDashboardAndWorkOrders()
+    {
+        using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var component = ctx.Render<NotFound>();
+
+        component.Find("h1").TextContent.ShouldBe("Not found");
+        var dashboard = component.Find($"section.not-found-card [data-testid='{nameof(NotFound.Elements.NotFoundDashboardLink)}']");
+        dashboard.TextContent.ShouldBe("Dashboard");
+        dashboard.GetAttribute("href").ShouldBe("/");
+        var workOrders = component.Find($"section.not-found-card [data-testid='{nameof(NotFound.Elements.NotFoundWorkOrdersLink)}']");
+        workOrders.TextContent.ShouldBe("Work Orders");
+        workOrders.GetAttribute("href").ShouldBe("/workorder/search");
+        var home = component.Find($"section.not-found-card [data-testid='{nameof(NotFound.Elements.NotFoundHomeLink)}']");
+        home.GetAttribute("href").ShouldBe("/");
+    }
 }
