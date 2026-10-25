@@ -1,3 +1,35 @@
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable-Italic.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter Variable';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter Variable';
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter/InterVariable-Italic.woff2') format('woff2');
+}
+
 /* Design tokens (#251). Scoped component styles use these; dark values follow html[data-theme="dark"]. */
 :root {
     --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
