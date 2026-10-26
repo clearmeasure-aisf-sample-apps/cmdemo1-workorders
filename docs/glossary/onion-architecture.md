@@ -1,0 +1,3 @@
+# Onion architecture
+
+**Onion architecture** is the layering this application follows: dependencies point inward, so outer layers may depend on inner layers and inner layers must not depend on outer layers. [Core](../../src/Core/Core.csproj) in `src/Core` contains domain models, interfaces, and queries and has no project dependencies; DataAccess in `src/DataAccess` contains Entity Framework Core data access and MediatR handlers and references Core only; the UI in `src/UI` and `src/UI.Shared` is an outer layer. The rule is described in [Application Architecture Layers](../architecture-layers.md).
