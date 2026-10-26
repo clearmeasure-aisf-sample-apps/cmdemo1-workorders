@@ -212,6 +212,11 @@
     padding: 1.5rem;
 }
 
+.chart-container:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
 .weekly-chart-html {
     display: flex;
     align-items: flex-end;
