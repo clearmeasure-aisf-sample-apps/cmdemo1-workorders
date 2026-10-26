@@ -1,0 +1,106 @@
+@using Palermo.BlazorMvc
+@inject CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject IUserSession UserSession
+@implements IListener<UserLoggedInEvent>
+
+<div class="user-menu" @onkeydown="HandleKeyDown">
+    <button type="button"
+            class="user-menu-trigger"
+            data-testid="@Elements.UserMenuToggle"
+            aria-haspopup="menu"
+            aria-controls="user-menu-list"
+            aria-expanded="@(_open ? "true" : "false")"
+            @ref="_triggerRef"
+            @onclick="ToggleMenu">
+        <span class="visually-hidden" data-testid="@Elements.WelcomeText">
+            Welcome
+            @{
+                var userIdentity = AuthStateProvider.GetUsername();
+            }
+            @(HasMiddleName(_currentEmployee) ? _currentEmployee!.GetFullName() : userIdentity)!
+        </span>
+        <span class="user-avatar" aria-hidden="true">@UserDisplay.Initials(_currentEmployee, userIdentity)</span>
+        <span class="user-identity" aria-hidden="true">
+            <span class="user-name" data-testid="@Elements.UserFullName">@(_currentEmployee?.GetFullName() ?? userIdentity)</span>
+            @if (!string.IsNullOrEmpty(Roles))
+            {
+                <span class="user-roles" data-testid="@Elements.UserRoles">@Roles</span>
+            }
+        </span>
+        <i class="bi bi-chevron-down user-menu-caret" aria-hidden="true"></i>
+    </button>
+    <ul id="user-menu-list" class="user-menu-list" role="menu" aria-label="User menu" hidden="@(!_open)">
+        <li role="presentation">
+            <button type="button" role="menuitem" data-testid="@Elements.LogoutLink" title="Sign out of the work order portal" @onclick="HandleLogout" class="user-menu-item">Logout</button>
+        </li>
+    </ul>
+</div>
+
+@code {
+
+    private Employee? _currentEmployee;
+    private bool _open;
+    private ElementReference _triggerRef;
+
+    private string Roles => UserDisplay.Roles(_currentEmployee);
+
+    private static bool HasMiddleName(Employee? employee) => employee is { MiddleName: not null } && !string.IsNullOrWhiteSpace(employee.MiddleName);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurrentEmployee();
+    }
+
+    public void Handle(UserLoggedInEvent theEvent)
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadCurrentEmployee();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadCurrentEmployee()
+    {
+        try
+        {
+            _currentEmployee = await UserSession.GetCurrentUserAsync();
+        }
+        catch (Exception)
+        {
+            _currentEmployee = null;
+        }
+    }
+
+    private void ToggleMenu() => _open = !_open;
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Escape" || !_open)
+        {
+            return;
+        }
+
+        _open = false;
+        await _triggerRef.FocusAsync();
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthStateProvider.Logout();
+        _open = false;
+        EventBus.Notify(new UserLoggedOutEvent(AuthStateProvider.GetUsername()));
+        NavigationManager.NavigateTo("/login");
+    }
+
+    public enum Elements
+    {
+        LogoutLink,
+        WelcomeText,
+        UserMenuToggle,
+        UserFullName,
+        UserRoles
+    }
+
+}
