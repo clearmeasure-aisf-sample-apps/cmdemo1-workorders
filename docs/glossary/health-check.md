@@ -1,0 +1,3 @@
+# Health check
+
+**Health check** is an ASP.NET Core check the UI.Server exposes so a monitor can tell whether the application is up. `GET /_healthcheck`, mapped in [`ServerApplication`](../../src/UI/Server/ServerApplication.cs), returns plain text through `HealthCheckPlainTextResponseWriter`: the first line is `Healthy`, `Degraded`, or `Unhealthy`, and the second is `databaseVersion`, with HTTP 200 for healthy and degraded and HTTP 503 for unhealthy ([Health and build endpoints](../health-endpoints.md)). The footer [`HealthCheckLink`](../../src/UI.Shared/Components/HealthCheckLink.razor) opens `/_clienthealthcheck` ([`ClientHealthCheck`](../../src/UI/Client/Pages/ClientHealthCheck.razor)), which shows that overall status in the browser.

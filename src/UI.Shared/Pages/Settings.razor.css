@@ -1,0 +1,81 @@
+/* Settings. Colours come from the tokens in app.css, including dark mode. */
+
+.settings-page {
+    min-height: 100%;
+    padding: 2rem 1rem 3rem;
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-body);
+}
+
+.settings-container {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.settings-section {
+    margin-top: 2rem;
+}
+
+.settings-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 1rem;
+}
+
+.token-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: 1.5rem;
+}
+
+.settings-dark-switch-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin: 0;
+    min-height: 3rem;
+}
+
+.settings-dark-switch-row .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.settings-switch-labels {
+    flex: 1;
+    min-width: 0;
+    color: var(--color-text);
+}
+
+.settings-switch-labels .form-check-label {
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.settings-helper {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--muted-on-page);
+    line-height: 1.5;
+}
+
+@media (max-width: 576px) {
+    .settings-dark-switch-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .settings-dark-switch-row .form-check-input {
+        align-self: flex-start;
+    }
+}
