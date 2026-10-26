@@ -647,7 +647,7 @@ jobs:
     name: Acceptance Tests [shard ${{ matrix.shard }}/6]
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
       group: acceptance-tests-${{ github.ref }}-${{ github.sha }}-shard-${{ matrix.shard }}
