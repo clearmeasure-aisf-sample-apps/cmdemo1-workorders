@@ -1,0 +1,183 @@
+/* AI Assistant. Colours come from the tokens in app.css, including dark mode. */
+.ai-agent-page {
+    background: var(--color-page);
+    color: var(--color-text);
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ai-agent-container {
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+}
+
+.ai-agent-subtitle {
+    margin: 0.35rem 0 0;
+    font-size: var(--font-size-body);
+    color: var(--muted-on-page);
+}
+
+.token-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+
+.chat-container {
+    padding: 1rem;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-history-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-history {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    padding-right: 0.25rem;
+}
+
+.chat-placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-on-page);
+    text-align: center;
+    padding: 2rem;
+}
+
+.chat-message {
+    margin-bottom: 0.75rem;
+    padding: 10px 14px;
+    border-radius: var(--radius-card);
+    max-width: 80%;
+}
+
+.user-message {
+    background: var(--gradient-primary);
+    color: var(--color-on-primary);
+    align-self: flex-end;
+    margin-left: auto;
+    text-align: right;
+}
+
+.ai-message {
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+.message-content {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.chat-loading {
+    color: var(--color-primary);
+    padding: 8px;
+    text-align: center;
+}
+
+.chat-input-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    position: sticky;
+    bottom: 0;
+    background: var(--color-surface);
+    z-index: 1;
+}
+
+.chat-input {
+    flex: 1;
+    border-radius: var(--radius-control);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.chat-input:focus {
+    border-color: var(--color-primary);
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+.ai-agent-page .btn-app {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: var(--control-height);
+    padding: 0 1rem;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.ai-agent-page .btn-app--primary {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-card);
+}
+
+.ai-agent-page .btn-app--primary:hover:not(:disabled) {
+    color: var(--color-on-primary);
+    filter: brightness(1.05);
+}
+
+.ai-agent-page .btn-app:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.ai-agent-page .btn-app:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        padding: 1rem;
+    }
+
+    .chat-message {
+        max-width: 90%;
+    }
+}
