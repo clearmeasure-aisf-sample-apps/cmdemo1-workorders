@@ -1,0 +1,171 @@
+@page "/reports"
+@attribute [Authorize]
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+<PageTitle>Reports - TechWeek Work Orders</PageTitle>
+
+<div class="reports-page">
+    <PageHeader Title="Reports" TitleTestId="@nameof(Elements.ReportsTitle)"
+                Subtitle="Facility work order figures in one place."
+                SubtitleTestId="@nameof(Elements.ReportsSubtitle)">
+        <Actions>
+            <button type="button" class="btn-app btn-app--secondary" data-testid="@Elements.ExportButton"
+                    disabled="@(Data == null)" title="Download the summary figures as CSV" @onclick="ExportAsync">
+                <i class="bi bi-download" aria-hidden="true"></i> Download CSV
+            </button>
+        </Actions>
+    </PageHeader>
+
+    @if (Data != null)
+    {
+        <section class="summary-cards" aria-label="Work order summary">
+            <!-- Open by Status Card -->
+            <article class="report-card report-card--indigo" data-testid="@Elements.SummaryCardStatus">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Open by Status</h2>
+                    <i class="bi bi-diagram-3-fill report-card-icon" aria-hidden="true"></i>
+                </div>
+                <div class="chart-bars chart-bars--status">
+                    @{
+                        string[] statusKeys = ["Draft", "Assigned", "InProgress"];
+                        var maxCount = Data.CountByStatus.Values.Any() ? Data.CountByStatus.Values.Max() : 1;
+                        if (maxCount == 0) maxCount = 1;
+                    }
+                    @foreach (var statusKey in statusKeys)
+                    {
+                        var count = Data.CountByStatus.GetValueOrDefault(statusKey);
+                        var percentage = maxCount > 0 ? (count * 100) / maxCount : 0;
+                        var statusName = WorkOrderStatus.FromKey(statusKey).FriendlyName;
+                        <div class="bar-item">
+                            <div class="bar-label">@statusName</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: @(percentage)%"></div>
+                            </div>
+                            <div class="bar-value">@count</div>
+                        </div>
+                    }
+                </div>
+            </article>
+
+            <!-- Open by Priority Card -->
+            <article class="report-card report-card--teal" data-testid="@Elements.SummaryCardPriority">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Open by Priority</h2>
+                    <i class="bi bi-exclamation-circle-fill report-card-icon" aria-hidden="true"></i>
+                </div>
+                <div class="chart-bars">
+                    @{
+                        string[] priorityLabels = ["High", "Medium", "Low"];
+                        var maxPriorityCount = Data.CountByPriority.Values.Any() ? Data.CountByPriority.Values.Max() : 1;
+                        if (maxPriorityCount == 0) maxPriorityCount = 1;
+                    }
+                    @foreach (var label in priorityLabels)
+                    {
+                        var count = Data.CountByPriority.GetValueOrDefault(label);
+                        var percentage = maxPriorityCount > 0 ? (count * 100) / maxPriorityCount : 0;
+                        <div class="bar-item">
+                            <div class="bar-label">@label</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: @(percentage)%"></div>
+                            </div>
+                            <div class="bar-value">@count</div>
+                        </div>
+                    }
+                </div>
+            </article>
+
+            <!-- Open by Building Card -->
+            <article class="report-card report-card--success" data-testid="@Elements.SummaryCardBuilding">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Open by Building</h2>
+                    <i class="bi bi-building report-card-icon" aria-hidden="true"></i>
+                </div>
+                <div class="chart-bars">
+                    @{
+                        var buildings = Data.CountByBuilding.OrderByDescending(kvp => kvp.Value).Take(6).ToList();
+                        var maxBuildingCount = buildings.Any() ? buildings.Max(b => b.Value) : 1;
+                        if (maxBuildingCount == 0) maxBuildingCount = 1;
+                    }
+                    @if (buildings.Count == 0)
+                    {
+                        <div class="chart-empty">No buildings assigned</div>
+                    }
+                    else
+                    {
+                        @foreach (var building in buildings)
+                        {
+                            var percentage = maxBuildingCount > 0 ? (building.Value * 100) / maxBuildingCount : 0;
+                            <div class="bar-item">
+                                <div class="bar-label" title="@building.Key">@building.Key</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: @(percentage)%"></div>
+                                </div>
+                                <div class="bar-value">@building.Value</div>
+                            </div>
+                        }
+                    }
+                </div>
+            </article>
+
+            <!-- Completed (30 days) Card -->
+            <article class="report-card report-card--success" data-testid="@Elements.SummaryCardCompletedLast30">
+                <div class="report-card-header">
+                    <h2 class="report-card-title">Completed (30 days)</h2>
+                    <i class="bi bi-check2-circle report-card-icon" aria-hidden="true"></i>
+                </div>
+                <div class="completion-stats">
+                    <div class="stat-value">@Data.CompletedLast30Days</div>
+                    <div class="stat-label">Work orders</div>
+                    <div class="stat-note">
+                        @if (Data.AverageDaysToClose.HasValue)
+                        {
+                            <span>Avg. @Data.AverageDaysToClose.Value.ToString("0.0", CultureInfo.InvariantCulture) days to close</span>
+                        }
+                        else
+                        {
+                            <span>No recent closures</span>
+                        }
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="reports-charts" aria-label="Work order trends">
+            <article class="chart-card" data-testid="@Elements.ChartCompletedPerWeek">
+                <h2 class="chart-title">Completed per week (8 weeks)</h2>
+                <div class="chart-container">
+                    <div class="weekly-chart-html">
+                        @{
+                            var maxWeeklyCount = Data.CompletedPerWeek.Any() ? Data.CompletedPerWeek.Max(w => w.Count) : 1;
+                            if (maxWeeklyCount == 0) maxWeeklyCount = 1;
+                        }
+                        @foreach (var week in Data.CompletedPerWeek)
+                        {
+                            var percentage = maxWeeklyCount > 0 ? (week.Count * 100) / maxWeeklyCount : 0;
+                            <div class="weekly-bar">
+                                <div class="weekly-bar-container">
+                                    <div class="weekly-bar-fill" style="height: @(percentage)%"></div>
+                                    @if (week.Count > 0)
+                                    {
+                                        <div class="weekly-bar-label">@week.Count</div>
+                                    }
+                                </div>
+                                <div class="weekly-bar-date">@week.WeekEndingDate.ToString("M/d", CultureInfo.InvariantCulture)</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </article>
+
+            <article class="kpi-card" data-testid="@Elements.KpiOverdue">
+                <h2 class="kpi-title">Overdue now</h2>
+                <div class="kpi-value">@Data.OverdueCount</div>
+                <p class="kpi-note">action needed</p>
+            </article>
+        </section>
+    }
+    else
+    {
+        <div class="loading-placeholder">Loading...</div>
+    }
+</div>
