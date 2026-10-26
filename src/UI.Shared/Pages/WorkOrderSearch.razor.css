@@ -3,6 +3,8 @@
 .search-page {
     color: var(--color-text);
     font-size: var(--font-size-body);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .search-container {
@@ -12,6 +14,12 @@
     max-width: 1600px;
     margin: 0 auto;
     min-width: 0;
+}
+
+/* Child components (page header, summary cards) are flex items; min-width:auto would let them widen the page. */
+.search-container > * {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .link-button:focus-visible,
@@ -137,6 +145,8 @@
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-card);
     padding: 1.25rem 1.5rem 1.5rem;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .filters-card-header {
@@ -194,6 +204,8 @@
 
 .search-page ::deep .filter-select {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     height: var(--control-height);
     padding: 0 2rem 0 0.75rem;
     border: 1px solid var(--color-border);
@@ -351,7 +363,11 @@
 
 @media (max-width: 480px) {
     .filters-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .filter-switches {
+        flex-wrap: wrap;
     }
 }
 
@@ -460,14 +476,23 @@
     outline-offset: 2px;
 }
 
-/* Below the full-width layout the table scrolls inside its card instead of the page */
+/* Below the full-width layout the table scrolls inside its card instead of the page.
+   contain:paint keeps the table's min-content out of the document scroll width. */
 .table-scroll {
     overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    contain: paint;
 }
 
 /* Board view: a column per status; narrow widths scroll inside the card instead of the page */
 .board-scroll {
     overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    contain: paint;
     padding: 0 1.5rem 1.5rem;
 }
 

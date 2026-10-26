@@ -161,7 +161,7 @@ All branches must be created inside a folder matching the username of the accoun
 | ServiceDefaults | Azure.Monitor.OpenTelemetry.AspNetCore 1.6.0, OpenTelemetry 1.12.0, Microsoft.Extensions.ServiceDiscovery 9.5.0 |
 | UnitTests | NUnit 4.3.2, Shouldly 4.3.0, bunit 1.40.0, AutoBogus.Conventions 2.13.1 |
 | IntegrationTests | NUnit 4.3.2, Shouldly 4.3.0, Microsoft.EntityFrameworkCore 10.0.0 |
-| AcceptanceTests | NUnit 4.3.2, microsoft.playwright.nunit 1.54.0, Azure.AI.OpenAI 2.1.0, ModelContextProtocol 1.0.0 |
+| AcceptanceTests | NUnit 4.3.2, microsoft.playwright.nunit 1.61.0, Azure.AI.OpenAI 2.1.0, ModelContextProtocol 1.0.0 |
 
 ## General Coding Standards
 

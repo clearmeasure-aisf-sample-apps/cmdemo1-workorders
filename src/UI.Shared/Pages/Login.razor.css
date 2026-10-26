@@ -1,5 +1,7 @@
 .login-container {
     min-height: 70vh;
+    min-width: 0;
+    max-width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -7,6 +9,10 @@
     padding: 2rem 1rem;
     color: var(--color-text);
     font-family: var(--font-sans);
+    /* The member select's min-content is wider than a 390px card. Paint containment
+       keeps that overflow inside this box so the document stays viewport-width. */
+    overflow-x: auto;
+    contain: paint;
 }
 
 .login-card {
@@ -17,6 +23,7 @@
     box-shadow: var(--shadow-card);
     max-width: 420px;
     width: 100%;
+    min-width: 0;
 }
 
 .login-header {
@@ -27,6 +34,8 @@
     padding: 1.5rem 1.5rem 0;
     background: transparent;
     color: var(--color-text);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .church-icon.brand-mark {
@@ -49,6 +58,8 @@
     font-weight: 700;
     font-family: var(--font-sans);
     color: var(--color-text);
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .login-subtitle {
@@ -62,10 +73,15 @@
     padding: 1.25rem 1.5rem 1.5rem;
     background: transparent;
     color: var(--color-text);
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .form-group {
     margin-bottom: 1rem;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .form-group label {
@@ -88,6 +104,15 @@
     font-family: var(--font-sans);
     box-shadow: none;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* A native select's min-content is its longest option. width:0 with min-width:100%
+   sizes it to the card instead of that option text. */
+.login-body ::deep select.form-control {
+    width: 0;
+    min-width: 100%;
 }
 
 .login-body ::deep .form-control:focus {

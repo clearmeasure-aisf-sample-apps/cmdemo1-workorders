@@ -133,7 +133,7 @@
         <section class="reports-charts" aria-label="Work order trends">
             <article class="chart-card" data-testid="@Elements.ChartCompletedPerWeek">
                 <h2 class="chart-title">Completed per week (8 weeks)</h2>
-                <div class="chart-container">
+                <div class="chart-container" tabindex="0" aria-label="Completed per week chart">
                     <div class="weekly-chart-html">
                         @{
                             var maxWeeklyCount = Data.CompletedPerWeek.Any() ? Data.CompletedPerWeek.Max(w => w.Count) : 1;

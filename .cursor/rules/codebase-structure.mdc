@@ -78,7 +78,7 @@ alwaysApply: true
 | ServiceDefaults | Azure.Monitor.OpenTelemetry.AspNetCore 1.6.0, OpenTelemetry 1.12.0 |
 | UnitTests | NUnit 4.3.2, Shouldly 4.3.0, bunit 1.40.0, AutoBogus.Conventions 2.13.1 |
 | IntegrationTests | NUnit 4.3.2, Shouldly 4.3.0, Microsoft.EntityFrameworkCore 10.0.0 |
-| AcceptanceTests | NUnit 4.3.2, Playwright.NUnit 1.54.0, Azure.AI.OpenAI 2.1.0 |
+| AcceptanceTests | NUnit 4.3.2, Playwright.NUnit 1.61.0, Azure.AI.OpenAI 2.1.0 |
 
 ## References for Agents
 

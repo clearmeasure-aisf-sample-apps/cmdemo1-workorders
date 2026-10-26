@@ -5,6 +5,8 @@
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .page-heading h1 {
@@ -27,6 +29,7 @@
     align-items: center;
     gap: 0.625rem;
     flex-wrap: wrap;
+    min-width: 0;
 }
 
 .page-actions ::deep .btn-app {

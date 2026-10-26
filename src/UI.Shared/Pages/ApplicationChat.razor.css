@@ -4,17 +4,20 @@
     color: var(--color-text);
     flex: 1 1 0;
     min-height: 0;
+    min-width: 0;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
 .ai-agent-container {
-    max-width: 960px;
+    max-width: min(960px, 100%);
     margin: 0 auto;
     width: 100%;
     flex: 1 1 0;
     min-height: 0;
+    min-width: 0;
     display: grid;
     grid-template-rows: auto 1fr;
     gap: 1rem;
