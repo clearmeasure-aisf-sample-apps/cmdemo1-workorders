@@ -136,7 +136,7 @@ public class LoginTests : AcceptanceTestBase
     }
 
     [Test, Retry(2)]
-    public async Task Should_AnimateLoginLinkOpacity_WhenAnonymous()
+    public async Task Should_PulseLoginLinkColorAtFullOpacity_WhenAnonymous()
     {
         await EnsureAnonymousHomeAsync();
 
@@ -148,16 +148,19 @@ public class LoginTests : AcceptanceTestBase
         animationName.ShouldStartWith("login-link-blink-pulse");
 
         var observedOpacities = new List<double>();
+        var observedColors = new List<string>();
         for (var sample = 0; sample < 30; sample++)
         {
-            observedOpacities.Add(await loginLink.EvaluateAsync<double>(
-                "element => parseFloat(getComputedStyle(element).opacity)"));
+            var reading = await loginLink.EvaluateAsync<string>(
+                "element => parseFloat(getComputedStyle(element).opacity) + '|' + getComputedStyle(element).color");
+            var splitAt = reading.IndexOf('|');
+            observedOpacities.Add(double.Parse(reading[..splitAt], System.Globalization.CultureInfo.InvariantCulture));
+            observedColors.Add(reading[(splitAt + 1)..]);
             await Task.Delay(100);
         }
 
-        observedOpacities.Min().ShouldBeLessThan(0.75);
-        observedOpacities.Max().ShouldBeGreaterThan(0.9);
-        observedOpacities.Min().ShouldBeGreaterThanOrEqualTo(0.5);
+        observedOpacities.Min().ShouldBeGreaterThanOrEqualTo(0.99);
+        observedColors.Distinct().Count().ShouldBeGreaterThan(1);
     }
 
     [Test, Retry(2)]

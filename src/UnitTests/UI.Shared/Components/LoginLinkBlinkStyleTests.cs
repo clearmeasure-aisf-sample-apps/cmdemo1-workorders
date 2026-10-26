@@ -7,16 +7,16 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 public class LoginLinkBlinkStyleTests
 {
     [Test]
-    public void ShouldPulseOpacityBetweenFullAndPartial_SoTheBlinkIsVisible()
+    public void ShouldKeepLoginLinkOpaque_SoContrastHoldsWhileTheColorPulses()
     {
         var css = ReadLoginLinkCss();
 
         var trough = Regex.Match(css, @"50%\s*\{[^}]*opacity:\s*(?<opacity>[\d.]+)");
         trough.Success.ShouldBeTrue("Expected a 50% keyframe declaring opacity");
+        double.Parse(trough.Groups["opacity"].Value).ShouldBe(1);
 
-        var opacity = double.Parse(trough.Groups["opacity"].Value);
-        opacity.ShouldBeGreaterThanOrEqualTo(0.55);
-        opacity.ShouldBeLessThanOrEqualTo(0.6);
+        css.ShouldContain("color: var(--login-link-bright)");
+        css.ShouldContain("color: var(--login-link-dim)");
     }
 
     [Test]
@@ -59,9 +59,15 @@ public class LoginLinkBlinkStyleTests
     {
         var css = ReadLoginLinkCss();
 
-        css.ShouldContain("#2b6cb0");
-        css.ShouldContain("#90cdf4");
-        css.ShouldContain("html[data-theme=\"dark\"] .auth-section a.login-link-blink");
+        css.ShouldContain("var(--login-link-bright)");
+        css.ShouldContain("var(--login-link-dim)");
+
+        var tokens = ReadAppCss();
+        tokens.ShouldContain("--login-link-bright: #2b6cb0");
+        tokens.ShouldContain("--login-link-dim: #4a5568");
+        tokens.ShouldContain("--login-link-bright: #90cdf4");
+        tokens.ShouldContain("--login-link-dim: #a0aec0");
+        tokens.ShouldContain("html[data-theme=\"dark\"]");
     }
 
     [Test]
@@ -79,11 +85,22 @@ public class LoginLinkBlinkStyleTests
 
     private static string ReadLoginLinkCss()
     {
+        return ReadCss(Path.Combine("UI.Shared", "Components", "LoginLink.razor.css"));
+    }
+
+    private static string ReadAppCss()
+    {
+        return ReadCss(Path.Combine("UI", "Client", "wwwroot", "css", "app.css"));
+    }
+
+    private static string ReadCss(string relativeToSrc)
+    {
         var path = Path.GetFullPath(Path.Combine(
             TestContext.CurrentContext.TestDirectory,
-            "..", "..", "..", "..", "UI.Shared", "Components", "LoginLink.razor.css"));
+            "..", "..", "..", "..",
+            relativeToSrc));
 
-        File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
+        File.Exists(path).ShouldBeTrue($"Expected stylesheet at {path}");
         var css = File.ReadAllText(path).Replace("\r\n", "\n");
         return Regex.Replace(css, @"/\*.*?\*/", string.Empty, RegexOptions.Singleline).Trim();
     }

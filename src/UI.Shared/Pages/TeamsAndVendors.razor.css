@@ -1,4 +1,4 @@
-/* Teams & Vendors (#256): page header, table with sortable columns */
+/* Teams & Vendors (issue 256): page header, table with sortable columns */
 .teams-page {
     color: var(--color-text);
     font-size: var(--font-size-body);
@@ -176,17 +176,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
+    color: var(--color-on-primary);
     font-size: 11px;
     font-weight: 700;
 }
 
-.avatar--0 { background: #047857; }
-.avatar--1 { background: #1d4ed8; }
-.avatar--2 { background: #be185d; }
-.avatar--3 { background: #6d28d9; }
-.avatar--4 { background: #b45309; }
-.avatar--5 { background: #0e7490; }
+.avatar--0 { background: var(--avatar-0); }
+.avatar--1 { background: var(--avatar-1); }
+.avatar--2 { background: var(--avatar-2); }
+.avatar--3 { background: var(--avatar-3); }
+.avatar--4 { background: var(--avatar-4); }
+.avatar--5 { background: var(--avatar-5); }
 
 .visually-hidden {
     position: absolute;
@@ -199,14 +199,6 @@
     white-space: nowrap;
     border: 0;
 }
-
-/* Dark mode: avatars keep their distinct colors */
-:global(html[data-theme="dark"]) .avatar--0 { background: #047857; }
-:global(html[data-theme="dark"]) .avatar--1 { background: #1d4ed8; }
-:global(html[data-theme="dark"]) .avatar--2 { background: #be185d; }
-:global(html[data-theme="dark"]) .avatar--3 { background: #6d28d9; }
-:global(html[data-theme="dark"]) .avatar--4 { background: #b45309; }
-:global(html[data-theme="dark"]) .avatar--5 { background: #0e7490; }
 
 /* Teams Section */
 .teams-section {
@@ -240,7 +232,7 @@
 
 .team-card:hover {
     border-color: var(--color-primary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-card);
 }
 
 .team-name {
@@ -330,7 +322,7 @@
 
 .vendor-card:hover {
     border-color: var(--color-primary);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-card);
 }
 
 .vendor-header {
@@ -362,23 +354,13 @@
 }
 
 .vendor-status-pill.active {
-    background: rgba(16, 185, 129, 0.1);
-    color: #047857;
+    background: var(--vendor-active-bg);
+    color: var(--vendor-active-fg);
 }
 
 .vendor-status-pill.inactive {
-    background: rgba(107, 114, 128, 0.1);
-    color: #374151;
-}
-
-:global(html[data-theme="dark"]) .vendor-status-pill.active {
-    background: rgba(16, 185, 129, 0.2);
-    color: #86efac;
-}
-
-:global(html[data-theme="dark"]) .vendor-status-pill.inactive {
-    background: rgba(107, 114, 128, 0.2);
-    color: #9ca3af;
+    background: var(--vendor-inactive-bg);
+    color: var(--vendor-inactive-fg);
 }
 
 .vendor-trade {

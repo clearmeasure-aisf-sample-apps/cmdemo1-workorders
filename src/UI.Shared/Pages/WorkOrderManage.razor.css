@@ -119,11 +119,14 @@
 
 .control-row small {
     flex-basis: 100%;
+}
+
+.control-row small.char-count {
     color: var(--color-muted);
 }
 
 .control-row small.text-danger {
-    color: var(--color-danger);
+    color: var(--color-danger) !important;
 }
 
 .value {

@@ -3,7 +3,7 @@
 @using ClearMeasure.Bootcamp.UI.Shared.Pages
 @inherits AppComponentBase
 
-<div class="sla-health-card" data-testid="@Elements.SlaHealthCard">
+<div class="sla-health-card @CardStateClass" data-testid="@Elements.SlaHealthCard">
     @if (_health == null)
     {
         <div class="sla-health-loading">Loading...</div>
@@ -36,6 +36,13 @@
 @code {
     private SlaHealth? _health;
     private string? _trendText;
+
+    private string CardStateClass => _health switch
+    {
+        null => "sla-health-card--loading",
+        { CurrentMonthPercentage: null } => "sla-health-card--empty",
+        _ => "sla-health-card--loaded"
+    };
 
     public enum Elements
     {

@@ -47,8 +47,8 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
         await AssertScrollsInsideAsync(".teams-page .table-scroll");
         await OpenAndAssertFitsAsync("/ai-agent", Page.GetByTestId(nameof(ApplicationChat.Elements.ChatShell)));
         await OpenAndAssertFitsAsync("/settings", Page.GetByTestId(nameof(Settings.Elements.SettingsSubtitle)));
-        await OpenAndAssertFitsAsync("/counter", Page.GetByTestId(nameof(Counter.Elements.CounterHint)));
-        await OpenAndAssertFitsAsync("/fetchdata", Page.GetByTestId(nameof(FetchData.Elements.ForecastTableTooltip)));
+        await OpenAndAssertFitsAsync("/counter", Page.GetByTestId(nameof(NotFound.Elements.NotFoundHomeLink)));
+        await OpenAndAssertFitsAsync("/fetchdata", Page.GetByTestId(nameof(NotFound.Elements.NotFoundHomeLink)));
         await OpenAndAssertFitsAsync("/not-found", Page.GetByTestId(nameof(NotFound.Elements.NotFoundHomeLink)));
         await OpenAndAssertFitsAsync("/_clienthealthcheck", Page.GetByTestId(nameof(ClientHealthCheck.Elements.Status)));
         await OpenAndAssertFitsAsync(

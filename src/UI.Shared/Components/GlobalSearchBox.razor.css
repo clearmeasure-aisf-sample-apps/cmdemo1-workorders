@@ -73,12 +73,97 @@
     pointer-events: none;
 }
 
+.global-search-toggle {
+    display: none;
+}
+
 @media (max-width: 1023px) {
     .global-search-hint {
         display: none;
     }
 
     .global-search-input {
+        padding-right: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .global-search {
+        width: auto;
+    }
+
+    .global-search-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: var(--control-height);
+        height: var(--control-height);
+        padding: 0;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        color: var(--muted-on-page);
+        cursor: pointer;
+    }
+
+    .global-search-toggle:hover {
+        background: var(--color-surface-2);
+        border-color: var(--color-border-strong);
+        color: var(--color-text);
+    }
+
+    .global-search-toggle:focus-visible {
+        outline: var(--focus-ring);
+        outline-offset: 2px;
+    }
+
+    .global-search-toggle i {
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+
+    .global-search-icon,
+    .global-search-slash-hint {
+        display: none;
+    }
+
+    .global-search-input {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .global-search-field {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .global-search:focus-within .global-search-field {
+        position: fixed;
+        top: 64px;
+        left: 0.75rem;
+        right: 0.75rem;
+        z-index: 1;
+        width: auto;
+        height: auto;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        background: var(--color-surface);
+        border-radius: var(--radius-control);
+        box-shadow: var(--shadow-popover);
+    }
+
+    .global-search:focus-within .global-search-input {
+        padding-left: 0.75rem;
         padding-right: 0.75rem;
     }
 }

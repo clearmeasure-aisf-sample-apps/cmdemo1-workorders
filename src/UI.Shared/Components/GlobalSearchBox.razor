@@ -4,10 +4,19 @@
 @inject IJSRuntime Js
 
 <div class="global-search" role="search">
+    <button type="button"
+            class="global-search-toggle"
+            data-testid="@Elements.GlobalSearchToggle"
+            aria-label="Search work orders"
+            title="Search work orders"
+            @onclick="FocusInputAsync">
+        <i class="bi bi-search" aria-hidden="true"></i>
+    </button>
     <label for="@InputId" class="visually-hidden">Search work orders</label>
     <i class="bi bi-search global-search-icon" aria-hidden="true"></i>
     <div class="global-search-field">
-        <input id="@InputId"
+        <input @ref="_inputRef"
+               id="@InputId"
                data-testid="@Elements.GlobalSearchInput"
                type="search"
                class="global-search-input"
@@ -30,6 +39,7 @@
 
     private const string SlashHintId = "GlobalSearchSlashHintText";
 
+    private ElementReference _inputRef;
     private string? _text;
     private IJSObjectReference? _module;
     private IJSObjectReference? _shortcut;
@@ -37,7 +47,13 @@
     public enum Elements
     {
         GlobalSearchInput,
-        GlobalSearchSlashHint
+        GlobalSearchSlashHint,
+        GlobalSearchToggle
+    }
+
+    private async Task FocusInputAsync()
+    {
+        await _inputRef.FocusAsync();
     }
 
     private void HandleKeyDown(KeyboardEventArgs e)
