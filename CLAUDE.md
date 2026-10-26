@@ -152,7 +152,7 @@ DbUp scripts in `src/Database/scripts/Update/`, numbered sequentially (`###_Desc
 
 **IntegrationTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, Shouldly 4.3.0, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.Extensions.Hosting 10.0.2, coverlet.msbuild 6.0.4, coverlet.collector 6.0.4, Grpc.Net.Client 2.70.0, Microsoft.AspNetCore.Mvc.Testing 10.0.0, Microsoft.NET.Test.Sdk 17.14.1
 
-**AcceptanceTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, microsoft.playwright.nunit 1.54.0, Azure.AI.OpenAI 2.1.0, ModelContextProtocol 1.0.0, Microsoft.Extensions.AI 9.7.0, Microsoft.Extensions.AI.OpenAI 9.7.1-preview.1.25365.4, coverlet.collector 6.0.4, coverlet.msbuild 6.0.4, Microsoft.NET.Test.Sdk 17.14.1, Microsoft.Extensions.Hosting 10.0.2, OpenTelemetry.Instrumentation.AspNetCore 1.15.2, OpenTelemetry.Instrumentation.Http 1.15.1, OpenTelemetry.Instrumentation.Runtime 1.15.1, OpenTelemetry.Instrumentation.SqlClient 1.15.2
+**AcceptanceTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, microsoft.playwright.nunit 1.61.0, Azure.AI.OpenAI 2.1.0, ModelContextProtocol 1.0.0, Microsoft.Extensions.AI 9.7.0, Microsoft.Extensions.AI.OpenAI 9.7.1-preview.1.25365.4, coverlet.collector 6.0.4, coverlet.msbuild 6.0.4, Microsoft.NET.Test.Sdk 17.14.1, Microsoft.Extensions.Hosting 10.0.2, OpenTelemetry.Instrumentation.AspNetCore 1.15.2, OpenTelemetry.Instrumentation.Http 1.15.1, OpenTelemetry.Instrumentation.Runtime 1.15.1, OpenTelemetry.Instrumentation.SqlClient 1.15.2
 
 ## API Tools Endpoints
 
