@@ -6,11 +6,12 @@
 <div class="print-page">
 @if (!_loaded)
 {
-    <p>Loading...</p>
+    <p role="status">Loading...</p>
 }
 else if (_workOrder == null)
 {
     <p data-testid="@Elements.NotFound">Work order not found</p>
+    <a href="/workorder/search">Back to work orders</a>
 }
 else
 {
