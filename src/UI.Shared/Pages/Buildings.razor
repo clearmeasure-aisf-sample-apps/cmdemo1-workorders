@@ -13,13 +13,13 @@
 
         @if (_data == null)
         {
-            <div class="buildings-loading">
+            <div class="buildings-loading" role="status">
                 <p>Loading...</p>
             </div>
         }
         else if (_data.Length == 0)
         {
-            <div class="buildings-empty-state">
+            <div class="buildings-empty-state" role="status">
                 <p>No work orders found.</p>
             </div>
         }
