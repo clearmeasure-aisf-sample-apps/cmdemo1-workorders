@@ -121,6 +121,21 @@ public class SettingsTests
     }
 
     [Test]
+    public async Task Settings_DarkModeSwitch_ShouldBeDescribedByDarkModeHelp()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule(ThemePreferenceService.ThemeJsModulePath);
+        module.Setup<string>("getTheme").SetResult("light");
+        module.SetupVoid("syncDomFromTheme", _ => true).SetVoidResult();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Settings>());
+
+        var sw = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeSwitch)}']");
+        sw.GetAttribute("aria-describedby").ShouldBe("dark-mode-help");
+        component.Find("#dark-mode-help").GetAttribute("id").ShouldBe("dark-mode-help");
+    }
+
+    [Test]
     public void Settings_Stylesheet_ShouldUseDesignTokensWithoutDarkOverrides()
     {
         var path = Path.GetFullPath(Path.Combine(
