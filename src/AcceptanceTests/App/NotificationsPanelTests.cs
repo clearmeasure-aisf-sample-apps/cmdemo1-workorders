@@ -147,6 +147,20 @@ public class NotificationsPanelTests : AcceptanceTestBase
     }
 
     [Test, Retry(2)]
+    public async Task ShouldExposeRegionAndAccessibleName_WhenPanelOpens()
+    {
+        await Page.ReloadAsync();
+
+        var bellButton = Page.GetByTestId(nameof(MainLayout.Elements.NotificationsButton));
+        await bellButton.ClickAsync();
+
+        var panel = Page.Locator(".notifications-panel");
+        await Expect(panel).ToBeVisibleAsync();
+        await Expect(panel).ToHaveAttributeAsync("role", "region");
+        await Expect(panel).ToHaveAttributeAsync("aria-label", "Notifications");
+    }
+
+    [Test, Retry(2)]
     public async Task ShouldShowEmptyMessages_WhenUserHasNoNotifications()
     {
         await Page.ReloadAsync();
