@@ -37,7 +37,13 @@ public class BuildingsTests
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Buildings>());
 
         await component.WaitForAssertionAsync(() =>
-            component.Markup.ShouldContain("No work orders found"));
+        {
+            var empty = component.Find(".buildings-empty-state");
+            var role = empty.GetAttribute("role");
+            role.ShouldNotBeNull();
+            role.ShouldBe("status");
+            empty.TextContent.ShouldContain("No work orders found");
+        });
     }
 
     [Test]

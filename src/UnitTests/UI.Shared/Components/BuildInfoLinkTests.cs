@@ -29,4 +29,21 @@ public class BuildInfoLinkTests
         rel.ShouldContain("noopener");
         link.GetAttribute("title").ShouldBe("View the version, commit and build of this deployment");
     }
+
+    [Test]
+    public async Task Should_RenderBuildInfoLink_WithVisuallyHiddenNewTabText()
+    {
+        await using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+
+        var component = ctx.Render<BuildInfoLink>();
+
+        var link = component.Find($"[data-testid='{nameof(BuildInfoLink.Elements.BuildInfoLink)}']");
+        var hidden = link.QuerySelector(".visually-hidden");
+        hidden.ShouldNotBeNull();
+        hidden.TextContent.ShouldBe("(opens in a new tab)");
+        hidden.ClassList.ShouldContain("visually-hidden");
+        link.GetAttribute("data-testid").ShouldBe(nameof(BuildInfoLink.Elements.BuildInfoLink));
+    }
 }
