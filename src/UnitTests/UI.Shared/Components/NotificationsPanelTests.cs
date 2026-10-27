@@ -42,6 +42,21 @@ public class NotificationsPanelTests
     }
 
     [Test]
+    public void ShouldExposeRegionAndAccessibleName_WhenOpen()
+    {
+        using var ctx = new BunitContext();
+        SetupJsInterop(ctx);
+
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+
+        var panel = component.Find(".notifications-panel");
+        panel.GetAttribute("role").ShouldBe("region");
+        panel.GetAttribute("aria-label").ShouldBe("Notifications");
+    }
+
+    [Test]
     public void ShouldRenderAllThreeSections_WhenOpen()
     {
         using var ctx = new BunitContext();
