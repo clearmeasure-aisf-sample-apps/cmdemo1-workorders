@@ -119,6 +119,7 @@ public class WorkOrderPrintTests
 
         c.Find(Id(WorkOrderPrint.Elements.NotFound)).TextContent.ShouldBe("Work order not found");
         c.FindAll(Id(WorkOrderPrint.Elements.Title)).Count.ShouldBe(0);
+        c.Find("a[href='/workorder/search']").TextContent.ShouldBe("Back to work orders");
     }
 
     [TestCase("DOESNOTEXIST")]
