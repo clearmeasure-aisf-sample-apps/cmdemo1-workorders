@@ -98,6 +98,17 @@ public class DarkModeTests : AcceptanceTestBase
     }
 
     [Test, Retry(2)]
+    public async Task DarkMode_SettingsSwitch_ShouldBeDescribedByHelpText()
+    {
+        await LoginAsCurrentUser();
+        await Click(nameof(NavMenu.Elements.Settings));
+        await Page.WaitForURLAsync("**/settings");
+        var darkSwitch = Page.GetByTestId(nameof(Settings.Elements.DarkModeSwitch));
+        await darkSwitch.WaitForAsync();
+        await Expect(darkSwitch).ToHaveAttributeAsync("aria-describedby", "dark-mode-help");
+    }
+
+    [Test, Retry(2)]
     public async Task Settings_ShouldRequireAuth()
     {
         await Page.GotoAsync("/settings");

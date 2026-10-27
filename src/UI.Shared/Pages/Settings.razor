@@ -17,6 +17,7 @@
                            data-testid="@nameof(Elements.DarkModeSwitch)"
                            checked="@Theme.IsDarkMode"
                            aria-checked="@Theme.IsDarkMode.ToString().ToLowerInvariant()"
+                           aria-describedby="dark-mode-help"
                            @onchange="OnDarkModeChanged" />
                     <div class="settings-switch-labels">
                         <label class="form-check-label" for="dark-mode-switch">Dark mode</label>
