@@ -369,6 +369,27 @@ public class LoginPageTests
     }
 
     [Test]
+    public async Task Should_DescribeUserSelect_WithNotListedHint()
+    {
+        await using var ctx = new BunitContext();
+
+        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        ctx.Services.AddSingleton(provider);
+        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+
+        var component = ctx.Render<Login>();
+
+        var select = component.Find($"[data-testid='{Login.Elements.User}']");
+        select.GetAttribute("aria-describedby").ShouldBe("login-user-hint");
+        var hint = component.Find("#login-user-hint");
+        hint.TagName.ShouldBe("SMALL");
+        hint.TextContent.ShouldBe("Not listed? Ask the church office to add you.");
+    }
+
+    [Test]
     public async Task Should_RenderForgotLoginLink_WithCorrectText()
     {
         await using var ctx = new BunitContext();
@@ -639,7 +660,12 @@ public class LoginPageTests
         var component = ctx.Render<Login>();
 
         var link = component.Find("a[href='https://www.clear-measure.com']");
-        link.TextContent.ShouldBe("Need help?");
+        var caption = link.QuerySelector("small");
+        caption.ShouldNotBeNull();
+        caption.TextContent.ShouldBe("Need help?");
+        var hidden = link.QuerySelector(".visually-hidden");
+        hidden.ShouldNotBeNull();
+        hidden.TextContent.ShouldBe("(opens in a new tab)");
     }
 
     [Test]

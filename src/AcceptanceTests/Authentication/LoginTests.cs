@@ -63,6 +63,29 @@ public class LoginTests : AcceptanceTestBase
     }
 
     [Test, Retry(2)]
+    public async Task Should_DescribeUserSelectWithHint_AndAnnounceHelpLinkOpensNewTab()
+    {
+        await Page.GotoAsync("/login");
+
+        var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
+        var homerOption = userSelect.Locator("option[value='hsimpson']");
+        await WaitForEmployeeOptionsRenderedAsync(homerOption);
+
+        await Expect(userSelect).ToHaveAttributeAsync("aria-describedby", "login-user-hint");
+        await Expect(Page.Locator("#login-user-hint")).ToHaveTextAsync("Not listed? Ask the church office to add you.");
+
+        var hidden = Page.Locator("a[href='https://www.clear-measure.com']").Locator(".visually-hidden");
+        await Expect(hidden).ToHaveTextAsync("(opens in a new tab)");
+
+        await Expect(Page.GetByTestId(nameof(Login.Elements.User))).ToBeAttachedAsync();
+        await Expect(Page.GetByTestId(nameof(Login.Elements.LoginButton))).ToBeAttachedAsync();
+        await Expect(Page.GetByTestId(nameof(Login.Elements.LovejoyShortcut))).ToBeAttachedAsync();
+        await Expect(Page.GetByTestId(nameof(Login.Elements.RememberMySelection))).ToBeAttachedAsync();
+        await Expect(Page.GetByTestId(nameof(Login.Elements.LoginHint))).ToBeAttachedAsync();
+        await Expect(Page.GetByTestId(nameof(Login.Elements.LoginHeadingTooltip))).ToBeAttachedAsync();
+    }
+
+    [Test, Retry(2)]
     public async Task Should_LoginSuccessfully_UsingUsernameValue_NotDisplayLabel()
     {
         await Page.GotoAsync("/login");
