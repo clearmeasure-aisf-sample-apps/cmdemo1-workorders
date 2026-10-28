@@ -1,0 +1,3 @@
+# Note 81
+
+GET `/api/tools/random` returns HTTP 400 with detail "Query parameter 'type' is required. Supported values: number, string, uuid, color." when `type` is missing, empty, or whitespace, and HTTP 400 with detail "Unknown type '<type>'. Supported values: number, string, uuid, color." when the trimmed `type` is not one of those four names; the detail repeats `type` as sent. `ToolsRandomController.Get` in `src/UI/Api/Controllers/ToolsRandomController.cs` looks the trimmed name up in `Generators`, which uses `StringComparer.OrdinalIgnoreCase`, so `UUID` is accepted. The same GET is also routed at `api/v{version:apiVersion}/tools/random` with API version 1.0. `docs/api/tools.md` states that a missing or unknown `type` returns 400.
