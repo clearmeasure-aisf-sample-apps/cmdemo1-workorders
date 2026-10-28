@@ -1,0 +1,76 @@
+@page "/admin/buildings"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Buildings & Rooms - TechWeek Work Orders</PageTitle>
+
+<div class="buildings-page">
+    <div class="buildings-container">
+        <header class="buildings-header">
+            <h1>Buildings & Rooms</h1>
+            <p class="buildings-subtitle">Work orders by facility and location.</p>
+        </header>
+
+        @if (_data == null)
+        {
+            <div class="buildings-loading" role="status">
+                <p>Loading...</p>
+            </div>
+        }
+        else if (_data.Length == 0)
+        {
+            <div class="buildings-empty-state" role="status">
+                <p>No work orders found.</p>
+            </div>
+        }
+        else
+        {
+            <section class="buildings-cards" aria-label="Buildings and rooms">
+                @foreach (var building in _data)
+                {
+                    var buildingLabel = string.IsNullOrEmpty(building.Building) ? "No building" : building.Building;
+                    <article class="building-card" data-testid="@($"building-card-{buildingLabel}")">
+                        <div class="building-card-header">
+                            <h2 class="building-card-title">@buildingLabel</h2>
+                        </div>
+                        <div class="rooms-list">
+                            @foreach (var room in building.Rooms)
+                            {
+                                var roomLabel = string.IsNullOrEmpty(room.Room) ? "No room" : room.Room;
+                                <div class="room-item" data-testid="@($"room-item-{buildingLabel}-{roomLabel}")">
+                                    <div class="room-name">@roomLabel</div>
+                                    <div class="room-counts">
+                                        @{
+                                            var buildingParam = string.IsNullOrEmpty(building.Building) ? null : Uri.EscapeDataString(building.Building);
+                                            var roomParam = string.IsNullOrEmpty(room.Room) ? null : Uri.EscapeDataString(room.Room);
+                                            var buildingQuery = string.IsNullOrEmpty(building.Building) ? "NoBuilding=true" : $"Building={buildingParam}";
+                                            var roomQuery = string.IsNullOrEmpty(room.Room) ? "NoRoom=true" : $"Room={roomParam}";
+                                        }
+                                        <a href="@($"workorder/search?{buildingQuery}&{roomQuery}&OpenOnly=true")"
+                                           class="count-link"
+                                           data-testid="@($"room-open-link-{buildingLabel}-{roomLabel}")">
+                                            <span class="count-value">@room.OpenCount</span>
+                                            <span class="count-label">Open</span>
+                                        </a>
+                                        <a href="@($"workorder/search?{buildingQuery}&{roomQuery}&OverdueOnly=true")"
+                                           class="count-link"
+                                           data-testid="@($"room-overdue-link-{buildingLabel}-{roomLabel}")">
+                                            <span class="count-value">@room.OverdueCount</span>
+                                            <span class="count-label">Overdue</span>
+                                        </a>
+                                        <a href="@($"workorder/search?{buildingQuery}&{roomQuery}&Status=Complete&CompletedWithinDays=30")"
+                                           class="count-link"
+                                           data-testid="@($"room-completed-link-{buildingLabel}-{roomLabel}")">
+                                            <span class="count-value">@room.CompletedLast30Days</span>
+                                            <span class="count-label">Completed 30d</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </article>
+                }
+            </section>
+        }
+    </div>
+</div>
