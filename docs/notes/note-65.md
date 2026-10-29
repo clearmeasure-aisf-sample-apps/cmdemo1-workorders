@@ -1,0 +1,3 @@
+# Note 65
+
+GET /api/tools/work-order-statuses returns JSON of the statuses from WorkOrderStatus.GetAllItems(), ordered by SortBy. GetAllItems() in src/Core/Model/WorkOrderStatus.cs returns Draft (DRT, sort 1), Assigned (ASD, 2), InProgress (IPG, 3), Complete (CMP, 4), and Cancelled (CNL, 5), and does not include the empty None sentinel. Each object has code, key, friendlyName, and sortBy. ToolsWorkOrderStatusesController.Get in src/UI/Api/Controllers/ToolsWorkOrderStatusesController.cs builds that array. The same GET is also routed at api/v{version:apiVersion}/tools/work-order-statuses with API version 1.0. docs/api/tools.md states that array shape, ordered by sortBy.
