@@ -1,0 +1,3 @@
+# Assignee
+
+The **assignee** is the optional employee who fulfills a work order (`WorkOrder.Assignee`, type `Employee?`, in [`src/Core/Model/WorkOrder.cs`](../../src/Core/Model/WorkOrder.cs)), and a work order may have none. The creator assigns a Draft work order; the assignee begins, completes, or shelves it and can wait on a vendor while it is In Progress; cancellation clears the assignee ([Work order lifecycle](../domain/work-order-lifecycle.md)). This person is not the Assigned status ([Assigned](assigned.md)); the Work Order Search page filters by assignee, and **Anyone** includes assigned and unassigned work orders ([Work order search](../work-order-search.md), [`WorkOrderSearch.razor`](../../src/UI.Shared/Pages/WorkOrderSearch.razor)).
