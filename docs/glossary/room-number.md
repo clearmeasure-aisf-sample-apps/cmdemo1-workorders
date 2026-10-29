@@ -1,0 +1,3 @@
+# Room number
+
+A **room number** is the optional work-order location field that names the room or other specific area where the work is needed, such as "204" or "Main kitchen" (`WorkOrder.RoomNumber`, a nullable string, in [`src/Core/Model/WorkOrder.cs`](../../src/Core/Model/WorkOrder.cs)). It is independent of the building: a work order can have a room number, a building, both, or neither, and the field is left blank when a more specific location is not known or does not apply. Those facts are already written in [Buildings and Rooms](../buildings-rooms.md) and [docs/domain/buildings-and-rooms.md](../domain/buildings-and-rooms.md).
