@@ -1,0 +1,316 @@
+@using ClearMeasure.Bootcamp.Core.Queries
+
+<PageTitle>Teams & Vendors - TechWeek Work Orders</PageTitle>
+
+<div class="teams-page">
+    <div class="teams-container">
+        <header class="teams-header">
+            <h1>Teams & Vendors</h1>
+            <p class="teams-subtitle">Everyone who works on work orders, with their load.</p>
+        </header>
+
+        @if (_tableData == null || _teamsData == null || _vendorsData == null)
+        {
+            <div class="teams-loading">
+                <p>Loading...</p>
+            </div>
+        }
+        else
+        {
+            @if (_tableData.Count == 0)
+            {
+                <div class="teams-empty-state">
+                    <p>No assignable employees found.</p>
+                </div>
+            }
+            else
+            {
+                <section class="teams-table-card" aria-labelledby="teams-table-heading">
+                    <h2 id="teams-table-heading" class="visually-hidden">Teams and vendors list</h2>
+                    <div class="table-scroll">
+                        <table class="teams-table">
+                            <thead>
+                            <tr>
+                                <th class="col-name" scope="col">
+                                    <button type="button" class="@SortHeaderClass(SortColumn.Name)"
+                                            @onclick="() => HandleSortColumnClicked(SortColumn.Name)">
+                                        Name
+                                        @if (_sortColumn == SortColumn.Name)
+                                        {
+                                            <span class="sort-indicator" aria-hidden="true">
+                                                @(_sortAscending ? "▲" : "▼")
+                                            </span>
+                                        }
+                                    </button>
+                                </th>
+                                <th class="col-role" scope="col">Role</th>
+                                <th class="col-assigned-open" scope="col">
+                                    <button type="button" class="@SortHeaderClass(SortColumn.OpenLoad)"
+                                            @onclick="() => HandleSortColumnClicked(SortColumn.OpenLoad)">
+                                        Assigned Open
+                                        @if (_sortColumn == SortColumn.OpenLoad)
+                                        {
+                                            <span class="sort-indicator" aria-hidden="true">
+                                                @(_sortAscending ? "▲" : "▼")
+                                            </span>
+                                        }
+                                    </button>
+                                </th>
+                                <th class="col-in-progress" scope="col">In Progress</th>
+                                <th class="col-overdue" scope="col">Overdue</th>
+                                <th class="col-completed" scope="col">Completed 30d</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var row in _tableData)
+                            {
+                                var encodedName = Uri.EscapeDataString(row.Employee.UserName);
+                                var searchUrl = $"workorder/search?Assignee={encodedName}&OpenOnly=true";
+                                <tr class="teams-table-row">
+                                    <td class="col-name" data-testid="@($"{Elements.TableRowName}{row.Employee.UserName}")">
+                                        <a href="@searchUrl" class="assignee-link">
+                                            <span class="avatar avatar--@AvatarIndex(row.Employee.UserName)" aria-hidden="true">
+                                                @UserDisplay.Initials(row.Employee)
+                                            </span>
+                                            <span>@row.Employee.GetFullName()</span>
+                                        </a>
+                                    </td>
+                                    <td class="col-role" data-testid="@($"{Elements.TableRowRole}{row.Employee.UserName}")">
+                                        @UserDisplay.Roles(row.Employee)
+                                    </td>
+                                    <td class="col-assigned-open" data-testid="@($"{Elements.TableRowAssignedOpen}{row.Employee.UserName}")">
+                                        @row.Load.AssignedAndOpen
+                                    </td>
+                                    <td class="col-in-progress" data-testid="@($"{Elements.TableRowInProgress}{row.Employee.UserName}")">
+                                        @row.Load.InProgress
+                                    </td>
+                                    <td class="col-overdue" data-testid="@($"{Elements.TableRowOverdue}{row.Employee.UserName}")">
+                                        @row.Load.Overdue
+                                    </td>
+                                    <td class="col-completed" data-testid="@($"{Elements.TableRowCompleted}{row.Employee.UserName}")">
+                                        @row.Load.CompletedLast30Days
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            }
+
+            @if (_teamsData.Count == 0)
+            {
+                <div class="teams-empty-state" data-testid="@Elements.TeamsEmptyState">
+                    <p>No teams found.</p>
+                </div>
+            }
+            else
+            {
+                <section class="teams-section" aria-labelledby="teams-section-heading">
+                    <h2 id="teams-section-heading">Teams</h2>
+                    <div class="teams-grid">
+                        @foreach (var team in _teamsData)
+                        {
+                            <div class="team-card" data-testid="@($"{Elements.TeamCard}{team.Id}")">
+                                <h3 class="team-name" data-testid="@($"{Elements.TeamName}{team.Id}")">@team.Name</h3>
+                                @if (!string.IsNullOrWhiteSpace(team.Description))
+                                {
+                                    <p class="team-description" data-testid="@($"{Elements.TeamDescription}{team.Id}")">@team.Description</p>
+                                }
+                                <div class="team-info" data-testid="@($"{Elements.TeamInfo}{team.Id}")">
+                                    <span class="member-count" data-testid="@($"{Elements.TeamMemberCount}{team.Id}")">
+                                        @team.MemberCount member@(team.MemberCount != 1 ? "s" : string.Empty)
+                                    </span>
+                                </div>
+                                @if (team.Members.Count > 0)
+                                {
+                                    <div class="team-members" data-testid="@($"{Elements.TeamMembers}{team.Id}")">
+                                        @foreach (var member in team.Members)
+                                        {
+                                            var encodedMemberName = Uri.EscapeDataString(member.UserName);
+                                            var memberSearchUrl = $"workorder/search?Assignee={encodedMemberName}&OpenOnly=true";
+                                            <a href="@memberSearchUrl" class="member-avatar-link"
+                                               data-testid="@($"{Elements.TeamMemberLink}{member.UserName}")"
+                                               title="@member.GetFullName()">
+                                                <span class="avatar avatar--@AvatarIndex(member.UserName)" aria-hidden="true">
+                                                    @UserDisplay.Initials(member)
+                                                </span>
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+
+            @if (_vendorsData.Count == 0)
+            {
+                <div class="teams-empty-state" data-testid="@Elements.VendorsEmptyState">
+                    <p>No vendors found.</p>
+                </div>
+            }
+            else
+            {
+                <section class="vendors-section" aria-labelledby="vendors-section-heading">
+                    <h2 id="vendors-section-heading">Vendors</h2>
+                    <div class="vendors-grid">
+                        @foreach (var vendor in _vendorsData)
+                        {
+                            <div class="vendor-card" data-testid="@($"{Elements.VendorCard}{vendor.Id}")">
+                                <div class="vendor-header" data-testid="@($"{Elements.VendorHeader}{vendor.Id}")">
+                                    <h3 class="vendor-name" data-testid="@($"{Elements.VendorName}{vendor.Id}")">@vendor.Name</h3>
+                                    @if (!vendor.IsActive)
+                                    {
+                                        <span class="vendor-status-pill inactive" data-testid="@($"{Elements.VendorStatus}{vendor.Id}")">Inactive</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="vendor-status-pill active" data-testid="@($"{Elements.VendorStatus}{vendor.Id}")">Active</span>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(vendor.Trade))
+                                {
+                                    <p class="vendor-trade" data-testid="@($"{Elements.VendorTrade}{vendor.Id}")">@vendor.Trade</p>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(vendor.ContactName))
+                                {
+                                    <p class="vendor-contact" data-testid="@($"{Elements.VendorContactName}{vendor.Id}")">@vendor.ContactName</p>
+                                }
+                                <div class="vendor-details">
+                                    @if (!string.IsNullOrWhiteSpace(vendor.EmailAddress))
+                                    {
+                                        <p class="vendor-email" data-testid="@($"{Elements.VendorEmail}{vendor.Id}")">
+                                            <a href="mailto:@vendor.EmailAddress">@vendor.EmailAddress</a>
+                                        </p>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(vendor.PhoneNumber))
+                                    {
+                                        <p class="vendor-phone" data-testid="@($"{Elements.VendorPhone}{vendor.Id}")">@vendor.PhoneNumber</p>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    public enum Elements
+    {
+        TableRowName,
+        TableRowRole,
+        TableRowAssignedOpen,
+        TableRowInProgress,
+        TableRowOverdue,
+        TableRowCompleted,
+        TeamCard,
+        TeamName,
+        TeamDescription,
+        TeamInfo,
+        TeamMemberCount,
+        TeamMembers,
+        TeamMemberLink,
+        TeamsEmptyState,
+        VendorCard,
+        VendorHeader,
+        VendorName,
+        VendorStatus,
+        VendorTrade,
+        VendorContactName,
+        VendorEmail,
+        VendorPhone,
+        VendorsEmptyState
+    }
+
+    private enum SortColumn
+    {
+        Name,
+        OpenLoad
+    }
+
+    private sealed class TeamTableRow
+    {
+        public required Employee Employee { get; init; }
+        public required EmployeeWorkLoad Load { get; init; }
+    }
+
+    private List<TeamTableRow>? _tableData;
+    private List<Team>? _teamsData;
+    private List<Vendor>? _vendorsData;
+    private SortColumn _sortColumn = SortColumn.Name;
+    private bool _sortAscending = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var employees = await Bus.Send(new EmployeeGetAllQuery());
+        var assignableEmployees = employees
+            .Where(e => e.CanFulfillWorkOrder())
+            .ToList();
+
+        _tableData = new List<TeamTableRow>();
+
+        foreach (var employee in assignableEmployees)
+        {
+            var load = await Bus.Send(new EmployeeWorkLoadQuery(employee.UserName));
+            _tableData.Add(new TeamTableRow
+            {
+                Employee = employee,
+                Load = load
+            });
+        }
+
+        SortTableData();
+
+        var teams = await Bus.Send(new TeamsQuery());
+        _teamsData = teams.ToList();
+
+        var vendors = await Bus.Send(new VendorsQuery());
+        _vendorsData = vendors.ToList();
+    }
+
+    private void HandleSortColumnClicked(SortColumn column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = column == SortColumn.Name;
+        }
+
+        SortTableData();
+    }
+
+    private void SortTableData()
+    {
+        if (_tableData == null) return;
+
+        _tableData = _sortColumn switch
+        {
+            SortColumn.Name => _sortAscending
+                ? _tableData.OrderBy(r => r.Employee.LastName)
+                    .ThenBy(r => r.Employee.FirstName)
+                    .ToList()
+                : _tableData.OrderByDescending(r => r.Employee.LastName)
+                    .ThenByDescending(r => r.Employee.FirstName)
+                    .ToList(),
+            SortColumn.OpenLoad => _sortAscending
+                ? _tableData.OrderBy(r => r.Load.AssignedAndOpen).ToList()
+                : _tableData.OrderByDescending(r => r.Load.AssignedAndOpen).ToList(),
+            _ => _tableData
+        };
+    }
+
+    private string SortHeaderClass(SortColumn column) =>
+        _sortColumn == column ? "sort-header active-sort" : "sort-header";
+
+    private static int AvatarIndex(string? userName) =>
+        (userName ?? string.Empty).Aggregate(0, (hash, c) => (hash * 31 + c) % 6);
+}
