@@ -1,0 +1,61 @@
+@startuml
+!include templates/plantuml-theme.puml
+
+center header
+    Architecture: Logging & Observability
+endheader
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Container.puml
+
+title Logging & Observability
+
+System_Ext(health, "Platform health dashboard", "Runs in another origin. Polls the rolling 60 s counts and draws the deployed runtime view")
+
+System_Boundary(system, "Church Bulletin (this repository)") {
+    Container(client, "Blazor WASM Client", "Browser", "Client-side app, no telemetry exporter")
+    Container(server, "UI Server", "ASP.NET Core", "The deployed runtime (Dockerfile entry point). AddServiceDefaults(). MCP is served in-process at /mcp")
+    Container(worker, "Worker", ".NET Worker", "NServiceBus endpoint WorkOrderProcessing. AddServiceDefaults(). Not in the deployed image: local runs under the Aspire AppHost")
+    Container(mcp, "MCP Server (standalone)", "ASP.NET Core", "AddSerilogJsonConsole() only: no OpenTelemetry exporter. Not in the deployed image or the AppHost")
+}
+
+System_Ext(appInsights, "Application Insights", "Azure telemetry backend")
+System_Ext(aspire, "Aspire dashboard", "Local telemetry backend")
+System_Ext(stdout, "Container stdout", "One compact JSON log event per line, for container log aggregation")
+
+Person(ops, "Operator / SRE", "Monitors system health and telemetry")
+
+Lay_R(mcp, worker)
+Lay_R(worker, client)
+Rel_R(client, server, "Calls API", "HTTPS")
+Rel_L(health, server, "Polls", "GET /_telemetry")
+
+Rel(server, appInsights, "Traces, metrics, logs", "Azure Monitor exporter")
+Rel(server, aspire, "Traces, metrics, logs", "OTLP exporter")
+Rel(worker, aspire, "Traces, metrics, logs", "OTLP exporter")
+
+Rel(server, stdout, "Log events", "Serilog")
+Rel(worker, stdout, "Log events", "Serilog")
+Rel(mcp, stdout, "Log events", "Serilog")
+
+Lay_R(stdout, aspire)
+Lay_R(aspire, appInsights)
+
+Rel_U(ops, appInsights, "Views telemetry")
+Rel_U(ops, aspire, "Views telemetry (local)")
+
+legend
+|= Signal |= Wiring |
+| Logs | Serilog compact JSON on stdout in every host; hosts that call AddServiceDefaults() also feed the OpenTelemetry logging provider |
+| Traces | sources: application name, ChurchBulletin.Application, ChurchBulletin.Application.Bus, ChurchBulletin.LlmGateway, NServiceBus.Core |
+| | NServiceBus.Core: EnableOpenTelemetry on the UI.Server and WorkOrderProcessing endpoints |
+| | instrumentation: ASP.NET Core, HttpClient, SqlClient, EF Core |
+| Metrics | meter ChurchBulletin.Application, plus ASP.NET Core, HttpClient and runtime instrumentation |
+| Exporters | chosen by configuration, either, both or neither |
+| | OTEL_EXPORTER_OTLP_ENDPOINT set (by the AppHost, locally): OTLP exporter |
+| | APPLICATIONINSIGHTS_CONNECTION_STRING set (by the platform, in Azure): Azure Monitor exporter |
+| Development | LocalTelemetryFileWriter also writes JSON lines files of traces, events, logs and metrics |
+| Health | UI Server: /_healthcheck, /_healthcheck/detailed, /_telemetry, and /health and /alive from MapDefaultEndpoints() |
+| Deployed runtime | not drawn here: the platform's health dashboard draws it, https:~//blue-bush-041023510.1.azurestaticapps.net/#runtime/prod |
+endlegend
+FOOTER()
+@enduml

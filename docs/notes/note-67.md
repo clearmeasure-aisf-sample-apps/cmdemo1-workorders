@@ -1,0 +1,3 @@
+# Note 67
+
+POST /api/tools/random with both query parameters `min` and `max` returns plain text (`text/plain; charset=utf-8`) of an integer in the inclusive range from `min` to `max`. `ToolsRandomController.Post` in `src/UI/Api/Controllers/ToolsRandomController.cs` returns HTTP 400 with detail "Query parameters 'min' and 'max' are required." when either parameter is missing, and HTTP 400 with detail "Query parameter 'min' must be less than or equal to 'max'." when `min` is greater than `max`. When `min` equals `max`, the body is that integer. Otherwise `NextInclusive` draws `Random.Shared.NextInt64` over `(long)max - min + 1` and formats the result with the invariant culture. The same POST is also routed at `api/v{version:apiVersion}/tools/random` with API version 1.0.
