@@ -1,0 +1,3 @@
+# Note 131
+
+WaitingOnVendorToInProgressCommand.Name is the string constant "Resume" (`public const string Name = "Resume";`). TransitionVerbPastTense is "Resumed". GetBeginStatus and GetEndStatus both return WorkOrderStatus.InProgress. UserCanExecute returns true only when the current user is the work order's assignee. IsAllowedInCurrentState returns true only when WorkOrder.WaitingOnVendorSince is not null. Execute sets WaitingOnVendorSince to null, then calls base.Execute. The command is WaitingOnVendorToInProgressCommand in `src/Core/Model/StateCommands/WaitingOnVendorToInProgressCommand.cs`.
