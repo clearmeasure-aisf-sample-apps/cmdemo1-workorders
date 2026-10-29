@@ -1,0 +1,3 @@
+# DataContext
+
+**DataContext** is the Entity Framework Core `DbContext` this application uses to read and update data. [`DataContext`](../../src/DataAccess/Mappings/DataContext.cs) in `src/DataAccess/Mappings` takes `IDatabaseConfiguration`, uses SQLite when the connection string starts with `Data Source=` and SQL Server otherwise, and maps the application's entities in `OnModelCreating`. Handlers reach the database through it, and [`UiServiceRegistry`](../../src/UI/Server/UIServiceRegistry.cs) registers it as a scoped `DbContext`; the path is described in [CQRS request flow](../conventions/cqrs-request-flow.md).
