@@ -1,0 +1,3 @@
+# Note 138
+
+RemoveAttachmentCommand.Validate returns "Work order not found." when the work order is null, "User not found." when the user is null, and "Attachment not found." when the attachment is null. Otherwise it returns "Attachment does not belong to this work order." when the attachment's WorkOrderId is not the work order's Id, "Only the creator or the assignee can remove attachments." when the user is neither the creator nor the assignee, and "Attachments cannot be removed from a Complete or Cancelled work order." when the status is not Draft, Assigned, or InProgress. When none of those apply it returns null. The method is `RemoveAttachmentCommand.Validate` in `src/Core/Model/StateCommands/RemoveAttachmentCommand.cs`.
