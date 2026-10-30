@@ -1,0 +1,3 @@
+# Technical debt
+
+**Technical debt**, as this repository uses the phrase, is the cost of a system that costs a given amount to replace but is expensive to change; the cartography audit calls that quantifiable technical debt ([Economic valuation](../../.claude/skills/codebase-cartography-audit/references/12-economic-valuation.md)). The observability guidance uses the same words for existing patterns that must not be copied: full `chat.prompt` and `chat.response` tags on spans in [`TracingChatClient`](../../src/LlmGateway/TracingChatClient.cs), and the `user.name` metric attribute in [`TelemetryHandler`](../../src/DataAccess/Handlers/TelemetryHandler.cs) ([Observability mindset](../../.claude/skills/otel-observability-mindset/SKILL.md)).
