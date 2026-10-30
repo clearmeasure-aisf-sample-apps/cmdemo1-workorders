@@ -1,0 +1,26 @@
+# Environment of the GitHub Copilot cloud agent (the fworker factory's default worker runtime): the .NET SDK of global.json, so the agent
+# runs PrivateBuild.ps1 and AcceptanceTests.ps1 before it pushes. ubuntu-latest brings PowerShell and Docker (build.ps1 starts its SQL Server
+# container when Docker runs, else falls back to SQLite); the Playwright browsers are installed here.
+# Approved by the owner as a minimal pipeline file (2026-10-20; private build and acceptance tests in the session, 2026-10-21).
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [.github/workflows/copilot-setup-steps.yml]
+  pull_request:
+    paths: [.github/workflows/copilot-setup-steps.yml]
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6.0.1
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet restore src/ChurchBulletin.sln
+      - run: dotnet build src/AcceptanceTests --configuration Debug
+      - run: pwsh src/AcceptanceTests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
