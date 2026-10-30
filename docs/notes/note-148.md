@@ -1,0 +1,3 @@
+# Note 148
+
+WorkOrderActivity.Latest returns the latest of the work order's completed, assigned, and created dates, or null when all three are null. The candidates are ordered Completed, Assigned, then Created (`Candidate("Completed", workOrder.CompletedDate)`, `Candidate("Assigned", workOrder.AssignedDate)`, `Candidate("Created", workOrder.CreatedDate)`), and `candidates.OfType<WorkOrderActivity>().MaxBy(a => a.WhenUtc)` keeps the first maximum, so equal dates prefer Completed over Assigned and Assigned over Created. The method is `WorkOrderActivity.Latest` in `src/Core/Services/WorkOrderActivity.cs`.
