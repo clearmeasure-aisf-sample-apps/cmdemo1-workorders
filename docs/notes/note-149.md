@@ -1,0 +1,3 @@
+# Note 149
+
+CommandButtonStyleHelper.GetButtonStyle returns `btn-outline-danger` when `commandName` is `Cancel`, `btn-outline-secondary` when `commandName` is `Save`, `btn-primary` when `commandName` is `Assign`, `Begin`, or `Complete` and that name is also in `validCommandNames`, and `btn-outline-secondary` otherwise (`if (commandName == "Cancel")` returns `"btn-outline-danger"`; `if (commandName == "Save")` returns `"btn-outline-secondary"`; `IsPrimaryForwardCommand` returns true only when `primaryCommands` contains the name and `validCommandNames` contains it, and `primaryCommands` is `"Assign"`, `"Begin"`, and `"Complete"`). The method is `CommandButtonStyleHelper.GetButtonStyle` in `src/Core/Services/Impl/CommandButtonStyleHelper.cs`.

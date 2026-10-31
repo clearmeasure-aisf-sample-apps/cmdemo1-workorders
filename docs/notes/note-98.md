@@ -1,0 +1,3 @@
+# Note 98
+
+WorkOrderStatus.Equals returns true when both sides are the same instance, or when the other value is not null, has the same runtime type, and CodesEqual holds. CodesEqual is ordinal string equality and is false when the receiver Code is null, so a null Code never matches by value, including another null Code. The == operator calls Equals on the left side; when the left side is null it is true only when the right side is also null. GetHashCode returns 0 when Code is null and otherwise Code.GetHashCode(). The methods are WorkOrderStatus.Equals, operator ==, and GetHashCode in src/Core/Model/WorkOrderStatus.cs.
