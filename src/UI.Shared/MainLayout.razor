@@ -1,0 +1,168 @@
+@inherits Palermo.BlazorMvc.MvcLayoutComponentBase
+
+<div class="@AppContainerClass">
+    <aside id="app-navigation-rail" class="@SidebarClass">
+        <div class="sidebar-header">
+            <div class="church-brand">
+                <div class="church-icon brand-mark" aria-hidden="true">KC</div>
+                <div class="brand-block">
+                    <div class="brand-text">
+                        <h4>TechWeek Work Orders</h4>
+                    </div>
+                    <p class="brand-subtitle" data-testid="@nameof(Elements.BrandSubtitle)">Kalahari Church · Facilities</p>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <NavMenu/>
+        </nav>
+        <div class="sidebar-footer">
+            <HealthCheckLink/>
+            <BuildInfoLink/>
+        </div>
+    </aside>
+
+    @if (_isNarrowViewport && _navVisible)
+    {
+        <div class="nav-backdrop" @onclick="ToggleNavRailAsync"></div>
+    }
+
+    <div class="main-container">
+        <header class="modern-header">
+            <div class="header-content">
+                <div class="header-leading">
+                    <button type="button"
+                            class="nav-rail-toggle"
+                            data-testid="@nameof(Elements.NavRailToggle)"
+                            @ref="_navToggleButtonRef"
+                            @onclick="ToggleNavRailAsync"
+                            aria-controls="app-navigation-rail"
+                            aria-expanded="@NavToggleAriaExpanded"
+                            title="@NavToggleTitle"
+                            aria-label="@NavToggleTitle">
+                        @if (_navVisible)
+                        {
+                            <i class="bi bi-chevron-double-left" aria-hidden="true"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-list" aria-hidden="true"></i>
+                        }
+                    </button>
+                    <div class="header-title">
+                        <Breadcrumbs/>
+                    </div>
+                </div>
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="header-search">
+                            <GlobalSearchBox/>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+                <div class="header-actions">
+                    <a href="ai-agent"
+                       class="icon-button"
+                       data-testid="@nameof(Elements.HelpLink)"
+                       title="Help"
+                       aria-label="Help">
+                        <i class="bi bi-question-lg" aria-hidden="true"></i>
+                    </a>
+                    <button type="button"
+                            class="dark-mode-toggle icon-button"
+                            data-testid="@nameof(Elements.DarkModeToggle)"
+                            @onclick="ToggleDarkModeAsync"
+                            title="@DarkModeToggleTitle"
+                            aria-label="@DarkModeToggleTitle">
+                        @if (Theme.IsDarkMode)
+                        {
+                            <i class="bi bi-moon" aria-hidden="true"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-sun" aria-hidden="true"></i>
+                        }
+                    </button>
+                    <button type="button"
+                            class="icon-button"
+                            data-testid="@nameof(Elements.NotificationsButton)"
+                            @ref="_bellButtonRef"
+                            @onclick="OpenNotificationsPanelAsync"
+                            title="Notifications"
+                            aria-label="Notifications"
+                            aria-expanded="@(_notificationsPanelOpen ? "true" : "false")">
+                        <i class="bi bi-bell" aria-hidden="true"></i>
+                        @if (BadgeCount > 0)
+                        {
+                            <span class="badge-count" data-testid="@nameof(Elements.NotificationsBadge)">@BadgeCount</span>
+                        }
+                    </button>
+                    <AuthorizeView>
+                        <Authorized>
+                            <div class="user-section">
+                                <Logout/>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="auth-section">
+                                <LoginLink/>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </header>
+
+        <AuthorizeView>
+            <Authorized>
+                <NotificationsPanel IsOpen="@_notificationsPanelOpen"
+                                   Data="@_notificationsPanelData"
+                                   BellButtonRef="_bellButtonRef"
+                                   OnClose="CloseNotificationsPanelAsync"/>
+            </Authorized>
+        </AuthorizeView>
+
+        <main class="modern-main">
+            <div class="content-wrapper">
+                @Body
+            </div>
+        </main>
+
+        <footer class="site-footer" data-testid="@nameof(Elements.CopyrightFooter)">
+            <div class="site-footer-inner">
+                <div class="footer-left">
+                    <span class="site-footer-line">
+                        © @CopyrightYear
+                        <a class="site-footer-link"
+                           href="https://clearmeasure.com/"
+                           target="_blank"
+                           rel="noopener noreferrer">ClearMeasure Labs</a>
+                    </span>
+                    <span class="site-footer-note" data-testid="@nameof(Elements.FooterNote)">
+                        Requests are typically reviewed within one business day.
+                    </span>
+                </div>
+                <div class="footer-right">
+                    <span class="site-footer-note" data-testid="@nameof(Elements.SoftwareVersion)">
+                        @AppVersion
+                        @if (_gitSha != "unknown" && _gitSha.Length >= 7)
+                        {
+                            <span> · </span>
+                            <a data-testid="@nameof(Elements.GitSha)"
+                               href="https://github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/@_gitSha"
+                               target="_blank"
+                               rel="noopener noreferrer">@_gitSha[..7]</a>
+                        }
+                        else
+                        {
+                            <span> · </span>
+                            <span data-testid="@nameof(Elements.GitSha)">unknown</span>
+                        }
+                        <span> · </span>
+                        <span data-testid="@nameof(Elements.EnvironmentName)">@_environmentName</span>
+                    </span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
