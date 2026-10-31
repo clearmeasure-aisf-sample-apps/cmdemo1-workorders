@@ -1,0 +1,3 @@
+# Note 140
+
+ChurchTimeZone.ComingSaturday returns today's calendar date in America/Chicago when today is Saturday, and otherwise the next Saturday. It sets daysUntilSaturday to `((int)DayOfWeek.Saturday - (int)today.DayOfWeek + 7) % 7` and returns `today.AddDays(daysUntilSaturday)`, which is zero days when today is Saturday. Today converts the clock's UTC instant into ChurchTimeZone.Chicago (`TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), Chicago)`) and returns that calendar date. The summary comment is "Returns the coming Saturday in America/Chicago (today when today is Saturday)." The method is `ChurchTimeZone.ComingSaturday` in `src/Core/Services/ChurchTimeZone.cs`.
