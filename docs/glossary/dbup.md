@@ -1,0 +1,3 @@
+# DbUp
+
+**DbUp** is the library the Database project uses to apply numbered SQL migration scripts. [`UpdateDatabaseCommand`](../../src/Database/Console/UpdateDatabaseCommand.cs) runs the scripts in `src/Database/scripts/Update/` against SQL Server and records each one in the `dbo.SchemaVersions` journal (packages DbUp 5.0.41 and dbup-sqlserver 6.0.16 in [`Database.csproj`](../../src/Database/Database.csproj)). [`DatabaseMigrationVersionReader`](../../src/DataAccess/DatabaseMigrationVersionReader.cs) reads the highest applied script number from that journal; SQL Server schema is managed by these scripts ([`SqliteSchemaUpgrade`](../../src/DataAccess/SqliteSchemaUpgrade.cs)).
