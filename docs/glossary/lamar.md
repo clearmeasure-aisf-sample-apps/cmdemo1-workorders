@@ -1,0 +1,3 @@
+# Lamar
+
+**Lamar** is the dependency-injection container this application uses. [`UiServiceRegistry`](../../src/UI/Server/UIServiceRegistry.cs) extends Lamar `ServiceRegistry` and scans assemblies for MediatR handlers; [`ServerApplication`](../../src/UI/Server/ServerApplication.cs) calls `builder.Host.UseLamar` and includes that registry. The Blazor client uses the same container through `LamarServiceProviderFactory` and [`UIClientServiceRegistry`](../../src/UI/Client/UIClientServiceRegistry.cs) ([`Program.cs`](../../src/UI/Client/Program.cs)), and the MCP host includes [`McpServiceRegistry`](../../src/McpServer/McpServiceRegistry.cs); UI.Server, UI.Client, UI.Api, and McpServer reference `Lamar.Microsoft.DependencyInjection` 15.0.1.

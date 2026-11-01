@@ -1,0 +1,49 @@
+@inject NavigationManager Navigation
+
+<nav aria-label="Breadcrumb" class="breadcrumbs" data-testid="@Elements.Breadcrumbs">
+    <ol>
+        @for (var index = 0; index < _trail.Count; index++)
+        {
+            var crumb = _trail[index];
+            var isLast = index == _trail.Count - 1;
+            <li>
+                @if (isLast || crumb.Href == null)
+                {
+                    <span aria-current="@(isLast ? "page" : null)" class="breadcrumb-current">@crumb.Text</span>
+                }
+                else
+                {
+                    <a href="@crumb.Href">@crumb.Text</a>
+                    <span class="breadcrumb-separator" aria-hidden="true">/</span>
+                }
+            </li>
+        }
+    </ol>
+</nav>
+
+@code {
+    private IReadOnlyList<Breadcrumb> _trail = [];
+
+    public enum Elements
+    {
+        Breadcrumbs
+    }
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        _trail = BreadcrumbResolver.Resolve(Navigation.ToBaseRelativePath(Navigation.Uri));
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _trail = BreadcrumbResolver.Resolve(Navigation.ToBaseRelativePath(e.Location));
+        InvokeAsync(StateHasChanged);
+    }
+
+    public override void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        base.Dispose();
+    }
+}

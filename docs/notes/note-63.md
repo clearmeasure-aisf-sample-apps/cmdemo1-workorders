@@ -1,0 +1,3 @@
+# Note 63
+
+GET /_healthcheck returns plain text. The first line is the overall health status word (Healthy, Degraded, or Unhealthy). The second line is databaseVersion: followed by the highest applied DbUp script number, or null when the journal cannot be read. HealthCheckPlainTextResponseWriter.Format builds that two-line body in src/UI/Server/HealthCheckPlainTextResponseWriter.cs, and DatabaseMigrationVersionReader.ReadAsync returns the highest leading script number or null when the journal cannot be read. ServerApplication maps the path with MapHealthChecks("_healthcheck", ...). docs/health-endpoints.md states the same shape.

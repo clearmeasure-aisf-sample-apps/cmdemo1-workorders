@@ -1,0 +1,3 @@
+# Release candidate
+
+**Release candidate** is the versioned build the Release workflow publishes after a successful Build of master. [`.github/workflows/release.yml`](../../.github/workflows/release.yml) turns that build's packages into the UI image, the database and acceptance-test packages, and an Octopus release numbered `MAJOR.MINOR.run_number`, whose lifecycle deploys it to the first environment ([Release workflow](../../arch/arch-devops-pipeline.md#release-workflow)). The operations glossary names the same term as a versioned build published from master that UX Testing environments deploy ([Operations glossary](../glossary-ops.md)); a merge that changes only documentation publishes no release candidate ([Board columns](../board-columns.md)).

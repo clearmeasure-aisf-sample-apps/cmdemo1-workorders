@@ -1,0 +1,99 @@
+.chat-container {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    padding: 12px;
+    background-color: var(--color-surface);
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-card);
+}
+
+.chat-history {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    max-height: 300px;
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-control);
+    max-width: 80%;
+}
+
+.user-message {
+    background: var(--gradient-primary);
+    color: var(--color-on-primary);
+    align-self: flex-end;
+    margin-left: auto;
+    text-align: right;
+}
+
+.ai-message {
+    background-color: var(--color-surface-2);
+    color: var(--color-text);
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+.message-content {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.chat-loading {
+    font-style: italic;
+    color: var(--color-muted);
+    padding: 8px;
+    text-align: center;
+}
+
+.chat-input-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.chat-input {
+    flex: 1;
+}
+
+.btn-app {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: var(--control-height);
+    padding: 0 1rem;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.btn-app--primary {
+    background: var(--gradient-primary);
+    border-color: transparent;
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-card);
+}
+
+.btn-app--primary:hover {
+    color: var(--color-on-primary);
+    filter: brightness(1.05);
+}
+
+.btn-app:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}

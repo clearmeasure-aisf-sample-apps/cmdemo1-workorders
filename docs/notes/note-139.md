@@ -1,0 +1,3 @@
+# Note 139
+
+SavedSearchViewHandler.Handle for DeleteSearchViewCommand returns SavedSearchViewResult.Failure with "User not found." when no employee has the request user name (`if (employee == null) return SavedSearchViewResult.Failure(UnknownUser);`, and `private const string UnknownUser = "User not found.";`). When no saved view has that id and that employee's id, it returns SavedSearchViewResult.Failure with "View not found." (`if (view == null) return SavedSearchViewResult.Failure("View not found.");`). Otherwise it removes the view, saves, and returns SavedSearchViewResult.Success. The method is `SavedSearchViewHandler.Handle` in `src/DataAccess/Handlers/SavedSearchViewHandler.cs`.

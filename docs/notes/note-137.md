@@ -1,0 +1,3 @@
+# Note 137
+
+AddAttachmentMetadataCommand.CreateAttachment throws ArgumentException with message "FileName is required." when FileName is null or whitespace (`if (string.IsNullOrWhiteSpace(FileName)) throw new ArgumentException("FileName is required.", nameof(FileName));`). Otherwise it returns a new WorkOrderAttachment whose Id is a new Guid, WorkOrderId is the work order's id, FileName, ContentType and FileSize are the given arguments, UploadedById is the uploader's id, and UploadedDate is the given date. The method is `AddAttachmentMetadataCommand.CreateAttachment` in `src/Core/Model/StateCommands/AddAttachmentMetadataCommand.cs`.

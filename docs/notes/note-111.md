@@ -1,0 +1,3 @@
+# Note 111
+
+WorkOrderStatus.FromKey throws ArgumentNullException when the key is null (`ArgumentNullException.ThrowIfNull(key)`). It searches `GetAllItems()` for the status whose `Key` equals the argument with invariant-culture ignore-case comparison (`instance.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase)`), and throws `ArgumentOutOfRangeException` when none matches. The exception message is `Key '{key}' is not a valid key for WorkOrderStatus` (`$"Key '{key}' is not a valid key for {nameof(WorkOrderStatus)}"`). The method is `WorkOrderStatus.FromKey` in `src/Core/Model/WorkOrderStatus.cs`.

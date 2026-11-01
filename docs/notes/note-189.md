@@ -1,0 +1,3 @@
+# Note 189
+
+`RequestClassifier.Classify` in `src/UI/Server/LiveTelemetry/RequestClassifier.cs` returns `RequestKind.FrontDoorTraffic` when the request is not a Front Door health probe and not a probe path and the header `X-Azure-FDID` is present, and returns `RequestKind.DirectTraffic` when that header is absent. After those probe checks the return is `request.Headers.ContainsKey(FrontDoorIdHeader) ? RequestKind.FrontDoorTraffic : RequestKind.DirectTraffic`. `FrontDoorIdHeader` is the constant `"X-Azure-FDID"`. `CLAUDE.md` states the same rule: otherwise traffic, through Front Door when `X-Azure-FDID` is present.

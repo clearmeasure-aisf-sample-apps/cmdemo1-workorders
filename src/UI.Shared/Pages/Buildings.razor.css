@@ -1,0 +1,151 @@
+/* Buildings & Rooms (#272): cards for each building with rooms and work order counts */
+.buildings-page {
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+    min-width: 0;
+    max-width: 100%;
+}
+
+.buildings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    min-width: 0;
+    padding: 0 1rem;
+}
+
+.buildings-header {
+    margin-top: 0.5rem;
+}
+
+.buildings-header h1 {
+    margin: 0;
+    font-size: var(--font-size-title);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+}
+
+.buildings-subtitle {
+    margin: 0.35rem 0 0;
+    color: var(--muted-on-page);
+    font-size: 15px;
+}
+
+.buildings-loading,
+.buildings-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted-on-page);
+}
+
+.buildings-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.25rem;
+}
+
+.building-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.building-card-header {
+    background: var(--color-surface-2);
+    border-bottom: 1px solid var(--color-border);
+    padding: 1rem;
+}
+
+.building-card-title {
+    margin: 0;
+    font-size: var(--font-size-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text);
+}
+
+.rooms-list {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+.room-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.room-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.room-name {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+}
+
+.room-counts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.count-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.12s ease;
+}
+
+.count-link:hover {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: var(--color-primary);
+}
+
+.count-link:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.count-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.count-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+    .buildings-cards {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .room-counts {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

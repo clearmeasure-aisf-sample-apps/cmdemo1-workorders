@@ -1,0 +1,3 @@
+# Note 160
+
+When POST `/api/tools/base64` uses `mode` `decode` (whitespace trimmed, then lowercased with the invariant culture), `ToolsBase64Controller.Decode` calls `Convert.FromBase64String` on JSON `text` and returns `Encoding.UTF8.GetString` of those bytes in JSON `result`. When that text is not valid Base64, `Decode` catches `FormatException` and returns HTTP 400 with detail `JSON body field 'text' is not valid Base64.` The method is `Decode` in `src/UI/Api/Controllers/ToolsBase64Controller.cs`. The same POST is also routed at `api/v{version:apiVersion}/tools/base64` with API version 1.0. `docs/api/tools.md` states that `mode` is `encode` (the default) or `decode`.

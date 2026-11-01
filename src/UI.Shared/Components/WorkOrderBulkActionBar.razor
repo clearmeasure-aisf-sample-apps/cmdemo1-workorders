@@ -1,0 +1,109 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+<div class="bulk-bar" role="toolbar" aria-label="Bulk actions" data-testid="@Elements.BulkActionBar" @onkeydown="HandleKeyDown">
+    <span class="bulk-count" data-testid="@Elements.BulkSelectedCount">@SelectedCount selected</span>
+
+    <span class="bulk-group">
+        <label for="@Elements.BulkAssignSelect" class="visually-hidden">Assign selected to</label>
+        <select id="@Elements.BulkAssignSelect" data-testid="@Elements.BulkAssignSelect" class="bulk-select" @bind="_assignee">
+            <option value="">Assign to…</option>
+            @foreach (var user in UserOptions)
+            {
+                <option value="@user.Value">@user.Text</option>
+            }
+        </select>
+        <button type="button" class="bulk-button" data-testid="@Elements.BulkAssignButton"
+                disabled="@string.IsNullOrEmpty(_assignee)" @onclick="AssignAsync">Assign</button>
+    </span>
+
+    <span class="bulk-group">
+        <label for="@Elements.BulkChangeStatusSelect" class="visually-hidden">Change status of selected</label>
+        <select id="@Elements.BulkChangeStatusSelect" data-testid="@Elements.BulkChangeStatusSelect" class="bulk-select" @bind="_verb">
+            <option value="">Change status…</option>
+            @foreach (var verb in StatusOptions)
+            {
+                <option value="@verb">@verb</option>
+            }
+        </select>
+        <button type="button" class="bulk-button" data-testid="@Elements.BulkChangeStatusButton"
+                disabled="@string.IsNullOrEmpty(_verb)" @onclick="ChangeStatusAsync">Apply</button>
+    </span>
+
+    <span class="bulk-more">
+        <button type="button" class="bulk-button bulk-more-button" data-testid="@Elements.BulkMoreButton"
+                aria-haspopup="menu" aria-expanded="@(_moreOpen ? "true" : "false")" aria-label="More bulk actions"
+                @ref="_moreButton" @onclick="() => _moreOpen = !_moreOpen">
+            <i class="bi bi-three-dots" aria-hidden="true"></i>
+        </button>
+        <ul class="bulk-menu" role="menu" aria-label="More bulk actions" hidden="@(!_moreOpen)">
+            <li role="presentation">
+                <button type="button" role="menuitem" class="bulk-menu-item" data-testid="@Elements.BulkExportSelected" @onclick="ExportAsync">Export selected</button>
+            </li>
+            <li role="presentation">
+                <button type="button" role="menuitem" class="bulk-menu-item" data-testid="@Elements.BulkClearSelection" @onclick="ClearAsync">Clear selection</button>
+            </li>
+        </ul>
+    </span>
+</div>
+
+@code {
+    private string? _assignee;
+    private string? _verb;
+    private bool _moreOpen;
+    private ElementReference _moreButton;
+
+    /// <summary>Number of selected rows.</summary>
+    [Parameter] public int SelectedCount { get; set; }
+
+    /// <summary>People who can be assigned (user name, full name).</summary>
+    [Parameter] public IReadOnlyList<SelectListItem> UserOptions { get; set; } = [];
+
+    /// <summary>Status verbs valid for at least one selected row (for example Begin, Complete).</summary>
+    [Parameter] public IReadOnlyList<string> StatusOptions { get; set; } = [];
+
+    [Parameter] public EventCallback<string> OnAssign { get; set; }
+    [Parameter] public EventCallback<string> OnChangeStatus { get; set; }
+    [Parameter] public EventCallback OnExportSelected { get; set; }
+    [Parameter] public EventCallback OnClearSelection { get; set; }
+
+    public enum Elements
+    {
+        BulkActionBar,
+        BulkSelectedCount,
+        BulkAssignSelect,
+        BulkAssignButton,
+        BulkChangeStatusSelect,
+        BulkChangeStatusButton,
+        BulkMoreButton,
+        BulkExportSelected,
+        BulkClearSelection
+    }
+
+    private Task AssignAsync() => OnAssign.InvokeAsync(_assignee);
+
+    private Task ChangeStatusAsync() => OnChangeStatus.InvokeAsync(_verb);
+
+    private Task ExportAsync()
+    {
+        _moreOpen = false;
+        return OnExportSelected.InvokeAsync();
+    }
+
+    private Task ClearAsync()
+    {
+        _moreOpen = false;
+        return OnClearSelection.InvokeAsync();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key != "Escape" || !_moreOpen)
+        {
+            return;
+        }
+
+        _moreOpen = false;
+        await _moreButton.FocusAsync();
+    }
+}

@@ -1,0 +1,3 @@
+# Note 188
+
+GET `/api/work-orders/status-counts` and GET `/api/v1.0/work-orders/status-counts` allow anonymous access, are exempt from API-key authentication and the API sliding-window rate limit, and return HTTP 200 JSON keyed by status key with every status included even when its count is zero. `WorkOrderStatusCountsController` in `src/UI/Api/Controllers/WorkOrderStatusCountsController.cs` is `[AllowAnonymous]`, routed at `api/work-orders/status-counts` and `api/v{version:apiVersion}/work-orders/status-counts`, and has no rate-limit attribute. The public leaf `work-orders/status-counts` is listed in `src/UI/Server/ApiKeyAuthenticationMiddleware.cs`. `docs/api/status-counts.md` states the same anonymous access, exemptions, and JSON shape.

@@ -1,0 +1,42 @@
+@startuml
+!include templates/plantuml-theme.puml
+
+title Work Order State Transitions
+
+left to right direction
+
+state InProgress {
+    state "Active" as ActiveInProgress
+    state WaitingOnVendor
+
+    [*] --> ActiveInProgress
+    ActiveInProgress --> WaitingOnVendor : InProgressToWaitingOnVendorCommand
+    WaitingOnVendor --> ActiveInProgress : WaitingOnVendorToInProgressCommand
+}
+
+[*] --> Draft : Create
+
+Draft --> Draft : SaveDraftCommand
+Draft --> Assigned : DraftToAssignedCommand
+
+Assigned --> InProgress : AssignedToInProgressCommand
+Assigned --> Cancelled : AssignedToCancelledCommand
+
+InProgress --> Complete : InProgressToCompleteCommand
+InProgress --> Assigned : InProgressToAssignedCommand
+ActiveInProgress --> Cancelled : InProgressToCancelledCommand
+WaitingOnVendor --> Cancelled : WaitingOnVendorToCancelledCommand
+
+Complete --> [*]
+Cancelled --> [*]
+
+legend bottom
+    |= State / notation |= Meaning |
+    | Draft, Assigned, InProgress, Complete, Cancelled | Persisted WorkOrderStatus values |
+    | Active / WaitingOnVendor | InProgress substates: WaitingOnVendorSince is null / non-null |
+    | Command-labelled arrow | One implemented command transition |
+    | Arrow from InProgress | Applies to both active work and vendor waiting |
+    | Complete / Cancelled | Terminal states |
+endlegend
+FOOTER()
+@enduml

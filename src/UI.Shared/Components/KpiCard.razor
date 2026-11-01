@@ -1,0 +1,67 @@
+@inherits ComponentBase
+@using System.Globalization
+
+@if (Href != null)
+{
+    <a class="summary-card @Tone" href="@Href" data-testid="@TestId" aria-label="@AriaLabel">
+        @Body
+    </a>
+}
+else
+{
+    <button type="button" class="summary-card @Tone" data-testid="@TestId" aria-label="@AriaLabel"
+            @onclick="() => OnSelected.InvokeAsync()">
+        @Body
+    </button>
+}
+
+@code {
+    /// <summary>Test id on the card.</summary>
+    [Parameter, EditorRequired] public string TestId { get; set; } = "";
+
+    /// <summary>Optional test id on the value; no attribute when null.</summary>
+    [Parameter] public string? ValueTestId { get; set; }
+
+    /// <summary>Card label, for example "Open work orders".</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>The number shown; null renders a dash while loading.</summary>
+    [Parameter] public int? Count { get; set; }
+
+    /// <summary>Optional note under the value; omitted when null.</summary>
+    [Parameter] public string? Note { get; set; }
+
+    /// <summary>Tone class, for example "summary-card--indigo".</summary>
+    [Parameter] public string? Tone { get; set; }
+
+    /// <summary>Bootstrap icon class, for example "bi-check2-circle".</summary>
+    [Parameter] public string? Icon { get; set; }
+
+    /// <summary>Note tone class, for example "note--success".</summary>
+    [Parameter] public string? NoteTone { get; set; }
+
+    /// <summary>When set, the card is a link to this address instead of a button.</summary>
+    [Parameter] public string? Href { get; set; }
+
+    /// <summary>Raised when the button card is clicked.</summary>
+    [Parameter] public EventCallback OnSelected { get; set; }
+
+    private string CountText => Count?.ToString(CultureInfo.InvariantCulture) ?? "–";
+
+    private string AriaLabel => Note == null
+        ? $"{Label}: {CountText}. Show these work orders"
+        : $"{Label}: {CountText}. {Note}. Show these work orders";
+
+    private RenderFragment Body =>
+        @<text>
+            <span class="summary-card-text">
+                <span class="summary-card-label">@Label</span>
+                <span class="summary-card-value" data-testid="@ValueTestId">@CountText</span>
+                @if (Note != null)
+                {
+                    @(" ")<span class="summary-card-note @NoteTone">@Note</span>
+                }
+            </span>
+            <span class="summary-card-icon" aria-hidden="true"><i class="bi @Icon"></i></span>
+        </text>;
+}

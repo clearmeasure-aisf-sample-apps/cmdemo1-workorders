@@ -1,0 +1,56 @@
+/*
+	The scoped bundle emits this file before MainLayout.razor.css, and
+	`.auth-section ::deep a` matches the header Login anchor at the same
+	specificity, so it would win every tie. Qualifying with `.auth-section`
+	outranks it and keeps the pulse (not the header's muted gray and
+	`transition: all`) in control of color and opacity.
+
+	`:global(...)` is copied verbatim into the bundle and is not a real CSS
+	pseudo-class, so browsers drop any rule that uses it. Ancestor selectors
+	are written plainly instead; Razor only appends the scope identifier to
+	the last compound selector.
+
+	Blink colours are the `--login-link-bright` and `--login-link-dim` tokens
+	in app.css, including the dark-theme values.
+*/
+a.login-link-blink,
+.auth-section a.login-link-blink {
+	font-weight: 600;
+	color: var(--login-link-bright);
+	opacity: 1;
+	transition: background-color 0.3s ease;
+	animation: login-link-blink-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes login-link-blink-pulse {
+	0%,
+	100% {
+		opacity: 1;
+		color: var(--login-link-bright);
+	}
+
+	50% {
+		opacity: 1;
+		color: var(--login-link-dim);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	a.login-link-blink,
+	.auth-section a.login-link-blink {
+		animation: none;
+		opacity: 1;
+		color: var(--login-link-bright);
+		font-weight: 700;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+
+	.auth-section a.login-link-blink:hover,
+	.auth-section a.login-link-blink:focus {
+		color: var(--login-link-bright);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+		opacity: 1;
+	}
+}

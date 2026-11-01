@@ -1,0 +1,230 @@
+@startuml
+!include templates/plantuml-theme.puml
+
+scale 2/3
+'left to right direction
+center header
+    C4 Architecture: Work Order System domain model
+endheader
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Component.puml
+
+title Work Order System domain model
+
+abstract class EntityBase<T> {
+  +Id : Guid
+  +Equals(other : T) : bool
+  +Equals(obj : object) : bool
+  +ToString() : string
+  +GetHashCode() : int
+}
+
+class WorkOrder {
+  +Title : string?
+  +Description : string?
+  +Instructions : string?
+  +RoomNumber : string?
+  +Building : string?
+  +Priority : WorkOrderPriority = Medium
+  +DueDate : DateOnly?
+  +Status : WorkOrderStatus
+  +Creator : Employee?
+  +Assignee : Employee?
+  +Number : string?
+  +FriendlyStatus : string
+  +AssignedDate : DateTime?
+  +CreatedDate : DateTime?
+  +CompletedDate : DateTime?
+  +WaitingOnVendorSince : DateTime?
+  +IsWaitingOnVendor : bool
+  +Attachments : ICollection<WorkOrderAttachment>
+  +ChangeStatus(status : WorkOrderStatus) : void
+  +ChangeStatus(employee : Employee, date : DateTime, status : WorkOrderStatus) : void
+  +GetMessage() : string
+  +CanReassign() : bool
+  +GetDueDateUrgency() : DueDateUrgency
+  +IsOverdue() : bool
+}
+
+class Employee {
+  +UserName : string
+  +FirstName : string
+  +LastName : string
+  +MiddleName : string?
+  +EmailAddress : string
+  +PreferredLanguage : string = "en-US"
+  +Roles : ISet<Role>
+  +CompareTo(other : Employee?) : int
+  +GetFullName() : string
+  +CanCreateWorkOrder() : bool
+  +CanFulfillWorkOrder() : bool
+  +AddRole(role : Role) : void
+}
+
+class Team {
+  +Name : string
+  +Description : string?
+  +Members : ISet<Employee>
+  +MemberCount : int
+  +AddMember(employee : Employee) : void
+}
+
+class Vendor {
+  +Name : string
+  +Trade : string?
+  +ContactName : string?
+  +EmailAddress : string?
+  +PhoneNumber : string?
+  +IsActive : bool = true
+}
+
+class SavedSearchView {
+  +Id : Guid
+  +EmployeeId : Guid
+  +Name : string
+  +Query : string
+  +CreatedDate : DateTime
+}
+
+class WorkOrderStatusChange {
+  +WorkOrderId : Guid
+  +FromStatus : WorkOrderStatus
+  +ToStatus : WorkOrderStatus
+  +ChangedById : Guid
+  +ChangedBy : Employee?
+  +ChangedDate : DateTime
+}
+
+class WorkOrderAttachment {
+  +Id : Guid
+  +WorkOrderId : Guid
+  +FileName : string
+  +ContentType : string
+  +FileSize : long
+  +UploadedById : Guid
+  +UploadedBy : Employee?
+  +UploadedDate : DateTime
+}
+
+enum WorkOrderPriority {
+  Low = 1
+  Medium = 2
+  High = 3
+}
+
+enum DueDateUrgency {
+  None = 0
+  DueToday = 1
+  Overdue = 2
+}
+
+class WorkOrderStatus {
+  +Code : string
+  +Key : string
+  +FriendlyName : string
+  +SortBy : byte
+  {static} +None : WorkOrderStatus
+  {static} +Draft : WorkOrderStatus
+  {static} +Assigned : WorkOrderStatus
+  {static} +InProgress : WorkOrderStatus
+  {static} +Complete : WorkOrderStatus
+  {static} +Cancelled : WorkOrderStatus
+  {static} +GetAllItems() : WorkOrderStatus[]
+  +Equals(obj : object) : bool
+  +ToString() : string
+  +GetHashCode() : int
+  +IsEmpty() : bool
+  {static} +FromCode(code : string) : WorkOrderStatus
+  {static} +FromKey(key : string) : WorkOrderStatus
+  {static} +Parse(name : string) : WorkOrderStatus
+}
+
+class Role {
+  +Name : string
+  +CanCreateWorkOrder : bool
+  +CanFulfillWorkOrder : bool
+}
+
+abstract class StateCommandBase <<record>> {
+  +WorkOrder : WorkOrder
+  +CurrentUser : Employee
+  +StateTransitionEvent : IStateTransitionEvent?
+  +TransitionVerbPresentTense : string
+  +TransitionVerbPastTense : string
+  +GetBeginStatus() : WorkOrderStatus
+  +GetEndStatus() : WorkOrderStatus
+  +IsValid() : bool
+  +Matches(commandName : string) : bool
+  +Execute(context : StateCommandContext) : void
+}
+
+class SaveDraftCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+class DraftToAssignedCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+class AssignedToInProgressCommand <<record>> {
+}
+
+class InProgressToCompleteCommand <<record>> {
+  +Execute(context : StateCommandContext) : void
+}
+
+class StateCommandResult <<record>> {
+  +WorkOrder : WorkOrder
+  +TransitionVerbPresentTense : string
+  +DebugMessage : string
+}
+
+' Inheritance relationships
+WorkOrder --|> EntityBase
+Employee --|> EntityBase
+Role --|> EntityBase
+Team --|> EntityBase
+Vendor --|> EntityBase
+WorkOrderStatusChange --|> EntityBase
+
+' State command inheritance
+SaveDraftCommand --|> StateCommandBase
+DraftToAssignedCommand --|> StateCommandBase
+AssignedToInProgressCommand --|> StateCommandBase
+InProgressToCompleteCommand --|> StateCommandBase
+
+' Associations
+WorkOrder "0..*" --> "1" WorkOrderStatus : status
+WorkOrder --> WorkOrderPriority : priority
+WorkOrder ..> DueDateUrgency : calculated urgency
+WorkOrder "0..*" --> "0..1" Employee : creator
+WorkOrder "0..*" --> "0..1" Employee : assignee
+Employee "0..*" --> "0..*" Role : roles
+Team "0..*" --> "0..*" Employee : members
+SavedSearchView "0..*" --> "1" Employee : owner (EmployeeId)
+WorkOrder "1" *-- "0..*" WorkOrderAttachment : attachments (WorkOrderId)
+WorkOrderAttachment "0..*" --> "0..1" Employee : uploaded by
+WorkOrder "1" -- "0..*" WorkOrderStatusChange : history (WorkOrderId)
+WorkOrderStatusChange "0..*" --> "0..1" Employee : changed by
+WorkOrderStatusChange --> WorkOrderStatus : from / to status
+
+note right of Vendor
+  Independent vendor directory;
+  no WorkOrder association in the model.
+end note
+
+note left of WorkOrder
+  Building is an optional string, not an entity.
+  Team membership is not a WorkOrder assignment.
+  WaitingOnVendor is an InProgress substate
+  indicated by WaitingOnVendorSince.
+end note
+
+' State command associations
+StateCommandBase --> WorkOrder : operates on
+StateCommandBase --> Employee : CurrentUser
+StateCommandResult --> WorkOrder : contains
+
+LEGEND("Legend","Entities: WorkOrder, Employee, Role, Team, Vendor, SavedSearchView, WorkOrderStatusChange, WorkOrderAttachment\nSupporting types: EntityBase<T>, WorkOrderStatus, WorkOrderPriority, DueDateUrgency\nStateCommands: representative guarded-transition examples; separate command diagrams cover the full set")
+FOOTER()
+@enduml
