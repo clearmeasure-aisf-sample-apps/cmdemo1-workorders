@@ -1,0 +1,3 @@
+# Note 216
+
+`BuildFactsProvider.FileName` in `src/UI/Server/BuildFacts/BuildFactsProvider.cs` is the public constant `build-facts.json` (`public const string FileName = "build-facts.json";`). The constructor that takes `contentRootPath` builds the path with `Path.Combine(contentRootPath, FileName)`. When that file is missing, `Load` returns `BuildFactsDocument.Create(null, informationalVersion)`. `docs/health-endpoints.md` states that release builds stamp facts into `build-facts.json` and that, when the file is unavailable, `/_build` still returns the same JSON shape with the assembly version and nulls for the other facts.
