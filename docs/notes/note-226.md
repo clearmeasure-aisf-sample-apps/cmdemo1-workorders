@@ -1,0 +1,3 @@
+# Note 226
+
+`VersionController.ResolveBuildConfiguration` in `src/UI/Api/Controllers/VersionController.cs` returns the executing assembly's `AssemblyConfigurationAttribute.Configuration` when that value is not null or whitespace (`var fromAttribute = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;` then `if (!string.IsNullOrWhiteSpace(fromAttribute)) return fromAttribute;`). When the attribute is missing or whitespace, a DEBUG compilation returns `"Debug"` and any other compilation returns `"Release"`. `VersionController.Get` assigns that string to `VersionMetadataResponse.BuildConfiguration`.
