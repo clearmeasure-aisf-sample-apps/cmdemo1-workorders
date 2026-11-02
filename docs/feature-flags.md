@@ -2,7 +2,7 @@
 
 Runtime feature flags are a static catalog. `GET /api/features/flags` returns every flag and whether it is enabled. The catalog is `src/UI/Api/FeatureFlagsCatalog.cs` (`FeatureFlagsCatalog.All`). Add or remove a flag only in that file.
 
-`FeatureFlagsController` (`src/UI/Api/Controllers/FeatureFlagsController.cs`) serves the catalog. It does not read the database and does not go through MediatR. The action returns the dictionary as JSON (`application/json`) with a weak ETag, so a repeat request can answer `304` when the body has not changed.
+`FeatureFlagsController` (`src/UI/Api/Controllers/FeatureFlagsController.cs`) serves the catalog. It does not read the database and does not go through MediatR. The action returns the dictionary as JSON (`application/json`) with status 200.
 
 ## Routes
 
