@@ -1,0 +1,3 @@
+# Note 229
+
+A successful GET `/api/tools/due-date-check` (also `/api/v1.0/tools/due-date-check`) parses query `date` with `DateOnly.TryParseExact` as `yyyy-MM-dd` (`CultureInfo.InvariantCulture`, `DateTimeStyles.None`, after `date.Trim()`). `ToolsDueDateCheckController.Get` in `src/UI/Api/Controllers/ToolsDueDateCheckController.cs` then calls `DueDateUrgencyCalculator.Calculate(parsedDate, WorkOrderStatus.Draft, timeProvider)` and returns HTTP 200 `DueDateCheckResponse(urgency.ToString())`. `docs/api/tools.md` states the response is `{ "urgency": "<name>" }` and that urgency is `None`, `DueToday`, or `Overdue`, relative to today in America/Chicago, treating the work order as open (Draft).
