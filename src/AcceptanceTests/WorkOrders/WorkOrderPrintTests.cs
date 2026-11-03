@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
@@ -18,5 +19,10 @@ public class WorkOrderPrintTests : AcceptanceTestBase
         await Expect(popup.GetByTestId(nameof(WorkOrderPrint.Elements.Number))).ToHaveTextAsync(order.Number!);
         await Expect(popup.GetByTestId(nameof(WorkOrderPrint.Elements.Title))).ToHaveTextAsync(order.Title!);
         await Expect(popup.Locator("#app-navigation-rail")).ToHaveCountAsync(0);
+
+        var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+        var footer = popup.Locator("footer.print-copyright");
+        await Expect(footer).ToContainTextAsync(yearText);
+        await Expect(footer).ToContainTextAsync("ClearMeasure Labs");
     }
 }

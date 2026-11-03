@@ -1,0 +1,27 @@
+.print-copyright {
+    margin-top: 1.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted-on-page);
+}
+
+.print-copyright-link {
+    margin-left: 0.35rem;
+    color: var(--muted-on-page);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+@media print {
+    .print-copyright {
+        border-top-color: #ccc;
+        color: #000;
+        background: #fff;
+    }
+
+    .print-copyright-link {
+        color: #000;
+    }
+}
