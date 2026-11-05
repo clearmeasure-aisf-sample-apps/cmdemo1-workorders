@@ -14,7 +14,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 /// <item>Octopus Feature Toggles through OpenFeature, when <see cref="ClientIdentifierKey"/> is configured
 /// (environment variable <c>Octopus__FeatureFlags__ClientIdentifier</c>). The toggle slug is the kebab-case flag
 /// name (<c>building-management</c>) or the flag name itself, ignoring case.</item>
-/// <item>The <see cref="ConfigurationSectionName"/> configuration section (<c>FeatureFlags:BuildingManagement</c>).</item>
+/// <item>The <c>FeatureFlags</c> configuration section (<c>FeatureFlags:BuildingManagement</c>).</item>
 /// <item>false.</item>
 /// </list>
 /// </summary>
@@ -24,7 +24,7 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
     public const string ClientIdentifierKey = "Octopus:FeatureFlags:ClientIdentifier";
 
     /// <summary>Configuration section holding per-flag fallback values.</summary>
-    public const string ConfigurationSectionName = "FeatureFlags";
+    private const string ConfigurationSectionName = "FeatureFlags";
 
     private const string ProductName = "ChurchBulletin";
 

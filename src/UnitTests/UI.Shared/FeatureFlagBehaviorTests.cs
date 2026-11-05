@@ -106,13 +106,13 @@ public class FeatureFlagBehaviorTests
     }
 
     [RequiresFeature(FeatureFlagNames.VendorManagement)]
-    public record GatedProbeRequest : IRequest<string>;
+    private record GatedProbeRequest : IRequest<string>;
 
-    public record OpenProbeRequest : IRequest<string>;
+    private record OpenProbeRequest : IRequest<string>;
 
     [RequiresFeature(FeatureFlagNames.BuildingManagement)]
     [RequiresFeature(FeatureFlagNames.VendorManagement)]
-    public record DoublyGatedProbeRequest : IRequest<string>;
+    private record DoublyGatedProbeRequest : IRequest<string>;
 
     private sealed class ProbeHandler<TRequest> : IRequestHandler<TRequest, string> where TRequest : IRequest<string>
     {

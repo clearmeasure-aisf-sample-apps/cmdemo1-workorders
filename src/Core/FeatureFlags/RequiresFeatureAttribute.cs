@@ -5,7 +5,7 @@ namespace ClearMeasure.Bootcamp.Core.FeatureFlags;
 /// behavior rejects the request with <see cref="FeatureDisabledException"/> otherwise. Apply more than once to
 /// require several flags.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public sealed class RequiresFeatureAttribute(string featureName) : Attribute
 {
     /// <summary>The <see cref="FeatureFlagNames"/> entry that must be enabled.</summary>

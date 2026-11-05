@@ -27,9 +27,9 @@ public sealed class FeatureDisabledProblemAttribute : ExceptionFilterAttribute
             Title = "Feature disabled",
             Status = StatusCodes.Status403Forbidden,
             Detail = disabled.Message,
-            Instance = context.HttpContext.Request.Path
+            Instance = context.HttpContext.Request.Path,
+            Extensions = { ["feature"] = disabled.FeatureName }
         };
-        problem.Extensions["feature"] = disabled.FeatureName;
 
         context.Result = new ObjectResult(problem)
         {

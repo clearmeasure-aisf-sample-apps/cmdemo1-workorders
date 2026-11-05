@@ -54,8 +54,7 @@ public class FeatureDisabledProblemAttributeTests
 
     private static ExceptionContext CreateContext(Exception exception)
     {
-        var httpContext = new DefaultHttpContext();
-        httpContext.Request.Path = "/api/blazor-wasm-single-api";
+        var httpContext = new DefaultHttpContext { Request = { Path = "/api/blazor-wasm-single-api" } };
         var actionContext = new ActionContext(httpContext, new RouteData(), new ActionDescriptor());
         return new ExceptionContext(actionContext, []) { Exception = exception };
     }
