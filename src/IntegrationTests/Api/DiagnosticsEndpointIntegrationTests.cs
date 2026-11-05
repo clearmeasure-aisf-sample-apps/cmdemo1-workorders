@@ -102,8 +102,73 @@ public class DiagnosticsEndpointIntegrationTests
         var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         payload.ShouldNotBeNull();
-        payload.FeatureFlags.SampleFeatureA.ShouldBeTrue();
-        payload.FeatureFlags.SampleFeatureB.ShouldBeFalse();
+        payload.FeatureFlags["SampleFeatureA"].ShouldBeTrue();
+        payload.FeatureFlags["SampleFeatureB"].ShouldBeFalse();
+        payload.FeatureFlags.Count.ShouldBe(FeatureFlagsCatalog.All.Count);
+    }
+
+    [Test]
+    public async Task Should_MatchFeatureFlagsEndpoint_When_GetDiagnostics()
+    {
+        var flags = await ReadFlagMapAsync(_client!, "/api/features/flags");
+        var diagnostics = await ReadDiagnosticsFlagsAsync(_client!, "/api/diagnostics");
+
+        diagnostics.Count.ShouldBe(flags.Count);
+        foreach (var (name, enabled) in flags)
+        {
+            diagnostics.ShouldContainKey(name);
+            diagnostics[name].ShouldBe(enabled);
+        }
+    }
+
+    [Test]
+    public async Task Should_ReportBuildingAndVendorOff_When_ConfigurationDisablesThem()
+    {
+        await using var factory = new DiagnosticsWebApplicationFactory().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["FeatureFlags:BuildingManagement"] = "false",
+                    ["FeatureFlags:VendorManagement"] = "false"
+                });
+            });
+        });
+        using var client = factory.CreateClient();
+
+        var flags = await ReadFlagMapAsync(client, "/api/features/flags");
+        var diagnostics = await ReadDiagnosticsFlagsAsync(client, "/api/diagnostics");
+
+        flags[FeatureFlagsCatalog.BuildingManagement].ShouldBeFalse();
+        flags[FeatureFlagsCatalog.VendorManagement].ShouldBeFalse();
+        diagnostics[FeatureFlagsCatalog.BuildingManagement].ShouldBeFalse();
+        diagnostics[FeatureFlagsCatalog.VendorManagement].ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task Should_ReportBuildingAndVendorOn_When_ConfigurationEnablesThem()
+    {
+        await using var factory = new DiagnosticsWebApplicationFactory().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["FeatureFlags:BuildingManagement"] = "true",
+                    ["FeatureFlags:VendorManagement"] = "true"
+                });
+            });
+        });
+        using var client = factory.CreateClient();
+
+        var flags = await ReadFlagMapAsync(client, "/api/features/flags");
+        var diagnostics = await ReadDiagnosticsFlagsAsync(client, "/api/v1.0/diagnostics");
+
+        flags[FeatureFlagsCatalog.BuildingManagement].ShouldBeTrue();
+        flags[FeatureFlagsCatalog.VendorManagement].ShouldBeTrue();
+        diagnostics[FeatureFlagsCatalog.BuildingManagement].ShouldBeTrue();
+        diagnostics[FeatureFlagsCatalog.VendorManagement].ShouldBeTrue();
     }
 
     [Test]
@@ -128,8 +193,28 @@ public class DiagnosticsEndpointIntegrationTests
         var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         payload.ShouldNotBeNull();
-        payload.FeatureFlags.SampleFeatureA.ShouldBeFalse();
-        payload.FeatureFlags.SampleFeatureB.ShouldBeTrue();
+        payload.FeatureFlags["SampleFeatureA"].ShouldBeFalse();
+        payload.FeatureFlags["SampleFeatureB"].ShouldBeTrue();
+    }
+
+    private static async Task<Dictionary<string, bool>> ReadFlagMapAsync(HttpClient client, string path)
+    {
+        var response = await client.GetAsync(path);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, bool>>(
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        payload.ShouldNotBeNull();
+        return payload;
+    }
+
+    private static async Task<Dictionary<string, bool>> ReadDiagnosticsFlagsAsync(HttpClient client, string path)
+    {
+        var response = await client.GetAsync(path);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        payload.ShouldNotBeNull();
+        return new Dictionary<string, bool>(payload.FeatureFlags, StringComparer.Ordinal);
     }
 
     [Test]

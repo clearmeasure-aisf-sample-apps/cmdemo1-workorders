@@ -176,19 +176,22 @@ All routes also available under the versioned prefix `/api/v1.0/tools/`.
 
 ## Feature Flags
 
-Runtime feature flag status endpoint — read-only, no DB access, no MediatR:
+Runtime feature flag status — read-only, no DB access, no MediatR. `GET /api/features/flags` and `featureFlags` on `GET /api/diagnostics` are the same map.
 
 | Route | Method | Description |
 |-------|--------|-------------|
 | `/api/features/flags` | GET | Returns `{ "FlagName": bool, ... }` for all flags |
+| `/api/diagnostics` | GET | Returns environment, uptime, and that same flag map on `featureFlags` |
 
-Also available as `/api/v1.0/features/flags`.
+Also available as `/api/v1.0/features/flags` and `/api/v1.0/diagnostics`.
 
-**Catalog:** `src/UI/Api/FeatureFlagsCatalog.cs` — static `IReadOnlyDictionary<string,bool>`. Add/remove flags there only.
-**Controller:** `src/UI/Api/Controllers/FeatureFlagsController.cs` — calls `ConditionalGetEtag.JsonContent(FeatureFlagsCatalog.All)`.
+**Catalog:** `src/UI/Api/FeatureFlagsCatalog.cs` — code defaults (`IReadOnlyDictionary<string,bool>`). Add/remove flags there only. `BuildingManagement` and `VendorManagement` default to false.
+**Runtime:** `src/UI/Api/FeatureFlagRuntime.cs` — `ConfigurationFeatureFlagRuntime` overlays the `FeatureFlags` configuration section onto the catalog. Unknown names are ignored.
+**Controllers:** `FeatureFlagsController` and `DiagnosticsController` both call `IFeatureFlagRuntime.Snapshot()`.
 **Helper:** `src/UI/Api/ConditionalGetEtag.cs` — serializes with `JsonSerializerDefaults.Web` and returns `ContentResult`; reuse for any read-only GET that returns JSON.
+**Environments:** code and `appsettings.json` leave the two gates false (image default; platform uat and prod until flipped). `appsettings.Development.json` turns them on (local process, acceptance host, matching platform tdd). Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`.
 
-Pattern: no `IBus`, no query, no handler — pure static data. API-key middleware guards automatically. Rate-limited by `ApiRateLimiting.PolicyName`.
+Pattern: no `IBus`, no query, no handler. API-key middleware guards automatically. Rate-limited by `ApiRateLimiting.PolicyName`. The acceptance host does not stub `IFeatureFlags`; it runs Development, so the gates are on.
 
 ## Build Facts
 

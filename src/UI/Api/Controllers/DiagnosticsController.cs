@@ -1,7 +1,6 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Options;
 
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 
@@ -16,10 +15,11 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 public class DiagnosticsController(
     IHostEnvironment hostEnvironment,
     TimeProvider timeProvider,
-    IOptions<DiagnosticsFeatureFlagsOptions> featureFlagsOptions) : ControllerBase
+    IFeatureFlagRuntime featureFlags) : ControllerBase
 {
     /// <summary>
-    /// Returns environment name, process uptime (same semantics as <see cref="SimpleHealthResponseBuilder"/>), and configured feature flags.
+    /// Returns environment name, process uptime (same semantics as <see cref="SimpleHealthResponseBuilder"/>),
+    /// and the feature-flag map from <see cref="IFeatureFlagRuntime"/> (the same source as <c>GET /api/features/flags</c>).
     /// </summary>
     [HttpGet]
     public IActionResult Get()
@@ -28,7 +28,7 @@ public class DiagnosticsController(
         var payload = new DiagnosticsResponse(
             Environment: hostEnvironment.EnvironmentName,
             Uptime: healthSlice.Uptime,
-            FeatureFlags: featureFlagsOptions.Value);
+            FeatureFlags: featureFlags.Snapshot());
         return ConditionalGetEtag.JsonContent(payload);
     }
 }

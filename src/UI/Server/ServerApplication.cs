@@ -94,8 +94,7 @@ public static class ServerApplication
         builder.Services.AddApiRequestTimeouts(builder.Configuration);
         builder.Services.Configure<ApiKeyAuthenticationOptions>(
             builder.Configuration.GetSection(ApiKeyAuthenticationOptions.SectionName));
-        builder.Services.Configure<DiagnosticsFeatureFlagsOptions>(
-            builder.Configuration.GetSection(DiagnosticsFeatureFlagsOptions.SectionName));
+        builder.Services.AddSingleton<IFeatureFlagRuntime, ConfigurationFeatureFlagRuntime>();
         builder.Services.PostConfigure<ApiKeyAuthenticationOptions>(o =>
             o.ValidationKey = string.IsNullOrWhiteSpace(o.ValidationKey) ? null : o.ValidationKey.Trim());
         builder.Services.AddRequestDecompression();

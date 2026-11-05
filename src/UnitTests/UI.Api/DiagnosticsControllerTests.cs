@@ -3,9 +3,9 @@ using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
@@ -31,8 +31,12 @@ public class DiagnosticsControllerTests
     {
         var clock = new FixedUtcTimeProvider(new DateTimeOffset(2026, 4, 10, 15, 0, 0, TimeSpan.Zero));
         var stubEnv = new StubHostEnvironment("UnitTestEnv");
-        var flags = new DiagnosticsFeatureFlagsOptions { SampleFeatureA = true, SampleFeatureB = false };
-        var controller = new DiagnosticsController(stubEnv, clock, Options.Create(flags))
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["FeatureFlags:SampleFeatureA"] = "true",
+            ["FeatureFlags:SampleFeatureB"] = "false"
+        }).Build();
+        var controller = new DiagnosticsController(stubEnv, clock, new ConfigurationFeatureFlagRuntime(configuration))
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -48,7 +52,10 @@ public class DiagnosticsControllerTests
         payload.ShouldNotBeNull();
         payload.Environment.ShouldBe("UnitTestEnv");
         payload.Uptime.ShouldBe(SimpleHealthResponseBuilder.Build(clock).Uptime);
-        payload.FeatureFlags.SampleFeatureA.ShouldBeTrue();
-        payload.FeatureFlags.SampleFeatureB.ShouldBeFalse();
+        payload.FeatureFlags["SampleFeatureA"].ShouldBeTrue();
+        payload.FeatureFlags["SampleFeatureB"].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagsCatalog.BuildingManagement].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagsCatalog.VendorManagement].ShouldBeFalse();
+        payload.FeatureFlags.Count.ShouldBe(FeatureFlagsCatalog.All.Count);
     }
 }

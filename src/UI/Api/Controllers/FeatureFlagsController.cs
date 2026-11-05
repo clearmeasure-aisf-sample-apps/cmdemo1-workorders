@@ -12,12 +12,13 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 [Route("api/features/flags")]
 [Route($"{ApiRoutes.VersionedApiPrefix}/features/flags")]
 [EnableRateLimiting(ApiRateLimiting.PolicyName)]
-public class FeatureFlagsController : ControllerBase
+public class FeatureFlagsController(IFeatureFlagRuntime featureFlags) : ControllerBase
 {
     /// <summary>
     /// Returns a JSON object of all known feature flag names mapped to enabled/disabled status.
+    /// The map is <see cref="IFeatureFlagRuntime.Snapshot"/>, the same source diagnostics reports.
     /// </summary>
     [HttpGet]
     public IActionResult Get() =>
-        ConditionalGetEtag.JsonContent(FeatureFlagsCatalog.All);
+        ConditionalGetEtag.JsonContent(featureFlags.Snapshot());
 }

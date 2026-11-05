@@ -1,16 +1,11 @@
 namespace ClearMeasure.Bootcamp.UI.Api;
 
 /// <summary>
-/// Configuration-bound feature flags exposed on <c>GET /api/diagnostics</c> for deployment verification.
+/// Names the <c>FeatureFlags</c> configuration section read by <see cref="IFeatureFlagRuntime"/>.
+/// Diagnostics and the flags endpoint both use that runtime, not a separate options object.
 /// </summary>
-public sealed class DiagnosticsFeatureFlagsOptions
+public static class DiagnosticsFeatureFlagsOptions
 {
     /// <summary>Configuration section name (root <c>FeatureFlags</c> in appsettings).</summary>
     public const string SectionName = "FeatureFlags";
-
-    /// <summary>Sample flag for contract stability; replace or extend with product flags as needed.</summary>
-    public bool SampleFeatureA { get; init; }
-
-    /// <summary>Sample flag for contract stability; replace or extend with product flags as needed.</summary>
-    public bool SampleFeatureB { get; init; }
 }

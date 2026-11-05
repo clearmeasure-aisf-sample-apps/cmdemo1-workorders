@@ -3,6 +3,13 @@ using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 
+/// <summary>
+/// The acceptance host runs as Development. That file turns BuildingManagement and VendorManagement on,
+/// which is the tdd default. The host does not stub <c>IFeatureFlags</c>.
+/// Flag-off navigation, deep links, and MCP or API fail-closed behavior belong to the Building and Vendor
+/// gates. This host stays on so the existing Buildings and Vendors checks keep passing.
+/// Integration tests cover the shared runtime when those flags are configured off.
+/// </summary>
 [TestFixture]
 public class FeatureFlagsApiAcceptanceTests : AcceptanceTestBase
 {
@@ -46,5 +53,28 @@ public class FeatureFlagsApiAcceptanceTests : AcceptanceTestBase
         var dict = JsonSerializer.Deserialize<Dictionary<string, bool>>(doc.RootElement.GetRawText());
         dict.ShouldNotBeNull();
         dict.Count.ShouldBeGreaterThan(0);
+    }
+
+    [Test]
+    public async Task GetFeatureFlags_Should_EnableBuildingAndVendor_And_MatchDiagnostics_When_LocalHostMatchesTdd()
+    {
+        if (!ServerFixture.StartLocalServer)
+            Assert.Ignore("Requires the local Development host (tdd ON). This host does not stub IFeatureFlags.");
+
+        var client = TestHttpClientFactory.CreateInsecureClient();
+        using var flagsResponse = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/features/flags");
+        flagsResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var flagsDocument = JsonDocument.Parse(await flagsResponse.Content.ReadAsStringAsync());
+        flagsDocument.RootElement.GetProperty("BuildingManagement").GetBoolean().ShouldBeTrue();
+        flagsDocument.RootElement.GetProperty("VendorManagement").GetBoolean().ShouldBeTrue();
+
+        using var diagnosticsResponse = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/diagnostics");
+        diagnosticsResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var diagnosticsDocument = JsonDocument.Parse(await diagnosticsResponse.Content.ReadAsStringAsync());
+        var diagnosticsFlags = diagnosticsDocument.RootElement.GetProperty("featureFlags");
+        foreach (var property in flagsDocument.RootElement.EnumerateObject())
+        {
+            diagnosticsFlags.GetProperty(property.Name).GetBoolean().ShouldBe(property.Value.GetBoolean());
+        }
     }
 }
