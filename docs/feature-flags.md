@@ -7,8 +7,8 @@ Feature flags are evaluated at runtime on the server and enforced in one place: 
 | Flag | Default in `appsettings.json` | Effect |
 | --- | --- | --- |
 | `ShowPriorityBadges` | true | When enabled, the work order search page shows a High badge on a work order whose priority is High. |
-| `BuildingManagement` | false | Reserved for the Buildings & Rooms admin surface and its building-room summary reads. No request is tagged yet. |
-| `VendorManagement` | false | Reserved for the vendor directory (list and create, UI and MCP). No request is tagged yet. |
+| `BuildingManagement` | false | Gates Buildings & Rooms: the nav link, `/admin/buildings`, `BuildingRoomSummaryQuery`, and `WorkOrderBuildingsQuery`. The work-order building text stays. |
+| `VendorManagement` | false | Gates `VendorsQuery` and `CreateVendorCommand`: the Vendors section on Teams & Vendors, and MCP `list-vendors` / `create-vendor`. Teams and the waiting-on-vendor work-order flow stay available. |
 | `SampleFeatureA` | false (true in Development) | Returned by the endpoints. No screen reads it. |
 | `SampleFeatureB` | false | Returned by the endpoints. No screen reads it. |
 
@@ -38,7 +38,7 @@ With no Octopus client identifier, `RuntimeFeatureFlagEvaluator` uses configurat
 
 Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`, or turns the Octopus toggles `building-management` and `vendor-management` on. Platform uat and prod leave them off until an operator flips them. A flip does not require a new image.
 
-The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads `appsettings.Development.json` and runs with both gates ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Existing Buildings and Vendors checks run against the ON state. Navigation hiding, an unavailable `/admin/buildings` deep link, and MCP or API fail-closed for those surfaces are the Building and Vendor gates. No request is tagged `[RequiresFeature]` for them yet. A tagged request is already rejected by `FeatureFlagBehavior` when its flag is off, and `GET /api/diagnostics` reports the same map as `GET /api/features/flags`.
+The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads `appsettings.Development.json` and runs with both gates ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Existing Buildings and Vendors checks run against the ON state. `BuildingRoomSummaryQuery` and `WorkOrderBuildingsQuery` require `BuildingManagement`. `VendorsQuery` and `CreateVendorCommand` require `VendorManagement`. When a flag is off, the bus rejects those requests, the Buildings & Rooms nav link and page are hidden, and the Vendors section on Teams & Vendors is hidden. Teams and waiting-on-vendor stay available. `GET /api/diagnostics` reports the same map as `GET /api/features/flags`.
 
 ## Enforcing a flag on a request
 

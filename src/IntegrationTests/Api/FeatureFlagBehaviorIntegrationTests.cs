@@ -142,6 +142,23 @@ public class FeatureFlagBehaviorIntegrationTests
         result.Flags[FeatureFlagNames.ShowPriorityBadges].ShouldBeTrue();
     }
 
+    [Test]
+    public async Task Send_Should_DenyVendorDirectory_When_VendorManagementIsOff()
+    {
+        await using var factory = new GatedProbeWebApplicationFactory(vendorManagement: false);
+        using var scope = factory.Services.CreateScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
+
+        var list = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new VendorsQuery()));
+        list.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
+        list.RequestName.ShouldBe(nameof(VendorsQuery));
+
+        var create = await Should.ThrowAsync<FeatureDisabledException>(() =>
+            bus.Send(new CreateVendorCommand("Acme", "HVAC", null, null, null)));
+        create.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
+        create.RequestName.ShouldBe(nameof(CreateVendorCommand));
+    }
+
     [RequiresFeature(FeatureFlagNames.VendorManagement)]
     public record GatedProbeRequest(string Value) : IRequest<string>, IRemotableRequest;
 

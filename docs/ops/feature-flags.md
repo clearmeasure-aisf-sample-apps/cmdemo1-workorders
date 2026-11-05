@@ -7,8 +7,8 @@ Flag values are evaluated at runtime. The flag names are fixed in `FeatureFlagNa
 | Flag | Default without Octopus | What it changes |
 | --- | --- | --- |
 | `ShowPriorityBadges` | true | When enabled, a High-priority work order shows a colored High badge on the search list and on the board. |
-| `BuildingManagement` | false | Reserved for Buildings & Rooms admin; no request is gated yet. |
-| `VendorManagement` | false | Reserved for the vendor directory; no request is gated yet. |
+| `BuildingManagement` | false | When off, the Buildings & Rooms nav link and page are hidden, and `BuildingRoomSummaryQuery` and `WorkOrderBuildingsQuery` are denied. The work-order building text stays. |
+| `VendorManagement` | false | When off, the Vendors section, `VendorsQuery`, `CreateVendorCommand`, and MCP `list-vendors` / `create-vendor` are denied. Teams and waiting-on-vendor stay available. |
 | `SampleFeatureA` | false (true in Development) | The flags endpoint returns it. It changes no screen. |
 | `SampleFeatureB` | false | The flags endpoint returns it. It changes no screen. |
 
@@ -29,7 +29,7 @@ A missing client identifier or an unknown flag reads as false.
 | Platform tdd | ON | ON |
 | Platform uat and prod | OFF until flipped | OFF until flipped |
 
-The acceptance host uses Development, so both gates are ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Flag-off navigation, deep links, and MCP or API fail-closed checks are the Building and Vendor gates; those requests are not tagged yet. `GET /api/diagnostics` returns the same map as the flags endpoint.
+The acceptance host uses Development, so both gates are ON. That matches platform tdd. The host does not stub `IFeatureFlags`. `BuildingRoomSummaryQuery` and `WorkOrderBuildingsQuery` require `BuildingManagement`. `VendorsQuery` and `CreateVendorCommand` require `VendorManagement`. `GET /api/diagnostics` returns the same map as the flags endpoint.
 
 ## How to read the current values
 

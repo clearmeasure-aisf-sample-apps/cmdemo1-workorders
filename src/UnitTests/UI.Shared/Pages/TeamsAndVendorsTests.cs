@@ -1,9 +1,11 @@
 using Bunit;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UI.Shared.Services;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -478,10 +480,43 @@ public class TeamsAndVendorsTests
         });
     }
 
-    private static BunitContext CreateContext(StubBusTeamsAndVendors? bus = null)
+    [Test]
+    public async Task TeamsAndVendors_WhenVendorManagementDisabled_ShouldHideVendorsAndKeepTeams()
+    {
+        var emp1 = new Employee("hsimpson", "Homer", "Simpson", "homer@springfield.com");
+        emp1.AddRole(new Role { Name = "Worker", CanCreateWorkOrder = false, CanFulfillWorkOrder = true });
+        var team = new Team("Maintenance", "Maintenance team") { Id = Guid.NewGuid() };
+        team.AddMember(emp1);
+        var vendor = new Vendor { Id = Guid.NewGuid(), Name = "Hidden Vendor", IsActive = true, Trade = "HVAC" };
+        var bus = new StubBusTeamsAndVendors
+        {
+            TeamsToReturn = [team],
+            VendorsToReturn = [vendor]
+        };
+
+        await using var ctx = CreateContext(bus, new StubFeatureFlags(vendorManagement: false));
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Find($"[data-testid='{TeamsAndVendors.Elements.TeamCard}{team.Id}']");
+            component.Markup.ShouldContain("Maintenance");
+            component.Markup.ShouldNotContain("Hidden Vendor");
+            component.Markup.ShouldNotContain("No vendors found");
+            component.FindAll(".vendors-section").Count.ShouldBe(0);
+            component.FindAll($"[data-testid='{TeamsAndVendors.Elements.VendorsEmptyState}']").Count.ShouldBe(0);
+        });
+
+        bus.VendorsQueriesSent.ShouldBe(0);
+    }
+
+    private static BunitContext CreateContext(StubBusTeamsAndVendors? bus = null, IFeatureFlags? featureFlags = null)
     {
         var ctx = new BunitContext();
         ctx.Services.AddSingleton<IBus>(bus ?? new StubBusTeamsAndVendors());
+        IFeatureFlags flags = featureFlags ?? new StubFeatureFlags();
+        ctx.Services.AddSingleton(flags);
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);
 
@@ -537,6 +572,8 @@ public class StubBusTeamsAndVendors : StubBus
 
     public Vendor[] VendorsToReturn { get; init; } = [];
 
+    public int VendorsQueriesSent { get; private set; }
+
     public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
     {
         if (request is EmployeeGetAllQuery)
@@ -558,6 +595,7 @@ public class StubBusTeamsAndVendors : StubBus
 
         if (request is VendorsQuery)
         {
+            VendorsQueriesSent++;
             return Task.FromResult<TResponse>((TResponse)(object)VendorsToReturn);
         }
 

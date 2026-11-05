@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 
@@ -5,4 +6,9 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 [Route("/admin/teams")]
 [Authorize]
-public partial class TeamsAndVendors : AppComponentBase;
+public partial class TeamsAndVendors : AppComponentBase
+{
+    private bool _vendorManagementEnabled;
+
+    [Inject] private IFeatureFlags FeatureFlags { get; set; } = null!;
+}

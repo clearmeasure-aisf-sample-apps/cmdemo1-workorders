@@ -308,6 +308,7 @@ public class ServerFixture
         process.StartInfo.Environment["ApiKeyAuthentication__Enabled"] = "false";
         process.StartInfo.Environment["ApiKeyAuthentication__ValidationKey"] = "";
         process.StartInfo.Environment["FeatureFlags__BuildingManagement"] = "true";
+        process.StartInfo.Environment["FeatureFlags__VendorManagement"] = "true";
         if (useSqlite)
         {
             ApplySqliteServerEnvironment(process, connectionString);

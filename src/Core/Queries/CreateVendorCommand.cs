@@ -1,11 +1,13 @@
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using MediatR;
 
 // ReSharper disable NotAccessedPositionalProperty.Global -- Message and Id are read by the vendor UI (later item) and by tests
 namespace ClearMeasure.Bootcamp.Core.Queries;
 
 /// <summary>
-/// Creates a vendor.
+/// Creates a vendor. Requires <see cref="FeatureFlagNames.VendorManagement"/>.
 /// </summary>
+[RequiresFeature(FeatureFlagNames.VendorManagement)]
 public record CreateVendorCommand(
     string Name,
     string? Trade,

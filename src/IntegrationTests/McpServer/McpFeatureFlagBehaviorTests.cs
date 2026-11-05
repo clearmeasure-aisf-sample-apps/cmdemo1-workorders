@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.McpServer;
+using ClearMeasure.Bootcamp.McpServer.Tools;
 using Lamar;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -47,6 +48,22 @@ public class McpFeatureFlagBehaviorTests
 
         result.Flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
         result.Flags[FeatureFlagNames.BuildingManagement].ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task VendorTools_Should_ThrowFeatureDisabled_When_VendorManagementIsOff()
+    {
+        await using var container = BuildContainer(vendorManagement: false);
+        var bus = container.GetInstance<IBus>();
+
+        var list = await Should.ThrowAsync<FeatureDisabledException>(() => VendorTools.ListVendors(bus));
+        list.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
+        list.RequestName.ShouldBe(nameof(VendorsQuery));
+
+        var create = await Should.ThrowAsync<FeatureDisabledException>(() =>
+            VendorTools.CreateVendor(bus, "Acme", "HVAC"));
+        create.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
+        create.RequestName.ShouldBe(nameof(CreateVendorCommand));
     }
 
     private static Container BuildContainer(bool vendorManagement)
