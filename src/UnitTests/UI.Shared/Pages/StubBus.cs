@@ -10,6 +10,8 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 {
     public int SendCallCount { get; private set; }
 
+    public int BuildingsQueryCount { get; private set; }
+
     public WorkOrderSearchSummary Summary { get; set; } = new();
 
     public int SummaryRequestCount { get; private set; }
@@ -128,6 +130,7 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
         if (request is WorkOrderBuildingsQuery)
         {
+            BuildingsQueryCount++;
             return Task.FromResult<TResponse>((TResponse)(object)new[] { "Kitchen", "Sanctuary" });
         }
 

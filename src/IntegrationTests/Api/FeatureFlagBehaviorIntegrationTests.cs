@@ -89,6 +89,42 @@ public class FeatureFlagBehaviorIntegrationTests
     }
 
     [Test]
+    public async Task SingleApi_Should_DenyBuildingQueries_When_BuildingManagementIsOff()
+    {
+        await using var factory = new GatedProbeWebApplicationFactory(vendorManagement: false);
+        using var client = factory.CreateClient();
+
+        foreach (var query in new IRemotableRequest[] { new BuildingRoomSummaryQuery(), new WorkOrderBuildingsQuery() })
+        {
+            using var response = await client.PostAsJsonAsync(
+                "/api/blazor-wasm-single-api", new WebServiceMessage(query));
+
+            response.StatusCode.ShouldBe(HttpStatusCode.Forbidden, query.GetType().Name);
+            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+            using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            problem.RootElement.GetProperty("status").GetInt32().ShouldBe(403);
+            problem.RootElement.GetProperty("feature").GetString().ShouldBe(FeatureFlagNames.BuildingManagement);
+            problem.RootElement.GetProperty("detail").GetString()!.ShouldContain(query.GetType().Name);
+        }
+    }
+
+    [Test]
+    public async Task Send_Should_DenyBuildingQueries_When_BuildingManagementIsOff()
+    {
+        await using var factory = new GatedProbeWebApplicationFactory(vendorManagement: false);
+        using var scope = factory.Services.CreateScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
+
+        var summary = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new BuildingRoomSummaryQuery()));
+        summary.FeatureName.ShouldBe(FeatureFlagNames.BuildingManagement);
+        summary.RequestName.ShouldBe(nameof(BuildingRoomSummaryQuery));
+
+        var buildings = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new WorkOrderBuildingsQuery()));
+        buildings.FeatureName.ShouldBe(FeatureFlagNames.BuildingManagement);
+        buildings.RequestName.ShouldBe(nameof(WorkOrderBuildingsQuery));
+    }
+
+    [Test]
     public async Task SingleApi_Should_ReturnBothManagementFlags_When_FeatureFlagsQueryPosted()
     {
         await using var factory = new GatedProbeWebApplicationFactory(vendorManagement: true);

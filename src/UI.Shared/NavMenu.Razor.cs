@@ -1,8 +1,10 @@
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Palermo.BlazorMvc;
@@ -20,15 +22,20 @@ public partial class NavMenu : AppComponentBase,
 
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
+    [Inject] private IFeatureFlags FeatureFlags { get; set; } = null!;
+
     private Employee? CurrentUser { get; set; }
 
     private WorkOrderSearchSummary? Summary { get; set; }
+
+    private bool _buildingManagementEnabled;
 
     protected override async Task OnInitializedAsync()
     {
         Navigation.LocationChanged += OnLocationChanged;
         await SetCurrentUser();
         await LoadSummaryAsync();
+        _buildingManagementEnabled = await FeatureFlags.IsEnabledAsync(FeatureFlagNames.BuildingManagement);
     }
 
     private async Task SetCurrentUser()

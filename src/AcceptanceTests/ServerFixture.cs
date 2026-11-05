@@ -307,6 +307,7 @@ public class ServerFixture
         process.StartInfo.Environment["DISABLE_AUTO_CANCEL_AGENT"] = "true";
         process.StartInfo.Environment["ApiKeyAuthentication__Enabled"] = "false";
         process.StartInfo.Environment["ApiKeyAuthentication__ValidationKey"] = "";
+        process.StartInfo.Environment["FeatureFlags__BuildingManagement"] = "true";
         if (useSqlite)
         {
             ApplySqliteServerEnvironment(process, connectionString);

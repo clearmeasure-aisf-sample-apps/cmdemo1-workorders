@@ -11,7 +11,13 @@
             <p class="buildings-subtitle">Work orders by facility and location.</p>
         </header>
 
-        @if (_data == null)
+        @if (_unavailable)
+        {
+            <div class="buildings-empty-state" role="status" data-testid="buildings-unavailable">
+                <p>Buildings & Rooms is unavailable.</p>
+            </div>
+        }
+        else if (_data == null)
         {
             <div class="buildings-loading" role="status">
                 <p>Loading...</p>
