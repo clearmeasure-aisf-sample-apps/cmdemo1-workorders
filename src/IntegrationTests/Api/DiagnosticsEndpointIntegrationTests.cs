@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -102,8 +103,8 @@ public class DiagnosticsEndpointIntegrationTests
         var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         payload.ShouldNotBeNull();
-        payload.FeatureFlags.SampleFeatureA.ShouldBeTrue();
-        payload.FeatureFlags.SampleFeatureB.ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeTrue();
+        payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeFalse();
     }
 
     [Test]
@@ -128,8 +129,8 @@ public class DiagnosticsEndpointIntegrationTests
         var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         payload.ShouldNotBeNull();
-        payload.FeatureFlags.SampleFeatureA.ShouldBeFalse();
-        payload.FeatureFlags.SampleFeatureB.ShouldBeTrue();
+        payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeTrue();
     }
 
     [Test]

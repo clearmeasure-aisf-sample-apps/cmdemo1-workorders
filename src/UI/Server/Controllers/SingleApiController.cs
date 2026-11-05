@@ -12,6 +12,7 @@ namespace ClearMeasure.Bootcamp.UI.Server.Controllers;
 [ApiVersion("1.0")]
 [Route(WebServiceApiRoutes.LegacyRelativeUrl)]
 [Route($"{ApiRoutes.VersionedApiPrefix}/{WebServiceApiRoutes.AbstractPathSegment}")]
+[FeatureDisabledProblem]
 public class SingleApiController(IBus bus, ILogger<SingleApiController>? logger = null)
     : ControllerBase
 {

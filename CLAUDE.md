@@ -126,7 +126,7 @@ DbUp scripts in `src/Database/scripts/Update/`, numbered sequentially (`###_Desc
 
 **Core** — FluentValidation 11.11.0, MediatR.Contracts 2.0.1, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0
 
-**DataAccess** — MediatR 12.4.1, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, NServiceBus.Persistence.Sql.TransactionalSession 8.3.0, ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0, SQLitePCLRaw.bundle_e_sqlite3 2.1.12, System.Security.Cryptography.Xml 10.0.11
+**DataAccess** — MediatR 12.4.1, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, NServiceBus.Persistence.Sql.TransactionalSession 8.3.0, ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30, OpenFeature 2.14.1, Octopus.OpenFeature 4.0.0, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0, SQLitePCLRaw.bundle_e_sqlite3 2.1.12, System.Security.Cryptography.Xml 10.0.11
 
 **Database** — DbUp 5.0.41, dbup-sqlserver 6.0.16, JetBrains.Annotations 2025.2.2, Spectre.Console 0.54.0, Spectre.Console.Cli 0.53.0
 
@@ -176,19 +176,19 @@ All routes also available under the versioned prefix `/api/v1.0/tools/`.
 
 ## Feature Flags
 
-Runtime feature flag status endpoint — read-only, no DB access, no MediatR:
+Product flags are evaluated at runtime and enforced in one place, the MediatR bus. Full design: `docs/feature-flags.md`.
+
+- **Names:** `src/Core/FeatureFlags/FeatureFlagNames.cs` (`ShowPriorityBadges`, `BuildingManagement`, `VendorManagement`, `SampleFeatureA/B`; `All` is the catalog). Add a flag there and give it a default in the `FeatureFlags` section of `src/UI/Server/appsettings.json`.
+- **Values:** `RuntimeFeatureFlagEvaluator` (`src/DataAccess/FeatureFlags/`, behind `IFeatureFlagEvaluator`): Octopus Feature Toggles via OpenFeature when `Octopus__FeatureFlags__ClientIdentifier` is set (slug = kebab-case name, or the name) → `FeatureFlags:<Name>` config → **false**.
+- **Enforce:** `[RequiresFeature(FeatureFlagNames.X)]` on the request record. `FeatureFlagBehavior<,>` (`src/UI.Shared/`) is registered with `AddOpenBehavior` in `UIServiceRegistry.cs` and `McpServiceRegistry.cs` and throws `FeatureDisabledException`. `SingleApiController` (`[FeatureDisabledProblem]`) maps it to 403 problem details; MCP (`FeatureDisabledToolFilter`) returns tool error text. Do not check flags in handlers, controllers or pages.
+- **Read (UI hide only):** remotable `FeatureFlagsQuery` → `FeatureFlagsResult`. Blazor uses `IFeatureFlags` = `BusFeatureFlags` (on query failure `ShowPriorityBadges` is true, everything else false).
 
 | Route | Method | Description |
 |-------|--------|-------------|
-| `/api/features/flags` | GET | Returns `{ "FlagName": bool, ... }` for all flags |
+| `/api/features/flags` | GET | `{ "FlagName": bool, ... }` for every catalog name, via `FeatureFlagsQuery` on the bus |
 
-Also available as `/api/v1.0/features/flags`.
-
-**Catalog:** `src/UI/Api/FeatureFlagsCatalog.cs` — static `IReadOnlyDictionary<string,bool>`. Add/remove flags there only.
-**Controller:** `src/UI/Api/Controllers/FeatureFlagsController.cs` — calls `ConditionalGetEtag.JsonContent(FeatureFlagsCatalog.All)`.
+Also available as `/api/v1.0/features/flags`. `GET /api/diagnostics` returns the same map as `featureFlags`.
 **Helper:** `src/UI/Api/ConditionalGetEtag.cs` — serializes with `JsonSerializerDefaults.Web` and returns `ContentResult`; reuse for any read-only GET that returns JSON.
-
-Pattern: no `IBus`, no query, no handler — pure static data. API-key middleware guards automatically. Rate-limited by `ApiRateLimiting.PolicyName`.
 
 ## Build Facts
 

@@ -1,6 +1,10 @@
 using System.Text.Json;
+using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -10,15 +14,20 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 [TestFixture]
 public class FeatureFlagsControllerTests
 {
-    [Test]
-    public void Get_Should_ReturnAllCatalogEntries_When_Called()
+    private static readonly Dictionary<string, bool> RuntimeFlags = new()
     {
-        var controller = new FeatureFlagsController
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+        [FeatureFlagNames.ShowPriorityBadges] = true,
+        [FeatureFlagNames.BuildingManagement] = true,
+        [FeatureFlagNames.VendorManagement] = false
+    };
 
-        var result = controller.Get();
+    [Test]
+    public async Task Get_Should_ReturnQueryFlags_When_Called()
+    {
+        var bus = new StubBus(RuntimeFlags);
+        var controller = CreateController(bus);
+
+        var result = await controller.Get();
 
         var content = result.ShouldBeOfType<ContentResult>();
         content.ContentType.ShouldNotBeNull();
@@ -27,43 +36,40 @@ public class FeatureFlagsControllerTests
             content.Content!,
             ConditionalGetEtag.JsonSerializerOptions);
         payload.ShouldNotBeNull();
-        foreach (var (name, enabled) in FeatureFlagsCatalog.All)
-        {
-            payload.ShouldContainKey(name);
-            payload[name].ShouldBe(enabled);
-        }
-
-        payload.Count.ShouldBe(FeatureFlagsCatalog.All.Count);
+        payload.ShouldBe(RuntimeFlags, ignoreOrder: true);
+        bus.Requests.Single().ShouldBeOfType<FeatureFlagsQuery>();
     }
 
     [Test]
-    public void All_Should_EnableShowPriorityBadges_When_CatalogRead()
+    public async Task Get_Should_SerializeFlagKeysAsCatalogNames_When_UsingWebJsonDefaults()
     {
-        FeatureFlagsCatalog.All["ShowPriorityBadges"].ShouldBeTrue();
-    }
+        var controller = CreateController(new StubBus(RuntimeFlags));
 
-    [Test]
-    public void All_Should_BeNonNull_When_CatalogAccessed()
-    {
-        FeatureFlagsCatalog.All.ShouldNotBeNull();
-        FeatureFlagsCatalog.All.Count.ShouldBeGreaterThan(0);
-    }
-
-    [Test]
-    public void Get_Should_SerializeFlagKeysAsCatalogNames_When_UsingWebJsonDefaults()
-    {
-        var controller = new FeatureFlagsController
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
-
-        var result = controller.Get();
+        var result = await controller.Get();
 
         var content = result.ShouldBeOfType<ContentResult>();
         using var doc = JsonDocument.Parse(content.Content!);
-        foreach (var key in FeatureFlagsCatalog.All.Keys)
+        foreach (var key in RuntimeFlags.Keys)
         {
             doc.RootElement.TryGetProperty(key, out _).ShouldBeTrue($"expected key '{key}' in JSON");
         }
+    }
+
+    private static FeatureFlagsController CreateController(IBus bus) =>
+        new(bus) { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };
+
+    private sealed class StubBus(IReadOnlyDictionary<string, bool> flags) : IBus
+    {
+        public List<object> Requests { get; } = [];
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        {
+            Requests.Add(request);
+            return Task.FromResult((TResponse)(object)new FeatureFlagsResult(flags));
+        }
+
+        public Task<object?> Send(object request) => throw new NotSupportedException();
+
+        public Task Publish(INotification notification) => Task.CompletedTask;
     }
 }

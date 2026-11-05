@@ -1,19 +1,22 @@
 # Feature Flags
 
-The read-only endpoint returns the current application feature flags as a JSON object. Each property name is a flag name and its Boolean value indicates whether that flag is enabled.
+The read-only endpoint returns the current application feature flags as a JSON object. Each property name is a flag name and its Boolean value indicates whether that flag is enabled right now.
 
 Routes:
 
 - `GET /api/features/flags`
 - `GET /api/v1.0/features/flags`
 
-The in-memory catalog currently contains:
+With the checked-in `appsettings.json` and no Octopus client identifier, the body is:
 
 ```json
 {
-  "SampleFeatureA": true,
-  "SampleFeatureB": false
+  "SampleFeatureA": false,
+  "SampleFeatureB": false,
+  "ShowPriorityBadges": true,
+  "BuildingManagement": false,
+  "VendorManagement": false
 }
 ```
 
-The catalog is defined in `FeatureFlagsCatalog`.
+The controller sends `FeatureFlagsQuery` on the bus; values come from Octopus Feature Toggles, then the `FeatureFlags` configuration section, then false. `GET /api/diagnostics` returns the same map as `featureFlags`. See [Feature flags](../feature-flags.md).
