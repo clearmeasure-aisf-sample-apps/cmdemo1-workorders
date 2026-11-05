@@ -1,4 +1,6 @@
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UI.Shared;
 using Lamar;
@@ -13,7 +15,11 @@ public class McpServiceRegistry : ServiceRegistry
     {
         this.AddScoped<DbContext, DataContext>();
 
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<McpServiceRegistry>());
+        this.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblyContaining<McpServiceRegistry>();
+            cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
+        });
         this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DataContext>());
 
         this.AddTransient<IBus>(provider =>
@@ -22,6 +28,7 @@ public class McpServiceRegistry : ServiceRegistry
             return new Bus(mediator);
         });
 
+        this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
         this.AddSingleton(TimeProvider.System);
 

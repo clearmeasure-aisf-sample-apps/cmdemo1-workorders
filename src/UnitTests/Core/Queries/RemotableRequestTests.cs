@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
@@ -96,6 +97,23 @@ public class RemotableRequestTests
         var rehydrated = SimulateRemoteObject(summary);
 
         ObjectMother.AssertAllProperties(summary, rehydrated);
+    }
+
+    [Test]
+    public void ShouldRoundTripFeatureFlagsQueryAndResult()
+    {
+        AssertRemotable(new FeatureFlagsQuery());
+        var result = new FeatureFlagsResult(new Dictionary<string, bool>
+        {
+            [FeatureFlagNames.BuildingManagement] = true,
+            [FeatureFlagNames.VendorManagement] = false
+        });
+
+        var rehydrated = SimulateRemoteObject(result);
+
+        rehydrated.Flags.Count.ShouldBe(2);
+        rehydrated.Flags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
+        rehydrated.Flags[FeatureFlagNames.VendorManagement].ShouldBeFalse();
     }
 
     [Test]

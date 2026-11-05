@@ -43,6 +43,7 @@ public static class McpServerApplication
                     Version = "1.0.0"
                 };
             })
+            .WithRequestFilters(filters => filters.AddCallToolFilter(FeatureDisabledToolFilter.Create))
             .WithTools<WorkOrderTools>()
             .WithTools<EmployeeTools>()
             .WithTools<TeamTools>()
