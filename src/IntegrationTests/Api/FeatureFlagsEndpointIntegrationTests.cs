@@ -1,8 +1,11 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
+using Microsoft.Extensions.Configuration;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
@@ -77,21 +80,51 @@ public class FeatureFlagsEndpointIntegrationTests
         okVersioned.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    [Test]
+    public async Task Should_ReportSameRuntimeValues_When_FlagsAndDiagnosticsRead()
+    {
+        await using var factory = new DiagnosticsWebApplicationFactory().WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["FeatureFlags:VendorManagement"] = "true",
+                    ["FeatureFlags:ShowPriorityBadges"] = "false"
+                })));
+        using var client = factory.CreateClient();
+
+        var flags = await client.GetFromJsonAsync<Dictionary<string, bool>>("/api/features/flags");
+        var diagnostics = await client.GetFromJsonAsync<DiagnosticsResponse>(
+            "/api/diagnostics", new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        flags.ShouldNotBeNull();
+        flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
+        flags[FeatureFlagNames.BuildingManagement].ShouldBeFalse();
+        flags[FeatureFlagNames.ShowPriorityBadges].ShouldBeFalse();
+        diagnostics.ShouldNotBeNull();
+        diagnostics.FeatureFlags.ShouldBe(flags, ignoreOrder: true);
+    }
+
     private static async Task AssertCatalogPayloadAsync(HttpResponseMessage response)
     {
         await using var stream = await response.Content.ReadAsStreamAsync();
         using var doc = await JsonDocument.ParseAsync(stream);
         doc.RootElement.ValueKind.ShouldBe(JsonValueKind.Object);
 
-        foreach (var (name, enabled) in FeatureFlagsCatalog.All)
+        foreach (var (name, enabled) in ExpectedDefaults)
         {
             doc.RootElement.TryGetProperty(name, out var value).ShouldBeTrue($"missing flag '{name}'");
-            value.GetBoolean().ShouldBe(enabled);
+            value.GetBoolean().ShouldBe(enabled, $"flag '{name}'");
         }
 
-        var propertyCount = 0;
-        foreach (var _ in doc.RootElement.EnumerateObject())
-            propertyCount++;
-        propertyCount.ShouldBe(FeatureFlagsCatalog.All.Count);
+        doc.RootElement.EnumerateObject().Select(p => p.Name).ShouldBe(FeatureFlagNames.All);
     }
+
+    private static readonly Dictionary<string, bool> ExpectedDefaults = new()
+    {
+        [FeatureFlagNames.SampleFeatureA] = true,
+        [FeatureFlagNames.SampleFeatureB] = false,
+        [FeatureFlagNames.ShowPriorityBadges] = true,
+        [FeatureFlagNames.BuildingManagement] = false,
+        [FeatureFlagNames.VendorManagement] = false
+    };
 }

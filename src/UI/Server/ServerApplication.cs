@@ -3,6 +3,7 @@ using Asp.Versioning;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.DataAccess.Messaging;
+using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Resources;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UI.Api;
@@ -94,7 +95,6 @@ public static class ServerApplication
         builder.Services.AddApiRequestTimeouts(builder.Configuration);
         builder.Services.Configure<ApiKeyAuthenticationOptions>(
             builder.Configuration.GetSection(ApiKeyAuthenticationOptions.SectionName));
-        builder.Services.AddSingleton<IFeatureFlagRuntime, ConfigurationFeatureFlagRuntime>();
         builder.Services.PostConfigure<ApiKeyAuthenticationOptions>(o =>
             o.ValidationKey = string.IsNullOrWhiteSpace(o.ValidationKey) ? null : o.ValidationKey.Trim());
         builder.Services.AddRequestDecompression();
@@ -128,6 +128,7 @@ public static class ServerApplication
                 options.ServerInfo = new() { Name = "ChurchBulletin", Version = "1.0.0" };
             })
             .WithHttpTransport()
+            .WithRequestFilters(filters => filters.AddCallToolFilter(FeatureDisabledToolFilter.Create))
             .WithTools<WorkOrderTools>()
             .WithTools<EmployeeTools>()
             .WithTools<TeamTools>()

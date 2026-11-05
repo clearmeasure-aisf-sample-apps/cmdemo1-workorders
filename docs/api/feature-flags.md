@@ -1,19 +1,17 @@
 # Feature Flags
 
-The read-only endpoint returns the current application feature flags as a JSON object. Each property name is a flag name and its Boolean value indicates whether that flag is enabled. `GET /api/diagnostics` returns the same object on `featureFlags`. Both read `IFeatureFlagRuntime`: code defaults from `FeatureFlagsCatalog`, then the `FeatureFlags` configuration section for any known name.
+The read-only endpoint returns the current application feature flags as a JSON object. Each property name is a flag name and its Boolean value indicates whether that flag is enabled right now.
 
 Routes:
 
 - `GET /api/features/flags`
 - `GET /api/v1.0/features/flags`
-- `GET /api/diagnostics`
-- `GET /api/v1.0/diagnostics`
 
-Code defaults, before configuration overlay:
+With the checked-in `appsettings.json` and no Octopus client identifier, the body is:
 
 ```json
 {
-  "SampleFeatureA": true,
+  "SampleFeatureA": false,
   "SampleFeatureB": false,
   "ShowPriorityBadges": true,
   "BuildingManagement": false,
@@ -21,6 +19,4 @@ Code defaults, before configuration overlay:
 }
 ```
 
-`BuildingManagement` and `VendorManagement` are false in code and in `appsettings.json` (the image, and platform uat and prod until flipped). They are true in `appsettings.Development.json`, which is the local process, the acceptance host, and the stand-in for platform tdd. Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`.
-
-The catalog is defined in `FeatureFlagsCatalog`.
+The controller sends `FeatureFlagsQuery` on the bus; values come from Octopus Feature Toggles, then the `FeatureFlags` configuration section, then false. `GET /api/diagnostics` returns the same map as `featureFlags`. `appsettings.Development.json` turns `BuildingManagement` and `VendorManagement` on for the local process and the acceptance host (platform tdd). The image and platform uat and prod leave them off until flipped. See [Feature flags](../feature-flags.md).

@@ -1,11 +1,11 @@
 using System.Text.Json;
-using ClearMeasure.Bootcamp.UI.Api;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 /// <summary>
-/// Locks the shipped defaults: code and the image file are off; Development (the acceptance host, matching tdd) is on.
+/// Locks the shipped defaults: the image file leaves the gates off; Development (the acceptance host, matching platform tdd) turns them on.
 /// </summary>
 [TestFixture]
 public class FeatureFlagAppSettingsTests
@@ -15,8 +15,8 @@ public class FeatureFlagAppSettingsTests
     {
         var flags = ReadFlags("appsettings.json");
 
-        flags[FeatureFlagsCatalog.BuildingManagement].ShouldBeFalse();
-        flags[FeatureFlagsCatalog.VendorManagement].ShouldBeFalse();
+        flags[FeatureFlagNames.BuildingManagement].ShouldBeFalse();
+        flags[FeatureFlagNames.VendorManagement].ShouldBeFalse();
     }
 
     [Test]
@@ -24,8 +24,8 @@ public class FeatureFlagAppSettingsTests
     {
         var flags = ReadFlags("appsettings.Development.json");
 
-        flags[FeatureFlagsCatalog.BuildingManagement].ShouldBeTrue();
-        flags[FeatureFlagsCatalog.VendorManagement].ShouldBeTrue();
+        flags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
+        flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
     }
 
     private static Dictionary<string, bool> ReadFlags(string fileName)

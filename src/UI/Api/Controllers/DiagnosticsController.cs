@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -15,20 +17,21 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 public class DiagnosticsController(
     IHostEnvironment hostEnvironment,
     TimeProvider timeProvider,
-    IFeatureFlagRuntime featureFlags) : ControllerBase
+    IBus bus) : ControllerBase
 {
     /// <summary>
-    /// Returns environment name, process uptime (same semantics as <see cref="SimpleHealthResponseBuilder"/>),
-    /// and the feature-flag map from <see cref="IFeatureFlagRuntime"/> (the same source as <c>GET /api/features/flags</c>).
+    /// Returns environment name, process uptime (same semantics as <see cref="SimpleHealthResponseBuilder"/>), and
+    /// the runtime feature flags from <see cref="FeatureFlagsQuery"/>.
     /// </summary>
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
         var healthSlice = SimpleHealthResponseBuilder.Build(timeProvider);
+        var featureFlags = await bus.Send(new FeatureFlagsQuery());
         var payload = new DiagnosticsResponse(
             Environment: hostEnvironment.EnvironmentName,
             Uptime: healthSlice.Uptime,
-            FeatureFlags: featureFlags.Snapshot());
+            FeatureFlags: featureFlags.Flags);
         return ConditionalGetEtag.JsonContent(payload);
     }
 }

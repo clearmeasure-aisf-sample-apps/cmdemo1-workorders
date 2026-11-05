@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;

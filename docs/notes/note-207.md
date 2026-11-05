@@ -1,3 +1,3 @@
 # Note 207
 
-`DiagnosticsFeatureFlagsOptions.SectionName` in `src/UI/Api/DiagnosticsFeatureFlagsOptions.cs` is the constant `FeatureFlags` (`public const string SectionName = "FeatureFlags";`).
+`RuntimeFeatureFlagEvaluator` in `src/DataAccess/FeatureFlags/RuntimeFeatureFlagEvaluator.cs` reads fallback values from the configuration section `FeatureFlags` (`private const string ConfigurationSectionName = "FeatureFlags";`).

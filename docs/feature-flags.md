@@ -1,25 +1,69 @@
 # Feature flags
 
-`GET /api/features/flags` and `GET /api/diagnostics` report one runtime map. The map starts from the code defaults in `FeatureFlagsCatalog.All` (`src/UI/Api/FeatureFlagsCatalog.cs`). The `FeatureFlags` configuration section overrides a known name. Unknown names are ignored. A value that is not a boolean leaves the code default. Add or remove a flag only in `FeatureFlagsCatalog`.
+Feature flags are evaluated at runtime on the server and enforced in one place: the MediatR bus. The catalog of flag names is fixed in code (`FeatureFlagNames` in `src/Core/FeatureFlags/FeatureFlagNames.cs`); the values come from Octopus Feature Toggles, then configuration, then false.
 
-`FeatureFlagsController` and `DiagnosticsController` both call `IFeatureFlagRuntime.Snapshot` (`ConfigurationFeatureFlagRuntime`). They do not read the database and do not go through MediatR. The actions return JSON (`application/json`) with status 200.
+## Flags
 
-## Routes
+| Flag | Default in `appsettings.json` | Effect |
+| --- | --- | --- |
+| `ShowPriorityBadges` | true | When enabled, the work order search page shows a High badge on a work order whose priority is High. |
+| `BuildingManagement` | false | Reserved for the Buildings & Rooms admin surface and its building-room summary reads. No request is tagged yet. |
+| `VendorManagement` | false | Reserved for the vendor directory (list and create, UI and MCP). No request is tagged yet. |
+| `SampleFeatureA` | false (true in Development) | Returned by the endpoints. No screen reads it. |
+| `SampleFeatureB` | false | Returned by the endpoints. No screen reads it. |
 
-| Method | Route |
+To add a flag, add a constant to `FeatureFlagNames` and to `FeatureFlagNames.All`, and give it a default in the `FeatureFlags` section of `src/UI/Server/appsettings.json` (and `src/McpServer/appsettings.json` if MCP uses it).
+
+## Where values come from
+
+`RuntimeFeatureFlagEvaluator` (`src/DataAccess/FeatureFlags/`) answers every evaluation. The first source that knows the flag wins:
+
+1. **Octopus Feature Toggles through OpenFeature.** Used only when the configuration key `Octopus:FeatureFlags:ClientIdentifier` has a value. In a container that is the environment variable `Octopus__FeatureFlags__ClientIdentifier`, injected at deploy time from the Octopus variable `Octopus.FeatureToggles.ClientIdentifier`. The evaluator looks up the toggle slug as the kebab-case flag name (`building-management`), then the flag name itself (`BuildingManagement`); slugs match ignoring case. The Octopus provider caches the toggle manifest and refreshes it in the background, so a toggle flip shows up without a new image.
+2. **The `FeatureFlags` configuration section**, for example `FeatureFlags:BuildingManagement` (environment variable `FeatureFlags__BuildingManagement`). A value that is not `true` or `false` counts as false.
+3. **false.** A missing client identifier and an unknown flag both end here, so new flags fail closed.
+
+The client identifier is not a secret, but it is environment-specific: never commit one.
+
+## Environment defaults
+
+With no Octopus client identifier, `RuntimeFeatureFlagEvaluator` uses configuration and then false. There is no separate in-code true/false catalog.
+
+| Place | `BuildingManagement` | `VendorManagement` |
+| --- | --- | --- |
+| No Octopus client and no configuration value | false | false |
+| `appsettings.json` (image; platform uat and prod until flipped) | false | false |
+| `appsettings.Development.json` (local process and the acceptance host) | true | true |
+| Platform tdd | ON | ON |
+| Platform uat and prod | OFF | OFF until flipped |
+
+Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`, or turns the Octopus toggles `building-management` and `vendor-management` on. Platform uat and prod leave them off until an operator flips them. A flip does not require a new image.
+
+The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads `appsettings.Development.json` and runs with both gates ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Existing Buildings and Vendors checks run against the ON state. Navigation hiding, an unavailable `/admin/buildings` deep link, and MCP or API fail-closed for those surfaces are the Building and Vendor gates. No request is tagged `[RequiresFeature]` for them yet. A tagged request is already rejected by `FeatureFlagBehavior` when its flag is off, and `GET /api/diagnostics` reports the same map as `GET /api/features/flags`.
+
+## Enforcing a flag on a request
+
+Put `[RequiresFeature(FeatureFlagNames.X)]` on the request record (command or query). `FeatureFlagBehavior<TRequest, TResponse>` (`src/UI.Shared/FeatureFlagBehavior.cs`) runs in the MediatR pipeline of both hosts, registered with `AddOpenBehavior` in `src/UI/Server/UIServiceRegistry.cs` and `src/McpServer/McpServiceRegistry.cs`. When any required flag is off it throws `FeatureDisabledException` before the handler runs. Apply the attribute more than once to require several flags.
+
+Because Blazor WebAssembly and the Worker reach the server bus through the single API, and MCP tools call the bus in-process, one attribute gates every caller:
+
+| Caller | What a disabled flag returns |
 | --- | --- |
-| GET | `/api/features/flags` |
-| GET | `/api/v1.0/features/flags` |
-| GET | `/api/diagnostics` |
-| GET | `/api/v1.0/diagnostics` |
+| Single API (`POST /api/blazor-wasm-single-api`) | `403` with an `application/problem+json` body: `title` "Feature disabled", `detail` naming the feature and request, and a `feature` extension with the flag name. The Blazor client's remoting call throws. |
+| MCP tool | A tool error (`isError: true`) whose text names the disabled feature and request (`FeatureDisabledToolFilter`). |
+| In-process `IBus.Send` | `FeatureDisabledException`. |
 
-The flags routes return one JSON object. Each property name is a catalog key and each value is a boolean. The diagnostics routes return that same object on `featureFlags`.
+Only requests sent through `Send` are gated; `Publish` (events) is not.
 
-With no configuration overlay, the body is the code defaults:
+## Reading flags
+
+`FeatureFlagsQuery` (`src/Core/Queries/FeatureFlagsQuery.cs`) returns `FeatureFlagsResult` with every catalog name and its runtime value. It is remotable, so the Blazor client sends it over the single API like any other query. Use it to hide UI for a disabled feature; enforcement stays in the behavior.
+
+- **Blazor:** inject `IFeatureFlags` (`BusFeatureFlags`). It sends `FeatureFlagsQuery` once per scope. If the query fails, `ShowPriorityBadges` is treated as enabled and every other name as disabled. A name missing from the result is disabled.
+- **HTTP:** `GET /api/features/flags` (and `/api/v1.0/features/flags`) returns the same map as one JSON object, through the bus. `GET /api/diagnostics` returns it as `featureFlags`. Both read the same runtime source.
 
 ```json
 {
-  "SampleFeatureA": true,
+  "SampleFeatureA": false,
   "SampleFeatureB": false,
   "ShowPriorityBadges": true,
   "BuildingManagement": false,
@@ -29,39 +73,10 @@ With no configuration overlay, the body is the code defaults:
 
 ```bash
 curl -sS "https://<host>/api/features/flags"
-curl -sS "https://<host>/api/diagnostics"
 ```
-
-## Flags
-
-| Flag | Default | Effect |
-| --- | --- | --- |
-| `SampleFeatureA` | true | Returned by the endpoints. No screen reads it. |
-| `SampleFeatureB` | false | Returned by the endpoints. No screen reads it. |
-| `ShowPriorityBadges` | true | When enabled, the work order search page shows a High badge on a work order whose priority is High. |
-| `BuildingManagement` | false | Buildings and rooms administration. Off until an environment turns it on. |
-| `VendorManagement` | false | Vendor administration. Teams stay available. Off until an environment turns it on. |
-
-`BuildingManagement` and `VendorManagement` are the gates for Buildings & Rooms and for vendors. When a gate is off, the intended effect is: the Buildings & Rooms navigation link is absent and `/admin/buildings` does not load building data; the vendors section is absent and vendor list/create calls, including MCP `list-vendors` and `create-vendor`, fail closed. Work-order building text, the Open by Building report, the waiting-on-vendor work-order step, and Teams are not gated. Enforcement of that hide-and-fail-closed behavior is the Building and Vendor gate work. This runtime is the on/off value those gates read. `GET /api/features/flags` and diagnostics already report it.
-
-## Environment defaults
-
-| Place | `BuildingManagement` | `VendorManagement` |
-| --- | --- | --- |
-| Code (`FeatureFlagsCatalog.All`) | false | false |
-| `appsettings.json` (image default: uat and prod until flipped) | false | false |
-| `appsettings.Development.json` (local process and the acceptance host) | true | true |
-| Platform tdd | ON | ON |
-| Platform uat and prod | OFF | OFF until flipped |
-
-Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`. Platform uat and prod leave those values false until an operator flips them. Flipping configuration does not require a new image.
-
-The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads `appsettings.Development.json` and runs with both gates ON. That matches tdd. The host does not stub `IFeatureFlags`. Existing Buildings and Vendors checks run against the ON state. Flag-off of the shared map (both endpoints report false and match) is an integration test. Flag-off of navigation, the buildings deep link, and MCP or API calls is the Building and Vendor gate work, not a second acceptance host.
 
 ## Access
 
-The flags and diagnostics routes use the API sliding-window rate limit (`ApiSlidingWindow`). The default limit is 100 requests per 60 seconds.
+Both flag routes use the API sliding-window rate limit (`ApiSlidingWindow`). The default limit is 100 requests per 60 seconds.
 
-These routes are not public API paths. When API-key middleware is enabled and a validation key is configured, a request without a matching `X-Api-Key` header receives `401`.
-
-The Blazor client loads `api/features/flags` once. If that load fails, `ShowPriorityBadges` is treated as enabled and every other name is treated as disabled. A successful body that omits a name is treated as disabled for that name.
+`features/flags` is not a public API path. When API-key middleware is enabled and a validation key is configured, a request without a matching `X-Api-Key` header receives `401`.

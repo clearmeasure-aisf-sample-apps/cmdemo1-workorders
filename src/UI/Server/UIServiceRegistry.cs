@@ -1,14 +1,17 @@
 ﻿using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.UI.Server.Validation;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.DataAccess;
+using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Server.Notifications;
+using ClearMeasure.Bootcamp.UI.Shared;
 using FluentValidation;
 using Lamar;
 using MediatR;
@@ -34,7 +37,9 @@ public class UiServiceRegistry : ServiceRegistry
         {
             cfg.RegisterServicesFromAssemblyContaining<UiServiceRegistry>();
             cfg.RegisterServicesFromAssemblyContaining<HealthCheck>();
+            cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
+        this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IBus>(provider =>
         {
             var mediator = provider.GetRequiredService<IMediator>();
