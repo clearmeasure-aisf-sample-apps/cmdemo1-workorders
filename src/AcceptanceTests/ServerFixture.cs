@@ -315,6 +315,7 @@ public class ServerFixture
 
     private static void ApplySqliteServerEnvironment(Process process, string connectionString)
     {
+        // Development loads appsettings.Development.json: BuildingManagement and VendorManagement are ON (tdd default).
         process.StartInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
         process.StartInfo.Environment["ConnectionStrings__SqlConnectionString"] =
             ResolveSqliteConnectionString(connectionString);

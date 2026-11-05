@@ -19,6 +19,18 @@ Flag values are evaluated at runtime. The flag names are fixed in `FeatureFlagNa
 
 A missing client identifier or an unknown flag reads as false.
 
+## Environment defaults
+
+| Place | `BuildingManagement` | `VendorManagement` |
+| --- | --- | --- |
+| No Octopus client and no configuration value | false | false |
+| `src/UI/Server/appsettings.json` (image; platform uat and prod until flipped) | false | false |
+| `src/UI/Server/appsettings.Development.json` (local and acceptance host) | true | true |
+| Platform tdd | ON | ON |
+| Platform uat and prod | OFF until flipped | OFF until flipped |
+
+The acceptance host uses Development, so both gates are ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Flag-off navigation, deep links, and MCP or API fail-closed checks are the Building and Vendor gates; those requests are not tagged yet. `GET /api/diagnostics` returns the same map as the flags endpoint.
+
 ## How to read the current values
 
 Send GET to either route:

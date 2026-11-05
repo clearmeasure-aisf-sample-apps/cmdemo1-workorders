@@ -19,4 +19,4 @@ With the checked-in `appsettings.json` and no Octopus client identifier, the bod
 }
 ```
 
-The controller sends `FeatureFlagsQuery` on the bus; values come from Octopus Feature Toggles, then the `FeatureFlags` configuration section, then false. `GET /api/diagnostics` returns the same map as `featureFlags`. See [Feature flags](../feature-flags.md).
+The controller sends `FeatureFlagsQuery` on the bus; values come from Octopus Feature Toggles, then the `FeatureFlags` configuration section, then false. `GET /api/diagnostics` returns the same map as `featureFlags`. `appsettings.Development.json` turns `BuildingManagement` and `VendorManagement` on for the local process and the acceptance host (platform tdd). The image and platform uat and prod leave them off until flipped. See [Feature flags](../feature-flags.md).

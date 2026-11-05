@@ -105,6 +105,46 @@ public class DiagnosticsEndpointIntegrationTests
         payload.ShouldNotBeNull();
         payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeTrue();
         payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.BuildingManagement].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.VendorManagement].ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task Should_MatchFeatureFlagsEndpoint_When_GetDiagnostics()
+    {
+        var flags = await ReadFlagMapAsync(_client!, "/api/features/flags");
+        var diagnostics = await ReadDiagnosticsFlagsAsync(_client!, "/api/diagnostics");
+
+        diagnostics.Count.ShouldBe(flags.Count);
+        foreach (var (name, enabled) in flags)
+        {
+            diagnostics[name].ShouldBe(enabled);
+        }
+    }
+
+    [Test]
+    public async Task Should_ReportBuildingAndVendorFromConfiguration_When_Overridden()
+    {
+        await using var factory = new DiagnosticsWebApplicationFactory().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["FeatureFlags:BuildingManagement"] = "true",
+                    ["FeatureFlags:VendorManagement"] = "false"
+                });
+            });
+        });
+        using var client = factory.CreateClient();
+
+        var flags = await ReadFlagMapAsync(client, "/api/features/flags");
+        var diagnostics = await ReadDiagnosticsFlagsAsync(client, "/api/v1.0/diagnostics");
+
+        flags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
+        flags[FeatureFlagNames.VendorManagement].ShouldBeFalse();
+        diagnostics[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
+        diagnostics[FeatureFlagNames.VendorManagement].ShouldBeFalse();
     }
 
     [Test]
@@ -131,6 +171,26 @@ public class DiagnosticsEndpointIntegrationTests
         payload.ShouldNotBeNull();
         payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeFalse();
         payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeTrue();
+    }
+
+    private static async Task<Dictionary<string, bool>> ReadFlagMapAsync(HttpClient client, string path)
+    {
+        var response = await client.GetAsync(path);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, bool>>(
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        payload.ShouldNotBeNull();
+        return payload;
+    }
+
+    private static async Task<Dictionary<string, bool>> ReadDiagnosticsFlagsAsync(HttpClient client, string path)
+    {
+        var response = await client.GetAsync(path);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        payload.ShouldNotBeNull();
+        return new Dictionary<string, bool>(payload.FeatureFlags, StringComparer.Ordinal);
     }
 
     [Test]

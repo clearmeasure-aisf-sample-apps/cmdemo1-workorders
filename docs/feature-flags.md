@@ -24,6 +24,22 @@ To add a flag, add a constant to `FeatureFlagNames` and to `FeatureFlagNames.All
 
 The client identifier is not a secret, but it is environment-specific: never commit one.
 
+## Environment defaults
+
+With no Octopus client identifier, `RuntimeFeatureFlagEvaluator` uses configuration and then false. There is no separate in-code true/false catalog.
+
+| Place | `BuildingManagement` | `VendorManagement` |
+| --- | --- | --- |
+| No Octopus client and no configuration value | false | false |
+| `appsettings.json` (image; platform uat and prod until flipped) | false | false |
+| `appsettings.Development.json` (local process and the acceptance host) | true | true |
+| Platform tdd | ON | ON |
+| Platform uat and prod | OFF | OFF until flipped |
+
+Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`, or turns the Octopus toggles `building-management` and `vendor-management` on. Platform uat and prod leave them off until an operator flips them. A flip does not require a new image.
+
+The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads `appsettings.Development.json` and runs with both gates ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Existing Buildings and Vendors checks run against the ON state. Navigation hiding, an unavailable `/admin/buildings` deep link, and MCP or API fail-closed for those surfaces are the Building and Vendor gates. No request is tagged `[RequiresFeature]` for them yet. A tagged request is already rejected by `FeatureFlagBehavior` when its flag is off, and `GET /api/diagnostics` reports the same map as `GET /api/features/flags`.
+
 ## Enforcing a flag on a request
 
 Put `[RequiresFeature(FeatureFlagNames.X)]` on the request record (command or query). `FeatureFlagBehavior<TRequest, TResponse>` (`src/UI.Shared/FeatureFlagBehavior.cs`) runs in the MediatR pipeline of both hosts, registered with `AddOpenBehavior` in `src/UI/Server/UIServiceRegistry.cs` and `src/McpServer/McpServiceRegistry.cs`. When any required flag is off it throws `FeatureDisabledException` before the handler runs. Apply the attribute more than once to require several flags.
