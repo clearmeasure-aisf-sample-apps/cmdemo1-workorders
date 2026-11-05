@@ -41,22 +41,54 @@ public class RuntimeFeatureFlagEvaluatorTests
     }
 
     [Test]
-    public async Task IsEnabledAsync_Should_PreferOpenFeature_When_ProviderHasTheFlag()
+    public async Task IsEnabledAsync_Should_PreferOpenFeature_When_ClientIdentifierIsConfigured()
     {
-        var client = await InMemoryClientAsync(("building-management", true), ("vendor-management", false));
+        var factory = new StubProviderFactory(("building-management", true), ("vendor-management", false));
         var evaluator = new RuntimeFeatureFlagEvaluator(
-            Configuration(("FeatureFlags:BuildingManagement", "false"), ("FeatureFlags:VendorManagement", "true")),
-            client);
+            Configuration(
+                (RuntimeFeatureFlagEvaluator.ClientIdentifierKey, "  client-123  "),
+                ("FeatureFlags:BuildingManagement", "false"),
+                ("FeatureFlags:VendorManagement", "true")),
+            NullLoggerFactory.Instance,
+            factory.Create);
 
         (await evaluator.IsEnabledAsync(FeatureFlagNames.BuildingManagement)).ShouldBeTrue();
         (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
+        factory.ClientIdentifiers.ShouldBe(["client-123"]);
+    }
+
+    [TestCase("")]
+    [TestCase("   ")]
+    public async Task IsEnabledAsync_Should_SkipOpenFeature_When_ClientIdentifierIsBlank(string clientIdentifier)
+    {
+        var factory = new StubProviderFactory(("vendor-management", true));
+        var evaluator = new RuntimeFeatureFlagEvaluator(
+            Configuration((RuntimeFeatureFlagEvaluator.ClientIdentifierKey, clientIdentifier)),
+            NullLoggerFactory.Instance,
+            factory.Create);
+
+        (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
+        factory.ClientIdentifiers.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task IsEnabledAsync_Should_UseConfiguration_When_ProviderCannotBeCreated()
+    {
+        var evaluator = new RuntimeFeatureFlagEvaluator(
+            Configuration(
+                (RuntimeFeatureFlagEvaluator.ClientIdentifierKey, "client-123"),
+                ("FeatureFlags:VendorManagement", "true")),
+            NullLoggerFactory.Instance,
+            _ => throw new InvalidOperationException("unreachable"));
+
+        (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeTrue();
+        (await evaluator.IsEnabledAsync(FeatureFlagNames.BuildingManagement)).ShouldBeFalse();
     }
 
     [Test]
     public async Task IsEnabledAsync_Should_MatchFlagNameAsSlug_When_KebabSlugIsMissing()
     {
-        var client = await InMemoryClientAsync((FeatureFlagNames.VendorManagement, true));
-        var evaluator = new RuntimeFeatureFlagEvaluator(Configuration(), client);
+        var evaluator = WithOpenFeature(Configuration(), (FeatureFlagNames.VendorManagement, true));
 
         (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeTrue();
     }
@@ -64,9 +96,8 @@ public class RuntimeFeatureFlagEvaluatorTests
     [Test]
     public async Task IsEnabledAsync_Should_FallBackToConfiguration_When_ProviderLacksTheFlag()
     {
-        var client = await InMemoryClientAsync(("building-management", true));
-        var evaluator = new RuntimeFeatureFlagEvaluator(
-            Configuration(("FeatureFlags:ShowPriorityBadges", "true")), client);
+        var evaluator = WithOpenFeature(
+            Configuration(("FeatureFlags:ShowPriorityBadges", "true")), ("building-management", true));
 
         (await evaluator.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges)).ShouldBeTrue();
         (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
@@ -86,15 +117,33 @@ public class RuntimeFeatureFlagEvaluatorTests
             .AddInMemoryCollection(values.Select(v => new KeyValuePair<string, string?>(v.Key, v.Value)))
             .Build();
 
-    private static async Task<IFeatureClient> InMemoryClientAsync(params (string Key, bool Enabled)[] flags)
+    private static RuntimeFeatureFlagEvaluator WithOpenFeature(
+        IConfiguration fallback,
+        params (string Key, bool Enabled)[] flags)
     {
-        var domain = $"unit-{Guid.NewGuid():N}";
-        var provider = new InMemoryProvider(flags.ToDictionary(
-            flag => flag.Key,
-            Flag (flag) => new Flag<bool>(
-                new Dictionary<string, bool> { ["on"] = true, ["off"] = false },
-                flag.Enabled ? "on" : "off")));
-        await OpenFeature.Api.Instance.SetProviderAsync(domain, provider);
-        return OpenFeature.Api.Instance.GetClient(domain);
+        var configuration = new ConfigurationBuilder()
+            .AddConfiguration(fallback)
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [RuntimeFeatureFlagEvaluator.ClientIdentifierKey] = "client-123"
+            })
+            .Build();
+        return new RuntimeFeatureFlagEvaluator(configuration, NullLoggerFactory.Instance,
+            new StubProviderFactory(flags).Create);
+    }
+
+    private sealed class StubProviderFactory(params (string Key, bool Enabled)[] flags)
+    {
+        public List<string> ClientIdentifiers { get; } = [];
+
+        public FeatureProvider Create(string clientIdentifier)
+        {
+            ClientIdentifiers.Add(clientIdentifier);
+            return new InMemoryProvider(flags.ToDictionary(
+                flag => flag.Key,
+                Flag (flag) => new Flag<bool>(
+                    new Dictionary<string, bool> { ["on"] = true, ["off"] = false },
+                    flag.Enabled ? "on" : "off")));
+        }
     }
 }

@@ -26,23 +26,32 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
     /// <summary>Configuration section holding per-flag fallback values.</summary>
     public const string ConfigurationSectionName = "FeatureFlags";
 
-    private const string OpenFeatureDomain = "ChurchBulletin";
+    private const string ProductName = "ChurchBulletin";
 
     private readonly IConfiguration _configuration;
     private readonly Lazy<Task<IFeatureClient?>> _client;
 
-    // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
     public RuntimeFeatureFlagEvaluator(IConfiguration configuration, ILoggerFactory loggerFactory)
+        : this(configuration, loggerFactory, clientIdentifier => new OctopusFeatureProvider(
+            new OctopusFeatureConfiguration(clientIdentifier, new ProductMetadata(ProductName))
+            {
+                LoggerFactory = loggerFactory
+            }))
     {
-        _configuration = configuration;
-        _client = new Lazy<Task<IFeatureClient?>>(() => CreateOctopusClientAsync(configuration, loggerFactory));
     }
 
-    /// <summary>Uses <paramref name="client"/> as the OpenFeature source instead of Octopus.</summary>
-    internal RuntimeFeatureFlagEvaluator(IConfiguration configuration, IFeatureClient? client)
+    /// <summary>Builds the OpenFeature provider with <paramref name="createProvider"/> instead of Octopus.</summary>
+    // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
+    internal RuntimeFeatureFlagEvaluator(
+        IConfiguration configuration,
+        ILoggerFactory loggerFactory,
+        Func<string, FeatureProvider> createProvider)
     {
         _configuration = configuration;
-        _client = new Lazy<Task<IFeatureClient?>>(Task.FromResult(client));
+        _client = new Lazy<Task<IFeatureClient?>>(() => CreateClientAsync(
+            configuration[ClientIdentifierKey],
+            createProvider,
+            loggerFactory.CreateLogger<RuntimeFeatureFlagEvaluator>()));
     }
 
     /// <inheritdoc />
@@ -94,26 +103,21 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
         return builder.ToString();
     }
 
-    private static async Task<IFeatureClient?> CreateOctopusClientAsync(
-        IConfiguration configuration,
-        ILoggerFactory loggerFactory)
+    private static async Task<IFeatureClient?> CreateClientAsync(
+        string? clientIdentifier,
+        Func<string, FeatureProvider> createProvider,
+        ILogger logger)
     {
-        var clientIdentifier = configuration[ClientIdentifierKey];
         if (string.IsNullOrWhiteSpace(clientIdentifier))
         {
             return null;
         }
 
-        var logger = loggerFactory.CreateLogger<RuntimeFeatureFlagEvaluator>();
         try
         {
-            var provider = new OctopusFeatureProvider(
-                new OctopusFeatureConfiguration(clientIdentifier.Trim(), new ProductMetadata(OpenFeatureDomain))
-                {
-                    LoggerFactory = loggerFactory
-                });
-            await Api.Instance.SetProviderAsync(OpenFeatureDomain, provider).ConfigureAwait(false);
-            return Api.Instance.GetClient(OpenFeatureDomain);
+            var domain = $"{ProductName}-{Guid.NewGuid():N}";
+            await Api.Instance.SetProviderAsync(domain, createProvider(clientIdentifier.Trim())).ConfigureAwait(false);
+            return Api.Instance.GetClient(domain);
         }
         catch (Exception ex)
         {
