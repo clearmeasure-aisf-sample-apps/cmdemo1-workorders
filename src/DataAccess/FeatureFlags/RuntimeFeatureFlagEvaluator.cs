@@ -31,6 +31,7 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
     private readonly IConfiguration _configuration;
     private readonly Lazy<Task<IFeatureClient?>> _client;
 
+    /// <summary>Uses the Octopus OpenFeature provider when <see cref="ClientIdentifierKey"/> is configured.</summary>
     public RuntimeFeatureFlagEvaluator(IConfiguration configuration, ILoggerFactory loggerFactory)
         : this(configuration, loggerFactory, clientIdentifier => new OctopusFeatureProvider(
             new OctopusFeatureConfiguration(clientIdentifier, new ProductMetadata(ProductName))
