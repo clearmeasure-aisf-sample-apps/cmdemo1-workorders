@@ -8,7 +8,8 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
 /// <summary>
 /// Counts work orders per status with the same status filter Work Order Search applies, so each
-/// count equals the search total for that status.
+/// count equals the search total for that status. Statuses are grouped in one query; a status
+/// with no rows stays at zero.
 /// </summary>
 public class WorkOrderCountByStatusQueryHandler(DataContext context) :
     IRequestHandler<WorkOrderCountByStatusQuery, Dictionary<string, int>>
@@ -16,12 +17,21 @@ public class WorkOrderCountByStatusQueryHandler(DataContext context) :
     public async Task<Dictionary<string, int>> Handle(WorkOrderCountByStatusQuery request,
         CancellationToken cancellationToken = default)
     {
-        var orders = context.Set<WorkOrder>().AsNoTracking();
+        var grouped = await context.Set<WorkOrder>()
+            .AsNoTracking()
+            .GroupBy(workOrder => workOrder.Status)
+            .Select(group => new { Status = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+
         var result = new Dictionary<string, int>();
         foreach (var status in WorkOrderStatus.GetAllItems())
         {
-            result[status.Key] = await WorkOrderQueryFilters.Apply(orders, null, null, status)
-                .CountAsync(cancellationToken);
+            result[status.Key] = 0;
+        }
+
+        foreach (var row in grouped)
+        {
+            result[row.Status.Key] = row.Count;
         }
 
         return result;
