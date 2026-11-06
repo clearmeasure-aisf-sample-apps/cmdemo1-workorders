@@ -16,8 +16,8 @@ public record EmployeeWorkLoadSummaryQuery : IRequest<EmployeeWorkLoadSummary[]>
 public class EmployeeWorkLoadSummary
 {
     /// <summary>The employee, including roles.</summary>
-    public Employee Employee { get; set; } = null!;
+    public Employee Employee { get; init; } = null!;
 
     /// <summary>Open, in-progress, overdue and recently completed counts for <see cref="Employee"/>.</summary>
-    public EmployeeWorkLoad Load { get; set; } = null!;
+    public EmployeeWorkLoad Load { get; init; } = null!;
 }

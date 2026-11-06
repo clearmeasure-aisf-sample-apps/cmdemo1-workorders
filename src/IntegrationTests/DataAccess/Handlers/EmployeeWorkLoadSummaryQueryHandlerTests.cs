@@ -57,8 +57,8 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, context.Commands.Texts));
         context.Commands.OtherCommands.ShouldBe(0);
         var sql = context.Commands.Texts.Single();
-        sql.ShouldContain("GROUP BY", Case.Insensitive);
-        sql.ShouldContain("SUM(", Case.Insensitive);
+        sql.ShouldContain("GROUP BY");
+        sql.ShouldContain("SUM(");
 
         summaries.ShouldNotContain(summary => summary.Employee.UserName == creatorName);
         var workerSummary = summaries.Single(summary => summary.Employee.UserName == workerName);

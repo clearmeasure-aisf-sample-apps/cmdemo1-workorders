@@ -73,8 +73,8 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         _context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, _context.Commands.Texts));
         _context.Commands.OtherCommands.ShouldBe(0);
         var sql = _context.Commands.Texts.Single();
-            sql.ShouldContain("GROUP BY", Case.Insensitive);
-            sql.ShouldContain("SUM(", Case.Insensitive);
+sql.ShouldContain("GROUP BY");
+        sql.ShouldContain("SUM(");
 
             summaries.Select(summary => summary.Employee.UserName).ShouldBe(["other", "worker", "idle"]);
         var workerSummary = summaries.Single(summary => summary.Employee.UserName == "worker");
@@ -126,8 +126,8 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
                 .ToQueryString();
 
             TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
-            sql.ShouldContain("GROUP BY", Case.Insensitive);
-            sql.ShouldContain("SUM(", Case.Insensitive);
+sql.ShouldContain("GROUP BY");
+        sql.ShouldContain("SUM(");
         }
     }
 

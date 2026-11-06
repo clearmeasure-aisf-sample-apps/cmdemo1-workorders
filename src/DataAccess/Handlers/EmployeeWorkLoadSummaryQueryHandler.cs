@@ -52,12 +52,14 @@ public class EmployeeWorkLoadSummaryQueryHandler(DataContext context, TimeProvid
                 RoleName = role.Name,
                 RoleCanCreate = role.CanCreateWorkOrder,
                 RoleCanFulfill = role.CanFulfillWorkOrder,
-                // (int?) is not redundant: EF reads a left-join null as int? and COALESCE, instead of throwing.
+                // The cast is never null in C#. EF still needs it so a missing left join becomes COALESCE(..., 0).
                 // ReSharper disable RedundantCast
+                // ReSharper disable ConstantNullCoalescingCondition
                 AssignedAndOpen = (int?)load.AssignedAndOpen ?? 0,
                 InProgress = (int?)load.InProgress ?? 0,
                 Overdue = (int?)load.Overdue ?? 0,
                 CompletedLast30Days = (int?)load.CompletedLast30Days ?? 0
+                // ReSharper restore ConstantNullCoalescingCondition
                 // ReSharper restore RedundantCast
             };
     }
@@ -116,11 +118,11 @@ public class EmployeeWorkLoadSummaryQueryHandler(DataContext context, TimeProvid
     // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global -- setter required: EF Core materializes the projection
     private sealed class AssigneeLoad
     {
-        public Guid AssigneeId { get; set; }
-        public int AssignedAndOpen { get; set; }
-        public int InProgress { get; set; }
-        public int Overdue { get; set; }
-        public int CompletedLast30Days { get; set; }
+        public Guid AssigneeId { get; init; }
+        public int AssignedAndOpen { get; init; }
+        public int InProgress { get; init; }
+        public int Overdue { get; init; }
+        public int CompletedLast30Days { get; init; }
     }
 
     internal sealed class EmployeeWorkLoadFlatRow
