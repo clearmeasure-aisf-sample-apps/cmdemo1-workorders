@@ -72,6 +72,36 @@ public class WorkOrderCountByStatusQueryHandlerTests
         (counts.Values.Sum() - before.Values.Sum()).ShouldBe(7);
     }
 
+    [Test]
+    public async Task ShouldMatchPerStatusFilterCounts()
+    {
+        var userName = TestData.UserName("wocbs");
+        var creator = new Employee(userName, "First", "Last", TestData.Email(userName));
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(creator);
+            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Draft });
+            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Draft });
+            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Assigned });
+            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.InProgress });
+            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Complete });
+            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Cancelled });
+            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Cancelled });
+            await context.SaveChangesAsync();
+        }
+
+        var dataContext = TestHost.GetRequiredService<DataContext>();
+        var counts = await new WorkOrderCountByStatusQueryHandler(dataContext).Handle(new WorkOrderCountByStatusQuery());
+        var orders = dataContext.Set<WorkOrder>().AsNoTracking();
+        foreach (var status in WorkOrderStatus.GetAllItems())
+        {
+            var expected = await WorkOrderQueryFilters.Apply(orders, null, null, status).CountAsync();
+            counts[status.Key].ShouldBe(expected, status.Key);
+        }
+
+        counts.Count.ShouldBe(WorkOrderStatus.GetAllItems().Length);
+    }
+
     private static async Task<IReadOnlyDictionary<string, int>> CountsAsync()
     {
         var handler = new WorkOrderCountByStatusQueryHandler(TestHost.GetRequiredService<DataContext>());
