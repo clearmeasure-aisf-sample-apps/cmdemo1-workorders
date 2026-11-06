@@ -116,8 +116,33 @@ internal static class WorkOrderQueryFilters
         return Expression.Lambda<Func<WorkOrder, WorkOrderCountRow>>(body, wo);
     }
 
+    /// <summary>
+    /// Projects an assigned work order to its assignee and 1/0 flags for the Teams &amp; Vendors load
+    /// counts, using <see cref="IsOpen"/>, in-progress, <see cref="IsOverdue"/> and
+    /// <see cref="IsCompletedWithin"/>. The caller drops work orders with no assignee.
+    /// </summary>
+    internal static Expression<Func<WorkOrder, AssigneeLoadFlag>> AssigneeLoadFlags(
+        DateOnly today, TimeProvider time, int completedDays)
+    {
+        var wo = Expression.Parameter(typeof(WorkOrder), "wo");
+        var inProgress = WorkOrderStatus.InProgress;
+        Expression<Func<WorkOrder, Guid>> assigneeId = order => order.Assignee!.Id;
+        Expression<Func<WorkOrder, bool>> isInProgress = order => order.Status == inProgress;
+        var body = Expression.MemberInit(
+            Expression.New(typeof(AssigneeLoadFlag)),
+            BindFlag(nameof(AssigneeLoadFlag.AssigneeId), Rebind(assigneeId, wo)),
+            BindFlag(nameof(AssigneeLoadFlag.Open), OneOrZero(Rebind(IsOpen(), wo))),
+            BindFlag(nameof(AssigneeLoadFlag.InProgress), OneOrZero(Rebind(isInProgress, wo))),
+            BindFlag(nameof(AssigneeLoadFlag.Overdue), OneOrZero(Rebind(IsOverdue(today), wo))),
+            BindFlag(nameof(AssigneeLoadFlag.Completed), OneOrZero(Rebind(IsCompletedWithin(completedDays, time), wo))));
+        return Expression.Lambda<Func<WorkOrder, AssigneeLoadFlag>>(body, wo);
+    }
+
     private static MemberAssignment Bind(string member, Expression value) =>
         Expression.Bind(typeof(WorkOrderCountRow).GetProperty(member)!, value);
+
+    private static MemberAssignment BindFlag(string member, Expression value) =>
+        Expression.Bind(typeof(AssigneeLoadFlag).GetProperty(member)!, value);
 
     private static ConditionalExpression OneOrZero(Expression predicate) =>
         Expression.Condition(predicate, Expression.Constant(1), Expression.Constant(0));
@@ -254,6 +279,20 @@ internal sealed class WorkOrderCountRow
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- setter required: assigned by Expression.Bind in CountRow
     public string Room { get; set; } = "";
     public int Open { get; set; }
+    public int Overdue { get; set; }
+    public int Completed { get; set; }
+}
+
+/// <summary>
+/// One assigned work order reduced to its assignee and 1/0 load flags, the input of the grouping in
+/// <see cref="EmployeeWorkLoadSummaryQueryHandler"/>.
+/// </summary>
+// ReSharper disable PropertyCanBeMadeInitOnly.Global -- bound by an expression-tree MemberInit translated by EF Core
+internal sealed class AssigneeLoadFlag
+{
+    public Guid AssigneeId { get; set; }
+    public int Open { get; set; }
+    public int InProgress { get; set; }
     public int Overdue { get; set; }
     public int Completed { get; set; }
 }
