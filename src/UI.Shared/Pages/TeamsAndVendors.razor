@@ -1,3 +1,4 @@
+@using ClearMeasure.Bootcamp.Core.FeatureFlags
 @using ClearMeasure.Bootcamp.Core.Queries
 
 <PageTitle>Teams & Vendors - TechWeek Work Orders</PageTitle>
@@ -145,13 +146,13 @@
                 </section>
             }
 
-            @if (_vendorsData.Count == 0)
+            @if (_vendorManagementEnabled && _vendorsData.Count == 0)
             {
                 <div class="teams-empty-state" data-testid="@Elements.VendorsEmptyState">
                     <p>No vendors found.</p>
                 </div>
             }
-            else
+            else if (_vendorManagementEnabled)
             {
                 <section class="vendors-section" aria-labelledby="vendors-section-heading">
                     <h2 id="vendors-section-heading">Vendors</h2>
@@ -269,8 +270,16 @@
         var teams = await Bus.Send(new TeamsQuery());
         _teamsData = teams.ToList();
 
-        var vendors = await Bus.Send(new VendorsQuery());
-        _vendorsData = vendors.ToList();
+        _vendorManagementEnabled = await FeatureFlags.IsEnabledAsync(FeatureFlagNames.VendorManagement);
+        if (_vendorManagementEnabled)
+        {
+            var vendors = await Bus.Send(new VendorsQuery());
+            _vendorsData = vendors.ToList();
+        }
+        else
+        {
+            _vendorsData = [];
+        }
     }
 
     private void HandleSortColumnClicked(SortColumn column)
