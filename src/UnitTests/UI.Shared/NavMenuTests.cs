@@ -6,6 +6,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 using Microsoft.AspNetCore.Components;
@@ -81,6 +82,18 @@ public class NavMenuTests
     }
 
     [Test]
+    public async Task ShouldHideBuildingsAndRooms_When_BuildingManagementIsOff()
+    {
+        await using var ctx = CreateContext(out _, new StubFeatureFlags(buildingManagement: false));
+
+        var component = ctx.Render<NavMenu>();
+
+        component.FindAll($"[data-testid='{NavMenu.Elements.BuildingsAndRooms}']").Count.ShouldBe(0);
+        component.FindAll($"[data-testid='{NavMenu.Elements.TeamsAndVendors}']").Count.ShouldBe(1);
+        component.FindAll($"[data-testid='{NavMenu.Elements.Reports}']").Count.ShouldBe(1);
+    }
+
+    [Test]
     public async Task ShouldRenderReportsLink_AsEnabledNavLink()
     {
         await using var ctx = CreateContext(out _);
@@ -112,7 +125,7 @@ public class NavMenuTests
     {
         var user = new Employee("fixer", "Groundskeeper", "Willie", "w@example.com");
         user.AddRole(new Role("fulfiller", false, true));
-        await using var ctx = CreateContext(out _, user);
+        await using var ctx = CreateContext(out _, user: user);
 
         var component = ctx.Render<NavMenu>();
 
@@ -161,7 +174,7 @@ public class NavMenuTests
     private static string BadgeText(IRenderedComponent<NavMenu> component, NavMenu.Elements testId) =>
         Link(component, testId).QuerySelector(".nav-badge")!.FirstChild!.TextContent.Trim();
 
-    private static BunitContext CreateContext(out StubBus bus, Employee? user = null)
+    private static BunitContext CreateContext(out StubBus bus, StubFeatureFlags? featureFlags = null, Employee? user = null)
     {
         var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
@@ -175,6 +188,7 @@ public class NavMenuTests
         ctx.Services.AddSingleton<IBus>(bus);
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(user));
+        ctx.Services.AddSingleton<IFeatureFlags>(featureFlags ?? new StubFeatureFlags());
         return ctx;
     }
 }

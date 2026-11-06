@@ -93,7 +93,10 @@ public partial class WorkOrderSearch : AppComponentBase
         StatusOptions = WorkOrderStatus.GetAllItems().Select(s => new SelectListItem(s.Key, s.FriendlyName)).ToList();
         var employees = await Bus.Send(new EmployeeGetAllQuery());
         UserOptions = employees.Select(e => new SelectListItem(e.UserName, e.DisplayName)).ToList();
-        BuildingOptions = (await Bus.Send(new WorkOrderBuildingsQuery())).ToList();
+        if (await FeatureFlags.IsEnabledAsync(FeatureFlagNames.BuildingManagement))
+        {
+            BuildingOptions = (await Bus.Send(new WorkOrderBuildingsQuery())).ToList();
+        }
         _currentUserName = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity?.Name;
         await LoadUserViewsAsync();
         _currentUser = await UserSession.GetCurrentUserAsync();
@@ -156,8 +159,21 @@ public partial class WorkOrderSearch : AppComponentBase
         Model.Filters.WaitingOnVendorOnly = state.WaitingOnVendorOnly;
         Model.Filters.Priority = state.Priority?.ToString();
         Model.Filters.Building = state.Building;
+        EnsureSelectedBuildingIsListed();
         Model.Filters.Room = state.Room;
         await SearchWorkOrders();
+    }
+
+    /// <summary>
+    /// Keeps a building already chosen in the filter visible when the distinct-buildings query is not run.
+    /// </summary>
+    private void EnsureSelectedBuildingIsListed()
+    {
+        var building = Model.Filters.Building;
+        if (!string.IsNullOrEmpty(building) && !BuildingOptions.Contains(building))
+        {
+            BuildingOptions.Add(building);
+        }
     }
 
     /// <summary>Applies a state the user chose, searches, and records it in the URL (replace, no history entry).</summary>

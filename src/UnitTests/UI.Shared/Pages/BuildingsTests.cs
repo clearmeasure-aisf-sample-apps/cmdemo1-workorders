@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 using MediatR;
@@ -76,6 +77,25 @@ public class BuildingsTests
             roomItems.Count.ShouldBeGreaterThan(0);
             component.Markup.ShouldContain("Room 101");
         });
+    }
+
+    [Test]
+    public async Task Buildings_WhenBuildingManagementOff_DoesNotLoadData()
+    {
+        var bus = new StubBusBuildings();
+        await using var ctx = CreateContext(bus, new StubFeatureFlags(buildingManagement: false));
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Buildings>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var unavailable = component.Find("[data-testid='buildings-unavailable']");
+            unavailable.GetAttribute("role").ShouldBe("status");
+            unavailable.TextContent.ShouldContain("Buildings & Rooms is unavailable");
+            component.FindAll(".building-card").Count.ShouldBe(0);
+            component.Markup.ShouldNotContain("Main Building");
+        });
+        bus.SendCallCount.ShouldBe(0);
     }
 
     [Test]
@@ -185,11 +205,12 @@ public class BuildingsTests
         });
     }
 
-    private static BunitContext CreateContext(StubBusBuildings? bus = null)
+    private static BunitContext CreateContext(StubBusBuildings? bus = null, StubFeatureFlags? featureFlags = null)
     {
         var ctx = new BunitContext();
         ctx.Services.AddSingleton<IBus>(bus ?? new StubBusBuildings());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IFeatureFlags>(featureFlags ?? new StubFeatureFlags());
         ctx.Services.AddSingleton(TimeProvider.System);
 
         var bunitAuth = ctx.AddAuthorization();

@@ -906,6 +906,7 @@ public class MainLayoutTests
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(bus ?? new StubBus());
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession());
+        ctx.Services.AddSingleton<IFeatureFlags>(new StubFeatureFlags());
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();
         var customAuth = new CustomAuthenticationStateProvider(new StubUserSessionStore());

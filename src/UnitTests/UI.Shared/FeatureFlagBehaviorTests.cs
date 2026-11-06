@@ -1,5 +1,8 @@
+using System.Reflection;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +71,76 @@ public class FeatureFlagBehaviorTests
             new DoublyGatedProbeRequest(), () => Task.FromResult("handled"), CancellationToken.None));
 
         ex.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
+    }
+
+    [Test]
+    public async Task Handle_Should_DenyBuildingQueries_When_BuildingManagementIsOff()
+    {
+        var evaluator = new StubFeatureFlagEvaluator();
+
+        var summary = await Should.ThrowAsync<FeatureDisabledException>(() =>
+            new FeatureFlagBehavior<BuildingRoomSummaryQuery, BuildingSummary[]>(evaluator).Handle(
+                new BuildingRoomSummaryQuery(),
+                () => Task.FromResult(Array.Empty<BuildingSummary>()),
+                CancellationToken.None));
+        summary.FeatureName.ShouldBe(FeatureFlagNames.BuildingManagement);
+        summary.RequestName.ShouldBe(nameof(BuildingRoomSummaryQuery));
+
+        var buildings = await Should.ThrowAsync<FeatureDisabledException>(() =>
+            new FeatureFlagBehavior<WorkOrderBuildingsQuery, string[]>(evaluator).Handle(
+                new WorkOrderBuildingsQuery(),
+                () => Task.FromResult(Array.Empty<string>()),
+                CancellationToken.None));
+        buildings.FeatureName.ShouldBe(FeatureFlagNames.BuildingManagement);
+        buildings.RequestName.ShouldBe(nameof(WorkOrderBuildingsQuery));
+        evaluator.Evaluated.ShouldBe([
+            FeatureFlagNames.BuildingManagement,
+            FeatureFlagNames.BuildingManagement
+        ]);
+    }
+
+    [Test]
+    public async Task Handle_Should_RunBuildingQueries_When_BuildingManagementIsOn()
+    {
+        var evaluator = new StubFeatureFlagEvaluator { [FeatureFlagNames.BuildingManagement] = true };
+        var summaryCalled = false;
+        var namesCalled = false;
+
+        var summary = await new FeatureFlagBehavior<BuildingRoomSummaryQuery, BuildingSummary[]>(evaluator).Handle(
+            new BuildingRoomSummaryQuery(),
+            () =>
+            {
+                summaryCalled = true;
+                return Task.FromResult(Array.Empty<BuildingSummary>());
+            },
+            CancellationToken.None);
+        var names = await new FeatureFlagBehavior<WorkOrderBuildingsQuery, string[]>(evaluator).Handle(
+            new WorkOrderBuildingsQuery(),
+            () =>
+            {
+                namesCalled = true;
+                return Task.FromResult(new[] { "Kitchen" });
+            },
+            CancellationToken.None);
+
+        summary.ShouldBeEmpty();
+        names.ShouldBe(["Kitchen"]);
+        summaryCalled.ShouldBeTrue();
+        namesCalled.ShouldBeTrue();
+    }
+
+    [Test]
+    public void SearchReportsAndDraftCommands_Should_NotRequireBuildingManagement()
+    {
+        foreach (var type in new[]
+                 {
+                     typeof(WorkOrderSpecificationQuery),
+                     typeof(WorkOrderReportsQuery),
+                     typeof(SaveDraftCommand)
+                 })
+        {
+            type.GetCustomAttributes<RequiresFeatureAttribute>().ShouldBeEmpty();
+        }
     }
 
     [Test]

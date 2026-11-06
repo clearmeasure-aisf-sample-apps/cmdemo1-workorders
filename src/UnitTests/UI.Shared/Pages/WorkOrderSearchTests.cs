@@ -839,6 +839,22 @@ public class WorkOrderSearchTests
     }
 
     [Test]
+    public async Task BuildingFilter_StaysAvailable_When_BuildingManagementIsOff()
+    {
+        var bus = new StubBus();
+        await using var ctx = CreateContext(bus, featureFlags: new StubFeatureFlags(buildingManagement: false));
+        ctx.Services.GetRequiredService<NavigationManager>()
+            .NavigateTo("workorder/search?Building=Kitchen");
+
+        var component = ctx.Render<WorkOrderSearch>();
+
+        bus.BuildingsQueryCount.ShouldBe(0);
+        bus.LastSpecification!.Building.ShouldBe("Kitchen");
+        component.Find($"#{WorkOrderSearch.Elements.BuildingSelect}").GetAttribute("value").ShouldBe("Kitchen");
+        component.Find($"label[for='{WorkOrderSearch.Elements.BuildingSelect}']").TextContent.ShouldBe("Building");
+    }
+
+    [Test]
     public async Task RemovingChip_ClearsThatFilter()
     {
         var bus = new StubBus();
