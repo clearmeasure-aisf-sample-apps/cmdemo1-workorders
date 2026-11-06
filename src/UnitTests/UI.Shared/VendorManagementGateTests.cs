@@ -62,6 +62,7 @@ public class VendorManagementGateTests
     }
 
     [TestCase(typeof(TeamsQuery))]
+    [TestCase(typeof(EmployeeWorkLoadSummaryQuery))]
     [TestCase(typeof(CreateTeamCommand))]
     [TestCase(typeof(InProgressToWaitingOnVendorCommand))]
     [TestCase(typeof(WaitingOnVendorToInProgressCommand))]

@@ -136,7 +136,8 @@ public class FeatureFlagBehaviorTests
                  {
                      typeof(WorkOrderSpecificationQuery),
                      typeof(WorkOrderReportsQuery),
-                     typeof(SaveDraftCommand)
+                     typeof(SaveDraftCommand),
+                     typeof(EmployeeWorkLoadSummaryQuery)
                  })
         {
             type.GetCustomAttributes<RequiresFeatureAttribute>().ShouldBeEmpty();

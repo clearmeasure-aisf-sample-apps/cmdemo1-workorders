@@ -37,6 +37,7 @@ public class OnionArchitectureTests
     [TestCase(typeof(Vendor))]
     [TestCase(typeof(TeamsQuery))]
     [TestCase(typeof(VendorsQuery))]
+    [TestCase(typeof(EmployeeWorkLoadSummaryQuery))]
     [TestCase(typeof(CreateTeamCommand))]
     [TestCase(typeof(CreateVendorCommand))]
     public void DomainTypesShouldLiveInCore(Type type)
@@ -48,6 +49,7 @@ public class OnionArchitectureTests
     [TestCase(typeof(VendorMap))]
     [TestCase(typeof(TeamQueryHandler))]
     [TestCase(typeof(VendorQueryHandler))]
+    [TestCase(typeof(EmployeeWorkLoadSummaryQueryHandler))]
     public void PersistenceTypesShouldLiveInDataAccess(Type type)
     {
         type.Assembly.ShouldBe(typeof(DataContext).Assembly);

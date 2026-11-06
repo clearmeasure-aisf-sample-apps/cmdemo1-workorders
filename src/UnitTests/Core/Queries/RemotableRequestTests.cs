@@ -170,6 +170,45 @@ public class RemotableRequestTests
     }
 
     [Test]
+    public void ShouldRoundTripEmployeeWorkLoadSummaryQueryAndResult()
+    {
+        AssertRemotable(new EmployeeWorkLoadSummaryQuery());
+        var employee = new Employee("hsimpson", "Homer", "Simpson", "homer@example.com")
+        {
+            Id = Guid.NewGuid(),
+            MiddleName = "Jay",
+            PreferredLanguage = "en-US"
+        };
+        employee.AddRole(new Role("Worker", false, true) { Id = Guid.NewGuid() });
+        EmployeeWorkLoadSummary[] summaries =
+        [
+            new()
+            {
+                Employee = employee,
+                Load = new EmployeeWorkLoad
+                {
+                    AssignedAndOpen = 4,
+                    InProgress = 2,
+                    Overdue = 1,
+                    CompletedLast30Days = 3
+                }
+            }
+        ];
+
+        var rehydrated = SimulateRemoteObject(summaries);
+
+        rehydrated.Length.ShouldBe(1);
+        rehydrated[0].Employee.UserName.ShouldBe("hsimpson");
+        rehydrated[0].Employee.GetFullName().ShouldBe("Homer Jay Simpson");
+        rehydrated[0].Employee.Roles.Single().Name.ShouldBe("Worker");
+        rehydrated[0].Employee.CanFulfillWorkOrder().ShouldBeTrue();
+        rehydrated[0].Load.AssignedAndOpen.ShouldBe(4);
+        rehydrated[0].Load.InProgress.ShouldBe(2);
+        rehydrated[0].Load.Overdue.ShouldBe(1);
+        rehydrated[0].Load.CompletedLast30Days.ShouldBe(3);
+    }
+
+    [Test]
     public void ShouldRoundTripTeamAndVendorRequests()
     {
         AssertRemotable(new TeamsQuery());

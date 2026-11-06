@@ -248,22 +248,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var employees = await Bus.Send(new EmployeeGetAllQuery());
-        var assignableEmployees = employees
-            .Where(e => e.CanFulfillWorkOrder())
-            .ToList();
-
-        _tableData = new List<TeamTableRow>();
-
-        foreach (var employee in assignableEmployees)
-        {
-            var load = await Bus.Send(new EmployeeWorkLoadQuery(employee.UserName));
-            _tableData.Add(new TeamTableRow
+        var summaries = await Bus.Send(new EmployeeWorkLoadSummaryQuery());
+        _tableData = summaries
+            .Where(summary => summary.Employee.CanFulfillWorkOrder())
+            .Select(summary => new TeamTableRow
             {
-                Employee = employee,
-                Load = load
-            });
-        }
+                Employee = summary.Employee,
+                Load = summary.Load
+            })
+            .ToList();
 
         SortTableData();
 

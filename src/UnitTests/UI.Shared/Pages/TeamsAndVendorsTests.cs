@@ -27,7 +27,9 @@ public class TeamsAndVendorsTests
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
 
         await component.WaitForAssertionAsync(() => component.Markup.ShouldContain("HOMER SIMPSON"));
-        bus.EmployeeWorkLoadQueriesSent.ShouldContain(q => q.EmployeeUserName == "hsimpson");
+        bus.SummaryQueriesSent.ShouldBe(1);
+        bus.EmployeeGetAllQueriesSent.ShouldBe(0);
+        bus.EmployeeWorkLoadQueriesSent.ShouldBeEmpty();
     }
 
     [Test]
@@ -532,11 +534,16 @@ public class TeamsAndVendorsTests
 }
 
 /// <summary>
-/// Stub bus for TeamsAndVendors tests that captures EmployeeWorkLoadQuery invocations.
+/// Stub bus for TeamsAndVendors tests. The page loads every assignable employee's workload
+/// with one <see cref="EmployeeWorkLoadSummaryQuery"/>.
 /// </summary>
 public class StubBusTeamsAndVendors : StubBus
 {
     public List<EmployeeWorkLoadQuery> EmployeeWorkLoadQueriesSent { get; } = new();
+
+    public int SummaryQueriesSent { get; private set; }
+
+    public int EmployeeGetAllQueriesSent { get; private set; }
 
     private bool _employeesInitialized;
 
@@ -578,7 +585,27 @@ public class StubBusTeamsAndVendors : StubBus
     {
         if (request is EmployeeGetAllQuery)
         {
+            EmployeeGetAllQueriesSent++;
             return Task.FromResult<TResponse>((TResponse)(object)EmployeesToReturn);
+        }
+
+        if (request is EmployeeWorkLoadSummaryQuery)
+        {
+            SummaryQueriesSent++;
+            var summaries = EmployeesToReturn
+                .Select(employee => new EmployeeWorkLoadSummary
+                {
+                    Employee = employee,
+                    Load = new EmployeeWorkLoad
+                    {
+                        AssignedAndOpen = 5,
+                        InProgress = 2,
+                        Overdue = 1,
+                        CompletedLast30Days = 10
+                    }
+                })
+                .ToArray();
+            return Task.FromResult<TResponse>((TResponse)(object)summaries);
         }
 
         if (request is EmployeeWorkLoadQuery workLoadQuery)
