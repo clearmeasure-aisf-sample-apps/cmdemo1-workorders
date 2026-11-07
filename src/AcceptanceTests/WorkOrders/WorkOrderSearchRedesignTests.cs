@@ -156,10 +156,14 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
             await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.StatusCell}{order.Number}").Locator(".status-badge"))
                 .ToHaveTextAsync(WorkOrderStatus.Assigned.FriendlyName);
             await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.AssigneeCell}{order.Number}")).ToContainTextAsync(fixer.DisplayName);
-            var saved = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
-            saved!.Status.ShouldBe(WorkOrderStatus.Assigned);
-            saved.Assignee!.UserName.ShouldBe(fixer.UserName);
         }
+
+        var savedFirst = await Bus.Send(new WorkOrderByNumberQuery(first.Number!));
+        savedFirst!.Status.ShouldBe(WorkOrderStatus.Assigned);
+        savedFirst.Assignee!.UserName.ShouldBe(fixer.UserName);
+        var savedSecond = await Bus.Send(new WorkOrderByNumberQuery(second.Number!));
+        savedSecond!.Status.ShouldBe(WorkOrderStatus.Assigned);
+        savedSecond.Assignee!.UserName.ShouldBe(fixer.UserName);
     }
 
     [Test, Retry(2)]

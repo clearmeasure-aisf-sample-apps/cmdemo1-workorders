@@ -428,7 +428,10 @@ public abstract class AcceptanceTestBase
         WorkOrder? rehyratedOrder = null;
         for (var attempt = 0; attempt < 10; attempt++)
         {
+            // Bounded poll of one saved work order until it is readable. Same key each attempt, not a per-row fan-out.
+#pragma warning disable CM0001
             rehyratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number));
+#pragma warning restore CM0001
             if (rehyratedOrder != null) break;
             await Task.Delay(1000);
         }

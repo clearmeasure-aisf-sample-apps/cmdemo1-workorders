@@ -1,0 +1,17 @@
+<Project>
+  <!-- #1516: ClearMeasure.NpoAnalyzers runs in every src project as a build analyzer.
+       ReferenceOutputAssembly is false so the DLL is not a runtime dependency.
+       UnitTests is the exception: the fixture constructs the analyzers, so it also compiles against the assembly.
+       #1517 can add its own ItemGroup beside this one. -->
+  <PropertyGroup>
+    <NpoAnalyzersProject>$(MSBuildThisFileDirectory)Analyzers\ClearMeasure.NpoAnalyzers\ClearMeasure.NpoAnalyzers.csproj</NpoAnalyzersProject>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'ClearMeasure.NpoAnalyzers' and '$(MSBuildProjectName)' != 'UnitTests'">
+    <ProjectReference Include="$(NpoAnalyzersProject)" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'UnitTests'">
+    <ProjectReference Include="$(NpoAnalyzersProject)" OutputItemType="Analyzer" ReferenceOutputAssembly="true" PrivateAssets="all" IsAspireProjectResource="false" />
+  </ItemGroup>
+</Project>
