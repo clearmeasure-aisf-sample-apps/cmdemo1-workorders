@@ -120,6 +120,7 @@ public class PageLoadBudgetTests : AcceptanceTestBase
             ServerFixture.ApplicationBaseUrl,
             async () => { await link.EvaluateAsync("el => el.click()"); },
             ready);
+        // ReSharper disable once MethodHasAsyncOverload -- TestContext output is synchronous diagnostic text
         TestContext.Out.WriteLine(measurement.Describe());
         return measurement;
     }

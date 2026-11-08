@@ -15,12 +15,12 @@ public static class PageLoadBudget
     /// How long the browser must stay free of in-flight app API calls before a load is finished.
     /// Long enough that a call which starts on the next Blazor turn is still counted.
     /// </summary>
-    public static readonly TimeSpan ApiQuietWindow = TimeSpan.FromMilliseconds(500);
+    private static readonly TimeSpan ApiQuietWindow = TimeSpan.FromMilliseconds(500);
 
     /// <summary>
     /// A same-origin request whose path contains <c>/api/</c>.
     /// </summary>
-    public static bool IsAppApiRequest(string requestUrl, string appBaseUrl)
+    private static bool IsAppApiRequest(string requestUrl, string appBaseUrl)
     {
         if (!Uri.TryCreate(requestUrl, UriKind.Absolute, out var request)
             || !Uri.TryCreate(appBaseUrl, UriKind.Absolute, out var app))
