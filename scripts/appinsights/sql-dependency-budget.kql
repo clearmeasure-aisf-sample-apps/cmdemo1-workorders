@@ -1,0 +1,17 @@
+// Request operations whose SQL dependency count exceeds the budget token.
+// The lookback token is a KQL timespan (for example 1h). Invoke-SqlDependencyBudget.ps1 replaces both tokens.
+// operation_Id is the correlation id the Azure Monitor exporter writes on requests and dependencies.
+requests
+| where timestamp > ago({{LOOKBACK}})
+| where isnotempty(operation_Id)
+| project operation_Id, requestName = name, requestTimestamp = timestamp, success, resultCode, duration
+| join kind=inner (
+    dependencies
+    | where timestamp > ago({{LOOKBACK}})
+    | where isnotempty(operation_Id)
+    | where type in~ ("SQL", "SQL Server")
+    | summarize sqlCount = count() by operation_Id
+) on operation_Id
+| where sqlCount > {{SQL_BUDGET}}
+| project requestTimestamp, operation_Id, requestName, sqlCount, duration, success, resultCode
+| order by sqlCount desc, requestTimestamp desc
