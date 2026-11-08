@@ -9,7 +9,6 @@ namespace ClearMeasure.NpoAnalyzers;
 /// <summary>
 /// Reports CM0004 when a materializer runs before a later query operator. Disabled until #1520.
 /// </summary>
-// ReSharper disable once ClassNeverInstantiated.Global -- loaded by Roslyn reflection, not new()
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class PrematureMaterializationAnalyzer : DiagnosticAnalyzer
 {

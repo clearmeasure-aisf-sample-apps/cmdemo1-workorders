@@ -9,7 +9,6 @@ namespace ClearMeasure.NpoAnalyzers;
 /// <summary>
 /// Reports CM0002 for EF materializers inside loops. Disabled in .editorconfig until #1520.
 /// </summary>
-// ReSharper disable once ClassNeverInstantiated.Global -- loaded by Roslyn reflection, not new()
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
 {

@@ -7,7 +7,6 @@ namespace ClearMeasure.NpoAnalyzers;
 /// <summary>
 /// Reports CM0005 when a UI assembly declares a member whose type is a DbContext.
 /// </summary>
-// ReSharper disable once ClassNeverInstantiated.Global -- loaded by Roslyn reflection, not new()
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class DbContextInUiAnalyzer : DiagnosticAnalyzer
 {

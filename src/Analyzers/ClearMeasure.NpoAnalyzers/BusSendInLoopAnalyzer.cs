@@ -9,7 +9,6 @@ namespace ClearMeasure.NpoAnalyzers;
 /// <summary>
 /// Reports CM0001 when an awaited bus or mediator send runs inside a loop or a Select lambda.
 /// </summary>
-// ReSharper disable once ClassNeverInstantiated.Global -- loaded by Roslyn reflection, not new()
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class BusSendInLoopAnalyzer : DiagnosticAnalyzer
 {

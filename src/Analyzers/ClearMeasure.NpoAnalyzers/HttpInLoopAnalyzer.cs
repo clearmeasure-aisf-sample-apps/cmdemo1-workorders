@@ -9,7 +9,6 @@ namespace ClearMeasure.NpoAnalyzers;
 /// <summary>
 /// Reports CM0003 for HTTP calls inside loops. Disabled in .editorconfig until #1520.
 /// </summary>
-// ReSharper disable once ClassNeverInstantiated.Global -- loaded by Roslyn reflection, not new()
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class HttpInLoopAnalyzer : DiagnosticAnalyzer
 {
