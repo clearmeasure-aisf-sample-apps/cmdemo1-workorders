@@ -16,7 +16,8 @@ public sealed record BulkActionOutcome(int Updated, int Skipped)
 }
 
 /// <summary>
-/// Applies the existing state commands to several work orders, one at a time through <see cref="IBus"/>.
+/// Applies the existing state commands to several work orders through <see cref="IBus"/>.
+/// The targeted rows are loaded in one query; each valid command is then sent on its own.
 /// Domain rules are unchanged: a row where the command is not valid for its state or the current user
 /// is skipped and counted.
 /// </summary>
@@ -51,28 +52,66 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
     private async Task<BulkActionOutcome> ApplyAsync(IEnumerable<string> numbers, string verb, Employee currentUser,
         Action<WorkOrder> prepare)
     {
+        var requested = numbers.ToArray();
+        var byNumber = await LoadByNumberAsync(requested);
+        return await ApplyLoadedAsync(requested, byNumber, verb, currentUser, prepare);
+    }
+
+    private async Task<Dictionary<string, WorkOrder>> LoadByNumberAsync(string[] requested)
+    {
+        if (requested.Length == 0)
+        {
+            return new Dictionary<string, WorkOrder>(StringComparer.Ordinal);
+        }
+
+        var loaded = await bus.Send(new WorkOrdersByNumbersQuery(requested));
+        return loaded
+            .Where(order => !string.IsNullOrEmpty(order.Number))
+            .ToDictionary(order => order.Number!, StringComparer.Ordinal);
+    }
+
+    private async Task<BulkActionOutcome> ApplyLoadedAsync(string[] requested, Dictionary<string, WorkOrder> byNumber,
+        string verb, Employee currentUser, Action<WorkOrder> prepare)
+    {
         var updated = 0;
         var skipped = 0;
-        foreach (var number in numbers)
+        foreach (var number in requested)
         {
-#pragma warning disable CM0001 // #1522 batches BulkAction per-row IBus.Send
-            var applied = await ApplyOneAsync(number, verb, currentUser, prepare);
+            if (!TryGetOrder(byNumber, number, out var order))
+            {
+                skipped++;
+                continue;
+            }
+
+            // The read is one query. Each state command is still its own send.
+#pragma warning disable CM0001
+            var applied = await ApplyOneAsync(order, verb, currentUser, prepare);
 #pragma warning restore CM0001
-            updated += applied ? 1 : 0;
-            skipped += applied ? 0 : 1;
+            if (applied)
+            {
+                updated++;
+                continue;
+            }
+
+            skipped++;
         }
 
         return new BulkActionOutcome(updated, skipped);
     }
 
-    private async Task<bool> ApplyOneAsync(string number, string verb, Employee currentUser, Action<WorkOrder> prepare)
+    private static bool TryGetOrder(Dictionary<string, WorkOrder> byNumber, string number, out WorkOrder order)
     {
-        var order = await bus.Send(new WorkOrderByNumberQuery(number));
-        if (order == null)
+        if (string.IsNullOrWhiteSpace(number))
         {
+            order = null!;
             return false;
         }
 
+        return byNumber.TryGetValue(number, out order!);
+    }
+
+    private async Task<bool> ApplyOneAsync(WorkOrder order, string verb, Employee currentUser, Action<WorkOrder> prepare)
+    {
         prepare(order);
         var command = new StateCommandList().GetValidStateCommands(order, currentUser)
             .FirstOrDefault(candidate => candidate.Matches(verb));

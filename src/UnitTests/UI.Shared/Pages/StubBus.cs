@@ -80,6 +80,19 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return Task.FromResult<TResponse>((TResponse)(object)workOrder);
         }
 
+        if (request is WorkOrdersByNumbersQuery byNumbers)
+        {
+            var workOrder = new WorkOrder
+            {
+                Id = Guid.NewGuid(),
+                Number = byNumbers.Numbers.FirstOrDefault(number => !string.IsNullOrWhiteSpace(number)) ?? "WO-001",
+                Title = "Fix broken door",
+                Status = WorkOrderStatus.Draft,
+                Creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jeffrey@example.com")
+            };
+            return Task.FromResult<TResponse>((TResponse)(object)new[] { workOrder });
+        }
+
         if (request is WorkOrderCountByStatusQuery)
         {
             var counts = StatusCounts ?? WorkOrderStatus.GetAllItems().ToDictionary(s => s.Key, _ => 0);

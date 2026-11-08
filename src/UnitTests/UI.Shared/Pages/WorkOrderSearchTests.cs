@@ -1835,6 +1835,13 @@ public class WorkOrderSearchTests
 
         public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
         {
+            if (request is WorkOrdersByNumbersQuery byNumbers)
+            {
+                var wanted = new HashSet<string>(byNumbers.Numbers, StringComparer.Ordinal);
+                var matches = _orders.Where(order => order.Number != null && wanted.Contains(order.Number)).ToArray();
+                return Task.FromResult((TResponse)(object)matches);
+            }
+
             if (request is WorkOrderByNumberQuery byNumber)
             {
                 return Task.FromResult((TResponse)(object)_orders.Single(o => o.Number == byNumber.Number));
