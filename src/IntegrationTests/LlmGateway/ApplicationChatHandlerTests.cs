@@ -25,11 +25,14 @@ public class ApplicationChatHandlerTests : LlmTestBase
         while (DateTime.UtcNow < deadline)
         {
             var db = TestHost.GetRequiredService<DataContext>();
+            // Bounded poll of one work order until the predicate holds. Same key each attempt, not a per-row fan-out.
+#pragma warning disable CM0002
             var workOrder = await db.Set<WorkOrder>()
                 .AsNoTracking()
                 .Include(wo => wo.Assignee)
                 .Include(wo => wo.Creator)
                 .SingleOrDefaultAsync(wo => wo.Number == workOrderNumber, cancellationToken);
+#pragma warning restore CM0002
 
             if (workOrder is not null && predicate(workOrder))
             {

@@ -38,6 +38,8 @@ internal static class AnalyzerTestHelper
         var locations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         Add(locations, typeof(object).Assembly);
         Add(locations, typeof(Enumerable).Assembly);
+        Add(locations, typeof(IQueryable).Assembly);
+        Add(locations, typeof(System.Linq.Expressions.Expression).Assembly);
         Add(locations, typeof(Task).Assembly);
         Add(locations, typeof(List<>).Assembly);
         Add(locations, typeof(HttpClient).Assembly);

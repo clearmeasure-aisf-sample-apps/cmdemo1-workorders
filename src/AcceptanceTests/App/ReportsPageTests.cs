@@ -143,7 +143,10 @@ public class ReportsPageTests : AcceptanceTestBase
             await using var cleanup = TestHost.NewDbContext();
             foreach (var order in orders)
             {
+                // Deletes the rows this test inserted. Keyed lookup per id, not a product query path.
+#pragma warning disable CM0002
                 var stored = await cleanup.Set<WorkOrder>().FindAsync(order.Id);
+#pragma warning restore CM0002
                 if (stored != null)
                 {
                     cleanup.Remove(stored);

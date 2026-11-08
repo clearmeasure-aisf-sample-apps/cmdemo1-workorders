@@ -79,10 +79,10 @@ dotnet_style_object_initializer = true:suggestion
 dotnet_style_collection_initializer = true:suggestion
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
 
-# NPO analyzers (#1516). CM0002–CM0004 ship with the assembly but stay off until #1520.
+# NPO analyzers (#1516, #1520). CM0002 warns on IQueryable materializers in loops. CM0003–CM0004 stay off.
 [*.{cs,razor}]
 dotnet_diagnostic.CM0001.severity = error
 dotnet_diagnostic.CM0005.severity = error
-dotnet_diagnostic.CM0002.severity = none
+dotnet_diagnostic.CM0002.severity = warning
 dotnet_diagnostic.CM0003.severity = none
 dotnet_diagnostic.CM0004.severity = none
