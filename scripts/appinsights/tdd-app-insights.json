@@ -1,0 +1,9 @@
+{
+  "environment": "tdd",
+  "appInsightsName": "appi-cmdemo1-tdd",
+  "resourceGroup": "rg-cmdemo1-nonprod",
+  "provider": "Microsoft.Insights/components",
+  "source": "https://blue-bush-041023510.1.azurestaticapps.net/topology.json",
+  "sourceDocument": "arch/runtime-view.md",
+  "observedGeneratedAt": "2026-11-05T22:16:18Z"
+}

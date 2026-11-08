@@ -1,0 +1,106 @@
+# Hourly check that tdd request operations stay within a SQL dependency budget.
+# The query script no-ops when the Azure login variables are absent. It does not
+# deploy the scheduled query rule in scripts/appinsights/sql-dependency-budget-alert.bicep.
+# An operator applies that template by hand. See scripts/appinsights/README.md.
+# This job does not set the GitHub environment "release": a job that names it creates a
+# GitHub deployment, and this check must not record hourly deployments on that environment.
+name: TDD SQL dependency budget
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      sqlBudget:
+        description: SQL dependencies allowed on one request operation
+        required: false
+        default: '20'
+        type: string
+      lookback:
+        description: Lookback (15m, 30m, 1h, 6h, 12h, or 1d)
+        required: false
+        default: '1h'
+        type: string
+  pull_request:
+    paths:
+      - 'scripts/appinsights/**'
+      - '.github/workflows/tdd-sql-dependency-budget.yml'
+      - 'src/UnitTests/BuildGates/SqlDependencyBudgetAlertTests.cs'
+  push:
+    branches: [master]
+    paths:
+      - 'scripts/appinsights/**'
+      - '.github/workflows/tdd-sql-dependency-budget.yml'
+      - 'src/UnitTests/BuildGates/SqlDependencyBudgetAlertTests.cs'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  self-test:
+    name: Self-test
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Run the SQL dependency budget self-test
+        shell: pwsh
+        run: ./scripts/appinsights/Invoke-SqlDependencyBudget.ps1 -SelfTest
+
+  query:
+    name: Query tdd App Insights
+    needs: self-test
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Decide whether Azure credentials are configured
+        id: gate
+        shell: bash
+        env:
+          AZURE_CLIENT_ID_APP_INSIGHTS: ${{ vars.AZURE_CLIENT_ID_APP_INSIGHTS }}
+          AZURE_CLIENT_ID_ACR_PUSH: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          missing=()
+          if [ -z "${AZURE_TENANT_ID}" ]; then
+            missing+=("AZURE_TENANT_ID")
+          fi
+          if [ -z "${AZURE_SUBSCRIPTION_ID}" ]; then
+            missing+=("AZURE_SUBSCRIPTION_ID")
+          fi
+          if [ -z "${AZURE_CLIENT_ID_APP_INSIGHTS}" ] && [ -z "${AZURE_CLIENT_ID_ACR_PUSH}" ]; then
+            missing+=("AZURE_CLIENT_ID_APP_INSIGHTS or AZURE_CLIENT_ID_ACR_PUSH")
+          fi
+          if [ "${#missing[@]}" -gt 0 ]; then
+            message="Skipping tdd SQL dependency budget query. Azure login settings are absent: ${missing[*]}."
+            echo "$message"
+            echo "$message" >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Azure login
+        if: steps.gate.outputs.skip != 'true'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_APP_INSIGHTS != '' && vars.AZURE_CLIENT_ID_APP_INSIGHTS || vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Query SQL dependency budget
+        if: steps.gate.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          SQL_BUDGET: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.sqlBudget || '20' }}
+          LOOKBACK: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.lookback || '1h' }}
+        run: |
+          ./scripts/appinsights/Invoke-SqlDependencyBudget.ps1 -UseDiscoveredTddTarget -RequireAzure -SubscriptionId "$env:AZURE_SUBSCRIPTION_ID" -Budget ([int]$env:SQL_BUDGET) -Lookback $env:LOOKBACK
