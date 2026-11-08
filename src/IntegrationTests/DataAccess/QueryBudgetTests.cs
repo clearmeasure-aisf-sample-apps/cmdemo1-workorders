@@ -70,7 +70,7 @@ public sealed class QueryBudgetTests
         await using var context = NewContext();
         using (context.Begin())
         {
-            var error = Should.Throw<InvalidOperationException>(() => context.Begin());
+            var error = Should.Throw<InvalidOperationException>(context.Begin);
             error.Message.ShouldContain("already open");
         }
     }
