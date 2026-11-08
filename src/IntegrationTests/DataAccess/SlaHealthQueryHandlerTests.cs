@@ -275,6 +275,7 @@ public class SlaHealthQueryHandlerTests
         var lastMonthStart = currentMonthStart.AddMonths(-1);
         var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
         var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
+        var completed = windowStart.AddHours(1);
 
         var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
@@ -284,7 +285,7 @@ public class SlaHealthQueryHandlerTests
             Number = TestData.Number(),
             DueDate = today,
             Status = WorkOrderStatus.Complete,
-            CompletedDate = windowStart.AddHours(1)
+            CompletedDate = completed
         };
         var outside = Enumerable.Range(0, 12).Select(index => new WorkOrder
         {
@@ -298,7 +299,7 @@ public class SlaHealthQueryHandlerTests
         await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
         context.Add(creator);
         context.Add(inWindow);
-        context.AddRange(outside);
+        context.AddRange(outside.AsEnumerable());
         await context.SaveChangesAsync();
 
         context.Commands.Reset();
@@ -311,6 +312,8 @@ public class SlaHealthQueryHandlerTests
         sql.ShouldContain(">=");
         sql.ShouldContain("<");
         sql.ShouldNotContain("JOIN");
+        completed.ShouldBeGreaterThanOrEqualTo(windowStart);
+        completed.ShouldBeLessThan(windowEnd);
         result.LastMonthPercentage.ShouldBe(100m);
         result.LastMonthOrderCount.ShouldBe(1);
         result.CurrentMonthPercentage.ShouldBeNull();

@@ -15,8 +15,8 @@ public class EmployeeGetAllQuery : IRequest<Employee[]>, IRemotableRequest
     public const int MaxTake = 1000;
 
     /// <summary>Rows to skip. Negative values are treated as zero.</summary>
-    public int Skip { get; set; }
+    public int Skip { get; init; }
 
     /// <summary>Rows to return, from 1 through <see cref="MaxTake"/>.</summary>
-    public int Take { get; set; } = MaxTake;
+    public int Take { get; init; } = MaxTake;
 }

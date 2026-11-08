@@ -42,13 +42,13 @@ public class WorkOrderQueryHandler(DataContext context) :
         var numbers = request.Numbers
             .Where(number => !string.IsNullOrWhiteSpace(number))
             .Distinct(StringComparer.Ordinal)
-            .ToArray();
-        if (numbers.Length == 0)
+            .ToList();
+        if (numbers.Count == 0)
         {
             return [];
         }
 
-        if (numbers.Length > WorkOrdersByNumbersQuery.MaxNumbers)
+        if (numbers.Count > WorkOrdersByNumbersQuery.MaxNumbers)
         {
             throw new InvalidOperationException(
                 $"WorkOrdersByNumbersQuery accepts at most {WorkOrdersByNumbersQuery.MaxNumbers} numbers.");

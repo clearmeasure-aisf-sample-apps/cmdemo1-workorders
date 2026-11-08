@@ -25,7 +25,7 @@ public class WorkOrdersByNumbersQueryHandlerTests
 
         await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
         context.Add(creator);
-        context.AddRange(orders);
+        context.AddRange(orders.AsEnumerable());
         await context.SaveChangesAsync();
         var handler = new WorkOrderQueryHandler(context);
 
