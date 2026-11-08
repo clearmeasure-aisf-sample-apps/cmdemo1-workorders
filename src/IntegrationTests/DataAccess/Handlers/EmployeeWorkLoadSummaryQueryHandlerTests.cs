@@ -1,12 +1,8 @@
-using System.Data.Common;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
-using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
@@ -37,7 +33,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         var idle = new Employee(idleName, "Id", "Le", TestData.Email(idleName));
         idle.AddRole(new Role("Worker", false, true));
 
-        await using var context = new CountingContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
+        await using var context = new QueryBudgetContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
         context.AddRange(creator, worker, idle);
         context.Add(Order(creator, worker, WorkOrderStatus.Draft, today.AddDays(5)));
         context.Add(Order(creator, worker, WorkOrderStatus.Assigned, today.AddDays(-3)));
@@ -50,15 +46,18 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         context.Add(Order(creator, creator, WorkOrderStatus.Assigned, today.AddDays(-4)));
         await context.SaveChangesAsync();
 
-        context.Commands.Reset();
-        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(context, clock)
-            .Handle(new EmployeeWorkLoadSummaryQuery());
+        EmployeeWorkLoadSummary[] summaries;
+        using (var budget = context.Begin())
+        {
+            summaries = await new EmployeeWorkLoadSummaryQueryHandler(context, clock)
+                .Handle(new EmployeeWorkLoadSummaryQuery());
 
-        context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, context.Commands.Texts));
-        context.Commands.OtherCommands.ShouldBe(0);
-        var sql = context.Commands.Texts.Single();
-        sql.ShouldContain("GROUP BY");
-        sql.ShouldContain("SUM(");
+            budget.ReaderCount.ShouldBe(1, budget.Describe());
+            budget.OtherCount.ShouldBe(0);
+            var sql = budget.CommandTexts.Single();
+            sql.ShouldContain("GROUP BY");
+            sql.ShouldContain("SUM(");
+        }
 
         summaries.ShouldNotContain(summary => summary.Employee.UserName == creatorName);
         var workerSummary = summaries.Single(summary => summary.Employee.UserName == workerName);
@@ -97,57 +96,5 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
             DueDate = dueDate,
             CompletedDate = completedDate
         };
-    }
-
-    private sealed class CountingContext(IDatabaseConfiguration configuration) : DataContext(configuration)
-    {
-        public CommandCounter Commands { get; } = new();
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.AddInterceptors(Commands);
-            base.OnConfiguring(optionsBuilder);
-        }
-    }
-
-    private sealed class CommandCounter : DbCommandInterceptor
-    {
-        public int ReaderCommands { get; private set; }
-        public int OtherCommands { get; private set; }
-        public List<string> Texts { get; } = [];
-
-        public void Reset()
-        {
-            ReaderCommands = 0;
-            OtherCommands = 0;
-            Texts.Clear();
-        }
-
-        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
-            CommandEventData eventData, InterceptionResult<DbDataReader> result,
-            CancellationToken cancellationToken = default)
-        {
-            ReaderCommands++;
-            Texts.Add(command.CommandText);
-            return base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
-        }
-
-        public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command,
-            CommandEventData eventData, InterceptionResult<int> result,
-            CancellationToken cancellationToken = default)
-        {
-            OtherCommands++;
-            Texts.Add(command.CommandText);
-            return base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
-        }
-
-        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(DbCommand command,
-            CommandEventData eventData, InterceptionResult<object> result,
-            CancellationToken cancellationToken = default)
-        {
-            OtherCommands++;
-            Texts.Add(command.CommandText);
-            return base.ScalarExecutingAsync(command, eventData, result, cancellationToken);
-        }
     }
 }
