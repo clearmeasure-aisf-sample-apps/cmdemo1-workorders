@@ -213,8 +213,9 @@ function ConvertFrom-AppInsightsQueryTable {
             throw 'Application Insights query result has no tables property.'
         }
         $result = [System.Collections.Generic.List[object]]::new()
-        if ($tablesProperty.GetArrayLength() -eq 0) {
-            return $result
+        if ($tablesProperty.ValueKind -eq [System.Text.Json.JsonValueKind]::Null -or $tablesProperty.GetArrayLength() -eq 0) {
+            Write-Output -NoEnumerate $result
+            return
         }
 
         $table = $tablesProperty[0]
@@ -223,16 +224,22 @@ function ConvertFrom-AppInsightsQueryTable {
             $columns.Add($column.GetProperty('name').GetString())
         }
 
-        foreach ($row in $table.GetProperty('rows').EnumerateArray()) {
-            $item = [ordered]@{}
-            for ($index = 0; $index -lt $columns.Count; $index++) {
-                $item[$columns[$index]] = ConvertFrom-JsonElementValue -Element $row[$index]
-            }
+        $rowsElement = [System.Text.Json.JsonElement]::Parse('null')
+        $hasRows = $table.TryGetProperty('rows', [ref]$rowsElement)
+        if ($hasRows -and $rowsElement.ValueKind -eq [System.Text.Json.JsonValueKind]::Array) {
+            foreach ($row in $rowsElement.EnumerateArray()) {
+                $item = [ordered]@{}
+                for ($index = 0; $index -lt $columns.Count; $index++) {
+                    $item[$columns[$index]] = ConvertFrom-JsonElementValue -Element $row[$index]
+                }
 
-            $result.Add([pscustomobject]$item)
+                $result.Add([pscustomobject]$item)
+            }
         }
 
-        return $result
+        # An empty List enumerates to $null on return. Keep the list so the caller can pass it on.
+        Write-Output -NoEnumerate $result
+        return
     }
     finally {
         if ($null -ne $document) {
@@ -244,6 +251,7 @@ function ConvertFrom-AppInsightsQueryTable {
 function Get-SqlDependencyBudgetViolations {
     param(
         [Parameter(Mandatory = $true)]
+        [AllowNull()]
         [AllowEmptyCollection()]
         [System.Collections.IEnumerable]$Rows,
         [Parameter(Mandatory = $true)]
@@ -255,6 +263,11 @@ function Get-SqlDependencyBudgetViolations {
     }
 
     $violations = [System.Collections.Generic.List[object]]::new()
+    if ($null -eq $Rows) {
+        Write-Output -NoEnumerate $violations
+        return
+    }
+
     foreach ($row in $Rows) {
         if ($null -eq $row) {
             throw 'Query row is null.'
@@ -270,7 +283,8 @@ function Get-SqlDependencyBudgetViolations {
         }
     }
 
-    return $violations
+    Write-Output -NoEnumerate $violations
+    return
 }
 
 function New-SqlDependencyBudgetDeployment {

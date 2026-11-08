@@ -121,8 +121,8 @@ else {
     }
 }
 
-if ($violations.Count -eq 0) {
-    $passed = "SQL dependency budget passed. Budget $Budget, lookback $Lookback. No request operation exceeded the budget."
+if ($null -eq $violations -or $violations.Count -eq 0) {
+    $passed = "SQL dependency budget passed. Budget ${Budget}, lookback ${Lookback}. no operations over budget."
     Write-Output $passed
     Write-BudgetStepSummary $passed
     exit 0
