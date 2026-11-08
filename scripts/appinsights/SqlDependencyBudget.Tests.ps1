@@ -104,7 +104,25 @@ $single = ConvertFrom-AppInsightsQueryTable -Json $oneRow
 Assert-True ($single.Count -eq 1 -and [long]$single[0].sqlCount -eq 20) 'A single result row should parse without collapsing cells.'
 
 $empty = ConvertFrom-AppInsightsQueryTable -Json '{"tables":[]}'
+Assert-True ($null -ne $empty) 'An empty tables array must return a list, not null.'
 Assert-True ($empty.Count -eq 0) 'An empty tables array should produce no rows.'
+Assert-True ((Get-SqlDependencyBudgetViolations -Rows $empty -Budget 20).Count -eq 0) 'An empty tables array should be within budget.'
+
+$zeroRows = @'
+{"tables":[{"name":"PrimaryResult","columns":[{"name":"operation_Id","type":"string"},{"name":"sqlCount","type":"long"},{"name":"requestName","type":"string"}],"rows":[]}]}
+'@
+$zero = ConvertFrom-AppInsightsQueryTable -Json $zeroRows
+Assert-True ($null -ne $zero) 'Zero query rows must not come back as null.'
+Assert-True ($zero.Count -eq 0) 'Zero query rows should be an empty list.'
+Assert-True ((Get-SqlDependencyBudgetViolations -Rows $zero -Budget 20).Count -eq 0) 'Zero query rows should be within budget.'
+$nullRows = Get-SqlDependencyBudgetViolations -Rows $null -Budget 20
+Assert-True ($null -ne $nullRows -and $nullRows.Count -eq 0) 'A null row list should be within budget.'
+
+$missingRows = @'
+{"tables":[{"name":"PrimaryResult","columns":[{"name":"sqlCount","type":"long"}]}]}
+'@
+$missing = ConvertFrom-AppInsightsQueryTable -Json $missingRows
+Assert-True ($null -ne $missing -and $missing.Count -eq 0) 'A table with no rows property should be an empty list.'
 Assert-Throws { ConvertFrom-AppInsightsQueryTable -Json 'not-json' } 'Invalid JSON should fail.'
 Assert-Throws { ConvertFrom-AppInsightsQueryTable -Json '{"error":true}' } 'A payload without tables should fail.'
 
@@ -179,6 +197,17 @@ Assert-True ($skipped.Contains('Skipping SQL dependency budget query.')) 'A quer
 
 $badLookback = & pwsh -NoProfile -File (Join-Path $root 'Invoke-SqlDependencyBudget.ps1') -UseDiscoveredTddTarget -Budget 20 -Lookback '1h;clear' 2>&1 | Out-String
 Assert-True ($LASTEXITCODE -eq 2) "A bad lookback should exit 2. Output: $badLookback"
+
+$zeroFile = Join-Path ([System.IO.Path]::GetTempPath()) 'sql-dependency-budget-zero-rows.json'
+Set-Content -LiteralPath $zeroFile -Value $zeroRows -Encoding utf8NoBOM
+try {
+    $healthy = & pwsh -NoProfile -File (Join-Path $root 'Invoke-SqlDependencyBudget.ps1') -QueryResultPath $zeroFile -Budget 20 -Lookback '1h' 2>&1 | Out-String
+    Assert-True ($LASTEXITCODE -eq 0) "Zero rows should exit 0. Output: $healthy"
+    Assert-True ($healthy.Contains('no operations over budget')) "Zero rows should log that no operations are over budget. Output: $healthy"
+}
+finally {
+    Remove-Item -LiteralPath $zeroFile -Force -ErrorAction SilentlyContinue
+}
 
 Write-Output 'SQL dependency budget self-test passed.'
 exit 0

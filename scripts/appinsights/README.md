@@ -36,7 +36,7 @@ pwsh -NoProfile -File ./scripts/appinsights/Invoke-SqlDependencyBudget.ps1 -UseD
 
 | Exit | Meaning |
 | --- | --- |
-| 0 | No operation over the budget, or the run skipped because the target or credentials are absent |
+| 0 | No operations over budget (including a query that returns no rows), or the run skipped because the target or credentials are absent |
 | 1 | At least one operation has `sqlCount` greater than the budget |
 | 2 | Bad argument, query command failed, or credentials were required and absent |
 
