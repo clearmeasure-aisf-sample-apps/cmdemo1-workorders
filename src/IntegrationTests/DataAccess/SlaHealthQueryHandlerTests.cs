@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -263,5 +264,56 @@ public class SlaHealthQueryHandlerTests
         // Should be counted in current month (when it was completed), and it's on time
         result.CurrentMonthPercentage.ShouldBe(100m);
         result.CurrentMonthOrderCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task ShouldReadOnlyTheTwoChurchMonths_InOneQuery()
+    {
+        var clock = TestData.FutureClock();
+        var today = ChurchTimeZone.Today(clock);
+        var currentMonthStart = new DateOnly(today.Year, today.Month, 1);
+        var lastMonthStart = currentMonthStart.AddMonths(-1);
+        var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
+        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
+
+        var userName = TestData.UserName("sla");
+        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
+        var inWindow = new WorkOrder
+        {
+            Creator = creator,
+            Number = TestData.Number(),
+            DueDate = today,
+            Status = WorkOrderStatus.Complete,
+            CompletedDate = windowStart.AddHours(1)
+        };
+        var outside = Enumerable.Range(0, 12).Select(index => new WorkOrder
+        {
+            Creator = creator,
+            Number = TestData.Number(),
+            DueDate = today.AddYears(-3),
+            Status = WorkOrderStatus.Complete,
+            CompletedDate = windowStart.AddYears(-2).AddDays(index)
+        }).ToArray();
+
+        await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
+        context.Add(creator);
+        context.Add(inWindow);
+        context.AddRange(outside);
+        await context.SaveChangesAsync();
+
+        context.Commands.Reset();
+        var result = await new SlaHealthQueryHandler(context, clock).Handle(new SlaHealthQuery());
+
+        context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, context.Commands.Texts));
+        context.Commands.OtherCommands.ShouldBe(0);
+        var sql = context.Commands.Texts.Single();
+        sql.ShouldContain("CompletedDate");
+        sql.ShouldContain(">=");
+        sql.ShouldContain("<");
+        sql.ShouldNotContain("JOIN");
+        result.LastMonthPercentage.ShouldBe(100m);
+        result.LastMonthOrderCount.ShouldBe(1);
+        result.CurrentMonthPercentage.ShouldBeNull();
+        result.CurrentMonthOrderCount.ShouldBe(0);
     }
 }

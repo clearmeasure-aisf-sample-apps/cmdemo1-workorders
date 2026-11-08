@@ -24,6 +24,13 @@ public class RemotableRequestTests
         AssertRemotable(ObjectMother.Faker<WorkOrderSpecificationQuery>());
         AssertRemotable(WorkOrderStatus.Draft);
         AssertRemotable(new RecentWorkOrdersQuery(10));
+
+        var directory = SimulateRemoteObject(new EmployeeGetAllQuery { Skip = 20, Take = 40 });
+        directory.Skip.ShouldBe(20);
+        directory.Take.ShouldBe(40);
+
+        var batch = SimulateRemoteObject(new WorkOrdersByNumbersQuery(["WO-1", "WO-2"]));
+        batch.Numbers.ShouldBe(["WO-1", "WO-2"]);
     }
 
     [Test]

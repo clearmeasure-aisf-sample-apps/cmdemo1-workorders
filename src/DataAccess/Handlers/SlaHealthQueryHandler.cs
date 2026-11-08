@@ -9,8 +9,9 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
 /// <summary>
 /// Computes SLA health (on-time completion percentage) for the current month and last month.
-/// A work order counts toward SLA if it is completed (Status == Complete) and has a DueDate
-/// within that month. SLA = (on-time count / total count) * 100, where on-time means CompletedDate &lt;= DueDate.
+/// Only completions whose church date falls in those two months are read, as due date and
+/// completed date. SLA = (on-time count / total count) * 100, where on-time means the church
+/// completion date is on or before the due date.
 /// </summary>
 public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRequestHandler<SlaHealthQuery, SlaHealth>
 {
@@ -21,12 +22,25 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
         var lastMonthStart = currentMonthStart.AddMonths(-1);
         var lastMonthEnd = currentMonthStart.AddDays(-1);
+        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
 
-        // Load all completed orders with DueDate once
-        var orders = await context.Set<WorkOrder>()
+        // Completion dates in the two church months only, projected so creator and assignee are not joined.
+        var rows = await context.Set<WorkOrder>()
             .AsNoTracking()
-            .Where(wo => wo.Status == WorkOrderStatus.Complete && wo.DueDate != null && wo.CompletedDate.HasValue)
+            .IgnoreAutoIncludes()
+            .Where(wo => wo.Status == WorkOrderStatus.Complete
+                && wo.DueDate != null
+                && wo.CompletedDate >= windowStart
+                && wo.CompletedDate < windowEnd)
+            .Select(wo => new { wo.DueDate, wo.CompletedDate })
             .ToListAsync(cancellationToken);
+
+        var orders = rows.Select(row => new WorkOrder
+        {
+            DueDate = row.DueDate,
+            CompletedDate = row.CompletedDate,
+            Status = WorkOrderStatus.Complete
+        }).ToList();
 
         // Compute both months in memory
         var currentMonthData = ComputeMonthSlaInMemory(orders, currentMonthStart, currentMonthEnd);

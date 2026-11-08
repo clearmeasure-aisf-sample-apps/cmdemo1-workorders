@@ -159,6 +159,24 @@ public class SlaHealthCalculationTests
     }
 
     [Test]
+    public void Should_BoundCompletionWindow_ToTheChurchMonth()
+    {
+        var monthStart = new DateOnly(2026, 10, 1);
+        var monthEnd = new DateOnly(2026, 10, 31);
+        var (start, end) = SlaHealth.CompletionWindow(monthStart, monthEnd);
+
+        SlaHealth.ChurchDate(start).ShouldBe(monthStart);
+        SlaHealth.ChurchDate(start.AddTicks(-1)).ShouldBe(monthStart.AddDays(-1));
+        SlaHealth.ChurchDate(end.AddTicks(-1)).ShouldBe(monthEnd);
+        SlaHealth.ChurchDate(end).ShouldBe(monthEnd.AddDays(1));
+        start.Kind.ShouldBe(DateTimeKind.Unspecified);
+        end.Kind.ShouldBe(DateTimeKind.Unspecified);
+
+        var lateEveningUtc = new DateTime(2026, 11, 1, 3, 0, 0);
+        (lateEveningUtc >= start && lateEveningUtc < end).ShouldBeTrue();
+    }
+
+    [Test]
     public void Should_ComputeTrend_FromCalculatedPercentages()
     {
         var due = new DateOnly(2026, 5, 10);

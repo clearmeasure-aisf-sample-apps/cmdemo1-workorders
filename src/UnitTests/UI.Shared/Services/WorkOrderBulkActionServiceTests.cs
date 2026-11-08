@@ -26,6 +26,8 @@ public class WorkOrderBulkActionServiceTests
         var outcome = await service.AssignAsync(["1", "2"], "fixer", Creator);
 
         outcome.ShouldBe(new BulkActionOutcome(2, 0));
+        bus.BatchedReads.ShouldBe(1);
+        bus.ByNumberReads.ShouldBe(0);
         bus.Commands.ShouldAllBe(c => c is DraftToAssignedCommand && c.WorkOrder.Assignee!.UserName == "fixer");
     }
 
@@ -58,6 +60,8 @@ public class WorkOrderBulkActionServiceTests
 
         outcome.ShouldBe(new BulkActionOutcome(2, 2));
         outcome.Text.ShouldBe("2 updated, 2 skipped");
+        bus.BatchedReads.ShouldBe(1);
+        bus.ByNumberReads.ShouldBe(0);
         bus.Commands.Select(c => c.WorkOrder.Number).ShouldBe(["1", "2"]);
     }
 
@@ -79,6 +83,33 @@ public class WorkOrderBulkActionServiceTests
         // #288: an In Progress order that is not waiting also offers "Wait on vendor" (not "Resume").
         options.ShouldBe([AssignedToCancelledCommand.Name, InProgressToWaitingOnVendorCommand.Name, InProgressToCompleteCommand.Name], ignoreOrder: true);
         options.ShouldNotContain(InProgressToAssignedCommand.Name);
+    }
+
+    [Test]
+    public async Task ChangeStatus_NoNumbers_DoesNotRead()
+    {
+        var bus = new StubCommandBus();
+        var service = new WorkOrderBulkActionService(bus, new CountingUiBus());
+
+        var outcome = await service.ChangeStatusAsync([], AssignedToCancelledCommand.Name, Creator);
+
+        outcome.ShouldBe(new BulkActionOutcome(0, 0));
+        bus.BatchedReads.ShouldBe(0);
+        bus.Commands.ShouldBeEmpty();
+    }
+
+    [Test]
+    public async Task ChangeStatus_BlankNumbers_SkipsWithoutACommand()
+    {
+        var bus = new StubCommandBus(Order("1", WorkOrderStatus.Assigned));
+        var service = new WorkOrderBulkActionService(bus, new CountingUiBus());
+
+        var outcome = await service.ChangeStatusAsync(["", " "], AssignedToCancelledCommand.Name, Creator);
+
+        outcome.ShouldBe(new BulkActionOutcome(0, 2));
+        bus.BatchedReads.ShouldBe(1);
+        bus.ByNumberReads.ShouldBe(0);
+        bus.Commands.ShouldBeEmpty();
     }
 
     [Test]
@@ -108,18 +139,36 @@ public class WorkOrderBulkActionServiceTests
     {
         public List<StateCommandBase> Commands { get; } = [];
 
+        public int BatchedReads { get; private set; }
+
+        public int ByNumberReads { get; private set; }
+
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
             object? response = request switch
             {
-                WorkOrderByNumberQuery q => orders.SingleOrDefault(o => o.Number == q.Number),
-                EmployeeByUserNameQuery q => q.Username == Fixer.UserName ? Fixer : null,
+                WorkOrdersByNumbersQuery query => LoadBatch(query),
+                WorkOrderByNumberQuery query => LoadOne(query),
+                EmployeeByUserNameQuery query => query.Username == Fixer.UserName ? Fixer : null,
                 StateCommandBase command => Record(command),
                 _ => throw new NotImplementedException(request.GetType().Name)
             };
             return Task.FromResult((TResponse)response!);
+        }
+
+        private WorkOrder[] LoadBatch(WorkOrdersByNumbersQuery query)
+        {
+            BatchedReads++;
+            var wanted = new HashSet<string>(query.Numbers, StringComparer.Ordinal);
+            return orders.Where(order => order.Number != null && wanted.Contains(order.Number)).ToArray();
+        }
+
+        private WorkOrder? LoadOne(WorkOrderByNumberQuery query)
+        {
+            ByNumberReads++;
+            return orders.SingleOrDefault(order => order.Number == query.Number);
         }
 
         private StateCommandResult Record(StateCommandBase command)

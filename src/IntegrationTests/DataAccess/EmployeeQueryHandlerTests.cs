@@ -137,4 +137,44 @@ public class EmployeeQueryHandlerTests
             rehydrated.LastName.ShouldBe("CaseName");
         }
     }
+
+    [Test]
+    public async Task ShouldPageTheDirectory_InAConstantNumberOfQueries()
+    {
+        var userName = TestData.UserName("directory");
+        var employee = new Employee(userName, "Paged", "AaaDirectory", TestData.Email(userName));
+        employee.AddRole(new Role($"Role_{TestData.Tag()}", true, false));
+
+        await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
+        context.Add(employee);
+        await context.SaveChangesAsync();
+        var handler = new EmployeeQueryHandler(context);
+
+        context.Commands.Reset();
+        var one = await handler.Handle(new EmployeeGetAllQuery { Take = 1 });
+        var oneCommands = context.Commands.ReaderCommands;
+
+        context.Commands.Reset();
+        var page = await handler.Handle(new EmployeeGetAllQuery { Take = 30 });
+        var pageCommands = context.Commands.ReaderCommands;
+        var pageSql = string.Join(Environment.NewLine, context.Commands.Texts);
+
+        one.Length.ShouldBe(1);
+        page.Length.ShouldBeGreaterThan(1);
+        page.Length.ShouldBeLessThanOrEqualTo(30);
+        oneCommands.ShouldBe(pageCommands);
+        oneCommands.ShouldBe(2, pageSql);
+        (pageSql.Contains("TOP", StringComparison.Ordinal) || pageSql.Contains("FETCH", StringComparison.Ordinal)).ShouldBeTrue(pageSql);
+
+        context.Commands.Reset();
+        var pastTheEnd = await handler.Handle(new EmployeeGetAllQuery { Skip = 100_000, Take = 10 });
+        pastTheEnd.ShouldBeEmpty();
+        context.Commands.ReaderCommands.ShouldBe(1);
+
+        var found = (await handler.Handle(new EmployeeGetAllQuery())).Single(row => row.UserName == userName);
+        found.FirstName.ShouldBe("Paged");
+        found.LastName.ShouldBe("AaaDirectory");
+        found.Roles.Count.ShouldBe(1);
+        found.Roles.Single().CanCreateWorkOrder.ShouldBeTrue();
+    }
 }
