@@ -19,7 +19,7 @@ public sealed class HttpInLoopAnalyzer : DiagnosticAnalyzer
         "PostAsJsonAsync", "PutAsJsonAsync");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(Descriptors.CM0003);
+        [Descriptors.Cm0003];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -48,6 +48,6 @@ public sealed class HttpInLoopAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        context.ReportDiagnostic(Diagnostic.Create(Descriptors.CM0003, invocation.GetLocation(), name));
+        context.ReportDiagnostic(Diagnostic.Create(Descriptors.Cm0003, invocation.GetLocation(), name));
     }
 }

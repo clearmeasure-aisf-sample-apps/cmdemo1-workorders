@@ -23,7 +23,7 @@ public sealed class PrematureMaterializationAnalyzer : DiagnosticAnalyzer
             "Single", "SingleOrDefault", "Sum", "Average", "Min", "Max");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(Descriptors.CM0004);
+        [Descriptors.Cm0004];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -40,49 +40,45 @@ public sealed class PrematureMaterializationAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!TryReport(context, continuation))
-        {
-            return;
-        }
+        ReportContinuation(context, continuation);
     }
 
-    private static bool TryReport(SyntaxNodeAnalysisContext context, MemberAccessExpressionSyntax continuation)
+    private static void ReportContinuation(SyntaxNodeAnalysisContext context, MemberAccessExpressionSyntax continuation)
     {
         var continuationName = continuation.Name.Identifier.ValueText;
         if (!Continuations.Contains(continuationName))
         {
-            return false;
+            return;
         }
 
         if (continuation.Expression is not InvocationExpressionSyntax prior)
         {
-            return false;
+            return;
         }
 
-        return TryReportMaterializer(context, prior, continuationName);
+        ReportMaterializer(context, prior, continuationName);
     }
 
-    private static bool TryReportMaterializer(
+    private static void ReportMaterializer(
         SyntaxNodeAnalysisContext context,
         InvocationExpressionSyntax prior,
         string continuationName)
     {
         if (prior.Expression is not MemberAccessExpressionSyntax priorAccess)
         {
-            return false;
+            return;
         }
 
         var materializerName = priorAccess.Name.Identifier.ValueText;
         if (!Materializers.Contains(materializerName))
         {
-            return false;
+            return;
         }
 
         context.ReportDiagnostic(Diagnostic.Create(
-            Descriptors.CM0004,
+            Descriptors.Cm0004,
             priorAccess.Name.GetLocation(),
             materializerName,
             continuationName));
-        return true;
     }
 }

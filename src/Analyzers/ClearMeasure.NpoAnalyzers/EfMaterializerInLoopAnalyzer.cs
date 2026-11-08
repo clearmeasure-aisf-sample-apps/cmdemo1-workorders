@@ -27,7 +27,7 @@ public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
         "Find", "Load", "ToList", "ToArray", "First", "FirstOrDefault", "Single", "SingleOrDefault", "Count");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(Descriptors.CM0002);
+        [Descriptors.Cm0002];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -79,6 +79,6 @@ public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        context.ReportDiagnostic(Diagnostic.Create(Descriptors.CM0002, invocation.GetLocation(), name));
+        context.ReportDiagnostic(Diagnostic.Create(Descriptors.Cm0002, invocation.GetLocation(), name));
     }
 }

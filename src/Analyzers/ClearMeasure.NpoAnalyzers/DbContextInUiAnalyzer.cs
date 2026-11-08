@@ -10,10 +10,10 @@ namespace ClearMeasure.NpoAnalyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class DbContextInUiAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly string[] UiNameParts = { "UI.Shared", "UI.Client", "UI.Server", "UI.Api" };
+    private static readonly string[] UiNameParts = ["UI.Shared", "UI.Client", "UI.Server", "UI.Api"];
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(Descriptors.CM0005);
+        [Descriptors.Cm0005];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -122,7 +122,7 @@ public sealed class DbContextInUiAnalyzer : DiagnosticAnalyzer
     }
 
     private static void Report(SymbolAnalysisContext context, Location location, string name) =>
-        context.ReportDiagnostic(Diagnostic.Create(Descriptors.CM0005, location, name));
+        context.ReportDiagnostic(Diagnostic.Create(Descriptors.Cm0005, location, name));
 
     private static bool IsDbContextType(ITypeSymbol type)
     {

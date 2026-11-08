@@ -29,7 +29,7 @@ public sealed class BusSendInLoopAnalyzer : DiagnosticAnalyzer
             "sender");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(Descriptors.CM0001);
+        [Descriptors.Cm0001];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -53,7 +53,7 @@ public sealed class BusSendInLoopAnalyzer : DiagnosticAnalyzer
         }
 
         var name = LoopHelpers.GetInvocationName(invocation) ?? "Send";
-        context.ReportDiagnostic(Diagnostic.Create(Descriptors.CM0001, invocation.GetLocation(), name));
+        context.ReportDiagnostic(Diagnostic.Create(Descriptors.Cm0001, invocation.GetLocation(), name));
     }
 
     private static bool IsBusSend(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation)

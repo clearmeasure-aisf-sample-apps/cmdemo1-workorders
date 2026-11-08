@@ -29,7 +29,7 @@ internal static class AnalyzerTestHelper
             throw new InvalidOperationException(message);
         }
 
-        var withAnalyzers = compilation.WithAnalyzers(ImmutableArray.Create(analyzer));
+        var withAnalyzers = compilation.WithAnalyzers([analyzer]);
         return await withAnalyzers.GetAnalyzerDiagnosticsAsync();
     }
 
@@ -52,7 +52,7 @@ internal static class AnalyzerTestHelper
             }
         }
 
-        return locations.Select(location => MetadataReference.CreateFromFile(location)).ToArray();
+        return locations.Select(MetadataReference (location) => MetadataReference.CreateFromFile(location)).ToArray();
     }
 
     private static void Add(HashSet<string> locations, Assembly assembly)
