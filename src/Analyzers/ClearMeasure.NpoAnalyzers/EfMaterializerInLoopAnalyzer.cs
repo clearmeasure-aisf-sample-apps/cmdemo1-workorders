@@ -143,7 +143,7 @@ public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
                 ContainingNamespace:
                 {
                     Name: "System",
-                    ContainingNamespace: { IsGlobalNamespace: true }
+                    ContainingNamespace.IsGlobalNamespace: true
                 }
             }
         };
