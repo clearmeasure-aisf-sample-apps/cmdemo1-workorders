@@ -134,10 +134,17 @@ public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
     }
 
     private static bool IsQueryableType(ITypeSymbol type) =>
-        type is INamedTypeSymbol named && named.Name == "IQueryable" && IsSystemLinq(named.ContainingNamespace);
-
-    private static bool IsSystemLinq(INamespaceSymbol ns) =>
-        ns.Name == "Linq"
-        && ns.ContainingNamespace.Name == "System"
-        && ns.ContainingNamespace.ContainingNamespace.IsGlobalNamespace;
+        type is INamedTypeSymbol
+        {
+            Name: "IQueryable",
+            ContainingNamespace:
+            {
+                Name: "Linq",
+                ContainingNamespace:
+                {
+                    Name: "System",
+                    ContainingNamespace: { IsGlobalNamespace: true }
+                }
+            }
+        };
 }
