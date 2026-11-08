@@ -144,9 +144,11 @@ public class EmployeeQueryHandlerTests
         var userName = TestData.UserName("directory");
         var employee = new Employee(userName, "Paged", "AaaDirectory", TestData.Email(userName));
         employee.AddRole(new Role($"Role_{TestData.Tag()}", true, false));
+        var secondName = TestData.UserName("directory");
+        var second = new Employee(secondName, "Also", "AaaDirectory", TestData.Email(secondName));
 
         await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
-        context.Add(employee);
+        context.AddRange(employee, second);
         await context.SaveChangesAsync();
         var handler = new EmployeeQueryHandler(context);
 
@@ -160,11 +162,14 @@ public class EmployeeQueryHandlerTests
         var pageSql = string.Join(Environment.NewLine, context.Commands.Texts);
 
         one.Length.ShouldBe(1);
-        page.Length.ShouldBeGreaterThan(1);
+        page.Length.ShouldBeGreaterThanOrEqualTo(2);
         page.Length.ShouldBeLessThanOrEqualTo(30);
         oneCommands.ShouldBe(pageCommands);
         oneCommands.ShouldBe(2, pageSql);
-        (pageSql.Contains("TOP", StringComparison.Ordinal) || pageSql.Contains("FETCH", StringComparison.Ordinal)).ShouldBeTrue(pageSql);
+        var bounded = pageSql.Contains("TOP", StringComparison.Ordinal)
+            || pageSql.Contains("FETCH", StringComparison.Ordinal)
+            || pageSql.Contains("LIMIT", StringComparison.Ordinal);
+        bounded.ShouldBeTrue(pageSql);
 
         context.Commands.Reset();
         var pastTheEnd = await handler.Handle(new EmployeeGetAllQuery { Skip = 100_000, Take = 10 });
