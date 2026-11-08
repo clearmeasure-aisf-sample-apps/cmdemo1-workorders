@@ -95,7 +95,10 @@ public class WorkOrderCountByStatusQueryHandlerTests
         var orders = dataContext.Set<WorkOrder>().AsNoTracking();
         foreach (var status in WorkOrderStatus.GetAllItems())
         {
+            // One count per stored status, compared with the handler's grouped result. Not a product N+1.
+#pragma warning disable CM0002
             var expected = await WorkOrderQueryFilters.Apply(orders, null, null, status).CountAsync();
+#pragma warning restore CM0002
             counts[status.Key].ShouldBe(expected, status.Key);
         }
 

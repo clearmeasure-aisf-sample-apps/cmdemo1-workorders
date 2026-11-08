@@ -7,7 +7,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace ClearMeasure.NpoAnalyzers;
 
 /// <summary>
-/// Reports CM0002 for EF materializers inside loops. Disabled in .editorconfig until #1520.
+/// Reports CM0002 when an EF materializer inside a loop has an <c>IQueryable</c> receiver.
+/// In-memory <c>ToArray</c> / <c>FirstOrDefault</c> calls are ignored. Severity is warning.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
@@ -74,11 +75,69 @@ public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
     private static void ReportIfMaterializer(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation)
     {
         var name = LoopHelpers.GetInvocationName(invocation);
-        if (name is null || !Materializers.Contains(name))
+        if (name is null || !Materializers.Contains(name) || !IsQueryableReceiver(context, invocation))
         {
             return;
         }
 
         context.ReportDiagnostic(Diagnostic.Create(Descriptors.Cm0002, invocation.GetLocation(), name));
     }
+
+    private static bool IsQueryableReceiver(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation)
+    {
+        var type = ReceiverType(context, invocation);
+        return type is not null && IsQueryable(type);
+    }
+
+    private static ITypeSymbol? ReceiverType(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation)
+    {
+        var receiver = Receiver(invocation);
+        if (receiver is null)
+        {
+            return null;
+        }
+
+        return context.SemanticModel.GetTypeInfo(receiver).Type;
+    }
+
+    private static ExpressionSyntax? Receiver(InvocationExpressionSyntax invocation)
+    {
+        if (invocation.Expression is MemberAccessExpressionSyntax access)
+        {
+            return access.Expression;
+        }
+
+        if (invocation.Parent is ConditionalAccessExpressionSyntax conditional)
+        {
+            return conditional.Expression;
+        }
+
+        return null;
+    }
+
+    private static bool IsQueryable(ITypeSymbol type)
+    {
+        if (IsQueryableType(type))
+        {
+            return true;
+        }
+
+        foreach (var iface in type.AllInterfaces)
+        {
+            if (IsQueryableType(iface))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsQueryableType(ITypeSymbol type) =>
+        type is INamedTypeSymbol named && named.Name == "IQueryable" && IsSystemLinq(named.ContainingNamespace);
+
+    private static bool IsSystemLinq(INamespaceSymbol ns) =>
+        ns.Name == "Linq"
+        && ns.ContainingNamespace.Name == "System"
+        && ns.ContainingNamespace.ContainingNamespace.IsGlobalNamespace;
 }

@@ -55,7 +55,9 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
         var skipped = 0;
         foreach (var number in numbers)
         {
+#pragma warning disable CM0001 // #1522 batches BulkAction per-row IBus.Send
             var applied = await ApplyOneAsync(number, verb, currentUser, prepare);
+#pragma warning restore CM0001
             updated += applied ? 1 : 0;
             skipped += applied ? 0 : 1;
         }

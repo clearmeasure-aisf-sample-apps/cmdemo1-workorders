@@ -11,16 +11,16 @@ internal static class Descriptors
         category: "Performance.DataAccess",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Detects an awaited Send, SendAsync, or Publish on IBus, IMediator, or ISender, and on a receiver named Bus, bus, or _bus, inside foreach, for, while, do, or a LINQ Select lambda.");
+        description: "Detects an awaited Send, SendAsync, or Publish on IBus, IMediator, or ISender, and on a receiver named Bus, bus, or _bus, inside foreach, for, while, do, or a LINQ Select lambda. Also flags one level of a local function or same-type helper whose body awaits that send.");
 
     public static readonly DiagnosticDescriptor Cm0002 = new(
         id: "CM0002",
         title: "EF Core materializer or DbContext query inside a loop",
         messageFormat: "EF Core call '{0}' inside a loop is an N+1 risk; query once outside the loop or use a set-based filter (Contains/GroupBy)",
         category: "Performance.DataAccess",
-        defaultSeverity: DiagnosticSeverity.Hidden,
+        defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Shipped disabled (#1520). Detects ToListAsync, FirstOrDefaultAsync, and similar materializers inside loops.");
+        description: "Detects ToListAsync, FirstOrDefaultAsync, and similar materializers on an IQueryable inside a loop. In-memory LINQ is ignored.");
 
     public static readonly DiagnosticDescriptor Cm0003 = new(
         id: "CM0003",

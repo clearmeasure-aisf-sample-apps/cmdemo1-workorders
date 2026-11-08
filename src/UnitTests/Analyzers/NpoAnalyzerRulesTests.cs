@@ -331,9 +331,72 @@ public class NpoAnalyzerRulesTests
     }
 
     [Test]
-    public async Task ShouldReportCm0002_When_ToListAsyncIsInsideForeach()
+    public async Task ShouldReportCm0002AsWarning_When_QueryableMaterializerIsInsideForeach()
     {
         var source = """
+            using System.Collections.Generic;
+            using System.Linq;
+            using System.Threading.Tasks;
+            public static class Ext {
+              public static Task<List<T>> ToListAsync<T>(this IQueryable<T> src) => Task.FromResult(new List<T>());
+            }
+            public class H {
+              public async Task Run(IQueryable<int> rows, int[] ids) {
+                foreach (var id in ids) {
+                  var list = await rows.ToListAsync();
+                  var first = rows.FirstOrDefault();
+                  var copy = rows.ToArray();
+                  var maybe = rows?.ToArray();
+                }
+              }
+            }
+            """;
+
+        var hits = await Cm0002Async(source);
+        hits.Length.ShouldBe(4);
+        hits.ShouldAllBe(diagnostic => diagnostic.Severity == DiagnosticSeverity.Warning);
+    }
+
+    [Test]
+    public async Task ShouldReportCm0002_When_ReceiverImplementsIQueryable()
+    {
+        var source = """
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using System.Linq;
+            using System.Linq.Expressions;
+            using System.Threading.Tasks;
+            public sealed class Query<T> : IQueryable<T> {
+              public Type ElementType => typeof(T);
+              public Expression Expression => System.Linq.Expressions.Expression.Constant(this);
+              public IQueryProvider Provider => null!;
+              public IEnumerator<T> GetEnumerator() => new List<T>().GetEnumerator();
+              IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+            }
+            public static class Ext {
+              public static Task<List<T>> ToListAsync<T>(this IQueryable<T> src) => Task.FromResult(new List<T>());
+            }
+            public class H {
+              public async Task Run(int[] ids) {
+                var rows = new Query<int>();
+                foreach (var id in ids) {
+                  var list = await rows.ToListAsync();
+                }
+              }
+            }
+            """;
+
+        var hits = await Cm0002Async(source);
+        hits.ShouldHaveSingleItem().Severity.ShouldBe(DiagnosticSeverity.Warning);
+    }
+
+    [Test]
+    public async Task ShouldReportNothing_When_InMemoryMaterializerIsInsideForeach()
+    {
+        var sources = new[]
+        {
+            """
             using System.Collections.Generic;
             using System.Linq;
             using System.Threading.Tasks;
@@ -341,16 +404,186 @@ public class NpoAnalyzerRulesTests
               public static Task<List<T>> ToListAsync<T>(this IEnumerable<T> src) => Task.FromResult(src.ToList());
             }
             public class H {
-              public async Task Run(IEnumerable<int> ids, IEnumerable<int> db) {
+              public async Task Run(List<int> rows, int[] ids) {
                 foreach (var id in ids) {
-                  var rows = await db.Where(x => x == id).ToListAsync();
+                  var list = await rows.ToListAsync();
+                  var first = rows.FirstOrDefault();
+                  var copy = ids.ToArray();
+                  var maybe = rows?.ToArray();
+                  ToList();
+                }
+              }
+              private static void ToList() {}
+            }
+            """,
+            """
+            using System.Collections.Generic;
+            using System.Linq;
+            public class H {
+              public int[][] Build(IReadOnlyList<int> rows) =>
+                new[] { 1, 2 }.Select(status => rows.Where(row => row == status).ToArray()).ToArray();
+            }
+            """
+        };
+
+        foreach (var source in sources)
+        {
+            (await Cm0002Async(source)).ShouldBeEmpty();
+        }
+    }
+
+    [Test]
+    public async Task ShouldReportCm0001_When_LoopAwaitsSameTypeHelperThatAwaitsBus()
+    {
+        var blockHelper = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                foreach (var id in ids) {
+                  await this.Load(id);
+                }
+              }
+              private async Task Load(int id) {
+                await Bus.Send(new TeamsPageQuery());
+                await Bus.Send(new EmployeeListQuery());
+              }
+            }
+            """;
+        var expressionHelper = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                foreach (var id in ids) {
+                  await Load(id);
+                }
+              }
+              private async Task Load(int id) => await Bus.Send(new TeamsPageQuery());
+            }
+            """;
+        var localFunction = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                async Task Load(int id) {
+                  await Bus.Send(new TeamsPageQuery()).ConfigureAwait(false);
+                }
+                foreach (var id in ids) {
+                  await Load(id);
                 }
               }
             }
             """;
+        var selectHelper = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                var loads = ids.Select(async id => await Load(id));
+              }
+              private async Task Load(int id) => await Bus.Send(new TeamsPageQuery());
+            }
+            """;
 
-        var hits = await AnalyzerTestHelper.GetDiagnosticsAsync(new EfMaterializerInLoopAnalyzer(), source);
-        hits.ShouldContain(diagnostic => diagnostic.Id == "CM0002");
+        (await Cm0001Async(blockHelper)).ShouldHaveSingleItem().Severity.ShouldBe(DiagnosticSeverity.Error);
+        (await Cm0001Async(expressionHelper)).ShouldHaveSingleItem();
+        (await Cm0001Async(localFunction)).ShouldHaveSingleItem();
+        (await Cm0001Async(selectHelper)).ShouldHaveSingleItem();
+    }
+
+    [Test]
+    public async Task ShouldReportNothing_When_HelperFollowDoesNotReachABusSend()
+    {
+        var noBus = BusStubs + """
+            public class H {
+              public async Task Run(int[] ids) {
+                foreach (var id in ids) {
+                  await Load(id);
+                }
+              }
+              private async Task Load(int id) => await System.Threading.Tasks.Task.Delay(id);
+            }
+            """;
+        var otherType = BusStubs + """
+            public class Other {
+              public IBus Bus { get; set; } = null!;
+              public async Task Load(int id) => await Bus.Send(new TeamsPageQuery());
+            }
+            public class H {
+              private readonly Other other = new Other();
+              public async Task Run(int[] ids) {
+                foreach (var id in ids) {
+                  await other.Load(id);
+                }
+              }
+            }
+            """;
+        var twoLevels = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                foreach (var id in ids) {
+                  await Outer(id);
+                }
+              }
+              private async Task Outer(int id) => await Inner(id);
+              private async Task Inner(int id) => await Bus.Send(new TeamsPageQuery());
+            }
+            """;
+        var nestedLocal = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                foreach (var id in ids) {
+                  await Load(id);
+                }
+              }
+              private async Task Load(int id) {
+                async Task Inner() {
+                  await Bus.Send(new TeamsPageQuery());
+                }
+                await Inner();
+              }
+            }
+            """;
+        var returnsSend = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                foreach (var id in ids) {
+                  await Load(id);
+                }
+              }
+              private Task Load(int id) => Bus.Send(new TeamsPageQuery());
+            }
+            """;
+        var outsideLoop = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run() {
+                await Load();
+              }
+              private async Task Load() => await Bus.Send(new TeamsPageQuery());
+            }
+            """;
+        var throughDelegate = BusStubs + """
+            public class H {
+              public IBus Bus { get; set; } = null!;
+              public async Task Run(int[] ids) {
+                System.Func<int, System.Threading.Tasks.Task> call = Load;
+                foreach (var id in ids) {
+                  await call(id);
+                }
+              }
+              private async Task Load(int id) => await Bus.Send(new TeamsPageQuery());
+            }
+            """;
+
+        (await Cm0001Async(noBus)).ShouldBeEmpty();
+        (await Cm0001Async(otherType)).ShouldBeEmpty();
+        (await Cm0001Async(twoLevels)).ShouldBeEmpty();
+        (await Cm0001Async(nestedLocal)).ShouldBeEmpty();
+        (await Cm0001Async(returnsSend)).ShouldBeEmpty();
+        (await Cm0001Async(outsideLoop)).ShouldBeEmpty();
+        (await Cm0001Async(throughDelegate)).ShouldBeEmpty();
     }
 
     [Test]
@@ -485,12 +718,12 @@ public class NpoAnalyzerRulesTests
     }
 
     [Test]
-    public void EditorConfig_ShouldTreatCm0001AndCm0005AsErrors_And_DisableTheRest()
+    public void ShouldTreatCm0001AndCm0005AsErrors_And_Cm0002AsWarning()
     {
         var text = File.ReadAllText(EditorConfigPath());
         text.ShouldContain("dotnet_diagnostic.CM0001.severity = error");
         text.ShouldContain("dotnet_diagnostic.CM0005.severity = error");
-        text.ShouldContain("dotnet_diagnostic.CM0002.severity = none");
+        text.ShouldContain("dotnet_diagnostic.CM0002.severity = warning");
         text.ShouldContain("dotnet_diagnostic.CM0003.severity = none");
         text.ShouldContain("dotnet_diagnostic.CM0004.severity = none");
     }
@@ -499,6 +732,12 @@ public class NpoAnalyzerRulesTests
     {
         var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new BusSendInLoopAnalyzer(), source);
         return diagnostics.Where(diagnostic => diagnostic.Id == "CM0001").ToArray();
+    }
+
+    private static async Task<Diagnostic[]> Cm0002Async(string source)
+    {
+        var diagnostics = await AnalyzerTestHelper.GetDiagnosticsAsync(new EfMaterializerInLoopAnalyzer(), source);
+        return diagnostics.Where(diagnostic => diagnostic.Id == "CM0002").ToArray();
     }
 
     private static string EditorConfigPath()

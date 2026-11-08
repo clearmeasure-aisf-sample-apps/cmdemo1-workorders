@@ -103,7 +103,10 @@ public class DemoEmployeeSeeder
         var rolesAdded = 0;
         foreach (var demoRole in DemoRoles)
         {
+            // Fixed demo catalog (a handful of roles), matched by name. Not a product query path.
+#pragma warning disable CM0002
             var role = context.Set<Role>().FirstOrDefault(r => r.Name == demoRole.Name);
+#pragma warning restore CM0002
             if (role is null)
             {
                 role = new Role(demoRole.Name, demoRole.CanCreate, demoRole.CanFulfill);
@@ -118,8 +121,11 @@ public class DemoEmployeeSeeder
         var linksAdded = 0;
         foreach (var demoEmployee in DemoEmployees)
         {
+            // Fixed demo catalog (a handful of employees), matched by user name. Not a product query path.
+#pragma warning disable CM0002
             var employee = context.Set<Employee>().Include(e => e.Roles)
                 .FirstOrDefault(e => e.UserName == demoEmployee.UserName);
+#pragma warning restore CM0002
             if (employee is null)
             {
                 employee = new Employee(demoEmployee.UserName, demoEmployee.FirstName, demoEmployee.LastName,
