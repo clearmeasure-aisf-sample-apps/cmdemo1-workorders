@@ -31,7 +31,10 @@ public class AutoReformatAgentTests : AcceptanceTestBase
         for (var attempt = 0; attempt < 120 && rehydrated?.Description == order.Description; attempt++)
         {
             await Task.Delay(250);
+            // Bounded poll of one work order until the reformat agent writes. Same key each attempt, not a per-row fan-out.
+#pragma warning disable CM0001
             rehydrated = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
+#pragma warning restore CM0001
         }
 
         rehydrated.ShouldNotBeNull();
