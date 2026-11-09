@@ -18,27 +18,6 @@ public static class PageLoadBudget
     private static readonly TimeSpan ApiQuietWindow = TimeSpan.FromMilliseconds(500);
 
     /// <summary>
-    /// A same-origin request whose path contains <c>/api/</c>.
-    /// </summary>
-    private static bool IsAppApiRequest(string requestUrl, string appBaseUrl)
-    {
-        if (!Uri.TryCreate(requestUrl, UriKind.Absolute, out var request)
-            || !Uri.TryCreate(appBaseUrl, UriKind.Absolute, out var app))
-        {
-            return false;
-        }
-
-        if (!string.Equals(request.Scheme, app.Scheme, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(request.Host, app.Host, StringComparison.OrdinalIgnoreCase)
-            || request.Port != app.Port)
-        {
-            return false;
-        }
-
-        return request.AbsolutePath.Contains("/api/", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
     /// Waits until the page has made no app API call for <see cref="ApiQuietWindow"/>.
     /// Call this after login, before <see cref="MeasureAsync"/>, so the measurement starts from a settled shell.
     /// </summary>
@@ -47,7 +26,7 @@ public static class PageLoadBudget
         var probe = new ApiCallProbe(page, appBaseUrl);
         try
         {
-            await WaitUntilQuietAsync(probe, timeoutMs);
+            await WaitUntilQuietAsync(probe, appBaseUrl, timeoutMs);
         }
         finally
         {
@@ -75,9 +54,13 @@ public static class PageLoadBudget
                 State = WaitForSelectorState.Visible,
                 Timeout = timeoutMs
             });
-            var loadedAt = await WaitUntilQuietAsync(probe, timeoutMs);
-            var (count, calls) = probe.Snapshot();
-            return new PageLoadMeasurement(count, Stopwatch.GetElapsedTime(started, loadedAt), calls);
+            var loadedAt = await WaitUntilQuietAsync(probe, appBaseUrl, timeoutMs);
+            var (calls, observed) = probe.Snapshot();
+            var count = PageLoadBudgetRules.CountApiCalls(observed, appBaseUrl);
+            return new PageLoadMeasurement(count, Stopwatch.GetElapsedTime(started, loadedAt), calls)
+            {
+                Requests = observed
+            };
         }
         finally
         {
@@ -85,7 +68,7 @@ public static class PageLoadBudget
         }
     }
 
-    private static async Task<long> WaitUntilQuietAsync(ApiCallProbe probe, int timeoutMs)
+    private static async Task<long> WaitUntilQuietAsync(ApiCallProbe probe, string appBaseUrl, int timeoutMs)
     {
         var timeout = Stopwatch.StartNew();
         long quietBeganAt = 0;
@@ -111,7 +94,8 @@ public static class PageLoadBudget
             await Task.Delay(25);
         }
 
-        var (count, calls) = probe.Snapshot();
+        var (calls, observed) = probe.Snapshot();
+        var count = PageLoadBudgetRules.CountApiCalls(observed, appBaseUrl);
         throw new TimeoutException(
             $"App API calls were still in flight after {timeoutMs} ms ({probe.InFlight} in flight, {count} seen). {string.Join("; ", calls)}");
     }
@@ -121,8 +105,10 @@ public static class PageLoadBudget
         private readonly IPage _page;
         private readonly string _appBaseUrl;
         private readonly Lock _gate = new();
+        private readonly HashSet<IRequest> _seen = [];
         private readonly HashSet<IRequest> _tracked = [];
         private readonly List<string> _calls = [];
+        private readonly List<PageLoadBudgetRules.RecordedRequest> _observed = [];
         private int _inFlight;
 
         // ReSharper disable once ConvertToPrimaryConstructor -- constructor subscribes Playwright events
@@ -144,32 +130,41 @@ public static class PageLoadBudget
             _page.RequestFailed -= OnSettled;
         }
 
-        public (int Count, string[] Calls) Snapshot()
+        public (string[] Calls, PageLoadBudgetRules.RecordedRequest[] Observed) Snapshot()
         {
             lock (_gate)
             {
-                return (_calls.Count, _calls.ToArray());
+                return (_calls.ToArray(), _observed.ToArray());
             }
         }
 
         private void OnRequest(object? sender, IRequest request)
         {
-            if (!IsAppApiRequest(request.Url, _appBaseUrl))
-            {
-                return;
-            }
-
+            var recorded = new PageLoadBudgetRules.RecordedRequest(request.Url, request.ResourceType);
+            var isApi = PageLoadBudgetRules.IsAppApiRequest(request.Url, _appBaseUrl);
+            var trackInFlight = false;
             lock (_gate)
             {
-                if (!_tracked.Add(request))
+                if (!_seen.Add(request))
                 {
                     return;
                 }
 
+                _observed.Add(recorded);
+                if (!isApi)
+                {
+                    return;
+                }
+
+                _tracked.Add(request);
                 _calls.Add(Describe(request));
+                trackInFlight = true;
             }
 
-            Interlocked.Increment(ref _inFlight);
+            if (trackInFlight)
+            {
+                Interlocked.Increment(ref _inFlight);
+            }
         }
 
         private void OnSettled(object? sender, IRequest request)
@@ -242,6 +237,11 @@ public static class PageLoadBudget
 /// </summary>
 public sealed record PageLoadMeasurement(int ApiCallCount, TimeSpan Elapsed, IReadOnlyList<string> ApiCalls)
 {
+    /// <summary>
+    /// Every request observed for this navigation, including requests that are not API calls.
+    /// </summary>
+    internal IReadOnlyList<PageLoadBudgetRules.RecordedRequest> Requests { get; init; } = [];
+
     /// <summary>
     /// One line a failing assertion can print: the count, the elapsed time, and each call.
     /// </summary>

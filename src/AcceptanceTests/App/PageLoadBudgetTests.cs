@@ -128,8 +128,13 @@ public class PageLoadBudgetTests : AcceptanceTestBase
     private static void AssertWithin(PageLoadMeasurement measurement, int minimumCalls, int maximumCalls)
     {
         var detail = measurement.Describe();
-        measurement.ApiCallCount.ShouldBeGreaterThanOrEqualTo(minimumCalls, detail);
-        measurement.ApiCallCount.ShouldBeLessThanOrEqualTo(maximumCalls, detail);
+        var verdict = PageLoadBudgetRules.Evaluate(
+            measurement.Requests,
+            ServerFixture.ApplicationBaseUrl,
+            minimumCalls,
+            maximumCalls);
+        verdict.Passed.ShouldBeTrue(verdict.Detail + " " + detail);
+        verdict.ApiCallCount.ShouldBe(measurement.ApiCallCount, detail);
         measurement.Elapsed.ShouldBeLessThan(LoadCeiling, detail);
     }
 
