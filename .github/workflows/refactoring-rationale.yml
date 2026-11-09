@@ -19,18 +19,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # The pull request head, not the merge ref: a merge ref also carries base-branch commits newer than
+      # pull_request.base.sha, which would count as changes of this pull request.
       - name: Checkout code
         uses: actions/checkout@v6.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Check the pull request against the refactoring playbook
         shell: pwsh
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           $bodyPath = Join-Path $env:RUNNER_TEMP 'pr-body.md'
           Set-Content -LiteralPath $bodyPath -Value ($env:PR_BODY ?? '')
-          $base = (git merge-base $env:BASE_SHA HEAD).Trim()
+          git fetch --no-tags origin "$($env:BASE_REF):refs/remotes/origin/$($env:BASE_REF)"
+          $base = (git merge-base "origin/$($env:BASE_REF)" HEAD).Trim()
           ./scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef $base -PrBodyPath $bodyPath
