@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Services;
 using Shouldly;
 
@@ -8,14 +9,14 @@ public class CompletionWeeksTests
 {
     private static readonly DateOnly Monday = new(2026, 11, 9);
 
-    [TestCase(2026, 11, 8, 2026, 11, 8)]
-    [TestCase(2026, 11, 14, 2026, 11, 8)]
-    [TestCase(2026, 11, 9, 2026, 11, 8)]
-    public void ShouldNameAWeekByItsMostRecentSunday_WhenADayIsGiven(int year, int month, int day, int endYear, int endMonth, int endDay)
+    [TestCase("2026-11-08", "2026-11-08")]
+    [TestCase("2026-11-14", "2026-11-08")]
+    [TestCase("2026-11-09", "2026-11-08")]
+    public void ShouldNameAWeekByItsMostRecentSunday_WhenADayIsGiven(string day, string expected)
     {
-        var weekEnding = CompletionWeeks.WeekEnding(new DateOnly(year, month, day));
+        var weekEnding = CompletionWeeks.WeekEnding(DateOnly.Parse(day, CultureInfo.InvariantCulture));
 
-        weekEnding.ShouldBe(new DateOnly(endYear, endMonth, endDay));
+        weekEnding.ShouldBe(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
     }
 
     [Test]

@@ -72,7 +72,14 @@ public class CreateDatedWorkOrdersHandler(
         var creator = await FindEmployeeAsync(request.CreatorUsername, cancellationToken);
         return creator is null
             ? (null, NotFound("Creator", request.CreatorUsername))
-            : (new DatedWorkOrderBatch(request.Title, request.Description, creator, assignee, request.DueDates), null);
+            : (new DatedWorkOrderBatch
+            {
+                Title = request.Title,
+                Description = request.Description,
+                Creator = creator,
+                Assignee = assignee,
+                DueDates = request.DueDates
+            }, null);
     }
 
     private CreateDatedWorkOrdersResult NotFound(string role, string username)

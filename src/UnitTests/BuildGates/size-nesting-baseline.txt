@@ -8,7 +8,6 @@
 # Do not add lines. Delete a line in the same change that fixes a violation.
 file src/AcceptanceTests/WorkOrders/WorkOrderSearchRedesignTests.cs
 file src/AcceptanceTests/WorkOrders/WorkOrderSearchTests.cs
-file src/Core/Import/WorkOrderBulkImportCsvParser.cs
 file src/IntegrationTests/DataAccess/WorkOrderSpecificationHandlerTests.cs
 file src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs
 file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
@@ -109,17 +108,6 @@ method src/AcceptanceTests/WorkOrders/WorkOrderSearchTests.cs WorkOrderSearchTes
 method src/AcceptanceTests/WorkOrders/WorkOrderWaitingOnVendorTests.cs WorkOrderWaitingOnVendorTests.ShouldShowWaitingPillThenInProgressPillAfterResume()
 method src/ChurchBulletin.ServiceDefaults/Extensions.cs Extensions.ConfigureOpenTelemetry<1>(this TBuilder)
 method src/ChurchBulletin.ServiceDefaults/LocalTelemetryFileWriter.cs LocalTelemetryFileWriter.ExecuteAsync(CancellationToken)
-method src/Core/Services/DueDateUrgencyCalculator.cs DueDateUrgencyCalculator.Calculate(DateOnly?,WorkOrderStatus,TimeProvider)
-method src/DataAccess/Handlers/CreateDatedWorkOrdersHandler.cs CreateDatedWorkOrdersHandler.Handle(CreateDatedWorkOrdersCommand,CancellationToken)
-method src/DataAccess/Handlers/EmployeeWorkLoadSummaryQueryHandler.cs EmployeeWorkLoadSummaryQueryHandler.SummaryQuery()
-method src/DataAccess/Handlers/EmployeeWorkLoadSummaryQueryHandler.cs EmployeeWorkLoadSummaryQueryHandler.ToSummaries(List<EmployeeWorkLoadFlatRow>)
-method src/DataAccess/Handlers/SlaHealthQueryHandler.cs SlaHealthQueryHandler.Handle(SlaHealthQuery,CancellationToken)
-method src/DataAccess/Handlers/StateCommandHandler.cs StateCommandHandler.InsertNewAsync(WorkOrder,WorkOrderStatus,Employee,DateTime,StateCommandBase,CancellationToken)
-method src/DataAccess/Handlers/StateCommandHandler.cs StateCommandHandler.UpdateExistingAsync(WorkOrder,WorkOrderStatus,Employee,DateTime,StateCommandBase,CancellationToken)
-method src/DataAccess/Handlers/WorkOrderReportsQueryHandler.cs WorkOrderReportsQueryHandler.AddCompletedPerWeekAsync(WorkOrderReportsData,IQueryable<WorkOrder>,DateOnly,CancellationToken)
-method src/DataAccess/Mappings/EmployeeMap.cs EmployeeMap.Map(ModelBuilder)
-method src/DataAccess/Mappings/WorkOrderMap.cs WorkOrderMap.Map(ModelBuilder)
-method src/DataAccess/Mappings/WorkOrderStatusChangeMap.cs WorkOrderStatusChangeMap.Map(ModelBuilder)
 method src/IntegrationTests/Api/DetailedHealthEndpointIntegrationTests.cs DetailedHealthEndpointIntegrationTests.Should_SupportConditionalGet_When_ETagMatches()
 method src/IntegrationTests/Api/GrpcWorkOrderIntegrationTests.cs GrpcWorkOrderIntegrationTests.Should_ReturnExpectedPayload_When_UnaryGrpcCallSucceeded()
 method src/IntegrationTests/Api/HealthCheckDatabaseVersionIntegrationTests.cs HealthCheckDatabaseVersionIntegrationTests.OneTimeSetUp()
@@ -344,11 +332,6 @@ parameters src/Core/Model/StateCommands/AddAttachmentMetadataCommand.cs AddAttac
 parameters src/Core/Model/StateCommands/CreateDatedWorkOrdersCommand.cs CreateDatedWorkOrdersCommand(string,string,string,string,IReadOnlyList<DateOnly>)
 parameters src/Core/Queries/CreateVendorCommand.cs CreateVendorCommand(string,string?,string?,string?,string?,bool)
 parameters src/DataAccess/Handlers/CreateDatedWorkOrdersHandler.cs CreateDatedWorkOrdersHandler(DbContext,IBus,IWorkOrderNumberGenerator,TimeProvider,ILogger<CreateDatedWorkOrdersHandler>)
-parameters src/DataAccess/Handlers/StateCommandHandler.cs StateCommandHandler.InsertNewAsync(WorkOrder,WorkOrderStatus,Employee,DateTime,StateCommandBase,CancellationToken)
-parameters src/DataAccess/Handlers/StateCommandHandler.cs StateCommandHandler.PersistAsync(WorkOrder,WorkOrderStatus,Employee,DateTime,StateCommandBase,CancellationToken)
-parameters src/DataAccess/Handlers/StateCommandHandler.cs StateCommandHandler.UpdateExistingAsync(WorkOrder,WorkOrderStatus,Employee,DateTime,StateCommandBase,CancellationToken)
-parameters src/DataAccess/Handlers/WorkOrderQueryFilters.cs WorkOrderQueryFilters.Apply(IQueryable<WorkOrder>,Employee?,Employee?,WorkOrderStatus?,bool)
-parameters src/DataAccess/Handlers/WorkOrderSearchSummaryQueryHandler.cs WorkOrderSearchSummaryQueryHandler.AddUserCountsAsync(WorkOrderSearchSummary,IQueryable<WorkOrder>,string?,DateOnly,CancellationToken)
 parameters src/IntegrationTests/DataAccess/Handlers/BuildingRoomSummaryQueryHandlerTests.cs BuildingRoomSummaryQueryHandlerTests.AssertCounts(RoomSummary,string,int,int,int,int)
 parameters src/IntegrationTests/DataAccess/Handlers/BuildingRoomSummaryQueryHandlerTests.cs BuildingRoomSummaryQueryHandlerTests.Order(Employee,WorkOrderStatus,string?,string?,DateTime?,DateOnly?)
 parameters src/IntegrationTests/DataAccess/Handlers/EmployeeWorkLoadQueryHandlerTests.cs EmployeeWorkLoadQueryHandlerTests.NewOrder(string,Employee,Employee?,WorkOrderStatus,DateOnly?,DateTime?)

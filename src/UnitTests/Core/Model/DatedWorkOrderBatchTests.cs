@@ -14,8 +14,14 @@ public class DatedWorkOrderBatchTests
     {
         var creator = new Employee("jsmith", "Jane", "Smith", "jane@example.com");
         var assignee = new Employee("gwillie", "Groundskeeper", "Willie", "willie@example.com");
-        var batch = new DatedWorkOrderBatch("Mow", "Mow the lawn", creator, assignee,
-            [new DateOnly(2026, 11, 14), new DateOnly(2026, 11, 21)]);
+        var batch = new DatedWorkOrderBatch
+        {
+            Title = "Mow",
+            Description = "Mow the lawn",
+            Creator = creator,
+            Assignee = assignee,
+            DueDates = [new DateOnly(2026, 11, 14), new DateOnly(2026, 11, 21)]
+        };
 
         var workOrders = batch.CreateWorkOrders(Now, new StubNumberGenerator());
 
