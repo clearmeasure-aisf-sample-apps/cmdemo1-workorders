@@ -1,5 +1,5 @@
-// ReSharper disable NotAccessedPositionalProperty.Global
-// ReSharper disable NotAccessedPositionalProperty.Local
+// ReSharper disable NotAccessedPositionalProperty.Global -- problem-details records are serialized onto the HTTP response
+// ReSharper disable NotAccessedPositionalProperty.Local -- problem-details records are serialized onto the HTTP response
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core.Messaging;
 using FluentValidation;

@@ -1,5 +1,5 @@
-// ReSharper disable NotAccessedPositionalProperty.Global
-// ReSharper disable NotAccessedPositionalProperty.Local
+// ReSharper disable NotAccessedPositionalProperty.Global -- JSON response contract; callers and serializers read the positional members
+// ReSharper disable NotAccessedPositionalProperty.Local -- JSON response contract; callers and serializers read the positional members
 namespace ClearMeasure.Bootcamp.UI.Api;
 
 /// <summary>

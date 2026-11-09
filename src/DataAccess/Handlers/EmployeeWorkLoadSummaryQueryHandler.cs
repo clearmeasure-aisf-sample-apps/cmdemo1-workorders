@@ -54,7 +54,7 @@ public class EmployeeWorkLoadSummaryQueryHandler(DataContext context, TimeProvid
                 RoleCanFulfill = role.CanFulfillWorkOrder,
                 // The cast is never null in C#. EF still needs it so a missing left join becomes COALESCE(..., 0).
                 // ReSharper disable RedundantCast
-                // ReSharper disable ConstantNullCoalescingCondition
+                // ReSharper disable ConstantNullCoalescingCondition -- EF translates the coalesce so a missing left join becomes 0
                 AssignedAndOpen = (int?)load.AssignedAndOpen ?? 0,
                 InProgress = (int?)load.InProgress ?? 0,
                 Overdue = (int?)load.Overdue ?? 0,

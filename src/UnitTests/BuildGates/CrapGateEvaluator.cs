@@ -1,5 +1,5 @@
-// ReSharper disable NotAccessedPositionalProperty.Global
-// ReSharper disable NotAccessedPositionalProperty.Local
+// ReSharper disable NotAccessedPositionalProperty.Global -- result records are the gate contract returned to callers
+// ReSharper disable NotAccessedPositionalProperty.Local -- result records are the gate contract returned to callers
 using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;

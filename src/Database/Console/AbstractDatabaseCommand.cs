@@ -27,7 +27,7 @@ public abstract class AbstractDatabaseCommand : Command<DatabaseOptions>
         return ExecuteInternal(context, options, connectionString, cancellationToken);
     }
 
-    // ReSharper disable UnusedParameter.Global
+    // ReSharper disable UnusedParameter.Global -- parameters are the abstract contract each database command implements
     protected abstract int ExecuteInternal(CommandContext context, DatabaseOptions options, string connectionString, CancellationToken cancellationToken);
     // ReSharper restore UnusedParameter.Global
 

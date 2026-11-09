@@ -12,7 +12,7 @@ using Palermo.BlazorMvc;
 
 namespace ClearMeasure.Bootcamp.UI.Client;
 
-// ReSharper disable once InconsistentNaming
+// ReSharper disable once InconsistentNaming -- UI is the product abbreviation in this type name
 public class UIClientServiceRegistry : ServiceRegistry
 {
     public UIClientServiceRegistry()

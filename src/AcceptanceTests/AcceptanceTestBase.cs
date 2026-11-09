@@ -249,7 +249,7 @@ public abstract class AcceptanceTestBase
         await TakeScreenshotAsync();
         // Assert: Should be redirected to home and see welcome message
         await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
-        // HACK: a double click finishes DOM loading. WelcomeText is visually hidden inside the user menu
+        // A double click finishes DOM loading. WelcomeText is visually hidden inside the user menu
         // trigger (#251), so the trigger takes the clicks: the first opens the menu, the second closes it.
         await Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle)).DblClickAsync();
     }

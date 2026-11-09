@@ -1,4 +1,4 @@
-// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Local -- stub payload is initialized in the test and read by JSON serialization
 using ClearMeasure.Bootcamp.UI.Api;
 using Microsoft.AspNetCore.Http;
 using Shouldly;
