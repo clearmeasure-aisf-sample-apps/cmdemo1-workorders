@@ -10,7 +10,7 @@
 
   Stray artifacts (*.bak and the other scratch names below) fail anywhere outside
   compiler and tool output. .git is ignored. build/, private-build.json, build-facts.json,
-  crap-metrics/, and ChurchBulletin.db* are build-script output and are not root entries.
+  build_version.txt, crap-metrics/, and ChurchBulletin.db* are build output and are not root entries.
 
   -SelfTest runs the fixture cases, then checks this repo. Exits 0 only when both pass.
 #>
@@ -31,6 +31,7 @@ $script:GeneratedRootNames = [System.Collections.Generic.HashSet[string]]::new(
         'build',
         'private-build.json',
         'build-facts.json',
+        'build_version.txt',
         'crap-metrics',
         'ChurchBulletin.db',
         'ChurchBulletin.db-shm',
@@ -301,7 +302,7 @@ function Invoke-RepoRootAllowlistSelfTest {
             Name = 'generated root output is ignored'
             Allowlist = 'README.md'
             Entries = @(
-                'README.md', 'build/noise.tmp', 'private-build.json', 'build-facts.json',
+                'README.md', 'build/noise.tmp', 'private-build.json', 'build-facts.json', 'build_version.txt',
                 'crap-metrics/report.json', 'ChurchBulletin.db', 'ChurchBulletin.db-shm', 'ChurchBulletin.db-wal')
         }
         @{
@@ -311,10 +312,10 @@ function Invoke-RepoRootAllowlistSelfTest {
             Expect = 'stray artifact: src/nested/err.tmp'
         }
         @{
-            Name = 'nul at the root fails'
+            Name = 'Thumbs.db at the root fails'
             Allowlist = $listed
-            Entries = @('README.md', 'nul')
-            Expect = @('root entry not allowlisted: nul', 'stray artifact: nul')
+            Entries = @('README.md', 'Thumbs.db')
+            Expect = @('root entry not allowlisted: Thumbs.db', 'stray artifact: Thumbs.db')
         }
         @{
             Name = 'tilde backup fails'
@@ -346,6 +347,14 @@ function Invoke-RepoRootAllowlistSelfTest {
 
     foreach ($case in $cases) {
         Invoke-FixtureCase $case
+    }
+
+    # nul is a Windows device name, so a fixture file of that name never appears in the directory listing.
+    if (-not (Test-StrayArtifactName 'nul') -or -not (Test-StrayArtifactName 'NUL')) {
+        throw 'nul must be a stray artifact name on every platform.'
+    }
+    if (Test-StrayArtifactName 'README.md') {
+        throw 'A normal root name must not be a stray artifact.'
     }
 
     Assert-AllowlistRejected -Content "README.md`nREADME.md`n" -Pattern 'Duplicate allowlist entry*'

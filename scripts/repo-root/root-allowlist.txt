@@ -2,7 +2,7 @@
 # The build fails when the root contains any other name.
 # Shrink this list when an entry is removed so that name cannot come back.
 # Generated build output (build/, private-build.json, build-facts.json,
-# crap-metrics/, ChurchBulletin.db*) is ignored by the script and is not listed.
+# build_version.txt, crap-metrics/, ChurchBulletin.db*) is ignored by the script and is not listed.
 #
 # owner decision pending — allowlisted, not deleted, until an owner decides:
 #   .bob  .claude  .cursor  .cursorrules  .squad
