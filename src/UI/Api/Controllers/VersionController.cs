@@ -36,7 +36,8 @@ public class VersionController(IHostEnvironment hostEnvironment) : ControllerBas
             BuildConfiguration: buildConfiguration,
             Environment: hostEnvironment.EnvironmentName,
             MachineName: Environment.MachineName,
-            FrameworkDescription: RuntimeInformation.FrameworkDescription);
+            FrameworkDescription: RuntimeInformation.FrameworkDescription,
+            OsDescription: RuntimeInformation.OSDescription);
         var etag = ConditionalGetEtag.CreateWeakEtagForJson(payload);
         Response.Headers.ETag = etag.ToString();
         if (ConditionalGetEtag.IfNoneMatchIncludesEtag(Request, etag))
@@ -67,4 +68,5 @@ public record VersionMetadataResponse(
     string BuildConfiguration,
     string? Environment,
     string MachineName,
-    string FrameworkDescription);
+    string FrameworkDescription,
+    string OsDescription);
