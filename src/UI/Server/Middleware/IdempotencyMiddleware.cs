@@ -1,5 +1,5 @@
-// ReSharper disable NotAccessedPositionalProperty.Global
-// ReSharper disable NotAccessedPositionalProperty.Local
+// ReSharper disable NotAccessedPositionalProperty.Global -- snapshot and problem-details records are stored and serialized
+// ReSharper disable NotAccessedPositionalProperty.Local -- snapshot and problem-details records are stored and serialized
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text.Json;

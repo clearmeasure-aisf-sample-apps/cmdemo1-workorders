@@ -1,5 +1,5 @@
-// ReSharper disable NotAccessedPositionalProperty.Global
-// ReSharper disable NotAccessedPositionalProperty.Local
+// ReSharper disable NotAccessedPositionalProperty.Global -- notification envelope is serialized to WebSocket clients
+// ReSharper disable NotAccessedPositionalProperty.Local -- notification envelope is serialized to WebSocket clients
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;

@@ -1,5 +1,5 @@
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Global -- OpenTelemetry JSON deserialization and file output use these accessors
+// ReSharper disable UnusedAutoPropertyAccessor.Local -- OpenTelemetry JSON deserialization and file output use these accessors
 
 namespace ChurchBulletin.ServiceDefaults;
 

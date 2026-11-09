@@ -1,5 +1,5 @@
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Global -- health JSON payload; System.Text.Json writes these accessors
+// ReSharper disable UnusedAutoPropertyAccessor.Local -- health JSON payload; System.Text.Json writes these accessors
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
