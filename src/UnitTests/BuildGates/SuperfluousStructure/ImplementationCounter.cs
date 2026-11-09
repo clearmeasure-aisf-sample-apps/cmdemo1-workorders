@@ -167,40 +167,27 @@ internal static class ImplementationCounter
 
         private ParsedType? SearchNamespaceChain(string namespaceName, string name, int arity)
         {
-            var current = namespaceName;
-            while (true)
-            {
-                var found = Find(current, name, arity);
-                if (found != null)
-                {
-                    return found;
-                }
-
-                if (current.Length == 0)
-                {
-                    return null;
-                }
-
-                var dot = current.LastIndexOf('.');
-                current = dot < 0 ? "" : current[..dot];
-            }
+            return WalkNamespaces(namespaceName, current => Find(current, name, arity));
         }
 
         private ParsedType? SearchNamespaceChain(string namespaceName, string left, string right, int arity)
         {
+            return WalkNamespaces(namespaceName, current =>
+            {
+                var prefix = current.Length == 0 ? left : current + "." + left;
+                return Find(prefix, right, arity);
+            });
+        }
+
+        private ParsedType? WalkNamespaces(string namespaceName, Func<string, ParsedType?> find)
+        {
             var current = namespaceName;
             while (true)
             {
-                var prefix = current.Length == 0 ? left : current + "." + left;
-                var found = Find(prefix, right, arity);
-                if (found != null)
+                var found = find(current);
+                if (found != null || current.Length == 0)
                 {
                     return found;
-                }
-
-                if (current.Length == 0)
-                {
-                    return null;
                 }
 
                 var dot = current.LastIndexOf('.');

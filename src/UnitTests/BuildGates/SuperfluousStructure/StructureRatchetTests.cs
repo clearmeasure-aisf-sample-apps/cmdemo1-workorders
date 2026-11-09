@@ -66,7 +66,7 @@ public class StructureRatchetTests
 
     private static StructureReport Report(string[] interfaces)
     {
-        return new StructureReport(interfaces, [], [], [], [], []);
+        return new StructureReport { SingleImplementationInterfaces = interfaces };
     }
 
     private static StructureAllowList EmptyAllow()

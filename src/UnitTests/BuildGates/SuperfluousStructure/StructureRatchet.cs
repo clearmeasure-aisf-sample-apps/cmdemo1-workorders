@@ -29,29 +29,47 @@ public static class StructureRatchet
         StructureAllowList allowList,
         StructureBaseline baseline)
     {
-        var allowIds = allowList.Ids(input.Rule);
-        foreach (var id in allowIds)
+        RejectStaleAllowances(problems, input, allowList);
+        var current = WithoutAllowances(input, allowList);
+        RejectNewFindings(problems, input.Rule, current, baseline);
+        if (current.Count > baseline.Max(input.Rule))
+        {
+            problems.Add($"{input.Rule}: count {current.Count} exceeds max {baseline.Max(input.Rule)}");
+        }
+    }
+
+    private static void RejectStaleAllowances(
+        List<string> problems,
+        RuleInput input,
+        StructureAllowList allowList)
+    {
+        foreach (var id in allowList.Ids(input.Rule))
         {
             if (!input.Findings.Contains(id, StringComparer.Ordinal))
             {
                 problems.Add($"{input.Rule}: allowlist id {id} is not a current finding");
             }
         }
+    }
 
-        var current = input.Findings
-            .Where(id => !allowIds.Contains(id, StringComparer.Ordinal))
-            .ToList();
+    private static List<string> WithoutAllowances(RuleInput input, StructureAllowList allowList)
+    {
+        var allowIds = allowList.Ids(input.Rule);
+        return input.Findings.Where(id => !allowIds.Contains(id, StringComparer.Ordinal)).ToList();
+    }
+
+    private static void RejectNewFindings(
+        List<string> problems,
+        string rule,
+        List<string> current,
+        StructureBaseline baseline)
+    {
         foreach (var id in current)
         {
-            if (!baseline.Ids(input.Rule).Contains(id))
+            if (!baseline.Ids(rule).Contains(id))
             {
-                problems.Add($"{input.Rule}: new id {id}");
+                problems.Add($"{rule}: new id {id}");
             }
-        }
-
-        if (current.Count > baseline.Max(input.Rule))
-        {
-            problems.Add($"{input.Rule}: count {current.Count} exceeds max {baseline.Max(input.Rule)}");
         }
     }
 

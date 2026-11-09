@@ -46,6 +46,29 @@ internal static class StructureFixture
         }
     }
 
+    public static StructureReport ScanDemo(string source)
+    {
+        return Scan(repo =>
+        {
+            Write(repo, "src/Demo/Demo.csproj", LibraryProject);
+            Write(repo, "src/Demo/Sample.cs", source);
+        });
+    }
+
+    public static StructureReport Scan(Action<string> arrange)
+    {
+        var repo = CreateRepo();
+        try
+        {
+            arrange(repo);
+            return SuperfluousStructureScanner.Scan(repo);
+        }
+        finally
+        {
+            Delete(repo);
+        }
+    }
+
     public static string EmptyAllowList()
     {
         var rules = StructureRule.All.Select(rule => $"\"{rule}\": []");

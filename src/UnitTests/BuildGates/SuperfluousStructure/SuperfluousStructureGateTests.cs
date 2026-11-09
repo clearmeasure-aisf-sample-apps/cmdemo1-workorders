@@ -14,7 +14,7 @@ public class SuperfluousStructureGateTests
     [Test]
     public void ShouldMatchBaseline_When_RepositoryIsScanned()
     {
-        var root = FindRepoRoot();
+        var root = RepoFiles.Root();
         var report = SuperfluousStructureScanner.Scan(root);
         var allowList = StructureAllowList.Load(File.ReadAllText(Path.Combine(root, AllowListPath)));
         var baseline = StructureBaseline.Load(File.ReadAllText(Path.Combine(root, BaselinePath)));
@@ -28,21 +28,5 @@ public class SuperfluousStructureGateTests
 
         var problems = StructureRatchet.Evaluate(report, allowList, baseline);
         problems.ShouldBeEmpty(string.Join(Environment.NewLine, problems));
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root from test directory.");
     }
 }

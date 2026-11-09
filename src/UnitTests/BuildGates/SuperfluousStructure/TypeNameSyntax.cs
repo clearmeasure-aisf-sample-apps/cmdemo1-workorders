@@ -9,6 +9,18 @@ internal static class TypeNameSyntax
 {
     public static bool TryFormat(TypeSyntax type, out string name, out int arity)
     {
+        if (TrySimple(type, out name, out arity) || TryComposite(type, out name, out arity))
+        {
+            return true;
+        }
+
+        name = "";
+        arity = 0;
+        return false;
+    }
+
+    private static bool TrySimple(TypeSyntax type, out string name, out int arity)
+    {
         if (type is IdentifierNameSyntax identifier)
         {
             name = identifier.Identifier.ValueText;
@@ -23,6 +35,13 @@ internal static class TypeNameSyntax
             return true;
         }
 
+        name = "";
+        arity = 0;
+        return false;
+    }
+
+    private static bool TryComposite(TypeSyntax type, out string name, out int arity)
+    {
         if (type is QualifiedNameSyntax qualified
             && TryFormat(qualified.Left, out var left, out _)
             && TryFormat(qualified.Right, out var right, out var rightArity))

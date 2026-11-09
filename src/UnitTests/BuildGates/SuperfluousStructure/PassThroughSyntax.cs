@@ -18,35 +18,39 @@ internal static class PassThroughSyntax
     public static PassThroughFacts Inspect(TypeDeclarationSyntax type)
     {
         var members = MemberNames(type);
-        string? target = null;
-        var sawForwarder = false;
-        var disqualified = false;
-
+        var progress = new ForwardProgress();
         foreach (var member in type.Members)
         {
-            var effect = Classify(member, members, out var memberTarget);
-            if (effect == MemberEffect.Ignore)
-            {
-                continue;
-            }
-
-            if (effect == MemberEffect.Disqualify)
-            {
-                disqualified = true;
-                continue;
-            }
-
-            sawForwarder = true;
-            target = Agree(target, memberTarget, ref disqualified);
+            progress = Note(Classify(member, members, out var memberTarget), memberTarget, progress);
         }
 
-        if (disqualified || !sawForwarder)
-        {
-            return new PassThroughFacts(false, disqualified, null);
-        }
-
-        return new PassThroughFacts(true, false, target);
+        return Finish(progress);
     }
+
+    private static ForwardProgress Note(MemberEffect effect, string? memberTarget, ForwardProgress state)
+    {
+        var disqualified = state.Disqualified || effect == MemberEffect.Disqualify;
+        if (effect != MemberEffect.Forward)
+        {
+            return state with { Disqualified = disqualified };
+        }
+
+        var target = state.Target;
+        var agreed = Agree(target, memberTarget, ref disqualified);
+        return new ForwardProgress(agreed, true, disqualified);
+    }
+
+    private static PassThroughFacts Finish(ForwardProgress progress)
+    {
+        if (progress.Disqualified || !progress.SawForwarder)
+        {
+            return new PassThroughFacts(false, progress.Disqualified, null);
+        }
+
+        return new PassThroughFacts(true, false, progress.Target);
+    }
+
+    private readonly record struct ForwardProgress(string? Target, bool SawForwarder, bool Disqualified);
 
     private static MemberEffect Classify(
         MemberDeclarationSyntax member,

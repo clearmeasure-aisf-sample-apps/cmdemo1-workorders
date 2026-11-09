@@ -13,13 +13,15 @@ public static class SuperfluousStructureScanner
     public static StructureReport Scan(string repositoryRoot)
     {
         var types = SourceTypeParser.ParseRepository(repositoryRoot);
-        return new StructureReport(
-            ImplementationCounter.SingleImplementationInterfaces(types),
-            ImplementationCounter.SingleSubclassAbstractClasses(types),
-            PassThroughClasses(types),
-            FolderShapeInspector.SingleFileFolders(repositoryRoot),
-            FolderShapeInspector.DeepFolders(repositoryRoot),
-            ProjectReferenceInspector.UnreferencedProjects(repositoryRoot));
+        return new StructureReport
+        {
+            SingleImplementationInterfaces = ImplementationCounter.SingleImplementationInterfaces(types),
+            SingleSubclassAbstractClasses = ImplementationCounter.SingleSubclassAbstractClasses(types),
+            PassThroughClasses = PassThroughClasses(types),
+            SingleFileFolders = FolderShapeInspector.SingleFileFolders(repositoryRoot),
+            DeepFolders = FolderShapeInspector.DeepFolders(repositoryRoot),
+            UnreferencedProjects = ProjectReferenceInspector.UnreferencedProjects(repositoryRoot),
+        };
     }
 
     private static IReadOnlyList<string> PassThroughClasses(IReadOnlyList<ParsedType> types)

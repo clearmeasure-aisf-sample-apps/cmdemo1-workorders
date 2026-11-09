@@ -125,20 +125,32 @@ internal static class SourceTypeParser
 
     private static void CollectType(TypeDeclarationSyntax type, ParseContext context)
     {
+        var names = TypeNamesOf(type, context);
+        context.Sink.Add(Describe(type, context, names));
+        WalkMembers(type.Members, context.WithParent(names.Plus, names.Dotted));
+    }
+
+    private static TypeNames TypeNamesOf(TypeDeclarationSyntax type, ParseContext context)
+    {
         var simpleName = type.Identifier.ValueText;
         var arity = type.TypeParameterList?.Parameters.Count ?? 0;
-        var plusName = context.ParentPlus.Length == 0 ? simpleName : context.ParentPlus + "+" + simpleName;
-        var dottedName = context.ParentDots.Length == 0 ? simpleName : context.ParentDots + "." + simpleName;
-        var fileLocal = HasModifier(type.Modifiers, SyntaxKind.FileKeyword);
-        var facts = type is InterfaceDeclarationSyntax
-            ? PassThroughFacts.None
-            : PassThroughSyntax.Inspect(type);
+        return new TypeNames(Join(context.ParentPlus, simpleName, "+"), Join(context.ParentDots, simpleName, "."), arity);
+    }
 
-        context.Sink.Add(new ParsedType
+    private static string Join(string parent, string name, string separator)
+    {
+        return parent.Length == 0 ? name : parent + separator + name;
+    }
+
+    private static ParsedType Describe(TypeDeclarationSyntax type, ParseContext context, TypeNames names)
+    {
+        var fileLocal = HasModifier(type.Modifiers, SyntaxKind.FileKeyword);
+        var facts = type is InterfaceDeclarationSyntax ? PassThroughFacts.None : PassThroughSyntax.Inspect(type);
+        return new ParsedType
         {
-            Id = TypeId(context, plusName, arity, fileLocal),
-            LookupName = dottedName,
-            Arity = arity,
+            Id = TypeId(context, names.Plus, names.Arity, fileLocal),
+            LookupName = names.Dotted,
+            Arity = names.Arity,
             Namespace = context.Namespace,
             Kind = KindOf(type),
             IsAbstract = HasModifier(type.Modifiers, SyntaxKind.AbstractKeyword),
@@ -149,11 +161,11 @@ internal static class SourceTypeParser
             Bases = ReadBases(type),
             SawForwarder = facts.SawForwarder,
             PassThroughDisqualified = facts.Disqualified,
-            ForwardTarget = facts.Target
-        });
-
-        WalkMembers(type.Members, context.WithParent(plusName, dottedName));
+            ForwardTarget = facts.Target,
+        };
     }
+
+    private readonly record struct TypeNames(string Plus, string Dotted, int Arity);
 
     private static string TypeId(ParseContext context, string plusName, int arity, bool fileLocal)
     {

@@ -49,7 +49,7 @@ public static class UnusedPackageGate
         var unused = new List<UnusedPackage>();
         foreach (var project in ProjectFiles(src))
         {
-            CollectProject(repoRoot, configuration, project, missing, unused);
+            CollectProject(new ProjectInputs(repoRoot, configuration, project), missing, unused);
         }
 
         unused.Sort(ComparePackages);
@@ -136,16 +136,14 @@ public static class UnusedPackageGate
         return unexpected;
     }
 
-    private static void CollectProject(
-        string repoRoot,
-        string configuration,
-        string project,
-        List<string> missing,
-        List<UnusedPackage> unused)
+    private readonly record struct ProjectInputs(string RepoRoot, string Configuration, string Project);
+
+    private static void CollectProject(ProjectInputs input, List<string> missing, List<UnusedPackage> unused)
     {
-        var relative = Relative(repoRoot, project);
-        var assets = Path.Combine(Path.GetDirectoryName(project)!, "obj", "project.assets.json");
-        var output = ResolveOutputPath(project, configuration);
+        var relative = Relative(input.RepoRoot, input.Project);
+        var projectDirectory = Path.GetDirectoryName(input.Project)!;
+        var assets = Path.Combine(projectDirectory, "obj", "project.assets.json");
+        var output = ResolveOutputPath(input.Project, input.Configuration);
         if (!File.Exists(assets) || !File.Exists(output))
         {
             missing.Add(relative);
@@ -155,8 +153,8 @@ public static class UnusedPackageGate
         var referenced = ReadAssemblyReferences(output);
         var assemblies = PackageAssemblies(assets);
         var tooling = ToolingPackages(assets);
-        var ids = ReadPackageIds(XDocument.Load(project));
-        var source = ReadProjectSource(Path.GetDirectoryName(project)!);
+        var ids = ReadPackageIds(XDocument.Load(input.Project));
+        var source = ReadProjectSource(projectDirectory);
         foreach (var package in SelectUnused(relative, ids, assemblies, referenced))
         {
             if (tooling.Contains(package.PackageId) || SourceMentions(source, package.PackageId, assemblies))
