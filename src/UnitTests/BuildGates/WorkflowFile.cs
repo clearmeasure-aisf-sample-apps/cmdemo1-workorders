@@ -13,7 +13,7 @@ public sealed class WorkflowFile
     private static readonly Regex JobHeader = new(@"^  [A-Za-z0-9_-]+:\s*$", RegexOptions.Compiled);
 
     private static readonly Regex StepName = new(
-        @"^      (- |  )name: (?<name>.+)$",
+        "^      (- |  )name: (?<name>.+)$",
         RegexOptions.Compiled | RegexOptions.Multiline);
 
     private WorkflowFile(string text)
