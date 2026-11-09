@@ -16,7 +16,7 @@ public class ChurchTimeZoneTests
     {
         // Verify that the Chicago timezone is resolved (could be America/Chicago or Central Standard Time)
         ChurchTimeZone.Chicago.ShouldNotBeNull();
-        string id = ChurchTimeZone.Chicago.Id;
+        var id = ChurchTimeZone.Chicago.Id;
         id.ShouldBeOneOf("America/Chicago", "Central Standard Time", "UTC");
     }
 

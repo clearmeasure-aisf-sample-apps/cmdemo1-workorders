@@ -14,8 +14,8 @@ public class SqlDependencyBudgetAlertTests
     [Test]
     public async Task Script_WhenSelfTestRuns_ExitsZero()
     {
-        string repoRoot = FindRepoRoot();
-        string script = Path.Combine(repoRoot, "scripts", "appinsights", "Invoke-SqlDependencyBudget.ps1");
+        var repoRoot = FindRepoRoot();
+        var script = Path.Combine(repoRoot, "scripts", "appinsights", "Invoke-SqlDependencyBudget.ps1");
         File.Exists(script).ShouldBeTrue(script);
 
         var startInfo = new ProcessStartInfo("pwsh")
@@ -35,7 +35,7 @@ public class SqlDependencyBudgetAlertTests
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
         var stderrTask = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync(CancellationToken.None);
-        string output = $"{await stdoutTask}{Environment.NewLine}{await stderrTask}";
+        var output = $"{await stdoutTask}{Environment.NewLine}{await stderrTask}";
 
         process.ExitCode.ShouldBe(0, output);
         output.ShouldContain("SQL dependency budget self-test passed.");

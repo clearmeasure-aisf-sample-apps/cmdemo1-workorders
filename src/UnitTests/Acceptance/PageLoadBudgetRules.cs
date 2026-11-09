@@ -45,7 +45,7 @@ internal static class PageLoadBudgetRules
     /// </summary>
     internal static int CountApiCalls(IReadOnlyList<RecordedRequest> requests, string appBaseUrl)
     {
-        int count = 0;
+        var count = 0;
         foreach (var request in requests)
         {
             if (IsAppApiRequest(request.Url, appBaseUrl))
@@ -76,7 +76,7 @@ internal static class PageLoadBudgetRules
             }
         }
 
-        int count = counted.Count;
+        var count = counted.Count;
         if (count < minimumCalls)
         {
             return new Verdict(count, false, Outside("below the minimum", count, minimumCalls, counted));
@@ -92,7 +92,7 @@ internal static class PageLoadBudgetRules
 
     private static string Describe(RecordedRequest request)
     {
-        string path = Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ? uri.AbsolutePath : request.Url;
+        var path = Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ? uri.AbsolutePath : request.Url;
         return string.IsNullOrEmpty(request.ResourceType) ? path : request.ResourceType + " " + path;
     }
 

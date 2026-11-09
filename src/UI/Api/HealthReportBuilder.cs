@@ -35,14 +35,11 @@ public static class HealthReportBuilder
 
     internal static string AggregateWorst(IReadOnlyList<ComponentHealthEntry> components)
     {
-        int rank = 0;
+        var rank = 0;
         foreach (var c in components)
         {
-            int r = Rank(c.Status);
-            if (r > rank)
-            {
-                rank = r;
-            }
+            var r = Rank(c.Status);
+            if (r > rank) rank = r;
         }
 
         return rank switch

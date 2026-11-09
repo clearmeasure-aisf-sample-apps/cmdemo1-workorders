@@ -25,7 +25,7 @@ internal static class AnalyzerTestHelper
             .ToArray();
         if (errors.Length > 0)
         {
-            string message = string.Join(Environment.NewLine, errors.Select(error => error.ToString()));
+            var message = string.Join(Environment.NewLine, errors.Select(error => error.ToString()));
             throw new InvalidOperationException(message);
         }
 
@@ -47,7 +47,7 @@ internal static class AnalyzerTestHelper
         Add(locations, typeof(Attribute).Assembly);
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
-            string? name = assembly.GetName().Name;
+            var name = assembly.GetName().Name;
             if (name is "System.Runtime" or "netstandard" or "System.Collections" or "System.Linq")
             {
                 Add(locations, assembly);

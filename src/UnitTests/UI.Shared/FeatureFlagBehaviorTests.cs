@@ -18,7 +18,7 @@ public class FeatureFlagBehaviorTests
     {
         var evaluator = new StubFeatureFlagEvaluator();
         var behavior = new FeatureFlagBehavior<GatedProbeRequest, string>(evaluator);
-        bool handlerCalled = false;
+        var handlerCalled = false;
 
         var ex = await Should.ThrowAsync<FeatureDisabledException>(() => behavior.Handle(
             new GatedProbeRequest(),
@@ -41,7 +41,7 @@ public class FeatureFlagBehaviorTests
         var evaluator = new StubFeatureFlagEvaluator { [FeatureFlagNames.VendorManagement] = true };
         var behavior = new FeatureFlagBehavior<GatedProbeRequest, string>(evaluator);
 
-        string result = await behavior.Handle(new GatedProbeRequest(), () => Task.FromResult("handled"),
+        var result = await behavior.Handle(new GatedProbeRequest(), () => Task.FromResult("handled"),
             CancellationToken.None);
 
         result.ShouldBe("handled");
@@ -54,7 +54,7 @@ public class FeatureFlagBehaviorTests
         var evaluator = new StubFeatureFlagEvaluator();
         var behavior = new FeatureFlagBehavior<OpenProbeRequest, string>(evaluator);
 
-        string result = await behavior.Handle(new OpenProbeRequest(), () => Task.FromResult("handled"),
+        var result = await behavior.Handle(new OpenProbeRequest(), () => Task.FromResult("handled"),
             CancellationToken.None);
 
         result.ShouldBe("handled");
@@ -103,8 +103,8 @@ public class FeatureFlagBehaviorTests
     public async Task Handle_Should_RunBuildingQueries_When_BuildingManagementIsOn()
     {
         var evaluator = new StubFeatureFlagEvaluator { [FeatureFlagNames.BuildingManagement] = true };
-        bool summaryCalled = false;
-        bool namesCalled = false;
+        var summaryCalled = false;
+        var namesCalled = false;
 
         var summary = await new FeatureFlagBehavior<BuildingRoomSummaryQuery, BuildingSummary[]>(evaluator).Handle(
             new BuildingRoomSummaryQuery(),
@@ -114,7 +114,7 @@ public class FeatureFlagBehaviorTests
                 return Task.FromResult(Array.Empty<BuildingSummary>());
             },
             CancellationToken.None);
-        string[] names = await new FeatureFlagBehavior<WorkOrderBuildingsQuery, string[]>(evaluator).Handle(
+        var names = await new FeatureFlagBehavior<WorkOrderBuildingsQuery, string[]>(evaluator).Handle(
             new WorkOrderBuildingsQuery(),
             () =>
             {
@@ -201,7 +201,7 @@ public class FeatureFlagBehaviorTests
         public Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default)
         {
             Evaluated.Add(featureName);
-            return Task.FromResult(TryGetValue(featureName, out bool enabled) && enabled);
+            return Task.FromResult(TryGetValue(featureName, out var enabled) && enabled);
         }
     }
 }

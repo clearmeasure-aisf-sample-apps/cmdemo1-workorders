@@ -93,9 +93,9 @@ public class DataAccessNPlusOneCanaryTests
 
     private static async Task<BuildResult> BuildCanaryAsync(string source)
     {
-        string repoRoot = FindRepoRoot();
-        string dataAccessProject = Path.Combine(repoRoot, "src", "DataAccess", "DataAccess.csproj");
-        string editorConfig = Path.Combine(repoRoot, "src", "DataAccess", ".editorconfig");
+        var repoRoot = FindRepoRoot();
+        var dataAccessProject = Path.Combine(repoRoot, "src", "DataAccess", "DataAccess.csproj");
+        var editorConfig = Path.Combine(repoRoot, "src", "DataAccess", ".editorconfig");
         File.Exists(dataAccessProject).ShouldBeTrue(dataAccessProject);
         File.Exists(editorConfig).ShouldBeTrue(editorConfig);
         RequireErrorSeverity(editorConfig, "NP0001");
@@ -103,8 +103,8 @@ public class DataAccessNPlusOneCanaryTests
 
         var project = XDocument.Load(dataAccessProject);
         var packages = ReadCanaryPackages(project);
-        string targetFramework = ReadTargetFramework(project);
-        string projectDirectory = Path.Combine(
+        var targetFramework = ReadTargetFramework(project);
+        var projectDirectory = Path.Combine(
             Path.GetTempPath(),
             $"dataaccess-nplusone-canary-{Guid.NewGuid():N}");
         Directory.CreateDirectory(projectDirectory);
@@ -129,9 +129,9 @@ public class DataAccessNPlusOneCanaryTests
 
     private static void RequireErrorSeverity(string editorConfigPath, string diagnosticId)
     {
-        string severity = ReadSeverity(editorConfigPath, diagnosticId);
-        string key = $"dotnet_diagnostic.{diagnosticId}.severity";
-        string message = string.IsNullOrEmpty(severity)
+        var severity = ReadSeverity(editorConfigPath, diagnosticId);
+        var key = $"dotnet_diagnostic.{diagnosticId}.severity";
+        var message = string.IsNullOrEmpty(severity)
             ? $"src/DataAccess/.editorconfig does not set {key}."
             : $"src/DataAccess/.editorconfig sets {key} to '{severity}', which is below error.";
         string.Equals(severity, "error", StringComparison.OrdinalIgnoreCase).ShouldBeTrue(message);
@@ -139,23 +139,23 @@ public class DataAccessNPlusOneCanaryTests
 
     private static string ReadSeverity(string editorConfigPath, string diagnosticId)
     {
-        string key = $"dotnet_diagnostic.{diagnosticId}.severity";
-        string severity = "";
-        foreach (string raw in File.ReadLines(editorConfigPath))
+        var key = $"dotnet_diagnostic.{diagnosticId}.severity";
+        var severity = "";
+        foreach (var raw in File.ReadLines(editorConfigPath))
         {
-            string line = raw.Trim();
+            var line = raw.Trim();
             if (line.StartsWith('#') || !line.StartsWith(key, StringComparison.Ordinal))
             {
                 continue;
             }
 
-            string value = line[key.Length..].Trim();
+            var value = line[key.Length..].Trim();
             if (value.StartsWith('='))
             {
                 value = value[1..].Trim();
             }
 
-            int comment = value.IndexOf('#', StringComparison.Ordinal);
+            var comment = value.IndexOf('#', StringComparison.Ordinal);
             if (comment >= 0)
             {
                 value = value[..comment].Trim();
@@ -199,8 +199,8 @@ public class DataAccessNPlusOneCanaryTests
 
     private static PackageReference ReadPackageReference(XElement element)
     {
-        string include = element.Attribute("Include")?.Value.Trim() ?? "";
-        string? version = element.Attribute("Version")?.Value.Trim();
+        var include = element.Attribute("Include")?.Value.Trim() ?? "";
+        var version = element.Attribute("Version")?.Value.Trim();
         if (string.IsNullOrEmpty(version))
         {
             version = element.Elements()
@@ -218,7 +218,7 @@ public class DataAccessNPlusOneCanaryTests
 
     private static string? ChildValue(XElement element, string name)
     {
-        string? value = element.Elements()
+        var value = element.Elements()
             .FirstOrDefault(child => child.Name.LocalName == name)
             ?.Value
             .Trim();
@@ -227,7 +227,7 @@ public class DataAccessNPlusOneCanaryTests
 
     private static string ReadTargetFramework(XDocument project)
     {
-        string? targetFramework = project
+        var targetFramework = project
             .Descendants()
             .FirstOrDefault(element => element.Name.LocalName == "TargetFramework")
             ?.Value
@@ -305,7 +305,7 @@ public class DataAccessNPlusOneCanaryTests
         catch (OperationCanceledException)
         {
             process.Kill(entireProcessTree: true);
-            string partial = await CombineOutput(standardOutput, standardError);
+            var partial = await CombineOutput(standardOutput, standardError);
             throw new TimeoutException(
                 $"dotnet build did not finish within 4 minutes.{Environment.NewLine}{partial}");
         }
@@ -322,7 +322,7 @@ public class DataAccessNPlusOneCanaryTests
     {
         var found = new List<AnalyzerDiagnostic>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (string raw in output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+        foreach (var raw in output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
         {
             if (!raw.Contains("OrderByCustomerQueryHandler.cs(", StringComparison.Ordinal))
             {
@@ -343,33 +343,33 @@ public class DataAccessNPlusOneCanaryTests
 
     private static AnalyzerDiagnostic? TryReadDiagnostic(string line)
     {
-        int marker = line.IndexOf("): ", StringComparison.Ordinal);
+        var marker = line.IndexOf("): ", StringComparison.Ordinal);
         if (marker < 0)
         {
             return null;
         }
 
-        string rest = line[(marker + 3)..].TrimStart();
-        int space = rest.IndexOf(' ');
+        var rest = line[(marker + 3)..].TrimStart();
+        var space = rest.IndexOf(' ');
         if (space <= 0)
         {
             return null;
         }
 
-        string severity = rest[..space];
+        var severity = rest[..space];
         if (severity is not ("error" or "warning" or "info"))
         {
             return null;
         }
 
-        int idStart = space + 1;
-        int colon = rest.IndexOf(':', idStart);
+        var idStart = space + 1;
+        var colon = rest.IndexOf(':', idStart);
         if (colon <= idStart)
         {
             return null;
         }
 
-        string id = rest[idStart..colon];
+        var id = rest[idStart..colon];
         if (id.Length == 0 || !id.All(char.IsLetterOrDigit))
         {
             return null;

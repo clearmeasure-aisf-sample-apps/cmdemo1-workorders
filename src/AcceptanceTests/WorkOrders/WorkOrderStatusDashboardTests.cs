@@ -23,7 +23,7 @@ public class WorkOrderStatusDashboardTests : AcceptanceTestBase
             await countLocator.WaitForAsync();
             await Expect(countLocator).ToBeVisibleAsync();
 
-            string countText = await countLocator.InnerTextAsync();
+            var countText = await countLocator.InnerTextAsync();
             countText.ShouldMatch(@"^\d+$");
         }
     }

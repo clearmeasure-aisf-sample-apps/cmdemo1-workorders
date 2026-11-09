@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Messaging;
@@ -36,14 +36,14 @@ public class PublisherGateway(HttpClient httpClient, IConfiguration? configurati
         // (Qodana UsingStatementResourceInitialization).
         using var request = new HttpRequestMessage(HttpMethod.Post, ApiRelativeUrl);
         request.Content = JsonContent.Create(message);
-        string? key = configuration?["ApiKeyAuthentication:ValidationKey"];
+        var key = configuration?["ApiKeyAuthentication:ValidationKey"];
         if (!string.IsNullOrWhiteSpace(key))
         {
             request.Headers.TryAddWithoutValidation(ApiKeyConstants.HeaderName, key.Trim());
         }
 
         using var result = await httpClient.SendAsync(request);
-        string json = await result.Content.ReadAsStringAsync();
+        var json = await result.Content.ReadAsStringAsync();
         if (!result.IsSuccessStatusCode)
         {
             // Response bodies can carry internal detail; surface status only to the UI.

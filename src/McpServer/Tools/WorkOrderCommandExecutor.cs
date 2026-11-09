@@ -115,7 +115,7 @@ internal static class WorkOrderCommandExecutor
             return (null, null);
         }
 
-        string trimmed = reason?.Trim() ?? "";
+        var trimmed = reason?.Trim() ?? "";
         if (trimmed.Length == 0)
         {
             return ("Shelve requires a reason.", null);
@@ -153,7 +153,7 @@ internal static class WorkOrderCommandExecutor
 
         if (commandName == "DraftToAssignedCommand")
         {
-            string? assigneeError = await PrepareDraftToAssignedAsync(bus, workOrder!, assigneeUsername);
+            var assigneeError = await PrepareDraftToAssignedAsync(bus, workOrder!, assigneeUsername);
             if (assigneeError != null)
             {
                 return (null, null, assigneeError);

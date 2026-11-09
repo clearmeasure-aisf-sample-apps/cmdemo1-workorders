@@ -60,7 +60,7 @@ public sealed class IdempotencyMiddleware
             return null;
         }
 
-        string trimmed = keyValues.ToString().Trim();
+        var trimmed = keyValues.ToString().Trim();
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
@@ -71,7 +71,7 @@ public sealed class IdempotencyMiddleware
     {
         request.EnableBuffering();
         request.Body.Position = 0;
-        string bodyHash = await ComputeBodySha256HexAsync(request.Body, cancellationToken);
+        var bodyHash = await ComputeBodySha256HexAsync(request.Body, cancellationToken);
         request.Body.Position = 0;
         return $"{request.Method}\u001f{request.Path.Value}\u001f{idempotencyKey}\u001f{bodyHash}";
     }
@@ -79,7 +79,7 @@ public sealed class IdempotencyMiddleware
     private static async Task<string> ComputeBodySha256HexAsync(Stream body, CancellationToken cancellationToken)
     {
         using var sha = SHA256.Create();
-        byte[] buffer = new byte[8192];
+        var buffer = new byte[8192];
         int read;
         while ((read = await body.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
         {
@@ -178,7 +178,7 @@ internal static class IdempotencyMiddlewareHandler
             return;
         }
 
-        string? idempotencyKey = IdempotencyMiddleware.TryReadIdempotencyKey(context.Request);
+        var idempotencyKey = IdempotencyMiddleware.TryReadIdempotencyKey(context.Request);
         if (idempotencyKey is null)
         {
             await next(context);
@@ -194,7 +194,7 @@ internal static class IdempotencyMiddlewareHandler
             return;
         }
 
-        string compositeKey = await IdempotencyMiddleware.BuildCompositeKeyAsync(
+        var compositeKey = await IdempotencyMiddleware.BuildCompositeKeyAsync(
             context.Request,
             idempotencyKey,
             context.RequestAborted);

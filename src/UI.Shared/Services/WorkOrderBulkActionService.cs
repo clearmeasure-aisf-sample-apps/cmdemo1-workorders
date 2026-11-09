@@ -52,7 +52,7 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
     private async Task<BulkActionOutcome> ApplyAsync(IEnumerable<string> numbers, string verb, Employee currentUser,
         Action<WorkOrder> prepare)
     {
-        string[] requested = numbers.ToArray();
+        var requested = numbers.ToArray();
         var byNumber = await LoadByNumberAsync(requested);
         return await ApplyLoadedAsync(requested, byNumber, verb, currentUser, prepare);
     }
@@ -73,9 +73,9 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
     private async Task<BulkActionOutcome> ApplyLoadedAsync(string[] requested, Dictionary<string, WorkOrder> byNumber,
         string verb, Employee currentUser, Action<WorkOrder> prepare)
     {
-        int updated = 0;
-        int skipped = 0;
-        foreach (string number in requested)
+        var updated = 0;
+        var skipped = 0;
+        foreach (var number in requested)
         {
             if (!TryGetOrder(byNumber, number, out var order))
             {
@@ -85,7 +85,7 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
 
             // The read is one query. Each state command is still its own send.
 #pragma warning disable CM0001
-            bool applied = await ApplyOneAsync(order, verb, currentUser, prepare);
+            var applied = await ApplyOneAsync(order, verb, currentUser, prepare);
 #pragma warning restore CM0001
             if (applied)
             {

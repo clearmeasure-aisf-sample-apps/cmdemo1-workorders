@@ -32,12 +32,12 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await Expect(table).ToBeVisibleAsync();
 
         var headers = table.Locator("thead th");
-        int headerCount = await headers.CountAsync();
+        var headerCount = await headers.CountAsync();
         headerCount.ShouldBeGreaterThanOrEqualTo(6);
 
         // Match the column headers exactly: a loose text match also finds employee names in the rows
         // (for example "Role" in "Carole") and fails Playwright's strict mode.
-        foreach (string header in new[] { "Name", "Role", "Assigned Open", "In Progress", "Overdue", "Completed 30d" })
+        foreach (var header in new[] { "Name", "Role", "Assigned Open", "In Progress", "Overdue", "Completed 30d" })
         {
             await Expect(table.GetByRole(AriaRole.Columnheader, new() { Name = header, Exact = true })).ToBeVisibleAsync();
         }
@@ -62,11 +62,11 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         var rows = Page.Locator(".teams-table tbody tr");
         await Expect(rows.First).ToBeVisibleAsync();
-        int rowCount = await rows.CountAsync();
+        var rowCount = await rows.CountAsync();
         rowCount.ShouldBeGreaterThan(0);
 
         var firstRow = rows.First;
-        string firstEmployeeName = await firstRow.Locator("[data-testid*='TableRowName']").InnerTextAsync();
+        var firstEmployeeName = await firstRow.Locator("[data-testid*='TableRowName']").InnerTextAsync();
         firstEmployeeName.ShouldNotBeNullOrEmpty();
     }
 
@@ -87,7 +87,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         var rows = table.Locator("tbody tr");
         await Expect(rows.First).ToBeVisibleAsync();
-        int rowCount = await rows.CountAsync();
+        var rowCount = await rows.CountAsync();
         rowCount.ShouldBeGreaterThan(0);
 
         var firstRow = rows.First;
@@ -119,11 +119,11 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await Page.GotoAsync("/admin/teams");
 
         var openCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowAssignedOpen}{CurrentUser.UserName}");
-        string openCountText = await openCountCell.InnerTextAsync();
-        int teamsOpenCount = int.Parse(openCountText);
+        var openCountText = await openCountCell.InnerTextAsync();
+        var teamsOpenCount = int.Parse(openCountText);
 
         // Navigate to search page and count results with same assignee filter
-        string searchUrl = $"/workorder/search?Assignee={Uri.EscapeDataString(CurrentUser.UserName)}&OpenOnly=true";
+        var searchUrl = $"/workorder/search?Assignee={Uri.EscapeDataString(CurrentUser.UserName)}&OpenOnly=true";
         await Page.GotoAsync(searchUrl);
 
         // Results render asynchronously after the interactive circuit runs the search, so wait
@@ -134,7 +134,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         // Count rows in the search results table (OpenOnly=true restricts to Draft, Assigned and InProgress, matching the Teams open count)
         var searchResultRows = Page.Locator(".grid-data tbody tr");
         await Expect(searchResultRows).ToHaveCountAsync(teamsOpenCount);
-        int searchOpenCount = await searchResultRows.CountAsync();
+        var searchOpenCount = await searchResultRows.CountAsync();
 
         // Counts should match
         teamsOpenCount.ShouldBe(searchOpenCount);
@@ -150,16 +150,16 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await Page.GotoAsync("/admin/teams");
 
         var openCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowAssignedOpen}{CurrentUser.UserName}");
-        string openCountText = await openCountCell.InnerTextAsync();
+        var openCountText = await openCountCell.InnerTextAsync();
 
         var inProgressCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowInProgress}{CurrentUser.UserName}");
-        string inProgressCountText = await inProgressCountCell.InnerTextAsync();
+        var inProgressCountText = await inProgressCountCell.InnerTextAsync();
 
         var overdueCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowOverdue}{CurrentUser.UserName}");
-        string overdueCountText = await overdueCountCell.InnerTextAsync();
+        var overdueCountText = await overdueCountCell.InnerTextAsync();
 
         var completedCountCell = Page.GetByTestId($"{UI.Shared.Pages.TeamsAndVendors.Elements.TableRowCompleted}{CurrentUser.UserName}");
-        string completedCountText = await completedCountCell.InnerTextAsync();
+        var completedCountText = await completedCountCell.InnerTextAsync();
 
         // All counts should be 0
         int.Parse(openCountText).ShouldBe(0);
@@ -174,7 +174,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a team through the command
-        string teamName = $"Test Team {Guid.NewGuid()}";
+        var teamName = $"Test Team {Guid.NewGuid()}";
         var teamResult = await Bus.Send(new CreateTeamCommand(
             teamName,
             "A test team for acceptance testing",
@@ -205,7 +205,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         }
 
         // Create a team with multiple members
-        string teamName = $"Multi-Member Team {Guid.NewGuid()}";
+        var teamName = $"Multi-Member Team {Guid.NewGuid()}";
         var teamResult = await Bus.Send(new CreateTeamCommand(
             teamName,
             null,
@@ -227,7 +227,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         // Verify member avatars are displayed
         var memberAvatars = teamCard.Locator("[class*='member-avatar-link']");
-        int avatarCount = await memberAvatars.CountAsync();
+        var avatarCount = await memberAvatars.CountAsync();
         avatarCount.ShouldBe(2);
     }
 
@@ -237,7 +237,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a vendor through the command
-        string vendorName = $"Test Vendor {Guid.NewGuid()}";
+        var vendorName = $"Test Vendor {Guid.NewGuid()}";
         var vendorResult = await Bus.Send(new CreateVendorCommand(
             vendorName,
             "Plumbing",
@@ -263,7 +263,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a vendor with all details
-        string vendorName = $"Complete Vendor {Guid.NewGuid()}";
+        var vendorName = $"Complete Vendor {Guid.NewGuid()}";
         var vendorResult = await Bus.Send(new CreateVendorCommand(
             vendorName,
             "HVAC",
@@ -296,7 +296,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create an inactive vendor
-        string vendorName = $"Inactive Vendor {Guid.NewGuid()}";
+        var vendorName = $"Inactive Vendor {Guid.NewGuid()}";
         var vendorResult = await Bus.Send(new CreateVendorCommand(
             vendorName,
             "Electrical",
@@ -325,8 +325,8 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a vendor with email
-        string vendorName = $"Email Vendor {Guid.NewGuid()}";
-        string vendorEmail = "contact@vendor.com";
+        var vendorName = $"Email Vendor {Guid.NewGuid()}";
+        var vendorEmail = "contact@vendor.com";
         var vendorResult = await Bus.Send(new CreateVendorCommand(
             vendorName,
             null,

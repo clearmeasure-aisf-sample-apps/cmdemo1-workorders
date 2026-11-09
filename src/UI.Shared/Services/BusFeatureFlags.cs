@@ -23,7 +23,7 @@ public sealed class BusFeatureFlags(IBus bus) : IFeatureFlags
             return name == FeatureFlagNames.ShowPriorityBadges;
         }
 
-        return flags.TryGetValue(name, out bool enabled) && enabled;
+        return flags.TryGetValue(name, out var enabled) && enabled;
     }
 
     private async Task<IReadOnlyDictionary<string, bool>?> LoadAsync()

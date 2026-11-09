@@ -1,14 +1,14 @@
-using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using Bunit;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Client;
 

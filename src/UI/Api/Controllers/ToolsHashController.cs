@@ -41,9 +41,9 @@ public class ToolsHashController : ControllerBase
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
-        byte[] bytes = Encoding.UTF8.GetBytes(request.Text);
-        bool wantMd5 = includeMd5 ?? request.IncludeMd5;
-        bool wantSha1 = includeSha1 ?? request.IncludeSha1;
+        var bytes = Encoding.UTF8.GetBytes(request.Text);
+        var wantMd5 = includeMd5 ?? request.IncludeMd5;
+        var wantSha1 = includeSha1 ?? request.IncludeSha1;
 
         return Ok(new HashResponse(
             Sha256: ToLowerHex(SHA256.HashData(bytes)),

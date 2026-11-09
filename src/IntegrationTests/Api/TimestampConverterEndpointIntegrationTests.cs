@@ -80,7 +80,7 @@ public class TimestampConverterEndpointIntegrationTests
     private static async Task AssertGoldenAsync(HttpResponseMessage response)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 

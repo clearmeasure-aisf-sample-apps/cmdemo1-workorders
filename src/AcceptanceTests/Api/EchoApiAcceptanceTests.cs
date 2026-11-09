@@ -12,9 +12,7 @@ public class EchoApiAcceptanceTests : AcceptanceTestBase
     public async Task GetEcho_Should_Return200AndReflectRequest()
     {
         if (!ServerFixture.StartLocalServer)
-        {
             Assert.Ignore("Requires local server with HTTP access to /api/echo");
-        }
 
         var client = TestHttpClientFactory.CreateInsecureClient();
         using var request = new HttpRequestMessage(

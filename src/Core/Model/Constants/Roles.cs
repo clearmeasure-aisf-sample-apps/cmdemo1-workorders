@@ -1,4 +1,4 @@
-namespace ClearMeasure.Bootcamp.Core.Model.Constants;
+﻿namespace ClearMeasure.Bootcamp.Core.Model.Constants;
 
 public static class Roles
 {

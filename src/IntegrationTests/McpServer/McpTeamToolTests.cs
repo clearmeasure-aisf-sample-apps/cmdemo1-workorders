@@ -16,7 +16,7 @@ public class McpTeamToolTests
     {
         var emp1 = new Employee(TestData.UserName("jdoe"), "John", "Doe", "john@test.com");
         var emp2 = new Employee(TestData.UserName("jsmith"), "Jane", "Smith", "jane@test.com");
-        string tag = TestData.Tag();
+        var tag = TestData.Tag();
         var team1 = new Team($"Maintenance-{tag}", "Handles building maintenance");
         var team2 = new Team($"Kitchen-{tag}", "Prepares meals");
         team1.AddMember(emp1);
@@ -30,7 +30,7 @@ public class McpTeamToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await TeamTools.ListTeams(bus);
+        var result = await TeamTools.ListTeams(bus);
 
         result.ShouldContain(team1.Name);
         result.ShouldContain(team2.Name);
@@ -43,7 +43,7 @@ public class McpTeamToolTests
     public async Task ShouldReturnJsonArray()
     {
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await TeamTools.ListTeams(bus);
+        var result = await TeamTools.ListTeams(bus);
 
         using var json = JsonDocument.Parse(result);
         json.RootElement.ValueKind.ShouldBe(JsonValueKind.Array);
@@ -60,15 +60,15 @@ public class McpTeamToolTests
         context.Add(emp2);
         await context.SaveChangesAsync();
 
-        string teamName = $"Engineering-{TestData.Tag()}";
+        var teamName = $"Engineering-{TestData.Tag()}";
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await TeamTools.CreateTeam(bus, teamName, "Software and IT", [emp1.UserName, emp2.UserName]);
+        var result = await TeamTools.CreateTeam(bus, teamName, "Software and IT", [emp1.UserName, emp2.UserName]);
 
         result.ShouldContain("\"succeeded\": true");
         result.ShouldContain(teamName);
 
         // Verify the team was created
-        string listResult = await TeamTools.ListTeams(bus);
+        var listResult = await TeamTools.ListTeams(bus);
         listResult.ShouldContain(teamName);
         listResult.ShouldContain(emp1.UserName);
         listResult.ShouldContain(emp2.UserName);
@@ -77,7 +77,7 @@ public class McpTeamToolTests
     [Test]
     public async Task ShouldReturnErrorOnDuplicateTeamName()
     {
-        string teamName = $"Maintenance-{TestData.Tag()}";
+        var teamName = $"Maintenance-{TestData.Tag()}";
         var team = new Team(teamName, "Original team");
 
         await using var context = TestHost.GetRequiredService<DbContext>();
@@ -85,7 +85,7 @@ public class McpTeamToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await TeamTools.CreateTeam(bus, teamName, "Another team");
+        var result = await TeamTools.CreateTeam(bus, teamName, "Another team");
 
         result.ShouldContain("already exists");
         result.ShouldNotContain("\"succeeded\": true");
@@ -94,7 +94,7 @@ public class McpTeamToolTests
     [Test]
     public async Task ShouldReturnErrorOnDuplicateTeamNameIgnoringCase()
     {
-        string teamName = $"Maintenance-{TestData.Tag()}";
+        var teamName = $"Maintenance-{TestData.Tag()}";
         var team = new Team(teamName, "Original team");
 
         await using var context = TestHost.GetRequiredService<DbContext>();
@@ -102,7 +102,7 @@ public class McpTeamToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await TeamTools.CreateTeam(bus, teamName.ToUpperInvariant(), "Another team");
+        var result = await TeamTools.CreateTeam(bus, teamName.ToUpperInvariant(), "Another team");
 
         result.ShouldContain("already exists");
         result.ShouldNotContain("\"succeeded\": true");
@@ -111,9 +111,9 @@ public class McpTeamToolTests
     [Test]
     public async Task ShouldReturnErrorOnUnknownMember()
     {
-        string teamName = $"NewTeam-{TestData.Tag()}";
+        var teamName = $"NewTeam-{TestData.Tag()}";
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await TeamTools.CreateTeam(bus, teamName, null, ["nonexistent_user"]);
+        var result = await TeamTools.CreateTeam(bus, teamName, null, ["nonexistent_user"]);
 
         result.ShouldContain("No employee");
         result.ShouldNotContain("\"succeeded\":true");

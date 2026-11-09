@@ -11,7 +11,7 @@ public class HealthCheckPlainTextResponseWriterTests
     [Test]
     public void Should_KeepStatusWordAndAppendDatabaseVersion_When_FormattingHealthBody()
     {
-        string body = HealthCheckPlainTextResponseWriter.Format(HealthStatus.Healthy, 40);
+        var body = HealthCheckPlainTextResponseWriter.Format(HealthStatus.Healthy, 40);
 
         body.ShouldBe("Healthy\ndatabaseVersion: 40");
     }
@@ -19,7 +19,7 @@ public class HealthCheckPlainTextResponseWriterTests
     [Test]
     public void Should_WriteNullDatabaseVersion_When_VersionIsMissing()
     {
-        string body = HealthCheckPlainTextResponseWriter.Format(HealthStatus.Unhealthy, null);
+        var body = HealthCheckPlainTextResponseWriter.Format(HealthStatus.Unhealthy, null);
 
         body.ShouldBe("Unhealthy\ndatabaseVersion: null");
     }
@@ -43,7 +43,7 @@ public class HealthCheckPlainTextResponseWriterTests
         context.Response.ContentType.ShouldBe("text/plain; charset=utf-8");
         context.Response.Body.Position = 0;
         using var reader = new StreamReader(context.Response.Body);
-        string body = await reader.ReadToEndAsync();
+        var body = await reader.ReadToEndAsync();
         body.ShouldBe("Degraded\ndatabaseVersion: null");
     }
 }

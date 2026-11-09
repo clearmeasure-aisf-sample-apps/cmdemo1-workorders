@@ -37,7 +37,7 @@ public class RemotableRequestValidatorCoverageTests
                            && typeof(IRemotableRequest).IsAssignableFrom(type))
             .ToArray();
 
-        string?[] missing = remotableRequests
+        var missing = remotableRequests
             .Where(type => !validatedTypes.Contains(type))
             .Select(type => type.FullName)
             .OrderBy(name => name)

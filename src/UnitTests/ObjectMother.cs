@@ -62,8 +62,8 @@ public static class ObjectMother
             return;
         }
 
-        object? expectedValue = property.GetValue(expected, null);
-        object? actualValue = property.GetValue(actual, null);
+        var expectedValue = property.GetValue(expected, null);
+        var actualValue = property.GetValue(actual, null);
         if (Equals(expectedValue, actualValue))
         {
             return;

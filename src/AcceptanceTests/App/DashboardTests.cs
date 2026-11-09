@@ -16,7 +16,7 @@ public class DashboardTests : AcceptanceTestBase
         await OpenDashboardAsync();
 
         await Expect(Page.Locator(".page-heading h1")).ToHaveTextAsync("TechWeek Work Orders");
-        foreach (string card in Enum.GetNames<WorkOrderSummaryCards.Elements>())
+        foreach (var card in Enum.GetNames<WorkOrderSummaryCards.Elements>())
         {
             await Expect(Page.GetByTestId(card)).ToBeVisibleAsync();
         }
@@ -61,7 +61,7 @@ public class DashboardTests : AcceptanceTestBase
         await OpenDashboardAsync();
         var card = Page.GetByTestId(nameof(WorkOrderSummaryCards.Elements.SummaryCardDueThisWeek));
         await Expect(card).ToBeVisibleAsync();
-        string count = (await card.Locator(".summary-card-value").InnerTextAsync()).Trim();
+        var count = (await card.Locator(".summary-card-value").InnerTextAsync()).Trim();
 
         await card.ClickAsync();
         await Page.WaitForURLAsync(new Regex("DueThisWeekOnly=true"));
@@ -188,7 +188,7 @@ public class DashboardTests : AcceptanceTestBase
 
     private async Task<(double Left, double Width)> ContentBoxAsync()
     {
-        double[] box = await Page.Locator(".content-wrapper").EvaluateAsync<double[]>(
+        var box = await Page.Locator(".content-wrapper").EvaluateAsync<double[]>(
             "e => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e);" +
             " const l = parseFloat(s.paddingLeft), p = l + parseFloat(s.paddingRight);" +
             " return [r.left + l, e.clientWidth - p]; }");

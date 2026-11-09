@@ -17,7 +17,7 @@ public class OnionArchitectureTests
     [Test]
     public void CoreShouldNotReferenceAnyBootcampAssembly()
     {
-        string[] references = typeof(Team).Assembly.GetReferencedAssemblies()
+        var references = typeof(Team).Assembly.GetReferencedAssemblies()
             .Select(name => name.Name ?? "")
             .Where(name => name.StartsWith("ClearMeasure.Bootcamp.", StringComparison.Ordinal))
             .ToArray();
@@ -28,7 +28,7 @@ public class OnionArchitectureTests
     [Test]
     public void CoreProjectShouldHaveNoProjectReference()
     {
-        string project = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "Core", "Core.csproj"));
+        var project = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "Core", "Core.csproj"));
 
         project.ShouldNotContain("<ProjectReference");
     }

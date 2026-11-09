@@ -12,7 +12,7 @@ public class FeatureFlagsQueryHandler(IFeatureFlagEvaluator evaluator) : IReques
     public async Task<FeatureFlagsResult> Handle(FeatureFlagsQuery request, CancellationToken cancellationToken)
     {
         var flags = new Dictionary<string, bool>(StringComparer.Ordinal);
-        foreach (string name in FeatureFlagNames.All)
+        foreach (var name in FeatureFlagNames.All)
         {
             flags[name] = await evaluator.IsEnabledAsync(name, cancellationToken);
         }

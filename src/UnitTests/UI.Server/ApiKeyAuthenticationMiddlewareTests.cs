@@ -26,7 +26,7 @@ public class ApiKeyAuthenticationMiddlewareTests
     public void ShouldValidate_ReturnsExpected_When_PathAndOptions(string path, bool expectPublicSkip)
     {
         var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
-        bool shouldValidate = ApiKeyAuthenticationMiddleware.ShouldValidate(path, options);
+        var shouldValidate = ApiKeyAuthenticationMiddleware.ShouldValidate(path, options);
         if (expectPublicSkip)
         {
             shouldValidate.ShouldBeFalse();

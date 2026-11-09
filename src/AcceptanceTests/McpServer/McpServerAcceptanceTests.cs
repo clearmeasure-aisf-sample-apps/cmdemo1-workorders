@@ -21,19 +21,14 @@ public class McpServerAcceptanceTests : AcceptanceTestBase
     [OneTimeTearDown]
     public async Task McpTearDown()
     {
-        if (_helper != null)
-        {
-            await _helper.DisposeAsync();
-        }
+        if (_helper != null) await _helper.DisposeAsync();
     }
 
     [SetUp]
     public void EnsureAvailability()
     {
         if (!_helper!.Connected)
-        {
             Assert.Inconclusive("MCP server is not available");
-        }
     }
 
     [Test]
@@ -57,7 +52,7 @@ public class McpServerAcceptanceTests : AcceptanceTestBase
         var employees = await bus.Send(new EmployeeGetAllQuery());
         var creator = employees.First(e => e.Roles.Any(r => r.CanCreateWorkOrder));
 
-        string result = await _helper!.CallToolDirectly("create-work-order",
+        var result = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = "Direct MCP tool test",

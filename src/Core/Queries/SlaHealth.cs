@@ -33,7 +33,7 @@ public class SlaHealth
             return null;
         }
 
-        decimal? diff = currentPercent - lastPercent;
+        var diff = currentPercent - lastPercent;
         return diff > 0
             ? $"↑ up from {lastPercent:0}%"
             : diff < 0
@@ -54,9 +54,9 @@ public class SlaHealth
             return (null, 0);
         }
 
-        int onTimeCount = qualifying.Count(wo =>
+        var onTimeCount = qualifying.Count(wo =>
             ChurchDate(wo.CompletedDate!.Value) <= wo.DueDate!.Value);
-        decimal percentage = (decimal)onTimeCount / qualifying.Count * 100;
+        var percentage = (decimal)onTimeCount / qualifying.Count * 100;
         return (Math.Round(percentage, 0), qualifying.Count);
     }
 

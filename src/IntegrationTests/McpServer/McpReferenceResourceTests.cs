@@ -9,7 +9,7 @@ public class McpReferenceResourceTests
     [Test]
     public void ShouldReturnAllWorkOrderStatuses()
     {
-        string result = ReferenceResources.GetWorkOrderStatuses();
+        var result = ReferenceResources.GetWorkOrderStatuses();
 
         result.ShouldContain("Draft");
         result.ShouldContain("Assigned");
@@ -24,7 +24,7 @@ public class McpReferenceResourceTests
     [Test]
     public void ShouldReturnAllRoles()
     {
-        string result = ReferenceResources.GetRoles();
+        var result = ReferenceResources.GetRoles();
 
         result.ShouldContain("Manager");
         result.ShouldContain("Worker");
@@ -36,7 +36,7 @@ public class McpReferenceResourceTests
     [Test]
     public void ShouldReturnStatusTransitions()
     {
-        string result = ReferenceResources.GetStatusTransitions();
+        var result = ReferenceResources.GetStatusTransitions();
 
         result.ShouldContain("DraftToAssignedCommand");
         result.ShouldContain("AssignedToInProgressCommand");
@@ -46,7 +46,7 @@ public class McpReferenceResourceTests
     [Test]
     public void ShouldReturnAllWorkOrderPriorities()
     {
-        string result = ReferenceResources.GetWorkOrderPriorities();
+        var result = ReferenceResources.GetWorkOrderPriorities();
 
         result.ShouldContain("Low");
         result.ShouldContain("Medium");

@@ -10,9 +10,9 @@ public class WorkOrderStringUtilityTests
     [Test]
     public void TruncateDescription_WhenDescriptionUnder4000_ReturnsUnchanged()
     {
-        string description = "Short description";
+        var description = "Short description";
 
-        string result = WorkOrderStringUtility.TruncateDescription(description);
+        var result = WorkOrderStringUtility.TruncateDescription(description);
 
         result.ShouldBe(description);
     }
@@ -20,9 +20,9 @@ public class WorkOrderStringUtilityTests
     [Test]
     public void TruncateDescription_WhenDescriptionAt4000_ReturnsUnchanged()
     {
-        string description = new('x', WorkOrder.DescriptionMaxLength);
+        var description = new string('x', WorkOrder.DescriptionMaxLength);
 
-        string result = WorkOrderStringUtility.TruncateDescription(description);
+        var result = WorkOrderStringUtility.TruncateDescription(description);
 
         result.ShouldBe(description);
         result.Length.ShouldBe(WorkOrder.DescriptionMaxLength);
@@ -31,9 +31,9 @@ public class WorkOrderStringUtilityTests
     [Test]
     public void TruncateDescription_WhenDescriptionOver4000_TruncatesToMaxLength()
     {
-        string description = new('x', WorkOrder.DescriptionMaxLength + 100);
+        var description = new string('x', WorkOrder.DescriptionMaxLength + 100);
 
-        string result = WorkOrderStringUtility.TruncateDescription(description);
+        var result = WorkOrderStringUtility.TruncateDescription(description);
 
         result.Length.ShouldBe(WorkOrder.DescriptionMaxLength);
         result.ShouldBe(new string('x', WorkOrder.DescriptionMaxLength));

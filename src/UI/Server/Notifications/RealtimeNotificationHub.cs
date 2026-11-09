@@ -43,17 +43,17 @@ public sealed class RealtimeNotificationHub : IRealtimeNotificationHub
 
     public async Task BroadcastRemotableEventAsync(IRemotableEvent @event, CancellationToken cancellationToken = default)
     {
-        string messageJson = new WebServiceMessage(@event).GetJson();
+        var messageJson = new WebServiceMessage(@event).GetJson();
         var envelope = new RealtimeNotificationEnvelope(
             RealtimeNotificationKinds.RemotableEvent,
             messageJson);
-        string json = JsonSerializer.Serialize(envelope, RealtimeNotificationHubJson.Options);
+        var json = JsonSerializer.Serialize(envelope, RealtimeNotificationHubJson.Options);
         await BroadcastUtf8JsonAsync(json, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task BroadcastUtf8JsonAsync(string json, CancellationToken cancellationToken)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = Encoding.UTF8.GetBytes(json);
         foreach (var (id, socket) in _connections.ToArray())
         {
             if (!await RealtimeWebSocketSender.TrySendAsync(socket, bytes, cancellationToken).ConfigureAwait(false))

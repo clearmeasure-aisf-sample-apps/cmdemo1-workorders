@@ -20,7 +20,7 @@ public class DependencyCallListenerTests
         var counters = new LiveTelemetryCounters(new StubTimeProvider(Start));
         using var listener = new DependencyCallListener(counters);
         var operationId = Guid.NewGuid();
-        long started = Stopwatch.GetTimestamp();
+        var started = Stopwatch.GetTimestamp();
 
         listener.OnSqlClientEvent(DependencyCallListener.SqlCommandBefore, SqlPayload(operationId, started));
         listener.OnSqlClientEvent(
@@ -83,7 +83,7 @@ public class DependencyCallListenerTests
         var counters = new LiveTelemetryCounters(new StubTimeProvider(Start));
         using var listener = new DependencyCallListener(counters);
         var operationId = Guid.NewGuid();
-        long started = Stopwatch.GetTimestamp();
+        var started = Stopwatch.GetTimestamp();
 
         listener.OnSqlClientEvent(DependencyCallListener.SqlCommandBefore, SqlPayload(operationId, started));
         listener.OnSqlClientEvent(DependencyCallListener.SqlCommandError, SqlPayload(operationId, started));
@@ -112,7 +112,7 @@ public class DependencyCallListenerTests
         listener.Start();
         using var sqlClient = new DiagnosticListener(DependencyCallListener.SqlClientListenerName);
         var operationId = Guid.NewGuid();
-        long started = Stopwatch.GetTimestamp();
+        var started = Stopwatch.GetTimestamp();
 
         sqlClient.IsEnabled(DependencyCallListener.SqlCommandBefore).ShouldBeTrue();
         sqlClient.Write(DependencyCallListener.SqlCommandBefore, SqlPayload(operationId, started));
@@ -173,7 +173,7 @@ public class DependencyCallListenerTests
         using var listener = new DependencyCallListener(counters);
         listener.Start();
         using var server = new System.Net.HttpListener();
-        int port = FreeTcpPort();
+        var port = FreeTcpPort();
         server.Prefixes.Add($"http://127.0.0.1:{port}/");
         server.Start();
         var serve = AnswerOneRequestWithNoContentAsync(server);

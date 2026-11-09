@@ -180,7 +180,7 @@ internal static class LoopHelpers
             return false;
         }
 
-        string? name = GetInvocationName(invocation);
+        var name = GetInvocationName(invocation);
         return name is not null && SelectLikeNames.Contains(name);
     }
 

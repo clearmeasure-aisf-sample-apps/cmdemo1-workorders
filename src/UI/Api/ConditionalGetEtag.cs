@@ -21,8 +21,8 @@ public static class ConditionalGetEtag
     /// </summary>
     private static EntityTagHeaderValue CreateWeakEtag(ReadOnlySpan<byte> representationUtf8)
     {
-        byte[] hash = SHA256.HashData(representationUtf8);
-        string hex = Convert.ToHexStringLower(hash);
+        var hash = SHA256.HashData(representationUtf8);
+        var hex = Convert.ToHexStringLower(hash);
         return new EntityTagHeaderValue($"\"{hex}\"", isWeak: true);
     }
 
@@ -31,7 +31,7 @@ public static class ConditionalGetEtag
     /// </summary>
     public static EntityTagHeaderValue CreateWeakEtagForJson<T>(T value)
     {
-        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(value, JsonSerializerOptions);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, JsonSerializerOptions);
         return CreateWeakEtag(bytes);
     }
 
@@ -40,7 +40,7 @@ public static class ConditionalGetEtag
     /// </summary>
     public static EntityTagHeaderValue CreateWeakEtagForPlainText(string text)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(text);
+        var bytes = Encoding.UTF8.GetBytes(text);
         return CreateWeakEtag(bytes);
     }
 
@@ -50,21 +50,14 @@ public static class ConditionalGetEtag
     public static bool IfNoneMatchIncludesEtag(HttpRequest request, EntityTagHeaderValue etag)
     {
         if (!EntityTagHeaderValue.TryParseList(request.Headers.IfNoneMatch, out var candidates))
-        {
             return false;
-        }
 
         foreach (var candidate in candidates)
         {
             if (candidate.Equals(EntityTagHeaderValue.Any))
-            {
                 return true;
-            }
-
             if (candidate.Compare(etag, useStrongComparison: false))
-            {
                 return true;
-            }
         }
 
         return false;

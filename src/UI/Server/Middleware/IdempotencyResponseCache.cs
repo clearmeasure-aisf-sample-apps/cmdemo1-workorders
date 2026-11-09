@@ -97,7 +97,7 @@ internal static class IdempotencyResponseCache
         MemoryStream buffer,
         IdempotencyOptions opts)
     {
-        byte[] bodyBytes = buffer.ToArray();
+        var bodyBytes = buffer.ToArray();
         var headers = IdempotencyMiddleware.CaptureResponseHeaders(response);
         var snapshot = new IdempotencyMiddleware.IdempotentResponseSnapshot(response.StatusCode, headers, bodyBytes);
         var cacheOptions = new MemoryCacheEntryOptions

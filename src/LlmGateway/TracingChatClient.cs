@@ -111,7 +111,7 @@ public class TracingChatClient(IChatClient innerClient) : DelegatingChatClient(i
             ? ActivitySource.StartActivity(operationName, ActivityKind.Internal, parentContext.Value)
             : ActivitySource.StartActivity(operationName);
 
-        string provider = "OpenAI";
+        var provider = "OpenAI";
         activity?.SetTag("chat.provider", provider);
         return activity;
     }

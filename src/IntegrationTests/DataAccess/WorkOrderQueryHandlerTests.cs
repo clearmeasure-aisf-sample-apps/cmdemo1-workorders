@@ -13,8 +13,8 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldGetWorkOrderByNumber()
     {
-        string number123 = TestData.Number("Q");
-        string number456 = TestData.Number("Q");
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
         var creator = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var order1 = new WorkOrder()
@@ -49,8 +49,8 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithAssignee()
     {
-        string number123 = TestData.Number("Q");
-        string number456 = TestData.Number("Q");
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
         var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -89,8 +89,8 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithCreator()
     {
-        string number123 = TestData.Number("Q");
-        string number456 = TestData.Number("Q");
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
         var creator1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var creator2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -127,8 +127,8 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithFullSpecification()
     {
-        string number123 = TestData.Number("Q");
-        string number456 = TestData.Number("Q");
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
         var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -171,8 +171,8 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithStatus()
     {
-        string number123 = TestData.Number("Q");
-        string number456 = TestData.Number("Q");
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
         var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -214,8 +214,8 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task ShouldSearchWithEmptySpecificationAndReturnAll()
     {
-        string number123 = TestData.Number("Q");
-        string number456 = TestData.Number("Q");
+        var number123 = TestData.Number("Q");
+        var number456 = TestData.Number("Q");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var order1 = new WorkOrder { Creator = employee, Assignee = employee, Number = number123 };
@@ -240,7 +240,7 @@ public class WorkOrderQueryHandlerTests
     [Test]
     public async Task SearchShouldReturnHydratedEmployeesWithWorkOrders()
     {
-        string number123 = TestData.Number("Q");
+        var number123 = TestData.Number("Q");
 
         var creator = new Employee(TestData.UserName("employee1"), "John", "Doe", "john.doe@example.com");
         var assignee = new Employee(TestData.UserName("employee2"), "Jane", "Smith", "jane.smith@example.com");

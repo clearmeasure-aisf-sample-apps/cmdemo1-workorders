@@ -5,11 +5,11 @@ using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -138,11 +138,11 @@ public class SettingsTests
     [Test]
     public void Settings_Stylesheet_ShouldUseDesignTokensWithoutDarkOverrides()
     {
-        string path = Path.GetFullPath(Path.Combine(
+        var path = Path.GetFullPath(Path.Combine(
             NUnit.Framework.TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI.Shared", "Pages", "Settings.razor.css"));
         File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
-        string css = File.ReadAllText(path);
+        var css = File.ReadAllText(path);
 
         css.ShouldContain(".token-card");
         css.ShouldContain("var(--color-surface)");

@@ -8,7 +8,7 @@ public class CrapGateEvaluatorTests
     [Test]
     public void EvaluateReport_WhenOnlyTestsAndGeneratedExceedThreshold_ReturnsZero()
     {
-        int gate = CrapGateThreshold.ReadProductionThreshold();
+        var gate = CrapGateThreshold.ReadProductionThreshold();
         var result = CrapGateEvaluator.EvaluateReport(PassFixture(gate), threshold: gate);
 
         result.ViolationCount.ShouldBe(0);
@@ -18,7 +18,7 @@ public class CrapGateEvaluatorTests
     [Test]
     public void EvaluateReport_WhenProductionMethodExceedsThreshold_ReturnsThatMethod()
     {
-        int gate = CrapGateThreshold.ReadProductionThreshold();
+        var gate = CrapGateThreshold.ReadProductionThreshold();
         var result = CrapGateEvaluator.EvaluateReport(FailFixture(gate), threshold: gate);
 
         result.ViolationCount.ShouldBe(1);
@@ -29,8 +29,8 @@ public class CrapGateEvaluatorTests
     [Test]
     public void EvaluateReport_WhenWindowsBackslashProductionPathExceedsThreshold_CountsViolation()
     {
-        int gate = CrapGateThreshold.ReadProductionThreshold();
-        string json = $$"""
+        var gate = CrapGateThreshold.ReadProductionThreshold();
+        var json = $$"""
             {
               "threshold": {{gate}},
               "methods": [
@@ -51,16 +51,16 @@ public class CrapGateEvaluatorTests
     [Test]
     public void EvaluateReport_WhenThresholdRaisedAboveProductionCrap_ReturnsZero()
     {
-        int gate = CrapGateThreshold.ReadProductionThreshold();
+        var gate = CrapGateThreshold.ReadProductionThreshold();
         CrapGateEvaluator.EvaluateReport(FailFixture(gate), threshold: 20).ViolationCount.ShouldBe(0);
     }
 
     [Test]
     public void EvaluateReport_WhenProductionCrapIsJustOverGate_RejectsAtGateAndAcceptsAtGatePlusOne()
     {
-        int gate = CrapGateThreshold.ReadProductionThreshold();
-        int justOver = gate + 1;
-        string json = $$"""
+        var gate = CrapGateThreshold.ReadProductionThreshold();
+        var justOver = gate + 1;
+        var json = $$"""
             {
               "threshold": {{gate}},
               "methods": [
@@ -82,8 +82,8 @@ public class CrapGateEvaluatorTests
     [Test]
     public void RollupScript_WhenRead_ContainsProductionExclusionTokens()
     {
-        string scriptPath = FindRollupScript();
-        string source = File.ReadAllText(scriptPath);
+        var scriptPath = FindRollupScript();
+        var source = File.ReadAllText(scriptPath);
 
         source.ShouldContain("IsProductionFile");
         source.ShouldContain("NormalizePath(path)");
@@ -102,12 +102,12 @@ public class CrapGateEvaluatorTests
     [Test]
     public void RollupScript_WriteSummary_UsesProductionGateStatsNotWholeSolutionStats()
     {
-        string source = File.ReadAllText(FindRollupScript());
-        int writeSummaryStart = source.IndexOf("static async Task WriteSummaryAsync", StringComparison.Ordinal);
+        var source = File.ReadAllText(FindRollupScript());
+        var writeSummaryStart = source.IndexOf("static async Task WriteSummaryAsync", StringComparison.Ordinal);
         writeSummaryStart.ShouldBeGreaterThan(-1);
-        int writeSummaryEnd = source.IndexOf("static double Median", writeSummaryStart, StringComparison.Ordinal);
+        var writeSummaryEnd = source.IndexOf("static double Median", writeSummaryStart, StringComparison.Ordinal);
         writeSummaryEnd.ShouldBeGreaterThan(writeSummaryStart);
-        string writeSummary = source.Substring(writeSummaryStart, writeSummaryEnd - writeSummaryStart);
+        var writeSummary = source.Substring(writeSummaryStart, writeSummaryEnd - writeSummaryStart);
 
         writeSummary.ShouldContain("## Production gate stats");
         writeSummary.ShouldContain("Out-of-scope paths");
@@ -126,11 +126,11 @@ public class CrapGateEvaluatorTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName,
+            var candidate = Path.Combine(dir.FullName,
                 "scripts", "crap", "run-crap-audit.ps1");
             if (File.Exists(candidate))
             {
-                string source = File.ReadAllText(candidate);
+                var source = File.ReadAllText(candidate);
                 source.ShouldContain("Join-Path $HOME \".dotnet\" \"tools\"");
                 source.ShouldContain("$env:PATH = \"$dotnetTools");
                 source.ShouldContain("dotnet-script\" -Command \"dotnet-script\" -Version \"2.0.0\"");
@@ -150,11 +150,11 @@ public class CrapGateEvaluatorTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName,
+            var candidate = Path.Combine(dir.FullName,
                 "scripts", "crap", "flatten-cobertura.csx");
             if (File.Exists(candidate))
             {
-                string source = File.ReadAllText(candidate);
+                var source = File.ReadAllText(candidate);
                 source.ShouldContain("StateMachineClassName");
                 source.ShouldContain("FlattenAndMerge");
                 source.ShouldContain("<(?<method>[^>]+)>d__");
@@ -172,7 +172,7 @@ public class CrapGateEvaluatorTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName,
+            var candidate = Path.Combine(dir.FullName,
                 "scripts", "crap", "rollup-file-scores.csx");
             if (File.Exists(candidate))
             {

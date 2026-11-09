@@ -13,8 +13,8 @@ public class WorkOrderReformatAgent(
 
     internal static ReformatResult? ParseResponse(string responseText, WorkOrder workOrder)
     {
-        string title = ReformatResponseLineParser.ReadTitle(responseText, workOrder.Title ?? string.Empty);
-        string description = ReformatResponseLineParser.ReadDescription(responseText, workOrder.Description ?? string.Empty);
+        var title = ReformatResponseLineParser.ReadTitle(responseText, workOrder.Title ?? string.Empty);
+        var description = ReformatResponseLineParser.ReadDescription(responseText, workOrder.Description ?? string.Empty);
         return title == (workOrder.Title ?? string.Empty)
             && description == (workOrder.Description ?? string.Empty)
             ? null
@@ -45,7 +45,7 @@ internal static class ReformatWorkOrderRunner
         ILogger<WorkOrderReformatAgent> logger,
         WorkOrder workOrder)
     {
-        string? responseText = await RequestReformatTextAsync(chatClientFactory, workOrder);
+        var responseText = await RequestReformatTextAsync(chatClientFactory, workOrder);
         if (IsNoChangeResponse(responseText))
         {
             logger.LogInformation("No reformatting needed for WorkOrder {WorkOrderNumber}", workOrder.Number);
@@ -92,9 +92,9 @@ internal static class ReformatResponseLineParser
 {
     internal static string ReadTitle(string responseText, string defaultTitle)
     {
-        foreach (string line in responseText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        foreach (var line in responseText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (TryParseTitle(line, out string title))
+            if (TryParseTitle(line, out var title))
             {
                 return title;
             }
@@ -105,9 +105,9 @@ internal static class ReformatResponseLineParser
 
     internal static string ReadDescription(string responseText, string defaultDescription)
     {
-        foreach (string line in responseText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        foreach (var line in responseText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (TryParseDescription(line, out string description))
+            if (TryParseDescription(line, out var description))
             {
                 return description;
             }

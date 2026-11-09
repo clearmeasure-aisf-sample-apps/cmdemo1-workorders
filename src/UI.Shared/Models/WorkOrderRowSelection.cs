@@ -26,7 +26,7 @@ public sealed class WorkOrderRowSelection
     /// <summary>Selects every row of the page, or clears them when all were already selected.</summary>
     public void TogglePage(IEnumerable<string> pageNumbers)
     {
-        string[] page = pageNumbers.ToArray();
+        var page = pageNumbers.ToArray();
         if (AllSelected(page))
         {
             _numbers.ExceptWith(page);

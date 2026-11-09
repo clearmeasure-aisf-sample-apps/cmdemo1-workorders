@@ -58,7 +58,7 @@ public class WorkOrderToolTests
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
             LastRequest = request;
-            if (_responses.TryGetValue(request.GetType(), out object? response))
+            if (_responses.TryGetValue(request.GetType(), out var response))
             {
                 return Task.FromResult((TResponse)response!);
             }

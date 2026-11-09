@@ -21,20 +21,14 @@ public class McpWorkOrderLifecycleLlmTests : AcceptanceTestBase
     [OneTimeTearDown]
     public async Task McpTearDown()
     {
-        if (_helper != null)
-        {
-            await _helper.DisposeAsync();
-        }
+        if (_helper != null) await _helper.DisposeAsync();
     }
 
     [SetUp]
     public async Task EnsureAvailability()
     {
         if (!_helper!.Connected)
-        {
             Assert.Inconclusive("MCP server is not available");
-        }
-
         await SkipIfNoChatClient();
     }
 
@@ -48,14 +42,14 @@ public class McpWorkOrderLifecycleLlmTests : AcceptanceTestBase
             e.Roles.Any(r => r.CanFulfillWorkOrder) && e.UserName != creator.UserName);
 
         // Create and assign via direct tool calls for reliability
-        string createResult = await _helper!.CallToolDirectly("create-work-order",
+        var createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = "LLM lifecycle test",
                 ["description"] = "Testing full lifecycle via LLM",
                 ["creatorUsername"] = creator.UserName
             });
-        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
 
         await _helper.CallToolDirectly("execute-work-order-command",
             new Dictionary<string, object?>
@@ -75,7 +69,7 @@ public class McpWorkOrderLifecycleLlmTests : AcceptanceTestBase
             $"Report the final status of the work order.");
 
         response.Text.ShouldNotBeNullOrEmpty();
-        string responseText = response.Text.ToLowerInvariant();
+        var responseText = response.Text.ToLowerInvariant();
         (responseText.Contains("complete") || responseText.Contains("completed"))
             .ShouldBeTrue($"Expected 'complete' status in response: {response.Text}");
     }
@@ -96,7 +90,7 @@ public class McpWorkOrderLifecycleLlmTests : AcceptanceTestBase
             $"Report the final status of the work order.");
 
         response.Text.ShouldNotBeNullOrEmpty();
-        string responseText = response.Text.ToLowerInvariant();
+        var responseText = response.Text.ToLowerInvariant();
         (responseText.Contains("assigned") || responseText.Contains("assign"))
             .ShouldBeTrue($"Expected 'assigned' status in response: {response.Text}");
     }

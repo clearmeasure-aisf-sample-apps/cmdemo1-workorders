@@ -24,7 +24,7 @@ public class BuildInfoLinkTests
         link.TextContent.ShouldContain("Build info");
         link.GetAttribute("href").ShouldBe("/_build");
         link.GetAttribute("target").ShouldBe("_blank");
-        string? rel = link.GetAttribute("rel");
+        var rel = link.GetAttribute("rel");
         rel.ShouldNotBeNull();
         rel.ShouldContain("noopener");
         link.GetAttribute("title").ShouldBe("View the version, commit and build of this deployment");

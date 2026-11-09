@@ -8,7 +8,7 @@ public class WorkOrderDueDateStyleTests
     [Test]
     public void ShouldColorManageDueDateControlThroughDeepSelector()
     {
-        string css = ReadScopedCss("WorkOrderManage.razor.css");
+        var css = ReadScopedCss("WorkOrderManage.razor.css");
 
         css.ShouldContain(".due-date-field ::deep .due-date-today");
         css.ShouldContain(".due-date-field ::deep .due-date-overdue");
@@ -19,7 +19,7 @@ public class WorkOrderDueDateStyleTests
     [Test]
     public void ShouldKeepSearchDueDateCellColors()
     {
-        string css = ReadScopedCss("WorkOrderSearch.razor.css");
+        var css = ReadScopedCss("WorkOrderSearch.razor.css");
 
         css.ShouldContain(".due-date-today");
         css.ShouldContain(".due-date-overdue");
@@ -29,7 +29,7 @@ public class WorkOrderDueDateStyleTests
 
     private static string ReadScopedCss(string fileName)
     {
-        string path = Path.GetFullPath(Path.Combine(
+        var path = Path.GetFullPath(Path.Combine(
             TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI.Shared", "Pages", fileName));
 

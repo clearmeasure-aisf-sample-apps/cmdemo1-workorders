@@ -14,14 +14,14 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldPersistExplicitInstructionsDistinctFromDescription()
     {
-        string creatorUserName = TestData.UserName("creator");
+        var creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         const string description = "Fix the broken window in the fellowship hall";
         const string instructions = "Bring ladder from east shed; do not block wheelchair ramp";
 
-        string result = await WorkOrderTools.CreateWorkOrder(
+        var result = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "New Work Order",
@@ -30,7 +30,7 @@ public class McpCreateWorkOrderInstructionsTests
             instructions: instructions);
 
         result.ShouldContain("New Work Order");
-        string? number = ExtractWorkOrderNumber(result);
+        var number = ExtractWorkOrderNumber(result);
         number.ShouldNotBeNullOrWhiteSpace();
 
         var reloaded = await bus.Send(new WorkOrderByNumberQuery(number));
@@ -43,19 +43,19 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldPersistEmptyInstructionsWhenOmitted()
     {
-        string creatorUserName = TestData.UserName("creator");
+        var creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
 
-        string result = await WorkOrderTools.CreateWorkOrder(
+        var result = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Omitted instructions",
             "Description only",
             creatorUserName);
 
-        string? number = ExtractWorkOrderNumber(result);
+        var number = ExtractWorkOrderNumber(result);
         var reloaded = await bus.Send(new WorkOrderByNumberQuery(number!));
         reloaded!.Instructions.ShouldBe(string.Empty);
     }
@@ -63,12 +63,12 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldPersistEmptyInstructionsWhenEmpty()
     {
-        string creatorUserName = TestData.UserName("creator");
+        var creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
 
-        string result = await WorkOrderTools.CreateWorkOrder(
+        var result = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Empty instructions",
@@ -76,7 +76,7 @@ public class McpCreateWorkOrderInstructionsTests
             creatorUserName,
             instructions: string.Empty);
 
-        string? number = ExtractWorkOrderNumber(result);
+        var number = ExtractWorkOrderNumber(result);
         var reloaded = await bus.Send(new WorkOrderByNumberQuery(number!));
         reloaded!.Instructions.ShouldBe(string.Empty);
     }
@@ -84,14 +84,14 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldTruncateInstructionsTo4000CharactersOnCreate()
     {
-        string creatorUserName = TestData.UserName("creator");
+        var creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string longInstructions = new('I', WorkOrder.InstructionsMaxLength + 1);
-        string expected = new('I', WorkOrder.InstructionsMaxLength);
+        var longInstructions = new string('I', WorkOrder.InstructionsMaxLength + 1);
+        var expected = new string('I', WorkOrder.InstructionsMaxLength);
 
-        string result = await WorkOrderTools.CreateWorkOrder(
+        var result = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Long instructions",
@@ -100,7 +100,7 @@ public class McpCreateWorkOrderInstructionsTests
             instructions: longInstructions);
 
         result.ShouldContain("Long instructions");
-        string? number = ExtractWorkOrderNumber(result);
+        var number = ExtractWorkOrderNumber(result);
         var reloaded = await bus.Send(new WorkOrderByNumberQuery(number!));
         reloaded!.Instructions!.Length.ShouldBe(WorkOrder.InstructionsMaxLength);
         reloaded.Instructions.ShouldBe(expected);
@@ -109,12 +109,12 @@ public class McpCreateWorkOrderInstructionsTests
     [Test]
     public async Task ShouldReturnNotFoundWhenCreatorMissing()
     {
-        string missingUserName = TestData.UserName("missing");
+        var missingUserName = TestData.UserName("missing");
 
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
 
-        string result = await WorkOrderTools.CreateWorkOrder(
+        var result = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Title",

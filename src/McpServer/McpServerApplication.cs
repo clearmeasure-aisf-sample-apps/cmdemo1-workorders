@@ -1,7 +1,7 @@
-using ChurchBulletin.ServiceDefaults;
 using ClearMeasure.Bootcamp.McpServer.Resources;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using Lamar.Microsoft.DependencyInjection;
+using ChurchBulletin.ServiceDefaults;
 
 namespace ClearMeasure.Bootcamp.McpServer;
 
@@ -52,7 +52,7 @@ public static class McpServerApplication
 
         configureBuilder?.Invoke(builder);
 
-        bool useHttp = ShouldUseHttpTransport(args, builder.Configuration);
+        var useHttp = ShouldUseHttpTransport(args, builder.Configuration);
         ConfigureTransport(mcpBuilder, useHttp);
 
         var app = builder.Build();

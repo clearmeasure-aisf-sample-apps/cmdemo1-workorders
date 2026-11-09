@@ -61,7 +61,7 @@ public sealed class BusSendInLoopAnalyzer : DiagnosticAnalyzer
 
     private static void Report(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation)
     {
-        string name = LoopHelpers.GetInvocationName(invocation) ?? "Send";
+        var name = LoopHelpers.GetInvocationName(invocation) ?? "Send";
         context.ReportDiagnostic(Diagnostic.Create(Descriptors.Cm0001, invocation.GetLocation(), name));
     }
 
@@ -148,7 +148,7 @@ public sealed class BusSendInLoopAnalyzer : DiagnosticAnalyzer
 
     private static bool IsBusSend(SemanticModel model, InvocationExpressionSyntax invocation)
     {
-        string? name = LoopHelpers.GetInvocationName(invocation);
+        var name = LoopHelpers.GetInvocationName(invocation);
         if (name is null || !SendNames.Contains(name))
         {
             return false;
@@ -227,7 +227,7 @@ public sealed class BusSendInLoopAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        string receiver = access.Expression.ToString();
+        var receiver = access.Expression.ToString();
         if (NamedReceivers.Contains(receiver))
         {
             return true;

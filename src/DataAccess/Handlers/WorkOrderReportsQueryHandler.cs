@@ -156,7 +156,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
     private static DateOnly GetWeekEndingDate(DateOnly date)
     {
         // Calculate days since the most recent Sunday
-        int daysSinceSunday = (int)date.DayOfWeek;
+        var daysSinceSunday = (int)date.DayOfWeek;
         if (daysSinceSunday == 0)
         {
             // If it's already Sunday, that's the week-ending date

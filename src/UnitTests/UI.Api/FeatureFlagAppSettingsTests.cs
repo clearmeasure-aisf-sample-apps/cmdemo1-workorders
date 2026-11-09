@@ -30,7 +30,7 @@ public class FeatureFlagAppSettingsTests
 
     private static Dictionary<string, bool> ReadFlags(string fileName)
     {
-        string path = Path.Combine(FindRepoRoot(), "src", "UI", "Server", fileName);
+        var path = Path.Combine(FindRepoRoot(), "src", "UI", "Server", fileName);
         using var document = JsonDocument.Parse(File.ReadAllText(path));
         var section = document.RootElement.GetProperty("FeatureFlags");
         var flags = new Dictionary<string, bool>(StringComparer.Ordinal);

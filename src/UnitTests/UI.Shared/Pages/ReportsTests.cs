@@ -5,12 +5,12 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 

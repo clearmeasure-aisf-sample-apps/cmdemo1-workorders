@@ -1,4 +1,3 @@
-using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -12,6 +11,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
+using Bunit;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 
@@ -96,7 +96,7 @@ public class MyWorkOrdersTests
         ctx.Services.AddSingleton<IUiBus>(stubUiBus);
 
         var component = ctx.Render<MyWorkOrders>();
-        int initialCount = component.Instance.Count;
+        var initialCount = component.Instance.Count;
 
         // Act
         var newWorkOrder = new WorkOrder
@@ -134,7 +134,7 @@ public class MyWorkOrdersTests
         ctx.Services.AddSingleton<IUiBus>(stubUiBus);
 
         var component = ctx.Render<MyWorkOrders>();
-        int initialCount = component.Instance.Count;
+        var initialCount = component.Instance.Count;
 
         // Act - Handle the same work order event twice
         var workOrder = new WorkOrder

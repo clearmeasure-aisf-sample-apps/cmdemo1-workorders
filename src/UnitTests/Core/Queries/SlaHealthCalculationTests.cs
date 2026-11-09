@@ -10,7 +10,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnNullPercentage_When_NoQualifyingOrders()
     {
-        string? result = SlaHealth.TrendText(null, null);
+        var result = SlaHealth.TrendText(null, null);
 
         result.ShouldBeNull();
     }
@@ -18,7 +18,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnNullTrendText_When_CurrentMonthHasData_ButLastMonthDoesNot()
     {
-        string? result = SlaHealth.TrendText(80m, null);
+        var result = SlaHealth.TrendText(80m, null);
 
         result.ShouldBeNull();
     }
@@ -26,7 +26,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnTrendUp_When_CurrentPercentageGreaterThanLastMonth()
     {
-        string? result = SlaHealth.TrendText(90m, 75m);
+        var result = SlaHealth.TrendText(90m, 75m);
 
         result.ShouldBe("↑ up from 75%");
     }
@@ -34,7 +34,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnTrendDown_When_CurrentPercentageLessThanLastMonth()
     {
-        string? result = SlaHealth.TrendText(60m, 80m);
+        var result = SlaHealth.TrendText(60m, 80m);
 
         result.ShouldBe("↓ down from 80%");
     }
@@ -42,7 +42,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnTrendFlat_When_PercentagesEqual()
     {
-        string? result = SlaHealth.TrendText(75m, 75m);
+        var result = SlaHealth.TrendText(75m, 75m);
 
         result.ShouldBe("— flat at 75%");
     }
@@ -51,7 +51,7 @@ public class SlaHealthCalculationTests
     public void Should_RoundPercentageToWholeNumber()
     {
         // Test rounding with TrendText
-        string? result = SlaHealth.TrendText(66.67m, 50m);
+        var result = SlaHealth.TrendText(66.67m, 50m);
 
         result.ShouldBe("↑ up from 50%");
     }
@@ -59,7 +59,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_HandleZeroCurrentPercentage()
     {
-        string? result = SlaHealth.TrendText(0m, 50m);
+        var result = SlaHealth.TrendText(0m, 50m);
 
         result.ShouldBe("↓ down from 50%");
     }
@@ -67,7 +67,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_Handle100Percent()
     {
-        string? result = SlaHealth.TrendText(100m, 90m);
+        var result = SlaHealth.TrendText(100m, 90m);
 
         result.ShouldBe("↑ up from 90%");
     }

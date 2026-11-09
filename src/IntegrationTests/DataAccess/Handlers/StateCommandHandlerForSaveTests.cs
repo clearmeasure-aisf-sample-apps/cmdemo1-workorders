@@ -51,7 +51,7 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
         context.Add(currentUser);
         await context.SaveChangesAsync();
 
-        string expectedTitle = new('T', WorkOrder.TitleMaxLength);
+        var expectedTitle = new string('T', WorkOrder.TitleMaxLength);
         var workOrder = Faker<WorkOrder>();
         workOrder.Id = Guid.Empty;
         workOrder.Creator = currentUser;
@@ -74,7 +74,7 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
         context.Add(currentUser);
         await context.SaveChangesAsync();
 
-        string expectedBuilding = new('B', WorkOrder.BuildingMaxLength);
+        var expectedBuilding = new string('B', WorkOrder.BuildingMaxLength);
         var workOrder = Faker<WorkOrder>();
         workOrder.Id = Guid.Empty;
         workOrder.Creator = currentUser;
@@ -202,7 +202,7 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldRejectSecondInsert_WhenNumberAlreadyExists()
     {
-        string duplicateNumber = TestData.Number("P");
+        var duplicateNumber = TestData.Number("P");
 
         var currentUser = Faker<Employee>();
         currentUser.Id = Guid.NewGuid();

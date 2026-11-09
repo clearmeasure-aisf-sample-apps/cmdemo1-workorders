@@ -29,7 +29,7 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
 
     internal static bool IsCsvFile(IFormFile file)
     {
-        string ext = Path.GetExtension(file.FileName);
+        var ext = Path.GetExtension(file.FileName);
         return string.Equals(ext, ".csv", StringComparison.OrdinalIgnoreCase)
                || string.Equals(file.ContentType, "text/csv", StringComparison.OrdinalIgnoreCase)
                || string.Equals(file.ContentType, "application/vnd.ms-excel", StringComparison.OrdinalIgnoreCase);
@@ -40,7 +40,7 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
         CancellationToken cancellationToken)
     {
         var results = new List<WorkOrderBulkImportRowResult>(rows.Count);
-        int created = 0;
+        var created = 0;
         var creatorsByUsername = new Dictionary<string, Employee>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var row in rows)
@@ -63,7 +63,7 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
         Dictionary<string, Employee> creatorsByUsername,
         CancellationToken cancellationToken)
     {
-        string? rowError = ValidateRow(row);
+        var rowError = ValidateRow(row);
         if (rowError != null)
         {
             return new WorkOrderBulkImportRowResult(row.LineNumber, false, null, rowError);
@@ -94,7 +94,7 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        string username = row.CreatorUsername!;
+        var username = row.CreatorUsername!;
         if (creatorsByUsername.TryGetValue(username, out var cached))
         {
             return (cached, null);

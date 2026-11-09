@@ -14,7 +14,7 @@ public class McpVendorToolTests
     [Test]
     public async Task ShouldListAllVendors()
     {
-        string tag = TestData.Tag();
+        var tag = TestData.Tag();
         var vendor1 = new Vendor
         {
             Name = $"HVAC Solutions-{tag}",
@@ -40,7 +40,7 @@ public class McpVendorToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await VendorTools.ListVendors(bus);
+        var result = await VendorTools.ListVendors(bus);
 
         result.ShouldContain(vendor1.Name);
         result.ShouldContain(vendor2.Name);
@@ -54,7 +54,7 @@ public class McpVendorToolTests
     public async Task ShouldReturnJsonArray()
     {
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await VendorTools.ListVendors(bus);
+        var result = await VendorTools.ListVendors(bus);
 
         using var json = JsonDocument.Parse(result);
         json.RootElement.ValueKind.ShouldBe(JsonValueKind.Array);
@@ -63,15 +63,15 @@ public class McpVendorToolTests
     [Test]
     public async Task ShouldCreateVendor()
     {
-        string vendorName = $"Electrical Works-{TestData.Tag()}";
+        var vendorName = $"Electrical Works-{TestData.Tag()}";
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await VendorTools.CreateVendor(bus, vendorName, "Electrical", "Tom Jones", "tom@electrical.com", "555-9999");
+        var result = await VendorTools.CreateVendor(bus, vendorName, "Electrical", "Tom Jones", "tom@electrical.com", "555-9999");
 
         result.ShouldContain("\"succeeded\": true");
         result.ShouldContain(vendorName);
 
         // Verify the vendor was created
-        string listResult = await VendorTools.ListVendors(bus);
+        var listResult = await VendorTools.ListVendors(bus);
         listResult.ShouldContain(vendorName);
         listResult.ShouldContain("Electrical");
         listResult.ShouldContain("Tom Jones");
@@ -80,21 +80,21 @@ public class McpVendorToolTests
     [Test]
     public async Task ShouldCreateVendorWithDefaults()
     {
-        string vendorName = $"Simple Vendor-{TestData.Tag()}";
+        var vendorName = $"Simple Vendor-{TestData.Tag()}";
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await VendorTools.CreateVendor(bus, vendorName, "General");
+        var result = await VendorTools.CreateVendor(bus, vendorName, "General");
 
         result.ShouldContain("\"succeeded\": true");
 
         // Verify the vendor was created
-        string listResult = await VendorTools.ListVendors(bus);
+        var listResult = await VendorTools.ListVendors(bus);
         listResult.ShouldContain(vendorName);
     }
 
     [Test]
     public async Task ShouldReturnErrorOnDuplicateVendorName()
     {
-        string vendorName = $"HVAC Solutions-{TestData.Tag()}";
+        var vendorName = $"HVAC Solutions-{TestData.Tag()}";
         var vendor = new Vendor { Name = vendorName, Trade = "HVAC", IsActive = true };
 
         await using var context = TestHost.GetRequiredService<DbContext>();
@@ -102,7 +102,7 @@ public class McpVendorToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await VendorTools.CreateVendor(bus, vendorName, "HVAC Services");
+        var result = await VendorTools.CreateVendor(bus, vendorName, "HVAC Services");
 
         result.ShouldContain("already exists");
         result.ShouldNotContain("\"succeeded\": true");
@@ -111,7 +111,7 @@ public class McpVendorToolTests
     [Test]
     public async Task ShouldReturnErrorOnDuplicateVendorNameIgnoringCase()
     {
-        string vendorName = $"HVAC Solutions-{TestData.Tag()}";
+        var vendorName = $"HVAC Solutions-{TestData.Tag()}";
         var vendor = new Vendor { Name = vendorName, Trade = "HVAC", IsActive = true };
 
         await using var context = TestHost.GetRequiredService<DbContext>();
@@ -119,7 +119,7 @@ public class McpVendorToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await VendorTools.CreateVendor(bus, vendorName.ToLowerInvariant(), "HVAC Services");
+        var result = await VendorTools.CreateVendor(bus, vendorName.ToLowerInvariant(), "HVAC Services");
 
         result.ShouldContain("already exists");
         result.ShouldNotContain("\"succeeded\": true");

@@ -1,9 +1,8 @@
 using System.Reflection;
 using Asp.Versioning;
-using ChurchBulletin.ServiceDefaults;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.DataAccess.Messaging;
 using ClearMeasure.Bootcamp.LlmGateway;
+using ClearMeasure.Bootcamp.DataAccess.Messaging;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Resources;
 using ClearMeasure.Bootcamp.McpServer.Tools;
@@ -19,6 +18,7 @@ using ClearMeasure.Bootcamp.UI.Server.Testing;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using ChurchBulletin.ServiceDefaults;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
@@ -143,7 +143,7 @@ public static class ServerApplication
         endpointConfiguration.EnableInstallers();
         endpointConfiguration.EnableOpenTelemetry();
 
-        string sqlConnectionString = builder.Configuration.GetConnectionString("SqlConnectionString") ?? "";
+        var sqlConnectionString = builder.Configuration.GetConnectionString("SqlConnectionString") ?? "";
         if (ShouldUseLearningTransport(sqlConnectionString))
         {
             endpointConfiguration.UseTransport<LearningTransport>();
@@ -230,7 +230,7 @@ public static class ServerApplication
         });
         app.MapGet("/_version", () =>
         {
-            string? version = Assembly.GetExecutingAssembly()
+            var version = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             return Results.Json(new { version });
         }).CacheOutput(OutputCachePolicyNames.VersionMetadata);
@@ -260,14 +260,14 @@ public static class ServerApplication
         app.MapPost("/_test/body-buffer-probe", async (HttpRequest request, CancellationToken cancellationToken) =>
         {
             using var firstReader = new StreamReader(request.Body, leaveOpen: true);
-            string first = await firstReader.ReadToEndAsync(cancellationToken);
+            var first = await firstReader.ReadToEndAsync(cancellationToken);
             if (request.Body.CanSeek)
             {
                 request.Body.Position = 0;
             }
 
             using var secondReader = new StreamReader(request.Body, leaveOpen: true);
-            string second = await secondReader.ReadToEndAsync(cancellationToken);
+            var second = await secondReader.ReadToEndAsync(cancellationToken);
             return Results.Json(new { first, second });
         });
         app.MapPost("/__test/request-body-echo", EchoRequestBodyAsync);

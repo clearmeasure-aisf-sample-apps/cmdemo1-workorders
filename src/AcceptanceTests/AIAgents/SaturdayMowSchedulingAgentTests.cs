@@ -2,8 +2,8 @@ using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using Microsoft.EntityFrameworkCore;
 using Login = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
+using Microsoft.EntityFrameworkCore;
 using NavMenu = ClearMeasure.Bootcamp.UI.Shared.NavMenu;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
@@ -55,7 +55,7 @@ public class SaturdayMowSchedulingAgentTests : AcceptanceTestBase
         await Click(nameof(ApplicationChat.Elements.SendButton));
 
         var expectedDates = WorkOrderToolsComingSaturdays();
-        string firstDateText = expectedDates[0].ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var firstDateText = expectedDates[0].ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         // Wait for the assistant bubble to contain tool-backed content (not merely to exist).
         // AiMessage1 can appear before the full reply is meaningful if the model echoes early.
@@ -66,14 +66,14 @@ public class SaturdayMowSchedulingAgentTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(ApplicationChat.Elements.LoadingIndicator)))
             .ToHaveCountAsync(0);
 
-        string chatText = await Page.GetByTestId(nameof(ApplicationChat.Elements.ChatHistory)).InnerTextAsync();
+        var chatText = await Page.GetByTestId(nameof(ApplicationChat.Elements.ChatHistory)).InnerTextAsync();
         chatText.ShouldNotBeNullOrEmpty();
-        string aiText = await aiMessage.InnerTextAsync();
+        var aiText = await aiMessage.InnerTextAsync();
         aiText.ShouldNotBeNullOrEmpty();
 
         foreach (var date in expectedDates)
         {
-            string iso = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var iso = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             aiText.ShouldContain(iso);
             chatText.ShouldContain(iso);
         }

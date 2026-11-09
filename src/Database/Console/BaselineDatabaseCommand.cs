@@ -13,11 +13,11 @@ public class BaselineDatabaseCommand : AbstractDatabaseCommand
 {
     protected override int ExecuteInternal(CommandContext context, DatabaseOptions options, string connectionString, CancellationToken cancellationToken)
     {
-        string scriptDir = GetScriptDirectory(options);
+        var scriptDir = GetScriptDirectory(options);
 
         AnsiConsole.MarkupLine("[yellow]Baselining database - marking all scripts as executed without running them...[/]");
 
-        int markResult = MarkCreateAndUpdateScripts(connectionString, scriptDir);
+        var markResult = MarkCreateAndUpdateScripts(connectionString, scriptDir);
         if (markResult != 0)
         {
             return markResult;
@@ -34,7 +34,7 @@ public class BaselineDatabaseCommand : AbstractDatabaseCommand
     /// </summary>
     public static int MarkCreateAndUpdateScripts(string connectionString, string scriptDir)
     {
-        int createResult = ScriptBaselineMarker.MarkScriptsInDirectory(
+        var createResult = ScriptBaselineMarker.MarkScriptsInDirectory(
             connectionString, Path.Join(scriptDir, "Create"), "Create");
         if (createResult != 0)
         {

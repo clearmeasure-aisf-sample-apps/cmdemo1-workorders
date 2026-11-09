@@ -1,4 +1,3 @@
-using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -9,6 +8,7 @@ using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
+using Bunit;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 

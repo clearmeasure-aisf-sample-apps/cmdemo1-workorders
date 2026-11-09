@@ -11,7 +11,7 @@ public class KpiCardTests
     public async Task ShouldRenderButton_WhenNoHref_AndRaiseOnSelected()
     {
         await using var ctx = new BunitContext();
-        int selected = 0;
+        var selected = 0;
 
         var component = ctx.Render<KpiCard>(p => p
             .Add(c => c.TestId, "CardId")

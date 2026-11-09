@@ -30,7 +30,7 @@ public class ServerFixture
     public static bool HeadlessTestBrowser { get; private set; } = true;
     private static bool DatabaseInitialized { get; set; }
     private static readonly Lock DatabaseLock = new();
-
+    
     /// <summary>
     /// Shared Playwright instance for all tests. Thread-safe for parallel execution.
     /// </summary>
@@ -76,19 +76,16 @@ public class ServerFixture
     /// </summary>
     private static async Task WarmUpContainerApp()
     {
-        if (StartLocalServer)
-        {
-            return; // local server is already warmed by StartAndWaitForServer
-        }
+        if (StartLocalServer) return; // local server is already warmed by StartAndWaitForServer
 
         var client = TestHttpClientFactory.CreateInsecureClient();
 
         string[] warmUpPaths = ["/", "/_healthcheck", "/_clienthealthcheck"];
 
-        for (int attempt = 1; attempt <= 3; attempt++)
+        for (var attempt = 1; attempt <= 3; attempt++)
         {
             TestContext.Out.WriteLine($"HTTP warm-up: round {attempt}/3");
-            foreach (string path in warmUpPaths)
+            foreach (var path in warmUpPaths)
             {
                 try
                 {
@@ -143,7 +140,7 @@ public class ServerFixture
     {
         HttpResponseMessage? siteResponse = null;
         Exception? lastSiteException = null;
-        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             (siteResponse, lastSiteException) =
                 await AttemptGet(client, ApplicationBaseUrl, siteResponse);
@@ -163,11 +160,11 @@ public class ServerFixture
         int maxAttempts,
         int delayBetweenAttemptsMs)
     {
-        string healthUrl = $"{ApplicationBaseUrl}/_healthcheck";
+        var healthUrl = $"{ApplicationBaseUrl}/_healthcheck";
         string? healthBody = null;
         HttpStatusCode? healthStatus = null;
         Exception? lastHealthException = null;
-        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             var attemptResult = await AttemptHealthGet(client, healthUrl);
             if (attemptResult.Exception != null)
@@ -216,7 +213,7 @@ public class ServerFixture
         try
         {
             var response = await client.GetAsync(healthUrl);
-            string body = await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsStringAsync();
             TestContext.Out.WriteLine($"  GET {healthUrl} -> {(int)response.StatusCode}: {body}");
             return (response.StatusCode, body, null);
         }
@@ -234,7 +231,7 @@ public class ServerFixture
             return false;
         }
 
-        int code = (int)status.Value;
+        var code = (int)status.Value;
         return code is >= 200 and < 300 && IsAcceptableHealthStatus(body);
     }
 
@@ -266,7 +263,7 @@ public class ServerFixture
     private async Task StartAndWaitForServer()
     {
         const int maxAttempts = 2;
-        for (int attempt = 1; ; attempt++)
+        for (var attempt = 1; ; attempt++)
         {
             try
             {
@@ -286,8 +283,8 @@ public class ServerFixture
 
     private async Task StartAndWaitForServerOnce()
     {
-        string connectionString = GetSqlConnectionString();
-        bool useSqlite = IsSqliteConnection(connectionString);
+        var connectionString = GetSqlConnectionString();
+        var useSqlite = IsSqliteConnection(connectionString);
         _serverProcess = CreateDotnetProcess(ProjectPath, BuildServerArguments(useSqlite));
         ConfigureServerEnvironment(_serverProcess, useSqlite, connectionString);
         AttachProcessLogging(_serverProcess, "Server");
@@ -299,7 +296,7 @@ public class ServerFixture
 
     private static string BuildServerArguments(bool useSqlite)
     {
-        string config = BuildConfiguration;
+        var config = BuildConfiguration;
         return useSqlite
             ? $"run --no-build --configuration {config} --no-launch-profile --urls={ApplicationBaseUrl}"
             : $"run --no-build --configuration {config} --urls={ApplicationBaseUrl}";
@@ -333,8 +330,8 @@ public class ServerFixture
             return connectionString;
         }
 
-        string dbPath = connectionString["Data Source=".Length..].Trim();
-        int semicolonIndex = dbPath.IndexOf(';');
+        var dbPath = connectionString["Data Source=".Length..].Trim();
+        var semicolonIndex = dbPath.IndexOf(';');
         if (semicolonIndex >= 0)
         {
             dbPath = dbPath[..semicolonIndex];
@@ -383,14 +380,14 @@ public class ServerFixture
     /// </summary>
     private async Task StartAndWaitForWorker()
     {
-        string connectionString = GetSqlConnectionString();
+        var connectionString = GetSqlConnectionString();
         if (ShouldSkipWorker(IsSqliteConnection(connectionString)))
         {
             return;
         }
 
         TestContext.Out.WriteLine("Worker: starting...");
-        string config = BuildConfiguration;
+        var config = BuildConfiguration;
         _workerProcess = CreateDotnetProcess(
             WorkerProjectPath,
             $"run --no-build --configuration {config} --no-launch-profile");
@@ -523,20 +520,14 @@ public class ServerFixture
 
     private static void InitializeDatabaseOnce()
     {
-        if (DatabaseInitialized)
-        {
-            return;
-        }
+        if (DatabaseInitialized) return;
 
         lock (DatabaseLock)
         {
-            if (DatabaseInitialized)
-            {
-                return;
-            }
+            if (DatabaseInitialized) return;
 
             using var context = TestHost.GetRequiredService<DbContext>();
-            bool isSqlite = context.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true;
+            var isSqlite = context.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true;
             if (isSqlite)
             {
                 DataAccess.SqliteSchemaUpgrade.EnsureCreatedAndUpgraded(context);

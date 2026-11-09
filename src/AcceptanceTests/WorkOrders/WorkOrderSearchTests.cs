@@ -67,15 +67,15 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var creatorOptions = creatorSelect.Locator("option");
         await Expect(creatorOptions.First).ToHaveTextAsync("Anyone");
         // Wait for employee data to finish loading via auto-retrying assertion
-        await Expect(creatorOptions.Filter(new() { HasText = "Timothy Lovejoy" })).ToHaveCountAsync(1);
-        int creatorOptionCount = await creatorOptions.CountAsync();
+        await Expect(creatorOptions.Filter(new(){ HasText = "Timothy Lovejoy"})).ToHaveCountAsync(1);
+        var creatorOptionCount = await creatorOptions.CountAsync();
         creatorOptionCount.ShouldBeGreaterThanOrEqualTo(minimumBaseEmployees + 1);
 
         var assigneeOptions = assigneeSelect.Locator("option");
         await Expect(assigneeOptions.First).ToHaveTextAsync("Anyone");
         // Wait for employee data to finish loading via auto-retrying assertion
-        await Expect(assigneeOptions.Filter(new() { HasText = "Timothy Lovejoy" })).ToHaveCountAsync(1);
-        int assigneeOptionCount = await assigneeOptions.CountAsync();
+        await Expect(assigneeOptions.Filter(new(){ HasText = "Timothy Lovejoy"})).ToHaveCountAsync(1);
+        var assigneeOptionCount = await assigneeOptions.CountAsync();
         assigneeOptionCount.ShouldBeGreaterThanOrEqualTo(minimumBaseEmployees + 1);
 
         // Verify status options are loaded (5 statuses + "All" option = 6 options)
@@ -114,7 +114,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Expect(workOrderTable).ToBeVisibleAsync();
 
         var workOrderRows = workOrderTable.Locator("tbody tr");
-        int rowCount = await workOrderRows.CountAsync();
+        var rowCount = await workOrderRows.CountAsync();
         await Expect(workOrderRows).ToHaveCountAsync(rowCount);
     }
 
@@ -143,7 +143,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Expect(workOrderTable).ToBeVisibleAsync();
 
         var workOrderRows = workOrderTable.Locator("tbody tr");
-        int rowCount = await workOrderRows.CountAsync();
+        var rowCount = await workOrderRows.CountAsync();
         rowCount.ShouldBeGreaterThanOrEqualTo(1);
         await Expect(Page.GetByTestId($"{WorkOrderSearch.Elements.ActiveFilterChip}Creator")).ToContainTextAsync(creator.DisplayName);
     }
@@ -178,7 +178,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Expect(workOrderTable).ToBeVisibleAsync();
 
         var workOrderRows = workOrderTable.Locator("tbody tr");
-        int rowCount = await workOrderRows.CountAsync();
+        var rowCount = await workOrderRows.CountAsync();
         rowCount.ShouldBeGreaterThanOrEqualTo(1);
         await Expect(FirstRowCell(WorkOrderSearch.Elements.AssigneeCell)).ToContainTextAsync(assignee.DisplayName);
     }
@@ -256,7 +256,7 @@ public class WorkOrderSearchTests : AcceptanceTestBase
 
         // Wait for the table body to update with filtered results
         await workOrderTable.Locator("tbody").WaitForAsync();
-
+        
         var workOrderRows = workOrderTable.Locator("tbody tr");
         await Expect(workOrderRows).ToHaveCountAsync(1);
     }

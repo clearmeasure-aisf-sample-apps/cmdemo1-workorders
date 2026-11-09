@@ -47,14 +47,14 @@ public class TeamVendorMigrationTests
         };
         _connectionString = builder.ConnectionString;
         EnsureDatabase.For.SqlDatabase(_connectionString, new NoOpUpgradeLog());
-        string scriptDirectory = Path.Combine(FindRepoRoot(), "src", "Database", "scripts", "Update");
+        var scriptDirectory = Path.Combine(FindRepoRoot(), "src", "Database", "scripts", "Update");
 
         var previous = Upgrade(scriptDirectory,
             file => string.CompareOrdinal(Path.GetFileName(file), "036_") < 0);
         previous.Successful.ShouldBeTrue(previous.Error?.ToString());
         TableExists("Employee").ShouldBeTrue();
         NewTables.Select(TableExists).ShouldAllBe(exists => !exists);
-        string[] schemaBefore = SnapshotExistingSchema();
+        var schemaBefore = SnapshotExistingSchema();
         Execute("INSERT INTO [dbo].[Employee] ([Id], [UserName], [FirstName], [LastName], [EmailAddress], " +
                 "[PreferredLanguage]) VALUES (@id, N'mig291', N'Migration', N'Check', N'mig291@example.com', N'fr-FR')",
             new SqlParameter("@id", SeededEmployeeId));
@@ -100,15 +100,15 @@ public class TeamVendorMigrationTests
     private string[] SnapshotExistingSchema()
     {
         const string excluded = "('SchemaVersions', 'Team', 'Vendor', 'TeamMember', 'WorkOrderStatusChange')";
-        string[] columns = Query(
+        var columns = Query(
             "SELECT 'C', TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, DATA_TYPE, " +
             "CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE, COLUMN_DEFAULT " +
             "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME NOT IN " + excluded +
             " AND NOT (TABLE_NAME = 'WorkOrder' AND COLUMN_NAME IN ('ExternalReference', 'AccessNotes', 'Floor'))");
-        string[] constraints = Query(
+        var constraints = Query(
             "SELECT 'K', TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME, CONSTRAINT_TYPE " +
             "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME NOT IN " + excluded);
-        string[] indexes = Query(
+        var indexes = Query(
             "SELECT 'I', SCHEMA_NAME(t.schema_id), t.name, i.name, i.type_desc, i.is_unique " +
             "FROM sys.indexes i JOIN sys.tables t ON t.object_id = i.object_id " +
             "WHERE t.name NOT IN " + excluded);
@@ -146,8 +146,8 @@ public class TeamVendorMigrationTests
         var rows = new List<string>();
         while (reader.Read())
         {
-            string[] values = new string[reader.FieldCount];
-            for (int i = 0; i < values.Length; i++)
+            var values = new string[reader.FieldCount];
+            for (var i = 0; i < values.Length; i++)
             {
                 values[i] = reader.IsDBNull(i)
                     ? ""

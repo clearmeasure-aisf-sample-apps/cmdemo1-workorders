@@ -39,21 +39,21 @@ public static class BreadcrumbResolver
 
     private static Breadcrumb[] ManageTrail(string path, string query)
     {
-        string? number = path.Length > "workorder/manage/".Length ? path["workorder/manage/".Length..] : null;
-        bool isNew = number == null || query.Contains("mode=New", StringComparison.OrdinalIgnoreCase);
+        var number = path.Length > "workorder/manage/".Length ? path["workorder/manage/".Length..] : null;
+        var isNew = number == null || query.Contains("mode=New", StringComparison.OrdinalIgnoreCase);
         return [new Breadcrumb("Work Orders", WorkOrdersHref), new Breadcrumb(isNew ? "New" : $"WO-{number}", null)];
     }
 
     private static (string Path, string Query) Split(string relativeUri)
     {
-        string withoutFragment = relativeUri.Split('#')[0];
-        string[] parts = withoutFragment.Split('?', 2);
+        var withoutFragment = relativeUri.Split('#')[0];
+        var parts = withoutFragment.Split('?', 2);
         return (parts[0].Trim('/'), parts.Length > 1 ? parts[1] : string.Empty);
     }
 
     private static string Titleize(string path)
     {
-        string segment = path.Split('/')[0].Replace('-', ' ');
+        var segment = path.Split('/')[0].Replace('-', ' ');
         return segment.Length == 0 ? "Page" : char.ToUpperInvariant(segment[0]) + segment[1..];
     }
 }

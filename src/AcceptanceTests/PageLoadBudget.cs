@@ -46,7 +46,7 @@ public static class PageLoadBudget
         int timeoutMs = 30_000)
     {
         var probe = new ApiCallProbe(page, appBaseUrl);
-        long started = Stopwatch.GetTimestamp();
+        var started = Stopwatch.GetTimestamp();
         try
         {
             await navigate();
@@ -55,9 +55,9 @@ public static class PageLoadBudget
                 State = WaitForSelectorState.Visible,
                 Timeout = timeoutMs
             });
-            long loadedAt = await WaitUntilQuietAsync(probe, appBaseUrl, timeoutMs);
+            var loadedAt = await WaitUntilQuietAsync(probe, appBaseUrl, timeoutMs);
             var (calls, observed) = probe.Snapshot();
-            int count = PageLoadBudgetRules.CountApiCalls(observed, appBaseUrl);
+            var count = PageLoadBudgetRules.CountApiCalls(observed, appBaseUrl);
             return new PageLoadMeasurement(count, Stopwatch.GetElapsedTime(started, loadedAt), calls)
             {
                 Requests = observed
@@ -96,7 +96,7 @@ public static class PageLoadBudget
         }
 
         var (calls, observed) = probe.Snapshot();
-        int count = PageLoadBudgetRules.CountApiCalls(observed, appBaseUrl);
+        var count = PageLoadBudgetRules.CountApiCalls(observed, appBaseUrl);
         throw new TimeoutException(
             $"App API calls were still in flight after {timeoutMs} ms ({probe.InFlight} in flight, {count} seen). {string.Join("; ", calls)}");
     }
@@ -142,7 +142,7 @@ public static class PageLoadBudget
         private void OnRequest(object? sender, IRequest request)
         {
             var recorded = new PageLoadBudgetRules.RecordedRequest(request.Url, request.ResourceType);
-            bool isApi = PageLoadBudgetRules.IsAppApiRequest(request.Url, _appBaseUrl);
+            var isApi = PageLoadBudgetRules.IsAppApiRequest(request.Url, _appBaseUrl);
             lock (_gate)
             {
                 if (!_seen.Add(request))
@@ -177,8 +177,8 @@ public static class PageLoadBudget
 
         private static string Describe(IRequest request)
         {
-            string path = Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ? uri.AbsolutePath : request.Url;
-            string? typeName = TryReadTypeName(request.PostData);
+            var path = Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ? uri.AbsolutePath : request.Url;
+            var typeName = TryReadTypeName(request.PostData);
             return typeName is null ? $"{request.Method} {path}" : $"{request.Method} {path} ({typeName})";
         }
 
@@ -189,39 +189,39 @@ public static class PageLoadBudget
                 return null;
             }
 
-            int marker = postData.IndexOf("typeName", StringComparison.OrdinalIgnoreCase);
+            var marker = postData.IndexOf("typeName", StringComparison.OrdinalIgnoreCase);
             if (marker < 0)
             {
                 return null;
             }
 
-            int colon = postData.IndexOf(':', marker);
+            var colon = postData.IndexOf(':', marker);
             if (colon < 0)
             {
                 return null;
             }
 
-            int open = postData.IndexOf('"', colon + 1);
+            var open = postData.IndexOf('"', colon + 1);
             if (open < 0 || open + 1 >= postData.Length)
             {
                 return null;
             }
 
-            int close = postData.IndexOf('"', open + 1);
+            var close = postData.IndexOf('"', open + 1);
             if (close <= open)
             {
                 return null;
             }
 
-            string value = postData[(open + 1)..close];
-            int comma = value.IndexOf(',');
+            var value = postData[(open + 1)..close];
+            var comma = value.IndexOf(',');
             if (comma >= 0)
             {
                 value = value[..comma];
             }
 
-            int dot = value.LastIndexOf('.');
-            string name = dot >= 0 && dot < value.Length - 1 ? value[(dot + 1)..] : value;
+            var dot = value.LastIndexOf('.');
+            var name = dot >= 0 && dot < value.Length - 1 ? value[(dot + 1)..] : value;
             return name.Length == 0 ? null : name;
         }
     }

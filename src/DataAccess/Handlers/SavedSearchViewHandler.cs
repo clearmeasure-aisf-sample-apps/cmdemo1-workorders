@@ -18,10 +18,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
     public async Task<SavedSearchView[]> Handle(SavedSearchViewsQuery request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
-        if (employee == null)
-        {
-            return [];
-        }
+        if (employee == null) return [];
 
         var views = await context.Set<SavedSearchView>().AsNoTracking()
             .Where(v => v.EmployeeId == employee.Id)
@@ -33,21 +30,15 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
     public async Task<SavedSearchViewResult> Handle(SaveSearchViewCommand request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
-        if (employee == null)
-        {
-            return SavedSearchViewResult.Failure(UnknownUser);
-        }
+        if (employee == null) return SavedSearchViewResult.Failure(UnknownUser);
 
         var existingNames = await context.Set<SavedSearchView>().AsNoTracking()
             .Where(v => v.EmployeeId == employee.Id)
             .Select(v => v.Name)
             .ToListAsync(cancellationToken);
 
-        string? error = SavedSearchView.ValidateNew(request.Name, request.Query, existingNames);
-        if (error != null)
-        {
-            return SavedSearchViewResult.Failure(error);
-        }
+        var error = SavedSearchView.ValidateNew(request.Name, request.Query, existingNames);
+        if (error != null) return SavedSearchViewResult.Failure(error);
 
         context.Add(new SavedSearchView
         {
@@ -64,17 +55,11 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
     public async Task<SavedSearchViewResult> Handle(DeleteSearchViewCommand request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
-        if (employee == null)
-        {
-            return SavedSearchViewResult.Failure(UnknownUser);
-        }
+        if (employee == null) return SavedSearchViewResult.Failure(UnknownUser);
 
         var view = await context.Set<SavedSearchView>()
             .SingleOrDefaultAsync(v => v.Id == request.Id && v.EmployeeId == employee.Id, cancellationToken);
-        if (view == null)
-        {
-            return SavedSearchViewResult.Failure("View not found.");
-        }
+        if (view == null) return SavedSearchViewResult.Failure("View not found.");
 
         context.Remove(view);
         await context.SaveChangesAsync(cancellationToken);

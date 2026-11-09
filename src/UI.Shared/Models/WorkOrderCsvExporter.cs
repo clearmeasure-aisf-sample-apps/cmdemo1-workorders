@@ -54,7 +54,7 @@ public static class WorkOrderCsvExporter
     /// <summary>Quotes a cell when needed and neutralises formula prefixes.</summary>
     public static string Escape(string? value)
     {
-        string text = GuardFormula(value ?? string.Empty);
+        var text = GuardFormula(value ?? string.Empty);
         return text.IndexOfAny([',', '"', '\r', '\n']) >= 0 ? $"\"{text.Replace("\"", "\"\"")}\"" : text;
     }
 

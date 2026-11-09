@@ -25,32 +25,17 @@ public class SavedSearchView
     /// <returns>The error message, or null when the view is valid.</returns>
     public static string? ValidateNew(string? name, string? query, IReadOnlyCollection<string> existingNames)
     {
-        string trimmed = name?.Trim() ?? string.Empty;
+        var trimmed = name?.Trim() ?? string.Empty;
         if (trimmed.Length == 0)
-        {
             return "Enter a name for the view.";
-        }
-
         if (trimmed.Length > MaxNameLength)
-        {
             return $"Name must be {MaxNameLength} characters or fewer.";
-        }
-
         if ((query ?? string.Empty).Length > MaxQueryLength)
-        {
             return "Current filters are too long to save.";
-        }
-
         if (existingNames.Any(n => string.Equals(n.Trim(), trimmed, StringComparison.OrdinalIgnoreCase)))
-        {
             return $"A view named '{trimmed}' already exists.";
-        }
-
         if (existingNames.Count >= MaxViewsPerEmployee)
-        {
             return $"You can save up to {MaxViewsPerEmployee} views. Delete one first.";
-        }
-
         return null;
     }
 }

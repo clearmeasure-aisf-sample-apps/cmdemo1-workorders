@@ -31,7 +31,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldParseRows_WhenHeaderAndDataPresent()
     {
-        string csv = "Title,Description,CreatorUsername,RoomNumber\n"
+        var csv = "Title,Description,CreatorUsername,RoomNumber\n"
                   + "Fix leak,Under sink,u1,101\n"
                   + "\"Title, with comma\",Plain desc,u2,\n";
         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(csv));
@@ -52,7 +52,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldUnescapeDoubledQuotes_WhenInsideQuotedField()
     {
-        string csv = "Title,Description,CreatorUsername\n"
+        var csv = "Title,Description,CreatorUsername\n"
                   + "T,\"He said \"\"hi\"\"\",u\n";
         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(csv));
         var result = WorkOrderBulkImportCsvParser.Parse(ms);
@@ -65,7 +65,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldParseTwoDataRows_WhenMatchesIntegrationTestCsv()
     {
-        string csv = "Title,Description,CreatorUsername,RoomNumber\n"
+        var csv = "Title,Description,CreatorUsername,RoomNumber\n"
                   + "First,Desc one,bulk-user,1A\n"
                   + "Second,Desc two,bulk-user,\n";
         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(csv));
@@ -78,7 +78,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldParseMultilineQuotedField_WhenLogicalLineSpansRows()
     {
-        string csv = "Title,Description,CreatorUsername\n"
+        var csv = "Title,Description,CreatorUsername\n"
                   + "T,\"Line one\nLine two\",u\n";
         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(csv));
         var result = WorkOrderBulkImportCsvParser.Parse(ms);
@@ -101,7 +101,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldSkipBlankDataLines_WhenWhitespaceOnlyRowsPresent()
     {
-        string csv = "Title,Description,CreatorUsername\n"
+        var csv = "Title,Description,CreatorUsername\n"
                   + "   \n"
                   + "Keep,Desc,user1\n";
         using var ms = new MemoryStream(Encoding.UTF8.GetBytes(csv));
@@ -180,7 +180,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldReportError_WhenBuildingTooLong()
     {
-        string building = new('b', WorkOrder.BuildingMaxLength + 1);
+        var building = new string('b', WorkOrder.BuildingMaxLength + 1);
         var result = ParseCsv($"Title,Description,CreatorUsername,Building\nT,D,u,ok\nT,D,u,{building}\n");
 
         result.Rows[0].Error.ShouldBeNull();
@@ -191,7 +191,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldAcceptDescription_WhenAtMaxLength()
     {
-        string description = new('d', WorkOrder.DescriptionMaxLength);
+        var description = new string('d', WorkOrder.DescriptionMaxLength);
         var result = ParseCsv($"Title,Description,CreatorUsername\nT,{description},u\n");
 
         result.Rows[0].Error.ShouldBeNull();
@@ -200,7 +200,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldReportError_WhenDescriptionTooLong()
     {
-        string description = new('d', WorkOrder.DescriptionMaxLength + 1);
+        var description = new string('d', WorkOrder.DescriptionMaxLength + 1);
         var result = ParseCsv($"Title,Description,CreatorUsername\nT,ok,u\nT,{description},u\n");
 
         result.Rows[0].Error.ShouldBeNull();

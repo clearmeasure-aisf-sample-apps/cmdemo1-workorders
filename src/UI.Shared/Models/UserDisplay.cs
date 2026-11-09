@@ -27,7 +27,7 @@ public static class UserDisplay
 
     private static string InitialsFromName(string? name)
     {
-        char[] letters = (name ?? string.Empty).Where(char.IsLetterOrDigit).Take(2).ToArray();
+        var letters = (name ?? string.Empty).Where(char.IsLetterOrDigit).Take(2).ToArray();
         return letters.Length == 0 ? "?" : new string(letters).ToUpperInvariant();
     }
 }

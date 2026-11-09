@@ -16,7 +16,7 @@ public class DatabaseConnectionStringBuilderTests
             DatabaseName = "ChurchBulletin"
         };
 
-        string connectionString = DatabaseConnectionStringBuilder.Build(options);
+        var connectionString = DatabaseConnectionStringBuilder.Build(options);
         var builder = new SqlConnectionStringBuilder(connectionString);
 
         builder.DataSource.ShouldBe("localhost,1433");
@@ -37,7 +37,7 @@ public class DatabaseConnectionStringBuilderTests
             DatabasePassword = "secret"
         };
 
-        string connectionString = DatabaseConnectionStringBuilder.Build(options);
+        var connectionString = DatabaseConnectionStringBuilder.Build(options);
         var builder = new SqlConnectionStringBuilder(connectionString);
 
         builder.DataSource.ShouldBe("sql.example.com,1433");
@@ -57,7 +57,7 @@ public class DatabaseConnectionStringBuilderTests
             DatabaseName = "ChurchBulletin"
         };
 
-        string connectionString = DatabaseConnectionStringBuilder.Build(options);
+        var connectionString = DatabaseConnectionStringBuilder.Build(options);
         var builder = new SqlConnectionStringBuilder(connectionString);
 
         builder.DataSource.ShouldBe(@"(localdb)\MSSQLLocalDB");
@@ -72,7 +72,7 @@ public class DatabaseConnectionStringBuilderTests
             DatabaseName = "ChurchBulletin"
         };
 
-        string connectionString = DatabaseConnectionStringBuilder.Build(options);
+        var connectionString = DatabaseConnectionStringBuilder.Build(options);
         var builder = new SqlConnectionStringBuilder(connectionString);
 
         builder.DataSource.ShouldBe("db.example.com,1434");
@@ -207,7 +207,7 @@ public class ScriptBaselineMarkerTests
     [Test]
     public void Should_ReturnZero_WhenScriptDirectoryMissing()
     {
-        int result = ScriptBaselineMarker.MarkScriptsInDirectory(
+        var result = ScriptBaselineMarker.MarkScriptsInDirectory(
             "Server=localhost;Database=test;Integrated Security=true",
             Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")),
             "Create");
@@ -237,14 +237,14 @@ public class DatabaseRebuildStepsTests
     [Test]
     public void RunFullRebuild_WhenConnectionUnreachable_ReturnsFailure()
     {
-        string scriptRoot = Path.Combine(Path.GetTempPath(), "crap-rebuild-" + Guid.NewGuid().ToString("N"));
+        var scriptRoot = Path.Combine(Path.GetTempPath(), "crap-rebuild-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "Create"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "Update"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "Everytime"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "TestData"));
         try
         {
-            string connectionString =
+            var connectionString =
                 "Server=127.0.0.1,1;Database=ChurchBulletinCrapGate;User ID=sa;Password=invalid;" +
                 "TrustServerCertificate=true;Encrypt=false;Connect Timeout=1;";
 
@@ -266,11 +266,11 @@ public class BaselineDatabaseCommandTests
     [Test]
     public void MarkCreateAndUpdateScripts_WhenDirectoriesMissing_ReturnsZero()
     {
-        string scriptRoot = Path.Combine(Path.GetTempPath(), "crap-baseline-" + Guid.NewGuid().ToString("N"));
+        var scriptRoot = Path.Combine(Path.GetTempPath(), "crap-baseline-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(scriptRoot);
         try
         {
-            int result = BaselineDatabaseCommand.MarkCreateAndUpdateScripts(
+            var result = BaselineDatabaseCommand.MarkCreateAndUpdateScripts(
                 "Server=localhost;Database=test;Integrated Security=true;TrustServerCertificate=true",
                 scriptRoot);
 
@@ -285,7 +285,7 @@ public class BaselineDatabaseCommandTests
     [Test]
     public void ExecuteInternal_WhenScriptDirsMissing_ReturnsZero()
     {
-        string scriptRoot = Path.Combine(Path.GetTempPath(), "crap-baseline-exec-" + Guid.NewGuid().ToString("N"));
+        var scriptRoot = Path.Combine(Path.GetTempPath(), "crap-baseline-exec-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(scriptRoot);
         try
         {
@@ -301,7 +301,7 @@ public class BaselineDatabaseCommandTests
                 DatabaseName = "CrapGateBaseline"
             };
 
-            int result = (int)method.Invoke(
+            var result = (int)method.Invoke(
                 cmd,
                 [null!, options, "Server=localhost;Database=test;Integrated Security=true;TrustServerCertificate=true", CancellationToken.None])!;
 
@@ -320,7 +320,7 @@ public class RebuildDatabaseCommandTests
     [Test]
     public void ExecuteInternal_WhenConnectionUnreachable_ReturnsFailureCode()
     {
-        string scriptRoot = Path.Combine(Path.GetTempPath(), "crap-rebuild-exec-" + Guid.NewGuid().ToString("N"));
+        var scriptRoot = Path.Combine(Path.GetTempPath(), "crap-rebuild-exec-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "Create"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "Update"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "Everytime"));
@@ -339,11 +339,11 @@ public class RebuildDatabaseCommandTests
                 DatabaseName = "CrapGateRebuild",
                 SuppressUpgradeConsoleOutput = true
             };
-            string connectionString =
+            var connectionString =
                 "Server=127.0.0.1,1;Database=ChurchBulletinCrapGate;User ID=sa;Password=invalid;" +
                 "TrustServerCertificate=true;Encrypt=false;Connect Timeout=1;";
 
-            int result = (int)method.Invoke(
+            var result = (int)method.Invoke(
                 cmd,
                 [null!, options, connectionString, CancellationToken.None])!;
 
@@ -362,7 +362,7 @@ public class UpdateDatabaseCommandTests
     [Test]
     public void ExecuteInternal_WhenConnectionUnreachable_ReturnsFailureCode()
     {
-        string scriptRoot = Path.Combine(Path.GetTempPath(), "crap-update-exec-" + Guid.NewGuid().ToString("N"));
+        var scriptRoot = Path.Combine(Path.GetTempPath(), "crap-update-exec-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Path.Combine(scriptRoot, "Update"));
         try
         {
@@ -378,11 +378,11 @@ public class UpdateDatabaseCommandTests
                 DatabaseName = "CrapGateUpdate",
                 SuppressUpgradeConsoleOutput = true
             };
-            string connectionString =
+            var connectionString =
                 "Server=127.0.0.1,1;Database=ChurchBulletinCrapGate;User ID=sa;Password=invalid;" +
                 "TrustServerCertificate=true;Encrypt=false;Connect Timeout=1;";
 
-            int result = (int)method.Invoke(
+            var result = (int)method.Invoke(
                 cmd,
                 [null!, options, connectionString, CancellationToken.None])!;
 

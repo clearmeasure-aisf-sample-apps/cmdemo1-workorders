@@ -33,7 +33,7 @@ public class EchoEndpointIntegrationTests
         var response = await _client!.GetAsync("/api/echo?diag=1");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 

@@ -12,7 +12,7 @@ public class LandingPageTests : AcceptanceTestBase
         var heading = Page.Locator($"h1[data-testid='{nameof(IndexPage.Elements.HomeHeadingTooltip)}']");
         await heading.WaitForAsync();
 
-        string titleColor = await heading.EvaluateAsync<string>("element => window.getComputedStyle(element).color");
+        var titleColor = await heading.EvaluateAsync<string>("element => window.getComputedStyle(element).color");
         titleColor.ShouldBe("rgb(15, 23, 42)");
         await Expect(Page.Locator(".church-hero, .church-illustration, .lovejoy-quote")).ToHaveCountAsync(0);
         await Expect(Page.GetByTestId(nameof(IndexPage.Elements.SignInPrompt))).ToBeVisibleAsync();

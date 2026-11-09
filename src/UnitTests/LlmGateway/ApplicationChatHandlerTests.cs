@@ -1,10 +1,10 @@
-using System.ClientModel;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UnitTests.Core.Queries;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
+using System.ClientModel;
 
 namespace ClearMeasure.Bootcamp.UnitTests.LlmGateway;
 

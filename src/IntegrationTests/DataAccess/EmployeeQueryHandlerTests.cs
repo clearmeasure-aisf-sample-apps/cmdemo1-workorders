@@ -119,7 +119,7 @@ public class EmployeeQueryHandlerTests
     [Test]
     public async Task Should_NotMutateEmployeeRecords_When_LoginPageLoadsEmployees()
     {
-        string userName = TestData.UserName("loginuser");
+        var userName = TestData.UserName("loginuser");
         var employee = new Employee(userName, "Mixed", "CaseName", "login@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -141,10 +141,10 @@ public class EmployeeQueryHandlerTests
     [Test]
     public async Task ShouldPageTheDirectory_InAConstantNumberOfQueries()
     {
-        string userName = TestData.UserName("directory");
+        var userName = TestData.UserName("directory");
         var employee = new Employee(userName, "Paged", "AaaDirectory", TestData.Email(userName));
         employee.AddRole(new Role($"Role_{TestData.Tag()}", true, false));
-        string secondName = TestData.UserName("directory");
+        var secondName = TestData.UserName("directory");
         var second = new Employee(secondName, "Also", "AaaDirectory", TestData.Email(secondName));
 
         await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
@@ -154,19 +154,19 @@ public class EmployeeQueryHandlerTests
 
         context.Commands.Reset();
         var one = await handler.Handle(new EmployeeGetAllQuery { Take = 1 });
-        int oneCommands = context.Commands.ReaderCommands;
+        var oneCommands = context.Commands.ReaderCommands;
 
         context.Commands.Reset();
         var page = await handler.Handle(new EmployeeGetAllQuery { Take = 30 });
-        int pageCommands = context.Commands.ReaderCommands;
-        string pageSql = string.Join(Environment.NewLine, context.Commands.Texts);
+        var pageCommands = context.Commands.ReaderCommands;
+        var pageSql = string.Join(Environment.NewLine, context.Commands.Texts);
 
         one.Length.ShouldBe(1);
         page.Length.ShouldBeGreaterThanOrEqualTo(2);
         page.Length.ShouldBeLessThanOrEqualTo(30);
         oneCommands.ShouldBe(pageCommands);
         oneCommands.ShouldBe(2, pageSql);
-        bool bounded = pageSql.Contains("TOP", StringComparison.Ordinal)
+        var bounded = pageSql.Contains("TOP", StringComparison.Ordinal)
             || pageSql.Contains("FETCH", StringComparison.Ordinal)
             || pageSql.Contains("LIMIT", StringComparison.Ordinal);
         bounded.ShouldBeTrue(pageSql);

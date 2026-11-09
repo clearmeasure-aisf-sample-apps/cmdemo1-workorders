@@ -63,7 +63,7 @@ public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        string? name = LoopHelpers.GetInvocationName(invocation);
+        var name = LoopHelpers.GetInvocationName(invocation);
         if (name is null || !SyncMaterializers.Contains(name))
         {
             return;
@@ -74,7 +74,7 @@ public sealed class EfMaterializerInLoopAnalyzer : DiagnosticAnalyzer
 
     private static void ReportIfMaterializer(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation)
     {
-        string? name = LoopHelpers.GetInvocationName(invocation);
+        var name = LoopHelpers.GetInvocationName(invocation);
         if (name is null || !Materializers.Contains(name) || !IsQueryableReceiver(context, invocation))
         {
             return;

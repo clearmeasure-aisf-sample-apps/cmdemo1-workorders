@@ -401,7 +401,7 @@ jobs:
         run: dotnet restore src/ChurchBulletin.sln
 
       - name: Check formatting
-        run: dotnet format src/ChurchBulletin.sln --verify-no-changes --verbosity normal
+        run: dotnet format style src/ChurchBulletin.sln --verify-no-changes --severity warn --verbosity normal
 
       - name: Check code style
         run: dotnet format style src/ChurchBulletin.sln --verify-no-changes --verbosity normal

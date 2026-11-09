@@ -128,7 +128,7 @@ public class PageLoadBudgetTests : AcceptanceTestBase
 
     private static void AssertWithin(PageLoadMeasurement measurement, int minimumCalls, int maximumCalls)
     {
-        string detail = measurement.Describe();
+        var detail = measurement.Describe();
         var verdict = PageLoadBudgetRules.Evaluate(
             measurement.Requests,
             ServerFixture.ApplicationBaseUrl,
@@ -142,9 +142,9 @@ public class PageLoadBudgetTests : AcceptanceTestBase
     private void SeedFulfillers(int count)
     {
         using var context = TestHost.NewDbContext();
-        for (int index = 0; index < count; index++)
+        for (var index = 0; index < count; index++)
         {
-            string userName = $"fulfiller_{TestTag}_{index}";
+            var userName = $"fulfiller_{TestTag}_{index}";
             var employee = new Employee(userName, "Fulfill", index.ToString(), $"{userName}@example.com");
             employee.AddRole(new Role($"worker_{TestTag}_{index}", false, true));
             context.Add(employee);

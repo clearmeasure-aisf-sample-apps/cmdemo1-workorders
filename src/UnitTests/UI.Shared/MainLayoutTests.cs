@@ -10,13 +10,13 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared;
 
@@ -279,7 +279,7 @@ public class MainLayoutTests
         footer.TagName.ShouldBe("FOOTER");
         layout.FindAll("#app-navigation-rail footer").Count.ShouldBe(0);
 
-        string yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+        var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
         footer.TextContent.ShouldContain(yearText);
         footer.TextContent.ShouldContain("ClearMeasure Labs");
 
@@ -297,7 +297,7 @@ public class MainLayoutTests
         var layout = component.FindComponent<MainLayout>();
 
         var footer = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}']");
-        string yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+        var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
         footer.TextContent.ShouldContain(yearText);
         footer.TextContent.ShouldContain("ClearMeasure Labs");
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}'] .site-footer-link").GetAttribute("href")!.TrimEnd('/').ShouldBe("https://clearmeasure.com");
@@ -358,7 +358,7 @@ public class MainLayoutTests
 
         var link = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}'] .site-footer-link");
         link.GetAttribute("target").ShouldBe("_blank");
-        string? rel = link.GetAttribute("rel");
+        var rel = link.GetAttribute("rel");
         rel.ShouldNotBeNull();
         rel.ShouldContain("noopener");
         rel.ShouldContain("noreferrer");
@@ -560,7 +560,7 @@ public class MainLayoutTests
 
         var anchor = layout.Find($"[data-testid='{nameof(MainLayout.Elements.GitSha)}']");
         anchor.TagName.ShouldBe("A");
-        string? href = anchor.GetAttribute("href");
+        var href = anchor.GetAttribute("href");
         href.ShouldNotBeNull();
         href.ShouldContain("github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/abc1234def5678901");
     }
@@ -863,10 +863,7 @@ public class MainLayoutTests
         public async ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && args?[0] is string path && path.EndsWith("mainLayoutNav.js"))
-            {
                 return (TValue)await Import.Task;
-            }
-
             return default!;
         }
 
@@ -957,11 +954,9 @@ public class MainLayoutTests
             }
 
             if (stub is null)
-            {
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
-            }
 
-            string json = JsonSerializer.Serialize(stub, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            var json = JsonSerializer.Serialize(stub, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")

@@ -18,7 +18,7 @@ public static class CrapGateThreshold
     /// </summary>
     public static int ReadProductionThreshold()
     {
-        string path = FindRepoFile(RelativeConfigPath);
+        var path = FindRepoFile(RelativeConfigPath);
         using var doc = JsonDocument.Parse(File.ReadAllText(path));
         if (!doc.RootElement.TryGetProperty("productionThreshold", out var property)
             || property.ValueKind != JsonValueKind.Number)
@@ -35,7 +35,7 @@ public static class CrapGateThreshold
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName, relativePath);
+            var candidate = Path.Combine(dir.FullName, relativePath);
             if (File.Exists(candidate))
             {
                 return candidate;

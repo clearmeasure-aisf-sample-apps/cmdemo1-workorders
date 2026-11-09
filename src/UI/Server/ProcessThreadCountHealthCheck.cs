@@ -10,7 +10,7 @@ public class ProcessThreadCountHealthCheck(ILogger<ProcessThreadCountHealthCheck
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = new())
     {
-        int threadCount = Process.GetCurrentProcess().Threads.Count;
+        var threadCount = Process.GetCurrentProcess().Threads.Count;
         logger.LogDebug("Process thread count: {ThreadCount}", threadCount);
 
         var data = new Dictionary<string, object> { ["threadCount"] = threadCount };

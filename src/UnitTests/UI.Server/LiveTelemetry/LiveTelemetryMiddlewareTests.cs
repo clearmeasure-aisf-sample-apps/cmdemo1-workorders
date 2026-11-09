@@ -42,7 +42,7 @@ public class LiveTelemetryMiddlewareTests
     {
         var clock = new StubTimeProvider(Start);
         var counters = new LiveTelemetryCounters(clock);
-        int inFlightDuringRequest = -1;
+        var inFlightDuringRequest = -1;
         var middleware = new LiveTelemetryMiddleware(_ =>
         {
             inFlightDuringRequest = counters.Snapshot().Process.InFlight;

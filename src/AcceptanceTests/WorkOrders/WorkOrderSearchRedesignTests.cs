@@ -193,7 +193,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     public async Task ShouldPageThroughResults()
     {
         var creator = await SeedCreatorAsync("pages");
-        for (int i = 0; i < 30; i++)
+        for (var i = 0; i < 30; i++)
         {
             await SeedOrderAsync(creator, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
         }
@@ -352,7 +352,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         foreach (var status in WorkOrderStatus.GetAllItems())
         {
             seeded[status] = [];
-            for (int i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
                 seeded[status].Add((await SeedOrderAsync(creator, WorkOrderPriority.Medium, status, null)).Number!);
             }
@@ -405,7 +405,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(Rows()).ToHaveCountAsync(1);
         await Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}").FocusAsync();
 
-        string boardButton = $"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']";
+        var boardButton = $"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']";
         await TabUntilFocusedAsync(boardButton);
         (await FocusedOutlineWidthAsync()).ShouldBeGreaterThan(0);
         await Page.Keyboard.PressAsync("Enter");
@@ -424,7 +424,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
 
     private async Task TabUntilFocusedAsync(string selector, int maxTabs = 60)
     {
-        for (int i = 0; i < maxTabs; i++)
+        for (var i = 0; i < maxTabs; i++)
         {
             if (await Page.EvaluateAsync<bool>("s => document.activeElement?.matches(s) === true", selector))
             {
@@ -454,7 +454,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
             await Expect(Page.Locator(".modern-sidebar.open")).ToHaveCountAsync(0);
         }
 
-        foreach (string theme in new[] { "light", "dark" })
+        foreach (var theme in new[] { "light", "dark" })
         {
             await EnsureThemeAsync(theme);
             await ExpectPhoneHeaderCollapsedAsync();
@@ -481,7 +481,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
 
     private async Task EnsureThemeAsync(string theme)
     {
-        string current = await Page.EvaluateAsync<string>(
+        var current = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme') ?? 'light'");
         if (current == theme)
         {
@@ -497,7 +497,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     private async Task ExpectPhoneHeaderCollapsedAsync()
     {
         await Expect(Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchToggle))).ToBeVisibleAsync();
-        double[] metrics = await PhoneHeaderMetricsAsync();
+        var metrics = await PhoneHeaderMetricsAsync();
         metrics[0].ShouldBeLessThanOrEqualTo(96);
         metrics[1].ShouldBeLessThan(4);
         metrics[2].ShouldBeLessThanOrEqualTo(48);
@@ -506,7 +506,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
 
     private async Task ExpectPhoneHeaderIsOneRowAsync()
     {
-        double[] metrics = await PhoneHeaderMetricsAsync();
+        var metrics = await PhoneHeaderMetricsAsync();
         metrics[0].ShouldBeLessThanOrEqualTo(96);
         metrics[1].ShouldBeLessThan(4);
     }

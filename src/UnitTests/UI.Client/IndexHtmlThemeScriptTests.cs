@@ -10,7 +10,7 @@ public class IndexHtmlThemeScriptTests
     [SetUp]
     public void SetUp()
     {
-        string indexHtml = Path.GetFullPath(Path.Combine(
+        var indexHtml = Path.GetFullPath(Path.Combine(
             TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI", "Client", "wwwroot", "index.html"));
 

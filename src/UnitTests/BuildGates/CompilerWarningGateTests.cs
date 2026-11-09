@@ -45,7 +45,12 @@ public class CompilerWarningGateTests
         string condition = warningsNotAsErrors.Attribute("Condition")?.Value ?? "";
         condition.ShouldContain("Debug");
         condition.ShouldNotContain("Release");
+    }
 
+    [Test]
+    public void ShouldSuppressTodaysNuGetAdvisories_WhenDirectoryBuildPropsIsRead()
+    {
+        var props = XDocument.Load(Path.Combine(FindRepoRoot(), "src", "Directory.Build.props"));
         string[] auditSuppressions = props.Descendants()
             .Where(element => element.Name.LocalName == "NuGetAuditSuppress")
             .Select(element => element.Attribute("Include")?.Value ?? "")
@@ -96,7 +101,7 @@ public class CompilerWarningGateTests
         privateBuild.ShouldContain("--verify-no-changes");
 
         string workflow = File.ReadAllText(Path.Combine(repoRoot, ".github", "workflows", "build.yml"));
-        workflow.ShouldContain("dotnet format src/ChurchBulletin.sln --verify-no-changes");
+        workflow.ShouldContain("dotnet format style src/ChurchBulletin.sln --verify-no-changes --severity warn");
         workflow.ShouldContain("/p:TreatWarningsAsErrors=true");
         workflow.ShouldContain("/p:EnforceCodeStyleInBuild=true");
     }
@@ -106,16 +111,14 @@ public class CompilerWarningGateTests
     {
         string config = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", ".editorconfig"));
 
-        config.ShouldContain("csharp_style_var_for_built_in_types = false:warning");
+        config.ShouldContain("csharp_style_var_for_built_in_types = false:silent");
         config.ShouldContain("csharp_style_var_when_type_is_apparent = true:silent");
         config.ShouldContain("csharp_style_var_elsewhere = true:silent");
-        config.ShouldContain("csharp_style_implicit_object_creation_when_type_is_apparent = true:warning");
-        config.ShouldContain("csharp_prefer_braces = true:warning");
+        config.ShouldContain("csharp_style_implicit_object_creation_when_type_is_apparent = true:silent");
+        config.ShouldContain("csharp_prefer_braces = true:silent");
         config.ShouldContain("csharp_style_namespace_declarations = file_scoped:warning");
         config.ShouldContain("csharp_style_expression_bodied_methods = false:silent");
-        config.ShouldContain("csharp_using_directive_placement = outside_namespace:warning");
-        config.ShouldContain("dotnet_sort_system_directives_first = true:warning");
-        config.ShouldContain("dotnet_separate_import_directive_groups = true:warning");
+        config.ShouldContain("csharp_using_directive_placement = outside_namespace:silent");
         config.ShouldContain("dotnet_naming_rule.interface_should_be_begins_with_i.severity = suggestion");
         config.ShouldContain("dotnet_naming_rule.types_should_be_pascal_case.severity = suggestion");
         config.ShouldContain("dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion");

@@ -1,12 +1,12 @@
-using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.Events;
-using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Server.Controllers;
 using MediatR;
 using Shouldly;
+using System.Text.Json;
+using ClearMeasure.Bootcamp.Core.Messaging;
+using ClearMeasure.Bootcamp.Core.Queries;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 
@@ -23,7 +23,7 @@ public class SingleApiControllerTests
         var request = new EmployeeGetAllQuery();
         var message = new WebServiceMessage(request);
 
-        string json = await controller.Post(message);
+        var json = await controller.Post(message);
 
         var responseMessage = JsonSerializer.Deserialize<WebServiceMessage>(json)!;
         var result = (Employee[])responseMessage.GetBodyObject();
@@ -39,7 +39,7 @@ public class SingleApiControllerTests
         var loginEvent = new UserLoggedInEvent("testuser");
         var message = new WebServiceMessage(loginEvent);
 
-        string json = await controller.Post(message);
+        var json = await controller.Post(message);
 
         stubBus.LastPublishedNotification.ShouldBeOfType<UserLoggedInEvent>();
         ((UserLoggedInEvent)stubBus.LastPublishedNotification!).UserName.ShouldBe("testuser");
@@ -69,7 +69,7 @@ public class SingleApiControllerTests
         var loginEvent = new UserLoggedInEvent("testuser");
         var message = new WebServiceMessage(loginEvent);
 
-        string json = await controller.Post(message);
+        var json = await controller.Post(message);
 
         var responseMessage = JsonSerializer.Deserialize<WebServiceMessage>(json)!;
         responseMessage.Body.ShouldBeEmpty();

@@ -17,7 +17,7 @@ public class FeatureDisabledToolFilterTests
         var result = await handler(null!, CancellationToken.None);
 
         result.IsError.ShouldBe(true);
-        string text = result.Content.ShouldHaveSingleItem().ShouldBeOfType<TextContentBlock>().Text;
+        var text = result.Content.ShouldHaveSingleItem().ShouldBeOfType<TextContentBlock>().Text;
         text.ShouldContain(FeatureFlagNames.VendorManagement);
         text.ShouldContain("CreateVendorCommand");
     }

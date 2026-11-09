@@ -50,7 +50,7 @@ public class WorkOrderDescriptionCharCountTests : AcceptanceTestBase
         var descriptionField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Description));
         await Expect(descriptionField).ToBeEditableAsync(new LocatorAssertionsToBeEditableOptions { Timeout = 30_000 });
 
-        string fullText = new('A', WorkOrder.DescriptionMaxLength);
+        var fullText = new string('A', WorkOrder.DescriptionMaxLength);
         await descriptionField.FillAsync(fullText);
         await descriptionField.BlurAsync();
 
@@ -59,7 +59,7 @@ public class WorkOrderDescriptionCharCountTests : AcceptanceTestBase
         await Expect(caption).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("text-danger"));
 
         // Verify maxlength prevents further input
-        int valueLength = await descriptionField.EvaluateAsync<int>("el => el.value.length");
+        var valueLength = await descriptionField.EvaluateAsync<int>("el => el.value.length");
         valueLength.ShouldBe(WorkOrder.DescriptionMaxLength);
     }
 }

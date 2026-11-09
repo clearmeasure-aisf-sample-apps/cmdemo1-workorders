@@ -47,8 +47,8 @@ public static class CrapGateEvaluator
 
     private static bool TryCreateViolation(JsonElement method, int threshold, out CrapMethodViolation violation)
     {
-        string? filePath = ReadString(method, "filePath");
-        double crap = ReadDouble(method, "crap");
+        var filePath = ReadString(method, "filePath");
+        var crap = ReadDouble(method, "crap");
         if (crap <= threshold || !CrapProductionScope.IsProductionFile(filePath))
         {
             violation = null!;

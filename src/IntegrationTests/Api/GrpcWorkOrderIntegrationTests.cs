@@ -2,13 +2,13 @@ using System.Net;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UI.Server.Grpc;
+using DomainWorkOrder = ClearMeasure.Bootcamp.Core.Model.WorkOrder;
 using ClearMeasure.Bootcamp.UnitTests.Api;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
-using DomainWorkOrder = ClearMeasure.Bootcamp.Core.Model.WorkOrder;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 

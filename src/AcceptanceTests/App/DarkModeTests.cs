@@ -17,7 +17,7 @@ public class DarkModeTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(Settings.Elements.DarkModeSwitch)))
             .ToHaveAttributeAsync("role", "switch");
 
-        string initial = await Page.EvaluateAsync<string>(
+        var initial = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
         initial.ShouldNotBeNull();
 
@@ -26,18 +26,18 @@ public class DarkModeTests : AcceptanceTestBase
             "(t) => document.documentElement.getAttribute('data-theme') !== t",
             initial);
 
-        string afterToggle = await Page.EvaluateAsync<string>(
+        var afterToggle = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
         afterToggle.ShouldNotBe(initial);
 
-        string bsTheme = await Page.EvaluateAsync<string>(
+        var bsTheme = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-bs-theme')");
         bsTheme.ShouldBe(afterToggle);
 
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
 
-        string onSearch = await Page.EvaluateAsync<string>(
+        var onSearch = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
         onSearch.ShouldBe(afterToggle);
     }
@@ -52,10 +52,7 @@ public class DarkModeTests : AcceptanceTestBase
         await darkSwitch.WaitForAsync();
 
         if (await darkSwitch.IsCheckedAsync())
-        {
             await Click(nameof(Settings.Elements.DarkModeSwitch));
-        }
-
         await Page.WaitForFunctionAsync(
             "() => document.documentElement.getAttribute('data-theme') === 'light'");
 
@@ -63,13 +60,13 @@ public class DarkModeTests : AcceptanceTestBase
         await Page.WaitForFunctionAsync(
             "() => document.documentElement.getAttribute('data-theme') === 'dark'");
 
-        string stored = await Page.EvaluateAsync<string>(
+        var stored = await Page.EvaluateAsync<string>(
             "() => localStorage.getItem('churchbulletin-theme')");
         stored.ShouldBe("dark");
 
         await Page.ReloadAsync();
 
-        string afterReload = await Page.EvaluateAsync<string>(
+        var afterReload = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
         afterReload.ShouldBe("dark");
     }
@@ -81,7 +78,7 @@ public class DarkModeTests : AcceptanceTestBase
 
         await Page.GetByTestId(nameof(MainLayout.Elements.DarkModeToggle)).WaitForAsync();
 
-        string initial = await Page.EvaluateAsync<string>(
+        var initial = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme') ?? 'light'");
 
         await Page.GetByTestId(nameof(MainLayout.Elements.DarkModeToggle)).ClickAsync();
@@ -89,13 +86,13 @@ public class DarkModeTests : AcceptanceTestBase
             "(t) => document.documentElement.getAttribute('data-theme') !== t",
             initial);
 
-        string afterToggle = await Page.EvaluateAsync<string>(
+        var afterToggle = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
         afterToggle.ShouldNotBe(initial);
 
         await Page.ReloadAsync();
 
-        string afterReload = await Page.EvaluateAsync<string>(
+        var afterReload = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
         afterReload.ShouldBe(afterToggle);
     }

@@ -2,8 +2,8 @@ using System.Net;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Messaging;
-using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Shared;
+using ClearMeasure.Bootcamp.UI.Client;
 using Microsoft.Extensions.Configuration;
 using Shouldly;
 

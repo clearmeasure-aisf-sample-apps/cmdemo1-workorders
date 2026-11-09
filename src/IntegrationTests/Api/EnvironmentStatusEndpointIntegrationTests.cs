@@ -70,7 +70,7 @@ public class EnvironmentStatusEndpointIntegrationTests
     public async Task Should_ExposeEnvVarNamesWithoutValues_When_GetEnvironmentStatus()
     {
         var response = await _client!.GetAsync("/api/status/environment");
-        string body = await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         body.ShouldNotContain(SecretValue);
 
@@ -133,7 +133,7 @@ public class EnvironmentStatusEndpointIntegrationTests
 
         var ok = await withKey.GetAsync("/api/status/environment");
         ok.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string? mediaType = ok.Content.Headers.ContentType?.MediaType;
+        var mediaType = ok.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 
@@ -170,7 +170,7 @@ public class EnvironmentStatusEndpointIntegrationTests
     private static async Task AssertOkJsonShape(HttpResponseMessage response)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 

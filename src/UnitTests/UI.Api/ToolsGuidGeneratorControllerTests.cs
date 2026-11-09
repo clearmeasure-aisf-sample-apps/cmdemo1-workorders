@@ -15,7 +15,7 @@ public class ToolsGuidGeneratorControllerTests
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         ok.StatusCode.ShouldBe(200);
-        string[]? guids = ok.Value.ShouldBeAssignableTo<string[]>();
+        var guids = ok.Value.ShouldBeAssignableTo<string[]>();
         guids.ShouldNotBeNull();
         guids.Length.ShouldBe(1);
         Guid.TryParseExact(guids[0], "D", out _).ShouldBeTrue();
@@ -28,10 +28,10 @@ public class ToolsGuidGeneratorControllerTests
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         ok.StatusCode.ShouldBe(200);
-        string[]? guids = ok.Value.ShouldBeAssignableTo<string[]>();
+        var guids = ok.Value.ShouldBeAssignableTo<string[]>();
         guids.ShouldNotBeNull();
         guids.Length.ShouldBe(5);
-        foreach (string guid in guids)
+        foreach (var guid in guids)
         {
             Guid.TryParseExact(guid, "D", out _).ShouldBeTrue();
         }
@@ -46,7 +46,7 @@ public class ToolsGuidGeneratorControllerTests
 
         var ok = result.ShouldBeOfType<OkObjectResult>();
         ok.StatusCode.ShouldBe(200);
-        string[]? guids = ok.Value.ShouldBeAssignableTo<string[]>();
+        var guids = ok.Value.ShouldBeAssignableTo<string[]>();
         guids.ShouldNotBeNull();
         guids.Length.ShouldBe(100);
     }

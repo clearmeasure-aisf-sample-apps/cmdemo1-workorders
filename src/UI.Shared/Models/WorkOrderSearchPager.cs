@@ -30,10 +30,10 @@ public static class WorkOrderSearchPager
     /// <summary>The requested page, clamped to the available pages.</summary>
     public static SearchResultPage GetPage(IReadOnlyList<WorkOrderSearchResultRow> rows, int page)
     {
-        int pageCount = Math.Max(1, (int)Math.Ceiling(rows.Count / (double)PageSize));
-        int current = Math.Clamp(page, 1, pageCount);
+        var pageCount = Math.Max(1, (int)Math.Ceiling(rows.Count / (double)PageSize));
+        var current = Math.Clamp(page, 1, pageCount);
         var slice = rows.Skip((current - 1) * PageSize).Take(PageSize).ToArray();
-        int first = slice.Length == 0 ? 0 : ((current - 1) * PageSize) + 1;
+        var first = slice.Length == 0 ? 0 : ((current - 1) * PageSize) + 1;
         return new SearchResultPage(slice, current, pageCount, first, first + slice.Length - Math.Sign(slice.Length), rows.Count);
     }
 }

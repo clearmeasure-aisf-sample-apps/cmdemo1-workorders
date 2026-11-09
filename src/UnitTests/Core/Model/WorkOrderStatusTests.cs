@@ -64,7 +64,7 @@ public class WorkOrderStatusTests
     public void ShouldSerializeAndDeserializeWithJsonUsingKey()
     {
         var original = WorkOrderStatus.Complete;
-        string json = JsonSerializer.Serialize(original);
+        var json = JsonSerializer.Serialize(original);
         var deserialized = JsonSerializer.Deserialize<WorkOrderStatus>(json);
 
         Assert.That(deserialized, Is.EqualTo(original));
@@ -83,7 +83,7 @@ public class WorkOrderStatusTests
             Number = "123"
         };
 
-        string json = JsonSerializer.Serialize(workOrder);
+        var json = JsonSerializer.Serialize(workOrder);
         var deserialized = JsonSerializer.Deserialize<WorkOrder>(json);
 
         Assert.That(deserialized!.Status, Is.EqualTo(workOrder.Status));
@@ -128,7 +128,7 @@ public class WorkOrderStatusTests
     public void WhenComparingRoundTrippedJsonStatusShouldReturnCanonicalInstanceEqualByValue()
     {
         var original = WorkOrderStatus.Complete;
-        string json = JsonSerializer.Serialize(original);
+        var json = JsonSerializer.Serialize(original);
         var deserialized = JsonSerializer.Deserialize<WorkOrderStatus>(json);
 
         ReferenceEquals(deserialized, original).ShouldBeTrue();

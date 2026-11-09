@@ -15,7 +15,7 @@ internal static class WorkOrderSpeechHelper
             Lang = preferredLanguage
         };
 
-        string langPrefix = preferredLanguage.Split('-')[0];
+        var langPrefix = preferredLanguage.Split('-')[0];
         var matchingVoice = voices.FirstOrDefault(v =>
             v.Lang.StartsWith(langPrefix, StringComparison.OrdinalIgnoreCase));
         if (matchingVoice != null)

@@ -16,9 +16,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldListAllWorkOrders()
     {
-        string employeeUserName = TestData.UserName("user");
-        string number1 = TestData.Number("W");
-        string number2 = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var number1 = TestData.Number("W");
+        var number2 = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var order1 = new WorkOrder { Creator = employee, Number = number1, Title = "Fix sink" };
@@ -31,7 +31,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ListWorkOrders(bus);
+        var result = await WorkOrderTools.ListWorkOrders(bus);
 
         result.ShouldContain(number1);
         result.ShouldContain(number2);
@@ -42,9 +42,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldFilterWorkOrdersByStatus()
     {
-        string employeeUserName = TestData.UserName("user");
-        string number1 = TestData.Number("W");
-        string number2 = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var number1 = TestData.Number("W");
+        var number2 = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var draftOrder = new WorkOrder { Creator = employee, Number = number1, Title = "Draft order", Status = WorkOrderStatus.Draft };
@@ -57,7 +57,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ListWorkOrders(bus, "Assigned");
+        var result = await WorkOrderTools.ListWorkOrders(bus, "Assigned");
 
         result.ShouldContain(number2);
         result.ShouldNotContain(number1);
@@ -69,7 +69,7 @@ public class McpWorkOrderToolTests
         var seed = await SeedFilterWorkOrders();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        string result = await WorkOrderTools.ListWorkOrders(bus, creatorUsername: seed.CreatorUserName);
+        var result = await WorkOrderTools.ListWorkOrders(bus, creatorUsername: seed.CreatorUserName);
 
         ExtractNumbers(result).ShouldBeSet(
             seed["LJDRAFT"],
@@ -84,7 +84,7 @@ public class McpWorkOrderToolTests
         var seed = await SeedFilterWorkOrders();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        string result = await WorkOrderTools.ListWorkOrders(bus, assigneeUsername: seed.AssigneeUserName);
+        var result = await WorkOrderTools.ListWorkOrders(bus, assigneeUsername: seed.AssigneeUserName);
 
         ExtractNumbers(result).ShouldBeSet(
             seed["LJWA"],
@@ -98,7 +98,7 @@ public class McpWorkOrderToolTests
         var seed = await SeedFilterWorkOrders();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        string result = await WorkOrderTools.ListWorkOrders(
+        var result = await WorkOrderTools.ListWorkOrders(
             bus,
             status: "InProgress",
             assigneeUsername: seed.AssigneeUserName);
@@ -114,7 +114,7 @@ public class McpWorkOrderToolTests
         var seed = await SeedFilterWorkOrders();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        string result = await WorkOrderTools.ListWorkOrders(
+        var result = await WorkOrderTools.ListWorkOrders(
             bus,
             status: "Draft",
             creatorUsername: seed.CreatorUserName);
@@ -128,7 +128,7 @@ public class McpWorkOrderToolTests
         var seed = await SeedFilterWorkOrders();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        string result = await WorkOrderTools.ListWorkOrders(
+        var result = await WorkOrderTools.ListWorkOrders(
             bus,
             status: "InProgress",
             creatorUsername: seed.CreatorUserName,
@@ -143,8 +143,8 @@ public class McpWorkOrderToolTests
         var seed = await SeedFilterWorkOrders();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        string[] omitted = ExtractNumbers(await WorkOrderTools.ListWorkOrders(bus));
-        string[] blank = ExtractNumbers(await WorkOrderTools.ListWorkOrders(bus, " ", string.Empty, "   "));
+        var omitted = ExtractNumbers(await WorkOrderTools.ListWorkOrders(bus));
+        var blank = ExtractNumbers(await WorkOrderTools.ListWorkOrders(bus, " ", string.Empty, "   "));
 
         omitted.Where(seed.AllNumbers.Contains).ShouldBeSet(seed.AllNumbers);
         blank.ShouldBeSet(omitted);
@@ -156,13 +156,13 @@ public class McpWorkOrderToolTests
         var seed = await SeedFilterWorkOrders();
         var bus = TestHost.GetRequiredService<IBus>();
         await using var context = TestHost.GetRequiredService<DbContext>();
-        int employeeCount = await context.Set<Employee>().CountAsync();
+        var employeeCount = await context.Set<Employee>().CountAsync();
 
-        string unknownCreator = await WorkOrderTools.ListWorkOrders(
+        var unknownCreator = await WorkOrderTools.ListWorkOrders(
             bus,
             status: "Assigned",
             creatorUsername: TestData.UserName("not-a-person"));
-        string unknownAssignee = await WorkOrderTools.ListWorkOrders(
+        var unknownAssignee = await WorkOrderTools.ListWorkOrders(
             bus,
             status: "Draft",
             creatorUsername: seed.CreatorUserName,
@@ -186,8 +186,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldGetWorkOrderByNumberWithCompleteDetailShape()
     {
-        string employeeUserName = TestData.UserName("user");
-        string workOrderNumber = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var workOrderNumber = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var createdDate = new DateTime(2026, 8, 25, 14, 30, 0, DateTimeKind.Utc);
@@ -212,7 +212,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.GetWorkOrder(bus, workOrderNumber);
+        var result = await WorkOrderTools.GetWorkOrder(bus, workOrderNumber);
 
         using var document = JsonDocument.Parse(result);
         var detail = document.RootElement;
@@ -237,8 +237,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldGetWorkOrderWithEmptyInstructionsPropertyWhenInstructionsOmitted()
     {
-        string employeeUserName = TestData.UserName("user");
-        string workOrderNumber = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var workOrderNumber = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var order = new WorkOrder
@@ -255,7 +255,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.GetWorkOrder(bus, workOrderNumber);
+        var result = await WorkOrderTools.GetWorkOrder(bus, workOrderNumber);
 
         using var document = JsonDocument.Parse(result);
         var instructions = document.RootElement.GetProperty("Instructions");
@@ -269,7 +269,7 @@ public class McpWorkOrderToolTests
     public async Task ShouldReturnNotFoundForMissingWorkOrder()
     {
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.GetWorkOrder(bus, "NONEXISTENT");
+        var result = await WorkOrderTools.GetWorkOrder(bus, "NONEXISTENT");
 
         result.ShouldBe("No work order found with number 'NONEXISTENT'.");
     }
@@ -277,8 +277,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldKeepListWorkOrderSummaryWithoutInstructions()
     {
-        string employeeUserName = TestData.UserName("user");
-        string workOrderNumber = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var workOrderNumber = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var order = new WorkOrder
@@ -295,7 +295,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ListWorkOrders(bus, creatorUsername: employeeUserName);
+        var result = await WorkOrderTools.ListWorkOrders(bus, creatorUsername: employeeUserName);
 
         using var document = JsonDocument.Parse(result);
         var summary = document.RootElement.EnumerateArray().Single();
@@ -316,7 +316,7 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldCreateDraftWorkOrder()
     {
-        string creatorUserName = TestData.UserName("creator");
+        var creatorUserName = TestData.UserName("creator");
 
         var employee = new Employee(creatorUserName, "Jane", "Smith", "jane@test.com");
 
@@ -326,7 +326,7 @@ public class McpWorkOrderToolTests
 
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string result = await WorkOrderTools.CreateWorkOrder(bus, numberGenerator, "New Work Order", "Fix the broken window", creatorUserName);
+        var result = await WorkOrderTools.CreateWorkOrder(bus, numberGenerator, "New Work Order", "Fix the broken window", creatorUserName);
 
         result.ShouldContain("New Work Order");
         result.ShouldContain("Fix the broken window");
@@ -336,11 +336,11 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldReturnErrorForMissingCreator()
     {
-        string missingUserName = TestData.UserName("missing");
+        var missingUserName = TestData.UserName("missing");
 
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string result = await WorkOrderTools.CreateWorkOrder(bus, numberGenerator, "Title", "Description", missingUserName);
+        var result = await WorkOrderTools.CreateWorkOrder(bus, numberGenerator, "Title", "Description", missingUserName);
 
         result.ShouldContain("not found");
     }
@@ -348,8 +348,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldReturnErrorForUnknownCommand()
     {
-        string employeeUserName = TestData.UserName("user");
-        string workOrderNumber = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var workOrderNumber = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var order = new WorkOrder { Creator = employee, Number = workOrderNumber, Title = "Test" };
@@ -360,7 +360,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "FakeCommand", employeeUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "FakeCommand", employeeUserName);
 
         result.ShouldContain("Unknown command");
         result.ShouldContain("Available commands");
@@ -369,8 +369,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldExecuteCancelCommand()
     {
-        string employeeUserName = TestData.UserName("user");
-        string number2 = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var number2 = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var assignedOrder = new WorkOrder { Creator = employee, Number = number2, Title = "Assigned order", Status = WorkOrderStatus.Assigned };
@@ -381,7 +381,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, number2, "AssignedToCancelledCommand", employeeUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, number2, "AssignedToCancelledCommand", employeeUserName);
 
         await using var context2 = TestHost.GetRequiredService<DbContext>();
         var wo = context2.Set<WorkOrder>().Single(w => w.Number == number2);
@@ -393,9 +393,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldExecuteShelveCommand()
     {
-        string creatorUserName = TestData.UserName("creator");
-        string assigneeUserName = TestData.UserName("gw");
-        string workOrderNumber = TestData.Number("W");
+        var creatorUserName = TestData.UserName("creator");
+        var assigneeUserName = TestData.UserName("gw");
+        var workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Timothy", "Lovejoy", "timothy@test.com");
         var assignee = new Employee(assigneeUserName, "Groundskeeper Willie", "MacDougal", "willie@test.com");
@@ -415,7 +415,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(
             bus, workOrderNumber, "InProgressToAssignedCommand", assigneeUserName, reason: "Waiting on parts");
 
         await using var context2 = TestHost.GetRequiredService<DbContext>();
@@ -430,8 +430,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldReturnErrorWhenDraftToAssignedMissingAssignee()
     {
-        string creatorUserName = TestData.UserName("creator");
-        string workOrderNumber = TestData.Number("W");
+        var creatorUserName = TestData.UserName("creator");
+        var workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
         creator.AddRole(new Role($"Manager_{TestData.Tag()}", true, false));
@@ -449,7 +449,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "DraftToAssignedCommand", creatorUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "DraftToAssignedCommand", creatorUserName);
 
         result.ShouldContain("requires an assigneeUsername");
     }
@@ -457,9 +457,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldExecuteShelveAliasCommand()
     {
-        string creatorUserName = TestData.UserName("creator");
-        string assigneeUserName = TestData.UserName("gw");
-        string workOrderNumber = TestData.Number("W");
+        var creatorUserName = TestData.UserName("creator");
+        var assigneeUserName = TestData.UserName("gw");
+        var workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Timothy", "Lovejoy", "timothy@test.com");
         var assignee = new Employee(assigneeUserName, "Groundskeeper Willie", "MacDougal", "willie@test.com");
@@ -480,7 +480,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(
             bus, workOrderNumber, "Shelve", assigneeUserName, reason: "Waiting on parts");
 
         await using var context2 = TestHost.GetRequiredService<DbContext>();
@@ -495,8 +495,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldRefuseShelveWithoutReason()
     {
-        string assigneeUserName = TestData.UserName("gw");
-        string workOrderNumber = TestData.Number("W");
+        var assigneeUserName = TestData.UserName("gw");
+        var workOrderNumber = TestData.Number("W");
         var assignee = new Employee(assigneeUserName, "Groundskeeper Willie", "MacDougal", "willie@test.com");
         var inProgressOrder = new WorkOrder
         {
@@ -513,8 +513,8 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string missing = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "Shelve", assigneeUserName);
-        string tooLong = await WorkOrderTools.ExecuteWorkOrderCommand(
+        var missing = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "Shelve", assigneeUserName);
+        var tooLong = await WorkOrderTools.ExecuteWorkOrderCommand(
             bus,
             workOrderNumber,
             "Shelve",
@@ -532,9 +532,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldExecuteDraftToAssignedThenBeginStatusChanges()
     {
-        string creatorUserName = TestData.UserName("creator");
-        string workerUserName = TestData.UserName("worker");
-        string workOrderNumber = TestData.Number("W");
+        var creatorUserName = TestData.UserName("creator");
+        var workerUserName = TestData.UserName("worker");
+        var workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
         creator.AddRole(new Role($"Manager_{TestData.Tag()}", true, false));
@@ -555,7 +555,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string assignResult = await WorkOrderTools.ExecuteWorkOrderCommand(
+        var assignResult = await WorkOrderTools.ExecuteWorkOrderCommand(
             bus,
             workOrderNumber,
             "DraftToAssignedCommand",
@@ -564,7 +564,7 @@ public class McpWorkOrderToolTests
 
         assignResult.ShouldContain("Assigned");
 
-        string beginResult = await WorkOrderTools.ExecuteWorkOrderCommand(
+        var beginResult = await WorkOrderTools.ExecuteWorkOrderCommand(
             bus,
             workOrderNumber,
             "AssignedToInProgressCommand",
@@ -582,10 +582,10 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldReturnNotFoundWhenExecutingWorkOrderCommandForMissingWorkOrder()
     {
-        string employeeUserName = TestData.UserName("user");
+        var employeeUserName = TestData.UserName("user");
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, "MISSING-WO", "AssignedToCancelledCommand", employeeUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, "MISSING-WO", "AssignedToCancelledCommand", employeeUserName);
 
         result.ShouldContain("No work order found");
     }
@@ -593,9 +593,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldReturnNotFoundWhenExecutingUserMissing()
     {
-        string employeeUserName = TestData.UserName("user");
-        string workOrderNumber = TestData.Number("W");
-        string unknownUserName = TestData.UserName("ghost");
+        var employeeUserName = TestData.UserName("user");
+        var workOrderNumber = TestData.Number("W");
+        var unknownUserName = TestData.UserName("ghost");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var order = new WorkOrder { Creator = employee, Number = workOrderNumber, Title = "Test", Status = WorkOrderStatus.Assigned };
@@ -606,7 +606,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "AssignedToCancelledCommand", unknownUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "AssignedToCancelledCommand", unknownUserName);
 
         result.ShouldContain($"Employee with username '{unknownUserName}' not found");
     }
@@ -614,9 +614,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldReturnNotFoundWhenAssigneeMissingForDraftToAssigned()
     {
-        string creatorUserName = TestData.UserName("creator");
-        string workOrderNumber = TestData.Number("W");
-        string missingAssigneeUserName = TestData.UserName("missing");
+        var creatorUserName = TestData.UserName("creator");
+        var workOrderNumber = TestData.Number("W");
+        var missingAssigneeUserName = TestData.UserName("missing");
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
         creator.AddRole(new Role($"Manager_{TestData.Tag()}", true, false));
@@ -634,7 +634,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(
             bus,
             workOrderNumber,
             "DraftToAssignedCommand",
@@ -647,8 +647,8 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldReturnErrorWhenCommandInvalidForCurrentStatus()
     {
-        string employeeUserName = TestData.UserName("user");
-        string workOrderNumber = TestData.Number("W");
+        var employeeUserName = TestData.UserName("user");
+        var workOrderNumber = TestData.Number("W");
 
         var employee = new Employee(employeeUserName, "John", "Doe", "john@test.com");
         var draftOrder = new WorkOrder { Creator = employee, Number = workOrderNumber, Title = "Draft", Status = WorkOrderStatus.Draft };
@@ -659,7 +659,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "AssignedToCancelledCommand", employeeUserName);
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(bus, workOrderNumber, "AssignedToCancelledCommand", employeeUserName);
 
         result.ShouldContain("cannot be executed");
         result.ShouldContain("Draft");
@@ -668,9 +668,9 @@ public class McpWorkOrderToolTests
     [Test]
     public async Task ShouldExecuteInProgressToCompleteCommand()
     {
-        string creatorUserName = TestData.UserName("creator");
-        string workerUserName = TestData.UserName("worker");
-        string workOrderNumber = TestData.Number("W");
+        var creatorUserName = TestData.UserName("creator");
+        var workerUserName = TestData.UserName("worker");
+        var workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Creator", "creator@test.com");
         var assignee = new Employee(workerUserName, "Sam", "Worker", "worker@test.com");
@@ -691,7 +691,7 @@ public class McpWorkOrderToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string result = await WorkOrderTools.ExecuteWorkOrderCommand(
+        var result = await WorkOrderTools.ExecuteWorkOrderCommand(
             bus,
             workOrderNumber,
             "InProgressToCompleteCommand",

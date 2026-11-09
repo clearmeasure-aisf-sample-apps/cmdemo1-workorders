@@ -25,7 +25,7 @@ internal static class McpEndpointResolver
                 "Cannot determine server address for MCP loopback connection");
         }
 
-        string address = ToClientReachableAddress(SelectPreferredAddress(addresses));
+        var address = ToClientReachableAddress(SelectPreferredAddress(addresses));
         return address.TrimEnd('/') + "/mcp";
     }
 
@@ -53,7 +53,7 @@ internal static class McpEndpointResolver
 
         // IPv4 loopback for both: a socket bound to [::] is dual-stack and accepts IPv4, while a container
         // host may have no IPv6 loopback at all (Azure Container Apps: "Cannot assign requested address ([::1]:8080)").
-        string loopbackHost = IPAddress.Loopback.ToString();
+        var loopbackHost = IPAddress.Loopback.ToString();
 
         var builder = new UriBuilder(uri) { Host = loopbackHost };
         return builder.Uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
@@ -62,17 +62,17 @@ internal static class McpEndpointResolver
     private static string RewriteUnparseableWildcard(string address)
     {
         // Kestrel may advertise http://+:port or http://*:port, which Uri rejects.
-        foreach (string token in new[] { "://+:", "://*:" })
+        foreach (var token in new[] { "://+:", "://*:" })
         {
-            int index = address.IndexOf(token, StringComparison.OrdinalIgnoreCase);
+            var index = address.IndexOf(token, StringComparison.OrdinalIgnoreCase);
             if (index < 0)
             {
                 continue;
             }
 
-            string scheme = address[..index];
-            string portAndRest = address[(index + token.Length)..].TrimEnd('/');
-            string port = portAndRest.Split('/', 2)[0];
+            var scheme = address[..index];
+            var portAndRest = address[(index + token.Length)..].TrimEnd('/');
+            var port = portAndRest.Split('/', 2)[0];
             if (int.TryParse(port, out _))
             {
                 return $"{scheme}://{IPAddress.Loopback}:{port}";

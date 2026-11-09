@@ -12,7 +12,7 @@ public class UpdateDatabaseCommand : AbstractDatabaseCommand
 {
     protected override int ExecuteInternal(CommandContext context, DatabaseOptions options, string connectionString, CancellationToken cancellationToken)
     {
-        string scriptDir = Path.Join(GetScriptDirectory(options), "Update");
+        var scriptDir = Path.Join( GetScriptDirectory(options), "Update");
         var upgradeEngine = DeployChanges.To
             .SqlDatabase(connectionString)
             .WithScriptsFromFileSystem(scriptDir)

@@ -233,7 +233,7 @@ public class SlaHealthCardTests
         await Task.Delay(100);
 
         var root = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']");
-        string? className = root.GetAttribute("class");
+        var className = root.GetAttribute("class");
         className.ShouldNotBeNull();
         className.ShouldContain("sla-health-card--loaded");
         className.ShouldNotContain("sla-health-card--empty");
@@ -253,7 +253,7 @@ public class SlaHealthCardTests
         await Task.Delay(100);
 
         var root = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']");
-        string? className = root.GetAttribute("class");
+        var className = root.GetAttribute("class");
         className.ShouldNotBeNull();
         className.ShouldContain("sla-health-card--empty");
         className.ShouldNotContain("sla-health-card--loaded");
@@ -264,11 +264,11 @@ public class SlaHealthCardTests
     [Test]
     public void ShouldStyleCardWithSidebarTokens_InsteadOfSuccessFill()
     {
-        string path = Path.GetFullPath(Path.Combine(
+        var path = Path.GetFullPath(Path.Combine(
             NUnit.Framework.TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI.Shared", "Components", "SlaHealthCard.razor.css"));
         File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
-        string css = File.ReadAllText(path);
+        var css = File.ReadAllText(path);
 
         css.ShouldContain(".sla-health-card--empty");
         css.ShouldContain("color: var(--sidebar-muted)");

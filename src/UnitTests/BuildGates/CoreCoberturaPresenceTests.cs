@@ -55,8 +55,8 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void CoverletRunSettings_WhenRead_IncludesBootcampAndExcludesTests()
     {
-        string path = FindRepoFile("coverlet.runsettings");
-        string xml = File.ReadAllText(path);
+        var path = FindRepoFile("coverlet.runsettings");
+        var xml = File.ReadAllText(path);
 
         xml.ShouldContain("<Include>[ClearMeasure.Bootcamp.*]*,[Worker]*,[ChurchBulletin.ServiceDefaults]*</Include>");
         xml.ShouldContain("UnitTests");
@@ -68,8 +68,8 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void BuildScript_WhenRead_PassesCoverletRunSettingsToUnitAndIntegration()
     {
-        string path = FindRepoFile("build.ps1");
-        string source = File.ReadAllText(path);
+        var path = FindRepoFile("build.ps1");
+        var source = File.ReadAllText(path);
 
         source.ShouldContain("coverlet.runsettings");
         source.ShouldContain("--settings:");
@@ -79,9 +79,9 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void AssertCoreCoberturaScript_WhenRead_FailsWhenCoreMissing()
     {
-        string path = FindRepoFile(Path.Combine(
+        var path = FindRepoFile(Path.Combine(
             "scripts", "crap", "assert-core-cobertura.ps1"));
-        string source = File.ReadAllText(path);
+        var source = File.ReadAllText(path);
 
         source.ShouldContain("ClearMeasure.Bootcamp.Core");
         source.ShouldContain("exit 1");
@@ -90,15 +90,15 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void CoreProject_WhenRead_EnablesCopyLocalLockFileAssemblies()
     {
-        string path = FindRepoFile(Path.Combine("src", "Core", "Core.csproj"));
+        var path = FindRepoFile(Path.Combine("src", "Core", "Core.csproj"));
         File.ReadAllText(path).ShouldContain("CopyLocalLockFileAssemblies");
     }
 
     [Test]
     public void UnitTestsProject_WhenRead_CopiesCoreCoverletResolutionAssemblies()
     {
-        string path = FindRepoFile(Path.Combine("src", "UnitTests", "UnitTests.csproj"));
-        string source = File.ReadAllText(path);
+        var path = FindRepoFile(Path.Combine("src", "UnitTests", "UnitTests.csproj"));
+        var source = File.ReadAllText(path);
         source.ShouldContain("CopyCoreCoverletResolutionAssemblies");
         source.ShouldContain("HealthChecks.Abstractions");
     }
@@ -108,7 +108,7 @@ public class CoreCoberturaPresenceTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName, relativePath);
+            var candidate = Path.Combine(dir.FullName, relativePath);
             if (File.Exists(candidate))
             {
                 return candidate;

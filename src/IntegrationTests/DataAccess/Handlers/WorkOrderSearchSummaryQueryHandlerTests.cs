@@ -149,7 +149,7 @@ public class WorkOrderSearchSummaryQueryHandlerTests
 
     private static Employee NewEmployee(string prefix)
     {
-        string userName = TestData.UserName(prefix);
+        var userName = TestData.UserName(prefix);
         return new Employee(userName, "Sum", "Tester", TestData.Email(userName));
     }
 
@@ -157,14 +157,9 @@ public class WorkOrderSearchSummaryQueryHandlerTests
         Employee? assignee = null, DateTime? created = null, DateTime? completed = null, DateOnly? due = null) =>
         new()
         {
-            Creator = creator,
-            Assignee = assignee,
-            Number = TestData.Number("S"),
-            Title = $"Summary {creator.UserName}",
+            Creator = creator, Assignee = assignee, Number = TestData.Number("S"), Title = $"Summary {creator.UserName}",
             Status = status,
-            CreatedDate = created,
-            CompletedDate = completed,
-            DueDate = due
+            CreatedDate = created, CompletedDate = completed, DueDate = due
         };
 
     private static async Task SaveAsync(Employee creator, params WorkOrder[] orders)

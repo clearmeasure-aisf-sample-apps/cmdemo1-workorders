@@ -74,8 +74,8 @@ public class HealthCheckDatabaseVersionIntegrationTests
     public async Task Should_IncludeHighestScriptNumber_When_JournalHasAppliedScripts()
     {
         var response = await _client!.GetAsync("/_healthcheck");
-        string body = await response.Content.ReadAsStringAsync();
-        string[] lines = body.Split('\n');
+        var body = await response.Content.ReadAsStringAsync();
+        var lines = body.Split('\n');
 
         lines.Length.ShouldBe(2);
         lines[0].ShouldBeOneOf("Healthy", "Degraded", "Unhealthy");
@@ -93,7 +93,7 @@ public class HealthCheckDatabaseVersionIntegrationTests
         var response = await _client!.GetAsync("/_healthcheck/detailed");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
         await using var stream = await response.Content.ReadAsStreamAsync();

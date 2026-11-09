@@ -35,7 +35,7 @@ public class EnvironmentStatusControllerTests
         var controller = CreateController();
         var first = controller.Get();
         first.ShouldBeOfType<ContentResult>();
-        string etag = controller.Response.Headers.ETag.ToString();
+        var etag = controller.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
 
         controller.Request.Headers.IfNoneMatch = etag;
@@ -115,7 +115,7 @@ public class EnvironmentStatusControllerTests
 
         public static RedactionProbe Install(string value)
         {
-            string? previous = Environment.GetEnvironmentVariable(
+            var previous = Environment.GetEnvironmentVariable(
                 EnvironmentStatusController.RedactionProbeVariableName);
             Environment.SetEnvironmentVariable(
                 EnvironmentStatusController.RedactionProbeVariableName, value);

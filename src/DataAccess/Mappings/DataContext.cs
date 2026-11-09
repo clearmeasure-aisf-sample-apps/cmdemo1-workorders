@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.Core;
+﻿using ClearMeasure.Bootcamp.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +18,7 @@ public class DataContext : DbContext
     {
         optionsBuilder.EnableSensitiveDataLogging();
 
-        string connectionString = _config.GetConnectionString();
+        var connectionString = _config.GetConnectionString();
         if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
         {
             optionsBuilder.UseSqlite(connectionString);

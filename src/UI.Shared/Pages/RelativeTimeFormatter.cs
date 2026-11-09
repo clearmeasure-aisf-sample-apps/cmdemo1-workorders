@@ -40,7 +40,7 @@ internal static class RelativeTimeFormatter
 
     private static string DayOrMonth(TimeSpan elapsed)
     {
-        int days = (int)elapsed.TotalDays;
+        var days = (int)elapsed.TotalDays;
         if (days < 30)
         {
             return Ago(days, "day");
@@ -51,7 +51,7 @@ internal static class RelativeTimeFormatter
 
     private static string Ago(int count, string unit)
     {
-        string label = count == 1 ? unit : unit + "s";
+        var label = count == 1 ? unit : unit + "s";
         return $"{count} {label} ago";
     }
 

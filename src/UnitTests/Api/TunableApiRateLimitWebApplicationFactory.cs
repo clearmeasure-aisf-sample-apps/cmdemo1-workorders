@@ -26,9 +26,7 @@ public sealed class TunableApiRateLimitWebApplicationFactory : WebApplicationFac
         builder.UseSetting("AI_OpenAI_Url", "");
         builder.UseSetting("AI_OpenAI_Model", "");
         foreach (var kv in _overrides)
-        {
             builder.UseSetting(kv.Key, kv.Value ?? "");
-        }
 
         builder.ConfigureAppConfiguration((_, config) =>
         {
@@ -42,10 +40,7 @@ public sealed class TunableApiRateLimitWebApplicationFactory : WebApplicationFac
                 ["ApiKeyAuthentication:ValidationKey"] = ""
             };
             foreach (var kv in _overrides)
-            {
                 merged[kv.Key] = kv.Value;
-            }
-
             config.AddInMemoryCollection(merged);
         });
     }

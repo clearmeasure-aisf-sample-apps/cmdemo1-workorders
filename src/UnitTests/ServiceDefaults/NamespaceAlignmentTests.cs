@@ -1,5 +1,5 @@
-using ChurchBulletin.ServiceDefaults;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ChurchBulletin.ServiceDefaults;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.ServiceDefaults;

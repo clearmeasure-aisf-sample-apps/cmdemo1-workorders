@@ -27,9 +27,9 @@ public class VersionController(IHostEnvironment hostEnvironment) : ControllerBas
     public IActionResult Get()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        string? assemblyVersion = assembly.GetName().Version?.ToString();
-        string? informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-        string buildConfiguration = ResolveBuildConfiguration(assembly);
+        var assemblyVersion = assembly.GetName().Version?.ToString();
+        var informationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        var buildConfiguration = ResolveBuildConfiguration(assembly);
         var payload = new VersionMetadataResponse(
             AssemblyVersion: assemblyVersion,
             InformationalVersion: informationalVersion,
@@ -40,20 +40,15 @@ public class VersionController(IHostEnvironment hostEnvironment) : ControllerBas
         var etag = ConditionalGetEtag.CreateWeakEtagForJson(payload);
         Response.Headers.ETag = etag.ToString();
         if (ConditionalGetEtag.IfNoneMatchIncludesEtag(Request, etag))
-        {
             return StatusCode(StatusCodes.Status304NotModified);
-        }
-
         return ConditionalGetEtag.JsonContent(payload);
     }
 
     private static string ResolveBuildConfiguration(Assembly assembly)
     {
-        string? fromAttribute = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
+        var fromAttribute = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
         if (!string.IsNullOrWhiteSpace(fromAttribute))
-        {
             return fromAttribute;
-        }
 
 #if DEBUG
         return "Debug";

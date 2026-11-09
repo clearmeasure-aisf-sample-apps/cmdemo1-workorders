@@ -45,7 +45,7 @@ public static class TestData
             throw new ArgumentOutOfRangeException(nameof(count), count, "A number series has 1 to 99 numbers.");
         }
 
-        string stem = RandomBase36(5);
+        var stem = RandomBase36(5);
         return Enumerable.Range(1, count).Select(i => $"{stem}{i:00}").ToArray();
     }
 
@@ -104,7 +104,7 @@ public static class TestData
     {
         return string.Create(length, 0, (span, _) =>
         {
-            for (int i = 0; i < span.Length; i++)
+            for (var i = 0; i < span.Length; i++)
             {
                 span[i] = Base36[RandomNumberGenerator.GetInt32(Base36.Length)];
             }

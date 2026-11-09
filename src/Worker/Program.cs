@@ -1,5 +1,5 @@
-using ChurchBulletin.ServiceDefaults;
 using Worker;
+using ChurchBulletin.ServiceDefaults;
 
 var builder = Host.CreateApplicationBuilder(args);
 

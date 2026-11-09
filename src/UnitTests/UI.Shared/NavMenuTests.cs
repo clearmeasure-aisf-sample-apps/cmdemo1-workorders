@@ -33,8 +33,8 @@ public class NavMenuTests
             component.Find($"ul[aria-labelledby='{heading.Id}']").ShouldNotBeNull();
         }
 
-        string text = component.Markup;
-        foreach (string label in new[] { "Dashboard", "Work Orders", "New Request", "AI Assistant", "Assigned to Me", "Created by Me", "In Progress", "Overdue", "Buildings &amp; Rooms", "Teams &amp; Vendors", "Reports", "Settings" })
+        var text = component.Markup;
+        foreach (var label in new[] { "Dashboard", "Work Orders", "New Request", "AI Assistant", "Assigned to Me", "Created by Me", "In Progress", "Overdue", "Buildings &amp; Rooms", "Teams &amp; Vendors", "Reports", "Settings" })
         {
             text.ShouldContain(label);
         }

@@ -27,7 +27,7 @@ public class NotificationsPanelTests : AcceptanceTestBase
         var yesterday = today.AddDays(-1);
         var dayBeforeYesterday = today.AddDays(-2);
         var tomorrow = today.AddDays(1);
-        string[] numbers = TestData.NumberSeries(6);
+        var numbers = TestData.NumberSeries(6);
         var otherUser = new Employee($"other_user_{TestTag}", "Other", "User", $"other_{TestTag}@test.com");
 
         // Create work orders in various states assigned to CurrentUser
@@ -123,11 +123,11 @@ public class NotificationsPanelTests : AcceptanceTestBase
 
         // Badge should show count of overdue + due-today items (3: overdue1, overdue2, today)
         // Not including: completed (3), assigned to other (1), due tomorrow (1)
-        int expectedCount = 3;
+        var expectedCount = 3;
         await Expect(badge).ToHaveTextAsync(expectedCount.ToString(), new() { Timeout = 30_000 });
 
         // Bell button should be enabled (not disabled)
-        string? ariaDisabled = await bellButton.GetAttributeAsync("aria-disabled");
+        var ariaDisabled = await bellButton.GetAttributeAsync("aria-disabled");
         ariaDisabled.ShouldBeNull();
     }
 

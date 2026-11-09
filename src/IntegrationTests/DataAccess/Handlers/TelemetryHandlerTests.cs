@@ -1,7 +1,7 @@
-using System.Diagnostics.Metrics;
 using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using Shouldly;
+using System.Diagnostics.Metrics;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
 

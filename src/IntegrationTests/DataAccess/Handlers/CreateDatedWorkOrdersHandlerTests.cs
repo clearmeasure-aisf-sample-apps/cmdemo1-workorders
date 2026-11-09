@@ -44,9 +44,9 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_ShouldPersistNullAndDateWithoutUtcShift()
     {
-        string creatorUserName = TestData.UserName("creator1");
-        string withDateNumber = TestData.Number("D");
-        string withoutDateNumber = TestData.Number("D");
+        var creatorUserName = TestData.UserName("creator1");
+        var withDateNumber = TestData.Number("D");
+        var withoutDateNumber = TestData.Number("D");
 
         var creator = new Employee(creatorUserName, "John", "Doe", "john@example.com");
         var withDate = new WorkOrder
@@ -88,8 +88,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_ShouldCreateTenInOneTransaction()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string assigneeUserName = TestData.UserName("gw");
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
         var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
         var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");
@@ -131,8 +131,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_WhenAssigneeMissing_CreatesZero()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string missingAssigneeUserName = TestData.UserName("missing");
+        var creatorUserName = TestData.UserName("tl");
+        var missingAssigneeUserName = TestData.UserName("missing");
 
         var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -161,8 +161,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_WhenDueDatesEmpty_CreatesZero()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string assigneeUserName = TestData.UserName("gw");
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
         var bus = TestHost.GetRequiredService<IBus>();
         var result = await bus.Send(new CreateDatedWorkOrdersCommand(
@@ -180,8 +180,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_WhenBatchExceedsLimit_CreatesZero()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string assigneeUserName = TestData.UserName("gw");
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
         var dueDates = Enumerable.Range(0, CreateDatedWorkOrdersCommand.MaximumBatchSize + 1)
             .Select(i => new DateOnly(2026, 8, 29).AddDays(i))
@@ -205,8 +205,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_WhenCreatorMissing_CreatesZero()
     {
-        string assigneeUserName = TestData.UserName("gw");
-        string missingCreatorUserName = TestData.UserName("missing");
+        var assigneeUserName = TestData.UserName("gw");
+        var missingCreatorUserName = TestData.UserName("missing");
 
         var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -235,8 +235,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_WhenPartialBatchFails_RollsBackAll()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string assigneeUserName = TestData.UserName("gw");
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
         var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
         var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");
@@ -278,8 +278,8 @@ public class CreateDatedWorkOrdersHandlerTests
     [Test]
     public async Task Handle_WhenTelemetryPublishFails_ReturnsCommittedWorkOrders()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string assigneeUserName = TestData.UserName("gw");
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
 
         var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
         var assignee = new Employee(assigneeUserName, "Dated", "Assignee", "w@test.com");

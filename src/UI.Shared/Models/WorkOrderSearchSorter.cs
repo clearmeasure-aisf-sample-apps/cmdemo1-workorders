@@ -41,7 +41,7 @@ public static class WorkOrderSearchSorter
     /// <summary>Parses a sort control value such as "DueDate:desc"; an empty or unknown column means no sort.</summary>
     public static (string? Column, bool Descending) ParseOption(string? value)
     {
-        string[] parts = (value ?? string.Empty).Split(':');
+        var parts = (value ?? string.Empty).Split(':');
         return (IsSortable(parts[0]) ? parts[0] : null, parts.Length > 1 && parts[1] == "desc");
     }
 

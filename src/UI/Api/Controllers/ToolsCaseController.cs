@@ -43,7 +43,7 @@ public class ToolsCaseController : ControllerBase
             return MissingText();
         }
 
-        if (!TryConvert(request.Text, request.To, out string converted))
+        if (!TryConvert(request.Text, request.To, out var converted))
         {
             return UnknownTo();
         }
@@ -75,16 +75,16 @@ public class ToolsCaseController : ControllerBase
 
     private static string ToTitleCase(string text)
     {
-        string trimmed = text.Trim();
+        var trimmed = text.Trim();
         if (trimmed.Length == 0)
         {
             return string.Empty;
         }
 
-        string[] words = Regex.Split(trimmed, @"\s+");
-        for (int index = 0; index < words.Length; index++)
+        var words = Regex.Split(trimmed, @"\s+");
+        for (var index = 0; index < words.Length; index++)
         {
-            string word = words[index];
+            var word = words[index];
             words[index] = char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant();
         }
 
@@ -98,7 +98,7 @@ public class ToolsCaseController : ControllerBase
             return string.Empty;
         }
 
-        string converted = Regex.Replace(text, "[^a-zA-Z0-9]+", separator.ToString());
+        var converted = Regex.Replace(text, "[^a-zA-Z0-9]+", separator.ToString());
         converted = converted.Trim(separator);
         return converted.ToLowerInvariant();
     }

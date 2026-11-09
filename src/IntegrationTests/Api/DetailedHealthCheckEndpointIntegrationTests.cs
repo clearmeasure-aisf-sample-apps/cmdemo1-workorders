@@ -31,7 +31,7 @@ public class DetailedHealthCheckEndpointIntegrationTests
         var response = await _client!.GetAsync("/_healthcheck/detailed");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string? mediaType = response.Content.Headers.ContentType?.MediaType;
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
     }
@@ -70,7 +70,7 @@ public class DetailedHealthCheckEndpointIntegrationTests
         {
             entry.TryGetProperty("name", out _).ShouldBeTrue();
             entry.TryGetProperty("status", out var status).ShouldBeTrue();
-            string? statusString = status.GetString();
+            var statusString = status.GetString();
             (statusString == "Healthy" || statusString == "Degraded" || statusString == "Unhealthy").ShouldBeTrue();
             entry.TryGetProperty("durationMs", out _).ShouldBeTrue();
         }
@@ -113,7 +113,7 @@ public class DetailedHealthCheckEndpointIntegrationTests
 
         processThreadEntry.TryGetProperty("data", out var data).ShouldBeTrue();
         data.TryGetProperty("threadCount", out var threadCount).ShouldBeTrue();
-        int threadCountValue = threadCount.ValueKind == JsonValueKind.Number
+        var threadCountValue = threadCount.ValueKind == JsonValueKind.Number
             ? threadCount.GetInt32()
             : int.Parse(threadCount.GetString()!);
         threadCountValue.ShouldBeGreaterThan(0);
@@ -133,11 +133,11 @@ public class DetailedHealthCheckEndpointIntegrationTests
             .First(e => e.GetProperty("name").GetString() == "ProcessThreadCount");
 
         var threadCount = processThreadEntry.GetProperty("data").GetProperty("threadCount");
-        int threadCountValue = threadCount.ValueKind == JsonValueKind.Number
+        var threadCountValue = threadCount.ValueKind == JsonValueKind.Number
             ? threadCount.GetInt32()
             : int.Parse(threadCount.GetString()!);
 
-        int currentThreadCount = Process.GetCurrentProcess().Threads.Count;
+        var currentThreadCount = Process.GetCurrentProcess().Threads.Count;
         threadCountValue.ShouldBeInRange(currentThreadCount - 2, currentThreadCount + 2);
     }
 

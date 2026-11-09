@@ -22,5 +22,5 @@ public sealed class StubFeatureFlags(
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync(string name) =>
-        Task.FromResult(_flags.TryGetValue(name, out bool enabled) && enabled);
+        Task.FromResult(_flags.TryGetValue(name, out var enabled) && enabled);
 }

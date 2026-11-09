@@ -17,11 +17,11 @@ public class WorkOrderCreatedRelativeTimeTests : AcceptanceTestBase
         await Expect(created).ToBeVisibleAsync();
         await Expect(relative).ToBeVisibleAsync();
 
-        string createdText = (await created.InnerTextAsync()).Trim();
+        var createdText = (await created.InnerTextAsync()).Trim();
         await Expect(relative).ToHaveAttributeAsync("title", createdText);
         createdText.ShouldNotContain("ago");
 
-        string relativeText = (await relative.InnerTextAsync()).Trim();
+        var relativeText = (await relative.InnerTextAsync()).Trim();
         (relativeText is "just now" or "1 minute ago").ShouldBeTrue();
     }
 }

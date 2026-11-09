@@ -10,7 +10,7 @@ public class LocalTelemetryLoggerProviderTests
     [Test]
     public async Task CreateLogger_ShouldReturnLogger_AndDisposeIsSafe()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = new LocalTelemetryFileWriter(new StubConfiguration(directory));
         using var provider = new LocalTelemetryLoggerProvider(writer);
 
@@ -27,7 +27,7 @@ public class LocalTelemetryLoggerProviderTests
     [TestCase(LogLevel.Critical, true)]
     public async Task IsEnabled_ShouldFilterBelowInformation(LogLevel level, bool expected)
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = new LocalTelemetryFileWriter(new StubConfiguration(directory));
         using var provider = new LocalTelemetryLoggerProvider(writer);
         var logger = provider.CreateLogger("Filter.Category");
@@ -38,7 +38,7 @@ public class LocalTelemetryLoggerProviderTests
     [Test]
     public async Task Log_ShouldSkipBelowInformation_WhenWriterStarted()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = new LocalTelemetryFileWriter(new StubConfiguration(directory));
         using var provider = new LocalTelemetryLoggerProvider(writer);
         var logger = provider.CreateLogger("Skip.Category");
@@ -53,14 +53,14 @@ public class LocalTelemetryLoggerProviderTests
         await writer.StopAsync(CancellationToken.None);
         await start;
 
-        string content = await ReadCombinedLogContentAsync(directory);
+        var content = await ReadCombinedLogContentAsync(directory);
         content.ShouldNotContain("debug-should-not-appear");
     }
 
     [Test]
     public async Task Log_ShouldWriteCategoryMessageAndException_WhenInformationOrAbove()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = new LocalTelemetryFileWriter(new StubConfiguration(directory));
         using var provider = new LocalTelemetryLoggerProvider(writer);
         var logger = provider.CreateLogger("Emit.Category");
@@ -80,7 +80,7 @@ public class LocalTelemetryLoggerProviderTests
         await writer.StopAsync(CancellationToken.None);
         await start;
 
-        string content = await ReadCombinedLogContentAsync(directory);
+        var content = await ReadCombinedLogContentAsync(directory);
         content.ShouldContain("Emit.Category");
         content.ShouldContain("emit-should-appear");
         content.ShouldContain("boom-details");
@@ -89,7 +89,7 @@ public class LocalTelemetryLoggerProviderTests
     [Test]
     public async Task BeginScope_ShouldPushState_WhenScopeProviderSet()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = new LocalTelemetryFileWriter(new StubConfiguration(directory));
         using var provider = new LocalTelemetryLoggerProvider(writer);
         var scopeProvider = new StubExternalScopeProvider();
@@ -105,7 +105,7 @@ public class LocalTelemetryLoggerProviderTests
 
     private static string CreateTempDirectory()
     {
-        string path = Path.Combine(Path.GetTempPath(), "telemetry-provider-tests-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(Path.GetTempPath(), "telemetry-provider-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
     }
@@ -124,7 +124,7 @@ public class LocalTelemetryLoggerProviderTests
     private static async Task<string> ReadCombinedLogContentAsync(string directory)
     {
         var parts = new List<string>();
-        foreach (string file in Directory.GetFiles(directory, "logs_*.jsonl"))
+        foreach (var file in Directory.GetFiles(directory, "logs_*.jsonl"))
         {
             parts.Add(await File.ReadAllTextAsync(file));
         }

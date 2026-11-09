@@ -86,7 +86,7 @@ public class ToolsRandomController : ControllerBase
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            int value = min.Value == max.Value ? min.Value : NextInclusive(min.Value, max.Value);
+            var value = min.Value == max.Value ? min.Value : NextInclusive(min.Value, max.Value);
             return new ContentResult
             {
                 Content = value.ToString(CultureInfo.InvariantCulture),
@@ -102,14 +102,14 @@ public class ToolsRandomController : ControllerBase
 
     private static int NextInclusive(int lower, int upper)
     {
-        long span = (long)upper - lower + 1;
+        var span = (long)upper - lower + 1;
         return (int)(lower + Random.Shared.NextInt64(span));
     }
 
     private static string GenerateAlphanumeric()
     {
         var buffer = new StringBuilder(AlphanumericLength);
-        for (int i = 0; i < AlphanumericLength; i++)
+        for (var i = 0; i < AlphanumericLength; i++)
         {
             buffer.Append(AlphanumericChars[Random.Shared.Next(AlphanumericChars.Length)]);
         }

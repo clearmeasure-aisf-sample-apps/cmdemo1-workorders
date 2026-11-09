@@ -32,7 +32,7 @@ public class BuildingsTests : AcceptanceTestBase
         await Task.Delay(500);
 
         var cards = Page.Locator(".building-card");
-        int cardCount = await cards.CountAsync();
+        var cardCount = await cards.CountAsync();
         if (cardCount > 0)
         {
             await Expect(cards.First).ToBeVisibleAsync();
@@ -45,9 +45,9 @@ public class BuildingsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a unique building name so parallel tests never share it
-        string buildingName = $"TestBuilding{TestData.Tag()}";
-        string room1 = "TestRoom1";
-        string room2 = "TestRoom2";
+        var buildingName = $"TestBuilding{TestData.Tag()}";
+        var room1 = "TestRoom1";
+        var room2 = "TestRoom2";
 
         // Create test work orders
         var wo1 = await CreateAndSaveNewWorkOrder();
@@ -95,8 +95,8 @@ public class BuildingsTests : AcceptanceTestBase
 
         // Find and click the "Open" count link for room 1 (should have 2 open: wo1 Draft + wo2 Assigned)
         var openLink = Page.GetByTestId($"room-open-link-{buildingName}-{room1}");
-        string openCountText = await openLink.Locator(".count-value").InnerTextAsync();
-        int expectedOpenCount = int.Parse(openCountText);
+        var openCountText = await openLink.Locator(".count-value").InnerTextAsync();
+        var expectedOpenCount = int.Parse(openCountText);
 
         // Click the open link
         await openLink.ClickAsync();
@@ -112,7 +112,7 @@ public class BuildingsTests : AcceptanceTestBase
         // Count the results
         var searchResultRows = Page.Locator(".grid-data tbody tr");
         await Expect(searchResultRows.First).ToBeVisibleAsync();
-        int actualOpenCount = await searchResultRows.CountAsync();
+        var actualOpenCount = await searchResultRows.CountAsync();
 
         // Counts should match
         actualOpenCount.ShouldBe(expectedOpenCount);
@@ -125,8 +125,8 @@ public class BuildingsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a unique building name
-        string buildingName = $"TestBuilding{TestData.Tag()}";
-        string room = "TestRoom";
+        var buildingName = $"TestBuilding{TestData.Tag()}";
+        var room = "TestRoom";
 
         // Create test work orders
         var wo1 = await CreateAndSaveNewWorkOrder();
@@ -161,8 +161,8 @@ public class BuildingsTests : AcceptanceTestBase
         var overdueLink = Page.GetByTestId($"room-overdue-link-{buildingName}-{room}");
         await Expect(overdueLink).ToBeVisibleAsync();
 
-        string overdueCountText = await overdueLink.Locator(".count-value").InnerTextAsync();
-        int expectedOverdueCount = int.Parse(overdueCountText);
+        var overdueCountText = await overdueLink.Locator(".count-value").InnerTextAsync();
+        var expectedOverdueCount = int.Parse(overdueCountText);
 
         // Click the overdue link
         await overdueLink.ClickAsync();
@@ -179,7 +179,7 @@ public class BuildingsTests : AcceptanceTestBase
         {
             await Expect(searchResultRows.First).ToBeVisibleAsync();
         }
-        int actualOverdueCount = await searchResultRows.CountAsync();
+        var actualOverdueCount = await searchResultRows.CountAsync();
 
         // Should match
         actualOverdueCount.ShouldBe(expectedOverdueCount);
@@ -192,8 +192,8 @@ public class BuildingsTests : AcceptanceTestBase
         await LoginAsCurrentUser();
 
         // Create a unique building name
-        string buildingName = $"TestBuilding{TestData.Tag()}";
-        string room = "TestRoom";
+        var buildingName = $"TestBuilding{TestData.Tag()}";
+        var room = "TestRoom";
 
         // Create test work orders
         var wo1 = await CreateAndSaveNewWorkOrder();
@@ -226,8 +226,8 @@ public class BuildingsTests : AcceptanceTestBase
         var completedLink = Page.GetByTestId($"room-completed-link-{buildingName}-{room}");
         await Expect(completedLink).ToBeVisibleAsync();
 
-        string completedCountText = await completedLink.Locator(".count-value").InnerTextAsync();
-        int expectedCompletedCount = int.Parse(completedCountText);
+        var completedCountText = await completedLink.Locator(".count-value").InnerTextAsync();
+        var expectedCompletedCount = int.Parse(completedCountText);
 
         // Click the completed link
         await completedLink.ClickAsync();
@@ -245,7 +245,7 @@ public class BuildingsTests : AcceptanceTestBase
         {
             await Expect(searchResultRows.First).ToBeVisibleAsync();
         }
-        int actualCompletedCount = await searchResultRows.CountAsync();
+        var actualCompletedCount = await searchResultRows.CountAsync();
 
         // Should match
         actualCompletedCount.ShouldBe(expectedCompletedCount);

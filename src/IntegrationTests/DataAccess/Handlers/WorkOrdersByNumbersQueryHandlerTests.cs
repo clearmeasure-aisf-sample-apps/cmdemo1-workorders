@@ -13,9 +13,9 @@ public class WorkOrdersByNumbersQueryHandlerTests
     [Test]
     public async Task ShouldLoadEveryTargetedWorkOrderInOneQuery()
     {
-        string userName = TestData.UserName("batch");
+        var userName = TestData.UserName("batch");
         var creator = new Employee(userName, "Batch", "Reader", TestData.Email(userName));
-        string[] numbers = TestData.NumberSeries(8);
+        var numbers = TestData.NumberSeries(8);
         var orders = numbers.Select(number => new WorkOrder
         {
             Creator = creator,
@@ -31,11 +31,11 @@ public class WorkOrdersByNumbersQueryHandlerTests
 
         context.Commands.Reset();
         var one = await handler.Handle(new WorkOrdersByNumbersQuery([numbers[0]]));
-        int oneCommands = context.Commands.ReaderCommands;
+        var oneCommands = context.Commands.ReaderCommands;
 
         context.Commands.Reset();
         var all = await handler.Handle(new WorkOrdersByNumbersQuery([.. numbers, numbers[0], ""]));
-        int allCommands = context.Commands.ReaderCommands;
+        var allCommands = context.Commands.ReaderCommands;
 
         one.Length.ShouldBe(1);
         one[0].Number.ShouldBe(numbers[0]);
@@ -51,7 +51,7 @@ public class WorkOrdersByNumbersQueryHandlerTests
         (await handler.Handle(new WorkOrdersByNumbersQuery(["", " "]))).ShouldBeEmpty();
         context.Commands.ReaderCommands.ShouldBe(0);
 
-        string[] tooMany = Enumerable.Range(0, WorkOrdersByNumbersQuery.MaxNumbers + 1)
+        var tooMany = Enumerable.Range(0, WorkOrdersByNumbersQuery.MaxNumbers + 1)
             .Select(index => index.ToString())
             .ToArray();
         await Should.ThrowAsync<InvalidOperationException>(() => handler.Handle(new WorkOrdersByNumbersQuery(tooMany)));

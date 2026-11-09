@@ -19,9 +19,7 @@ public class FeatureFlagsApiAcceptanceTests : AcceptanceTestBase
     public async Task GetFeatureFlags_Should_Return200WithJsonDictionary_When_EndpointCalled()
     {
         if (!ServerFixture.StartLocalServer)
-        {
             Assert.Ignore("Requires local server with HTTP access to /api/features/flags");
-        }
 
         var client = TestHttpClientFactory.CreateInsecureClient();
         using var response = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/features/flags");
@@ -41,9 +39,7 @@ public class FeatureFlagsApiAcceptanceTests : AcceptanceTestBase
     public async Task GetFeatureFlags_Should_Return200WithJsonDictionary_When_VersionedEndpointCalled()
     {
         if (!ServerFixture.StartLocalServer)
-        {
             Assert.Ignore("Requires local server with HTTP access to /api/v1.0/features/flags");
-        }
 
         var client = TestHttpClientFactory.CreateInsecureClient();
         using var response = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/v1.0/features/flags");
@@ -63,9 +59,7 @@ public class FeatureFlagsApiAcceptanceTests : AcceptanceTestBase
     public async Task GetFeatureFlags_Should_EnableBuildingAndVendor_And_MatchDiagnostics_When_LocalHostMatchesTdd()
     {
         if (!ServerFixture.StartLocalServer)
-        {
             Assert.Ignore("Requires the local Development host (tdd ON). This host does not stub IFeatureFlags.");
-        }
 
         var client = TestHttpClientFactory.CreateInsecureClient();
         using var flagsResponse = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/features/flags");

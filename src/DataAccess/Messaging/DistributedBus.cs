@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.Core;
+﻿using ClearMeasure.Bootcamp.Core;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Messaging;
 

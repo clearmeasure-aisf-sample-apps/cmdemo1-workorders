@@ -17,7 +17,7 @@ public class AccessibilityAxeTests : AcceptanceTestBase
     {
         var failures = new List<string>();
 
-        foreach (string theme in Themes)
+        foreach (var theme in Themes)
         {
             await ScanAsync(theme, "/login", WaitForTestId(nameof(Login.Elements.User)), failures);
         }
@@ -26,7 +26,7 @@ public class AccessibilityAxeTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         var order = await CreateAndSaveNewWorkOrder();
         order.Number.ShouldNotBeNullOrWhiteSpace();
-        string number = Uri.EscapeDataString(order.Number);
+        var number = Uri.EscapeDataString(order.Number);
 
         var routes = new (string Url, Func<Task> Ready)[]
         {
@@ -45,7 +45,7 @@ public class AccessibilityAxeTests : AcceptanceTestBase
             ("/ai-agent", WaitForTestId(nameof(ApplicationChat.Elements.ChatShell)))
         };
 
-        foreach (string theme in Themes)
+        foreach (var theme in Themes)
         {
             foreach (var route in routes)
             {
@@ -79,7 +79,7 @@ public class AccessibilityAxeTests : AcceptanceTestBase
         await Page.GotoAsync(url);
         await ready();
 
-        string actual = await Page.EvaluateAsync<string>(
+        var actual = await Page.EvaluateAsync<string>(
             "() => document.documentElement.getAttribute('data-theme')");
         actual.ShouldBe(theme, $"theme for {url}");
 
@@ -96,7 +96,7 @@ public class AccessibilityAxeTests : AcceptanceTestBase
 
         foreach (var violation in result.Violations)
         {
-            string impact = violation.Impact ?? string.Empty;
+            var impact = violation.Impact ?? string.Empty;
             if (!impact.Equals("serious", StringComparison.OrdinalIgnoreCase)
                 && !impact.Equals("critical", StringComparison.OrdinalIgnoreCase))
             {
@@ -112,7 +112,7 @@ public class AccessibilityAxeTests : AcceptanceTestBase
 
             foreach (var node in nodes)
             {
-                string target = node.Target == null ? string.Empty : string.Join(" ", node.Target);
+                var target = node.Target == null ? string.Empty : string.Join(" ", node.Target);
                 failures.Add($"{theme} {url} {violation.Id} {impact} {target}");
             }
         }

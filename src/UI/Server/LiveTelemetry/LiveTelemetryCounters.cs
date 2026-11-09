@@ -51,7 +51,7 @@ public sealed class LiveTelemetryCounters
         _timeProvider = timeProvider;
         _processMeter = processMeter;
         Array.Fill(_bucketSecond, long.MinValue);
-        long now = timeProvider.GetUtcNow().UtcTicks;
+        var now = timeProvider.GetUtcNow().UtcTicks;
         _startedAt = new DateTime(now - now % TimeSpan.TicksPerSecond, DateTimeKind.Utc);
         _startedSecond = NowMilliseconds() / 1000;
         _cpu = new CpuUsage(NowMilliseconds(), processMeter.CpuTime, processMeter.ProcessorCount);
@@ -73,7 +73,7 @@ public sealed class LiveTelemetryCounters
     /// </summary>
     public void RecordRequest(RequestKind kind, int statusCode, TimeSpan? elapsed)
     {
-        long nowMs = NowMilliseconds();
+        var nowMs = NowMilliseconds();
         lock (_gate)
         {
             SampleCpuWhenDue(nowMs);
@@ -111,7 +111,7 @@ public sealed class LiveTelemetryCounters
     /// </summary>
     public void RecordSqlCommand(TimeSpan elapsed, bool duringRequest)
     {
-        long nowMs = NowMilliseconds();
+        var nowMs = NowMilliseconds();
         lock (_gate)
         {
             Increment(nowMs, Counter.SqlCommands);
@@ -127,7 +127,7 @@ public sealed class LiveTelemetryCounters
     /// <summary>Records a completed outgoing HTTP call.</summary>
     public void RecordHttpClientCall()
     {
-        long nowMs = NowMilliseconds();
+        var nowMs = NowMilliseconds();
         lock (_gate)
         {
             Increment(nowMs, Counter.HttpClientCalls);
@@ -141,7 +141,7 @@ public sealed class LiveTelemetryCounters
     /// </summary>
     public void RecordUnhandledException()
     {
-        long nowMs = NowMilliseconds();
+        var nowMs = NowMilliseconds();
         lock (_gate)
         {
             Increment(nowMs, Counter.UnhandledExceptions);
@@ -151,8 +151,8 @@ public sealed class LiveTelemetryCounters
     /// <summary>Returns the counts of the last 60 seconds and the vitals of the process now.</summary>
     public LiveTelemetrySnapshot Snapshot()
     {
-        long nowMs = NowMilliseconds();
-        long nowSecond = nowMs / 1000;
+        var nowMs = NowMilliseconds();
+        var nowSecond = nowMs / 1000;
         Span<int> totals = stackalloc int[Counter.Count];
         int? requestP95;
         int? sqlP95;
@@ -161,15 +161,15 @@ public sealed class LiveTelemetryCounters
         {
             SampleCpuWhenDue(nowMs);
             cpuPercent = _cpu.Percent;
-            for (int bucket = 0; bucket < WindowSeconds; bucket++)
+            for (var bucket = 0; bucket < WindowSeconds; bucket++)
             {
-                long second = _bucketSecond[bucket];
+                var second = _bucketSecond[bucket];
                 if (second <= nowSecond - WindowSeconds || second > nowSecond)
                 {
                     continue;
                 }
 
-                for (int counter = 0; counter < Counter.Count; counter++)
+                for (var counter = 0; counter < Counter.Count; counter++)
                 {
                     totals[counter] += _counts[bucket * Counter.Count + counter];
                 }
@@ -179,8 +179,8 @@ public sealed class LiveTelemetryCounters
             sqlP95 = _sqlLatency.Percentile95(nowMs - WindowMilliseconds);
         }
 
-        int frontDoor = totals[Counter.FrontDoorTraffic];
-        int direct = totals[Counter.DirectTraffic];
+        var frontDoor = totals[Counter.FrontDoorTraffic];
+        var direct = totals[Counter.DirectTraffic];
         return new LiveTelemetrySnapshot(
             WindowSeconds,
             _startedAt,
@@ -215,8 +215,8 @@ public sealed class LiveTelemetryCounters
 
     private void Increment(long nowMs, int counter)
     {
-        long second = nowMs / 1000;
-        int bucket = (int)(second % WindowSeconds);
+        var second = nowMs / 1000;
+        var bucket = (int)(second % WindowSeconds);
         if (_bucketSecond[bucket] != second)
         {
             _bucketSecond[bucket] = second;
@@ -266,11 +266,11 @@ public sealed class LiveTelemetryCounters
 
         public void Sample(long nowMs, TimeSpan cpuTime)
         {
-            long wallMs = nowMs - _sampledAtMs;
+            var wallMs = nowMs - _sampledAtMs;
             if (wallMs > 0)
             {
-                double usedMs = (cpuTime - _cpuTime).TotalMilliseconds;
-                double percent = 100.0 * usedMs / (wallMs * (double)_processorCount);
+                var usedMs = (cpuTime - _cpuTime).TotalMilliseconds;
+                var percent = 100.0 * usedMs / (wallMs * (double)_processorCount);
                 Percent = Math.Round(Math.Clamp(percent, 0, 100), 1, MidpointRounding.AwayFromZero);
             }
 
@@ -301,8 +301,8 @@ public sealed class LiveTelemetryCounters
         /// <summary>Nearest-rank 95th percentile of the samples newer than <paramref name="afterMs"/>.</summary>
         public int? Percentile95(long afterMs)
         {
-            int selected = 0;
-            for (int i = 0; i < _count; i++)
+            var selected = 0;
+            for (var i = 0; i < _count; i++)
             {
                 if (_times[i] > afterMs)
                 {
@@ -317,7 +317,7 @@ public sealed class LiveTelemetryCounters
 
             var window = _scratch.AsSpan(0, selected);
             window.Sort();
-            int rank = (int)Math.Ceiling(0.95 * selected);
+            var rank = (int)Math.Ceiling(0.95 * selected);
             return window[rank - 1];
         }
     }

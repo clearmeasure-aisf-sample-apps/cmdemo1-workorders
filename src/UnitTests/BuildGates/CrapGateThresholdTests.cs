@@ -8,7 +8,7 @@ public class CrapGateThresholdTests
     [Test]
     public void ReadProductionThreshold_WhenConfigExists_ReturnsPositiveInteger()
     {
-        int threshold = CrapGateThreshold.ReadProductionThreshold();
+        var threshold = CrapGateThreshold.ReadProductionThreshold();
 
         threshold.ShouldBeGreaterThan(0);
     }
@@ -16,14 +16,14 @@ public class CrapGateThresholdTests
     [Test]
     public void EnforcementEntrypoints_WhenRead_DoNotHardcodeGateThresholdLiterals()
     {
-        int threshold = CrapGateThreshold.ReadProductionThreshold();
-        string privateBuild = File.ReadAllText(FindRepoFile("PrivateBuild.ps1"));
-        string workflow = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
-        string auditScript = File.ReadAllText(FindRepoFile(Path.Combine(
+        var threshold = CrapGateThreshold.ReadProductionThreshold();
+        var privateBuild = File.ReadAllText(FindRepoFile("PrivateBuild.ps1"));
+        var workflow = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
+        var auditScript = File.ReadAllText(FindRepoFile(Path.Combine(
             "scripts", "crap", "run-crap-audit.ps1")));
-        string auditDoc = File.ReadAllText(FindRepoFile(Path.Combine(
+        var auditDoc = File.ReadAllText(FindRepoFile(Path.Combine(
             "docs", "crap-score-audit.md")));
-        string config = File.ReadAllText(FindRepoFile(CrapGateThreshold.RelativeConfigPath));
+        var config = File.ReadAllText(FindRepoFile(CrapGateThreshold.RelativeConfigPath));
         using var configDoc = System.Text.Json.JsonDocument.Parse(config);
         configDoc.RootElement.GetProperty("productionThreshold").GetInt32().ShouldBe(threshold);
 
@@ -45,7 +45,7 @@ public class CrapGateThresholdTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName, relativePath);
+            var candidate = Path.Combine(dir.FullName, relativePath);
             if (File.Exists(candidate))
             {
                 return candidate;

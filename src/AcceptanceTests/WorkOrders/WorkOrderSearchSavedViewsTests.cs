@@ -26,7 +26,7 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
         await Page.Locator($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}").CheckAsync();
         await Expect(Rows()).ToHaveCountAsync(1);
 
-        string viewName = $"View {TestTag}";
+        var viewName = $"View {TestTag}";
         await Page.GetByTestId(nameof(WorkOrderSearch.Elements.SavedViewsButton)).ClickAsync();
         await Page.GetByTestId(nameof(WorkOrderSearch.Elements.SaveCurrentViewButton)).ClickAsync();
         await Page.GetByTestId(nameof(WorkOrderSearch.Elements.SavedViewNameInput)).FillAsync(viewName);

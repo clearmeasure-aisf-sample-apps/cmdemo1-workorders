@@ -31,7 +31,7 @@ public class BuildingRoomSummaryQueryHandlerTests
         {
             foreach (var room in building.Rooms)
             {
-                string where = $"building '{building.Building}', room '{room.Room}'";
+                var where = $"building '{building.Building}', room '{room.Room}'";
                 room.TotalCount.ShouldBe(await SearchCountAsync(building.Building, room.Room), where);
                 room.OpenCount.ShouldBe(await SearchCountAsync(building.Building, room.Room, q => q.MatchOpenOnly(true)), where);
                 room.OverdueCount.ShouldBe(await SearchCountAsync(building.Building, room.Room, q => q.MatchOverdueOnly(true)), where);
@@ -77,9 +77,9 @@ public class BuildingRoomSummaryQueryHandlerTests
     [Test]
     public async Task ShouldCountBoundaries_WithFixedClock()
     {
-        string tag = TestData.Tag();
-        string boundary = $"Boundary {tag}";
-        string annex = $"Annex {tag}";
+        var tag = TestData.Tag();
+        var boundary = $"Boundary {tag}";
+        var annex = $"Annex {tag}";
         var creator = NewEmployee("brbound");
         var now = Now.DateTime;
         await SaveAsync(creator,
@@ -100,7 +100,7 @@ public class BuildingRoomSummaryQueryHandlerTests
     [Test]
     public async Task ShouldNotReturnUnknownBuilding_AndListEachBuildingAndRoomOnce()
     {
-        string unknown = $"empty {TestData.Tag()}";
+        var unknown = $"empty {TestData.Tag()}";
 
         var buildings = await Handle();
 
@@ -121,10 +121,10 @@ public class BuildingRoomSummaryQueryHandlerTests
             "Data Source=:memory:"
         ];
 
-        foreach (string connectionString in connectionStrings)
+        foreach (var connectionString in connectionStrings)
         {
             using var context = new DataContext(new StubDatabaseConfiguration(connectionString));
-            string sql = new BuildingRoomSummaryQueryHandler(context, TestData.FixedClock(Now)).CountsQuery().ToQueryString();
+            var sql = new BuildingRoomSummaryQueryHandler(context, TestData.FixedClock(Now)).CountsQuery().ToQueryString();
 
             TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
             sql.ShouldContain("GROUP BY");
@@ -149,9 +149,9 @@ public class BuildingRoomSummaryQueryHandlerTests
     /// </summary>
     private static async Task<SeededVariants> SeedVariantsAsync(string prefix)
     {
-        string tag = TestData.Tag();
-        string hall = $"Hall {tag}";
-        string gym = $"Gym {tag}";
+        var tag = TestData.Tag();
+        var hall = $"Hall {tag}";
+        var gym = $"Gym {tag}";
         var creator = NewEmployee(prefix);
         var now = Now.DateTime;
         WorkOrder[] orders =
@@ -182,7 +182,7 @@ public class BuildingRoomSummaryQueryHandlerTests
 
     private static Employee NewEmployee(string prefix)
     {
-        string userName = TestData.UserName(prefix);
+        var userName = TestData.UserName(prefix);
         return new Employee(userName, "Room", "Summary", TestData.Email(userName));
     }
 
@@ -224,15 +224,9 @@ public class BuildingRoomSummaryQueryHandlerTests
         string? room, DateTime? completed = null, DateOnly? due = null) =>
         new()
         {
-            Creator = creator,
-            Number = TestData.Number("V"),
-            Title = $"Room summary {creator.UserName}",
-            Status = status,
+            Creator = creator, Number = TestData.Number("V"), Title = $"Room summary {creator.UserName}", Status = status,
             Building = building,
-            RoomNumber = room,
-            CreatedDate = Now.DateTime.AddDays(-90),
-            CompletedDate = completed,
-            DueDate = due
+            RoomNumber = room, CreatedDate = Now.DateTime.AddDays(-90), CompletedDate = completed, DueDate = due
         };
 
     private static async Task SaveAsync(Employee creator, params WorkOrder[] orders)

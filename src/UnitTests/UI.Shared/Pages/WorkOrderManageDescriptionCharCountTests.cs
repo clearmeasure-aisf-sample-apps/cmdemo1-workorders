@@ -134,24 +134,16 @@ public class WorkOrderManageDescriptionCharCountTests
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
             if (request is EmployeeGetAllQuery)
-            {
                 return Task.FromResult((TResponse)(object)Array.Empty<Employee>());
-            }
 
             if (request is WorkOrderAttachmentsQuery)
-            {
                 return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderAttachment>());
-            }
 
             if (request is WorkOrderByNumberQuery && workOrderByNumber != null)
-            {
                 return Task.FromResult((TResponse)(object)workOrderByNumber);
-            }
 
             if (request is WorkOrderStatusHistoryQuery)
-            {
                 return Task.FromResult((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
-            }
 
             throw new NotImplementedException($"Unhandled request type: {request.GetType().Name}");
         }

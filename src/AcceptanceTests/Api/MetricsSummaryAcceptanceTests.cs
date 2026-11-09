@@ -16,9 +16,7 @@ public class MetricsSummaryAcceptanceTests : AcceptanceTestBase
     public async Task Api_MetricsSummary_Returns200AndRequiredJsonFields()
     {
         if (!ServerFixture.StartLocalServer)
-        {
             Assert.Ignore("Requires local server with HTTP access to /api/*");
-        }
 
         var client = TestHttpClientFactory.CreateInsecureClient();
         using var response = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/metrics/summary");

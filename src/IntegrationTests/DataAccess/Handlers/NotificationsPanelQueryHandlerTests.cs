@@ -28,7 +28,7 @@ public class NotificationsPanelQueryHandlerTests
     [Test]
     public async Task Handle_WithNonExistentUserName_ReturnsEmptyArrays()
     {
-        string nonexistentUserUserName = TestData.UserName("nonexistent_user");
+        var nonexistentUserUserName = TestData.UserName("nonexistent_user");
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var time = TestHost.GetRequiredService<TimeProvider>();
@@ -44,11 +44,11 @@ public class NotificationsPanelQueryHandlerTests
     [Test]
     public async Task Handle_ReturnsOverdueAndDueTodayWorkOrders()
     {
-        string notifTestUserUserName = TestData.UserName("notif_test_user");
-        string overdueOrderNumber = TestData.Number("N");
-        string dueTodayNumber = TestData.Number("N");
-        string futureDueNumber = TestData.Number("N");
-        string completeNumber = TestData.Number("N");
+        var notifTestUserUserName = TestData.UserName("notif_test_user");
+        var overdueOrderNumber = TestData.Number("N");
+        var dueTodayNumber = TestData.Number("N");
+        var futureDueNumber = TestData.Number("N");
+        var completeNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var today = ChurchTimeZone.Today(time);
@@ -126,10 +126,10 @@ public class NotificationsPanelQueryHandlerTests
     [Test]
     public async Task Handle_ReturnsNewlyAssignedLast7DaysWorkOrders()
     {
-        string notifNewUserUserName = TestData.UserName("notif_new_user");
-        string recentlyAssignedNumber = TestData.Number("N");
-        string oldAssignmentNumber = TestData.Number("N");
-        string notAssignedNumber = TestData.Number("N");
+        var notifNewUserUserName = TestData.UserName("notif_new_user");
+        var recentlyAssignedNumber = TestData.Number("N");
+        var oldAssignmentNumber = TestData.Number("N");
+        var notAssignedNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var now = time.GetUtcNow().DateTime;
@@ -192,12 +192,12 @@ public class NotificationsPanelQueryHandlerTests
     [Test]
     public async Task Handle_ReturnsCreatedByMeStatusChangedLast7DaysWorkOrders()
     {
-        string notifCreatorUserName = TestData.UserName("notif_creator");
-        string notifOtherUserName = TestData.UserName("notif_other");
-        string recentlyAssignedNumber = TestData.Number("N");
-        string recentlyCompletedNumber = TestData.Number("N");
-        string oldStatusChangeNumber = TestData.Number("N");
-        string draftNumber = TestData.Number("N");
+        var notifCreatorUserName = TestData.UserName("notif_creator");
+        var notifOtherUserName = TestData.UserName("notif_other");
+        var recentlyAssignedNumber = TestData.Number("N");
+        var recentlyCompletedNumber = TestData.Number("N");
+        var oldStatusChangeNumber = TestData.Number("N");
+        var draftNumber = TestData.Number("N");
 
         var time = TestHost.GetRequiredService<TimeProvider>();
         var now = time.GetUtcNow().DateTime;

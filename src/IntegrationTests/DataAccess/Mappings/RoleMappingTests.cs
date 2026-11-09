@@ -10,7 +10,7 @@ public class RoleMappingTests
     [Test]
     public void ShouldPersistRoles()
     {
-        string name = $"role_{TestData.Tag()}";
+        var name = $"role_{TestData.Tag()}";
         var role = new Role(name, true, true);
 
         using (var context = TestHost.GetRequiredService<DbContext>())

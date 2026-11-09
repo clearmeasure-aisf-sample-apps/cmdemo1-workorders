@@ -55,10 +55,10 @@ public class BuildFactsProviderTests
     [Test]
     public void Json_WhenReadTwice_ShouldReadTheFileOnce()
     {
-        string path = Path.Combine(_contentRoot, BuildFactsProvider.FileName);
+        var path = Path.Combine(_contentRoot, BuildFactsProvider.FileName);
         File.WriteAllText(path, """{ "version": "2.4.15" }""");
         var provider = new BuildFactsProvider(_contentRoot, null, NullLogger.Instance);
-        string first = provider.Json;
+        var first = provider.Json;
 
         File.WriteAllText(path, """{ "version": "9.9.9" }""");
 

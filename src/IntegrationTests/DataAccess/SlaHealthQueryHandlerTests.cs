@@ -18,7 +18,7 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var order = new WorkOrder
         {
@@ -47,7 +47,7 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var today = ChurchTimeZone.Today(clock);
         var completedOrder = new WorkOrder
@@ -78,7 +78,7 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var today = ChurchTimeZone.Today(clock);
         var dueDate = today;
@@ -112,7 +112,7 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var today = ChurchTimeZone.Today(clock);
         var dueDate = today.AddDays(-1);
@@ -146,7 +146,7 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var today = ChurchTimeZone.Today(clock);
 
@@ -189,7 +189,7 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var today = ChurchTimeZone.Today(clock);
         var lastMonth = today.AddMonths(-1);
@@ -235,7 +235,7 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var today = ChurchTimeZone.Today(clock);
         var nextMonth = today.AddMonths(1);
@@ -277,7 +277,7 @@ public class SlaHealthQueryHandlerTests
         var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
         var completed = windowStart.AddHours(1);
 
-        string userName = TestData.UserName("sla");
+        var userName = TestData.UserName("sla");
         var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
         var inWindow = new WorkOrder
         {
@@ -307,7 +307,7 @@ public class SlaHealthQueryHandlerTests
 
         context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, context.Commands.Texts));
         context.Commands.OtherCommands.ShouldBe(0);
-        string sql = context.Commands.Texts.Single();
+        var sql = context.Commands.Texts.Single();
         sql.ShouldContain("CompletedDate");
         sql.ShouldContain(">=");
         sql.ShouldContain("<");

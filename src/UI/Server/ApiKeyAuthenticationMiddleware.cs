@@ -18,7 +18,7 @@ public sealed class ApiKeyAuthenticationMiddleware(RequestDelegate next)
         || pathValue.Equals("/api", StringComparison.OrdinalIgnoreCase);
 
     internal static bool IsPublicVersionOrTimePath(string pathValue) =>
-        ApiPublicPathRules.TryGetLeafSegment(pathValue, out string leaf) && ApiPublicPathRules.IsPublicLeaf(leaf);
+        ApiPublicPathRules.TryGetLeafSegment(pathValue, out var leaf) && ApiPublicPathRules.IsPublicLeaf(leaf);
 
     internal static bool IsAuthorized(HttpRequest request, string expectedKey)
     {
@@ -27,14 +27,14 @@ public sealed class ApiKeyAuthenticationMiddleware(RequestDelegate next)
             return false;
         }
 
-        string? provided = providedValues.FirstOrDefault();
+        var provided = providedValues.FirstOrDefault();
         return !string.IsNullOrEmpty(provided) && FixedTimeEqualsUtf8(expectedKey, provided);
     }
 
     private static bool FixedTimeEqualsUtf8(string expected, string provided)
     {
-        byte[] expectedBytes = Encoding.UTF8.GetBytes(expected);
-        byte[] providedBytes = Encoding.UTF8.GetBytes(provided);
+        var expectedBytes = Encoding.UTF8.GetBytes(expected);
+        var providedBytes = Encoding.UTF8.GetBytes(provided);
         if (expectedBytes.Length != providedBytes.Length)
         {
             return false;
@@ -107,7 +107,7 @@ internal static class ApiPublicPathRules
     internal static bool TryGetLeafSegment(string pathValue, out string leaf)
     {
         leaf = string.Empty;
-        string[] segments = pathValue.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var segments = pathValue.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length < 2 || !segments[0].Equals("api", StringComparison.OrdinalIgnoreCase))
         {
             return false;

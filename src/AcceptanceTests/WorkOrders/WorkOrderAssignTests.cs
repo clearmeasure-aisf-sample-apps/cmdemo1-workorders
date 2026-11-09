@@ -19,7 +19,7 @@ public class WorkOrderAssignTests : AcceptanceTestBase
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
         await woNumberLocator.WaitForAsync();
         await Expect(woNumberLocator).ToHaveTextAsync(order.Number!);
-
+        
         await Select(nameof(WorkOrderManage.Elements.Assignee), CurrentUser.UserName);
         await Input(nameof(WorkOrderManage.Elements.Title), "newtitle");
         await Input(nameof(WorkOrderManage.Elements.Description), "newdesc");
@@ -34,10 +34,10 @@ public class WorkOrderAssignTests : AcceptanceTestBase
 
         var titleField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Title));
         await Expect(titleField).ToHaveValueAsync("newtitle");
-
+        
         var descriptionField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Description));
         await Expect(descriptionField).ToHaveValueAsync("newdesc");
-
+        
         var assigneeField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Assignee));
         await Expect(assigneeField).ToBeDisabledAsync();
         await Expect(assigneeField).ToHaveValueAsync(CurrentUser.UserName);

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -8,6 +7,7 @@ using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UnitTests.Core.Queries;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
+using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
 
@@ -20,9 +20,9 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldClearAssigneeAndDate_WhenCancelOnExistingAssignedRowAfterRemoting()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string assigneeUserName = TestData.UserName("gw");
-        string number = TestData.Number("P");
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
+        var number = TestData.Number("P");
 
         var creator = Faker<Employee>();
         creator.UserName = creatorUserName;
@@ -83,9 +83,9 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldPersistAssignedStatusAndDate_WhenSaveDraftThenRemotedAssign_OnExistingId()
     {
-        string creatorUserName = TestData.UserName("tl");
-        string assigneeUserName = TestData.UserName("gw");
-        string number = TestData.Number("P");
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
+        var number = TestData.Number("P");
 
         var creator = Faker<Employee>();
         creator.UserName = creatorUserName;
@@ -169,7 +169,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
         byNumber.AssignedDate.ShouldNotBeNull();
         byNumber.Assignee!.UserName.ShouldBe(assigneeUserName);
 
-        string getJson = await WorkOrderTools.GetWorkOrder(bus, number);
+        var getJson = await WorkOrderTools.GetWorkOrder(bus, number);
         using var doc = JsonDocument.Parse(getJson);
         var detail = doc.RootElement;
         detail.GetProperty("Status").GetString().ShouldBe("Assigned");
@@ -180,7 +180,7 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldKeepAddPathAssignedDateAndStatusWhenIdEmpty()
     {
-        string number = TestData.Number("P");
+        var number = TestData.Number("P");
 
         var o = Faker<WorkOrder>();
         o.Id = Guid.Empty;
@@ -212,8 +212,8 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldLeaveNearbyInProgressUnchangedWhenAssigningDifferentDraft()
     {
-        string inProgressNumber = TestData.Number("P");
-        string draftNumber = TestData.Number("P");
+        var inProgressNumber = TestData.Number("P");
+        var draftNumber = TestData.Number("P");
 
         var creator = Faker<Employee>();
         var assignee = Faker<Employee>();

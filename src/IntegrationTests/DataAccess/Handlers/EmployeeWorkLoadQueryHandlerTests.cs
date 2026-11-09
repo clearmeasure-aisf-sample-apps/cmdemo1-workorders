@@ -14,9 +14,9 @@ public class EmployeeWorkLoadQueryHandlerTests
     [Test]
     public async Task ShouldCountWorkLoadForEmployeeFromDatabase()
     {
-        string ewlCreatorUserName = TestData.UserName("ewl_creator");
-        string ewlWorkerUserName = TestData.UserName("ewl_worker");
-        string ewlIdleUserName = TestData.UserName("ewl_idle");
+        var ewlCreatorUserName = TestData.UserName("ewl_creator");
+        var ewlWorkerUserName = TestData.UserName("ewl_worker");
+        var ewlIdleUserName = TestData.UserName("ewl_idle");
 
         var creator = new Employee(ewlCreatorUserName, "Cre", "Ator", "creator@test.com");
         var worker = new Employee(ewlWorkerUserName, "Wor", "Ker", "worker@test.com");

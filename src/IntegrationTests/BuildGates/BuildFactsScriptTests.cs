@@ -40,7 +40,7 @@ public class BuildFactsScriptTests
         }
 
         // Git marks its object files read-only, which stops a recursive delete on Windows.
-        foreach (string file in Directory.EnumerateFiles(_workDirectory, "*", SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles(_workDirectory, "*", SearchOption.AllDirectories))
         {
             File.SetAttributes(file, FileAttributes.Normal);
         }
@@ -118,7 +118,7 @@ public class BuildFactsScriptTests
     [Test]
     public void WriteBuildFacts_WhenNoArtifactIsThere_WritesNullSectionsAndSucceeds()
     {
-        string empty = Path.Combine(_workDirectory, "no-artifacts");
+        var empty = Path.Combine(_workDirectory, "no-artifacts");
         Directory.CreateDirectory(empty);
 
         using var facts = RunScript(empty, out _);
@@ -126,7 +126,7 @@ public class BuildFactsScriptTests
         var root = facts.RootElement;
         root.GetProperty("version").GetString().ShouldBe("2.4.15");
         root.GetProperty("code").GetProperty("files").GetInt32().ShouldBe(5);
-        foreach (string section in new[] { "tests", "coverage", "complexity", "crap", "analysis" })
+        foreach (var section in new[] { "tests", "coverage", "complexity", "crap", "analysis" })
         {
             root.GetProperty(section).ValueKind.ShouldBe(JsonValueKind.Null, section);
         }
@@ -135,14 +135,14 @@ public class BuildFactsScriptTests
     [Test]
     public void WriteBuildFacts_WhenArtifactsAreUnreadable_WritesNullForThoseSectionsOnly()
     {
-        string broken = Path.Combine(_workDirectory, "broken-artifacts");
+        var broken = Path.Combine(_workDirectory, "broken-artifacts");
         WriteArtifacts(broken);
         File.WriteAllText(Path.Combine(broken, "qodana-report", "qodana.sarif.json"), "{ \"runs\": [");
         File.WriteAllText(
             Path.Combine(broken, "code-coverage-linux", "UnitTests", "run", "In", "host", "coverage.cobertura.xml"),
             "<coverage><packages>");
 
-        using var facts = RunScript(broken, out string log);
+        using var facts = RunScript(broken, out var log);
 
         var root = facts.RootElement;
         root.GetProperty("analysis").ValueKind.ShouldBe(JsonValueKind.Null);
@@ -158,9 +158,9 @@ public class BuildFactsScriptTests
     public void WriteBuildFacts_WhenTheQodanaReportIsAZipInTheArtifact_ReadsTheSarifInsideIt()
     {
         // What the Qodana action uploads: one qodana-report.zip with its results directory.
-        string artifacts = Path.Combine(_workDirectory, "zipped-qodana-artifacts");
+        var artifacts = Path.Combine(_workDirectory, "zipped-qodana-artifacts");
         WriteArtifacts(artifacts);
-        string report = Path.Combine(artifacts, "qodana-report");
+        var report = Path.Combine(artifacts, "qodana-report");
         File.Delete(Path.Combine(report, "qodana.sarif.json"));
         using (var archive = ZipFile.Open(Path.Combine(report, "qodana-report.zip"), ZipArchiveMode.Create))
         {
@@ -171,7 +171,7 @@ public class BuildFactsScriptTests
             WriteEntry(archive, "qodana.sarif.json", Sarif("unchanged", "new", "absent", "unchanged", "unchanged", "new"));
         }
 
-        using var facts = RunScript(artifacts, out string log);
+        using var facts = RunScript(artifacts, out var log);
 
         facts.RootElement.GetProperty("analysis").GetProperty("qodanaProblems").GetInt32().ShouldBe(5);
         log.ShouldContain("PASS analysis");
@@ -181,16 +181,16 @@ public class BuildFactsScriptTests
     [Test]
     public void WriteBuildFacts_WhenTheZipInTheArtifactHasNoSarif_WritesNullForAnalysis()
     {
-        string artifacts = Path.Combine(_workDirectory, "zip-without-sarif-artifacts");
+        var artifacts = Path.Combine(_workDirectory, "zip-without-sarif-artifacts");
         WriteArtifacts(artifacts);
-        string report = Path.Combine(artifacts, "qodana-report");
+        var report = Path.Combine(artifacts, "qodana-report");
         File.Delete(Path.Combine(report, "qodana.sarif.json"));
         using (var archive = ZipFile.Open(Path.Combine(report, "qodana-report.zip"), ZipArchiveMode.Create))
         {
             WriteEntry(archive, "qodana-short.sarif.json", Sarif("new"));
         }
 
-        using var facts = RunScript(artifacts, out string log);
+        using var facts = RunScript(artifacts, out var log);
 
         facts.RootElement.GetProperty("analysis").ValueKind.ShouldBe(JsonValueKind.Null);
         facts.RootElement.GetProperty("tests").GetProperty("unit").GetInt32().ShouldBe(4);
@@ -200,13 +200,13 @@ public class BuildFactsScriptTests
     [Test]
     public void WriteBuildFacts_WhenTheZipInTheArtifactIsUnreadable_WritesNullForAnalysisAndWarns()
     {
-        string artifacts = Path.Combine(_workDirectory, "broken-zip-artifacts");
+        var artifacts = Path.Combine(_workDirectory, "broken-zip-artifacts");
         WriteArtifacts(artifacts);
-        string report = Path.Combine(artifacts, "qodana-report");
+        var report = Path.Combine(artifacts, "qodana-report");
         File.Delete(Path.Combine(report, "qodana.sarif.json"));
         File.WriteAllText(Path.Combine(report, "qodana-report.zip"), "not a zip");
 
-        using var facts = RunScript(artifacts, out string log);
+        using var facts = RunScript(artifacts, out var log);
 
         facts.RootElement.GetProperty("analysis").ValueKind.ShouldBe(JsonValueKind.Null);
         facts.RootElement.GetProperty("crap").GetProperty("threshold").GetInt32().ShouldBe(6);
@@ -216,7 +216,7 @@ public class BuildFactsScriptTests
     [Test]
     public void WriteBuildFacts_WhenGivenAPackage_PutsTheFileInItsRoot()
     {
-        string package = Path.Combine(_workDirectory, "example-ui.2.4.15.zip");
+        var package = Path.Combine(_workDirectory, "example-ui.2.4.15.zip");
         using (var archive = ZipFile.Open(package, ZipArchiveMode.Create))
         {
             WriteEntry(archive, "ClearMeasure.Bootcamp.UI.Server.dll", "the app");
@@ -242,10 +242,10 @@ public class BuildFactsScriptTests
     [Test]
     public void WriteBuildFacts_WhenThePackageIsMissing_Fails()
     {
-        string output = Path.Combine(_workDirectory, $"facts-{Guid.NewGuid():N}.json");
+        var output = Path.Combine(_workDirectory, $"facts-{Guid.NewGuid():N}.json");
 
-        int exitCode = RunPwsh(
-            out string log,
+        var exitCode = RunPwsh(
+            out var log,
             "-OutputPath", output,
             "-RepoRoot", _repository,
             "-Commit", Commit,
@@ -257,7 +257,7 @@ public class BuildFactsScriptTests
 
     private JsonDocument RunScript(string artifacts, out string log, params string[] more)
     {
-        string output = Path.Combine(_workDirectory, $"facts-{Guid.NewGuid():N}.json");
+        var output = Path.Combine(_workDirectory, $"facts-{Guid.NewGuid():N}.json");
         string[] arguments =
         [
             "-OutputPath", output,
@@ -271,7 +271,7 @@ public class BuildFactsScriptTests
             .. more
         ];
 
-        int exitCode = RunPwsh(out log, arguments);
+        var exitCode = RunPwsh(out log, arguments);
 
         exitCode.ShouldBe(0, log);
         return JsonDocument.Parse(File.ReadAllText(output));
@@ -279,7 +279,7 @@ public class BuildFactsScriptTests
 
     private static int RunPwsh(out string log, params string[] arguments)
     {
-        string script = Path.Combine(FindRepoRoot(), "scripts", "Write-BuildFacts.ps1");
+        var script = Path.Combine(FindRepoRoot(), "scripts", "Write-BuildFacts.ps1");
         File.Exists(script).ShouldBeTrue(script);
         return Run("pwsh", ["-NoProfile", "-File", script, .. arguments], Path.GetTempPath(), out log);
     }
@@ -294,7 +294,7 @@ public class BuildFactsScriptTests
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        foreach (string argument in arguments)
+        foreach (var argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
         }
@@ -331,7 +331,7 @@ public class BuildFactsScriptTests
 
     private void RunGit(params string[] arguments)
     {
-        Run("git", arguments, _repository, out string log).ShouldBe(0, log);
+        Run("git", arguments, _repository, out var log).ShouldBe(0, log);
     }
 
     private static void WriteArtifacts(string artifacts)
@@ -479,7 +479,7 @@ public class BuildFactsScriptTests
 
     private static void WriteFile(string root, string relativePath, string content)
     {
-        string path = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        var path = Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, content);
     }

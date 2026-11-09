@@ -20,7 +20,7 @@ public class AppShellTests : AcceptanceTestBase
         await Page.SetViewportSizeAsync(1280, 800);
         var rail = Page.Locator("#app-navigation-rail");
 
-        string background = await rail.EvaluateAsync<string>("e => getComputedStyle(e).backgroundImage");
+        var background = await rail.EvaluateAsync<string>("e => getComputedStyle(e).backgroundImage");
 
         background.ShouldContain("rgb(11, 18, 32)");
         background.ShouldContain("rgb(17, 26, 46)");
@@ -32,7 +32,7 @@ public class AppShellTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldUseInterFont()
     {
-        string fontFamily = await Page.EvaluateAsync<string>("() => getComputedStyle(document.body).fontFamily");
+        var fontFamily = await Page.EvaluateAsync<string>("() => getComputedStyle(document.body).fontFamily");
 
         fontFamily.TrimStart('"', '\'').ShouldStartWith("Inter");
     }
@@ -46,7 +46,7 @@ public class AppShellTests : AcceptanceTestBase
         await Expect(rail).ToBeVisibleAsync();
         var box = await rail.BoundingBoxAsync();
         box!.Width.ShouldBeLessThanOrEqualTo(96);
-        double labelWidth = await Page.Locator("#app-navigation-rail .nav-text").First
+        var labelWidth = await Page.Locator("#app-navigation-rail .nav-text").First
             .EvaluateAsync<double>("e => e.getBoundingClientRect().width");
         labelWidth.ShouldBeLessThanOrEqualTo(1);
         var workOrders = Page.GetByRole(AriaRole.Link, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Work Orders") });
@@ -87,12 +87,12 @@ public class AppShellTests : AcceptanceTestBase
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
         await Expect(Page.Locator(".grid-data tbody tr")).ToHaveCountAsync(3);
 
-        bool pageFits = await Page.EvaluateAsync<bool>(
+        var pageFits = await Page.EvaluateAsync<bool>(
             "() => document.documentElement.scrollWidth <= document.documentElement.clientWidth");
-        bool tableFits = await Page.Locator(".table-scroll").EvaluateAsync<bool>("e => e.scrollWidth <= e.clientWidth");
-        int filtersPerRow = await Page.EvaluateAsync<int>(
+        var tableFits = await Page.Locator(".table-scroll").EvaluateAsync<bool>("e => e.scrollWidth <= e.clientWidth");
+        var filtersPerRow = await Page.EvaluateAsync<int>(
             "() => new Set([...document.querySelectorAll('.filter-group')].map(g => Math.round(g.getBoundingClientRect().top))).size");
-        int cardRows = await Page.EvaluateAsync<int>(
+        var cardRows = await Page.EvaluateAsync<int>(
             "() => new Set([...document.querySelectorAll('.summary-card')].map(c => Math.round(c.getBoundingClientRect().top))).size");
 
         pageFits.ShouldBeTrue();
@@ -126,8 +126,8 @@ public class AppShellTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         var filtersCard = Page.Locator(".filters-card");
-        string lightCard = await filtersCard.EvaluateAsync<string>("e => getComputedStyle(e).backgroundColor");
-        string lightPage = await Page.EvaluateAsync<string>("() => getComputedStyle(document.body).backgroundColor");
+        var lightCard = await filtersCard.EvaluateAsync<string>("e => getComputedStyle(e).backgroundColor");
+        var lightPage = await Page.EvaluateAsync<string>("() => getComputedStyle(document.body).backgroundColor");
         lightCard.ShouldBe("rgb(255, 255, 255)");
         lightPage.ShouldBe("rgb(245, 247, 251)");
 
@@ -152,17 +152,17 @@ public class AppShellTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Expect(Page.Locator(".grid-data")).ToBeVisibleAsync();
-        string folder = Path.Combine(TestContext.CurrentContext.WorkDirectory, "screenshots");
+        var folder = Path.Combine(TestContext.CurrentContext.WorkDirectory, "screenshots");
         Directory.CreateDirectory(folder);
 
-        foreach (string theme in new[] { "light", "dark" })
+        foreach (var theme in new[] { "light", "dark" })
         {
             await SetThemeAsync(theme);
-            foreach (int width in new[] { 1440, 1280, 900 })
+            foreach (var width in new[] { 1440, 1280, 900 })
             {
                 await Page.SetViewportSizeAsync(width, 1000);
                 await Page.WaitForTimeoutAsync(300);
-                string path = Path.Combine(folder, $"work-order-search-{theme}-{width}.png");
+                var path = Path.Combine(folder, $"work-order-search-{theme}-{width}.png");
                 await Page.ScreenshotAsync(new PageScreenshotOptions { Path = path, FullPage = true });
                 TestContext.AddTestAttachment(path);
                 File.Exists(path).ShouldBeTrue();
@@ -174,7 +174,7 @@ public class AppShellTests : AcceptanceTestBase
 
     private async Task SetThemeAsync(string theme)
     {
-        string current = await Page.EvaluateAsync<string>("() => document.documentElement.getAttribute('data-theme')");
+        var current = await Page.EvaluateAsync<string>("() => document.documentElement.getAttribute('data-theme')");
         if (current == theme)
         {
             return;

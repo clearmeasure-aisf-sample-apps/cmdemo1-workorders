@@ -28,7 +28,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001AsError_When_TeamsForeachAwaitsBusSend()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class TeamsAndVendors {
               public IBus Bus { get; set; } = null!;
               public async Task OnInitializedAsync() {
@@ -49,7 +49,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_SingleSendIsOutsideALoop()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class TeamsAndVendors {
               public IBus Bus { get; set; } = null!;
               public async Task OnInitializedAsync() {
@@ -65,7 +65,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_ForeachAwaitsFieldNamedBus()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class WorkOrderBulkActionService {
               private readonly IBus bus;
               public WorkOrderBulkActionService(IBus bus) => this.bus = bus;
@@ -84,7 +84,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_SelectLambdaAwaitsBusSend()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class TeamsAndVendors {
               public IBus Bus { get; set; } = null!;
               public async Task OnInitializedAsync() {
@@ -102,7 +102,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_SendOnlyEnumeratesTheForeach()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class TeamsAndVendors {
               public IBus Bus { get; set; } = null!;
               public async Task OnInitializedAsync() {
@@ -119,7 +119,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_SendIsInTheLoopCondition()
     {
-        string forCondition = BusStubs + """
+        var forCondition = BusStubs + """
             public class Poll {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -128,7 +128,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string whileCondition = BusStubs + """
+        var whileCondition = BusStubs + """
             public class Poll {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -138,7 +138,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string doCondition = BusStubs + """
+        var doCondition = BusStubs + """
             public class Poll {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -156,7 +156,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_SendIsInTheForIncrementor()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class Poll {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -172,7 +172,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_LocalSendIsInsideForeach()
     {
-        string source = """
+        var source = """
             using System.Threading.Tasks;
             public class H {
               public async Task Run(int[] ids) {
@@ -192,7 +192,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_SendIsInsideForWhileOrDo()
     {
-        string forLoop = BusStubs + """
+        var forLoop = BusStubs + """
             public class Poll {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -202,7 +202,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string whileLoop = BusStubs + """
+        var whileLoop = BusStubs + """
             public class Poll {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -214,7 +214,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string doLoop = BusStubs + """
+        var doLoop = BusStubs + """
             public class Poll {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -233,7 +233,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_ConfigureAwaitSendIsInsideForeach()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class TeamsAndVendors {
               public IBus Bus { get; set; } = null!;
               public async Task OnInitializedAsync() {
@@ -251,7 +251,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_HttpClientSendAsyncIsInsideForeach()
     {
-        string source = """
+        var source = """
             using System.Net.Http;
             using System.Threading.Tasks;
             public class H {
@@ -270,7 +270,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_UnrelatedSendIsInsideForeach()
     {
-        string source = """
+        var source = """
             using System.Threading.Tasks;
             public class Mailer {
               public Task Send(object message) => Task.CompletedTask;
@@ -291,7 +291,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_ConcreteBusImplementsIBus()
     {
-        string source = BusStubs + """
+        var source = BusStubs + """
             public class DirectBus : IBus {
               public Task<T> Send<T>(IRequest<T> request) => Task.FromResult(default(T)!);
               public Task<object?> Send(object request) => Task.FromResult<object?>(null);
@@ -313,7 +313,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_ISenderReceiverIsNotNamedBus()
     {
-        string source = """
+        var source = """
             using System.Threading.Tasks;
             public interface ISender { Task Send(object request); }
             public class H {
@@ -333,7 +333,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0002AsWarning_When_QueryableMaterializerIsInsideForeach()
     {
-        string source = """
+        var source = """
             using System.Collections.Generic;
             using System.Linq;
             using System.Threading.Tasks;
@@ -360,7 +360,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0002_When_ReceiverImplementsIQueryable()
     {
-        string source = """
+        var source = """
             using System;
             using System.Collections;
             using System.Collections.Generic;
@@ -394,8 +394,8 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_InMemoryMaterializerIsInsideForeach()
     {
-        string[] sources =
-        [
+        var sources = new[]
+        {
             """
             using System.Collections.Generic;
             using System.Linq;
@@ -424,9 +424,9 @@ public class NpoAnalyzerRulesTests
                 new[] { 1, 2 }.Select(status => rows.Where(row => row == status).ToArray()).ToArray();
             }
             """
-        ];
+        };
 
-        foreach (string source in sources)
+        foreach (var source in sources)
         {
             (await Cm0002Async(source)).ShouldBeEmpty();
         }
@@ -435,7 +435,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0001_When_LoopAwaitsSameTypeHelperThatAwaitsBus()
     {
-        string blockHelper = BusStubs + """
+        var blockHelper = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -449,7 +449,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string expressionHelper = BusStubs + """
+        var expressionHelper = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -460,7 +460,7 @@ public class NpoAnalyzerRulesTests
               private async Task Load(int id) => await Bus.Send(new TeamsPageQuery());
             }
             """;
-        string localFunction = BusStubs + """
+        var localFunction = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -473,7 +473,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string selectHelper = BusStubs + """
+        var selectHelper = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -492,7 +492,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_HelperFollowDoesNotReachABusSend()
     {
-        string noBus = BusStubs + """
+        var noBus = BusStubs + """
             public class H {
               public async Task Run(int[] ids) {
                 foreach (var id in ids) {
@@ -502,7 +502,7 @@ public class NpoAnalyzerRulesTests
               private async Task Load(int id) => await System.Threading.Tasks.Task.Delay(id);
             }
             """;
-        string otherType = BusStubs + """
+        var otherType = BusStubs + """
             public class Other {
               public IBus Bus { get; set; } = null!;
               public async Task Load(int id) => await Bus.Send(new TeamsPageQuery());
@@ -516,7 +516,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string twoLevels = BusStubs + """
+        var twoLevels = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -528,7 +528,7 @@ public class NpoAnalyzerRulesTests
               private async Task Inner(int id) => await Bus.Send(new TeamsPageQuery());
             }
             """;
-        string nestedLocal = BusStubs + """
+        var nestedLocal = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -544,7 +544,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string returnsSend = BusStubs + """
+        var returnsSend = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -555,7 +555,7 @@ public class NpoAnalyzerRulesTests
               private Task Load(int id) => Bus.Send(new TeamsPageQuery());
             }
             """;
-        string outsideLoop = BusStubs + """
+        var outsideLoop = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run() {
@@ -564,7 +564,7 @@ public class NpoAnalyzerRulesTests
               private async Task Load() => await Bus.Send(new TeamsPageQuery());
             }
             """;
-        string throughDelegate = BusStubs + """
+        var throughDelegate = BusStubs + """
             public class H {
               public IBus Bus { get; set; } = null!;
               public async Task Run(int[] ids) {
@@ -589,7 +589,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0004_When_ToListPrecedesWhere()
     {
-        string source = """
+        var source = """
             using System.Collections.Generic;
             using System.Linq;
             public class H {
@@ -606,7 +606,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportCm0003_When_HttpGetIsInsideForeach()
     {
-        string source = """
+        var source = """
             using System.Collections.Generic;
             using System.Net.Http;
             using System.Threading.Tasks;
@@ -627,7 +627,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_OptionalRulesRunOutsideALoop()
     {
-        string materializer = """
+        var materializer = """
             using System.Collections.Generic;
             using System.Linq;
             using System.Threading.Tasks;
@@ -641,7 +641,7 @@ public class NpoAnalyzerRulesTests
               }
             }
             """;
-        string http = """
+        var http = """
             using System.Net.Http;
             using System.Threading.Tasks;
             public class H {
@@ -720,7 +720,7 @@ public class NpoAnalyzerRulesTests
     [Test]
     public void ShouldTreatCm0001AndCm0005AsErrors_And_Cm0002AsWarning()
     {
-        string text = File.ReadAllText(EditorConfigPath());
+        var text = File.ReadAllText(EditorConfigPath());
         text.ShouldContain("dotnet_diagnostic.CM0001.severity = error");
         text.ShouldContain("dotnet_diagnostic.CM0005.severity = error");
         text.ShouldContain("dotnet_diagnostic.CM0002.severity = warning");
@@ -745,7 +745,7 @@ public class NpoAnalyzerRulesTests
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null)
         {
-            string solution = Path.Combine(dir.FullName, "src", "ChurchBulletin.sln");
+            var solution = Path.Combine(dir.FullName, "src", "ChurchBulletin.sln");
             if (File.Exists(solution))
             {
                 return Path.Combine(dir.FullName, "src", ".editorconfig");

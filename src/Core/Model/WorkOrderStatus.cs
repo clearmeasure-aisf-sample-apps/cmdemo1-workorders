@@ -98,7 +98,7 @@ public class WorkOrderStatus : IEquatable<WorkOrderStatus>
     public static WorkOrderStatus FromCode(string code)
     {
         // SQL Server nchar(3) can surface trailing pads; trim before Code match.
-        string normalized = code.Trim();
+        var normalized = code.Trim();
         var items = GetAllItems();
         var match =
             Array.Find(items, instance => instance.Code == normalized);
@@ -131,7 +131,7 @@ public class WorkOrderStatusJsonConverter : JsonConverter<WorkOrderStatus>
     public override WorkOrderStatus Read(ref Utf8JsonReader reader, Type typeToConvert,
         JsonSerializerOptions options)
     {
-        string? key = reader.GetString();
+        var key = reader.GetString();
         return WorkOrderStatus.FromKey(key);
     }
 

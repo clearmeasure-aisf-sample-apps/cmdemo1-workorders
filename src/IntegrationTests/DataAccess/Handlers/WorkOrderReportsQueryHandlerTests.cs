@@ -59,9 +59,9 @@ public class WorkOrderReportsQueryHandlerTests
     [Test]
     public async Task ShouldCountOpenByBuilding()
     {
-        string tag = TestData.Tag();
-        string sanctuary = $"Sanctuary {tag}";
-        string kitchen = $"Kitchen {tag}";
+        var tag = TestData.Tag();
+        var sanctuary = $"Sanctuary {tag}";
+        var kitchen = $"Kitchen {tag}";
         var creator = NewEmployee("bcreator");
         await SaveAsync(creator,
             Order(creator, WorkOrderStatus.Draft, building: sanctuary),
@@ -191,7 +191,7 @@ public class WorkOrderReportsQueryHandlerTests
 
     private static Employee NewEmployee(string prefix)
     {
-        string userName = TestData.UserName(prefix);
+        var userName = TestData.UserName(prefix);
         return new Employee(userName, "Reports", "Tester", TestData.Email(userName));
     }
 

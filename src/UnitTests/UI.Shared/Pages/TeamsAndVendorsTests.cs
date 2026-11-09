@@ -6,12 +6,12 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -130,7 +130,7 @@ public class TeamsAndVendorsTests
             var nameCell = component.Find($"[data-testid='{TeamsAndVendors.Elements.TableRowName}hsimpson']");
             var link = nameCell.QuerySelector("a");
             link.ShouldNotBeNull();
-            string? href = link.GetAttribute("href");
+            var href = link.GetAttribute("href");
             href.ShouldNotBeNull();
             href.ShouldContain("workorder/search");
             href.ShouldContain("Assignee=hsimpson");
@@ -175,7 +175,7 @@ public class TeamsAndVendorsTests
         {
             var rows = component.FindAll("tbody tr");
             rows.Count.ShouldBeGreaterThan(0);
-            string? firstEmployeeName = rows[0].QuerySelector("[data-testid*='TableRowName']")?.TextContent;
+            var firstEmployeeName = rows[0].QuerySelector("[data-testid*='TableRowName']")?.TextContent;
             firstEmployeeName.ShouldNotBeNullOrEmpty();
         });
     }
@@ -333,7 +333,7 @@ public class TeamsAndVendorsTests
         {
             var memberLink = component.Find($"[data-testid='{TeamsAndVendors.Elements.TeamMemberLink}{emp1.UserName}']");
             memberLink.ShouldNotBeNull();
-            string? href = memberLink.GetAttribute("href");
+            var href = memberLink.GetAttribute("href");
             href.ShouldNotBeNullOrEmpty();
             href.ShouldContain("workorder/search");
             href.ShouldContain("Assignee=hsimpson");
@@ -477,7 +477,7 @@ public class TeamsAndVendorsTests
         {
             var vendorCards = component.FindAll("[class*='vendor-card']");
             vendorCards.Count.ShouldBe(2);
-            string? firstCardName = vendorCards[0].QuerySelector("[class*='vendor-name']")?.TextContent.Trim();
+            var firstCardName = vendorCards[0].QuerySelector("[class*='vendor-name']")?.TextContent.Trim();
             firstCardName.ShouldBe("Active Vendor");
         });
     }

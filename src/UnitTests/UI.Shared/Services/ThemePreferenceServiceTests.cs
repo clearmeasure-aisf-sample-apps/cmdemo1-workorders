@@ -90,9 +90,7 @@ public class ThemePreferenceServiceTests
             public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
             {
                 if (identifier == "getTheme" && typeof(TValue) == typeof(string))
-                {
                     return ValueTask.FromResult((TValue)(object)_theme);
-                }
 
                 if (identifier == "syncDomFromTheme")
                 {

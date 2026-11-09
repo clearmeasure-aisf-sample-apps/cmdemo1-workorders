@@ -51,7 +51,7 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public void ShouldUseConfiguredDirectory_WhenConfigurationProvided()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         var writer = new LocalTelemetryFileWriter(new StubConfiguration(directory));
 
         writer.TelemetryLogDirectory.ShouldBe(directory);
@@ -60,7 +60,7 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public async Task WriteLogEntry_PastOneMegabyteCap_ShouldRollToSecondFile()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = CreateFixedClockWriter(directory, "1");
         using var cts = new CancellationTokenSource();
         await StartAsync(writer, directory, cts.Token);
@@ -70,8 +70,8 @@ public class LocalTelemetryFileWriterTests
 
         LogFileNames(directory).ShouldBe([$"logs_{FixedDate}.jsonl", $"logs_{FixedDate}_0.jsonl"], ignoreOrder: true);
         var lines = ReadLines(directory, $"logs_{FixedDate}_0.jsonl").Concat(ReadLines(directory, $"logs_{FixedDate}.jsonl")).ToList();
-        int longestLineBytes = lines.Max(line => Encoding.UTF8.GetByteCount(line) + Environment.NewLine.Length);
-        foreach (string file in Directory.GetFiles(directory, "logs_*.jsonl"))
+        var longestLineBytes = lines.Max(line => Encoding.UTF8.GetByteCount(line) + Environment.NewLine.Length);
+        foreach (var file in Directory.GetFiles(directory, "logs_*.jsonl"))
         {
             new FileInfo(file).Length.ShouldBeLessThanOrEqualTo(OneMegabyte + longestLineBytes);
         }
@@ -82,7 +82,7 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public async Task WriteLogEntry_PastCapTwice_ShouldRollInOrder()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = CreateFixedClockWriter(directory, "1");
         using var cts = new CancellationTokenSource();
         await StartAsync(writer, directory, cts.Token);
@@ -102,8 +102,8 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public void NextSequencePath_WithExistingSequences_ShouldUseHighestPlusOne()
     {
-        string directory = CreateTempDirectory();
-        string basePath = Path.Combine(directory, "logs_d.jsonl");
+        var directory = CreateTempDirectory();
+        var basePath = Path.Combine(directory, "logs_d.jsonl");
         File.WriteAllText(Path.Combine(directory, "logs_d_0.jsonl"), "{}");
         File.WriteAllText(Path.Combine(directory, "logs_d_3.jsonl"), "{}");
         File.WriteAllText(Path.Combine(directory, "logs_d_x.jsonl"), "{}");
@@ -115,8 +115,8 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public void NextSequencePath_WithoutSequences_ShouldStartAtZero()
     {
-        string directory = CreateTempDirectory();
-        string basePath = Path.Combine(directory, "logs_d.jsonl");
+        var directory = CreateTempDirectory();
+        var basePath = Path.Combine(directory, "logs_d.jsonl");
 
         TelemetryFileMaintenance.NextSequencePath(basePath).ShouldBe(Path.Combine(directory, "logs_d_0.jsonl"));
     }
@@ -124,7 +124,7 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public void TryMoveToNextSequence_WhenFileMissing_ShouldNotThrow()
     {
-        string basePath = Path.Combine(CreateTempDirectory(), "missing", "logs_d.jsonl");
+        var basePath = Path.Combine(CreateTempDirectory(), "missing", "logs_d.jsonl");
 
         Should.NotThrow(() => TelemetryFileMaintenance.TryMoveToNextSequence(basePath));
     }
@@ -132,9 +132,9 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public async Task ExecuteAsync_WithOldAndNewFiles_ShouldDeleteOnlyOldAtStart()
     {
-        string directory = CreateTempDirectory();
-        string oldFile = CreateJsonl(directory, "logs_2026-01-10.jsonl", new DateTime(2026, 1, 10, 0, 0, 0, DateTimeKind.Utc));
-        string newFile = CreateJsonl(directory, "logs_2026-01-13.jsonl", new DateTime(2026, 1, 14, 0, 0, 0, DateTimeKind.Utc));
+        var directory = CreateTempDirectory();
+        var oldFile = CreateJsonl(directory, "logs_2026-01-10.jsonl", new DateTime(2026, 1, 10, 0, 0, 0, DateTimeKind.Utc));
+        var newFile = CreateJsonl(directory, "logs_2026-01-13.jsonl", new DateTime(2026, 1, 14, 0, 0, 0, DateTimeKind.Utc));
         await using var writer = CreateFixedClockWriter(directory, null);
         using var cts = new CancellationTokenSource();
 
@@ -148,11 +148,11 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public async Task WriteLogEntry_WhenRolling_ShouldApplyRetention()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = CreateFixedClockWriter(directory, "1");
         using var cts = new CancellationTokenSource();
         await StartAsync(writer, directory, cts.Token);
-        string oldFile = CreateJsonl(directory, "events_2026-01-01.jsonl", new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        var oldFile = CreateJsonl(directory, "events_2026-01-01.jsonl", new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
         WriteMessagesPast(writer, OneMegabyte * 3 / 2);
         await StopAsync(writer, cts);
@@ -163,12 +163,12 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public void DeleteFilesOlderThan_ShouldDeleteOldKeepNewAndKeepPaths()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         var old = FixedNow.UtcDateTime.AddDays(-10);
-        string oldFile = CreateJsonl(directory, "logs_2026-01-05.jsonl", old);
-        string recentFile = CreateJsonl(directory, "logs_2026-01-14.jsonl", FixedNow.UtcDateTime.AddDays(-1));
-        string openFile = CreateJsonl(directory, "metrics_2026-01-05.jsonl", old);
-        string textFile = CreateJsonl(directory, "notes.txt", old);
+        var oldFile = CreateJsonl(directory, "logs_2026-01-05.jsonl", old);
+        var recentFile = CreateJsonl(directory, "logs_2026-01-14.jsonl", FixedNow.UtcDateTime.AddDays(-1));
+        var openFile = CreateJsonl(directory, "metrics_2026-01-05.jsonl", old);
+        var textFile = CreateJsonl(directory, "notes.txt", old);
 
         TelemetryFileMaintenance.DeleteFilesOlderThan(directory, 3, new StubTimeProvider(FixedNow), [openFile]);
 
@@ -181,7 +181,7 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public void DeleteFilesOlderThan_WhenDirectoryMissing_ShouldNotThrow()
     {
-        string directory = Path.Combine(CreateTempDirectory(), "missing");
+        var directory = Path.Combine(CreateTempDirectory(), "missing");
 
         Should.NotThrow(() =>
             TelemetryFileMaintenance.DeleteFilesOlderThan(directory, 3, new StubTimeProvider(FixedNow), []));
@@ -190,7 +190,7 @@ public class LocalTelemetryFileWriterTests
     [Test]
     public async Task ExecuteAsync_ShouldCreateLogFiles_ThenCancelCleanly()
     {
-        string directory = CreateTempDirectory();
+        var directory = CreateTempDirectory();
         await using var writer = new LocalTelemetryFileWriter(new StubConfiguration(directory));
 
         using var cts = new CancellationTokenSource();
@@ -226,8 +226,8 @@ public class LocalTelemetryFileWriterTests
         await writer.StopAsync(CancellationToken.None);
         await start;
 
-        string logsFile = Directory.GetFiles(directory, "logs_*.jsonl").Single();
-        long lengthAfterStop = new FileInfo(logsFile).Length;
+        var logsFile = Directory.GetFiles(directory, "logs_*.jsonl").Single();
+        var lengthAfterStop = new FileInfo(logsFile).Length;
         Should.NotThrow(() => writer.WriteLogEntry(LogLevel.Error, "cat", "after-stop"));
         new FileInfo(logsFile).Length.ShouldBe(lengthAfterStop);
     }
@@ -246,7 +246,7 @@ public class LocalTelemetryFileWriterTests
     {
         await writer.StartAsync(token);
 
-        string liveLogs = Path.Combine(directory, $"logs_{FixedDate}.jsonl");
+        var liveLogs = Path.Combine(directory, $"logs_{FixedDate}.jsonl");
         var deadline = DateTime.UtcNow.AddSeconds(5);
         while (DateTime.UtcNow < deadline && !File.Exists(liveLogs))
         {
@@ -264,12 +264,12 @@ public class LocalTelemetryFileWriterTests
 
     private static List<string> WriteMessagesPast(LocalTelemetryFileWriter writer, long totalBytes)
     {
-        string padding = new('x', 1000);
+        var padding = new string('x', 1000);
         var written = new List<string>();
         long bytes = 0;
         while (bytes <= totalBytes)
         {
-            string message = $"message-{written.Count:D6}-{padding}";
+            var message = $"message-{written.Count:D6}-{padding}";
             writer.WriteLogEntry(LogLevel.Information, "Rolling.Test", message);
             written.Add(message);
             bytes += message.Length;
@@ -292,7 +292,7 @@ public class LocalTelemetryFileWriterTests
 
     private static string CreateJsonl(string directory, string fileName, DateTime lastWriteUtc)
     {
-        string path = Path.Combine(directory, fileName);
+        var path = Path.Combine(directory, fileName);
         File.WriteAllText(path, "{}");
         File.SetLastWriteTimeUtc(path, lastWriteUtc);
         return path;
@@ -300,7 +300,7 @@ public class LocalTelemetryFileWriterTests
 
     private static string CreateTempDirectory()
     {
-        string path = Path.Combine(Path.GetTempPath(), "telemetry-tests-" + Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(Path.GetTempPath(), "telemetry-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
     }

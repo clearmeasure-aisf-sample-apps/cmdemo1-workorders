@@ -32,7 +32,7 @@ public sealed class BuildFactsProvider
     /// </summary>
     internal BuildFactsProvider(string contentRootPath, string? informationalVersion, ILogger logger)
     {
-        string path = Path.Combine(contentRootPath, FileName);
+        var path = Path.Combine(contentRootPath, FileName);
         _json = new Lazy<string>(() => Load(path, informationalVersion, logger));
     }
 

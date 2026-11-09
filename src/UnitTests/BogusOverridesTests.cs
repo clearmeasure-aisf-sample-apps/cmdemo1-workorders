@@ -9,7 +9,7 @@ public class BogusOverridesTests
     [Test]
     public void ShouldClampGeneratedRoomNumberToTheFormEntryLimit()
     {
-        for (int i = 0; i < 30; i++)
+        for (var i = 0; i < 30; i++)
         {
             var order = ObjectMother.Faker<WorkOrder>();
             order.RoomNumber.ShouldNotBeNullOrEmpty();

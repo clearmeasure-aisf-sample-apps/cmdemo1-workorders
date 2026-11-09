@@ -112,7 +112,7 @@ public sealed record WorkOrderSearchUrlState
     /// </summary>
     public string ToRelativeUri()
     {
-        string[] parts = FilterParts().Concat(ViewParts()).Where(p => p.Value != null)
+        var parts = FilterParts().Concat(ViewParts()).Where(p => p.Value != null)
             .Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value!)}")
             .ToArray();
         return parts.Length == 0 ? SearchPath : $"{SearchPath}?{string.Join("&", parts)}";
@@ -121,8 +121,8 @@ public sealed record WorkOrderSearchUrlState
     /// <summary>The query string of <see cref="ToRelativeUri"/> without the leading <c>?</c>, or an empty string.</summary>
     public string ToQueryString()
     {
-        string uri = ToRelativeUri();
-        int index = uri.IndexOf('?');
+        var uri = ToRelativeUri();
+        var index = uri.IndexOf('?');
         return index < 0 ? string.Empty : uri[(index + 1)..];
     }
 
@@ -179,10 +179,10 @@ public sealed record WorkOrderSearchUrlState
     private static bool HasText(string? value) => !string.IsNullOrWhiteSpace(value);
 
     private static string? Text(Dictionary<string, string?> values, string key) =>
-        values.TryGetValue(key, out string? value) && HasText(value) ? value!.Trim() : null;
+        values.TryGetValue(key, out var value) && HasText(value) ? value!.Trim() : null;
 
     private static bool Flag(Dictionary<string, string?> values, string key) =>
-        bool.TryParse(Text(values, key), out bool flag) && flag;
+        bool.TryParse(Text(values, key), out var flag) && flag;
 
     private static string? ParseStatus(string? key) =>
         WorkOrderStatus.GetAllItems().FirstOrDefault(s => string.Equals(s.Key, key, StringComparison.OrdinalIgnoreCase))?.Key;
@@ -198,7 +198,7 @@ public sealed record WorkOrderSearchUrlState
             : SearchView.Table;
 
     private static int? ParseDays(string? value) =>
-        int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int days) && days is >= 1 and <= 3650
+        int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var days) && days is >= 1 and <= 3650
             ? days
             : null;
 
@@ -206,5 +206,5 @@ public sealed record WorkOrderSearchUrlState
         SortColumns.All.FirstOrDefault(column => string.Equals(column, value, StringComparison.OrdinalIgnoreCase));
 
     private static int ParsePage(string? value) =>
-        int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int page) && page > 1 ? page : 1;
+        int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var page) && page > 1 ? page : 1;
 }

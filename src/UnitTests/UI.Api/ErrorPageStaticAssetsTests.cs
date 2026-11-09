@@ -8,12 +8,12 @@ public class ErrorPageStaticAssetsTests
     [Test]
     public void ErrorCshtml_ShouldNotReferenceMissingSharedCssPaths()
     {
-        string errorPage = Path.GetFullPath(Path.Combine(
+        var errorPage = Path.GetFullPath(Path.Combine(
             TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI", "Api", "Pages", "Error.cshtml"));
 
         File.Exists(errorPage).ShouldBeTrue();
-        string markup = File.ReadAllText(errorPage);
+        var markup = File.ReadAllText(errorPage);
         markup.ShouldNotContain("href=\"~/css/");
         markup.ShouldContain("<style>");
         markup.ShouldContain("text-danger");

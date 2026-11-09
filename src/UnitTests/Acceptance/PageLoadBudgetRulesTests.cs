@@ -14,7 +14,7 @@ public class PageLoadBudgetRulesTests
     public void Evaluate_ShouldFail_WhenFiftyOneApiCallsExceedMaxOfFive()
     {
         var requests = new PageLoadBudgetRules.RecordedRequest[51];
-        for (int index = 0; index < requests.Length; index++)
+        for (var index = 0; index < requests.Length; index++)
         {
             requests[index] = new PageLoadBudgetRules.RecordedRequest($"{App}/api/items/{index}", "fetch");
         }
@@ -47,7 +47,7 @@ public class PageLoadBudgetRulesTests
     public void Evaluate_ShouldPass_WhenCountEqualsTheMaximum()
     {
         var requests = new PageLoadBudgetRules.RecordedRequest[5];
-        for (int index = 0; index < requests.Length; index++)
+        for (var index = 0; index < requests.Length; index++)
         {
             requests[index] = new PageLoadBudgetRules.RecordedRequest($"{App}/api/items/{index}", "fetch");
         }

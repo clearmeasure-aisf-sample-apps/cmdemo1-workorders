@@ -9,7 +9,7 @@ public class WorkOrderNumberGeneratorTests
     public void ShouldBeSevenInLength()
     {
         var generator = new WorkOrderNumberGenerator();
-        string number = generator.GenerateNumber();
+        var number = generator.GenerateNumber();
 
         Assert.That(number.Length, Is.EqualTo(7));
     }

@@ -34,7 +34,7 @@ public class WorkOrderAiChatTests : AcceptanceTestBase
         await Expect(chatHistory).ToBeVisibleAsync();
 
         // Verify chat history contains text content (messages were added)
-        string chatHistoryText = await chatHistory.InnerTextAsync();
+        var chatHistoryText = await chatHistory.InnerTextAsync();
         chatHistoryText.ShouldNotBeNullOrEmpty();
         chatHistoryText.ShouldContain(prompt);
     }
@@ -63,11 +63,11 @@ public class WorkOrderAiChatTests : AcceptanceTestBase
         await Expect(chatHistory).ToBeVisibleAsync();
 
         // User message is always in history; LLM may not echo the work order number verbatim.
-        string chatHistoryText = await chatHistory.InnerTextAsync();
+        var chatHistoryText = await chatHistory.InnerTextAsync();
         chatHistoryText.ShouldNotBeNullOrEmpty();
         chatHistoryText.ShouldContain(prompt);
 
-        string aiOnlyText = await aiMessage.InnerTextAsync();
+        var aiOnlyText = await aiMessage.InnerTextAsync();
         aiOnlyText.ShouldNotBeNullOrWhiteSpace();
     }
 
@@ -95,7 +95,7 @@ public class WorkOrderAiChatTests : AcceptanceTestBase
         await Expect(chatHistory).ToBeVisibleAsync();
 
         // Verify chat history contains text content (messages were added)
-        string chatHistoryText = await chatHistory.InnerTextAsync();
+        var chatHistoryText = await chatHistory.InnerTextAsync();
         chatHistoryText.ShouldNotBeNullOrEmpty();
         chatHistoryText.ShouldContain("Simpson");
     }

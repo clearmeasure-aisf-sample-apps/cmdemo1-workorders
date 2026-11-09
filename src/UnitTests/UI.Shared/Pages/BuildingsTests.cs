@@ -40,7 +40,7 @@ public class BuildingsTests
         await component.WaitForAssertionAsync(() =>
         {
             var empty = component.Find(".buildings-empty-state");
-            string? role = empty.GetAttribute("role");
+            var role = empty.GetAttribute("role");
             role.ShouldNotBeNull();
             role.ShouldBe("status");
             empty.TextContent.ShouldContain("No work orders found");
@@ -125,7 +125,7 @@ public class BuildingsTests
         await component.WaitForAssertionAsync(() =>
         {
             var openLink = component.Find("[data-testid='room-open-link-Main Building-Room 101']");
-            string? href = openLink.GetAttribute("href");
+            var href = openLink.GetAttribute("href");
             href.ShouldNotBeNull();
             href.ShouldContain("workorder/search");
             href.ShouldContain("Building=Main%20Building");
@@ -145,7 +145,7 @@ public class BuildingsTests
         await component.WaitForAssertionAsync(() =>
         {
             var overdueLink = component.Find("[data-testid='room-overdue-link-Main Building-Room 101']");
-            string? href = overdueLink.GetAttribute("href");
+            var href = overdueLink.GetAttribute("href");
             href.ShouldNotBeNull();
             href.ShouldContain("OverdueOnly=true");
         });
@@ -162,7 +162,7 @@ public class BuildingsTests
         await component.WaitForAssertionAsync(() =>
         {
             var completedLink = component.Find("[data-testid='room-completed-link-Main Building-Room 101']");
-            string? href = completedLink.GetAttribute("href");
+            var href = completedLink.GetAttribute("href");
             href.ShouldNotBeNull();
             href.ShouldContain("Status=Complete");
             href.ShouldContain("CompletedWithinDays=30");

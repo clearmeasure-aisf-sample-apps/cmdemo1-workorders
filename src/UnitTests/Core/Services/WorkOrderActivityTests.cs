@@ -65,10 +65,7 @@ public class WorkOrderActivityTests
     {
         var order = new WorkOrder
         {
-            Status = WorkOrderStatus.Cancelled,
-            CreatedDate = Day,
-            AssignedDate = null,
-            CompletedDate = null
+            Status = WorkOrderStatus.Cancelled, CreatedDate = Day, AssignedDate = null, CompletedDate = null
         };
 
         var activity = WorkOrderActivity.Latest(order);

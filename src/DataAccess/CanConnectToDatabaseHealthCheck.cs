@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
@@ -12,8 +12,8 @@ public class CanConnectToDatabaseHealthCheck(DbContext dbContext, ILogger<CanCon
     {
         try
         {
-            string providerName = dbContext.Database.ProviderName ?? "Unknown";
-            bool canConnect = await dbContext.Database.CanConnectAsync(cancellationToken);
+            var providerName = dbContext.Database.ProviderName ?? "Unknown";
+            var canConnect = await dbContext.Database.CanConnectAsync(cancellationToken);
             if (canConnect)
             {
                 logger.LogDebug("Health check success via DbContext");
@@ -21,14 +21,14 @@ public class CanConnectToDatabaseHealthCheck(DbContext dbContext, ILogger<CanCon
                     description: $"Database connection successful (Provider: {providerName})");
             }
 
-            string description = $"Cannot connect to database (Provider: {providerName})";
+            var description = $"Cannot connect to database (Provider: {providerName})";
             logger.LogWarning(description);
             return new HealthCheckResult(HealthStatus.Unhealthy, description: description);
         }
         catch (Exception ex)
         {
-            string providerName = dbContext.Database.ProviderName ?? "Unknown";
-            string description = $"Database connection failed (Provider: {providerName}): {ex.Message}";
+            var providerName = dbContext.Database.ProviderName ?? "Unknown";
+            var description = $"Database connection failed (Provider: {providerName}): {ex.Message}";
             logger.LogWarning(ex, "Database connection failed");
             return new HealthCheckResult(HealthStatus.Unhealthy, description: description, exception: ex);
         }

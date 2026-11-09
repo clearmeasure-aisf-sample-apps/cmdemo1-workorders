@@ -21,8 +21,8 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithAssignee()
     {
-        string number123 = TestData.Number("S");
-        string number456 = TestData.Number("S");
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
         var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -61,8 +61,8 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithCreator()
     {
-        string number123 = TestData.Number("S");
-        string number456 = TestData.Number("S");
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
         var creator1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var creator2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -99,8 +99,8 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithFullSpecification()
     {
-        string number123 = TestData.Number("S");
-        string number456 = TestData.Number("S");
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
         var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -143,8 +143,8 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchBySpecificationWithStatus()
     {
-        string number123 = TestData.Number("S");
-        string number456 = TestData.Number("S");
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
         var employee1 = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var employee2 = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -186,8 +186,8 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldSearchWithEmptySpecificationAndReturnAll()
     {
-        string number123 = TestData.Number("S");
-        string number456 = TestData.Number("S");
+        var number123 = TestData.Number("S");
+        var number456 = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var order1 = new WorkOrder { Creator = employee, Assignee = employee, Number = number123 };
@@ -211,7 +211,7 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task SearchShouldReturnHydratedEmployeesWithWorkOrders()
     {
-        string number123 = TestData.Number("S");
+        var number123 = TestData.Number("S");
 
         var creator = new Employee(TestData.UserName("employee1"), "John", "Doe", "john.doe@example.com");
         var assignee = new Employee(TestData.UserName("employee2"), "Jane", "Smith", "jane.smith@example.com");
@@ -261,8 +261,8 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldReturnOnlyOverdueWorkOrders_WhenOverdueOnlyFilterIsTrue()
     {
-        string overdueOrderNumber = TestData.Number("S");
-        string futureOrderNumber = TestData.Number("S");
+        var overdueOrderNumber = TestData.Number("S");
+        var futureOrderNumber = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var overdueOrder = new WorkOrder
@@ -343,10 +343,10 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldReturnEachWorkOrderOnce_WhenSearchingByCreatorWithSeveralRoles()
     {
-        string firstNumber = TestData.Number("S");
-        string secondNumber = TestData.Number("S");
-        string thirdNumber = TestData.Number("S");
-        string otherCreatorNumber = TestData.Number("S");
+        var firstNumber = TestData.Number("S");
+        var secondNumber = TestData.Number("S");
+        var thirdNumber = TestData.Number("S");
+        var otherCreatorNumber = TestData.Number("S");
 
         var creator = new Employee(TestData.UserName("creator"), "Timothy", "Lovejoy Jr", "creator@example.com");
         creator.AddRole(new Role($"Pastor_{TestData.Tag()}", true, false));
@@ -383,7 +383,7 @@ public class WorkOrderSpecificationHandlerTests
     {
         var creator = new Employee(TestData.UserName("order"), "Order", "Creator", "order@example.com");
         // Numbers ascend in index order, so the two orders created on the same day sort A before B.
-        string[] numbers = TestData.NumberSeries(4);
+        var numbers = TestData.NumberSeries(4);
         var oldest = new WorkOrder { Creator = creator, Number = numbers[3], CreatedDate = new DateTime(2026, 1, 1) };
         var newestB = new WorkOrder { Creator = creator, Number = numbers[1], CreatedDate = new DateTime(2026, 3, 1) };
         var newestA = new WorkOrder { Creator = creator, Number = numbers[0], CreatedDate = new DateTime(2026, 3, 1) };
@@ -408,26 +408,20 @@ public class WorkOrderSpecificationHandlerTests
     public async Task ShouldOrderByDueDateAscendingWithNullsLast()
     {
         var creator = new Employee(TestData.UserName("dueasc"), "Due", "Ascending", "dueasc@example.com");
-        string[] numbers = TestData.NumberSeries(3);
+        var numbers = TestData.NumberSeries(3);
         var early = new WorkOrder
         {
-            Creator = creator,
-            Number = numbers[0],
-            DueDate = new DateOnly(2026, 1, 15),
+            Creator = creator, Number = numbers[0], DueDate = new DateOnly(2026, 1, 15),
             CreatedDate = new DateTime(2026, 1, 1)
         };
         var later = new WorkOrder
         {
-            Creator = creator,
-            Number = numbers[1],
-            DueDate = new DateOnly(2026, 6, 15),
+            Creator = creator, Number = numbers[1], DueDate = new DateOnly(2026, 6, 15),
             CreatedDate = new DateTime(2026, 2, 1)
         };
         var undated = new WorkOrder
         {
-            Creator = creator,
-            Number = numbers[2],
-            DueDate = null,
+            Creator = creator, Number = numbers[2], DueDate = null,
             CreatedDate = new DateTime(2026, 3, 1)
         };
 
@@ -451,26 +445,20 @@ public class WorkOrderSpecificationHandlerTests
     public async Task ShouldOrderByDueDateDescendingWithNullsLast()
     {
         var creator = new Employee(TestData.UserName("duedesc"), "Due", "Descending", "duedesc@example.com");
-        string[] numbers = TestData.NumberSeries(3);
+        var numbers = TestData.NumberSeries(3);
         var early = new WorkOrder
         {
-            Creator = creator,
-            Number = numbers[0],
-            DueDate = new DateOnly(2026, 1, 15),
+            Creator = creator, Number = numbers[0], DueDate = new DateOnly(2026, 1, 15),
             CreatedDate = new DateTime(2026, 3, 1)
         };
         var later = new WorkOrder
         {
-            Creator = creator,
-            Number = numbers[1],
-            DueDate = new DateOnly(2026, 6, 15),
+            Creator = creator, Number = numbers[1], DueDate = new DateOnly(2026, 6, 15),
             CreatedDate = new DateTime(2026, 2, 1)
         };
         var undated = new WorkOrder
         {
-            Creator = creator,
-            Number = numbers[2],
-            DueDate = null,
+            Creator = creator, Number = numbers[2], DueDate = null,
             CreatedDate = new DateTime(2026, 1, 1)
         };
 
@@ -493,9 +481,9 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldMatchSearchTextCaseInsensitively()
     {
-        string byTitleNumber = TestData.Number("S");
-        string byAssigneeNumber = TestData.Number("S");
-        string noneNumber = TestData.Number("S");
+        var byTitleNumber = TestData.Number("S");
+        var byAssigneeNumber = TestData.Number("S");
+        var noneNumber = TestData.Number("S");
 
         var creator = new Employee(TestData.UserName("requester"), "Ned", "Flanders", "ned@example.com");
         var assignee = new Employee(TestData.UserName("willie"), "Groundskeeper", "Willie", "willie@example.com");
@@ -525,10 +513,10 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldFilterByRoomExactMatch()
     {
-        string room101Number = TestData.Number("S");
-        string room101SpacesNumber = TestData.Number("S");
-        string room102Number = TestData.Number("S");
-        string noRoomNumber = TestData.Number("S");
+        var room101Number = TestData.Number("S");
+        var room101SpacesNumber = TestData.Number("S");
+        var room102Number = TestData.Number("S");
+        var noRoomNumber = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var room101 = new WorkOrder { Creator = employee, Number = room101Number, RoomNumber = "101" };
@@ -555,10 +543,10 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldFilterByRoomCaseInsensitiveWhenDatabaseIsCaseInsensitive()
     {
-        string lowerRoomNumber = TestData.Number("S");
-        string upperRoomNumber = TestData.Number("S");
-        string mixedRoomNumber = TestData.Number("S");
-        string differentRoomNumber = TestData.Number("S");
+        var lowerRoomNumber = TestData.Number("S");
+        var upperRoomNumber = TestData.Number("S");
+        var mixedRoomNumber = TestData.Number("S");
+        var differentRoomNumber = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var lowerRoom = new WorkOrder { Creator = employee, Number = lowerRoomNumber, RoomNumber = "sanctuary" };
@@ -585,10 +573,10 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldFilterByNoRoomWhenRoomIsNull()
     {
-        string withRoomNumber = TestData.Number("S");
-        string nullRoomNumber = TestData.Number("S");
-        string emptyRoomNumber = TestData.Number("S");
-        string whitespaceRoomNumber = TestData.Number("S");
+        var withRoomNumber = TestData.Number("S");
+        var nullRoomNumber = TestData.Number("S");
+        var emptyRoomNumber = TestData.Number("S");
+        var whitespaceRoomNumber = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var withRoom = new WorkOrder { Creator = employee, Number = withRoomNumber, RoomNumber = "101" };
@@ -615,10 +603,10 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldFilterByNoBuilding()
     {
-        string withBuildingNumber = TestData.Number("S");
-        string nullBuildingNumber = TestData.Number("S");
-        string emptyBuildingNumber = TestData.Number("S");
-        string whitespaceBuildingNumber = TestData.Number("S");
+        var withBuildingNumber = TestData.Number("S");
+        var nullBuildingNumber = TestData.Number("S");
+        var emptyBuildingNumber = TestData.Number("S");
+        var whitespaceBuildingNumber = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var withBuilding = new WorkOrder { Creator = employee, Number = withBuildingNumber, Building = "Sanctuary" };
@@ -645,10 +633,10 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldMatchRoomExactWhenBothRoomAndNoBuildingAreSpecified()
     {
-        string sanctuaryRoom101Number = TestData.Number("S");
-        string noRoomWithBuildingNumber = TestData.Number("S");
-        string room101NoBuildingNumber = TestData.Number("S");
-        string room101NoRoomNumber = TestData.Number("S");
+        var sanctuaryRoom101Number = TestData.Number("S");
+        var noRoomWithBuildingNumber = TestData.Number("S");
+        var room101NoBuildingNumber = TestData.Number("S");
+        var room101NoRoomNumber = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var sanctuaryRoom101 = new WorkOrder { Creator = employee, Number = sanctuaryRoom101Number, Building = "Sanctuary", RoomNumber = "101" };
@@ -675,10 +663,10 @@ public class WorkOrderSpecificationHandlerTests
     [Test]
     public async Task ShouldCombineRoomFilterWithOpenOnlyFilter()
     {
-        string openRoom101Number = TestData.Number("S");
-        string completeRoom101Number = TestData.Number("S");
-        string openRoom102Number = TestData.Number("S");
-        string draftRoom101Number = TestData.Number("S");
+        var openRoom101Number = TestData.Number("S");
+        var completeRoom101Number = TestData.Number("S");
+        var openRoom102Number = TestData.Number("S");
+        var draftRoom101Number = TestData.Number("S");
 
         var employee = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var openRoom101 = new WorkOrder { Creator = employee, Number = openRoom101Number, RoomNumber = "101", Status = WorkOrderStatus.Assigned };
@@ -706,7 +694,7 @@ public class WorkOrderSpecificationHandlerTests
     private static async Task<(Employee Employee, string[] Numbers)> SeedWaitingOnVendorOrdersAsync()
     {
         var employee = new Employee(TestData.UserName("vendor"), "1", "1", "1");
-        string[] numbers = TestData.NumberSeries(3);
+        var numbers = TestData.NumberSeries(3);
         var since = new DateTime(2026, 10, 14, 9, 0, 0);
         var waiting = new WorkOrder { Creator = employee, Assignee = employee, Number = numbers[0], Status = WorkOrderStatus.InProgress, WaitingOnVendorSince = since };
         var inProgress = new WorkOrder { Creator = employee, Assignee = employee, Number = numbers[1], Status = WorkOrderStatus.InProgress };

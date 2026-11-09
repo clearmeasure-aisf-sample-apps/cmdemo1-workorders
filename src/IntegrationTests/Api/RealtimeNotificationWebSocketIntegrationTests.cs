@@ -53,7 +53,7 @@ public class RealtimeNotificationWebSocketIntegrationTests
     {
         var response = await _client!.GetAsync(ConnectionCountPath).ConfigureAwait(false);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         json.ShouldContain("count");
     }
 

@@ -16,7 +16,7 @@ public class RecentWorkOrdersQueryHandlerTests
         // Dates after every stored work order date make this test's rows the most recent in the database.
         var start = TestData.FutureClock().GetUtcNow().UtcDateTime;
         var creator = NewEmployee("recentcreator");
-        string[] numbers = TestData.NumberSeries(13);
+        var numbers = TestData.NumberSeries(13);
         var orders = Enumerable.Range(1, 11)
             .Select(i => Order(creator, numbers[i - 1], created: start.AddDays(10 + i)))
             .ToList();
@@ -43,20 +43,20 @@ public class RecentWorkOrdersQueryHandlerTests
     {
         var creator = NewEmployee("recenttie");
         var created = TestData.FutureClock().GetUtcNow().UtcDateTime;
-        string[] numbers = TestData.NumberSeries(12).Reverse().ToArray();
+        var numbers = TestData.NumberSeries(12).Reverse().ToArray();
         await SaveAsync(creator, numbers.Select(n => Order(creator, n, created: created)).ToList());
 
         var first = await Handle(10);
         var second = await Handle(10);
 
-        string[] expected = numbers.OrderBy(n => n, StringComparer.Ordinal).Take(10).ToArray();
+        var expected = numbers.OrderBy(n => n, StringComparer.Ordinal).Take(10).ToArray();
         first.Select(wo => wo.Number).ShouldBe(expected);
         second.Select(wo => wo.Number).ShouldBe(expected);
     }
 
     private static Employee NewEmployee(string prefix)
     {
-        string userName = TestData.UserName(prefix);
+        var userName = TestData.UserName(prefix);
         return new Employee(userName, "Recent", "Tester", TestData.Email(userName));
     }
 
@@ -70,13 +70,8 @@ public class RecentWorkOrdersQueryHandlerTests
         DateTime? completed = null) =>
         new()
         {
-            Creator = creator,
-            Number = number,
-            Title = number,
-            Status = WorkOrderStatus.Draft,
-            CreatedDate = created,
-            AssignedDate = null,
-            CompletedDate = completed
+            Creator = creator, Number = number, Title = number, Status = WorkOrderStatus.Draft,
+            CreatedDate = created, AssignedDate = null, CompletedDate = completed
         };
 
     private static async Task SaveAsync(Employee creator, List<WorkOrder> orders)

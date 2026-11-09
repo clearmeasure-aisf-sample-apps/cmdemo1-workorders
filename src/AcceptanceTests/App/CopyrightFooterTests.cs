@@ -14,13 +14,13 @@ public class CopyrightFooterTests : AcceptanceTestBase
         await footer.WaitForAsync();
         await Expect(footer).ToBeVisibleAsync();
 
-        string yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+        var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
         await Expect(footer).ToContainTextAsync(yearText);
         await Expect(footer).ToContainTextAsync("ClearMeasure Labs");
 
         var link = footer.Locator("a[href*='clearmeasure.com']").First;
         await Expect(link).ToBeVisibleAsync();
-        string href = (await link.GetAttributeAsync("href"))!.ToLowerInvariant();
+        var href = (await link.GetAttributeAsync("href"))!.ToLowerInvariant();
         href.ShouldStartWith("http");
         href.ShouldContain("clearmeasure.com");
     }
@@ -33,7 +33,7 @@ public class CopyrightFooterTests : AcceptanceTestBase
 
         var footer = Page.GetByTestId(nameof(MainLayout.Elements.CopyrightFooter));
         await Expect(footer).ToBeVisibleAsync();
-        string yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+        var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
         await Expect(footer).ToContainTextAsync(yearText);
         await Expect(footer).ToContainTextAsync("ClearMeasure Labs");
     }
@@ -67,7 +67,7 @@ public class CopyrightFooterTests : AcceptanceTestBase
         var versionSpan = Page.GetByTestId(nameof(MainLayout.Elements.SoftwareVersion));
         await versionSpan.WaitForAsync();
         await Expect(versionSpan).ToBeVisibleAsync();
-        string text = await versionSpan.InnerTextAsync();
+        var text = await versionSpan.InnerTextAsync();
         text.Trim().ShouldNotBeEmpty();
     }
 
@@ -81,7 +81,7 @@ public class CopyrightFooterTests : AcceptanceTestBase
 
         // When the build has a git SHA, the element is an anchor with an href to the commit.
         // In local dev without SourceRevisionId the element falls back to a span showing "unknown".
-        string? href = await gitSha.GetAttributeAsync("href");
+        var href = await gitSha.GetAttributeAsync("href");
         if (href is not null)
         {
             href.ShouldContain("github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/");
@@ -96,7 +96,7 @@ public class CopyrightFooterTests : AcceptanceTestBase
         await envName.WaitForAsync();
         await Expect(envName).ToBeVisibleAsync();
 
-        string text = await envName.InnerTextAsync();
+        var text = await envName.InnerTextAsync();
         text.Trim().ShouldNotBeEmpty();
     }
 }

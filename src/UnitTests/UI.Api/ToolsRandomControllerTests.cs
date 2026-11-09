@@ -144,7 +144,7 @@ public class ToolsRandomControllerTests
         content.ContentType.ShouldNotBeNull();
         content.ContentType.ShouldContain("text/plain");
         content.Content.ShouldNotBeNull();
-        int.TryParse(content.Content, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value).ShouldBeTrue();
+        int.TryParse(content.Content, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value).ShouldBeTrue();
         value.ShouldBeGreaterThanOrEqualTo(10);
         value.ShouldBeLessThanOrEqualTo(12);
     }
@@ -157,7 +157,7 @@ public class ToolsRandomControllerTests
         var content = result.ShouldBeOfType<ContentResult>();
         content.StatusCode.ShouldBe(200);
         content.Content.ShouldNotBeNull();
-        int.TryParse(content.Content, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value).ShouldBeTrue();
+        int.TryParse(content.Content, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value).ShouldBeTrue();
         value.ShouldBeGreaterThanOrEqualTo(int.MaxValue - 1);
         value.ShouldBeLessThanOrEqualTo(int.MaxValue);
     }

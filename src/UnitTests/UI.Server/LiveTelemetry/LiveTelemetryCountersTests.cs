@@ -110,7 +110,7 @@ public class LiveTelemetryCountersTests
         var clock = new StubTimeProvider(Start);
         var counters = new LiveTelemetryCounters(clock);
 
-        for (int second = 0; second < 60; second++)
+        for (var second = 0; second < 60; second++)
         {
             counters.RecordRequest(RequestKind.FrontDoorTraffic, 200, TimeSpan.FromMilliseconds(5));
             counters.RecordRequest(RequestKind.FrontDoorTraffic, 200, TimeSpan.FromMilliseconds(5));
@@ -127,7 +127,7 @@ public class LiveTelemetryCountersTests
     {
         var counters = new LiveTelemetryCounters(new StubTimeProvider(Start));
 
-        foreach (int ms in Enumerable.Range(1, 20).Reverse())
+        foreach (var ms in Enumerable.Range(1, 20).Reverse())
         {
             counters.RecordRequest(RequestKind.DirectTraffic, 200, TimeSpan.FromMilliseconds(ms));
             counters.RecordSqlCommand(TimeSpan.FromMilliseconds(ms * 10), false);
@@ -144,7 +144,7 @@ public class LiveTelemetryCountersTests
     {
         var counters = new LiveTelemetryCounters(new StubTimeProvider(Start));
 
-        for (int i = 0; i < 99; i++)
+        for (var i = 0; i < 99; i++)
         {
             counters.RecordRequest(RequestKind.DirectTraffic, 200, TimeSpan.FromMilliseconds(12.4));
         }
@@ -159,12 +159,12 @@ public class LiveTelemetryCountersTests
     {
         var counters = new LiveTelemetryCounters(new StubTimeProvider(Start));
 
-        for (int i = 0; i < LiveTelemetryCounters.LatencySampleCapacity; i++)
+        for (var i = 0; i < LiveTelemetryCounters.LatencySampleCapacity; i++)
         {
             counters.RecordSqlCommand(TimeSpan.FromMilliseconds(500), false);
         }
 
-        for (int i = 0; i < LiveTelemetryCounters.LatencySampleCapacity; i++)
+        for (var i = 0; i < LiveTelemetryCounters.LatencySampleCapacity; i++)
         {
             counters.RecordSqlCommand(TimeSpan.FromMilliseconds(2), false);
         }
@@ -215,7 +215,7 @@ public class LiveTelemetryCountersTests
 
         await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(() =>
         {
-            for (int i = 0; i < 1000; i++)
+            for (var i = 0; i < 1000; i++)
             {
                 counters.RecordRequest(RequestKind.DirectTraffic, 200, TimeSpan.FromMilliseconds(1));
                 counters.RecordSqlCommand(TimeSpan.FromMilliseconds(1), false);

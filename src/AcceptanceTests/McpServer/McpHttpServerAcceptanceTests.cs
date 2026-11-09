@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
+using ClearMeasure.Bootcamp.Core.Queries;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
@@ -21,19 +21,14 @@ public class McpHttpServerAcceptanceTests : AcceptanceTestBase
     [OneTimeTearDown]
     public async Task McpTearDown()
     {
-        if (_helper != null)
-        {
-            await _helper.DisposeAsync();
-        }
+        if (_helper != null) await _helper.DisposeAsync();
     }
 
     [SetUp]
     public void EnsureAvailability()
     {
         if (!_helper!.Connected)
-        {
             Assert.Inconclusive("MCP HTTP server is not available");
-        }
     }
 
     [Test]
@@ -55,7 +50,7 @@ public class McpHttpServerAcceptanceTests : AcceptanceTestBase
     [Category("Smoke")]
     public async Task ShouldListWorkOrdersViaHttp()
     {
-        string text = await _helper!.CallToolDirectly("list-work-orders",
+        var text = await _helper!.CallToolDirectly("list-work-orders",
             new Dictionary<string, object?>());
 
         text.ShouldNotBeNullOrEmpty();
@@ -69,7 +64,7 @@ public class McpHttpServerAcceptanceTests : AcceptanceTestBase
         var employees = await bus.Send(new EmployeeGetAllQuery());
         var creator = employees.First(e => e.Roles.Any(r => r.CanCreateWorkOrder));
 
-        string text = await _helper!.CallToolDirectly("create-work-order",
+        var text = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = "HTTP transport test",
@@ -88,7 +83,7 @@ public class McpHttpServerAcceptanceTests : AcceptanceTestBase
         var employees = await bus.Send(new EmployeeGetAllQuery());
         var known = employees.First();
 
-        string text = await _helper!.CallToolDirectly("get-employee",
+        var text = await _helper!.CallToolDirectly("get-employee",
             new Dictionary<string, object?>
             {
                 ["username"] = known.UserName

@@ -8,7 +8,7 @@ public class QodanaTestScopeGateTests
     [Test]
     public void QodanaYaml_StillHasWholeSolutionFailThresholdZero()
     {
-        string yaml = File.ReadAllText(FindRepoFile("qodana.yaml"));
+        var yaml = File.ReadAllText(FindRepoFile("qodana.yaml"));
 
         yaml.ShouldContain("failThreshold: 0");
         yaml.ShouldContain("solution: src/ChurchBulletin.sln");
@@ -17,7 +17,7 @@ public class QodanaTestScopeGateTests
     [Test]
     public void BuildYml_QodanaStep_StillPassesFailThresholdZero()
     {
-        string workflow = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
+        var workflow = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
 
         workflow.ShouldContain("--fail-threshold,0");
         workflow.ShouldContain("--solution,src/ChurchBulletin.sln");
@@ -44,7 +44,7 @@ public class QodanaTestScopeGateTests
     [Test]
     public void SrcEditorConfig_DoesNotDowngradeQodanaGatingInspections()
     {
-        string config = File.ReadAllText(FindRepoFile(Path.Combine("src", ".editorconfig")));
+        var config = File.ReadAllText(FindRepoFile(Path.Combine("src", ".editorconfig")));
 
         config.ShouldNotContain("resharper_redundant_using_directive_highlighting = none");
         config.ShouldNotContain("resharper_redundant_nullable_warning_suppression_highlighting = none");
@@ -52,7 +52,7 @@ public class QodanaTestScopeGateTests
 
     private static void AssertEditorConfigDowngrades(string relativePath)
     {
-        string config = File.ReadAllText(FindRepoFile(relativePath));
+        var config = File.ReadAllText(FindRepoFile(relativePath));
 
         config.ShouldContain("resharper_redundant_using_directive_highlighting = none");
         config.ShouldContain("resharper_redundant_nullable_warning_suppression_highlighting = none");
@@ -64,7 +64,7 @@ public class QodanaTestScopeGateTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName, relativePath);
+            var candidate = Path.Combine(dir.FullName, relativePath);
             if (File.Exists(candidate))
             {
                 return candidate;

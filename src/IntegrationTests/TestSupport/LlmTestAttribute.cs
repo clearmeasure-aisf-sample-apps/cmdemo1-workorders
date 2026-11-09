@@ -56,7 +56,7 @@ public sealed class LlmTestAttribute : NUnitAttribute, IRepeatTest
     {
         public override TestResult Execute(TestExecutionContext context)
         {
-            int remaining = tryCount;
+            var remaining = tryCount;
 
             while (remaining-- > 0)
             {
@@ -90,7 +90,7 @@ public sealed class LlmTestAttribute : NUnitAttribute, IRepeatTest
 
         private void DowngradeToWarning(TestResult result)
         {
-            string message =
+            var message =
                 $"LLM-dependent test did not pass after {tryCount} attempt(s); reported as a warning instead of a failure. " +
                 $"Last outcome: {result.ResultState.Status}. {result.Message}";
             result.SetResult(ResultState.Warning, message, result.StackTrace);

@@ -12,9 +12,7 @@ public record AddAttachmentMetadataCommand(
     public WorkOrderAttachment CreateAttachment(DateTime uploadedDate)
     {
         if (string.IsNullOrWhiteSpace(FileName))
-        {
             throw new ArgumentException("FileName is required.", nameof(FileName));
-        }
 
         return new WorkOrderAttachment
         {

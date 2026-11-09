@@ -179,7 +179,7 @@ internal static class WorkOrderQueryFilters
     {
         if (!string.IsNullOrWhiteSpace(building))
         {
-            string trimmed = building.Trim();
+            var trimmed = building.Trim();
             return query.Where(wo => wo.Building != null && wo.Building.Trim() == trimmed);
         }
 
@@ -195,7 +195,7 @@ internal static class WorkOrderQueryFilters
     {
         if (!string.IsNullOrWhiteSpace(room))
         {
-            string trimmed = room.Trim().ToLower();
+            var trimmed = room.Trim().ToLower();
             return query.Where(wo => wo.RoomNumber != null && wo.RoomNumber.Trim().ToLower() == trimmed);
         }
 
@@ -228,7 +228,7 @@ internal static class WorkOrderQueryFilters
             return query;
         }
 
-        string q = searchText.Trim().ToLower();
+        var q = searchText.Trim().ToLower();
         return query.Where(OrElse(NumberTitleOrRoomContains(q), CreatorOrAssigneeNameContains(q)));
     }
 

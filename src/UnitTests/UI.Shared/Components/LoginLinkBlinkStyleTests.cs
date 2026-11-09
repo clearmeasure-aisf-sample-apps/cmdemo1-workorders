@@ -9,7 +9,7 @@ public class LoginLinkBlinkStyleTests
     [Test]
     public void ShouldKeepLoginLinkOpaque_SoContrastHoldsWhileTheColorPulses()
     {
-        string css = ReadLoginLinkCss();
+        var css = ReadLoginLinkCss();
 
         var trough = Regex.Match(css, @"50%\s*\{[^}]*opacity:\s*(?<opacity>[\d.]+)");
         trough.Success.ShouldBeTrue("Expected a 50% keyframe declaring opacity");
@@ -22,7 +22,7 @@ public class LoginLinkBlinkStyleTests
     [Test]
     public void ShouldNeverFullyHideTheLoginLabel()
     {
-        string css = ReadLoginLinkCss();
+        var css = ReadLoginLinkCss();
 
         foreach (Match match in Regex.Matches(css, @"opacity:\s*(?<opacity>[\d.]+)"))
         {
@@ -33,7 +33,7 @@ public class LoginLinkBlinkStyleTests
     [Test]
     public void ShouldUseGentleRepeatingCycle()
     {
-        string css = ReadLoginLinkCss();
+        var css = ReadLoginLinkCss();
 
         css.ShouldContain("animation: login-link-blink-pulse 1.5s ease-in-out infinite");
     }
@@ -41,7 +41,7 @@ public class LoginLinkBlinkStyleTests
     [Test]
     public void ShouldOutrankMainLayoutAuthSectionAnchorRule()
     {
-        string css = ReadLoginLinkCss();
+        var css = ReadLoginLinkCss();
 
         css.ShouldContain(".auth-section a.login-link-blink");
     }
@@ -49,7 +49,7 @@ public class LoginLinkBlinkStyleTests
     [Test]
     public void ShouldNotUseGlobalPseudoClass_BecauseBrowsersDropThoseRules()
     {
-        string css = ReadLoginLinkCss();
+        var css = ReadLoginLinkCss();
 
         css.ShouldNotContain(":global(");
     }
@@ -57,12 +57,12 @@ public class LoginLinkBlinkStyleTests
     [Test]
     public void ShouldAccentBothThemes()
     {
-        string css = ReadLoginLinkCss();
+        var css = ReadLoginLinkCss();
 
         css.ShouldContain("var(--login-link-bright)");
         css.ShouldContain("var(--login-link-dim)");
 
-        string tokens = ReadAppCss();
+        var tokens = ReadAppCss();
         tokens.ShouldContain("--login-link-bright: #2b6cb0");
         tokens.ShouldContain("--login-link-dim: #4a5568");
         tokens.ShouldContain("--login-link-bright: #90cdf4");
@@ -73,7 +73,7 @@ public class LoginLinkBlinkStyleTests
     [Test]
     public void ShouldDisableAnimation_WhenReducedMotionRequested()
     {
-        string css = ReadLoginLinkCss();
+        var css = ReadLoginLinkCss();
 
         var reducedMotion = Regex.Match(
             css,
@@ -95,13 +95,13 @@ public class LoginLinkBlinkStyleTests
 
     private static string ReadCss(string relativeToSrc)
     {
-        string path = Path.GetFullPath(Path.Combine(
+        var path = Path.GetFullPath(Path.Combine(
             TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..",
             relativeToSrc));
 
         File.Exists(path).ShouldBeTrue($"Expected stylesheet at {path}");
-        string css = File.ReadAllText(path).Replace("\r\n", "\n");
+        var css = File.ReadAllText(path).Replace("\r\n", "\n");
         return Regex.Replace(css, @"/\*.*?\*/", string.Empty, RegexOptions.Singleline).Trim();
     }
 }

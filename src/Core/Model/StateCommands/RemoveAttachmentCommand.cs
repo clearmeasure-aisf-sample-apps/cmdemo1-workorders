@@ -16,41 +16,18 @@ public record RemoveAttachmentCommand(Guid WorkOrderId, Guid AttachmentId, strin
     /// <summary>Returns the reason the removal is refused, or null when it is allowed.</summary>
     public static string? Validate(WorkOrder? workOrder, Employee? user, WorkOrderAttachment? attachment)
     {
-        if (workOrder is null)
-        {
-            return "Work order not found.";
-        }
-
-        if (user is null)
-        {
-            return "User not found.";
-        }
-
-        if (attachment is null)
-        {
-            return "Attachment not found.";
-        }
-
+        if (workOrder is null) return "Work order not found.";
+        if (user is null) return "User not found.";
+        if (attachment is null) return "Attachment not found.";
         return ValidateRules(workOrder, user, attachment);
     }
 
     private static string? ValidateRules(WorkOrder workOrder, Employee user, WorkOrderAttachment attachment)
     {
-        if (attachment.WorkOrderId != workOrder.Id)
-        {
-            return "Attachment does not belong to this work order.";
-        }
-
-        if (!IsCreatorOrAssignee(workOrder, user))
-        {
-            return "Only the creator or the assignee can remove attachments.";
-        }
-
+        if (attachment.WorkOrderId != workOrder.Id) return "Attachment does not belong to this work order.";
+        if (!IsCreatorOrAssignee(workOrder, user)) return "Only the creator or the assignee can remove attachments.";
         if (!IsRemovableStatus(workOrder.Status))
-        {
             return "Attachments cannot be removed from a Complete or Cancelled work order.";
-        }
-
         return null;
     }
 

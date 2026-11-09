@@ -81,7 +81,7 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
         await Input(nameof(WorkOrderManage.Elements.RoomNumber), order.RoomNumber);
 
-        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
@@ -175,13 +175,13 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
 
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
 
-        string overLimitInstructions = new('x', WorkOrder.InstructionsMaxLength + 1);
+        var overLimitInstructions = new string('x', WorkOrder.InstructionsMaxLength + 1);
         var instructionsField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions));
         await instructionsField.EvaluateAsync(
             "(el, value) => { el.removeAttribute('maxlength'); el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }",
             overLimitInstructions);
 
-        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
 
         await Expect(Page.GetByText("Instructions cannot exceed 4000 characters.")).ToBeVisibleAsync(

@@ -1,4 +1,4 @@
-namespace ClearMeasure.Bootcamp.Core;
+﻿namespace ClearMeasure.Bootcamp.Core;
 
 public interface IDistributedBus
 {

@@ -64,14 +64,14 @@ public class ProcessVitalsTests
         var counters = new LiveTelemetryCounters(clock, meter);
         clock.Advance(SampleInterval);
         meter.CpuTime += TimeSpan.FromMilliseconds(400);
-        double first = counters.Snapshot().Process.CpuPercent;
+        var first = counters.Snapshot().Process.CpuPercent;
 
         clock.Advance(SampleInterval / 2);
         meter.CpuTime += TimeSpan.FromSeconds(1);
-        double withinInterval = counters.Snapshot().Process.CpuPercent;
+        var withinInterval = counters.Snapshot().Process.CpuPercent;
         clock.Advance(SampleInterval / 2);
         meter.CpuTime += TimeSpan.FromSeconds(1);
-        double afterInterval = counters.Snapshot().Process.CpuPercent;
+        var afterInterval = counters.Snapshot().Process.CpuPercent;
 
         first.ShouldBe(10);
         withinInterval.ShouldBe(10);
@@ -118,10 +118,10 @@ public class ProcessVitalsTests
         counters.Snapshot().Process.CpuPercent.ShouldBe(25);
 
         clock.Advance(TimeSpan.FromMinutes(-5));
-        double afterStepBack = counters.Snapshot().Process.CpuPercent;
+        var afterStepBack = counters.Snapshot().Process.CpuPercent;
         clock.Advance(SampleInterval);
         meter.CpuTime += SampleInterval / 2;
-        double afterNextInterval = counters.Snapshot().Process.CpuPercent;
+        var afterNextInterval = counters.Snapshot().Process.CpuPercent;
 
         afterStepBack.ShouldBe(25);
         afterNextInterval.ShouldBe(50);
@@ -151,11 +151,11 @@ public class ProcessVitalsTests
         counters.RecordUnhandledException();
 
         clock.Advance(TimeSpan.FromSeconds(29));
-        int beforeRoll = counters.Snapshot().Process.ExceptionsPerMinute;
+        var beforeRoll = counters.Snapshot().Process.ExceptionsPerMinute;
         clock.Advance(TimeSpan.FromSeconds(1));
-        int afterFirstRoll = counters.Snapshot().Process.ExceptionsPerMinute;
+        var afterFirstRoll = counters.Snapshot().Process.ExceptionsPerMinute;
         clock.Advance(TimeSpan.FromSeconds(30));
-        int afterSecondRoll = counters.Snapshot().Process.ExceptionsPerMinute;
+        var afterSecondRoll = counters.Snapshot().Process.ExceptionsPerMinute;
 
         beforeRoll.ShouldBe(3);
         afterFirstRoll.ShouldBe(2);

@@ -290,7 +290,7 @@ public class DetailedHealthCheckResponseWriterTests
         using var doc = await WriteAndParseAsync(context, CreateMinimalReport());
 
         doc.RootElement.TryGetProperty("version", out var version).ShouldBeTrue();
-        string? expected = ExpectedAssemblyVersion();
+        var expected = ExpectedAssemblyVersion();
         if (expected is null)
         {
             version.ValueKind.ShouldBe(JsonValueKind.Null);
@@ -303,20 +303,20 @@ public class DetailedHealthCheckResponseWriterTests
 
     private static string? ExpectedAssemblyVersion()
     {
-        string? informationalVersion = typeof(DetailedHealthCheckResponseWriter).Assembly
+        var informationalVersion = typeof(DetailedHealthCheckResponseWriter).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         if (string.IsNullOrWhiteSpace(informationalVersion))
         {
             return null;
         }
 
-        int metadata = informationalVersion.IndexOf('+');
+        var metadata = informationalVersion.IndexOf('+');
         if (metadata < 0)
         {
             return informationalVersion;
         }
 
-        string version = informationalVersion[..metadata];
+        var version = informationalVersion[..metadata];
         return string.IsNullOrWhiteSpace(version) ? null : version;
     }
 }

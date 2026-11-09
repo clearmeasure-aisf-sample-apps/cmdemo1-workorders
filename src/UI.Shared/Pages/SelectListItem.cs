@@ -1,4 +1,4 @@
-namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
+﻿namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 public class SelectListItem(string value, string text)
 {

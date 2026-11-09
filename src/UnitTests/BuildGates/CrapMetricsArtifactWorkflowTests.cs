@@ -8,34 +8,34 @@ public class CrapMetricsArtifactWorkflowTests
     [Test]
     public void BuildWorkflow_WhenRead_PublishesCrapSummaryAndArtifactAfterEnforceStep()
     {
-        string yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
+        var yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
 
-        int jobStart = yaml.IndexOf("  build-linux:", StringComparison.Ordinal);
+        var jobStart = yaml.IndexOf("  build-linux:", StringComparison.Ordinal);
         jobStart.ShouldBeGreaterThan(-1);
-        int nextJob = yaml.IndexOf("\n  build-sqlite:", jobStart, StringComparison.Ordinal);
+        var nextJob = yaml.IndexOf("\n  build-sqlite:", jobStart, StringComparison.Ordinal);
         nextJob.ShouldBeGreaterThan(jobStart);
-        string linuxJob = yaml.Substring(jobStart, nextJob - jobStart);
+        var linuxJob = yaml.Substring(jobStart, nextJob - jobStart);
 
-        int enforceIndex = linuxJob.IndexOf("name: Enforce CRAP", StringComparison.Ordinal);
-        int summaryIndex = linuxJob.IndexOf("name: Publish CRAP summary to job summary", StringComparison.Ordinal);
+        var enforceIndex = linuxJob.IndexOf("name: Enforce CRAP", StringComparison.Ordinal);
+        var summaryIndex = linuxJob.IndexOf("name: Publish CRAP summary to job summary", StringComparison.Ordinal);
         enforceIndex.ShouldBeGreaterThan(-1);
         summaryIndex.ShouldBeGreaterThan(enforceIndex);
 
-        string nextStepMarker = "\n      - name:";
-        int nextStep = linuxJob.IndexOf(nextStepMarker, summaryIndex, StringComparison.Ordinal);
+        var nextStepMarker = "\n      - name:";
+        var nextStep = linuxJob.IndexOf(nextStepMarker, summaryIndex, StringComparison.Ordinal);
         nextStep.ShouldBeGreaterThan(summaryIndex);
-        string summaryBlock = linuxJob.Substring(summaryIndex, nextStep - summaryIndex);
+        var summaryBlock = linuxJob.Substring(summaryIndex, nextStep - summaryIndex);
 
         summaryBlock.ShouldContain("if: always()");
         summaryBlock.ShouldContain("GITHUB_STEP_SUMMARY");
         summaryBlock.ShouldContain("crap-metrics/crap-summary.md");
         summaryBlock.ShouldNotContain("uses: actions/upload-artifact");
 
-        int uploadIndex = linuxJob.IndexOf("name: Upload CRAP metrics", StringComparison.Ordinal);
+        var uploadIndex = linuxJob.IndexOf("name: Upload CRAP metrics", StringComparison.Ordinal);
         uploadIndex.ShouldBeGreaterThan(summaryIndex);
-        int uploadEnd = linuxJob.IndexOf(nextStepMarker, uploadIndex, StringComparison.Ordinal);
+        var uploadEnd = linuxJob.IndexOf(nextStepMarker, uploadIndex, StringComparison.Ordinal);
         uploadEnd.ShouldBeGreaterThan(uploadIndex);
-        string uploadBlock = linuxJob.Substring(uploadIndex, uploadEnd - uploadIndex);
+        var uploadBlock = linuxJob.Substring(uploadIndex, uploadEnd - uploadIndex);
 
         uploadBlock.ShouldContain("uses: actions/upload-artifact");
         uploadBlock.ShouldContain("if: always()");
@@ -51,7 +51,7 @@ public class CrapMetricsArtifactWorkflowTests
     [Test]
     public void CrapAuditDoc_WhenRead_DocumentsJobSummaryAndArtifact()
     {
-        string doc = File.ReadAllText(FindRepoFile(Path.Combine(
+        var doc = File.ReadAllText(FindRepoFile(Path.Combine(
             "docs", "crap-score-audit.md")));
 
         doc.ShouldContain("GITHUB_STEP_SUMMARY");
@@ -69,7 +69,7 @@ public class CrapMetricsArtifactWorkflowTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName, relativePath);
+            var candidate = Path.Combine(dir.FullName, relativePath);
             if (File.Exists(candidate))
             {
                 return candidate;

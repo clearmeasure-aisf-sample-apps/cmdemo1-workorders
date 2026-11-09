@@ -43,7 +43,7 @@ public sealed class CreateVendorCommandValidator : AbstractValidator<CreateVendo
             return true;
         }
 
-        int digitCount = phoneNumber.Count(char.IsDigit);
+        var digitCount = phoneNumber.Count(char.IsDigit);
         return digitCount >= 7;
     }
 }

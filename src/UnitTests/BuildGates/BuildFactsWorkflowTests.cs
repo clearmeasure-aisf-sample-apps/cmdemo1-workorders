@@ -14,11 +14,11 @@ public class BuildFactsWorkflowTests
     [Test]
     public void ReleaseWorkflow_WhenRead_StampsTheFactsBetweenExtractingTheUiAndBuildingTheImage()
     {
-        string yaml = ReadReleaseWorkflowWithTheStampStep();
+        var yaml = ReadReleaseWorkflowWithTheStampStep();
 
-        int extract = yaml.IndexOf("name: Extract the UI for the image", StringComparison.Ordinal);
-        int stamp = yaml.IndexOf(StampStep, StringComparison.Ordinal);
-        int image = yaml.IndexOf("name: Build and push the image", StringComparison.Ordinal);
+        var extract = yaml.IndexOf("name: Extract the UI for the image", StringComparison.Ordinal);
+        var stamp = yaml.IndexOf(StampStep, StringComparison.Ordinal);
+        var image = yaml.IndexOf("name: Build and push the image", StringComparison.Ordinal);
 
         extract.ShouldBeGreaterThan(-1);
         stamp.ShouldBeGreaterThan(extract);
@@ -28,10 +28,10 @@ public class BuildFactsWorkflowTests
     [Test]
     public void ReleaseWorkflow_WhenRead_CallsTheScriptWithParametersItHas()
     {
-        string yaml = ReadReleaseWorkflowWithTheStampStep();
-        string script = File.ReadAllText(FindRepoFile(Path.Combine("scripts", "Write-BuildFacts.ps1")));
-        int start = yaml.IndexOf(StampStep, StringComparison.Ordinal);
-        string step = yaml.Substring(start, yaml.IndexOf("\n      - ", start, StringComparison.Ordinal) - start);
+        var yaml = ReadReleaseWorkflowWithTheStampStep();
+        var script = File.ReadAllText(FindRepoFile(Path.Combine("scripts", "Write-BuildFacts.ps1")));
+        var start = yaml.IndexOf(StampStep, StringComparison.Ordinal);
+        var step = yaml.Substring(start, yaml.IndexOf("\n      - ", start, StringComparison.Ordinal) - start);
 
         step.ShouldContain("if: hashFiles('scripts/Write-BuildFacts.ps1') != ''");
         step.ShouldContain("GH_TOKEN: ${{ github.token }}");
@@ -41,7 +41,7 @@ public class BuildFactsWorkflowTests
         // The image is built from ./built (Dockerfile: COPY /built/ /app): the file is written there, not into a zip.
         step.ShouldContain("-OutputPath 'built/build-facts.json'");
         step.ShouldNotContain("-Package");
-        foreach (string parameter in new[] { "DownloadArtifacts", "Version", "RunId", "BuiltAt", "OutputPath" })
+        foreach (var parameter in new[] { "DownloadArtifacts", "Version", "RunId", "BuiltAt", "OutputPath" })
         {
             step.ShouldContain($"-{parameter}");
             script.ShouldMatch($@"\[(string|switch)\]\${parameter}\b");
@@ -55,8 +55,8 @@ public class BuildFactsWorkflowTests
     [TestCase("qodana-report")]
     public void BuildWorkflow_WhenRead_UploadsTheArtifactTheScriptReads(string artifact)
     {
-        string yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
-        string script = File.ReadAllText(FindRepoFile(Path.Combine("scripts", "Write-BuildFacts.ps1")));
+        var yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
+        var script = File.ReadAllText(FindRepoFile(Path.Combine("scripts", "Write-BuildFacts.ps1")));
 
         yaml.ShouldContain($"name: {artifact}");
         script.ShouldContain($"'{artifact}'");
@@ -66,7 +66,7 @@ public class BuildFactsWorkflowTests
     // A copy older than the kit's build-facts step has nothing to check yet, and the release then stamps no facts.
     private static string ReadReleaseWorkflowWithTheStampStep()
     {
-        string yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "release.yml")));
+        var yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "release.yml")));
         if (!yaml.Contains(StampStep, StringComparison.Ordinal))
         {
             Assert.Ignore(
@@ -81,7 +81,7 @@ public class BuildFactsWorkflowTests
         var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
         while (dir != null)
         {
-            string candidate = Path.Combine(dir.FullName, relativePath);
+            var candidate = Path.Combine(dir.FullName, relativePath);
             if (File.Exists(candidate))
             {
                 return candidate;

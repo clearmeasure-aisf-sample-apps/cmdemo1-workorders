@@ -32,7 +32,7 @@ public class WorkOrdersByNumbersQueryValidatorTests
     public void ShouldFail_WhenTheListExceedsTheCap()
     {
         var validator = new WorkOrdersByNumbersQueryValidator();
-        string[] numbers = Enumerable.Range(0, WorkOrdersByNumbersQuery.MaxNumbers + 1)
+        var numbers = Enumerable.Range(0, WorkOrdersByNumbersQuery.MaxNumbers + 1)
             .Select(index => index.ToString())
             .ToArray();
 

@@ -13,12 +13,9 @@ internal static class TelemetryFileMaintenance
     {
         var cutoffUtc = timeProvider.GetUtcNow().UtcDateTime.AddDays(-retentionDays);
 
-        foreach (string file in EnumerateJsonl(directory))
+        foreach (var file in EnumerateJsonl(directory))
         {
-            if (IsExpired(file, cutoffUtc, keepPaths))
-            {
-                TryDelete(file);
-            }
+            if (IsExpired(file, cutoffUtc, keepPaths)) TryDelete(file);
         }
     }
 
@@ -43,9 +40,9 @@ internal static class TelemetryFileMaintenance
 
     internal static string NextSequencePath(string basePath)
     {
-        string directory = Path.GetDirectoryName(basePath)!;
-        string stem = Path.GetFileNameWithoutExtension(basePath);
-        int next = Directory.GetFiles(directory, stem + "_*.jsonl")
+        var directory = Path.GetDirectoryName(basePath)!;
+        var stem = Path.GetFileNameWithoutExtension(basePath);
+        var next = Directory.GetFiles(directory, stem + "_*.jsonl")
             .Select(file => SequenceOf(file, stem))
             .DefaultIfEmpty(-1)
             .Max() + 1;
@@ -54,7 +51,7 @@ internal static class TelemetryFileMaintenance
 
     private static int SequenceOf(string file, string stem) =>
         int.TryParse(Path.GetFileNameWithoutExtension(file).AsSpan(stem.Length + 1), NumberStyles.None,
-            CultureInfo.InvariantCulture, out int sequence)
+            CultureInfo.InvariantCulture, out var sequence)
             ? sequence
             : -1;
 

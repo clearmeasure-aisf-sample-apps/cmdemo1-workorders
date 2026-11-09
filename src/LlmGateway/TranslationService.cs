@@ -22,7 +22,7 @@ public class TranslationService(ChatClientFactory chatClientFactory) : ITranslat
             return text;
         }
 
-        string systemPrompt =
+        var systemPrompt =
             $"Translate the following text into the language identified by BCP 47 code '{targetLanguageCode}'. Return ONLY the translated text, nothing else.";
 
         var messages = new List<ChatMessage>
@@ -32,7 +32,7 @@ public class TranslationService(ChatClientFactory chatClientFactory) : ITranslat
         };
 
         var response = await chatClient.GetResponseAsync(messages);
-        string translatedText = response.Text.Trim();
+        var translatedText = response.Text.Trim();
 
         return string.IsNullOrWhiteSpace(translatedText) ? text : translatedText;
     }

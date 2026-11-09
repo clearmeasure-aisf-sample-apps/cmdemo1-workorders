@@ -39,7 +39,7 @@ public class WorkOrderAccessNotesMigrationTests
         };
         _connectionString = builder.ConnectionString;
         EnsureDatabase.For.SqlDatabase(_connectionString, new NoOpUpgradeLog());
-        string scriptDirectory = Path.Combine(FindRepoRoot(), "src", "Database", "scripts", "Update");
+        var scriptDirectory = Path.Combine(FindRepoRoot(), "src", "Database", "scripts", "Update");
 
         var previous = Upgrade(scriptDirectory, file => string.CompareOrdinal(Path.GetFileName(file), "040_") < 0);
         previous.Successful.ShouldBeTrue(previous.Error?.ToString());
@@ -85,8 +85,8 @@ public class WorkOrderAccessNotesMigrationTests
         var rows = new List<string>();
         while (reader.Read())
         {
-            string[] values = new string[reader.FieldCount];
-            for (int i = 0; i < values.Length; i++)
+            var values = new string[reader.FieldCount];
+            for (var i = 0; i < values.Length; i++)
             {
                 values[i] = reader.IsDBNull(i)
                     ? ""

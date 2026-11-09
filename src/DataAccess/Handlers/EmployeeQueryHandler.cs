@@ -21,8 +21,8 @@ public class EmployeeQueryHandler(DataContext context)
 
     public async Task<Employee[]> Handle(EmployeeGetAllQuery request, CancellationToken cancellationToken = default)
     {
-        int take = Math.Clamp(request.Take, 1, EmployeeGetAllQuery.MaxTake);
-        int skip = Math.Max(request.Skip, 0);
+        var take = Math.Clamp(request.Take, 1, EmployeeGetAllQuery.MaxTake);
+        var skip = Math.Max(request.Skip, 0);
 
         // Page the keys first. Including Roles in the same statement would make Skip/Take
         // apply to the join rows instead of employees.

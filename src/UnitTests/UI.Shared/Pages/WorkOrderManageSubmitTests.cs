@@ -169,7 +169,7 @@ public class WorkOrderManageSubmitTests
         await component.Find($"[data-testid='{WorkOrderManage.Elements.Title}']").ChangeAsync(new() { Value = "Once" });
         await component.Find($"[data-testid='{WorkOrderManage.Elements.Description}']").ChangeAsync(new() { Value = "Only once" });
 
-        string saveSelector = $"[data-testid='{WorkOrderManage.Elements.CommandButton}Save']";
+        var saveSelector = $"[data-testid='{WorkOrderManage.Elements.CommandButton}Save']";
         _ = component.Find(saveSelector).ClickAsync(new());
         await component.WaitForAssertionAsync(() => bus.CommandCount.ShouldBe(1));
         var pendingSave = component.Find(saveSelector);

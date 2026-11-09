@@ -26,9 +26,9 @@ public class CreateVendorCommandIntegrationTests
     public async Task ShouldCreateAndReadVendorWithValidEmailAndPhone()
     {
         var handler = new VendorQueryHandler(TestHost.GetRequiredService<DataContext>());
-        string name = VendorName("Acme HVAC");
-        string email = "pat@acme.test";
-        string phone = "555-0100";
+        var name = VendorName("Acme HVAC");
+        var email = "pat@acme.test";
+        var phone = "555-0100";
 
         var createResult = await handler.Handle(
             new CreateVendorCommand(name, "HVAC", "Pat Smith", email, phone));

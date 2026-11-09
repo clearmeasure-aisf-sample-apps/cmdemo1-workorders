@@ -5,8 +5,8 @@ using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using Palermo.BlazorMvc;
+using Microsoft.JSInterop;
 using Toolbelt.Blazor.SpeechRecognition;
 using Toolbelt.Blazor.SpeechSynthesis;
 
@@ -80,7 +80,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             return ValidCommands
                 .OrderBy(c =>
                 {
-                    string style = CommandButtonStyleHelper.GetButtonStyle(c.TransitionVerbPresentTense, ValidCommandNames);
+                    var style = CommandButtonStyleHelper.GetButtonStyle(c.TransitionVerbPresentTense, ValidCommandNames);
                     // Sort order: secondary first (0), danger (1), primary last (2)
                     return style switch
                     {
@@ -294,7 +294,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     private InProgressToAssignedCommand? ShelvedCommand(InProgressToAssignedCommand shelve)
     {
-        string reason = Model.ShelveReason?.Trim() ?? "";
+        var reason = Model.ShelveReason?.Trim() ?? "";
         if (!ShelveReasonLengthIsValid(reason))
         {
             _shelveReasonError = ShelveReasonMessage(reason);
@@ -342,7 +342,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             return;
         }
 
-        string translatedText = await TranslationService!.TranslateAsync(text!, _preferredLanguage);
+        var translatedText = await TranslationService!.TranslateAsync(text!, _preferredLanguage);
         await SpeakTranslatedTextAsync(translatedText);
     }
 
@@ -417,7 +417,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             .Where(result => result.IsFinal)
             .Select(result => result.Items?.FirstOrDefault()?.Transcript?.Trim())
             .Where(transcript => !string.IsNullOrEmpty(transcript));
-        string transcript = string.Join(" ", transcripts);
+        var transcript = string.Join(" ", transcripts);
 
         if (string.IsNullOrEmpty(transcript))
         {

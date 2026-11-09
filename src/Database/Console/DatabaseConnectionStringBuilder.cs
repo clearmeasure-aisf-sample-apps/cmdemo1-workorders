@@ -20,10 +20,10 @@ public static class DatabaseConnectionStringBuilder
     /// </summary>
     public static string Build(DatabaseOptions options)
     {
-        string serverName = options.DatabaseServer.Trim();
-        bool isLocalServer = IsLocalServer(serverName);
-        bool isLocalDb = IsLocalDb(serverName);
-        string dataSource = FormatDataSource(serverName, isLocalDb);
+        var serverName = options.DatabaseServer.Trim();
+        var isLocalServer = IsLocalServer(serverName);
+        var isLocalDb = IsLocalDb(serverName);
+        var dataSource = FormatDataSource(serverName, isLocalDb);
 
         var builder = new SqlConnectionStringBuilder
         {

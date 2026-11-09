@@ -39,13 +39,13 @@ public class WorkOrderBulkActionBarTests
     public async Task MoreMenu_ExportsClearsAndClosesOnEscape()
     {
         await using var ctx = new BunitContext();
-        bool exported = false;
-        bool cleared = false;
+        var exported = false;
+        var cleared = false;
         var component = ctx.Render<WorkOrderBulkActionBar>(p => p
             .Add(c => c.SelectedCount, 1)
             .Add(c => c.OnExportSelected, () => exported = true)
             .Add(c => c.OnClearSelection, () => cleared = true));
-        string more = "[data-testid='BulkMoreButton']";
+        var more = "[data-testid='BulkMoreButton']";
 
         await component.Find(more).ClickAsync(new());
         component.Find(".bulk-menu").HasAttribute("hidden").ShouldBeFalse();

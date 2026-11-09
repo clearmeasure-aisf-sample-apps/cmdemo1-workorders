@@ -72,11 +72,11 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
 
         _context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, _context.Commands.Texts));
         _context.Commands.OtherCommands.ShouldBe(0);
-        string sql = _context.Commands.Texts.Single();
-        sql.ShouldContain("GROUP BY");
+        var sql = _context.Commands.Texts.Single();
+sql.ShouldContain("GROUP BY");
         sql.ShouldContain("SUM(");
 
-        summaries.Select(summary => summary.Employee.UserName).ShouldBe(["other", "worker", "idle"]);
+            summaries.Select(summary => summary.Employee.UserName).ShouldBe(["other", "worker", "idle"]);
         var workerSummary = summaries.Single(summary => summary.Employee.UserName == "worker");
         workerSummary.Employee.GetFullName().ShouldBe("Wor Mid Ker");
         workerSummary.Employee.Roles.Select(role => role.Name).ShouldBe(["Lead", "Worker"], ignoreOrder: true);
@@ -118,23 +118,23 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
             "Data Source=:memory:"
         ];
 
-        foreach (string connectionString in connectionStrings)
+        foreach (var connectionString in connectionStrings)
         {
             using var context = new DataContext(new FileDbConfig(connectionString));
-            string sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock ?? new FixedClock(Now))
+            var sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock ?? new FixedClock(Now))
                 .SummaryQuery()
                 .ToQueryString();
 
             TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
-            sql.ShouldContain("GROUP BY");
-            sql.ShouldContain("SUM(");
+sql.ShouldContain("GROUP BY");
+        sql.ShouldContain("SUM(");
         }
     }
 
     private static Employee Employee(string userName, string first, string last, bool fulfill, params string[] roleNames)
     {
         var employee = new Employee(userName, first, last, $"{userName}@example.test");
-        foreach (string roleName in roleNames)
+        foreach (var roleName in roleNames)
         {
             employee.AddRole(new Role(roleName, canCreate: false, canFulfill: fulfill));
         }

@@ -15,7 +15,7 @@ public class VendorNotesIntegrationTests
     [TestCase(1000)]
     public async Task ShouldPersistNotes_WithOptionalLength_RoundTrips(int? length)
     {
-        string? notes = length.HasValue ? new string('é', length.Value) : null;
+        var notes = length.HasValue ? new string('é', length.Value) : null;
         var vendor = new Vendor
         {
             Name = "VendorNotes_" + Guid.NewGuid().ToString("N"),

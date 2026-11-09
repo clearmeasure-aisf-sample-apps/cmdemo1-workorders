@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.Core.Model.Events;
+﻿using ClearMeasure.Bootcamp.Core.Model.Events;
 
 namespace Worker.Handlers;
 

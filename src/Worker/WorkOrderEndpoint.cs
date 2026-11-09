@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.Core;
+﻿using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.DataAccess.Messaging;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.HostedEndpoint;
@@ -63,7 +63,7 @@ public class WorkOrderEndpoint : ClearHostedEndpoint
     // Register services
     protected override void RegisterDependencyInjection(IServiceCollection services)
     {
-        string apiUrl = Configuration["RemotableBus:ApiUrl"]
+        var apiUrl = Configuration["RemotableBus:ApiUrl"]
                      ?? throw new InvalidOperationException("RemotableBus:ApiUrl configuration is required.");
 
         const string remotableBusClientName = "RemotableBus";

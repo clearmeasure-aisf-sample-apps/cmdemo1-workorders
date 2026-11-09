@@ -28,7 +28,7 @@ public record DraftToAssignedCommand(WorkOrder WorkOrder, Employee CurrentUser)
         WorkOrder.AssignedDate = context.CurrentDateTime;
         base.Execute(context);
 
-        bool assignedToAiBot = WorkOrder.Assignee?.Roles
+        var assignedToAiBot = WorkOrder.Assignee?.Roles
             .Any(x => x.Name == Roles.Bot) ?? false;
 
         if (assignedToAiBot)

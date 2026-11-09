@@ -23,7 +23,7 @@ public static class WorkOrderBulkImportCsvParser
 
     private static WorkOrderBulkImportParseResult Parse(TextReader reader, CancellationToken cancellationToken = default)
     {
-        int lineNumber = 0;
+        var lineNumber = 0;
         string? headerLine = CsvLineReader.ReadLogicalLine(reader, ref lineNumber, cancellationToken);
         if (headerLine == null)
         {
@@ -31,7 +31,7 @@ public static class WorkOrderBulkImportCsvParser
         }
 
         var columnIndex = CsvColumnIndex.FromHeader(headerLine);
-        string? missingColumn = columnIndex.FindMissingRequiredColumn(RequiredHeaders);
+        var missingColumn = columnIndex.FindMissingRequiredColumn(RequiredHeaders);
         if (missingColumn != null)
         {
             return WorkOrderBulkImportParseResult.Fail(
@@ -83,7 +83,7 @@ public static class WorkOrderBulkImportCsvParser
         {
             var headerValues = CsvLineReader.SplitCsvLine(headerLine);
             var columnIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < headerValues.Count; i++)
+            for (var i = 0; i < headerValues.Count; i++)
             {
                 AddUniqueHeader(columnIndex, headerValues[i], i);
             }
@@ -93,7 +93,7 @@ public static class WorkOrderBulkImportCsvParser
 
         private static void AddUniqueHeader(Dictionary<string, int> columnIndex, string rawName, int index)
         {
-            string name = rawName.Trim();
+            var name = rawName.Trim();
             if (name.Length > 0)
             {
                 columnIndex.TryAdd(name, index);
@@ -102,7 +102,7 @@ public static class WorkOrderBulkImportCsvParser
 
         public string? FindMissingRequiredColumn(IEnumerable<string> requiredHeaders)
         {
-            foreach (string required in requiredHeaders)
+            foreach (var required in requiredHeaders)
             {
                 if (!_columns.ContainsKey(required))
                 {
@@ -116,10 +116,10 @@ public static class WorkOrderBulkImportCsvParser
         public WorkOrderBulkImportRow ParseRow(string line, int lineNumber)
         {
             var cells = CsvLineReader.SplitCsvLine(line);
-            string? building = OptionalCell(cells, "Building");
-            string? description = OptionalCell(cells, "Description");
-            string? priorityText = OptionalCell(cells, "Priority");
-            string? dueDateText = OptionalCell(cells, "DueDate");
+            var building = OptionalCell(cells, "Building");
+            var description = OptionalCell(cells, "Description");
+            var priorityText = OptionalCell(cells, "Priority");
+            var dueDateText = OptionalCell(cells, "DueDate");
             var priority = ParsePriority(priorityText);
             var dueDate = ParseDueDate(dueDateText);
 
@@ -137,7 +137,7 @@ public static class WorkOrderBulkImportCsvParser
 
         private string? OptionalCell(List<string> cells, string name)
         {
-            int index = _columns.GetValueOrDefault(name, -1);
+            var index = _columns.GetValueOrDefault(name, -1);
             return index >= 0 && index < cells.Count ? NullIfWhitespace(cells[index]) : null;
         }
     }
@@ -182,7 +182,7 @@ public static class WorkOrderBulkImportCsvParser
     {
         internal static string? ReadLogicalLine(TextReader reader, ref int lineNumber, CancellationToken cancellationToken)
         {
-            string? first = reader.ReadLine();
+            var first = reader.ReadLine();
             if (first == null)
             {
                 return null;
@@ -203,7 +203,7 @@ public static class WorkOrderBulkImportCsvParser
             while (HasUnclosedQuotes(combined.ToString()))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                string? next = reader.ReadLine();
+                var next = reader.ReadLine();
                 if (next == null)
                 {
                     break;
@@ -218,8 +218,8 @@ public static class WorkOrderBulkImportCsvParser
 
         private static int CountUnescapedQuotes(string s)
         {
-            int count = 0;
-            int i = 0;
+            var count = 0;
+            var i = 0;
             while (i < s.Length)
             {
                 i += CountQuoteAt(s, i, ref count);
@@ -248,7 +248,7 @@ public static class WorkOrderBulkImportCsvParser
         {
             var result = new List<string>();
             var current = new StringBuilder();
-            int i = 0;
+            var i = 0;
             while (i < line.Length)
             {
                 i = AppendNextCsvToken(line, i, current, result);
@@ -278,10 +278,10 @@ public static class WorkOrderBulkImportCsvParser
 
         private static int AppendQuotedField(string line, int startIndex, StringBuilder current)
         {
-            int i = startIndex;
+            var i = startIndex;
             while (i < line.Length)
             {
-                int next = AppendQuotedCharacter(line, i, current);
+                var next = AppendQuotedCharacter(line, i, current);
                 if (next < 0)
                 {
                     return i + 1;

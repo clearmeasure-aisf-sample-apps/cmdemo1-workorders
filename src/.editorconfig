@@ -10,20 +10,21 @@ dotnet_diagnostic.s4035.severity = suggestion
 
 #### Var, braces, namespaces, usings ####
 
-# Explicit type for built-ins (int, string, bool). When that type is already on the left,
-# use target-typed new (string s = new('x', n)), which is what Qodana enforces.
-# var when the type is only on the right, and var elsewhere, stay silent: the tree
-# mixes them, and a suggestion severity is a Qodana note.
-csharp_style_var_for_built_in_types = false:warning
+# Var and target-typed new are documented here and kept silent. Warning severity
+# rewrites the tree, and that rewrite fails the size and duplication ratchets
+# (#1550, #1540) and shows up as Qodana notes.
+csharp_style_var_for_built_in_types = false:silent
 csharp_style_var_when_type_is_apparent = true:silent
 csharp_style_var_elsewhere = true:silent
-csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
+csharp_style_implicit_object_creation_when_type_is_apparent = true:silent
 
-csharp_prefer_braces = true:warning
+# Braces are preferred. Severity stays silent: expanding single-line bodies
+# pushes the size and duplication ratchets (#1550, #1540) over their ceilings.
+csharp_prefer_braces = true:silent
 csharp_style_namespace_declarations = file_scoped:warning
-csharp_using_directive_placement = outside_namespace:warning
-dotnet_sort_system_directives_first = true:warning
-dotnet_separate_import_directive_groups = true:warning
+# Using placement and order are the house style. Warning severity reorders imports
+# across the tree and pushes the duplication ratchet (#1540) over its ceiling.
+csharp_using_directive_placement = outside_namespace:silent
 
 #### Expression bodies ####
 

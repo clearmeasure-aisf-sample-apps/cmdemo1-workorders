@@ -12,7 +12,7 @@ public class DatabaseConfiguration(IConfiguration configuration) : IDatabaseConf
 
     public void ResetConnectionPool()
     {
-        string connectionString = GetConnectionString();
+        var connectionString = GetConnectionString();
         if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
         {
             Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();

@@ -1,4 +1,4 @@
-namespace ClearMeasure.Bootcamp.DataAccess.Messaging;
+﻿namespace ClearMeasure.Bootcamp.DataAccess.Messaging;
 
 public class MessagingConventions : IMessageConvention
 {

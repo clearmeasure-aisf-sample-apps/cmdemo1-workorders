@@ -23,14 +23,11 @@ public class TimeController(TimeProvider timeProvider) : ControllerBase
     [AllowAnonymous]
     public IActionResult Get()
     {
-        string text = timeProvider.GetUtcNow().ToString("O", CultureInfo.InvariantCulture);
+        var text = timeProvider.GetUtcNow().ToString("O", CultureInfo.InvariantCulture);
         var etag = ConditionalGetEtag.CreateWeakEtagForPlainText(text);
         Response.Headers.ETag = etag.ToString();
         if (ConditionalGetEtag.IfNoneMatchIncludesEtag(Request, etag))
-        {
             return StatusCode(StatusCodes.Status304NotModified);
-        }
-
         return new ContentResult
         {
             Content = text,

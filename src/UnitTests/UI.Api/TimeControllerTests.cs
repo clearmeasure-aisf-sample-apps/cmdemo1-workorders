@@ -25,7 +25,7 @@ public class TimeControllerTests
         content.StatusCode.ShouldBe(200);
         content.ContentType.ShouldNotBeNull();
         content.ContentType.ShouldContain("text/plain");
-        string expected = new DateTimeOffset(fixedUtc, TimeSpan.Zero).ToString("O", CultureInfo.InvariantCulture);
+        var expected = new DateTimeOffset(fixedUtc, TimeSpan.Zero).ToString("O", CultureInfo.InvariantCulture);
         content.Content.ShouldBe(expected);
     }
 

@@ -16,14 +16,14 @@ public class PrintLayoutTests
         var cut = ctx.Render<PrintLayout>();
 
         var footer = cut.Find("footer.print-copyright");
-        string yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+        var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
         footer.TextContent.ShouldContain(yearText);
         footer.TextContent.ShouldContain("ClearMeasure Labs");
 
         var link = cut.Find("footer.print-copyright a.print-copyright-link");
         link.GetAttribute("href")!.TrimEnd('/').ShouldBe("https://clearmeasure.com");
         link.GetAttribute("target").ShouldBe("_blank");
-        string? rel = link.GetAttribute("rel");
+        var rel = link.GetAttribute("rel");
         rel.ShouldNotBeNull();
         rel.ShouldContain("noopener");
         rel.ShouldContain("noreferrer");

@@ -110,7 +110,7 @@ public class CreateVendorCommandValidatorTests
     [Test]
     public void ShouldPass_WhenOptionalFieldsAreAtTheirMaximumLengths()
     {
-        string longEmail = new string('a', 242) + "@test.com";
+        var longEmail = new string('a', 242) + "@test.com";
         var command = new CreateVendorCommand("Acme", new string('t', 100), new string('c', 100),
             longEmail, new string('5', 50));
 
@@ -185,7 +185,7 @@ public class CreateVendorCommandValidatorTests
     [Test]
     public void ShouldPass_WhenEmailAddressIsAtMaxLengthWithValidFormat()
     {
-        string email = new string('a', 244) + "@test.com";
+        var email = new string('a', 244) + "@test.com";
         var command = new CreateVendorCommand("Acme", null, null, email, null);
 
         var result = _validator.TestValidate(command);
@@ -263,7 +263,7 @@ public class CreateVendorCommandValidatorTests
     [Test]
     public void ShouldPass_WhenPhoneNumberIsAtMaxLengthWithValidFormat()
     {
-        string phone = "(555) 012-0100 (555) 555-5555 555";
+        var phone = "(555) 012-0100 (555) 555-5555 555";
         var command = new CreateVendorCommand("Acme", null, null, null, phone);
 
         var result = _validator.TestValidate(command);

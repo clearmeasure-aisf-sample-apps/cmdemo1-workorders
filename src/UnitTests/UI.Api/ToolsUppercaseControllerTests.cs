@@ -69,7 +69,7 @@ public class ToolsUppercaseControllerTests
     public void Controller_Should_AllowAnonymousRateLimitedRoutes()
     {
         var controllerType = typeof(ToolsUppercaseController);
-        string[] routes = controllerType.GetCustomAttributes(typeof(RouteAttribute), inherit: false)
+        var routes = controllerType.GetCustomAttributes(typeof(RouteAttribute), inherit: false)
             .Cast<RouteAttribute>()
             .Select(attribute => attribute.Template)
             .ToArray();

@@ -41,7 +41,7 @@ public class TeamQueryHandlerTests
     [Test]
     public async Task ShouldCreateTeamWithMembersAndReadBackThroughTeamsQuery()
     {
-        string name = TeamName("Grounds");
+        var name = TeamName("Grounds");
         var result = await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
             .Handle(new CreateTeamCommand(name, "Lawn and snow",
                 [_employees[0].UserName, _employees[1].UserName.ToUpperInvariant()]));
@@ -76,7 +76,7 @@ public class TeamQueryHandlerTests
     [Test]
     public async Task ShouldFailAndWriteNothing_WhenMemberUnknown()
     {
-        string unknown = TestData.UserName("ghost");
+        var unknown = TestData.UserName("ghost");
         var result = await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
             .Handle(new CreateTeamCommand(TeamName("Grounds"), null, [_employees[0].UserName, unknown]));
 
@@ -90,7 +90,7 @@ public class TeamQueryHandlerTests
     [Test]
     public async Task ShouldFail_WhenTeamNameDuplicatesIgnoringCase()
     {
-        string name = TeamName("Grounds");
+        var name = TeamName("Grounds");
         (await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
             .Handle(new CreateTeamCommand(name, null, [_employees[0].UserName]))).Succeeded.ShouldBeTrue();
 
@@ -107,7 +107,7 @@ public class TeamQueryHandlerTests
 
     private static Employee NewEmployee(string prefix, string firstName, string lastName)
     {
-        string userName = TestData.UserName(prefix);
+        var userName = TestData.UserName(prefix);
         return new Employee(userName, firstName, lastName, TestData.Email(userName));
     }
 

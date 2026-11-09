@@ -93,7 +93,7 @@ public class ToolsHashEndpointIntegrationTests
     private static async Task AssertSha256OnlyAsync(HttpResponseMessage response, string expectedSha256)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        string json = await response.Content.ReadAsStringAsync();
+        var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         root.GetProperty("sha256").GetString().ShouldBe(expectedSha256);

@@ -22,11 +22,11 @@ public class SingleApiController(IBus bus, ILogger<SingleApiController>? logger 
     public async Task<string> Post(WebServiceMessage webServiceMessage)
     {
         _logger.LogDebug("Receiving {messageType}", webServiceMessage.TypeName);
-        object bodyObject = webServiceMessage.GetBodyObject();
+        var bodyObject = webServiceMessage.GetBodyObject();
 
         if (bodyObject is IRemotableRequest remotableRequest)
         {
-            object result = await bus.Send(remotableRequest) ?? throw new InvalidOperationException();
+            var result = await bus.Send(remotableRequest) ?? throw new InvalidOperationException();
             _logger.LogDebug("Returning {resultType}", result.GetType().Name);
             return new WebServiceMessage(result).GetJson();
         }

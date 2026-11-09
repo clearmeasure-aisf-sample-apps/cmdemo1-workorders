@@ -15,10 +15,10 @@ public sealed class LiveTelemetryMiddleware(RequestDelegate next, LiveTelemetryC
     public async Task InvokeAsync(HttpContext context)
     {
         var kind = RequestClassifier.Classify(context.Request);
-        bool isWebSocket = context.WebSockets.IsWebSocketRequest;
-        long started = timeProvider.GetTimestamp();
-        int statusCode = StatusCodes.Status500InternalServerError;
-        bool endedInException = false;
+        var isWebSocket = context.WebSockets.IsWebSocketRequest;
+        var started = timeProvider.GetTimestamp();
+        var statusCode = StatusCodes.Status500InternalServerError;
+        var endedInException = false;
         counters.RequestStarted();
         var flow = RequestFlow.Begin();
         try

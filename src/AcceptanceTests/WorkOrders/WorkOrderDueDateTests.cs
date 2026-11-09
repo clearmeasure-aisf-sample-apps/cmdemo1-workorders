@@ -39,7 +39,7 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Expect(dueDateInput).ToBeVisibleAsync();
         await Expect(dueDateInput).ToHaveValueAsync(string.Empty);
 
-        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
@@ -75,11 +75,11 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate))
             .FillAsync(dueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
-        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
-        string expectedDisplay = dueDate.ToString("d", CultureInfo.GetCultureInfo("en-US"));
+        var expectedDisplay = dueDate.ToString("d", CultureInfo.GetCultureInfo("en-US"));
         var dueDateCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + order.Number);
         await Expect(dueDateCell).ToContainTextAsync(expectedDisplay);
 
@@ -114,7 +114,7 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var dueDateInput = Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate));
         await dueDateInput.FillAsync(today.AddDays(-1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
-        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
 
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDateValidation)))
@@ -277,14 +277,14 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
                 dueDate,
                 WorkOrderStatus.Draft,
                 TimeProvider.System);
-            string expectedCssClass = DueDateUrgencyCalculator.CssClass(expectedUrgency);
+            var expectedCssClass = DueDateUrgencyCalculator.CssClass(expectedUrgency);
             if (!string.IsNullOrEmpty(expectedCssClass))
             {
                 await Expect(dueDateInput).ToHaveClassAsync(new Regex(expectedCssClass));
             }
         }
 
-        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
@@ -322,7 +322,7 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description ?? "desc");
 
-        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
         return order;
