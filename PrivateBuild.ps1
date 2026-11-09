@@ -19,6 +19,16 @@ if (-not [string]::IsNullOrEmpty($databaseName)) {
 }
 Build @buildArgs
 
+# #1535: warning-severity style drift fails the private build.
+# Whitespace format is not in this gate: wrapping and brace expansion move the
+# size and duplication ratchets. dotnet format style --severity warn is the check.
+$formatSolution = Join-Path $PSScriptRoot "src/ChurchBulletin.sln"
+Write-Host "Checking formatting (dotnet format style --verify-no-changes --severity warn)..."
+& dotnet format style $formatSolution --verify-no-changes --severity warn --verbosity minimal
+if ($LASTEXITCODE -ne 0) {
+    throw "dotnet format style --verify-no-changes failed. Run 'dotnet format style src/ChurchBulletin.sln --severity warn' and commit the result."
+}
+
 $crapAudit = Join-Path $PSScriptRoot "scripts/crap/run-crap-audit.ps1"
 $crapThresholdConfig = Join-Path $PSScriptRoot "scripts/crap/crap-gate-threshold.json"
 if (-not (Test-Path -LiteralPath $crapThresholdConfig)) {

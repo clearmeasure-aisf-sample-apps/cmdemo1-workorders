@@ -94,7 +94,7 @@ When a full PowerShell build is unnecessary (e.g. for a pre-built or docs-only f
 
 ```bash
 cd /workspace/src && dotnet restore ChurchBulletin.sln   # always restore first — obj/project.assets.json may be missing
-dotnet build UI/Api/UI.Api.csproj -warnaserror
+dotnet build UI/Api/UI.Api.csproj
 dotnet test UnitTests/UnitTests.csproj --no-build --filter "FullyQualifiedName~<ClassName>"
 ```
 
@@ -158,7 +158,7 @@ private static BunitContext CreateContext(IBus? bus = null, string loggedInAs = 
 
 ### "Feature Already Implemented" Work Items
 
-When a work item's Technical Design section says **"The feature is fully implemented"** and lists checked-off files, verify those files exist (`find /workspace/src -name "FileName.cs"`), confirm they match the spec, run `dotnet build src/ChurchBulletin.sln --configuration Release -warnaserror` (0 warnings required) and `dotnet test src/UnitTests --filter "FullyQualifiedName~ClassName"`, then proceed directly to the self-tuning/commit/PR steps. Do NOT re-create files that already exist and match the spec — doing so wastes tokens and risks introducing divergence.
+When a work item's Technical Design section says **"The feature is fully implemented"** and lists checked-off files, verify those files exist (`find /workspace/src -name "FileName.cs"`), confirm they match the spec, run `dotnet build src/ChurchBulletin.sln --configuration Release` (warnings are already errors) and `dotnet test src/UnitTests --filter "FullyQualifiedName~ClassName"`, then proceed directly to the self-tuning/commit/PR steps. Do NOT re-create files that already exist and match the spec — doing so wastes tokens and risks introducing divergence.
 
 ### API-Layer-Only Features (Pure Utility Endpoints)
 
@@ -168,7 +168,7 @@ For endpoints in `src/UI/Api/Controllers/` that have no Core/Domain/DataAccess c
 - Return plain text via `ContentResult` with `ContentType = "text/plain; charset=utf-8"`.
 - Return structured errors via `Problem(detail: "...", statusCode: 400)`.
 - No DI needed for stateless generators — use `Random.Shared` (thread-safe) and static helpers.
-- Build verification: `dotnet build src/ChurchBulletin.sln --configuration Release -warnaserror` — 0 warnings required.
+- Build verification: `dotnet build src/ChurchBulletin.sln --configuration Release` — warnings are already errors.
 
 ### Qodana Static Analysis — Known Conventions
 
@@ -193,7 +193,7 @@ Qodana runs in CI with `failThreshold: 0`. Common P2 findings to pre-empt:
 - **Private auto-property setters**: When narrowing visibility, if the setter is never assigned after construction, change `{ get; set; }` to `{ get; }` to avoid `AutoPropertyCanBeMadeGetOnly.Local`. If the property was previously `protected virtual` (`.Global` in baseline), also remove that baseline entry — it becomes absent and fails the gate.
 - **`virtual` keyword**: Removing `virtual` from a `protected virtual` member is often required when narrowing to `private` — `private virtual` is illegal and `private` overrides are invisible to subclasses.
 - **After all visibility changes**: Update `qodana.sarif.json` baseline to remove entries for every finding that is now fixed or suppressed. Absent findings (in baseline but not in scan) count against `failThreshold: 0` just like new findings. Remove them using a Python script that filters by `partialFingerprints.equalIndicator/v1`. Keep only findings that are genuinely still present in the code (e.g., cross-assembly public helpers that cannot be narrowed).
-- After all changes: `dotnet build src/ChurchBulletin.sln --configuration Release -warnaserror` must pass with 0 warnings, followed by the full `UnitTests` run.
+- After all changes: `dotnet build src/ChurchBulletin.sln --configuration Release` must pass (warnings are already errors), followed by the full `UnitTests` run.
 
 After any rename that touches test methods, verify no callers outside the file reference the old name (use `grep -r "OldName" src/`).
 

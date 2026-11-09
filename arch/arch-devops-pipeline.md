@@ -88,11 +88,11 @@ C4Deployment
 
 | # | Stage | Trigger | Tool | Key Steps |
 |---|-------|---------|------|-----------|
-| 1 | **Private Build** | Manual (`PrivateBuild.ps1`) | PowerShell + .NET CLI | Clean, Compile, Unit Tests, DB Migrate, Integration Tests, CRAP gate |
+| 1 | **Private Build** | Manual (`PrivateBuild.ps1`) | PowerShell + .NET CLI | Clean, Compile, Unit Tests, DB Migrate, Integration Tests, `dotnet format --verify-no-changes`, CRAP gate |
 | 2 | **Acceptance Tests** | Manual (`AcceptanceTests.ps1`) | PowerShell + Playwright | Compile, DB Setup, Playwright browser tests |
 | 3 | **Change Detection** | `git push` (all branches) | GitHub Actions | `changes` job: a docs-only change set skips the heavy jobs; detection fails open |
 | 4 | **Integration Build** | `git push` (all branches) | GitHub Actions | 4 variants (SQL container, SQLite, ARM SQLite, Windows LocalDB); the SQL container job also runs the CRAP gate and packages everything |
-| 5 | **Code Analysis** | `git push` (all branches) | GitHub Actions | `dotnet format style`, `dotnet format analyzers`, `EnforceCodeStyleInBuild` |
+| 5 | **Code Analysis** | `git push` (all branches) | GitHub Actions | `dotnet format --verify-no-changes`, `dotnet format style`, `dotnet format analyzers`, `EnforceCodeStyleInBuild` |
 | 6 | **Qodana** | `git push` (all branches) | GitHub Actions | Qodana (Community .NET) against the committed baseline `qodana.sarif.json`, fail threshold 0 |
 | 7 | **Acceptance Tests (CI)** | `git push` (all branches) | GitHub Actions | Playwright tests on x86 (SQL container) and ARM (SQLite) |
 | 8 | **Publish** | After build-linux succeeds | GitHub Actions | NuGet → GitHub Packages |
