@@ -413,6 +413,10 @@ jobs:
             /p:MSBuildTreatAllWarningsAsErrors=true \
             /p:EnforceCodeStyleInBuild=true
 
+      - name: Dead-code gates
+        shell: pwsh
+        run: pwsh -NoProfile -File ./scripts/dead-code/Invoke-DeadCodeGates.ps1
+
   qodana:
     name: Qodana (Community .NET)
     needs: changes
