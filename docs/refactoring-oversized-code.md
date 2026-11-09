@@ -21,7 +21,8 @@ written reason (write `Other: <move>` in the rationale row). Banned moves are ne
 4. Apply one preferred move at a time, building and testing after each step.
 5. Give every extracted class its own test fixture (`<ClassName>Tests`), written to the test rules below.
 6. Delete the fixed lines from `src/UnitTests/BuildGates/size-nesting-baseline.txt`; baselines only shrink.
-7. Fill in the **Refactoring rationale** section of the pull request template, one row per move.
+7. Fill in the **Refactoring plan** section of the pull request template: one rationale row per move, a Before and an
+   After mermaid diagram per concept cluster, and the generated line-count table (below).
 
 ## Diagnose first
 
@@ -142,18 +143,96 @@ public void ShouldMoveToAssigned_WhenADraftIsAssigned()
 }
 ```
 
-## Refactoring rationale (pull request)
+## Refactoring plan (pull request)
 
-A pull request that changes a file on the oversized baseline fills in this section of
-`.github/pull_request_template.md`, one row per move:
+A pull request that changes a file on the size baseline fills in the **Refactoring plan** section of
+`.github/pull_request_template.md`. It has three parts, all checked by the rationale script.
 
-```markdown
-## Refactoring rationale
+1. **Refactoring rationale**: one row per move, smell → move → resulting type, with the names from the tables above.
+2. **Before and after**: a pair of fenced `mermaid` diagrams for each extracted concept cluster (one cluster is the set
+   of types one move or a few related moves produced). Use `classDiagram` for types and their responsibilities, or
+   `flowchart` for a call path or pipeline. The line right above each fence starts with **Before** or **After**, and
+   there are as many of one as of the other. Every type the pull request adds to production code (and every new
+   `.razor` component) is named in a diagram, so the diagrams cannot drift from the code.
+3. **Line counts**: generated from the size-baseline diff, never typed. Paste the output of
+   `pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WriteLineCountTable` and
+   regenerate it after every push; CI fails when the table differs from what the script generates. It has one row
+   per size-baselined file the pull request changes and per file whose size-baseline lines change: lines before and
+   after, and the number of size-baseline lines (`file`, `method`, `parameters`) for that file before and after.
+
+The worked example, approved by the owner, is the CSV import of #1553: `WorkOrderBulkImportCsvParser` was a 316-line
+static class with two private nested classes; Extract Class gave each concept its own type and left the parser as the
+orchestrator. (The line-count table shows only the parser's row of the table #1553 generates.)
+
+````markdown
+## Refactoring plan
+
+### Refactoring rationale
 
 | Smell | Refactoring | New abstraction | Why |
 |-------|-------------|-----------------|-----|
-| Long Parameter List, Data Clumps | Introduce Parameter Object | WorkOrderDraft | The ten MCP arguments of create-work-order travel together and are validated together |
+| Large Class, Divergent Change | Extract Class | CsvLogicalLineReader | Joining quoted records that span physical lines changes for CSV reasons, not work-order reasons |
+| Primitive Obsession | Extract Class | CsvFields | Splitting a record into fields with quote escaping was a dozen index-juggling helpers inside the parser |
+| Data Clumps | Extract Class | CsvHeader | The column-name dictionary and its lookups travelled together through every row parse |
+
+### Before and after
+
+Before: CSV import
+
+```mermaid
+classDiagram
+    class WorkOrderBulkImportCsvParser {
+        +Parse(Stream) WorkOrderBulkImportParseResult
+        -ParseDataRows()
+        -ParsePriority() / -ParseDueDate() / -...Error()
+    }
+    class CsvColumnIndex {
+        <<private nested>>
+        +FromHeader(string)
+        +FindMissingRequiredColumn()
+        +ParseRow(string, int)
+    }
+    class CsvLineReader {
+        <<private nested>>
+        +ReadLogicalLine(TextReader, ref int)
+        +SplitCsvLine(string)
+        -AppendQuotedField() / -CountUnescapedQuotes() / -...
+    }
+    WorkOrderBulkImportCsvParser *-- CsvColumnIndex
+    WorkOrderBulkImportCsvParser *-- CsvLineReader
 ```
+
+After: CSV import
+
+```mermaid
+classDiagram
+    class WorkOrderBulkImportCsvParser {
+        +Parse(Stream) WorkOrderBulkImportParseResult
+        -ParseRow(CsvHeader, fields, lineNumber)
+    }
+    class CsvLogicalLineReader {
+        +LineNumber int
+        +ReadRecord() string
+    }
+    class CsvFields {
+        +Split(string record) List~string~
+    }
+    class CsvHeader {
+        +Parse(string headerRecord)$ CsvHeader
+        +FirstMissing(required) string
+        +Cell(fields, name) string
+    }
+    WorkOrderBulkImportCsvParser --> CsvLogicalLineReader : reads records
+    WorkOrderBulkImportCsvParser --> CsvFields : splits records
+    WorkOrderBulkImportCsvParser --> CsvHeader : names cells
+```
+
+### Line counts
+
+| File | Lines before | Lines after | Size-gate entries before | Size-gate entries after |
+|------|-------------:|------------:|-------------------------:|------------------------:|
+| `src/Core/Import/WorkOrderBulkImportCsvParser.cs` | 316 | 111 | 1 | 0 |
+````
 
 ## Enforcement
 
@@ -164,12 +243,13 @@ All checks are deterministic: build-gate tests and a script, no AI review.
 | Banned moves: `PartialTypeRule`, `StaticHelperClassRule`, `OwnTypeExtensionRule`, `BannedTypeNameRule` | `src/UnitTests/BuildGates/Refactoring/` (runs in `PrivateBuild.ps1` and CI) | A violation is not on its baseline in `Baselines/`, or a baseline line is no longer a violation |
 | Test rules: `TestControlFlowRule` (no loops or branches in a test), `WholeScenarioTestRule` (no single whole-scenario helper), `SetUpActAssertRule` (setup never asserts; it invokes the subject under test only in a `Given...` fixture), `TestNamespaceRule` (namespace matches folder), `TestSupportPlacementRule` (ObjectMother, builder and step placement) | Same | Same |
 | Size limits | The size gate (#1536): `SizeAndNestingBaselineTests` against `src/UnitTests/BuildGates/size-nesting-baseline.txt`; its failure message points here | A file, method, parameter list or nesting depth over its limit that is not on the baseline, or a baseline line that is fixed |
-| Refactoring rationale | `scripts/refactoring/Test-RefactoringRationale.ps1`, workflow `refactoring-rationale.yml` on every pull request | The pull request changes a file on the size baseline (any `file`, `method` or `parameters` line) and the section is missing, a row names a smell or move not in the tables above (without `Other:`), the new abstraction does not appear in the added code, the reason has fewer than 8 words, or an extracted class has no fixture |
+| Refactoring plan | `scripts/refactoring/Test-RefactoringRationale.ps1`, workflow `refactoring-rationale.yml` on every pull request | The pull request changes a file on the size baseline (any `file`, `method` or `parameters` line) and: the **Refactoring plan** section is missing; its rationale table is missing, a row names a smell or move not in the tables above (without `Other:`), the new abstraction does not appear in the added code, or the reason has fewer than 8 words; it has no `mermaid` diagram, a diagram is not a `classDiagram` or `flowchart`, a diagram is not labelled Before or After, the Before and After counts differ, or a type the pull request adds to production code is not named in any diagram; the line-count table is missing or differs from the generated one; or an extracted class has no fixture |
 | Ratchet | Same script | Any guardrail or oversized baseline gains a line |
 
 The script reads the **Smells** and **Preferred moves** tables of this file, so adding a row here is how a smell or a
 move becomes accepted. Run it locally:
 
 ```powershell
+pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WriteLineCountTable
 pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -PrBodyPath pr-body.md
 ```

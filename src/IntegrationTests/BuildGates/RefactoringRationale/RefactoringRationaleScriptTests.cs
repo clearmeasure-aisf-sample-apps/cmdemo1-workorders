@@ -8,9 +8,6 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.BuildGates.RefactoringRationale
 [TestFixture]
 public class RefactoringRationaleScriptTests
 {
-    private const string ValidRow =
-        "| Long Parameter List, Data Clumps | Introduce Parameter Object | WorkOrderDraft | The ten create arguments always travel together and are validated together |";
-
     private RefactoringPullRequestSteps _steps = null!;
 
     [SetUp]
@@ -25,26 +22,26 @@ public class RefactoringRationaleScriptTests
         _steps.CommitBaseWithOversizedFile();
         _steps.ExtractType("WorkOrderDraft");
         _steps.AddFixtureFor("WorkOrderDraftTests");
-        _steps.DescribeWithRationale(ValidRow);
+        _steps.DescribeWithPlan(new RefactoringPlanBuilder());
 
         var run = _steps.RunRationaleCheck();
 
         run.ExitCode.ShouldBe(0, run.Output);
-        run.Output.ShouldContain($"Oversized-baseline file(s) changed: {RefactoringPullRequestSteps.OversizedFile}");
+        run.Output.ShouldContain($"Size-baselined file(s) changed: {RefactoringPullRequestSteps.OversizedFile}");
     }
 
     [Test]
-    public void ShouldFail_WhenAnOversizedFileChangesWithoutARationale()
+    public void ShouldFail_WhenASizeBaselinedFileChangesWithoutAPlan()
     {
         _steps.CommitBaseWithOversizedFile();
         _steps.ExtractType("WorkOrderDraft");
         _steps.AddFixtureFor("WorkOrderDraftTests");
-        _steps.DescribeWithoutRationale();
+        _steps.DescribeWithoutPlan();
 
         var run = _steps.RunRationaleCheck();
 
         run.ExitCode.ShouldBe(1, run.Output);
-        run.Output.ShouldContain("no filled-in '## Refactoring rationale' table");
+        run.Output.ShouldContain("no '## Refactoring plan' section");
         run.Output.ShouldContain("docs/refactoring-oversized-code.md");
     }
 
@@ -68,7 +65,7 @@ public class RefactoringRationaleScriptTests
         _steps.CommitBaseWithOversizedFile();
         _steps.ExtractType("WorkOrderDraft");
         _steps.AddFixtureFor("WorkOrderDraftTests");
-        _steps.DescribeWithRationale(row);
+        _steps.DescribeWithPlan(new RefactoringPlanBuilder().WithRationaleRow(row));
 
         var run = _steps.RunRationaleCheck();
 
@@ -84,8 +81,8 @@ public class RefactoringRationaleScriptTests
         _steps.CommitBaseWithOversizedFile();
         _steps.ExtractType("WorkOrderDraft");
         _steps.AddFixtureFor("WorkOrderDraftTests");
-        _steps.DescribeWithRationale(
-            $"| Primitive Obsession | {move} | WorkOrderDraft | The draft fields were raw strings validated separately in every tool |");
+        _steps.DescribeWithPlan(new RefactoringPlanBuilder().WithRationaleRow(
+            $"| Primitive Obsession | {move} | WorkOrderDraft | The draft fields were raw strings validated separately in every tool |"));
 
         var run = _steps.RunRationaleCheck();
 
@@ -98,8 +95,8 @@ public class RefactoringRationaleScriptTests
         _steps.CommitBaseWithOversizedFile();
         _steps.ExtractType("WorkOrderDraft");
         _steps.AddFixtureFor("WorkOrderDraftCreationTests");
-        _steps.DescribeWithRationale(
-            "| Long Parameter List | Other: Introduce Builder | WorkOrderDraft | Optional arguments make a parameter object awkward, so a builder reads better here |");
+        _steps.DescribeWithPlan(new RefactoringPlanBuilder().WithRationaleRow(
+            "| Long Parameter List | Other: Introduce Builder | WorkOrderDraft | Optional arguments make a parameter object awkward, so a builder reads better here |"));
 
         var run = _steps.RunRationaleCheck();
 
@@ -112,7 +109,7 @@ public class RefactoringRationaleScriptTests
     {
         _steps.CommitBaseWithOversizedFile();
         _steps.ExtractType("WorkOrderDraft");
-        _steps.DescribeWithRationale(ValidRow);
+        _steps.DescribeWithPlan(new RefactoringPlanBuilder());
 
         var run = _steps.RunRationaleCheck();
 
@@ -125,7 +122,7 @@ public class RefactoringRationaleScriptTests
     {
         _steps.CommitBaseWithOversizedFile();
         _steps.AddGuardrailBaselineLine();
-        _steps.DescribeWithoutRationale();
+        _steps.DescribeWithoutPlan();
 
         var run = _steps.RunRationaleCheck();
 
@@ -138,7 +135,7 @@ public class RefactoringRationaleScriptTests
     {
         _steps.CommitBaseWithOversizedFile();
         _steps.AddNewGuardrailBaseline();
-        _steps.DescribeWithoutRationale();
+        _steps.DescribeWithoutPlan();
 
         var run = _steps.RunRationaleCheck();
 
@@ -146,16 +143,16 @@ public class RefactoringRationaleScriptTests
     }
 
     [Test]
-    public void ShouldPassWithoutARationale_WhenNoOversizedFileChanges()
+    public void ShouldPassWithoutAPlan_WhenNoSizeBaselinedFileChanges()
     {
         _steps.CommitBaseWithOversizedFile();
         _steps.ChangeSmallFile();
-        _steps.DescribeWithoutRationale();
+        _steps.DescribeWithoutPlan();
 
         var run = _steps.RunRationaleCheck();
 
         run.ExitCode.ShouldBe(0, run.Output);
-        run.Output.ShouldContain("no Refactoring rationale required");
+        run.Output.ShouldContain("no Refactoring plan required");
     }
 
     [Test]
@@ -163,12 +160,12 @@ public class RefactoringRationaleScriptTests
     {
         _steps.CommitBaseWithSizeBaselineListing();
         _steps.ChangeListedFile();
-        _steps.DescribeWithoutRationale();
+        _steps.DescribeWithoutPlan();
 
-        var run = _steps.RunRationaleCheck(RefactoringPullRequestSteps.SizeBaseline);
+        var run = _steps.RunRationaleCheck();
 
         run.ExitCode.ShouldBe(1, run.Output);
-        run.Output.ShouldContain($"changes oversized-baseline file(s) ({RefactoringPullRequestSteps.ListedFile})");
+        run.Output.ShouldContain($"changes size-baselined file(s) ({RefactoringPullRequestSteps.ListedFile})");
     }
 
     [Test]
@@ -176,24 +173,25 @@ public class RefactoringRationaleScriptTests
     {
         _steps.CommitBaseWithCodeBehindOnTheSizeBaseline();
         _steps.ChangeListedCodeBehind();
-        _steps.DescribeWithoutRationale();
+        _steps.DescribeWithoutPlan();
 
-        var run = _steps.RunRationaleCheck(oversizedBaselinePath: null);
+        var run = _steps.RunRationaleCheck();
 
         run.ExitCode.ShouldBe(1, run.Output);
-        run.Output.ShouldContain($"changes oversized-baseline file(s) ({RefactoringPullRequestSteps.ListedCodeBehind})");
+        run.Output.ShouldContain($"changes size-baselined file(s) ({RefactoringPullRequestSteps.ListedCodeBehind})");
     }
 
     [Test]
-    public void ShouldReadTheSizeGateBaseline_WhenNoBaselinePathIsGiven()
+    public void ShouldFail_WhenThePlanHasNoRationaleTable()
     {
-        _steps.CommitBaseWithSizeBaselineListing();
-        _steps.ChangeListedFile();
-        _steps.DescribeWithoutRationale();
+        _steps.CommitBaseWithOversizedFile();
+        _steps.ExtractType("WorkOrderDraft");
+        _steps.AddFixtureFor("WorkOrderDraftTests");
+        _steps.DescribeWithPlan(new RefactoringPlanBuilder().WithRationaleRow(""));
 
-        var run = _steps.RunRationaleCheck(oversizedBaselinePath: null);
+        var run = _steps.RunRationaleCheck();
 
         run.ExitCode.ShouldBe(1, run.Output);
-        run.Output.ShouldContain($"changes oversized-baseline file(s) ({RefactoringPullRequestSteps.ListedFile})");
+        run.Output.ShouldContain("no filled-in '### Refactoring rationale' table");
     }
 }

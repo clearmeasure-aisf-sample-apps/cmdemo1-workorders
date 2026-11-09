@@ -1,7 +1,7 @@
 name: Refactoring rationale
 # Deterministic checks from docs/refactoring-oversized-code.md: guardrail and oversized baselines only shrink; a pull
-# request that changes an oversized-baseline file explains each move in its "Refactoring rationale" section and gives
-# every extracted type a fixture. Runs on pull request events so editing the description re-runs the check.
+# request that changes a size-baselined file has a "Refactoring plan" section (rationale table, Before/After mermaid
+# diagrams naming every new type, generated line-count table) and gives every extracted type a fixture. Runs on pull request events so editing the description re-runs the check.
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened, ready_for_review]

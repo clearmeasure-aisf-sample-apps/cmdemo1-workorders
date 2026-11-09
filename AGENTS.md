@@ -17,7 +17,10 @@ rationale failure (workflow `refactoring-rationale.yml`), **read and follow `doc
 before editing**. Diagnose the smell and the emerging concept, use a preferred move (never `partial`, helper/util
 classes, own-type extensions, numbered names or line-count splits), give every extracted class its own fixture, write
 tests as visible procedural steps, delete the fixed line from the baseline, and fill in the pull request's
-**Refactoring rationale** table. Check locally:
+**Refactoring plan** section: the rationale table, a Before and an After `mermaid` diagram (`classDiagram` or
+`flowchart`) per concept cluster naming every new production type, and the line-count table pasted from
+`pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WriteLineCountTable` (regenerate after
+every push). Check locally:
 `pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -PrBodyPath pr-body.md`.
 
 ### Running the Full Build

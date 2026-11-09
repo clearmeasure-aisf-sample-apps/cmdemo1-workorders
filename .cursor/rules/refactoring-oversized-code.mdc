@@ -18,4 +18,7 @@ Refactoring rationale failure: **read and follow `docs/refactoring-oversized-cod
   infrastructure, plus shared arrange steps only in a `Given...` fixture; data in ObjectMother/builders, actions in
   small `*Steps` classes.
 - Every extracted class gets its own fixture; delete the fixed file's line from the baseline (baselines only shrink).
-- Fill in the pull request's **Refactoring rationale** table (Smell | Refactoring | New abstraction | Why).
+- Fill in the pull request's **Refactoring plan**: the rationale table (Smell | Refactoring | New abstraction | Why), a
+  Before and an After `mermaid` diagram (`classDiagram` or `flowchart`) per concept cluster that name every new
+  production type, and the line-count table pasted from
+  `pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WriteLineCountTable`.

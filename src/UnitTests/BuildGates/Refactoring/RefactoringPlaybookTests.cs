@@ -15,6 +15,9 @@ public class RefactoringPlaybookTests
     [TestCase("## Preferred moves")]
     [TestCase("## Banned moves")]
     [TestCase("## Test files")]
+    [TestCase("## Refactoring plan (pull request)")]
+    [TestCase("```mermaid")]
+    [TestCase("-WriteLineCountTable")]
     [TestCase("| Smell | Signals in this codebase |")]
     [TestCase("| Refactoring | Fixes | Source | In this codebase |")]
     public void ShouldCarryTheSectionsTheChecksRead_WhenThePlaybookIsRead(string expected)
@@ -41,12 +44,16 @@ public class RefactoringPlaybookTests
     }
 
     [Test]
-    public void ShouldOfferTheRationaleTable_WhenAPullRequestIsOpened()
+    public void ShouldOfferTheRefactoringPlan_WhenAPullRequestIsOpened()
     {
         var template = ReadRepositoryFile(".github/pull_request_template.md");
 
-        template.ShouldContain("## Refactoring rationale");
+        template.ShouldContain("## Refactoring plan");
+        template.ShouldContain("### Refactoring rationale");
         template.ShouldContain("| Smell | Refactoring | New abstraction | Why |");
+        template.ShouldContain("```mermaid");
+        template.ShouldContain("### Line counts");
+        template.ShouldContain("-WriteLineCountTable");
         template.ShouldContain(Playbook);
     }
 

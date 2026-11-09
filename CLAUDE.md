@@ -265,7 +265,8 @@ Format: `{username}/{branch-description}`. AI agents use the username of the acc
 **Oversized code:** on a size-gate failure, a structure-guardrail failure (`src/UnitTests/BuildGates/Refactoring/`) or a
 Refactoring rationale failure, read and follow `docs/refactoring-oversized-code.md` before editing: a real refactoring
 (smell → preferred move → named abstraction), never a mechanical split; tests as visible procedural steps; the pull
-request's **Refactoring rationale** table filled in (checked by `scripts/refactoring/Test-RefactoringRationale.ps1`).
+request's **Refactoring plan** filled in: rationale table, Before/After `mermaid` diagrams naming every new type, and the
+generated line-count table (`-WriteLineCountTable`), all checked by `scripts/refactoring/Test-RefactoringRationale.ps1`.
 
 CRAP gate (crap4dotnet): `pwsh scripts/crap/run-crap-audit.ps1 -SkipTests -FailOnViolations`. Threshold in `scripts/crap/crap-gate-threshold.json`; reports land in `crap-metrics/` (gitignored) and CI publishes them as the `crap-metrics-linux` artifact plus job summary. See `docs/crap-score-audit.md`.
 

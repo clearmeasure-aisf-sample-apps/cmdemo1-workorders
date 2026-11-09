@@ -3,7 +3,7 @@ using System.Diagnostics;
 namespace ClearMeasure.Bootcamp.IntegrationTests.BuildGates.RefactoringRationale;
 
 /// <summary>
-/// Steps of a refactoring pull request in a throwaway git repository: a base commit with an oversized file, the
+/// Steps of a refactoring pull request in a throwaway git repository: a base commit with a size-baselined file, the
 /// changes of the pull request, its description, and a run of the rationale script over them.
 /// </summary>
 public sealed class RefactoringPullRequestSteps : IDisposable
@@ -23,7 +23,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     {
         _repositoryRoot = RepositoryRootAbove(new DirectoryInfo(TestContext.CurrentContext.TestDirectory));
         _workDirectory = Path.Combine(Path.GetTempPath(), $"refactoring-rationale-{Guid.NewGuid():N}");
-        _bodyPath = Path.Combine(_workDirectory, "pr-body.md");
+        _bodyPath = $"{_workDirectory}-pr-body.md";
         Directory.CreateDirectory(_workDirectory);
         Git("init", "--quiet");
         Git("config", "user.email", "steps@example.com");
@@ -36,6 +36,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     {
         var methods = Enumerable.Range(1, 310).Select(n => $"    public int Value{n}() => {n};\n");
         Write(OversizedFile, $"namespace Tools;\n\npublic class WorkOrderTools\n{{\n{string.Concat(methods)}}}\n");
+        Write(SizeBaseline, $"# Size and nesting ratchet baseline.\nfile {OversizedFile}\n");
         WriteBaseCommonFiles();
         CommitBase();
     }
@@ -52,6 +53,12 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     {
         Write(OversizedFile, File.ReadAllText(PathOf(OversizedFile)).Replace("Value1()", $"Value1() => new {typeName}().Count; public int Old1()"));
         Write($"src/McpServer/Tools/{typeName}.cs", $"namespace Tools;\n\npublic sealed record {typeName}\n{{\n    public int Count => 1;\n}}\n");
+    }
+
+    public void ShrinkOversizedFileAndDeleteItsBaselineLine()
+    {
+        Write(OversizedFile, "namespace Tools;\n\npublic class WorkOrderTools\n{\n}\n");
+        Write(SizeBaseline, "# Size and nesting ratchet baseline.\n");
     }
 
     public void CommitBaseWithCodeBehindOnTheSizeBaseline()
@@ -79,43 +86,23 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     public void AddNewGuardrailBaseline() =>
         Write("src/UnitTests/BuildGates/Refactoring/Baselines/partial-types.txt", "# new baseline\nsrc/Core/Legacy.cs :: Legacy\n");
 
-    public void DescribeWithRationale(string row) =>
-        File.WriteAllText(
-            _bodyPath,
-            $"""
-             ## Summary
+    public void DescribeWithPlan(RefactoringPlanBuilder plan) =>
+        File.WriteAllText(_bodyPath, plan.Build(plan.UsesGeneratedLineCounts ? GenerateLineCountTable().Output : ""));
 
-             Refactors the work-order tools.
+    public void DescribeWithoutPlan() => File.WriteAllText(_bodyPath, "## Summary\n\nRefactors the work-order tools.\n");
 
-             ## Refactoring rationale
-
-             <!-- One row per move. -->
-             | Smell | Refactoring | New abstraction | Why |
-             |-------|-------------|-----------------|-----|
-             {row}
-
-             ## Testing
-
-             Unit tests.
-             """);
-
-    public void DescribeWithoutRationale() => File.WriteAllText(_bodyPath, "## Summary\n\nRefactors the work-order tools.\n");
-
-    /// <summary>
-    /// Commits the pull request and runs the script. An empty <paramref name="oversizedBaselinePath"/> makes the
-    /// script measure file sizes; <c>null</c> leaves the script's default baseline path.
-    /// </summary>
-    public ScriptRun RunRationaleCheck(string? oversizedBaselinePath = "")
+    /// <summary>Commits the pull request and runs the script with <c>-WriteLineCountTable</c>.</summary>
+    public ScriptRun GenerateLineCountTable()
     {
-        Git("add", "--all");
-        Git("commit", "--quiet", "--allow-empty", "-m", "pull request");
-        var script = Path.Combine(_repositoryRoot, "scripts", "refactoring", "Test-RefactoringRationale.ps1");
-        string[] arguments =
-        [
-            "-NoProfile", "-File", script, "-BaseRef", BaseTag, "-PrBodyPath", _bodyPath, "-RepoRoot", _workDirectory,
-            .. oversizedBaselinePath is null ? Array.Empty<string>() : ["-OversizedBaselinePath", oversizedBaselinePath]
-        ];
-        return Run("pwsh", arguments);
+        CommitPullRequest();
+        return RunScript("-WriteLineCountTable");
+    }
+
+    /// <summary>Commits the pull request and runs the script over it and its description.</summary>
+    public ScriptRun RunRationaleCheck()
+    {
+        CommitPullRequest();
+        return RunScript("-PrBodyPath", _bodyPath);
     }
 
     public void Dispose()
@@ -131,6 +118,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
         }
 
         Directory.Delete(_workDirectory, true);
+        File.Delete(_bodyPath);
     }
 
     private static string RepositoryRootAbove(DirectoryInfo directory) =>
@@ -142,6 +130,18 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     {
         Write("docs/refactoring-oversized-code.md", File.ReadAllText(Path.Combine(_repositoryRoot, "docs", "refactoring-oversized-code.md")));
         Write(GuardrailBaseline, "# baseline\nsrc/Core/WorkOrderHelper.cs :: WorkOrderHelper\n");
+    }
+
+    private void CommitPullRequest()
+    {
+        Git("add", "--all");
+        Git("commit", "--quiet", "--allow-empty", "-m", "pull request");
+    }
+
+    private ScriptRun RunScript(params string[] scriptArguments)
+    {
+        var script = Path.Combine(_repositoryRoot, "scripts", "refactoring", "Test-RefactoringRationale.ps1");
+        return Run("pwsh", ["-NoProfile", "-File", script, "-BaseRef", BaseTag, "-RepoRoot", _workDirectory, .. scriptArguments]);
     }
 
     private void CommitBase()
