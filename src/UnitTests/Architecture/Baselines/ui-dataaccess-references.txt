@@ -1,0 +1,5 @@
+# UI projects that reference DataAccess.csproj.
+# UI.Server is the composition host that registers DataAccess handlers.
+# This list is today's set. Delete a line when that reference is removed. Do not add lines.
+
+src/UI/Server/UI.Server.csproj
