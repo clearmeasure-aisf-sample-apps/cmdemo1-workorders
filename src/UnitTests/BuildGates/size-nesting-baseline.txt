@@ -375,7 +375,7 @@ parameters src/UI.Shared/Models/WorkOrderSearchPager.cs SearchResultPage(WorkOrd
 parameters src/UI.Shared/Services/WorkOrderBulkActionService.cs WorkOrderBulkActionService.ApplyLoadedAsync(string[],Dictionary<string,WorkOrder>,string,Employee,Action<WorkOrder>)
 parameters src/UI/Api/Controllers/EchoController.cs EchoResponse(string,string,string,string,string,string,string?,IReadOnlyDictionary<string,string>)
 parameters src/UI/Api/Controllers/EnvironmentStatusController.cs EnvironmentStatusResponse(string,int,string,IReadOnlyList<string>,IReadOnlyDictionary<string,string>,string,string,string)
-parameters src/UI/Api/Controllers/VersionController.cs VersionMetadataResponse(string?,string?,string,string?,string,string)
+parameters src/UI/Api/Controllers/VersionController.cs VersionMetadataResponse(string?,string?,string,string?,string,string,string)
 parameters src/UI/Api/MetricsSummaryResponse.cs MetricsSummaryResponse(TimeSpan,long,long,long,int,int,int)
 parameters src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs LiveTelemetrySnapshot(int,DateTime,RequestCounts,ProbeCounts,SqlCounts,HttpClientCounts,ProcessVitals)
 parameters src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs ProcessVitals(double,long,long,int,int,int,long)
