@@ -33,8 +33,8 @@ public sealed class SuppressionBudgetGateTests
 
     private static async Task<ScriptResult> RunScript(bool selfTest)
     {
-        var repoRoot = FindRepoRoot();
-        var script = Path.Combine(repoRoot, "scripts", "quality", "Test-SuppressionBudget.ps1");
+        string repoRoot = FindRepoRoot();
+        string script = Path.Combine(repoRoot, "scripts", "quality", "Test-SuppressionBudget.ps1");
         File.Exists(script).ShouldBeTrue(script);
 
         var startInfo = new ProcessStartInfo("pwsh")
@@ -57,7 +57,7 @@ public sealed class SuppressionBudgetGateTests
         var stdoutTask = process.StandardOutput.ReadToEndAsync();
         var stderrTask = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync(CancellationToken.None);
-        var output = $"{await stdoutTask}{Environment.NewLine}{await stderrTask}";
+        string output = $"{await stdoutTask}{Environment.NewLine}{await stderrTask}";
         return new ScriptResult(process.ExitCode, output);
     }
 
