@@ -18,9 +18,10 @@ public class CopyWorkOrderNumberButtonTests
         clipboard.Setup<object>("copyToClipboard", _ => true).SetResult(new object());
         var button = ctx.Render<CopyWorkOrderNumberButton>(parameters => parameters.Add(p => p.Number, "WO-42"));
 
-        button.Find($"[data-testid='{nameof(WorkOrderManage.Elements.CopyWorkOrderNumber)}']").Click();
+        var clicking = button.Find($"[data-testid='{nameof(WorkOrderManage.Elements.CopyWorkOrderNumber)}']").ClickAsync(new());
 
-        button.WaitForAssertion(() => button.Find("#copy-status").TextContent.ShouldContain("Copied"));
+        await button.WaitForAssertionAsync(() => button.Find("#copy-status").TextContent.ShouldContain("Copied"));
+        await clicking;
         clipboard.VerifyInvoke("copyToClipboard").Arguments.ShouldBe(["WO-42"]);
     }
 

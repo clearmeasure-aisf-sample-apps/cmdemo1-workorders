@@ -9,10 +9,10 @@ public sealed record SearchResultPage(WorkOrderSearchResultRow[] Rows, int Page,
     public const int PageSize = 25;
 
     /// <summary>Position of the first row of this page in the whole result (1-based); 0 for an empty page.</summary>
-    public int First => Rows.Length == 0 ? 0 : ((Page - 1) * PageSize) + 1;
+    private int First => Rows.Length == 0 ? 0 : ((Page - 1) * PageSize) + 1;
 
     /// <summary>Position of the last row of this page in the whole result; 0 for an empty page.</summary>
-    public int Last => First + Rows.Length - Math.Sign(Rows.Length);
+    private int Last => First + Rows.Length - Math.Sign(Rows.Length);
 
     /// <summary>"Showing a–b of M work orders".</summary>
     public string RangeText => Total == 0

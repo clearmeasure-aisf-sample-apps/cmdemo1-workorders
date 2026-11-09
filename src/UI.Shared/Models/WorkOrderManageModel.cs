@@ -50,12 +50,12 @@ public class WorkOrderManageModel : IValidatableObject
         workOrder.Floor = string.IsNullOrWhiteSpace(Floor) ? null : Floor.Trim();
     }
 
-    public WorkOrder? WorkOrder { get; set; }
-    public EditMode Mode { get; set; }
+    public WorkOrder? WorkOrder { get; private set; }
+    public EditMode Mode { get; private set; }
 
-    public string? WorkOrderNumber { get; set; }
+    public string? WorkOrderNumber { get; private set; }
 
-    public string? CreatorFullName { get; set; }
+    public string? CreatorFullName { get; private set; }
 
     public string? AssignedToUserName { get; set; }
 
@@ -70,16 +70,16 @@ public class WorkOrderManageModel : IValidatableObject
 
     public bool IsReadOnly { get; set; }
 
-    public string? AssignedDate { get; set; }
+    public string? AssignedDate { get; private set; }
 
-    public string? CompletedDate { get; set; }
+    public string? CompletedDate { get; private set; }
 
-    public string? CreatedDate { get; set; }
+    public string? CreatedDate { get; private set; }
 
     /// <summary>
     /// How long ago the work order was created, such as "3 days ago". Null when there is no created date.
     /// </summary>
-    public string? CreatedRelativeTime { get; init; }
+    public string? CreatedRelativeTime { get; private init; }
 
     /// <summary>
     /// Optional due date bound to the native date picker. Null when unset.
@@ -89,17 +89,17 @@ public class WorkOrderManageModel : IValidatableObject
     /// <summary>
     /// Due date loaded with the work order. An unchanged value is allowed even when it is before today.
     /// </summary>
-    public DateOnly? OriginalDueDate { get; init; }
+    public DateOnly? OriginalDueDate { get; private init; }
 
     /// <summary>
     /// Church calendar day the form validates against. The system clock is used when unset.
     /// </summary>
-    public DateOnly? ChurchToday { get; init; }
+    private DateOnly? ChurchToday { get; init; }
 
     /// <summary>
     /// Display text for the due date in the client culture's short-date pattern, when set.
     /// </summary>
-    public string? DueDateDisplay { get; set; }
+    public string? DueDateDisplay { get; private set; }
 
     public string? RoomNumber { get; set; }
 

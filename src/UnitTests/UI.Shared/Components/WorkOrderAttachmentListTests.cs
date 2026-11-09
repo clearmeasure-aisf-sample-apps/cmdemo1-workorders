@@ -80,7 +80,7 @@ public class WorkOrderAttachmentListTests
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
-            Removed = (RemoveAttachmentCommand)(object)request;
+            Removed = (RemoveAttachmentCommand)request;
             return Task.FromResult((TResponse)(object)result);
         }
 

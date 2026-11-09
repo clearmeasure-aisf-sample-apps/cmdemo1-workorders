@@ -5,7 +5,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 /// <summary>
 /// Dictation into one work-order field at a time: toggling a field starts or stops the browser's speech recognition
-/// in the user's language, and each final transcript is handed to <paramref name="onTranscript"/> for that field.
+/// in the user's language, and each final transcript is handed to the transcript callback for that field.
 /// Speech recognition may be missing or fail in some browsers; dictation then simply does not start.
 /// </summary>
 internal sealed class WorkOrderDictation : IAsyncDisposable
