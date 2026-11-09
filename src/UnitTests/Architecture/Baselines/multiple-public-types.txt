@@ -48,8 +48,6 @@ src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs
 src/UI/Server/Notifications/RealtimeNotificationHub.cs
 src/UI/Server/WorkOrderReformatAgent.cs
 src/UnitTests/BuildGates/CrapGateEvaluator.cs
-src/UnitTests/BuildGates/DuplicationGate.cs
-src/UnitTests/BuildGates/UnusedPackageGate.cs
 src/UnitTests/Core/Services/WorkOrderBuilderTests.cs
 src/UnitTests/Database/DatabaseConsoleTests.cs
 src/UnitTests/Database/DatabaseUpgradeLoggingTests.cs

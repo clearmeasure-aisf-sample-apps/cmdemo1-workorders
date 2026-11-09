@@ -6,7 +6,6 @@
 # file lines are today's oversized files. method and parameters lines are
 # members that already exceed a limit. Nesting has no current exceptions.
 # Do not add lines. Delete a line in the same change that fixes a violation.
-# #1535 recorded members that already exceeded a limit when the gate landed.
 file src/AcceptanceTests/WorkOrders/WorkOrderSearchRedesignTests.cs
 file src/AcceptanceTests/WorkOrders/WorkOrderSearchTests.cs
 file src/Core/Import/WorkOrderBulkImportCsvParser.cs
@@ -400,8 +399,3 @@ parameters src/UnitTests/UI.Shared/MainLayoutTests.cs MainLayoutTests.CreateCont
 parameters src/UnitTests/UI.Shared/Models/WorkOrderSearchTableModelTests.cs WorkOrderSearchSorterTests.Row(string,string,WorkOrderStatus,WorkOrderPriority,string?,string?,DateOnly?)
 parameters src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs WorkOrderSearchTests.CreateContext(IBus?,string,WorkOrderSearchState?,Employee?,StubFeatureFlags?)
 parameters src/UnitTests/UI.Shared/VendorManagementGateTests.cs VendorManagementGateTests.BuildPipeline(bool,CountingHandler<VendorsQuery,Vendor[]>,CountingHandler<CreateVendorCommand,CreateVendorResult>,CountingHandler<TeamsQuery,Team[]>,CountingHandler<CreateTeamCommand,CreateTeamResult>)
-method src/UnitTests/Architecture/SolutionArchitectureScan.cs SolutionArchitectureScan.NamespaceMismatch(string,CompilationUnitSyntax,Dictionary<string,(stringRootNamespace,stringDirectory)>)
-method src/UnitTests/Architecture/SolutionArchitectureScan.cs SolutionArchitectureScan.ScanSources(string)
-method src/UnitTests/BuildGates/UnusedPackageGate.cs UnusedPackageGate.CollectProject(string,string,string,List<string>,List<UnusedPackage>)
-parameters src/UnitTests/Architecture/SolutionArchitectureScan.cs SolutionArchitectureScan.Result(IReadOnlyList<string>,IReadOnlyList<string>,IReadOnlyList<string>,IReadOnlyList<string>,IReadOnlyList<string>)
-parameters src/UnitTests/BuildGates/UnusedPackageGate.cs UnusedPackageGate.CollectProject(string,string,string,List<string>,List<UnusedPackage>)
