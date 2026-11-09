@@ -21,7 +21,7 @@ public readonly record struct CompletionWeeks(DateOnly Today, int Count)
             .ToHashSet();
         var completionsPerWeek = completedDates
             .Select(completed => WeekEnding(DateOnly.FromDateTime(completed)))
-            .Where(weekEnding => weekEndings.Contains(weekEnding))
+            .Where(weekEndings.Contains)
             .CountBy(weekEnding => weekEnding)
             .ToDictionary();
 

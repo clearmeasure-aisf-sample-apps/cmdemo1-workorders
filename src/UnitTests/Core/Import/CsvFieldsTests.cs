@@ -8,12 +8,12 @@ public class CsvFieldsTests
 {
     private static IEnumerable<TestCaseData> Records() =>
     [
-        new TestCaseData("a,b,c", new[] { "a", "b", "c" }),
-        new TestCaseData("a,,c,", new[] { "a", "", "c", "" }),
-        new TestCaseData("\"x, y\",z", new[] { "x, y", "z" }),
-        new TestCaseData("\"say \"\"hi\"\"\",z", new[] { "say \"hi\"", "z" }),
-        new TestCaseData("\"two\nlines\",z", new[] { "two\nlines", "z" }),
-        new TestCaseData("\"unclosed", new[] { "unclosed" })
+        new("a,b,c", new[] { "a", "b", "c" }),
+        new("a,,c,", new[] { "a", "", "c", "" }),
+        new("\"x, y\",z", new[] { "x, y", "z" }),
+        new("\"say \"\"hi\"\"\",z", new[] { "say \"hi\"", "z" }),
+        new("\"two\nlines\",z", new[] { "two\nlines", "z" }),
+        new("\"unclosed", new[] { "unclosed" })
     ];
 
     [TestCaseSource(nameof(Records))]

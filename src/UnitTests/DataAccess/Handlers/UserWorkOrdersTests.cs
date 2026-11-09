@@ -16,10 +16,10 @@ public class UserWorkOrdersTests
     {
         var mine = new UserWorkOrders(Orders(), Me.Id, Today);
 
-        mine.AssignedToMe.Select(wo => wo.Number).ShouldBe(["1", "2", "3"]);
-        mine.OpenAssignedToMe.Select(wo => wo.Number).ShouldBe(["1", "2"]);
-        mine.OpenAssignedToMeDueToday.Select(wo => wo.Number).ShouldBe(["2"]);
-        mine.CreatedByMe.Select(wo => wo.Number).ShouldBe(["4"]);
+        mine.AssignedToMe.Select(wo => wo.Number).ToList().ShouldBe(["1", "2", "3"]);
+        mine.OpenAssignedToMe.Select(wo => wo.Number).ToList().ShouldBe(["1", "2"]);
+        mine.OpenAssignedToMeDueToday.Select(wo => wo.Number).ToList().ShouldBe(["2"]);
+        mine.CreatedByMe.Select(wo => wo.Number).ToList().ShouldBe(["4"]);
     }
 
     private static IQueryable<WorkOrder> Orders() => new[]
