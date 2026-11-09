@@ -1,0 +1,2 @@
+# Ratchet baseline for PartialTypeRule: today's violations. Only delete lines (fix the code first); never add.
+# See docs/refactoring-oversized-code.md.

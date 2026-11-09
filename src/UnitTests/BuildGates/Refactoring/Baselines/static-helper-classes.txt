@@ -1,0 +1,8 @@
+# Ratchet baseline for StaticHelperClassRule: today's violations. Only delete lines (fix the code first); never add.
+# See docs/refactoring-oversized-code.md.
+src/AcceptanceTests/ProcessCleanupHelper.cs :: ProcessCleanupHelper
+src/Analyzers/ClearMeasure.NpoAnalyzers/LoopHelpers.cs :: LoopHelpers
+src/Core/Services/Impl/CommandButtonStyleHelper.cs :: CommandButtonStyleHelper
+src/Core/Services/WorkOrderStringUtility.cs :: WorkOrderStringUtility
+src/UI.Shared/Pages/WorkOrderSpeechHelper.cs :: WorkOrderSpeechHelper
+src/UnitTests/Analyzers/AnalyzerTestHelper.cs :: AnalyzerTestHelper

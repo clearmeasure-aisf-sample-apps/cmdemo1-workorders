@@ -1,0 +1,4 @@
+# Ratchet baseline for SetUpActAssertRule: today's violations. Only delete lines (fix the code first); never add.
+# See docs/refactoring-oversized-code.md.
+src/UnitTests/UI.Client/AppCssLegacyRetirementTests.cs :: AppCssLegacyRetirementTests.SetUp
+src/UnitTests/UI.Client/IndexHtmlThemeScriptTests.cs :: IndexHtmlThemeScriptTests.SetUp

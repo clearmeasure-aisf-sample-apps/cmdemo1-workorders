@@ -1,0 +1,3 @@
+# Ratchet baseline for OwnTypeExtensionRule: today's violations. Only delete lines (fix the code first); never add.
+# See docs/refactoring-oversized-code.md.
+src/Core/Model/WorkOrderPriorityExtensions.cs :: WorkOrderPriorityExtensions
