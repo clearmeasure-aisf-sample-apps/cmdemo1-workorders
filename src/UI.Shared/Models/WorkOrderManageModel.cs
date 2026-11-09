@@ -53,7 +53,7 @@ public class WorkOrderManageModel : IValidatableObject
     public WorkOrder? WorkOrder { get; private set; }
     public EditMode Mode { get; private set; }
 
-    public string? WorkOrderNumber { get; private set; }
+    public string? WorkOrderNumber { get; private init; }
 
     public string? CreatorFullName { get; private set; }
 
