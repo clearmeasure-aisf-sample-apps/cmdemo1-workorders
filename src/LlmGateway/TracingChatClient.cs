@@ -1,16 +1,14 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.Extensions.AI;
 
 namespace ClearMeasure.Bootcamp.LlmGateway;
 
 /// <summary>
-/// A delegating chat client that adds distributed tracing spans around chat operations.
+/// A delegating chat client that adds distributed tracing spans (<see cref="ChatActivity"/>) around chat operations.
 /// </summary>
 public class TracingChatClient(IChatClient innerClient) : DelegatingChatClient(innerClient)
 {
-    private static readonly ActivitySource ActivitySource = new("ChurchBulletin.LlmGateway", "1.0.0");
-
     /// <inheritdoc />
     public override async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> messages,
@@ -18,28 +16,16 @@ public class TracingChatClient(IChatClient innerClient) : DelegatingChatClient(i
         CancellationToken cancellationToken = default)
     {
         var messageList = AsMaterializedList(messages);
-
-        using var activity = StartActivity("ChatClient.GetResponseAsync");
-        activity?.SetTag("chat.prompt", GetLastUserMessage(messageList));
-        activity?.AddEvent(new ActivityEvent("request.sent"));
-
+        using var activity = ChatActivity.Start("ChatClient.GetResponseAsync", messageList);
         try
         {
             var response = await base.GetResponseAsync(messageList, options, cancellationToken);
-            activity?.AddEvent(new ActivityEvent("response.received"));
-            activity?.SetTag("chat.model", response.ModelId);
-            activity?.SetTag("chat.response", response.Text);
+            activity.Completed(response.ModelId, response.Text);
             return response;
         }
         catch (Exception ex)
         {
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            activity?.AddEvent(new ActivityEvent("exception",
-                tags: new ActivityTagsCollection
-                {
-                    { "exception.type", ex.GetType().FullName },
-                    { "exception.message", ex.Message }
-                }));
+            activity.Failed(ex);
             throw;
         }
     }
@@ -51,74 +37,38 @@ public class TracingChatClient(IChatClient innerClient) : DelegatingChatClient(i
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var messageList = AsMaterializedList(messages);
-
-        using var activity = StartActivity("ChatClient.GetStreamingResponseAsync");
-        activity?.SetTag("chat.prompt", GetLastUserMessage(messageList));
-        activity?.AddEvent(new ActivityEvent("request.sent"));
-
+        using var activity = ChatActivity.Start("ChatClient.GetStreamingResponseAsync", messageList);
         ChatResponseUpdate? lastUpdate = null;
-        var responseText = new System.Text.StringBuilder();
-
-        await using var enumerator = base
+        var responseText = new StringBuilder();
+        await using var updates = base
             .GetStreamingResponseAsync(messageList, options, cancellationToken)
             .GetAsyncEnumerator(cancellationToken);
 
-        while (true)
+        while (await MoveNextAsync(updates, activity))
         {
-            ChatResponseUpdate update;
-            try
+            lastUpdate = updates.Current;
+            if (!string.IsNullOrWhiteSpace(lastUpdate.Text))
             {
-                if (!await enumerator.MoveNextAsync())
-                {
-                    break;
-                }
-
-                update = enumerator.Current;
+                responseText.Append(lastUpdate.Text);
+                yield return lastUpdate;
             }
-            catch (Exception ex)
-            {
-                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity?.AddEvent(new ActivityEvent("exception",
-                    tags: new ActivityTagsCollection
-                    {
-                        { "exception.type", ex.GetType().FullName },
-                        { "exception.message", ex.Message }
-                    }));
-                throw;
-            }
-
-            lastUpdate = update;
-
-            if (string.IsNullOrWhiteSpace(update.Text))
-            {
-                continue;
-            }
-
-            responseText.Append(update.Text);
-            yield return update;
         }
 
-        activity?.AddEvent(new ActivityEvent("response.received"));
-        activity?.SetTag("chat.model", lastUpdate?.ModelId);
-        activity?.SetTag("chat.response", responseText.ToString());
+        activity.Completed(lastUpdate?.ModelId, responseText.ToString());
     }
 
-    private Activity? StartActivity(string operationName)
+    /// <summary>The next update; a failure of the inner stream is recorded on the span (a yield cannot sit in a try).</summary>
+    private static async Task<bool> MoveNextAsync(IAsyncEnumerator<ChatResponseUpdate> updates, ChatActivity activity)
     {
-        var parentContext = Activity.Current?.Context;
-
-        var activity = parentContext.HasValue
-            ? ActivitySource.StartActivity(operationName, ActivityKind.Internal, parentContext.Value)
-            : ActivitySource.StartActivity(operationName);
-
-        var provider = "OpenAI";
-        activity?.SetTag("chat.provider", provider);
-        return activity;
-    }
-
-    private string? GetLastUserMessage(IEnumerable<ChatMessage> messages)
-    {
-        return messages.LastOrDefault(m => m.Role == ChatRole.User)?.Text;
+        try
+        {
+            return await updates.MoveNextAsync();
+        }
+        catch (Exception ex)
+        {
+            activity.Failed(ex);
+            throw;
+        }
     }
 
     /// <summary>

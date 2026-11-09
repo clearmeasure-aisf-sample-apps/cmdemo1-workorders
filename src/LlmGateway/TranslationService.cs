@@ -7,33 +7,34 @@ public class TranslationService(ChatClientFactory chatClientFactory) : ITranslat
 {
     public async Task<string> TranslateAsync(string text, string targetLanguageCode)
     {
-        if (TranslationGuard.ShouldReturnOriginal(text, targetLanguageCode))
+        if (TranslationGuard.ShouldReturnOriginal(text, targetLanguageCode)
+            || await TryGetChatClientAsync() is not { } chatClient)
         {
             return text;
         }
 
-        IChatClient chatClient;
+        var response = await chatClient.GetResponseAsync(TranslationPrompt(text, targetLanguageCode));
+        var translatedText = response.Text.Trim();
+        return string.IsNullOrWhiteSpace(translatedText) ? text : translatedText;
+    }
+
+    /// <summary>The chat client, or <c>null</c> when none can be created: translation then returns the original text.</summary>
+    private async Task<IChatClient?> TryGetChatClientAsync()
+    {
         try
         {
-            chatClient = await chatClientFactory.GetChatClient();
+            return await chatClientFactory.GetChatClient();
         }
         catch
         {
-            return text;
+            return null;
         }
-
-        var systemPrompt =
-            $"Translate the following text into the language identified by BCP 47 code '{targetLanguageCode}'. Return ONLY the translated text, nothing else.";
-
-        var messages = new List<ChatMessage>
-        {
-            new(ChatRole.System, systemPrompt),
-            new(ChatRole.User, text)
-        };
-
-        var response = await chatClient.GetResponseAsync(messages);
-        var translatedText = response.Text.Trim();
-
-        return string.IsNullOrWhiteSpace(translatedText) ? text : translatedText;
     }
+
+    private static List<ChatMessage> TranslationPrompt(string text, string targetLanguageCode) =>
+    [
+        new(ChatRole.System,
+            $"Translate the following text into the language identified by BCP 47 code '{targetLanguageCode}'. Return ONLY the translated text, nothing else."),
+        new(ChatRole.User, text)
+    ];
 }
