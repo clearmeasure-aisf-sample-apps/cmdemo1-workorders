@@ -181,7 +181,7 @@ public class WorkOrdersBulkImportControllerTests
 
     private static IFormFile CreateFormFile(string csvContent, string fileName = "import.csv", string contentType = "text/csv")
     {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
         var stream = new MemoryStream(bytes);
         return new FormFile(stream, 0, bytes.Length, "file", fileName)
         {

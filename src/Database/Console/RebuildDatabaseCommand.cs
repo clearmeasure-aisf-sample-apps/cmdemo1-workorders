@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -12,7 +12,7 @@ public class RebuildDatabaseCommand : AbstractDatabaseCommand
 {
     protected override int ExecuteInternal(CommandContext context, DatabaseOptions options, string connectionString, CancellationToken cancellationToken)
     {
-        var scriptDir = GetScriptDirectory(options);
+        string scriptDir = GetScriptDirectory(options);
         var result = DatabaseRebuildSteps.RunFullRebuild(
             connectionString,
             scriptDir,

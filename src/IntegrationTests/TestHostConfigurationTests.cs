@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests;
@@ -10,7 +10,7 @@ public class TestHostConfigurationTests
     public void ShouldReadVariableFromConfigFile()
     {
         var config = TestHost.GetRequiredService<IConfiguration>();
-        var key = config.GetValue<string>("ConnectionStrings:SqlConnectionString");
+        string? key = config.GetValue<string>("ConnectionStrings:SqlConnectionString");
         key.ShouldNotBeNullOrEmpty();
         Console.WriteLine(key);
     }
@@ -18,19 +18,19 @@ public class TestHostConfigurationTests
     [Test]
     public void ShouldReadVariableFromEnvironmentVariable()
     {
-        var keyName = "ConnectionStrings:TestConnectionString";
+        string keyName = "ConnectionStrings:TestConnectionString";
         var config = TestHost.GetRequiredService<IConfiguration>();
-        var testValue = "test value" + new Random();
+        string testValue = "test value" + new Random();
         config.GetValue<string>(keyName).ShouldNotBe(testValue);
         Console.WriteLine(testValue);
 
         Environment.SetEnvironmentVariable(keyName, testValue, EnvironmentVariableTarget.Process);
-        var foundVariable = Environment.GetEnvironmentVariable(keyName);
+        string? foundVariable = Environment.GetEnvironmentVariable(keyName);
         foundVariable.ShouldBe(testValue);
 
         config = TestHost.GetRequiredService<IConfiguration>();
         (config as IConfigurationRoot)?.Reload();
-        var key = config.GetValue<string>(keyName);
+        string? key = config.GetValue<string>(keyName);
         key.ShouldBe(testValue);
 
         config.GetConnectionString("TestConnectionString").ShouldBe(testValue);

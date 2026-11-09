@@ -107,7 +107,7 @@ public class LoginTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Should_ShowFullNameWithMiddleName_WhenEmployeeHasMiddleName()
     {
-        var userName = $"middle_{Guid.NewGuid():N}";
+        string userName = $"middle_{Guid.NewGuid():N}";
         await using (var context = TestHost.NewDbContext())
         {
             var employee = new Employee(userName, "First", "Last", $"{userName}@example.com")
@@ -166,17 +166,17 @@ public class LoginTests : AcceptanceTestBase
         var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
         await Expect(loginLink).ToBeVisibleAsync();
 
-        var animationName = await loginLink.EvaluateAsync<string>(
+        string animationName = await loginLink.EvaluateAsync<string>(
             "element => getComputedStyle(element).animationName");
         animationName.ShouldStartWith("login-link-blink-pulse");
 
         var observedOpacities = new List<double>();
         var observedColors = new List<string>();
-        for (var sample = 0; sample < 30; sample++)
+        for (int sample = 0; sample < 30; sample++)
         {
-            var reading = await loginLink.EvaluateAsync<string>(
+            string reading = await loginLink.EvaluateAsync<string>(
                 "element => parseFloat(getComputedStyle(element).opacity) + '|' + getComputedStyle(element).color");
-            var splitAt = reading.IndexOf('|');
+            int splitAt = reading.IndexOf('|');
             observedOpacities.Add(double.Parse(reading[..splitAt], System.Globalization.CultureInfo.InvariantCulture));
             observedColors.Add(reading[(splitAt + 1)..]);
             await Task.Delay(100);
@@ -379,7 +379,7 @@ public class LoginTests : AcceptanceTestBase
         await LoginAsLovejoyViaShortcutAsync();
 
         var logoutControl = Page.GetByTestId(nameof(Logout.Elements.LogoutLink));
-        var tagName = await logoutControl.EvaluateAsync<string>("el => el.tagName.toLowerCase()");
+        string tagName = await logoutControl.EvaluateAsync<string>("el => el.tagName.toLowerCase()");
         tagName.ShouldBe("button");
         await Expect(logoutControl).ToHaveAttributeAsync("type", "button");
 
@@ -526,7 +526,7 @@ public class LoginTests : AcceptanceTestBase
                 return;
             }
 
-            var postData = route.Request.PostData ?? string.Empty;
+            string postData = route.Request.PostData ?? string.Empty;
             if (postData.Contains("EmployeeGetAllQuery", StringComparison.Ordinal))
             {
                 await Task.Delay(employeeQueryDelayMs);

@@ -19,7 +19,7 @@ public sealed class DatabaseMigrationVersionReader(
     {
         try
         {
-            var sql = UsesSqlite()
+            string sql = UsesSqlite()
                 ? "SELECT ScriptName AS Value FROM SchemaVersions"
                 : "SELECT ScriptName AS Value FROM dbo.SchemaVersions";
             var names = await dbContext.Database.SqlQueryRaw<string>(sql).ToListAsync(cancellationToken);
@@ -34,13 +34,13 @@ public sealed class DatabaseMigrationVersionReader(
 
     private bool UsesSqlite()
     {
-        var provider = dbContext.Database.ProviderName;
+        string? provider = dbContext.Database.ProviderName;
         if (provider is not null)
         {
             return provider.Contains("Sqlite", StringComparison.OrdinalIgnoreCase);
         }
 
-        var connectionString = dbContext.Database.GetConnectionString();
+        string? connectionString = dbContext.Database.GetConnectionString();
         return connectionString is not null
             && connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase);
     }
@@ -48,9 +48,9 @@ public sealed class DatabaseMigrationVersionReader(
     private static int? HighestScriptNumber(IEnumerable<string> scriptNames)
     {
         int? highest = null;
-        foreach (var scriptName in scriptNames)
+        foreach (string scriptName in scriptNames)
         {
-            if (!TryParseScriptNumber(scriptName, out var number))
+            if (!TryParseScriptNumber(scriptName, out int number))
             {
                 continue;
             }
@@ -67,14 +67,14 @@ public sealed class DatabaseMigrationVersionReader(
     private static bool TryParseScriptNumber(string scriptName, out int number)
     {
         number = 0;
-        var fileName = scriptName.Replace('\\', '/');
-        var slash = fileName.LastIndexOf('/');
+        string fileName = scriptName.Replace('\\', '/');
+        int slash = fileName.LastIndexOf('/');
         if (slash >= 0)
         {
             fileName = fileName[(slash + 1)..];
         }
 
-        var digits = 0;
+        int digits = 0;
         while (digits < fileName.Length && char.IsDigit(fileName[digits]))
         {
             digits++;

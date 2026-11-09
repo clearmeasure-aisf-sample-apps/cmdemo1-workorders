@@ -20,7 +20,7 @@ public class QuietLog : IUpgradeLog
 
     public void LogInformation(string format, params object[] args)
     {
-        var message = string.Format(format, args);
+        string message = string.Format(format, args);
         if (message.Contains(".sql", StringComparison.OrdinalIgnoreCase))
         {
             System.Console.WriteLine(message);
@@ -40,7 +40,7 @@ public class QuietLog : IUpgradeLog
     public void LogError(Exception ex, string format, params object[] args)
     {
         System.Console.Error.WriteLine("[ERROR] " + string.Format(format, args));
-        var detail = string.IsNullOrWhiteSpace(ex.Message) ? ex.GetType().Name : ex.Message;
+        string detail = string.IsNullOrWhiteSpace(ex.Message) ? ex.GetType().Name : ex.Message;
         System.Console.Error.WriteLine(detail);
     }
 }

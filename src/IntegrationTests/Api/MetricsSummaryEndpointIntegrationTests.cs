@@ -39,7 +39,7 @@ public class MetricsSummaryEndpointIntegrationTests
         var response = await _client!.GetAsync("/api/metrics/summary");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 
@@ -60,13 +60,13 @@ public class MetricsSummaryEndpointIntegrationTests
     {
         var first = await _client!.GetAsync("/api/metrics/summary");
         first.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var firstTotal = await ReadTotalAsync(first);
+        long firstTotal = await ReadTotalAsync(first);
 
         await _client.GetAsync("/api/ping");
 
         var second = await _client.GetAsync("/api/metrics/summary");
         second.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var secondTotal = await ReadTotalAsync(second);
+        long secondTotal = await ReadTotalAsync(second);
 
         secondTotal.ShouldBeGreaterThan(firstTotal);
     }

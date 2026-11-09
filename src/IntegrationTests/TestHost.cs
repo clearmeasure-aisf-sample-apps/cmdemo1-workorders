@@ -66,7 +66,7 @@ public static class TestHost
                 if (string.Equals(Environment.GetEnvironmentVariable("DATABASE_ENGINE"), "SQLite",
                         StringComparison.OrdinalIgnoreCase))
                 {
-                    var sqliteConnection = Environment.GetEnvironmentVariable("ConnectionStrings__SqlConnectionString")
+                    string sqliteConnection = Environment.GetEnvironmentVariable("ConnectionStrings__SqlConnectionString")
                         ?? "Data Source=integration-tests.db";
                     config.AddInMemoryCollection(new Dictionary<string, string?>
                     {
@@ -77,7 +77,7 @@ public static class TestHost
                     && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__SqlConnectionString")))
                 {
                     var interim = config.Build();
-                    var connectionString = interim.GetConnectionString("SqlConnectionString") ?? "";
+                    string connectionString = interim.GetConnectionString("SqlConnectionString") ?? "";
                     if (connectionString.Contains("LocalDb", StringComparison.OrdinalIgnoreCase))
                     {
                         config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -103,7 +103,7 @@ public static class TestHost
                 endpointConfiguration.UseSerialization<SystemJsonSerializer>();
                 endpointConfiguration.EnableInstallers();
 
-                var connectionString = context.Configuration.GetConnectionString("SqlConnectionString") ?? "";
+                string connectionString = context.Configuration.GetConnectionString("SqlConnectionString") ?? "";
                 if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
                 {
                     var learningTransport = endpointConfiguration.UseTransport<LearningTransport>();

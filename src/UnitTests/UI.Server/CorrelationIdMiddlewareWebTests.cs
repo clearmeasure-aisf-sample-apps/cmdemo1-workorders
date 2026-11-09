@@ -17,7 +17,7 @@ public class CorrelationIdMiddlewareWebTests
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.TryGetValues(CorrelationIdConstants.HeaderName, out var values).ShouldBeTrue();
-        var id = values.Single();
+        string id = values.Single();
         id.Length.ShouldBeGreaterThan(0);
         Guid.TryParse(id, out _).ShouldBeTrue();
     }
@@ -46,7 +46,7 @@ public class CorrelationIdMiddlewareWebTests
         var response = await client.GetAsync("/api/v1.0/health");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var returned = response.Headers.GetValues(CorrelationIdConstants.HeaderName).Single();
+        string returned = response.Headers.GetValues(CorrelationIdConstants.HeaderName).Single();
         returned.Length.ShouldBe(36);
         Guid.TryParse(returned, out _).ShouldBeTrue();
     }

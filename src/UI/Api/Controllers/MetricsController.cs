@@ -27,7 +27,10 @@ public class MetricsController(
         var etag = ConditionalGetEtag.CreateWeakEtagForJson(payload);
         Response.Headers.ETag = etag.ToString();
         if (ConditionalGetEtag.IfNoneMatchIncludesEtag(Request, etag))
+        {
             return StatusCode(StatusCodes.Status304NotModified);
+        }
+
         return ConditionalGetEtag.JsonContent(payload);
     }
 }

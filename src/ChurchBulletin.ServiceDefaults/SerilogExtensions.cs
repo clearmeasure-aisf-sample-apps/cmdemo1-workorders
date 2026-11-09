@@ -30,7 +30,7 @@ public static class SerilogExtensions
 
     private static void WireSerilogToHost(IHostApplicationBuilder builder)
     {
-        var writeToProviders = ShouldWriteToProviders(builder.Environment);
+        bool writeToProviders = ShouldWriteToProviders(builder.Environment);
         switch (builder)
         {
             case WebApplicationBuilder web:

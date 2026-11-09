@@ -1,4 +1,4 @@
-﻿using AutoBogus;
+using AutoBogus;
 using Bogus.Extensions;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;

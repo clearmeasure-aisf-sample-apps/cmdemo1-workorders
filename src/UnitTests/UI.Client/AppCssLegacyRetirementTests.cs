@@ -11,11 +11,11 @@ public class AppCssLegacyRetirementTests
     [SetUp]
     public void SetUp()
     {
-        var root = Path.GetFullPath(Path.Combine(
+        string root = Path.GetFullPath(Path.Combine(
             TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", ".."));
-        var appCss = Path.Combine(root, "UI", "Client", "wwwroot", "css", "app.css");
-        var indexHtml = Path.Combine(root, "UI", "Client", "wwwroot", "index.html");
+        string appCss = Path.Combine(root, "UI", "Client", "wwwroot", "css", "app.css");
+        string indexHtml = Path.Combine(root, "UI", "Client", "wwwroot", "index.html");
 
         File.Exists(appCss).ShouldBeTrue();
         File.Exists(indexHtml).ShouldBeTrue();
@@ -36,16 +36,16 @@ public class AppCssLegacyRetirementTests
     [Test]
     public void AppCss_GlobalRules_ShouldUseDesignTokens()
     {
-        var button = Rule(".btn-primary");
+        string button = Rule(".btn-primary");
         button.ShouldContain("var(--gradient-primary)");
         button.ShouldContain("var(--color-on-primary)");
 
-        var form = Rule(".form-control");
+        string form = Rule(".form-control");
         form.ShouldContain("var(--radius-control)");
         form.ShouldNotContain("outline: none");
         Rule(".form-control:focus").ShouldNotContain("outline: none");
 
-        var card = Rule(".card");
+        string card = Rule(".card");
         card.ShouldContain("var(--color-surface)");
         card.ShouldContain("var(--radius-card)");
         Rule(".card-header").ShouldContain("var(--gradient-primary)");
@@ -70,10 +70,10 @@ public class AppCssLegacyRetirementTests
 
     private string Rule(string selector)
     {
-        var needle = selector + " {";
-        var at = _appCss.IndexOf(needle, StringComparison.Ordinal);
+        string needle = selector + " {";
+        int at = _appCss.IndexOf(needle, StringComparison.Ordinal);
         at.ShouldBeGreaterThanOrEqualTo(0);
-        var end = _appCss.IndexOf('}', at);
+        int end = _appCss.IndexOf('}', at);
         end.ShouldBeGreaterThan(at);
         return _appCss.Substring(at, end - at);
     }

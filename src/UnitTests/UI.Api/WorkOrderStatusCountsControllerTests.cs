@@ -7,9 +7,9 @@ using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using MediatR;
-using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Data.Sqlite;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
@@ -49,7 +49,7 @@ public class WorkOrderStatusCountsControllerTests
         await using var factory = new ApiVersioningRoutingWebApplicationFactory();
         using var client = factory.CreateClient();
 
-        for (var i = 0; i < 120; i++)
+        for (int i = 0; i < 120; i++)
         {
             using var response = await client.GetAsync("/api/work-orders/status-counts");
             response.StatusCode.ShouldBe(HttpStatusCode.OK);

@@ -59,14 +59,14 @@ public class ApplicationChatAgentTests : AcceptanceTestBase
         // Verify chat history contains a response
         var chatHistory = Page.GetByTestId(nameof(ApplicationChat.Elements.ChatHistory));
         await Expect(chatHistory).ToBeVisibleAsync();
-        var chatText = await chatHistory.InnerTextAsync();
+        string chatText = await chatHistory.InnerTextAsync();
         chatText.ShouldNotBeNullOrEmpty();
 
         // Extract the work order number from the AI response
         var match = Regex.Match(chatText, @"WorkOrderNumber:\s*[`*]*([A-Za-z0-9\-]+)[`*]*");
         match.Success.ShouldBeTrue(
             $"Expected AI response to contain 'WorkOrderNumber: <number>'. Response was: {chatText}");
-        var workOrderNumber = match.Groups[1].Value.Trim('`', '*', ' ');
+        string workOrderNumber = match.Groups[1].Value.Trim('`', '*', ' ');
 
         // Query the database by the specific work order number
         var bus = TestHost.GetRequiredService<IBus>();
@@ -90,7 +90,7 @@ public class ApplicationChatAgentTests : AcceptanceTestBase
         createdWo.Status.ShouldBe(WorkOrderStatus.Assigned);
         createdWo.Description.ShouldNotBeNullOrEmpty();
 
-        var description = createdWo.Description!.ToLowerInvariant();
+        string description = createdWo.Description!.ToLowerInvariant();
         (description.Contains("edge") || description.Contains("edging") || description.Contains("prayer garden"))
             .ShouldBeTrue(
                 $"Expected description to mention edging or prayer garden: {createdWo.Description}");
@@ -113,7 +113,7 @@ public class ApplicationChatAgentTests : AcceptanceTestBase
         var aiMessage = Page.GetByTestId(nameof(ApplicationChat.Elements.AiMessage) + "1");
         await aiMessage.WaitForAsync(new LocatorWaitForOptions { Timeout = 60_000 });
 
-        var messageText = await aiMessage.InnerTextAsync();
+        string messageText = await aiMessage.InnerTextAsync();
         messageText.ShouldContain("couldn't process that request");
 
         // No error banner should be visible

@@ -78,7 +78,7 @@ public sealed class DbContextInUiAnalyzer : DiagnosticAnalyzer
             return true;
         }
 
-        foreach (var part in UiNameParts)
+        foreach (string part in UiNameParts)
         {
             if (name.IndexOf(part, StringComparison.OrdinalIgnoreCase) >= 0)
             {

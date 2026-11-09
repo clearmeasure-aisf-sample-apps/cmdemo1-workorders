@@ -18,14 +18,14 @@ public record CreateTeamCommand(string Name, string? Description, IReadOnlyList<
         IEnumerable<string> knownUserNames)
     {
         var violations = new List<string>();
-        var name = Name.Trim();
+        string name = Name.Trim();
         if (existingTeamNames.Contains(name, StringComparer.OrdinalIgnoreCase))
         {
             violations.Add($"A team named '{name}' already exists.");
         }
 
         var known = new HashSet<string>(knownUserNames, StringComparer.OrdinalIgnoreCase);
-        foreach (var userName in MemberUserNames.Where(userName => !known.Contains(userName)))
+        foreach (string? userName in MemberUserNames.Where(userName => !known.Contains(userName)))
         {
             violations.Add($"No employee with user name '{userName}' exists.");
         }

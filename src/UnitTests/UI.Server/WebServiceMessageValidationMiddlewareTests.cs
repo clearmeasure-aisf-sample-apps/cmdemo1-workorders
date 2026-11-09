@@ -21,7 +21,7 @@ public class WebServiceMessageValidationMiddlewareTests
     [Test]
     public void TryDeserializeMessage_ReturnsFalse_WhenJsonInvalid()
     {
-        var ok = WebServiceMessageValidationMiddleware.TryDeserializeMessage("{bad", out _, out var detail);
+        bool ok = WebServiceMessageValidationMiddleware.TryDeserializeMessage("{bad", out _, out string? detail);
         ok.ShouldBeFalse();
         detail.ShouldNotBeNullOrEmpty();
     }
@@ -29,7 +29,7 @@ public class WebServiceMessageValidationMiddlewareTests
     [Test]
     public void TryDeserializeMessage_ReturnsFalse_WhenJsonNullBody()
     {
-        var ok = WebServiceMessageValidationMiddleware.TryDeserializeMessage("null", out _, out var detail);
+        bool ok = WebServiceMessageValidationMiddleware.TryDeserializeMessage("null", out _, out string? detail);
         ok.ShouldBeFalse();
         detail.ShouldNotBeNullOrEmpty();
     }

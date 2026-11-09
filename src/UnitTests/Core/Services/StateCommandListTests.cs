@@ -81,7 +81,7 @@ public class StateCommandListTests
         var commands = stubFacilitator.GetMatchingCommand(workOrder, employee, "Save");
 
         Assert.That(commands, Is.SameAs(expected));
-        }
+    }
 
     private class StubStateCommandList : StateCommandList
     {
@@ -105,7 +105,7 @@ public class StateCommandListTests
         public bool Matches(string commandName)
         {
             return TransitionVerbPresentTense == commandName;
-		}
+        }
 
         public WorkOrderStatus GetBeginStatus()
         {

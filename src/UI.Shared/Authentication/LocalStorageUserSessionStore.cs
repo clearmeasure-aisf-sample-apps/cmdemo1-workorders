@@ -49,7 +49,7 @@ public sealed class LocalStorageUserSessionStore : IUserSessionStore
         try
         {
             await _js.InvokeVoidAsync("localStorage.removeItem", StorageKey);
-            var remaining = await _js.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            string? remaining = await _js.InvokeAsync<string?>("localStorage.getItem", StorageKey);
             if (!string.IsNullOrEmpty(remaining))
             {
                 throw new InvalidOperationException(

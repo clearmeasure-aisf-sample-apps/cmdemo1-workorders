@@ -1,6 +1,6 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -50,7 +50,7 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
         const string instructions = "preschool quiet";
         const string room = "Front lawn";
         const string dueDate = "2027-06-15";
-        var createResult = await Helper.CallToolDirectly("create-work-order",
+        string createResult = await Helper.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = title,
@@ -60,10 +60,10 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
                 ["dueDate"] = dueDate,
                 ["instructions"] = instructions
             });
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
-        var getResult = await GetWorkOrderAsync(workOrderNumber);
+        string getResult = await GetWorkOrderAsync(workOrderNumber);
         using var document = JsonDocument.Parse(getResult);
         var detail = document.RootElement;
 
@@ -89,7 +89,7 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
 
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)))
             .ToHaveValueAsync(RequiredString(live, "Title"));
-        var expectedDescription = RequiredString(live, "Description").TrimEnd();
+        string expectedDescription = RequiredString(live, "Description").TrimEnd();
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description)))
             .ToHaveValueAsync(new Regex("^" + Regex.Escape(expectedDescription.TrimEnd('.')) + @"\.?$"));
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions)))
@@ -103,7 +103,7 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Assignee)))
             .ToHaveValueAsync(string.Empty);
 
-        var creator = RequiredString(live, "Creator");
+        string creator = RequiredString(live, "Creator");
         var creatorGroup = Page.Locator(".form-group").Filter(new LocatorFilterOptions { HasText = "Creator" });
         await Expect(creatorGroup.Locator("span.value").GetByText(creator, new LocatorGetByTextOptions { Exact = true }))
             .ToBeVisibleAsync();
@@ -116,7 +116,7 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.CompletedDate)))
             .ToHaveTextAsync(string.Empty);
 
-        var unknownResult = await GetWorkOrderAsync("ZZ9103");
+        string unknownResult = await GetWorkOrderAsync("ZZ9103");
         unknownResult.ShouldBe("No work order found with number 'ZZ9103'.");
     }
 
@@ -125,17 +125,17 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
     {
         await LoginAsTlovejoyAsync();
 
-        var createResult = await Helper.CallToolDirectly("create-work-order",
+        string createResult = await Helper.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = "No special instructions",
                 ["description"] = "Instructions intentionally omitted",
                 ["creatorUsername"] = "tlovejoy"
             });
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
-        var getResult = await GetWorkOrderAsync(workOrderNumber);
+        string getResult = await GetWorkOrderAsync(workOrderNumber);
         using var document = JsonDocument.Parse(getResult);
         var instructions = document.RootElement.GetProperty("Instructions");
         instructions.ValueKind.ShouldBe(JsonValueKind.String);

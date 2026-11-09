@@ -143,7 +143,7 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
 
     private string Number(string role)
     {
-        var number = $"{TestTag[..4]}{role}";
+        string number = $"{TestTag[..4]}{role}";
         number.Length.ShouldBeLessThanOrEqualTo(7);
         return number;
     }
@@ -165,7 +165,7 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
 
     private static async Task<HashSet<string>> CallListWorkOrders(Dictionary<string, object?> arguments)
     {
-        var json = await _helper!.CallToolDirectly("list-work-orders", arguments);
+        string json = await _helper!.CallToolDirectly("list-work-orders", arguments);
         using var document = JsonDocument.Parse(json);
         return document.RootElement.EnumerateArray()
             .Select(item => item.GetProperty("Number").GetString()!)
@@ -219,7 +219,7 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         // snapshot while Parallelizable siblings mutate the shared database.
         var portalNumbers = await VisibleSearchNumbers();
         var mcpNumbers = await CallListWorkOrders(filterArguments);
-        for (var attempt = 0; attempt < 10; attempt++)
+        for (int attempt = 0; attempt < 10; attempt++)
         {
             if (portalNumbers.SetEquals(mcpNumbers) && requiredNumbers.All(portalNumbers.Contains))
             {
@@ -252,7 +252,7 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
         numbers.UnionWith(await NumbersOnCurrentPage());
         while (await next.IsEnabledAsync())
         {
-            var firstLink = await FirstLinkTestId();
+            string? firstLink = await FirstLinkTestId();
             await next.ClickAsync();
             await Expect(Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First)
                 .Not.ToHaveAttributeAsync("data-testid", firstLink!);
@@ -275,11 +275,11 @@ public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
     private async Task<IEnumerable<string>> NumbersOnCurrentPage()
     {
         var links = Page.Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']");
-        var prefixLength = nameof(WorkOrderSearch.Elements.WorkOrderLink).Length;
+        int prefixLength = nameof(WorkOrderSearch.Elements.WorkOrderLink).Length;
         var numbers = new List<string>();
-        for (var index = 0; index < await links.CountAsync(); index++)
+        for (int index = 0; index < await links.CountAsync(); index++)
         {
-            var testId = await links.Nth(index).GetAttributeAsync("data-testid");
+            string? testId = await links.Nth(index).GetAttributeAsync("data-testid");
             numbers.Add(testId![prefixLength..]);
         }
 

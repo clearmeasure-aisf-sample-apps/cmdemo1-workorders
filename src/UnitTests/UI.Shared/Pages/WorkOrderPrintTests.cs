@@ -1,9 +1,9 @@
 using Bunit;
-using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,9 +24,14 @@ public class WorkOrderPrintTests
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         var wo = new WorkOrder
         {
-            Number = "WO-1", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
-            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
-            Description = "Drips", Instructions = "Bucket",
+            Number = "WO-1",
+            Title = "Leaky roof",
+            Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High,
+            Building = "Sanctuary",
+            RoomNumber = "12",
+            Description = "Drips",
+            Instructions = "Bucket",
             Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
             Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
             CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
@@ -70,7 +75,9 @@ public class WorkOrderPrintTests
                      WorkOrderPrint.Elements.RoomNumber, WorkOrderPrint.Elements.Creator,
                      WorkOrderPrint.Elements.Assignee, WorkOrderPrint.Elements.Description,
                      WorkOrderPrint.Elements.Instructions, WorkOrderPrint.Elements.AttachmentsNone })
+        {
             c.Find(Id(e)).TextContent.ShouldBe("None");
+        }
     }
 
     [Test]
@@ -152,9 +159,15 @@ public class WorkOrderPrintTests
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
             if (request is WorkOrderByNumberQuery)
+            {
                 return Task.FromResult((TResponse)(object)result!);
+            }
+
             if (request is WorkOrderAttachmentsQuery)
+            {
                 return Task.FromResult((TResponse)(object)(attachments ?? []));
+            }
+
             throw new NotImplementedException(request.GetType().Name);
         }
     }

@@ -32,7 +32,7 @@ public static class DateTimeTestExtensions
             return null;
         }
 
-        var normalized = NormalizeSpaces(dateTimeString);
+        string normalized = NormalizeSpaces(dateTimeString);
         foreach (var strategy in ParseStrategies)
         {
             var parsed = strategy(normalized);
@@ -51,7 +51,7 @@ public static class DateTimeTestExtensions
     /// </summary>
     public static async Task<DateTime?> GetDateTimeFromTestIdAsync(this IPage page, string testId)
     {
-        var textContent = await page.GetByTestId(testId).TextContentAsync();
+        string? textContent = await page.GetByTestId(testId).TextContentAsync();
         return textContent.ToTestDateTime();
     }
 
@@ -94,7 +94,7 @@ public static class DateTimeTestExtensions
 
     private static DateTime? TryParseIsoWithInvariantAmPm(string normalized)
     {
-        var withInvariantDesignators = normalized
+        string withInvariantDesignators = normalized
             .Replace("a.m.", "AM", StringComparison.OrdinalIgnoreCase)
             .Replace("p.m.", "PM", StringComparison.OrdinalIgnoreCase);
 
@@ -132,12 +132,12 @@ public static class DateTimeTestExtensions
 
     private static DateTime BuildDateTimeFromMatch(Match match, int yearGroup, int monthGroup, int dayGroup, string normalized)
     {
-        var year = int.Parse(match.Groups[yearGroup].Value);
-        var month = int.Parse(match.Groups[monthGroup].Value);
-        var day = int.Parse(match.Groups[dayGroup].Value);
-        var hour = AdjustHourForMeridiem(int.Parse(match.Groups[4].Value), normalized);
-        var min = int.Parse(match.Groups[5].Value);
-        var sec = int.Parse(match.Groups[6].Value);
+        int year = int.Parse(match.Groups[yearGroup].Value);
+        int month = int.Parse(match.Groups[monthGroup].Value);
+        int day = int.Parse(match.Groups[dayGroup].Value);
+        int hour = AdjustHourForMeridiem(int.Parse(match.Groups[4].Value), normalized);
+        int min = int.Parse(match.Groups[5].Value);
+        int sec = int.Parse(match.Groups[6].Value);
         return new DateTime(year, month, day, hour, min, sec);
     }
 

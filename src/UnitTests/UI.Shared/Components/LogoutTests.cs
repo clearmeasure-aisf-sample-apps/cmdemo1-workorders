@@ -6,13 +6,13 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 
@@ -230,7 +230,7 @@ public class LogoutTests
     {
         await using var ctx = CreateMenuContext();
         var component = ctx.Render<Logout>();
-        var toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
+        string toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
 
         component.Find(toggleSelector).GetAttribute("aria-expanded").ShouldBe("false");
         component.Find(toggleSelector).GetAttribute("aria-haspopup").ShouldBe("menu");
@@ -247,7 +247,7 @@ public class LogoutTests
     {
         await using var ctx = CreateMenuContext();
         var component = ctx.Render<Logout>();
-        var toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
+        string toggleSelector = $"[data-testid='{nameof(Logout.Elements.UserMenuToggle)}']";
         await component.Find(toggleSelector).ClickAsync(new());
 
         await component.Find(".user-menu").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
@@ -294,7 +294,7 @@ public class LogoutTests
         var component = ctx.Render<Logout>();
         var logoutButton = component.Find($"[data-testid='{nameof(Logout.Elements.LogoutLink)}']");
         var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
-        var uriBefore = navigationManager.Uri;
+        string uriBefore = navigationManager.Uri;
 
         await Should.ThrowAsync<InvalidOperationException>(() => logoutButton.ClickAsync(new()));
 

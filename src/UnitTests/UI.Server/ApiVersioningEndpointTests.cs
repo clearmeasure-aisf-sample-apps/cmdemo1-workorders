@@ -54,7 +54,7 @@ public class ApiVersioningEndpointTests
         var response = await _client!.GetAsync("/api/v1.0/version");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
     }
@@ -65,7 +65,7 @@ public class ApiVersioningEndpointTests
         var response = await _client!.GetAsync("/api/v1.0/time");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("text/plain");
     }
@@ -77,7 +77,7 @@ public class ApiVersioningEndpointTests
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         response.Headers.TryGetValues("api-supported-versions", out var values).ShouldBeTrue();
-        var valuesArray = values.ShouldNotBeNull().ToArray();
+        string[] valuesArray = values.ShouldNotBeNull().ToArray();
         string.Join(", ", valuesArray).ShouldContain("1.0");
     }
 }

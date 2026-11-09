@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Messaging;
@@ -48,7 +48,7 @@ public class RemotableBus(HttpClient httpClient, string apiUrl) : IBus
     {
         var message = new WebServiceMessage(payload);
         var result = await httpClient.PostAsJsonAsync(apiUrl, message);
-        var json = await result.Content.ReadAsStringAsync();
+        string json = await result.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<WebServiceMessage>(json);
     }
 }

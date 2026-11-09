@@ -12,7 +12,11 @@ public class DashboardStatusCardsTests
     {
         var counts = new Dictionary<string, int>
         {
-            ["Draft"] = 1, ["Assigned"] = 2, ["InProgress"] = 3, ["Complete"] = 4, ["Cancelled"] = 5
+            ["Draft"] = 1,
+            ["Assigned"] = 2,
+            ["InProgress"] = 3,
+            ["Complete"] = 4,
+            ["Cancelled"] = 5
         };
 
         var cards = DashboardStatusCards.Build(counts);

@@ -1,8 +1,8 @@
+using ChurchBulletin.ServiceDefaults;
 using ClearMeasure.Bootcamp.Database.Console;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Shouldly;
-using ChurchBulletin.ServiceDefaults;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Database;
 
@@ -46,7 +46,7 @@ public class DatabaseUpgradeLoggingTests
 
             log.LogError(new InvalidOperationException("inner"), "upgrade failed");
 
-            var output = writer.ToString();
+            string output = writer.ToString();
             output.ShouldContain("upgrade failed");
             output.ShouldContain("inner");
             output.ShouldNotContain("InvalidOperationException:");

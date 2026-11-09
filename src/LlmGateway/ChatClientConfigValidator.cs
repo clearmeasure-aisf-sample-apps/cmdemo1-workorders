@@ -6,9 +6,20 @@ internal static class ChatClientConfigValidator
     {
         var missing = new List<string>();
 
-        if (string.IsNullOrEmpty(config.AiOpenAiApiKey)) missing.Add("AI_OpenAI_ApiKey");
-        if (string.IsNullOrEmpty(config.AiOpenAiUrl)) missing.Add("AI_OpenAI_Url");
-        if (string.IsNullOrEmpty(config.AiOpenAiModel)) missing.Add("AI_OpenAI_Model");
+        if (string.IsNullOrEmpty(config.AiOpenAiApiKey))
+        {
+            missing.Add("AI_OpenAI_ApiKey");
+        }
+
+        if (string.IsNullOrEmpty(config.AiOpenAiUrl))
+        {
+            missing.Add("AI_OpenAI_Url");
+        }
+
+        if (string.IsNullOrEmpty(config.AiOpenAiModel))
+        {
+            missing.Add("AI_OpenAI_Model");
+        }
 
         if (missing.Count > 0)
         {

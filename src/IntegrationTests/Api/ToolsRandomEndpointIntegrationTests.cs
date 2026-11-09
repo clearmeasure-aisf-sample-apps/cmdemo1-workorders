@@ -83,7 +83,7 @@ public class ToolsRandomEndpointIntegrationTests
         var response = await _client!.PostAsync(path, content: null);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        var body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync();
         body.ShouldContain("Query parameter 'min' must be less than or equal to 'max'.");
     }
 
@@ -94,10 +94,10 @@ public class ToolsRandomEndpointIntegrationTests
         var response = await _client!.PostAsync(path, content: null);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("text/plain");
-        var body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync();
         body.ShouldBe(expected);
     }
 
@@ -108,11 +108,11 @@ public class ToolsRandomEndpointIntegrationTests
         var response = await _client!.PostAsync(path, content: null);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("text/plain");
-        var body = await response.Content.ReadAsStringAsync();
-        int.TryParse(body, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value).ShouldBeTrue();
+        string body = await response.Content.ReadAsStringAsync();
+        int.TryParse(body, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value).ShouldBeTrue();
         value.ShouldBeGreaterThanOrEqualTo(min);
         value.ShouldBeLessThanOrEqualTo(max);
     }
@@ -120,10 +120,10 @@ public class ToolsRandomEndpointIntegrationTests
     private static async Task AssertValidPayloadAsync(HttpResponseMessage response, string type)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("text/plain");
-        var body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync();
         body.ShouldNotBeNullOrWhiteSpace();
 
         switch (type.ToLowerInvariant())

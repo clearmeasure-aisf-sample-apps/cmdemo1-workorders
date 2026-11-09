@@ -1,4 +1,4 @@
-﻿// ReSharper disable PropertyCanBeMadeInitOnly.Global -- Qodana P5 (#9440): NHibernate proxy / System.Text.Json set-by-convention requires mutable setters
+// ReSharper disable PropertyCanBeMadeInitOnly.Global -- Qodana P5 (#9440): NHibernate proxy / System.Text.Json set-by-convention requires mutable setters
 
 using System.Text.Json;
 
@@ -24,7 +24,7 @@ public class WebServiceMessage
 
     public string GetBody(object request)
     {
-        var body = JsonSerializer.Serialize(request, request.GetType(),
+        string body = JsonSerializer.Serialize(request, request.GetType(),
             _jsonSerializerOptions);
         return body;
     }
@@ -37,7 +37,7 @@ public class WebServiceMessage
     public object GetBodyObject()
     {
         var type = Type.GetType(TypeName, true)!;
-        var value = Body;
+        string value = Body;
         return JsonSerializer.Deserialize(value, type, _jsonSerializerOptions)!;
     }
 }

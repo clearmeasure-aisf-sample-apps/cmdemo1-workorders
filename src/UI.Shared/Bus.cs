@@ -81,7 +81,7 @@ public class Bus : IBus
 
     private static Activity? StartActivity(object message, string operation = "Send")
     {
-        var messageName = message.GetType().Name;
+        string messageName = message.GetType().Name;
         var parentContext = Activity.Current?.Context;
 
         var activity = parentContext.HasValue
@@ -106,7 +106,10 @@ public class Bus : IBus
 
     private static void SetActivityError(Activity? activity, Exception ex)
     {
-        if (activity is null) return;
+        if (activity is null)
+        {
+            return;
+        }
 
         activity.SetStatus(ActivityStatusCode.Error, ex.Message);
         activity.SetTag("error", true);

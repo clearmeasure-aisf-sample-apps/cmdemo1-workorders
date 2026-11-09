@@ -25,7 +25,7 @@ public class ChatClientFactory(IBus bus)
     public virtual async Task<IChatClient> GetChatClient()
     {
         var config = await bus.Send(new ChatClientConfigQuery());
-        var apiKey = config.AiOpenAiApiKey
+        string apiKey = config.AiOpenAiApiKey
             ?? throw new InvalidOperationException("AI_OpenAI_ApiKey is not configured.");
 
         IChatClient innerClient = BuildAzureOpenAiChatClient(config, apiKey);
@@ -35,8 +35,8 @@ public class ChatClientFactory(IBus bus)
 
     private static IChatClient BuildAzureOpenAiChatClient(ChatClientConfig config, string apiKey)
     {
-        var openAiUrl = config.AiOpenAiUrl;
-        var openAiModel = config.AiOpenAiModel;
+        string? openAiUrl = config.AiOpenAiUrl;
+        string? openAiModel = config.AiOpenAiModel;
 
         var credential = new AzureKeyCredential(apiKey ?? throw new InvalidOperationException());
         var uri = new Uri(openAiUrl ?? throw new InvalidOperationException());

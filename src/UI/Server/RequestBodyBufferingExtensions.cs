@@ -30,8 +30,8 @@ internal static class RequestBodyBufferingPipeline
         var opts = context.RequestServices.GetRequiredService<IOptions<RequestBodyBufferingOptions>>().Value;
         if (opts.Enabled && RequestBodyBufferingRules.ShouldBuffer(context.Request))
         {
-            var threshold = RequestBodyBufferingRules.ClampBufferThreshold(opts.BufferThreshold);
-            var thresholdInt = threshold > int.MaxValue ? int.MaxValue : (int)threshold;
+            long threshold = RequestBodyBufferingRules.ClampBufferThreshold(opts.BufferThreshold);
+            int thresholdInt = threshold > int.MaxValue ? int.MaxValue : (int)threshold;
             context.Request.EnableBuffering(thresholdInt, long.MaxValue);
             if (context.Request.Body.CanSeek)
             {

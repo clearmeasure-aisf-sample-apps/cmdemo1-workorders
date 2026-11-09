@@ -13,7 +13,7 @@ public static class HealthCheckPlainTextResponseWriter
     /// </summary>
     public static async Task WriteAsync(HttpContext context, HealthReport report)
     {
-        var version = await TryReadVersionAsync(context);
+        int? version = await TryReadVersionAsync(context);
         context.Response.ContentType = "text/plain; charset=utf-8";
         await context.Response.WriteAsync(Format(report.Status, version), context.RequestAborted);
     }
@@ -23,7 +23,7 @@ public static class HealthCheckPlainTextResponseWriter
     /// </summary>
     internal static string Format(HealthStatus status, int? version)
     {
-        var versionText = version is null
+        string versionText = version is null
             ? "null"
             : version.Value.ToString(CultureInfo.InvariantCulture);
         return $"{status}\ndatabaseVersion: {versionText}";

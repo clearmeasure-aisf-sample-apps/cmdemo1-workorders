@@ -15,8 +15,14 @@ public class WorkOrderSummaryCardsTests
         await using var ctx = new BunitContext();
         var summary = new WorkOrderSearchSummary
         {
-            OpenCount = 24, OpenedLast7Days = 3, AssignedToMeCount = 2, AssignedToMeDueToday = 1,
-            OverdueCount = 3, DueThisWeekCount = 5, CompletedLast30Days = 41, AverageDaysToClose = 2.44
+            OpenCount = 24,
+            OpenedLast7Days = 3,
+            AssignedToMeCount = 2,
+            AssignedToMeDueToday = 1,
+            OverdueCount = 3,
+            DueThisWeekCount = 5,
+            CompletedLast30Days = 41,
+            AverageDaysToClose = 2.44
         };
 
         var component = ctx.Render<WorkOrderSummaryCards>(p => p.Add(c => c.Summary, summary));

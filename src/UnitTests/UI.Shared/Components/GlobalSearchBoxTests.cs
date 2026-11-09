@@ -33,7 +33,7 @@ public class GlobalSearchBoxTests
     {
         await using var ctx = CreateContext();
         var navigation = ctx.Services.GetRequiredService<NavigationManager>();
-        var before = navigation.Uri;
+        string before = navigation.Uri;
         var component = ctx.Render<GlobalSearchBox>();
 
         await component.Find("input").KeyDownAsync(new KeyboardEventArgs { Key = "a" });
@@ -51,11 +51,11 @@ public class GlobalSearchBoxTests
         var component = ctx.Render<GlobalSearchBox>();
         var input = component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchInput}']");
 
-        var shortcuts = input.GetAttribute("aria-keyshortcuts");
+        string? shortcuts = input.GetAttribute("aria-keyshortcuts");
         shortcuts.ShouldNotBeNull();
         shortcuts.ShouldContain("/");
 
-        var hintId = input.GetAttribute("aria-describedby");
+        string? hintId = input.GetAttribute("aria-describedby");
         hintId.ShouldNotBeNullOrWhiteSpace();
         var announced = component.Find($"#{hintId}");
         announced.TextContent.ShouldBe("Press / to search");
@@ -91,7 +91,7 @@ public class GlobalSearchBoxTests
     {
         await using var ctx = CreateContext();
         var navigation = ctx.Services.GetRequiredService<NavigationManager>();
-        var before = navigation.Uri;
+        string before = navigation.Uri;
         var component = ctx.Render<GlobalSearchBox>();
 
         var toggle = component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchToggle}']");
@@ -110,8 +110,8 @@ public class GlobalSearchBoxTests
     [Test]
     public void ShouldCollapseSearchWithoutNewColors_InPhoneWidthStyles()
     {
-        var searchCss = File.ReadAllText(RepoFile("UI.Shared", "Components", "GlobalSearchBox.razor.css"));
-        var layoutCss = File.ReadAllText(RepoFile("UI.Shared", "MainLayout.razor.css"));
+        string searchCss = File.ReadAllText(RepoFile("UI.Shared", "Components", "GlobalSearchBox.razor.css"));
+        string layoutCss = File.ReadAllText(RepoFile("UI.Shared", "MainLayout.razor.css"));
 
         searchCss.ShouldContain(".global-search-toggle");
         searchCss.ShouldContain("max-width: 480px");
@@ -126,7 +126,7 @@ public class GlobalSearchBoxTests
 
     private static string RepoFile(params string[] parts)
     {
-        var path = Path.GetFullPath(Path.Combine(
+        string path = Path.GetFullPath(Path.Combine(
             new[] { NUnit.Framework.TestContext.CurrentContext.TestDirectory, "..", "..", "..", ".." }.Concat(parts).ToArray()));
         File.Exists(path).ShouldBeTrue(path);
         return path;

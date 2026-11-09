@@ -1,4 +1,4 @@
-﻿namespace ClearMeasure.Bootcamp.UI.Server;
+namespace ClearMeasure.Bootcamp.UI.Server;
 
 public class Is64BitProcessHealthCheck(ILogger<Is64BitProcessHealthCheck> logger) : IHealthCheck
 {
@@ -7,7 +7,7 @@ public class Is64BitProcessHealthCheck(ILogger<Is64BitProcessHealthCheck> logger
     {
         if (!Environment.Is64BitProcess)
         {
-            var description = "Process is running as 32-bit. " +
+            string description = "Process is running as 32-bit. " +
                               "Expected 64-bit for optimal performance and memory utilization. " +
                               $"OS: {Environment.OSVersion}, ProcessorCount: {Environment.ProcessorCount}";
             logger.LogWarning(description);

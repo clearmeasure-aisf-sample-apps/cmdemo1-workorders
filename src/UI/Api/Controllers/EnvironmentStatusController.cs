@@ -40,7 +40,10 @@ public class EnvironmentStatusController : ControllerBase
         var etag = ConditionalGetEtag.CreateWeakEtagForJson(payload);
         Response.Headers.ETag = etag.ToString();
         if (ConditionalGetEtag.IfNoneMatchIncludesEtag(Request, etag))
+        {
             return StatusCode(StatusCodes.Status304NotModified);
+        }
+
         return ConditionalGetEtag.JsonContent(payload);
     }
 
@@ -48,7 +51,7 @@ public class EnvironmentStatusController : ControllerBase
     {
         var names = new List<string>();
         var variables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var name in ReportedEnvironmentVariableNames)
+        foreach (string name in ReportedEnvironmentVariableNames)
         {
             if (Environment.GetEnvironmentVariable(name) is null)
             {
@@ -59,14 +62,14 @@ public class EnvironmentStatusController : ControllerBase
             variables[name] = RedactedValue;
         }
 
-        var version = Assembly.GetEntryAssembly()
+        string version = Assembly.GetEntryAssembly()
             ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion ?? "unknown";
-        var gitSha = Assembly.GetEntryAssembly()
+        string gitSha = Assembly.GetEntryAssembly()
             ?.GetCustomAttributes<AssemblyMetadataAttribute>()
             .FirstOrDefault(a => a.Key == "SourceRevisionId")
             ?.Value ?? "unknown";
-        var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+        string environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
             ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
             ?? "unknown";
 

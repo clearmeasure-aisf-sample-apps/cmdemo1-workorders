@@ -98,7 +98,9 @@ public partial class MainLayout : IAsyncDisposable
         {
             _viewportSynced = true;
             if (isNarrow)
+            {
                 _navVisible = false;
+            }
         }
 
         _isNarrowViewport = isNarrow;
@@ -136,7 +138,7 @@ public partial class MainLayout : IAsyncDisposable
     {
         try
         {
-            var language = await Js.InvokeAsync<string>("churchBulletinBrowserCulture");
+            string language = await Js.InvokeAsync<string>("churchBulletinBrowserCulture");
             ClientDateFormatter.ApplyBrowserCulture(language);
         }
         catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException)
@@ -155,8 +157,8 @@ public partial class MainLayout : IAsyncDisposable
     {
         await using var stream = await response.Content.ReadAsStreamAsync();
         using var doc = await JsonDocument.ParseAsync(stream);
-        var gitSha = doc.RootElement.TryGetProperty("gitSha", out var sha) ? sha.GetString() ?? "unknown" : "unknown";
-        var environmentName = doc.RootElement.TryGetProperty("environmentName", out var env)
+        string gitSha = doc.RootElement.TryGetProperty("gitSha", out var sha) ? sha.GetString() ?? "unknown" : "unknown";
+        string environmentName = doc.RootElement.TryGetProperty("environmentName", out var env)
             ? env.GetString() ?? "unknown"
             : "unknown";
         return (gitSha, environmentName);
@@ -165,7 +167,9 @@ public partial class MainLayout : IAsyncDisposable
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
+        {
             return;
+        }
 
         try
         {
@@ -174,7 +178,10 @@ public partial class MainLayout : IAsyncDisposable
                 "./_content/ClearMeasure.Bootcamp.UI.Shared/js/mainLayoutNav.js");
             // A page with its own layout (the print view) replaces this layout while the module loads.
             if (_disposed)
+            {
                 return;
+            }
+
             _navToggleHelper = await _jsModule.InvokeAsync<IJSObjectReference>("initNavToggle", _dotNetRef,
                 NavRailBreakpointMediaQuery);
         }
@@ -199,7 +206,7 @@ public partial class MainLayout : IAsyncDisposable
 
     private async Task ToggleNavRailAsync()
     {
-        var wasVisible = _navVisible;
+        bool wasVisible = _navVisible;
         _navVisible = !wasVisible;
         await InvokeAsync(StateHasChanged);
 
@@ -234,7 +241,7 @@ public partial class MainLayout : IAsyncDisposable
         try
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var currentUserName = ResolveUserName(authState.User);
+            string? currentUserName = ResolveUserName(authState.User);
             if (string.IsNullOrWhiteSpace(currentUserName))
             {
                 _notificationsPanelData = null;
@@ -299,7 +306,9 @@ public partial class MainLayout : IAsyncDisposable
         }
 
         if (_jsModule is not null)
+        {
             await _jsModule.DisposeAsync();
+        }
 
         _dotNetRef?.Dispose();
     }

@@ -38,11 +38,11 @@ public class NeedsRebootHealthCheckTests : AcceptanceTestBase
 
         var setResponse = await client.GetAsync("/_demo/setneedsreboot/true");
         setResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var setText = await setResponse.Content.ReadAsStringAsync();
+        string setText = await setResponse.Content.ReadAsStringAsync();
         setText.ShouldContain("True");
 
         var healthResponse = await client.GetAsync("/_healthcheck");
-        var healthBody = await healthResponse.Content.ReadAsStringAsync();
+        string healthBody = await healthResponse.Content.ReadAsStringAsync();
         healthBody.ShouldContain("Unhealthy");
     }
 
@@ -54,11 +54,11 @@ public class NeedsRebootHealthCheckTests : AcceptanceTestBase
         await client.GetAsync("/_demo/setneedsreboot/true");
         var resetResponse = await client.GetAsync("/_demo/setneedsreboot/false");
         resetResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var resetText = await resetResponse.Content.ReadAsStringAsync();
+        string resetText = await resetResponse.Content.ReadAsStringAsync();
         resetText.ShouldContain("False");
 
         var healthResponse = await client.GetAsync("/_healthcheck");
-        var healthBody = await healthResponse.Content.ReadAsStringAsync();
+        string healthBody = await healthResponse.Content.ReadAsStringAsync();
         healthBody.ShouldNotContain("Unhealthy");
     }
 
@@ -69,12 +69,12 @@ public class NeedsRebootHealthCheckTests : AcceptanceTestBase
 
         var trueResponse = await client.GetAsync("/_demo/setneedsreboot/true");
         trueResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var trueText = await trueResponse.Content.ReadAsStringAsync();
+        string trueText = await trueResponse.Content.ReadAsStringAsync();
         trueText.ShouldBe("NeedsReboot set to True");
 
         var falseResponse = await client.GetAsync("/_demo/setneedsreboot/false");
         falseResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var falseText = await falseResponse.Content.ReadAsStringAsync();
+        string falseText = await falseResponse.Content.ReadAsStringAsync();
         falseText.ShouldBe("NeedsReboot set to False");
     }
 
@@ -86,7 +86,7 @@ public class NeedsRebootHealthCheckTests : AcceptanceTestBase
         await client.GetAsync("/_demo/setneedsreboot/true");
 
         var detailedResponse = await client.GetAsync("/_healthcheck/detailed");
-        var detailedBody = await detailedResponse.Content.ReadAsStringAsync();
+        string detailedBody = await detailedResponse.Content.ReadAsStringAsync();
         detailedBody.ShouldContain("memory is corrupted");
         detailedBody.ShouldContain("Restart process");
     }

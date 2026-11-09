@@ -22,14 +22,19 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
     [OneTimeTearDown]
     public async Task McpTearDown()
     {
-        if (_helper != null) await _helper.DisposeAsync();
+        if (_helper != null)
+        {
+            await _helper.DisposeAsync();
+        }
     }
 
     [SetUp]
     public void EnsureAvailability()
     {
         if (!_helper!.Connected)
+        {
             Assert.Inconclusive("MCP server is not available");
+        }
     }
 
     [Test]
@@ -41,7 +46,7 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
         var assignee = employees.Single(e => e.UserName == "gwillie");
 
         // Step 1: Create a draft work order
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = "Lifecycle test work order",
@@ -51,11 +56,11 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
 
         createResult.ShouldContain("Lifecycle test work order");
         createResult.ShouldContain("Draft");
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrEmpty("Work order number should be returned");
 
         // Step 2: Assign the work order (Draft -> Assigned)
-        var assignResult = await _helper.CallToolDirectly("execute-work-order-command",
+        string assignResult = await _helper.CallToolDirectly("execute-work-order-command",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber,
@@ -73,7 +78,7 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
         }
 
         // Step 3: Begin work (Assigned -> InProgress)
-        var beginResult = await _helper.CallToolDirectly("execute-work-order-command",
+        string beginResult = await _helper.CallToolDirectly("execute-work-order-command",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber,
@@ -84,7 +89,7 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
         beginResult.ShouldContain("In Progress");
 
         // Step 4: Complete work (InProgress -> Complete)
-        var completeResult = await _helper.CallToolDirectly("execute-work-order-command",
+        string completeResult = await _helper.CallToolDirectly("execute-work-order-command",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber,
@@ -96,7 +101,7 @@ public class McpWorkOrderLifecycleTests : AcceptanceTestBase
         completeResult.ShouldContain("CompletedDate");
 
         // Step 5: Verify final state via get-work-order
-        var getResult = await _helper.CallToolDirectly("get-work-order",
+        string getResult = await _helper.CallToolDirectly("get-work-order",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber

@@ -70,20 +70,20 @@ public static class DetailedHealthCheckResponseWriter
     /// </summary>
     private static string? AssemblyVersion()
     {
-        var informationalVersion = typeof(DetailedHealthCheckResponseWriter).Assembly
+        string? informationalVersion = typeof(DetailedHealthCheckResponseWriter).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         if (string.IsNullOrWhiteSpace(informationalVersion))
         {
             return null;
         }
 
-        var metadata = informationalVersion.IndexOf('+');
+        int metadata = informationalVersion.IndexOf('+');
         if (metadata < 0)
         {
             return informationalVersion;
         }
 
-        var version = informationalVersion[..metadata];
+        string version = informationalVersion[..metadata];
         return string.IsNullOrWhiteSpace(version) ? null : version;
     }
 

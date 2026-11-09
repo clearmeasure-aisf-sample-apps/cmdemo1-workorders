@@ -1,9 +1,9 @@
+using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
-using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
@@ -53,7 +53,7 @@ public class MetricsControllerTests
 
         controller.GetSummary();
 
-        var etag = controller.Response.Headers.ETag.ToString();
+        string etag = controller.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
         etag.ShouldStartWith("W/");
     }

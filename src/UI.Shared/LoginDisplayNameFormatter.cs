@@ -11,7 +11,9 @@ public static class LoginDisplayNameFormatter
     public static string FormatForLoginDropdown(string? fullName)
     {
         if (string.IsNullOrEmpty(fullName))
+        {
             return string.Empty;
+        }
 
         return fullName.ToUpperInvariant();
     }

@@ -21,7 +21,7 @@ public class McpTestHelper(ChatClientFactory factory) : IAsyncDisposable
 
     public async Task ConnectAsync()
     {
-        var mcpUrl = ServerFixture.ApplicationBaseUrl + "/mcp";
+        string mcpUrl = ServerFixture.ApplicationBaseUrl + "/mcp";
         TestContext.Out.WriteLine($"McpTestHelper: connecting to {mcpUrl}");
 
         var handler = new HttpClientHandler
@@ -71,12 +71,15 @@ public class McpTestHelper(ChatClientFactory factory) : IAsyncDisposable
 
     public static string ExtractJsonValue(string json, string propertyName)
     {
-        var searchPattern = $"\"{propertyName}\": \"";
-        var startIndex = json.IndexOf(searchPattern, StringComparison.Ordinal);
-        if (startIndex < 0) return string.Empty;
+        string searchPattern = $"\"{propertyName}\": \"";
+        int startIndex = json.IndexOf(searchPattern, StringComparison.Ordinal);
+        if (startIndex < 0)
+        {
+            return string.Empty;
+        }
 
         startIndex += searchPattern.Length;
-        var endIndex = json.IndexOf('"', startIndex);
+        int endIndex = json.IndexOf('"', startIndex);
         return endIndex < 0 ? string.Empty : json[startIndex..endIndex];
     }
 

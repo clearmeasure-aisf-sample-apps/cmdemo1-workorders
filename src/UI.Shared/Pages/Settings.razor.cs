@@ -25,7 +25,7 @@ public partial class Settings : AppComponentBase
 
     private async Task OnDarkModeChanged(ChangeEventArgs e)
     {
-        var enabled = e.Value is true;
+        bool enabled = e.Value is true;
         await Theme.SetDarkModeAsync(enabled);
         await InvokeAsync(StateHasChanged);
     }

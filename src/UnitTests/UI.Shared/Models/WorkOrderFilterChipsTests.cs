@@ -14,8 +14,15 @@ public class WorkOrderFilterChipsTests
     {
         var state = new WorkOrderSearchUrlState
         {
-            Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key,
-            Priority = WorkOrderPriority.High, Building = "Kitchen", Room = "101", OpenOnly = true, CompletedWithinDays = 30, Q = "organ"
+            Creator = "tlovejoy",
+            Assignee = "gwillie",
+            Status = WorkOrderStatus.InProgress.Key,
+            Priority = WorkOrderPriority.High,
+            Building = "Kitchen",
+            Room = "101",
+            OpenOnly = true,
+            CompletedWithinDays = 30,
+            Q = "organ"
         };
 
         var chips = WorkOrderFilterChips.Build(state, Name);
@@ -96,8 +103,16 @@ public class WorkOrderFilterChipsTests
     {
         var state = new WorkOrderSearchUrlState
         {
-            Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.Draft.Key, Priority = WorkOrderPriority.Low,
-            Building = "Kitchen", Room = "101", OpenOnly = true, CompletedWithinDays = 30, Q = "organ", Page = 4
+            Creator = "tlovejoy",
+            Assignee = "gwillie",
+            Status = WorkOrderStatus.Draft.Key,
+            Priority = WorkOrderPriority.Low,
+            Building = "Kitchen",
+            Room = "101",
+            OpenOnly = true,
+            CompletedWithinDays = 30,
+            Q = "organ",
+            Page = 4
         };
 
         var after = WorkOrderFilterChips.Remove(state, key);

@@ -61,7 +61,7 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
         var client = await _client.Value.ConfigureAwait(false);
         if (client is not null)
         {
-            foreach (var key in OpenFeatureKeys(featureName))
+            foreach (string key in OpenFeatureKeys(featureName))
             {
                 var details = await client
                     .GetBooleanDetailsAsync(key, false, cancellationToken: cancellationToken)
@@ -73,13 +73,13 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
             }
         }
 
-        return bool.TryParse(_configuration[$"{ConfigurationSectionName}:{featureName}"], out var enabled) && enabled;
+        return bool.TryParse(_configuration[$"{ConfigurationSectionName}:{featureName}"], out bool enabled) && enabled;
     }
 
     /// <summary>The OpenFeature keys tried for <paramref name="featureName"/>, in order.</summary>
     internal static IEnumerable<string> OpenFeatureKeys(string featureName)
     {
-        var slug = ToKebabCase(featureName);
+        string slug = ToKebabCase(featureName);
         yield return slug;
         if (!string.Equals(slug, featureName, StringComparison.OrdinalIgnoreCase))
         {
@@ -90,9 +90,9 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
     private static string ToKebabCase(string name)
     {
         var builder = new StringBuilder(name.Length + 4);
-        for (var i = 0; i < name.Length; i++)
+        for (int i = 0; i < name.Length; i++)
         {
-            var c = name[i];
+            char c = name[i];
             if (char.IsUpper(c) && i > 0 && !char.IsUpper(name[i - 1]))
             {
                 builder.Append('-');
@@ -116,7 +116,7 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
 
         try
         {
-            var domain = $"{ProductName}-{Guid.NewGuid():N}";
+            string domain = $"{ProductName}-{Guid.NewGuid():N}";
             await Api.Instance.SetProviderAsync(domain, createProvider(clientIdentifier.Trim())).ConfigureAwait(false);
             return Api.Instance.GetClient(domain);
         }

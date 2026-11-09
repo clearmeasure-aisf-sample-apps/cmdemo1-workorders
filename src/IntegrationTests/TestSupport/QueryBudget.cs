@@ -47,7 +47,7 @@ public sealed class QueryBudgetScope(Action<QueryBudgetScope> onDispose) : IDisp
 
     public string Describe()
     {
-        var body = _texts.Count == 0 ? "(no commands)" : string.Join(Environment.NewLine, _texts);
+        string body = _texts.Count == 0 ? "(no commands)" : string.Join(Environment.NewLine, _texts);
         return $"readers={ReaderCount}, other={OtherCount}{Environment.NewLine}{body}";
     }
 

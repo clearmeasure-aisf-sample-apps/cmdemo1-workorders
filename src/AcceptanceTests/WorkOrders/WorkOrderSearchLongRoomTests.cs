@@ -14,7 +14,7 @@ public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
         var order = await CreateAndSaveNewWorkOrder();
 
         // The form limits entry to RoomNumberEntryMaxLength; seed a legacy room up to the column length directly.
-        var room = new string('R', WorkOrder.RoomNumberMaxLength);
+        string room = new string('R', WorkOrder.RoomNumberMaxLength);
         var stored = (await Bus.Send(new WorkOrderByNumberQuery(order.Number!)))!;
         stored.RoomNumber = room;
         await Bus.Send(new SaveDraftCommand(stored, stored.Creator!) { PreviousRoomNumber = room });
@@ -30,11 +30,11 @@ public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
         var roomCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.RoomCell) + order.Number);
         await Expect(roomCell).ToBeVisibleAsync();
 
-        var isNotScrolled = await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth");
+        bool isNotScrolled = await Page.EvaluateAsync<bool>("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth");
         isNotScrolled.ShouldBeTrue();
 
         var roomText = roomCell.Locator(".room-text");
-        var titleAttribute = await roomText.GetAttributeAsync("title");
+        string? titleAttribute = await roomText.GetAttributeAsync("title");
         titleAttribute.ShouldBe(room);
 
         // .table-scroll has overflow-x:auto, so the page check alone would pass without the fix.
@@ -46,10 +46,10 @@ public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
         cellBox.ShouldNotBeNull();
         cellBox.Width.ShouldBeLessThanOrEqualTo(200);
 
-        var tableWidth = await Page.Locator(".grid-data").EvaluateAsync<double>("t => t.getBoundingClientRect().width");
+        double tableWidth = await Page.Locator(".grid-data").EvaluateAsync<double>("t => t.getBoundingClientRect().width");
         tableWidth.ShouldBeLessThanOrEqualTo(1280);
 
-        var isTruncated = await roomText.EvaluateAsync<bool>("e => e.scrollWidth > e.clientWidth");
+        bool isTruncated = await roomText.EvaluateAsync<bool>("e => e.scrollWidth > e.clientWidth");
         isTruncated.ShouldBeTrue();
     }
 }

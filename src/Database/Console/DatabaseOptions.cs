@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using JetBrains.Annotations;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -57,8 +57,8 @@ public class DatabaseOptions : CommandSettings
 
     private ValidationResult ValidateCredentials()
     {
-        var hasUser = !string.IsNullOrWhiteSpace(DatabaseUser);
-        var hasPassword = !string.IsNullOrWhiteSpace(DatabasePassword);
+        bool hasUser = !string.IsNullOrWhiteSpace(DatabaseUser);
+        bool hasPassword = !string.IsNullOrWhiteSpace(DatabasePassword);
 
         if (hasUser == hasPassword)
         {

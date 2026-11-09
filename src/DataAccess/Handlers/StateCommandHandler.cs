@@ -1,4 +1,4 @@
-﻿using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -36,11 +36,11 @@ public class StateCommandHandler(
 
         var persisted = await PersistAsync(order, beginStatus, request.CurrentUser, currentDateTime, request, cancellationToken);
 
-        var loweredTransitionVerb = request.TransitionVerbPastTense.ToLower();
-        var workOrderNumber = persisted.Number;
-        var fullName = request.CurrentUser.GetFullName();
+        string loweredTransitionVerb = request.TransitionVerbPastTense.ToLower();
+        string? workOrderNumber = persisted.Number;
+        string fullName = request.CurrentUser.GetFullName();
 
-        var debugMessage = $"{fullName} has {loweredTransitionVerb} work order {workOrderNumber}";
+        string debugMessage = $"{fullName} has {loweredTransitionVerb} work order {workOrderNumber}";
         logger.LogDebug(debugMessage);
         logger.LogInformation("Executed");
 
@@ -147,7 +147,7 @@ public class StateCommandHandler(
             return null;
         }
 
-        var trimmed = reason.Trim();
+        string trimmed = reason.Trim();
         return trimmed.Length == 0 ? null : trimmed;
     }
 

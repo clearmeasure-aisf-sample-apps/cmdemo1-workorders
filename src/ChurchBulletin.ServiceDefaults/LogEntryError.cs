@@ -41,7 +41,10 @@ public class LogEntryError
     /// <param name="exception">The exception to create the error from. Can be null.</param>
     public LogEntryError(Exception? exception)
     {
-        if (exception == null) return;
+        if (exception == null)
+        {
+            return;
+        }
 
         Type = exception.GetType().FullName;
         Message = exception.Message;

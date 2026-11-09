@@ -1,12 +1,12 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ChurchBulletin.ServiceDefaults;
 
@@ -84,19 +84,19 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 
     private static string ResolveDirectory(IConfiguration? configuration)
     {
-        var configuredPath = configuration?["LocalTelemetry:LogDirectory"];
+        string? configuredPath = configuration?["LocalTelemetry:LogDirectory"];
 
         if (!string.IsNullOrEmpty(configuredPath))
         {
             return configuredPath;
         }
 
-        var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
+        string basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
         return Path.Combine(basePath, "logs");
     }
 
     private static int ReadPositiveInt(IConfiguration? configuration, string key, int fallback) =>
-        int.TryParse(configuration?[key], NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) && value > 0
+        int.TryParse(configuration?[key], NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) && value > 0
             ? value
             : fallback;
 
@@ -104,11 +104,11 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
     {
         Directory.CreateDirectory(TelemetryLogDirectory);
 
-        var date = _timeProvider.GetUtcNow().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var tracesPath = Path.Combine(TelemetryLogDirectory, $"traces_{date}.jsonl");
-        var eventsPath = Path.Combine(TelemetryLogDirectory, $"events_{date}.jsonl");
-        var logsPath = Path.Combine(TelemetryLogDirectory, $"logs_{date}.jsonl");
-        var metricsPath = Path.Combine(TelemetryLogDirectory, $"metrics_{date}.jsonl");
+        string date = _timeProvider.GetUtcNow().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        string tracesPath = Path.Combine(TelemetryLogDirectory, $"traces_{date}.jsonl");
+        string eventsPath = Path.Combine(TelemetryLogDirectory, $"events_{date}.jsonl");
+        string logsPath = Path.Combine(TelemetryLogDirectory, $"logs_{date}.jsonl");
+        string metricsPath = Path.Combine(TelemetryLogDirectory, $"metrics_{date}.jsonl");
         _openPaths = [tracesPath, eventsPath, logsPath, metricsPath];
 
         CleanupOldFiles();
@@ -141,7 +141,11 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 
     public ValueTask DisposeAsync()
     {
-        if (_disposed) return ValueTask.CompletedTask;
+        if (_disposed)
+        {
+            return ValueTask.CompletedTask;
+        }
+
         _disposed = true;
 
         _activityListener.Dispose();
@@ -158,21 +162,30 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 
     public void WriteTraceEntry(Activity activity, string status)
     {
-        if (_traces == null) return;
+        if (_traces == null)
+        {
+            return;
+        }
 
         WriteJsonLine(_traces, TraceEntryMapper.FromActivity(activity, status));
     }
 
     public void WriteEventEntry(Activity activity, ActivityEvent evt)
     {
-        if (_events == null) return;
+        if (_events == null)
+        {
+            return;
+        }
 
         WriteJsonLine(_events, new EventEntry(activity, evt));
     }
 
     public void WriteLogEntry(LogLevel level, string category, string message, Exception? exception = null)
     {
-        if (_logs == null) return;
+        if (_logs == null)
+        {
+            return;
+        }
 
         WriteJsonLine(_logs, CreateLogEntry(level, category, message, exception));
     }
@@ -201,7 +214,10 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 
     public void WriteMetricEntry(string name, double value, string unit = "", IDictionary<string, object?>? tags = null)
     {
-        if (_metrics == null) return;
+        if (_metrics == null)
+        {
+            return;
+        }
 
         WriteJsonLine(_metrics, new MetricEntry(name, value, unit, tags));
     }
@@ -250,7 +266,7 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
         tagsDictionary["meter.version"] = instrument.Meter.Version;
         tagsDictionary["instrument.type"] = instrument.GetType().Name;
 
-        var value = Convert.ToDouble(measurement);
+        double value = Convert.ToDouble(measurement);
         WriteMetricEntry(instrument.Name, value, instrument.Unit ?? "", tagsDictionary);
     }
 
@@ -266,7 +282,10 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
         {
             lock (_gate)
             {
-                if (_writer is null) return;
+                if (_writer is null)
+                {
+                    return;
+                }
 
                 RollIfFull();
                 _writer?.WriteLine(line);
@@ -284,7 +303,10 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 
         private void RollIfFull()
         {
-            if (_writer!.BaseStream.Length < maxBytes) return;
+            if (_writer!.BaseStream.Length < maxBytes)
+            {
+                return;
+            }
 
             _writer.Dispose();
             _writer = null;

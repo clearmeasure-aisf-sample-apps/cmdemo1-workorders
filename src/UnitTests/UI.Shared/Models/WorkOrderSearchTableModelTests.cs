@@ -14,7 +14,12 @@ public class WorkOrderSearchSorterTests
         {
             WorkOrder = new WorkOrder
             {
-                Number = number, Title = title, Status = status, Priority = priority, RoomNumber = room, DueDate = due,
+                Number = number,
+                Title = title,
+                Status = status,
+                Priority = priority,
+                RoomNumber = room,
+                DueDate = due,
                 Assignee = assignee == null ? null : new Employee(assignee, assignee, "Z", "e")
             }
         };
@@ -187,14 +192,21 @@ public class WorkOrderCsvExporterTests
         {
             WorkOrder = new WorkOrder
             {
-                Number = "38173BA", Title = "Mow grass, north lawn", Description = "Cut to 3 inches", Status = WorkOrderStatus.Assigned,
-                Priority = WorkOrderPriority.High, Building = "Grounds", RoomNumber = "Lawn", DueDate = new DateOnly(2026, 10, 18),
+                Number = "38173BA",
+                Title = "Mow grass, north lawn",
+                Description = "Cut to 3 inches",
+                Status = WorkOrderStatus.Assigned,
+                Priority = WorkOrderPriority.High,
+                Building = "Grounds",
+                RoomNumber = "Lawn",
+                DueDate = new DateOnly(2026, 10, 18),
                 CreatedDate = new DateTime(2026, 10, 1, 9, 30, 0),
-                Assignee = new Employee("gw", "Groundskeeper", "Willie", "e"), Creator = new Employee("tl", "Timothy", "Lovejoy", "e")
+                Assignee = new Employee("gw", "Groundskeeper", "Willie", "e"),
+                Creator = new Employee("tl", "Timothy", "Lovejoy", "e")
             }
         };
 
-        var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
+        string[] lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
         lines[0].ShouldBe("Work Order,Title,Description,Status,Priority,Assignee,Creator,Building,Room,Due Date,Created,Completed");
         lines[1].ShouldBe("38173BA,\"Mow grass, north lawn\",Cut to 3 inches,Assigned,High,Groundskeeper Willie,Timothy Lovejoy,Grounds,Lawn,2026-10-18,2026-10-01 09:30,");
@@ -208,15 +220,21 @@ public class WorkOrderCsvExporterTests
         {
             WorkOrder = new WorkOrder
             {
-                Number = "12345CD", Title = "Fix roof", Status = WorkOrderStatus.Complete,
-                Priority = WorkOrderPriority.High, Building = "Main", RoomNumber = "Attic", DueDate = new DateOnly(2026, 10, 18),
+                Number = "12345CD",
+                Title = "Fix roof",
+                Status = WorkOrderStatus.Complete,
+                Priority = WorkOrderPriority.High,
+                Building = "Main",
+                RoomNumber = "Attic",
+                DueDate = new DateOnly(2026, 10, 18),
                 CreatedDate = new DateTime(2026, 10, 1, 9, 30, 0),
                 CompletedDate = new DateTime(2026, 10, 10, 14, 45, 0),
-                Assignee = new Employee("jd", "John", "Doe", "e"), Creator = new Employee("ab", "Admin", "Bob", "e")
+                Assignee = new Employee("jd", "John", "Doe", "e"),
+                Creator = new Employee("ab", "Admin", "Bob", "e")
             }
         };
 
-        var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
+        string[] lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
         lines[1].ShouldBe("12345CD,Fix roof,,Complete,High,John Doe,Admin Bob,Main,Attic,2026-10-18,2026-10-01 09:30,2026-10-10 14:45");
     }
@@ -228,14 +246,20 @@ public class WorkOrderCsvExporterTests
         {
             WorkOrder = new WorkOrder
             {
-                Number = "98765EF", Title = "Paint wall", Status = WorkOrderStatus.Draft,
-                Priority = WorkOrderPriority.Medium, Building = "West", RoomNumber = "Room 101", DueDate = new DateOnly(2026, 10, 20),
+                Number = "98765EF",
+                Title = "Paint wall",
+                Status = WorkOrderStatus.Draft,
+                Priority = WorkOrderPriority.Medium,
+                Building = "West",
+                RoomNumber = "Room 101",
+                DueDate = new DateOnly(2026, 10, 20),
                 CreatedDate = new DateTime(2026, 10, 5, 11, 15, 0),
-                Assignee = new Employee("ms", "Mary", "Smith", "e"), Creator = new Employee("pj", "Project", "Jones", "e")
+                Assignee = new Employee("ms", "Mary", "Smith", "e"),
+                Creator = new Employee("pj", "Project", "Jones", "e")
             }
         };
 
-        var lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
+        string[] lines = WorkOrderCsvExporter.ToCsv([row]).Split("\r\n");
 
         lines[1].ShouldBe("98765EF,Paint wall,,Draft,Medium,Mary Smith,Project Jones,West,Room 101,2026-10-20,2026-10-05 11:15,");
     }
@@ -245,7 +269,7 @@ public class WorkOrderCsvExporterTests
     [TestCase("Line one, with comma\rLine \"two\"")]
     public void ToCsv_WithMultiLineDescription_RoundTripsAsOneField(string description)
     {
-        var csv = WorkOrderCsvExporter.ToCsv([DescriptionRow(description)]);
+        string csv = WorkOrderCsvExporter.ToCsv([DescriptionRow(description)]);
 
         var records = ParseCsv(csv);
 
@@ -283,7 +307,10 @@ public class WorkOrderCsvExporterTests
         {
             WorkOrder = new WorkOrder
             {
-                Number = "55555GH", Title = "Fix window", Description = description, Status = WorkOrderStatus.Assigned,
+                Number = "55555GH",
+                Title = "Fix window",
+                Description = description,
+                Status = WorkOrderStatus.Assigned,
                 Priority = WorkOrderPriority.Low
             }
         };

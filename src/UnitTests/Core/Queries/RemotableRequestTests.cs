@@ -1,11 +1,11 @@
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
-using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Shouldly;
@@ -96,9 +96,17 @@ public class RemotableRequestTests
         AssertRemotable(new DeleteSearchViewCommand("tlovejoy", Guid.NewGuid()));
         var summary = new WorkOrderSearchSummary
         {
-            OpenCount = 24, OpenedLast7Days = 3, AssignedToMeCount = 2, AssignedToMeTotal = 4,
-            AssignedToMeDueToday = 1, OverdueCount = 3, DueThisWeekCount = 6, CompletedLast30Days = 41, AverageDaysToClose = 2.4,
-            CreatedByMeCount = 7, InProgressCount = 5
+            OpenCount = 24,
+            OpenedLast7Days = 3,
+            AssignedToMeCount = 2,
+            AssignedToMeTotal = 4,
+            AssignedToMeDueToday = 1,
+            OverdueCount = 3,
+            DueThisWeekCount = 6,
+            CompletedLast30Days = 41,
+            AverageDaysToClose = 2.4,
+            CreatedByMeCount = 7,
+            InProgressCount = 5
         };
 
         var rehydrated = SimulateRemoteObject(summary);
@@ -162,7 +170,9 @@ public class RemotableRequestTests
             CountByPriority = { ["High"] = 3 },
             CountByBuilding = { ["Sanctuary"] = 3 },
             CompletedPerWeek = { new WorkOrderReportsData.WeeklyCount { WeekEndingDate = new DateOnly(2026, 10, 11), Count = 4 } },
-            AverageDaysToClose = 2.5, OverdueCount = 1, CompletedLast30Days = 9
+            AverageDaysToClose = 2.5,
+            OverdueCount = 1,
+            CompletedLast30Days = 9
         };
 
         var rehydrated = SimulateRemoteObject(data);
@@ -248,8 +258,13 @@ public class RemotableRequestTests
 
         var vendor = new Vendor
         {
-            Id = Guid.NewGuid(), Name = "Acme", Trade = "HVAC", ContactName = "Pat",
-            EmailAddress = "pat@acme.test", PhoneNumber = "555", IsActive = false
+            Id = Guid.NewGuid(),
+            Name = "Acme",
+            Trade = "HVAC",
+            ContactName = "Pat",
+            EmailAddress = "pat@acme.test",
+            PhoneNumber = "555",
+            IsActive = false
         };
         AssertRemotable(vendor);
     }
@@ -281,7 +296,7 @@ public class RemotableRequestTests
 
     public static object AssertRemotable(object theObject)
     {
-        var rehydratedQuery = SimulateRemoteObject(theObject);
+        object rehydratedQuery = SimulateRemoteObject(theObject);
 
         ObjectMother.AssertAllProperties(theObject, rehydratedQuery);
         rehydratedQuery.ShouldBe(theObject);
@@ -291,9 +306,9 @@ public class RemotableRequestTests
     // ReSharper disable once MemberCanBePrivate.Global -- called from IntegrationTests and UnitTests.LlmGateway across assemblies
     public static object SimulateRemoteObject(object theObject)
     {
-        var json = new WebServiceMessage(theObject).GetJson();
+        string json = new WebServiceMessage(theObject).GetJson();
         var message = JsonSerializer.Deserialize<WebServiceMessage>(json);
-        var rehydratedQuery = message!.GetBodyObject();
+        object rehydratedQuery = message!.GetBodyObject();
         return rehydratedQuery;
     }
 

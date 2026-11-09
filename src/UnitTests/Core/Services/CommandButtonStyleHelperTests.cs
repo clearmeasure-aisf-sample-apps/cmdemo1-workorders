@@ -11,7 +11,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_SaveCommand_ReturnsBtnOutlineSecondary()
     {
-        var style = CommandButtonStyleHelper.GetButtonStyle("Save", AllValidCommandNames);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Save", AllValidCommandNames);
 
         style.ShouldBe("btn-outline-secondary");
     }
@@ -19,7 +19,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_CancelCommand_ReturnsBtnOutlineDanger()
     {
-        var style = CommandButtonStyleHelper.GetButtonStyle("Cancel", AllValidCommandNames);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Cancel", AllValidCommandNames);
 
         style.ShouldBe("btn-outline-danger");
     }
@@ -27,7 +27,7 @@ public class CommandButtonStyleHelperTests
     [Test]
     public void GetButtonStyle_ReassignCommand_ReturnsBtnOutlineSecondary()
     {
-        var style = CommandButtonStyleHelper.GetButtonStyle("Reassign", AllValidCommandNames);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Reassign", AllValidCommandNames);
 
         style.ShouldBe("btn-outline-secondary");
     }
@@ -37,7 +37,7 @@ public class CommandButtonStyleHelperTests
     {
         string[] validCommands = ["Save", "Assign", "Cancel"];
 
-        var style = CommandButtonStyleHelper.GetButtonStyle("Assign", validCommands);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Assign", validCommands);
 
         style.ShouldBe("btn-primary");
     }
@@ -47,7 +47,7 @@ public class CommandButtonStyleHelperTests
     {
         string[] validCommands = ["Save", "Begin"];
 
-        var style = CommandButtonStyleHelper.GetButtonStyle("Assign", validCommands);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Assign", validCommands);
 
         style.ShouldBe("btn-outline-secondary");
     }
@@ -57,7 +57,7 @@ public class CommandButtonStyleHelperTests
     {
         string[] validCommands = ["Save", "Begin", "Reassign", "Cancel"];
 
-        var style = CommandButtonStyleHelper.GetButtonStyle("Begin", validCommands);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Begin", validCommands);
 
         style.ShouldBe("btn-primary");
     }
@@ -67,7 +67,7 @@ public class CommandButtonStyleHelperTests
     {
         string[] validCommands = ["Save", "Assign", "Cancel"];
 
-        var style = CommandButtonStyleHelper.GetButtonStyle("Begin", validCommands);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Begin", validCommands);
 
         style.ShouldBe("btn-outline-secondary");
     }
@@ -77,7 +77,7 @@ public class CommandButtonStyleHelperTests
     {
         string[] validCommands = ["Save", "Complete", "Reassign", "Cancel"];
 
-        var style = CommandButtonStyleHelper.GetButtonStyle("Complete", validCommands);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Complete", validCommands);
 
         style.ShouldBe("btn-primary");
     }
@@ -87,7 +87,7 @@ public class CommandButtonStyleHelperTests
     {
         string[] validCommands = ["Save", "Begin", "Cancel"];
 
-        var style = CommandButtonStyleHelper.GetButtonStyle("Complete", validCommands);
+        string style = CommandButtonStyleHelper.GetButtonStyle("Complete", validCommands);
 
         style.ShouldBe("btn-outline-secondary");
     }
@@ -97,9 +97,9 @@ public class CommandButtonStyleHelperTests
     {
         string[] draftStateCommands = ["Save", "Assign", "Cancel"];
 
-        var saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", draftStateCommands);
-        var assignStyle = CommandButtonStyleHelper.GetButtonStyle("Assign", draftStateCommands);
-        var cancelStyle = CommandButtonStyleHelper.GetButtonStyle("Cancel", draftStateCommands);
+        string saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", draftStateCommands);
+        string assignStyle = CommandButtonStyleHelper.GetButtonStyle("Assign", draftStateCommands);
+        string cancelStyle = CommandButtonStyleHelper.GetButtonStyle("Cancel", draftStateCommands);
 
         saveStyle.ShouldBe("btn-outline-secondary");
         assignStyle.ShouldBe("btn-primary");
@@ -111,10 +111,10 @@ public class CommandButtonStyleHelperTests
     {
         string[] assignedStateCommands = ["Save", "Begin", "Reassign", "Cancel"];
 
-        var saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", assignedStateCommands);
-        var beginStyle = CommandButtonStyleHelper.GetButtonStyle("Begin", assignedStateCommands);
-        var reassignStyle = CommandButtonStyleHelper.GetButtonStyle("Reassign", assignedStateCommands);
-        var cancelStyle = CommandButtonStyleHelper.GetButtonStyle("Cancel", assignedStateCommands);
+        string saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", assignedStateCommands);
+        string beginStyle = CommandButtonStyleHelper.GetButtonStyle("Begin", assignedStateCommands);
+        string reassignStyle = CommandButtonStyleHelper.GetButtonStyle("Reassign", assignedStateCommands);
+        string cancelStyle = CommandButtonStyleHelper.GetButtonStyle("Cancel", assignedStateCommands);
 
         saveStyle.ShouldBe("btn-outline-secondary");
         beginStyle.ShouldBe("btn-primary");
@@ -127,9 +127,9 @@ public class CommandButtonStyleHelperTests
     {
         string[] inProgressStateCommands = ["Save", "Complete", "Reassign"];
 
-        var saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", inProgressStateCommands);
-        var completeStyle = CommandButtonStyleHelper.GetButtonStyle("Complete", inProgressStateCommands);
-        var reassignStyle = CommandButtonStyleHelper.GetButtonStyle("Reassign", inProgressStateCommands);
+        string saveStyle = CommandButtonStyleHelper.GetButtonStyle("Save", inProgressStateCommands);
+        string completeStyle = CommandButtonStyleHelper.GetButtonStyle("Complete", inProgressStateCommands);
+        string reassignStyle = CommandButtonStyleHelper.GetButtonStyle("Reassign", inProgressStateCommands);
 
         saveStyle.ShouldBe("btn-outline-secondary");
         completeStyle.ShouldBe("btn-primary");
@@ -146,9 +146,9 @@ public class CommandButtonStyleHelperTests
             ["Save", "Complete", "Reassign"]
         ];
 
-        foreach (var stateCommands in states)
+        foreach (string[] stateCommands in states)
         {
-            var primaryCount = stateCommands.Count(cmd =>
+            int primaryCount = stateCommands.Count(cmd =>
                 CommandButtonStyleHelper.GetButtonStyle(cmd, stateCommands) == "btn-primary");
 
             primaryCount.ShouldBeLessThanOrEqualTo(1, $"State {string.Join(", ", stateCommands)} should have at most one primary button");

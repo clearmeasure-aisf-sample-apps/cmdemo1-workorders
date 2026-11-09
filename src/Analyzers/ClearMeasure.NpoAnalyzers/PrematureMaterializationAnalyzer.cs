@@ -45,7 +45,7 @@ public sealed class PrematureMaterializationAnalyzer : DiagnosticAnalyzer
 
     private static void ReportContinuation(SyntaxNodeAnalysisContext context, MemberAccessExpressionSyntax continuation)
     {
-        var continuationName = continuation.Name.Identifier.ValueText;
+        string continuationName = continuation.Name.Identifier.ValueText;
         if (!Continuations.Contains(continuationName))
         {
             return;
@@ -69,7 +69,7 @@ public sealed class PrematureMaterializationAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var materializerName = priorAccess.Name.Identifier.ValueText;
+        string materializerName = priorAccess.Name.Identifier.ValueText;
         if (!Materializers.Contains(materializerName))
         {
             return;

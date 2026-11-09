@@ -23,12 +23,12 @@ public class AiAgentPageTests : AcceptanceTestBase
         var sendButton = Page.GetByTestId(nameof(ApplicationChat.Elements.SendButton));
         var history = Page.GetByTestId(nameof(ApplicationChat.Elements.ChatHistoryViewport));
 
-        for (var i = 0; i < 14; i++)
+        for (int i = 0; i < 14; i++)
         {
             await Input(nameof(ApplicationChat.Elements.ChatInput), $"Resize test prompt {i} with extra text to force history growth and overflow behavior in the chat viewport.");
             await Click(nameof(ApplicationChat.Elements.SendButton));
 
-            var aiMessageIndex = (i * 2) + 1;
+            int aiMessageIndex = (i * 2) + 1;
             var aiMessage = Page.GetByTestId($"{nameof(ApplicationChat.Elements.AiMessage)}{aiMessageIndex}");
             await aiMessage.WaitForAsync(new LocatorWaitForOptions { Timeout = 120_000 });
         }
@@ -48,7 +48,7 @@ public class AiAgentPageTests : AcceptanceTestBase
         await WaitForViewportSizeAsync(768, 540);
         await AssertPromptControlsAreInViewport(chatInput, sendButton);
 
-        var canScrollHistory = await history.EvaluateAsync<bool>(
+        bool canScrollHistory = await history.EvaluateAsync<bool>(
             "node => { const overflowY = window.getComputedStyle(node).overflowY; node.scrollTop = 0; const before = node.scrollTop ?? 0; node.scrollTop = node.scrollHeight; const after = node.scrollTop ?? 0; const hasOverflow = node.scrollHeight > node.clientHeight; const scrollsWhenOverflowed = !hasOverflow || after > before; return overflowY === 'auto' && scrollsWhenOverflowed; }");
         canScrollHistory.ShouldBeTrue();
     }
@@ -61,8 +61,8 @@ public class AiAgentPageTests : AcceptanceTestBase
 
     private async Task AssertPromptControlsAreInViewport(ILocator chatInput, ILocator sendButton)
     {
-        var chatInputTestId = nameof(ApplicationChat.Elements.ChatInput);
-        var sendButtonTestId = nameof(ApplicationChat.Elements.SendButton);
+        string chatInputTestId = nameof(ApplicationChat.Elements.ChatInput);
+        string sendButtonTestId = nameof(ApplicationChat.Elements.SendButton);
 
         await Page.WaitForFunctionAsync(
             $@"() => {{

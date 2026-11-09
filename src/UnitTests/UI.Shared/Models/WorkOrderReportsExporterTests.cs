@@ -21,7 +21,7 @@ public class WorkOrderReportsExporterTests
     [Test]
     public void ShouldWriteSectionsInFixedOrder()
     {
-        var lines = WorkOrderReportsExporter.ToCsv(Sample()).Split("\r\n");
+        string[] lines = WorkOrderReportsExporter.ToCsv(Sample()).Split("\r\n");
 
         lines.ShouldContain("Open by Status,Draft,2");
         lines.ShouldContain("Open by Status,InProgress,1");
@@ -34,7 +34,7 @@ public class WorkOrderReportsExporterTests
     [Test]
     public void ShouldWriteWeeksAndSummary()
     {
-        var lines = WorkOrderReportsExporter.ToCsv(Sample()).Split("\r\n");
+        string[] lines = WorkOrderReportsExporter.ToCsv(Sample()).Split("\r\n");
 
         lines.ShouldContain("2026-10-11,5");
         lines.ShouldContain("Completed (30 days),9");

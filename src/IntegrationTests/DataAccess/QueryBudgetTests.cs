@@ -158,10 +158,10 @@ public sealed class QueryBudgetTests
     private static void SeedAssignableEmployees(QueryBudgetContext context, int employeeCount, TimeProvider clock)
     {
         var today = ChurchTimeZone.Today(clock);
-        var numbers = TestData.NumberSeries(employeeCount);
+        string[] numbers = TestData.NumberSeries(employeeCount);
         var creator = NewEmployee("qbc");
         context.Add(creator);
-        for (var index = 0; index < employeeCount; index++)
+        for (int index = 0; index < employeeCount; index++)
         {
             var worker = NewEmployee("qbw");
             worker.AddRole(new Role("Worker", canCreate: false, canFulfill: true));
@@ -181,11 +181,11 @@ public sealed class QueryBudgetTests
     private static void SeedCompletedOrders(QueryBudgetContext context, int orderCount, TimeProvider clock)
     {
         var today = ChurchTimeZone.Today(clock);
-        var numbers = TestData.NumberSeries(orderCount);
+        string[] numbers = TestData.NumberSeries(orderCount);
         var creator = NewEmployee("qbs");
         context.Add(creator);
         var completed = today.ToDateTime(new TimeOnly(16, 0), DateTimeKind.Utc);
-        for (var index = 0; index < orderCount; index++)
+        for (int index = 0; index < orderCount; index++)
         {
             context.Add(new WorkOrder
             {
@@ -201,12 +201,12 @@ public sealed class QueryBudgetTests
 
     private static void SeedOpenOrders(QueryBudgetContext context, int orderCount, TimeProvider clock)
     {
-        var numbers = TestData.NumberSeries(orderCount);
+        string[] numbers = TestData.NumberSeries(orderCount);
         var creator = NewEmployee("qbr");
         context.Add(creator);
         var created = clock.GetUtcNow().UtcDateTime;
         var today = ChurchTimeZone.Today(clock);
-        for (var index = 0; index < orderCount; index++)
+        for (int index = 0; index < orderCount; index++)
         {
             context.Add(new WorkOrder
             {
@@ -223,7 +223,7 @@ public sealed class QueryBudgetTests
 
     private static Employee NewEmployee(string prefix)
     {
-        var userName = TestData.UserName(prefix);
+        string userName = TestData.UserName(prefix);
         return new Employee(userName, "Budget", "Tester", TestData.Email(userName));
     }
 

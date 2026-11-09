@@ -42,8 +42,8 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
         await LoginAsTlovejoyAsync();
 
         const string description = "Repair the fellowship hall window latch.";
-        var instructions = $"[{TestTag}] Enter through north door; ladder in east shed";
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string instructions = $"[{TestTag}] Enter through north door; ladder in east shed";
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] MCP instructions explicit",
@@ -52,7 +52,7 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
                 ["instructions"] = instructions
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
         await NavigateToManageEditAsync(workOrderNumber);
@@ -70,7 +70,7 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
     {
         await LoginAsTlovejoyAsync();
 
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] MCP instructions omitted",
@@ -78,7 +78,7 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
                 ["creatorUsername"] = "tlovejoy"
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
         await NavigateToManageEditAsync(workOrderNumber);
@@ -98,7 +98,7 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
     {
         await LoginAsTlovejoyAsync();
 
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] MCP instructions empty",
@@ -107,7 +107,7 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
                 ["instructions"] = string.Empty
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
         await NavigateToManageEditAsync(workOrderNumber);
@@ -127,10 +127,10 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
     {
         await LoginAsTlovejoyAsync();
 
-        var longInstructions = new string('M', WorkOrder.InstructionsMaxLength + 1);
-        var expectedInstructions = new string('M', WorkOrder.InstructionsMaxLength);
+        string longInstructions = new string('M', WorkOrder.InstructionsMaxLength + 1);
+        string expectedInstructions = new string('M', WorkOrder.InstructionsMaxLength);
 
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] MCP instructions truncate",
@@ -139,7 +139,7 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
                 ["instructions"] = longInstructions
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
         await NavigateToManageEditAsync(workOrderNumber);

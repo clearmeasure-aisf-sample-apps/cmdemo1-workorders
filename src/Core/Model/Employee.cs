@@ -40,7 +40,7 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
 
     public int CompareTo(Employee? other)
     {
-        var compareResult = string.Compare(LastName, other!.LastName, StringComparison.Ordinal);
+        int compareResult = string.Compare(LastName, other!.LastName, StringComparison.Ordinal);
         if (compareResult == 0)
         {
             compareResult = string.Compare(FirstName, other.FirstName, StringComparison.Ordinal);
@@ -64,8 +64,8 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
     {
         get
         {
-            var hasFirst = !string.IsNullOrWhiteSpace(FirstName);
-            var hasLast = !string.IsNullOrWhiteSpace(LastName);
+            bool hasFirst = !string.IsNullOrWhiteSpace(FirstName);
+            bool hasLast = !string.IsNullOrWhiteSpace(LastName);
             if (hasFirst && hasLast)
             {
                 return $"{FirstName.Trim()} {LastName.Trim()}";

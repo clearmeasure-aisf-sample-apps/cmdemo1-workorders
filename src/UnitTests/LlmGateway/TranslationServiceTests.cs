@@ -16,7 +16,7 @@ public class TranslationServiceTests
         var factory = new ChatClientFactory(bus);
         var service = new TranslationService(factory);
 
-        var result = await service.TranslateAsync("Fix the pipe", "en-US");
+        string result = await service.TranslateAsync("Fix the pipe", "en-US");
 
         result.ShouldBe("Fix the pipe");
         bus.ChatClientConfigQueryCount.ShouldBe(0);
@@ -29,7 +29,7 @@ public class TranslationServiceTests
         var factory = new ChatClientFactory(bus);
         var service = new TranslationService(factory);
 
-        var result = await service.TranslateAsync("Hello", "es-ES");
+        string result = await service.TranslateAsync("Hello", "es-ES");
 
         result.ShouldBe("Hello");
     }
@@ -39,7 +39,7 @@ public class TranslationServiceTests
     {
         var service = new TranslationService(new ThrowingChatClientFactory());
 
-        var result = await service.TranslateAsync("Hello", "es-ES");
+        string result = await service.TranslateAsync("Hello", "es-ES");
 
         result.ShouldBe("Hello");
     }
@@ -51,7 +51,7 @@ public class TranslationServiceTests
         var factory = new ChatClientFactory(bus);
         var service = new TranslationService(factory);
 
-        var result = await service.TranslateAsync("", "es-ES");
+        string result = await service.TranslateAsync("", "es-ES");
 
         result.ShouldBe("");
     }
@@ -63,7 +63,7 @@ public class TranslationServiceTests
         var factory = new ChatClientFactory(bus);
         var service = new TranslationService(factory);
 
-        var result = await service.TranslateAsync("Hello", "'; DROP TABLE Users;--");
+        string result = await service.TranslateAsync("Hello", "'; DROP TABLE Users;--");
 
         result.ShouldBe("Hello");
         bus.ChatClientConfigQueryCount.ShouldBe(0);
@@ -75,7 +75,7 @@ public class TranslationServiceTests
         var response = new ChatResponse([new ChatMessage(ChatRole.Assistant, "  Hola  ")]);
         var service = new TranslationService(new StubChatClientFactory(response));
 
-        var result = await service.TranslateAsync("Hello", "es-ES");
+        string result = await service.TranslateAsync("Hello", "es-ES");
 
         result.ShouldBe("Hola");
     }
@@ -86,7 +86,7 @@ public class TranslationServiceTests
         var response = new ChatResponse([new ChatMessage(ChatRole.Assistant, "   ")]);
         var service = new TranslationService(new StubChatClientFactory(response));
 
-        var result = await service.TranslateAsync("Hello", "es-ES");
+        string result = await service.TranslateAsync("Hello", "es-ES");
 
         result.ShouldBe("Hello");
     }

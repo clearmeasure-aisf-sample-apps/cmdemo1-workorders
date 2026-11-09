@@ -31,8 +31,8 @@ public class UIClientServiceRegistry : ServiceRegistry
 
         this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<UIClientServiceRegistry>());
         this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CanConnectToLlmServerHealthCheck>());
-        
-        
+
+
         this.AddSingleton<ChatClientFactory>();
         this.AddTransient<WorkOrderTool>();
         this.AddSingleton<ThemePreferenceService>();

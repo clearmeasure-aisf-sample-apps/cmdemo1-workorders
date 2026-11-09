@@ -39,10 +39,10 @@ public class WorkOrderManageInstructionsFieldTests
 
         await component.WaitForElementAsync($"[data-testid='{WorkOrderManage.Elements.Instructions}']");
 
-        var markup = component.Markup;
-        var descriptionIndex = markup.IndexOf($"data-testid=\"{WorkOrderManage.Elements.Description}\"", StringComparison.Ordinal);
-        var instructionsIndex = markup.IndexOf($"data-testid=\"{WorkOrderManage.Elements.Instructions}\"", StringComparison.Ordinal);
-        var roomIndex = markup.IndexOf($"data-testid=\"{WorkOrderManage.Elements.RoomNumber}\"", StringComparison.Ordinal);
+        string markup = component.Markup;
+        int descriptionIndex = markup.IndexOf($"data-testid=\"{WorkOrderManage.Elements.Description}\"", StringComparison.Ordinal);
+        int instructionsIndex = markup.IndexOf($"data-testid=\"{WorkOrderManage.Elements.Instructions}\"", StringComparison.Ordinal);
+        int roomIndex = markup.IndexOf($"data-testid=\"{WorkOrderManage.Elements.RoomNumber}\"", StringComparison.Ordinal);
 
         descriptionIndex.ShouldBeGreaterThanOrEqualTo(0);
         instructionsIndex.ShouldBeGreaterThan(descriptionIndex);
@@ -58,7 +58,7 @@ public class WorkOrderManageInstructionsFieldTests
 
         await component.WaitForElementAsync($"[data-testid='{WorkOrderManage.Elements.Instructions}']");
 
-        var markup = component.Markup;
+        string markup = component.Markup;
         markup.ShouldContain(">Risks</label>");
         markup.ShouldNotContain(">Instructions</label>");
     }

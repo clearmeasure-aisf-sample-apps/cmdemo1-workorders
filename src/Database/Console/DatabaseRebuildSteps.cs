@@ -1,6 +1,6 @@
 using DbUp;
-using DbUp.Engine.Output;
 using DbUp.Engine;
+using DbUp.Engine.Output;
 using DbUp.Helpers;
 using DbUp.Support;
 

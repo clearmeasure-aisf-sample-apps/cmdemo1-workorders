@@ -46,7 +46,7 @@ public class WorkOrderManageModelRoomNumberTests
     [Test]
     public void ShouldAllowUnchangedLongRoomNumber()
     {
-        var longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
+        string longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
         var model = ValidModel();
         model.RoomNumber = longRoom;
         model.OriginalRoomNumber = longRoom;

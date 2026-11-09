@@ -26,7 +26,7 @@ public class ToolsWordCountController : ControllerBase
     [ProducesResponseType(typeof(WordCountResponse), StatusCodes.Status200OK)]
     public IActionResult Post([FromBody] WordCountRequest? request)
     {
-        var text = request?.Text;
+        string? text = request?.Text;
         return Ok(new WordCountResponse(CountWords(text), CountCharacters(text), CountLines(text)));
     }
 

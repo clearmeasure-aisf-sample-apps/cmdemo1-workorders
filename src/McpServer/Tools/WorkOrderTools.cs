@@ -145,7 +145,7 @@ public class WorkOrderTools
                 return resolveError;
             }
 
-            var validationError = ValidateCreateParameters(description);
+            string? validationError = ValidateCreateParameters(description);
             if (validationError != null)
             {
                 return validationError;
@@ -198,13 +198,13 @@ public class WorkOrderTools
             return $"Employee with username '{executingUsername}' not found.";
         }
 
-        var validationError = ValidateSave(workOrder, executingUser, title, dueDate, roomNumber, description);
+        string? validationError = ValidateSave(workOrder, executingUser, title, dueDate, roomNumber, description);
         if (validationError != null)
         {
             return validationError;
         }
 
-        var originalRoomNumber = workOrder.RoomNumber;
+        string? originalRoomNumber = workOrder.RoomNumber;
         var originalDueDate = workOrder.DueDate;
         ApplySavePatches(workOrder, title, description, instructions, roomNumber, dueDate);
 
@@ -248,7 +248,7 @@ public class WorkOrderTools
             return $"Employee with username '{executingUsername}' not found.";
         }
 
-        var validationError = ValidateUpdate(workOrder, executingUser, priority, building, dueDate);
+        string? validationError = ValidateUpdate(workOrder, executingUser, priority, building, dueDate);
         if (validationError != null)
         {
             return validationError;
@@ -355,13 +355,13 @@ public class WorkOrderTools
         string? priority,
         string? building)
     {
-        var validationError = ValidateCreateParameters(description);
+        string? validationError = ValidateCreateParameters(description);
         if (validationError != null)
         {
             return (validationError, null, WorkOrderPriority.Medium, null);
         }
 
-        if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out var dueDateError))
+        if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out string? dueDateError))
         {
             return (dueDateError, null, WorkOrderPriority.Medium, null);
         }
@@ -491,7 +491,7 @@ public class WorkOrderTools
             return FormatInvalidSaveCommand(workOrder);
         }
 
-        var creatorUserName = workOrder.Creator?.UserName;
+        string? creatorUserName = workOrder.Creator?.UserName;
         return string.IsNullOrWhiteSpace(creatorUserName)
             ? $"Only the creator can update draft work order '{workOrder.Number}'."
             : $"Only the creator '{creatorUserName}' can update draft work order '{workOrder.Number}'.";
@@ -516,8 +516,8 @@ public class WorkOrderTools
             return (WorkOrderPriority.Medium, null);
         }
 
-        var trimmed = priorityStr.Trim();
-        var match = Enum.GetNames<WorkOrderPriority>()
+        string trimmed = priorityStr.Trim();
+        string? match = Enum.GetNames<WorkOrderPriority>()
             .FirstOrDefault(n => string.Equals(n, trimmed, StringComparison.OrdinalIgnoreCase));
         if (match != null)
         {
@@ -541,7 +541,7 @@ public class WorkOrderTools
             return (null, null);
         }
 
-        var trimmed = building.Trim();
+        string trimmed = building.Trim();
         if (trimmed.Length > WorkOrder.BuildingMaxLength)
         {
             return (null, $"Building cannot exceed {WorkOrder.BuildingMaxLength} characters.");

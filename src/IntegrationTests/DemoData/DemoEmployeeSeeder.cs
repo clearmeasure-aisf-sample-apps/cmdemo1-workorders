@@ -100,7 +100,7 @@ public class DemoEmployeeSeeder
     public static DemoEmployeeSeedResult Seed(DbContext context)
     {
         var roles = new Dictionary<string, Role>();
-        var rolesAdded = 0;
+        int rolesAdded = 0;
         foreach (var demoRole in DemoRoles)
         {
             // Fixed demo catalog (a handful of roles), matched by name. Not a product query path.
@@ -117,8 +117,8 @@ public class DemoEmployeeSeeder
             roles.Add(demoRole.Name, role);
         }
 
-        var employeesAdded = 0;
-        var linksAdded = 0;
+        int employeesAdded = 0;
+        int linksAdded = 0;
         foreach (var demoEmployee in DemoEmployees)
         {
             // Fixed demo catalog (a handful of employees), matched by user name. Not a product query path.
@@ -149,7 +149,7 @@ public class DemoEmployeeSeeder
 
     private static int AddMissingRoles(Employee employee, IEnumerable<Role> demoRoles)
     {
-        var added = 0;
+        int added = 0;
         foreach (var role in demoRoles)
         {
             if (employee.Roles.Any(existing => existing.Id == role.Id

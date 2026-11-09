@@ -27,7 +27,7 @@ public class ToolsUppercaseController : ControllerBase
     [ProducesResponseType(typeof(UppercaseResponse), StatusCodes.Status200OK)]
     public IActionResult Post([FromBody] UppercaseRequest? request)
     {
-        var text = request?.Text ?? string.Empty;
+        string text = request?.Text ?? string.Empty;
         return Ok(new UppercaseResponse(text.ToUpperInvariant()));
     }
 }

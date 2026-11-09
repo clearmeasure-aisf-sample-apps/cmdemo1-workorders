@@ -18,10 +18,10 @@ public class RequestFlowTests
     [Test]
     public async Task IsActive_WhenBegun_ShouldBeTrueInThatFlowAndTheFlowsItStartsUntilItEnds()
     {
-        var beforeEnd = false;
-        var inStartedFlowBeforeEnd = false;
-        var afterEnd = true;
-        var inStartedFlowAfterEnd = true;
+        bool beforeEnd = false;
+        bool inStartedFlowBeforeEnd = false;
+        bool afterEnd = true;
+        bool inStartedFlowAfterEnd = true;
 
         await Task.Run(async () =>
         {
@@ -61,7 +61,7 @@ public class RequestFlowTests
         });
         await begun.Task;
 
-        var here = RequestFlow.IsActive;
+        bool here = RequestFlow.IsActive;
         release.SetResult();
         await request;
 
@@ -73,7 +73,7 @@ public class RequestFlowTests
     public async Task InvokeAsync_WhileTheRequestExecutes_ShouldMarkItsFlowAndNotTheCallers()
     {
         var clock = new StubTimeProvider(Start);
-        var duringRequest = false;
+        bool duringRequest = false;
         var middleware = new LiveTelemetryMiddleware(
             async _ =>
             {

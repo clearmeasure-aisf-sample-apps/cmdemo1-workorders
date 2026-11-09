@@ -38,7 +38,7 @@ public static class CoreCoberturaPresence
             return false;
         }
 
-        var lower = filename.Replace('\\', '/').ToLowerInvariant();
+        string lower = filename.Replace('\\', '/').ToLowerInvariant();
         if (IsExcludedTestFilename(lower))
         {
             return false;
@@ -81,7 +81,7 @@ public static class CoreCoberturaPresence
 
     private static bool PackageElementHasCoreHits(XElement package)
     {
-        var packageName = GetAttributeValue(package, "name");
+        string? packageName = GetAttributeValue(package, "name");
         if (!string.Equals(packageName, CorePackageName, StringComparison.Ordinal))
         {
             return false;
@@ -105,8 +105,8 @@ public static class CoreCoberturaPresence
 
     private static bool ClassElementHasProductionHits(XElement classElement)
     {
-        var filename = GetAttributeValue(classElement, "filename");
-        var className = GetAttributeValue(classElement, "name");
+        string? filename = GetAttributeValue(classElement, "filename");
+        string? className = GetAttributeValue(classElement, "name");
         return IsProductionCoreClass(filename, className) && HasAnyLineHit(classElement);
     }
 
@@ -144,7 +144,7 @@ public static class CoreCoberturaPresence
 
     private static bool LineHasHits(XElement line)
     {
-        var hitsText = GetAttributeValue(line, "hits");
-        return int.TryParse(hitsText, out var hits) && hits > 0;
+        string? hitsText = GetAttributeValue(line, "hits");
+        return int.TryParse(hitsText, out int hits) && hits > 0;
     }
 }

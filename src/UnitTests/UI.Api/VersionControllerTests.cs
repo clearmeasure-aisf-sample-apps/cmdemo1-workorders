@@ -40,7 +40,7 @@ public class VersionControllerTests
     public void Get_Should_IncludeBuildConfiguration_MatchingAssemblyAttribute()
     {
         var apiAssembly = typeof(VersionController).Assembly;
-        var expected = apiAssembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
+        string? expected = apiAssembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
         if (string.IsNullOrWhiteSpace(expected))
         {
 #if DEBUG
@@ -68,7 +68,7 @@ public class VersionControllerTests
         var controller = CreateController(new StubHostEnvironment("Test"));
         var first = controller.Get();
         first.ShouldBeOfType<ContentResult>();
-        var etag = controller.Response.Headers.ETag.ToString();
+        string etag = controller.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
 
         controller.Request.Headers.IfNoneMatch = etag;

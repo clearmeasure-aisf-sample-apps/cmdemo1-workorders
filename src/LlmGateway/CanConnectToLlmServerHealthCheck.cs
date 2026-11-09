@@ -20,7 +20,7 @@ public class CanConnectToLlmServerHealthCheck(
             return LogUnavailable(availability);
         }
 
-        if (cache.TryGet(options.Value.CacheDuration, out var cached, out var ageSeconds))
+        if (cache.TryGet(options.Value.CacheDuration, out var cached, out double ageSeconds))
         {
             return LlmHealthEvaluator.Annotate(cached, true, ageSeconds);
         }

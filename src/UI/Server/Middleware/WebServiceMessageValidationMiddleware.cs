@@ -34,7 +34,7 @@ public sealed class WebServiceMessageValidationMiddleware(
     {
         request.EnableBuffering();
         using var reader = new StreamReader(request.Body, leaveOpen: true);
-        var body = await reader.ReadToEndAsync(request.HttpContext.RequestAborted);
+        string body = await reader.ReadToEndAsync(request.HttpContext.RequestAborted);
         request.Body.Position = 0;
         return body;
     }
@@ -119,7 +119,7 @@ internal static class WebServiceMessagePayloadValidator
         IServiceProvider services,
         CancellationToken cancellationToken)
     {
-        if (!TryGetPayload(message, out var payload, out var payloadError))
+        if (!TryGetPayload(message, out object? payload, out string? payloadError))
         {
             return new PayloadValidationResult(false, Array.Empty<ValidationFailure>(), payloadError);
         }
@@ -150,7 +150,7 @@ internal static class WebServiceMessagePayloadValidator
         CancellationToken cancellationToken)
     {
         var validatorInterface = typeof(IValidator<>).MakeGenericType(payload.GetType());
-        var payloadValidator = services.GetService(validatorInterface);
+        object? payloadValidator = services.GetService(validatorInterface);
         if (payloadValidator is null)
         {
             return new PayloadValidationResult(
@@ -197,8 +197,8 @@ internal static class WebServiceMessageValidationPipeline
             return;
         }
 
-        var body = await WebServiceMessageValidationMiddleware.ReadRequestBodyAsync(context.Request);
-        if (!WebServiceMessageValidationMiddleware.TryDeserializeMessage(body, out var message, out var deserializeError))
+        string body = await WebServiceMessageValidationMiddleware.ReadRequestBodyAsync(context.Request);
+        if (!WebServiceMessageValidationMiddleware.TryDeserializeMessage(body, out var message, out string? deserializeError))
         {
             logger.LogDebug("Invalid WebServiceMessage JSON: {Detail}", deserializeError);
             await WebServiceMessageValidationMiddleware.WriteBadRequestAsync(

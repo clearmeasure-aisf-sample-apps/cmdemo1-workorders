@@ -38,8 +38,8 @@ public class ToolsSlugifyController : ControllerBase
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
-        var text = request.Text;
-        var slug = GenerateSlug(text);
+        string text = request.Text;
+        string slug = GenerateSlug(text);
         return Ok(new SlugifyResponse(slug));
     }
 
@@ -50,7 +50,7 @@ public class ToolsSlugifyController : ControllerBase
             return string.Empty;
         }
 
-        var slug = Regex.Replace(text, "[^a-zA-Z0-9]+", "-");
+        string slug = Regex.Replace(text, "[^a-zA-Z0-9]+", "-");
         slug = slug.Trim('-');
         slug = slug.ToLowerInvariant();
         if (slug.Length <= MaxSlugLength)

@@ -45,7 +45,7 @@ public static class RequestClassifier
             return true;
         }
 
-        var value = path.Value;
+        string? value = path.Value;
         if (value is null || !value.StartsWith("/_", StringComparison.Ordinal))
         {
             return false;

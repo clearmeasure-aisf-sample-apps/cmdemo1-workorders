@@ -1,4 +1,4 @@
-﻿namespace ClearMeasure.Bootcamp.Core.Model;
+namespace ClearMeasure.Bootcamp.Core.Model;
 
 public abstract class EntityBase<T> : IEquatable<T> where T : EntityBase<T>, new()
 {

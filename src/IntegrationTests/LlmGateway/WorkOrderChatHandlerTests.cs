@@ -25,7 +25,7 @@ public class WorkOrderChatHandlerTests : LlmTestBase
             return;
         }
 
-        var responseText = response.Messages.LastOrDefault()?.Text;
+        string? responseText = response.Messages.LastOrDefault()?.Text;
         await TestContext.Out.WriteLineAsync($"LLM response: {responseText}");
 
         if (response.Messages.Count == 0 || string.IsNullOrWhiteSpace(responseText))
@@ -59,7 +59,7 @@ public class WorkOrderChatHandlerTests : LlmTestBase
             return;
         }
 
-        var responseText = response.Messages.LastOrDefault()?.Text;
+        string? responseText = response.Messages.LastOrDefault()?.Text;
         await TestContext.Out.WriteLineAsync($"LLM response: {responseText}");
 
         if (response.Messages.Count == 0 || string.IsNullOrWhiteSpace(responseText))

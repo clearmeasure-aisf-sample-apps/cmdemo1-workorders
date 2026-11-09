@@ -28,12 +28,14 @@ public sealed class ThemePreferenceService : IAsyncDisposable
     public async Task InitializeAsync()
     {
         if (_initialized)
+        {
             return;
+        }
 
         try
         {
             _module = await _js.InvokeAsync<IJSObjectReference>("import", ThemeJsModulePath);
-            var theme = await _module.InvokeAsync<string>("getTheme");
+            string theme = await _module.InvokeAsync<string>("getTheme");
             _isDarkMode = string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase);
             await _module.InvokeVoidAsync("syncDomFromTheme", theme);
         }
@@ -51,7 +53,9 @@ public sealed class ThemePreferenceService : IAsyncDisposable
     public async Task SetDarkModeAsync(bool enabled)
     {
         if (_isDarkMode == enabled && _initialized)
+        {
             return;
+        }
 
         _isDarkMode = enabled;
 

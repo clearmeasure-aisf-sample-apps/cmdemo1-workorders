@@ -24,7 +24,7 @@ public class McpCreateDatedWorkOrdersToolTests
         // Saturday 2026-08-29 noon Chicago → UTC
         var clock = ChicagoNoon(2026, 8, 29);
 
-        var result = await WorkOrderTools.CreateDatedWorkOrders(
+        string result = await WorkOrderTools.CreateDatedWorkOrders(
             bus,
             clock,
             creatorUserName,
@@ -47,7 +47,7 @@ public class McpCreateDatedWorkOrdersToolTests
         var (creatorUserName, assigneeUserName) = await SeedCreatorAndAssigneeAsync();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        var result = await WorkOrderTools.CreateDatedWorkOrders(
+        string result = await WorkOrderTools.CreateDatedWorkOrders(
             bus,
             TimeProvider.System,
             creatorUserName,
@@ -64,14 +64,14 @@ public class McpCreateDatedWorkOrdersToolTests
     [Test]
     public async Task CreateDatedWorkOrders_WhenAssigneeMissing_CreatesNothing()
     {
-        var creatorUserName = TestData.UserName("tl");
+        string creatorUserName = TestData.UserName("tl");
         var creator = new Employee(creatorUserName, "Dated", "Creator", "t@test.com");
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(creator);
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.CreateDatedWorkOrders(
+        string result = await WorkOrderTools.CreateDatedWorkOrders(
             bus,
             TimeProvider.System,
             creatorUserName,
@@ -127,7 +127,7 @@ public class McpCreateDatedWorkOrdersToolTests
     [Test]
     public void ShouldRejectExplicitDateListAboveTransactionalBatchLimit()
     {
-        var dueDates = string.Join(',', Enumerable.Repeat("2026-09-01", 11));
+        string dueDates = string.Join(',', Enumerable.Repeat("2026-09-01", 11));
 
         var (dates, error) = DatedWorkOrderScheduling.ResolveDueDates(
             TimeProvider.System,
@@ -142,7 +142,7 @@ public class McpCreateDatedWorkOrdersToolTests
     [Test]
     public void FormatResult_WhenFailure_ReturnsMessage()
     {
-        var text = DatedWorkOrderScheduling.FormatResult(
+        string text = DatedWorkOrderScheduling.FormatResult(
             new CreateDatedWorkOrdersResult(false, "Assignee missing", []));
         text.ShouldBe("Assignee missing");
     }

@@ -1,8 +1,8 @@
+using System.ClientModel;
 using ClearMeasure.Bootcamp.Core.Queries;
 using MediatR;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using System.ClientModel;
 
 namespace ClearMeasure.Bootcamp.LlmGateway;
 
@@ -26,7 +26,7 @@ public class ApplicationChatHandler(ChatClientFactory factory, IToolProvider too
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or ClientResultException)
         {
-            var statusCode = ex is ClientResultException cre ? cre.Status : (int?)null;
+            int? statusCode = ex is ClientResultException cre ? cre.Status : (int?)null;
             logger.LogWarning(ex, "LLM provider refused or timed out: {StatusCode} {Reason}",
                 statusCode, ex.Message);
             return new ApplicationChatResult(FriendlyProviderErrorMessage);
@@ -38,7 +38,7 @@ public class ApplicationChatHandler(ChatClientFactory factory, IToolProvider too
     /// </summary>
     internal static ApplicationChatResult ToResult(ChatResponse response)
     {
-        var text = ExtractAssistantText(response);
+        string text = ExtractAssistantText(response);
         return new ApplicationChatResult(string.IsNullOrWhiteSpace(text) ? string.Empty : text);
     }
 

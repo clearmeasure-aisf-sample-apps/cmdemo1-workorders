@@ -17,7 +17,7 @@ public class UserSession(
     public async Task<Employee?> GetCurrentUserAsync()
     {
         await authProvider.GetAuthenticationStateAsync();
-        var username = authProvider.GetUsername();
+        string? username = authProvider.GetUsername();
         if (string.IsNullOrEmpty(username))
         {
             return null;

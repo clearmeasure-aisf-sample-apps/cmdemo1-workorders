@@ -32,7 +32,7 @@ public class TimestampConverterController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public IActionResult Get([FromQuery] string? unix, [FromQuery] string? iso)
     {
-        var queryError = ValidateQueryKeys(Request.Query);
+        string? queryError = ValidateQueryKeys(Request.Query);
         if (queryError != null)
         {
             return Problem(detail: queryError, statusCode: StatusCodes.Status400BadRequest);
@@ -49,8 +49,8 @@ public class TimestampConverterController : ControllerBase
 
     private static string? ValidateQueryKeys(IQueryCollection query)
     {
-        var hasUnix = query.ContainsKey("unix");
-        var hasIso = query.ContainsKey("iso");
+        bool hasUnix = query.ContainsKey("unix");
+        bool hasIso = query.ContainsKey("iso");
 
         if (!hasUnix && !hasIso)
         {
@@ -89,7 +89,7 @@ public class TimestampConverterController : ControllerBase
             return false;
         }
 
-        if (!long.TryParse(unix.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seconds))
+        if (!long.TryParse(unix.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out long seconds))
         {
             return false;
         }

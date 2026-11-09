@@ -96,7 +96,7 @@ public class McpEndpointResolverTests
         {
             Features = new FeatureCollection();
             var addressFeature = new ServerAddressesFeature();
-            foreach (var address in addresses)
+            foreach (string address in addresses)
             {
                 addressFeature.Addresses.Add(address);
             }

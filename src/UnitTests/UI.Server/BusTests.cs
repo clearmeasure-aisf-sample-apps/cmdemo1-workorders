@@ -14,12 +14,12 @@ public class BusTests
     public void Should_SendRequest_WithGenericResponse_CallsMediator()
     {
         var stubMediator = new StubMediator();
-        var expectedResponse = "Test";
+        string expectedResponse = "Test";
         stubMediator.SetResponse(expectedResponse);
         var bus = new Bus(stubMediator);
         var request = new TestQuery();
 
-        var result = bus.Send(request).Result;
+        string result = bus.Send(request).Result;
 
         result.ShouldBe(expectedResponse);
         stubMediator.LastRequest.ShouldBe(request);
@@ -29,12 +29,12 @@ public class BusTests
     public void Should_SendObjectRequest_CallsMediator()
     {
         var stubMediator = new StubMediator();
-        var expectedResponse = "test response";
+        string expectedResponse = "test response";
         stubMediator.SetObjectResponse(expectedResponse);
         var bus = new Bus(stubMediator);
         var request = new TestCommand();
 
-        var result = bus.Send(request).Result;
+        object? result = bus.Send(request).Result;
 
         result.ShouldBe(expectedResponse);
         stubMediator.LastObjectRequest.ShouldBe(request);
@@ -48,7 +48,7 @@ public class BusTests
         var bus = new Bus(stubMediator);
         var request = new TestCommand();
 
-        var result = bus.Send(request).Result;
+        object? result = bus.Send(request).Result;
 
         result.ShouldBeNull();
         stubMediator.LastObjectRequest.ShouldBe(request);

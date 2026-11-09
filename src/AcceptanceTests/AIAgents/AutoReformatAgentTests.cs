@@ -28,7 +28,7 @@ public class AutoReformatAgentTests : AcceptanceTestBase
         await Click(nameof(WorkOrderManage.Elements.CommandButton) + "Save");
 
         var rehydrated = await Bus.Send(new WorkOrderByNumberQuery(order.Number!));
-        for (var attempt = 0; attempt < 120 && rehydrated?.Description == order.Description; attempt++)
+        for (int attempt = 0; attempt < 120 && rehydrated?.Description == order.Description; attempt++)
         {
             await Task.Delay(250);
             // Bounded poll of one work order until the reformat agent writes. Same key each attempt, not a per-row fan-out.

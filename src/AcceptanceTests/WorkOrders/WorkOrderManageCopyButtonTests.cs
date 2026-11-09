@@ -37,7 +37,7 @@ public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
         await Click(nameof(WorkOrderManage.Elements.CopyWorkOrderNumber));
         await Task.Delay(500); // Allow JS to execute
 
-        var clipboardText = await Page.EvaluateAsync<string>("navigator.clipboard.readText()");
+        string clipboardText = await Page.EvaluateAsync<string>("navigator.clipboard.readText()");
         clipboardText.ShouldBe(order.Number);
     }
 

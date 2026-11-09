@@ -22,7 +22,7 @@ public record CreateVendorCommand(
     /// </summary>
     public IReadOnlyList<string> FindRuleViolations(IEnumerable<string> existingVendorNames)
     {
-        var name = Name.Trim();
+        string name = Name.Trim();
         return existingVendorNames.Contains(name, StringComparer.OrdinalIgnoreCase)
             ? [$"A vendor named '{name}' already exists."]
             : [];

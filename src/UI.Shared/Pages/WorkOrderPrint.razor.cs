@@ -48,7 +48,11 @@ public partial class WorkOrderPrint : AppComponentBase
 
     private static string ChurchTime(DateTime? utc)
     {
-        if (utc is null) return "None";
+        if (utc is null)
+        {
+            return "None";
+        }
+
         var value = DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc);
         return TimeZoneInfo.ConvertTimeFromUtc(value, ChurchTimeZone.Chicago).ToString("yyyy-MM-dd h:mm tt");
     }
@@ -57,9 +61,13 @@ public partial class WorkOrderPrint : AppComponentBase
     {
         get
         {
-            if (_workOrder?.DueDate is null) return "None";
-            var text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd");
-            var urgency = DueDateUrgencyCalculator.ScreenReaderText(
+            if (_workOrder?.DueDate is null)
+            {
+                return "None";
+            }
+
+            string text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd");
+            string? urgency = DueDateUrgencyCalculator.ScreenReaderText(
                 DueDateUrgencyCalculator.Calculate(_workOrder, Clock));
             return string.IsNullOrEmpty(urgency) ? text : $"{text} ({urgency})";
         }

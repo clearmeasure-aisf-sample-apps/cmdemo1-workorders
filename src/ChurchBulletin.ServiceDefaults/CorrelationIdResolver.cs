@@ -8,7 +8,7 @@ internal static class CorrelationIdResolver
 
     public static string Resolve(HttpContext context)
     {
-        if (TryGetValidHeaderValue(context, out var id))
+        if (TryGetValidHeaderValue(context, out string? id))
         {
             return id;
         }
@@ -24,7 +24,7 @@ internal static class CorrelationIdResolver
             return false;
         }
 
-        var id = fromHeader.ToString().Trim();
+        string id = fromHeader.ToString().Trim();
         if (id.Length == 0 || id.Length > MaxIncomingLength)
         {
             return false;

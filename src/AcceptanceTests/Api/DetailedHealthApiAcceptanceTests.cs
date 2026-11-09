@@ -15,7 +15,9 @@ public class DetailedHealthApiAcceptanceTests : AcceptanceTestBase
     public async Task GetDetailedHealth_Returns200JsonWithOverallStatusAndComponents()
     {
         if (!ServerFixture.StartLocalServer)
+        {
             Assert.Ignore("Requires local server with HTTP access to /api/*");
+        }
 
         var client = TestHttpClientFactory.CreateInsecureClient();
         using var response = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/health/detailed");
@@ -44,7 +46,9 @@ public class DetailedHealthApiAcceptanceTests : AcceptanceTestBase
     public async Task GetDetailedHealth_VersionedRoute_Returns200Json()
     {
         if (!ServerFixture.StartLocalServer)
+        {
             Assert.Ignore("Requires local server with HTTP access to /api/*");
+        }
 
         var client = TestHttpClientFactory.CreateInsecureClient();
         using var response = await client.GetAsync($"{ServerFixture.ApplicationBaseUrl}/api/v1.0/health/detailed");

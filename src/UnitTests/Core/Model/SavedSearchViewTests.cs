@@ -56,7 +56,7 @@ public class SavedSearchViewTests
     [Test]
     public void ValidateNew_TwentyExistingViews_IsRejected()
     {
-        var existing = Enumerable.Range(1, 20).Select(i => $"View {i}").ToArray();
+        string[] existing = Enumerable.Range(1, 20).Select(i => $"View {i}").ToArray();
 
         SavedSearchView.ValidateNew("One more", "", existing).ShouldBe("You can save up to 20 views. Delete one first.");
     }
@@ -64,7 +64,7 @@ public class SavedSearchViewTests
     [Test]
     public void ValidateNew_NineteenExistingViews_IsAccepted()
     {
-        var existing = Enumerable.Range(1, 19).Select(i => $"View {i}").ToArray();
+        string[] existing = Enumerable.Range(1, 19).Select(i => $"View {i}").ToArray();
 
         SavedSearchView.ValidateNew("One more", "", existing).ShouldBeNull();
     }

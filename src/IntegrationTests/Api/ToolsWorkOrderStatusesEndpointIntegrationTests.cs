@@ -40,7 +40,7 @@ public class ToolsWorkOrderStatusesEndpointIntegrationTests
         statuses.ShouldNotBeNull();
         statuses.Length.ShouldBe(5);
 
-        var keys = statuses.Select(s => s.GetProperty("key").GetString()).ToArray();
+        string?[] keys = statuses.Select(s => s.GetProperty("key").GetString()).ToArray();
         keys.ShouldContain("Draft");
         keys.ShouldContain("Assigned");
         keys.ShouldContain("InProgress");

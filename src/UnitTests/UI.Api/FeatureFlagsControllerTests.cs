@@ -49,7 +49,7 @@ public class FeatureFlagsControllerTests
 
         var content = result.ShouldBeOfType<ContentResult>();
         using var doc = JsonDocument.Parse(content.Content!);
-        foreach (var key in RuntimeFlags.Keys)
+        foreach (string key in RuntimeFlags.Keys)
         {
             doc.RootElement.TryGetProperty(key, out _).ShouldBeTrue($"expected key '{key}' in JSON");
         }

@@ -221,8 +221,15 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
         };
 
         await using var context = TestHost.GetRequiredService<DbContext>();
-        if (saveCreator) context.Add(creator);
-        else context.Attach(creator);
+        if (saveCreator)
+        {
+            context.Add(creator);
+        }
+        else
+        {
+            context.Attach(creator);
+        }
+
         context.Add(workOrder);
         await context.SaveChangesAsync();
         return workOrder;

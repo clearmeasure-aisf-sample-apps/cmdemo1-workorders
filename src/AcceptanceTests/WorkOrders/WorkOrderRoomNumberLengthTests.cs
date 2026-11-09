@@ -13,7 +13,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        var room = new string('R', WorkOrder.RoomNumberEntryMaxLength);
+        string room = new string('R', WorkOrder.RoomNumberEntryMaxLength);
         var order = Faker<WorkOrder>();
         order.Title = $"[{TestTag}] 50 char room";
         order.Number = null;
@@ -30,7 +30,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
         await Input(nameof(WorkOrderManage.Elements.RoomNumber), room);
 
-        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
@@ -54,7 +54,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         var order = await CreateAndSaveNewWorkOrder();
 
         // Seed a legacy room number longer than the entry limit, as stored before the 50-character rule.
-        var longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
+        string longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
         var stored = (await Bus.Send(new WorkOrderByNumberQuery(order.Number!)))!;
         stored.RoomNumber = longRoom;
         await Bus.Send(new SaveDraftCommand(stored, stored.Creator!) { PreviousRoomNumber = longRoom });
@@ -64,10 +64,10 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         var roomField = Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber));
         await Expect(roomField).ToHaveValueAsync(longRoom);
 
-        var newTitle = $"[{TestTag}] 900 char room unchanged";
+        string newTitle = $"[{TestTag}] 900 char room unchanged";
         await Input(nameof(WorkOrderManage.Elements.Title), newTitle);
 
-        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
@@ -83,14 +83,14 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        var tooLong = new string('X', WorkOrder.RoomNumberEntryMaxLength + 1);
+        string tooLong = new string('X', WorkOrder.RoomNumberEntryMaxLength + 1);
 
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
 
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
         await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        var number = await woNumberLocator.InnerTextAsync();
+        string number = await woNumberLocator.InnerTextAsync();
 
         await Input(nameof(WorkOrderManage.Elements.Title), $"[{TestTag}] 51 char room");
         await Input(nameof(WorkOrderManage.Elements.Description), "description");
@@ -101,7 +101,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         await roomField.FillAsync(tooLong);
         await roomField.BlurAsync();
 
-        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
 
         await Expect(Page).ToHaveURLAsync(new Regex("workorder/manage"));

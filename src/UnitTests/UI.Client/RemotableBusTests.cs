@@ -1,6 +1,6 @@
-﻿using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Messaging;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Client;
 using MediatR;
 using Shouldly;
@@ -15,12 +15,12 @@ public class RemotableBusTests
     {
         var stubMediator = new StubMediator();
         var stubGateway = new StubPublisherGateway();
-        var expectedResponse = "Remote test";
+        string expectedResponse = "Remote test";
         stubGateway.SetResponse(expectedResponse);
         var bus = new RemotableBus(stubMediator, stubGateway);
         var request = new TestRemotableRequest();
 
-        var result = bus.Send(request).Result;
+        string result = bus.Send(request).Result;
 
         result.ShouldBe(expectedResponse);
         stubGateway.LastRequest.ShouldBe(request);
@@ -32,12 +32,12 @@ public class RemotableBusTests
     {
         var stubMediator = new StubMediator();
         var stubGateway = new StubPublisherGateway();
-        var expectedResponse = "mediator response";
+        string expectedResponse = "mediator response";
         stubMediator.SetResponse(expectedResponse);
         var bus = new RemotableBus(stubMediator, stubGateway);
         var request = new NonRemotableTestRequest();
 
-        var result = bus.Send(request).Result;
+        string result = bus.Send(request).Result;
 
         result.ShouldBe(expectedResponse);
         stubMediator.LastRequest.ShouldBe(request);
@@ -49,12 +49,12 @@ public class RemotableBusTests
     {
         var stubMediator = new StubMediator();
         var stubGateway = new StubPublisherGateway();
-        var expectedResponse = "object response";
+        string expectedResponse = "object response";
         stubMediator.SetObjectResponse(expectedResponse);
         var bus = new RemotableBus(stubMediator, stubGateway);
         var request = new TestCommand();
 
-        var result = bus.Send(request).Result;
+        object? result = bus.Send(request).Result;
 
         result.ShouldBe(expectedResponse);
         stubMediator.LastObjectRequest.ShouldBe(request);

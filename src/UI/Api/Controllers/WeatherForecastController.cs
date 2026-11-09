@@ -32,16 +32,19 @@ public class WeatherForecastController(ILogger<WeatherForecastController> logger
         logger.LogTrace("LogTrace Get Weather");
         // _logger.LogWarning("LogWarning Get Weather");
         var forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
+        {
+            Date = DateTime.Now.AddDays(index),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        })
             .ToArray();
         var etag = ConditionalGetEtag.CreateWeakEtagForJson(forecasts);
         Response.Headers.ETag = etag.ToString();
         if (ConditionalGetEtag.IfNoneMatchIncludesEtag(Request, etag))
+        {
             return StatusCode(StatusCodes.Status304NotModified);
+        }
+
         return ConditionalGetEtag.JsonContent(forecasts);
     }
 }

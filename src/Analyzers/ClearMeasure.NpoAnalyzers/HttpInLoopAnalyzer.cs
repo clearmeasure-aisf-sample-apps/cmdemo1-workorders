@@ -42,7 +42,7 @@ public sealed class HttpInLoopAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var name = LoopHelpers.GetInvocationName(invocation);
+        string? name = LoopHelpers.GetInvocationName(invocation);
         if (name is null || !HttpMethods.Contains(name))
         {
             return;

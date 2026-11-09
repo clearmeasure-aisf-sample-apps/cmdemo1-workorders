@@ -33,7 +33,7 @@ public class FeatureFlagBehaviorIntegrationTests
         using var scope = factory.Services.CreateScope();
         var bus = scope.ServiceProvider.GetRequiredService<IBus>();
 
-        var value = $"off-{Guid.NewGuid():N}";
+        string value = $"off-{Guid.NewGuid():N}";
 
         var ex = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new GatedProbeRequest(value)));
 
@@ -51,7 +51,7 @@ public class FeatureFlagBehaviorIntegrationTests
         using var scope = factory.Services.CreateScope();
         var bus = scope.ServiceProvider.GetRequiredService<IBus>();
 
-        var result = await bus.Send(new GatedProbeRequest("ping"));
+        string result = await bus.Send(new GatedProbeRequest("ping"));
 
         result.ShouldBe("pong:ping");
     }

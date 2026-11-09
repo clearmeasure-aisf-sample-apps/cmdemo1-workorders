@@ -68,10 +68,10 @@ public class ToolsGuidGeneratorEndpointIntegrationTests
     private static async Task AssertGuidArrayAsync(HttpResponseMessage response, int expectedCount)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var guids = await response.Content.ReadFromJsonAsync<string[]>();
+        string[]? guids = await response.Content.ReadFromJsonAsync<string[]>();
         guids.ShouldNotBeNull();
         guids.Length.ShouldBe(expectedCount);
-        foreach (var guid in guids)
+        foreach (string guid in guids)
         {
             Guid.TryParseExact(guid, "D", out _).ShouldBeTrue();
         }

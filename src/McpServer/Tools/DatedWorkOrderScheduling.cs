@@ -63,7 +63,7 @@ internal static class DatedWorkOrderScheduling
     {
         var first = ChurchTimeZone.ComingSaturday(timeProvider);
         var dates = new List<DateOnly>(count);
-        for (var i = 0; i < count; i++)
+        for (int i = 0; i < count; i++)
         {
             dates.Add(first.AddDays(7 * i));
         }
@@ -74,7 +74,7 @@ internal static class DatedWorkOrderScheduling
     private static (IReadOnlyList<DateOnly> Dates, string? Error) TryParseDueDateList(string dueDates)
     {
         var list = new List<DateOnly>();
-        foreach (var part in dueDates.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        foreach (string part in dueDates.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             if (!DateOnly.TryParseExact(part, "yyyy-MM-dd", CultureInfo.InvariantCulture,
                     DateTimeStyles.None, out var value))

@@ -10,8 +10,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
-using StubUserSession = ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.StubUserSession;
 using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
+using StubUserSession = ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.StubUserSession;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -132,12 +132,17 @@ public class IndexPageTests
     {
         var completed = new WorkOrder
         {
-            Number = "ABC1234", Title = "Fix the organ", Status = WorkOrderStatus.Complete,
-            CreatedDate = new DateTime(2026, 10, 1, 12, 0, 0), CompletedDate = new DateTime(2026, 10, 14, 3, 0, 0)
+            Number = "ABC1234",
+            Title = "Fix the organ",
+            Status = WorkOrderStatus.Complete,
+            CreatedDate = new DateTime(2026, 10, 1, 12, 0, 0),
+            CompletedDate = new DateTime(2026, 10, 14, 3, 0, 0)
         };
         var created = new WorkOrder
         {
-            Number = "DEF5678", Title = "Paint the hall", Status = WorkOrderStatus.Draft,
+            Number = "DEF5678",
+            Title = "Paint the hall",
+            Status = WorkOrderStatus.Draft,
             CreatedDate = new DateTime(2026, 10, 2, 18, 0, 0)
         };
         var bus = new StubBus { RecentWorkOrders = [completed, created] };

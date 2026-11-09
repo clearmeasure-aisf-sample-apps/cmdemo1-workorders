@@ -5,17 +5,17 @@ internal static class ApiRateLimitPartitionResolver
 {
     internal static string Resolve(HttpContext httpContext, string apiKeyHeaderName)
     {
-        if (TryGetKeyPartition(httpContext, apiKeyHeaderName, out var keyPartition))
+        if (TryGetKeyPartition(httpContext, apiKeyHeaderName, out string? keyPartition))
         {
             return keyPartition;
         }
 
-        if (TryGetUserPartition(httpContext, out var userPartition))
+        if (TryGetUserPartition(httpContext, out string? userPartition))
         {
             return userPartition;
         }
 
-        return TryGetIpPartition(httpContext, out var ipPartition) ? ipPartition : "anonymous";
+        return TryGetIpPartition(httpContext, out string? ipPartition) ? ipPartition : "anonymous";
     }
 
     private static bool TryGetKeyPartition(HttpContext httpContext, string apiKeyHeaderName, out string partition)
@@ -27,7 +27,7 @@ internal static class ApiRateLimitPartitionResolver
             return false;
         }
 
-        var key = keyValues.ToString();
+        string key = keyValues.ToString();
         if (string.IsNullOrWhiteSpace(key))
         {
             return false;
@@ -40,7 +40,7 @@ internal static class ApiRateLimitPartitionResolver
     private static bool TryGetUserPartition(HttpContext httpContext, out string partition)
     {
         partition = string.Empty;
-        var userName = httpContext.User.Identity?.Name;
+        string? userName = httpContext.User.Identity?.Name;
         if (string.IsNullOrEmpty(userName))
         {
             return false;
@@ -53,7 +53,7 @@ internal static class ApiRateLimitPartitionResolver
     private static bool TryGetIpPartition(HttpContext httpContext, out string partition)
     {
         partition = string.Empty;
-        var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString();
+        string? remoteIp = httpContext.Connection.RemoteIpAddress?.ToString();
         if (string.IsNullOrEmpty(remoteIp))
         {
             return false;

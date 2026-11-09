@@ -28,12 +28,25 @@ public class WorkOrderSearchUrlStateTests
     {
         var state = new WorkOrderSearchUrlState
         {
-            Creator = "tlovejoy", Assignee = "gwillie", Status = WorkOrderStatus.InProgress.Key, OverdueOnly = true, DueThisWeekOnly = true, WaitingOnVendorOnly = true,
-            Priority = WorkOrderPriority.High, Building = "Fellowship Hall", Room = "101", OpenOnly = true, CompletedWithinDays = 30,
-            Q = "organ & pipes", Sort = "Priority", Descending = true, Page = 3, View = SearchView.Board
+            Creator = "tlovejoy",
+            Assignee = "gwillie",
+            Status = WorkOrderStatus.InProgress.Key,
+            OverdueOnly = true,
+            DueThisWeekOnly = true,
+            WaitingOnVendorOnly = true,
+            Priority = WorkOrderPriority.High,
+            Building = "Fellowship Hall",
+            Room = "101",
+            OpenOnly = true,
+            CompletedWithinDays = 30,
+            Q = "organ & pipes",
+            Sort = "Priority",
+            Descending = true,
+            Page = 3,
+            View = SearchView.Board
         };
 
-        var uri = state.ToRelativeUri();
+        string uri = state.ToRelativeUri();
         var parsed = WorkOrderSearchUrlState.FromQuery(ParseQuery(uri));
 
         parsed.ShouldBe(state);
@@ -49,7 +62,7 @@ public class WorkOrderSearchUrlStateTests
     {
         var state = new WorkOrderSearchUrlState { View = SearchView.Board };
 
-        var uri = state.ToRelativeUri();
+        string uri = state.ToRelativeUri();
 
         uri.ShouldBe("workorder/search?View=Board");
         WorkOrderSearchUrlState.FromQuery(ParseQuery(uri)).ShouldBe(state);
@@ -102,8 +115,12 @@ public class WorkOrderSearchUrlStateTests
     {
         var state = WorkOrderSearchUrlState.FromQuery(new Dictionary<string, string?>
         {
-            ["Priority"] = "Urgent", ["CompletedWithinDays"] = "-4", ["Page"] = "zero", ["Status"] = "Bogus",
-            ["OverdueOnly"] = "yes", ["Dir"] = "sideways"
+            ["Priority"] = "Urgent",
+            ["CompletedWithinDays"] = "-4",
+            ["Page"] = "zero",
+            ["Status"] = "Bogus",
+            ["OverdueOnly"] = "yes",
+            ["Dir"] = "sideways"
         });
 
         state.ShouldBe(WorkOrderSearchUrlState.Default);
@@ -117,7 +134,10 @@ public class WorkOrderSearchUrlStateTests
     {
         var state = WorkOrderSearchUrlState.FromQuery(new Dictionary<string, string?>
         {
-            ["priority"] = "high", ["status"] = "inprogress", ["overdueonly"] = "TRUE", ["q"] = "  lights  "
+            ["priority"] = "high",
+            ["status"] = "inprogress",
+            ["overdueonly"] = "TRUE",
+            ["q"] = "  lights  "
         });
 
         state.Priority.ShouldBe(WorkOrderPriority.High);
@@ -183,7 +203,7 @@ public class WorkOrderSearchUrlStateTests
     [TestCase("CompletedWithinDays")]
     public void HasAnyFilter_TrueForEachFilter(string key)
     {
-        var value = key switch
+        string value = key switch
         {
             "Status" => WorkOrderStatus.Draft.Key,
             "Priority" => "Low",
@@ -268,7 +288,7 @@ public class WorkOrderSearchUrlStateTests
             Q = "leaky roof & more"
         };
 
-        var query = state.ToQueryString();
+        string query = state.ToQueryString();
 
         query.ShouldNotStartWith("?");
         WorkOrderSearchUrlState.RelativeUriForQuery(query).ShouldBe(state.ToRelativeUri());

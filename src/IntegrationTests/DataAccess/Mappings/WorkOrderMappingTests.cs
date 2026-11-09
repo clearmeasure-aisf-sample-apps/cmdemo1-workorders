@@ -11,7 +11,7 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldMapWorkOrderBasicProperties()
     {
-        var workOrderNumber = TestData.Number("M");
+        string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
@@ -56,7 +56,7 @@ public class WorkOrderMappingTests
     [Test]
     public async Task ShouldSaveWorkOrder()
     {
-        var number123 = TestData.Number("M");
+        string number123 = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var assignee = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -104,7 +104,7 @@ public class WorkOrderMappingTests
     [Test]
     public async Task ShouldSaveAuditEntries()
     {
-        var number123 = TestData.Number("M");
+        string number123 = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("employee1"), "1", "1", "1");
         var assignee = new Employee(TestData.UserName("employee2"), "2", "2", "2");
@@ -143,7 +143,7 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldMapWorkOrderWithCreatorAndAssignee()
     {
-        var workOrderNumber = TestData.Number("M");
+        string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var assignee = new Employee(TestData.UserName("assignee1"), "Jane", "Smith", "jane@example.com");
@@ -181,7 +181,7 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldMapWorkOrderStatusConversion()
     {
-        var workOrderNumber = TestData.Number("M");
+        string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
@@ -283,10 +283,10 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldSupportMaxLengthRoomNumber()
     {
-        var workOrderNumber = TestData.Number("M");
+        string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
-        var room = new string('R', WorkOrder.RoomNumberMaxLength);
+        string room = new string('R', WorkOrder.RoomNumberMaxLength);
         var workOrder = new WorkOrder
         {
             Number = workOrderNumber,
@@ -318,7 +318,7 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldEagerFetchCreatorAndAssigneeByDefault()
     {
-        var workOrderNumber = TestData.Number("M");
+        string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var assignee = new Employee(TestData.UserName("assignee1"), "Jane", "Smith", "jane@example.com");
@@ -362,7 +362,7 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistNullInstructionsForLegacyWorkOrder()
     {
-        var workOrderNumber = TestData.Number("M");
+        string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
         var workOrder = new WorkOrder
@@ -394,10 +394,10 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistInstructionsAtMaxLength()
     {
-        var workOrderNumber = TestData.Number("M");
+        string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
-        var longInstructions = new string('I', 4001);
+        string longInstructions = new string('I', 4001);
         var workOrder = new WorkOrder
         {
             Number = workOrderNumber,
@@ -427,7 +427,7 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldRejectDuplicateNumber_WhenSavedDirectly()
     {
-        var duplicateNumber = TestData.Number("M");
+        string duplicateNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("dupcreator"), "Dup", "Creator", "dup@example.com");
         using (var context = TestHost.GetRequiredService<DbContext>())
@@ -446,8 +446,8 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistPriorityAndBuilding()
     {
-        var highNumber = TestData.Number("M");
-        var defaultedNumber = TestData.Number("M");
+        string highNumber = TestData.Number("M");
+        string defaultedNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("prio"), "Prio", "Creator", "prio@example.com");
         var high = new WorkOrder { Number = highNumber, Title = "High", Creator = creator, Priority = WorkOrderPriority.High, Building = "Sanctuary" };
@@ -472,8 +472,8 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistFloor()
     {
-        var setNumber = TestData.Number("M");
-        var unsetNumber = TestData.Number("M");
+        string setNumber = TestData.Number("M");
+        string unsetNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("floor"), "Floor", "Creator", "floor@example.com");
         var withFloor = new WorkOrder { Number = setNumber, Title = "Upstairs", Creator = creator, Floor = "2" };
@@ -496,8 +496,8 @@ public class WorkOrderMappingTests
     [Test]
     public void ShouldPersistAccessNotes()
     {
-        var notedNumber = TestData.Number("M");
-        var unsetNumber = TestData.Number("M");
+        string notedNumber = TestData.Number("M");
+        string unsetNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("access"), "Access", "Creator", "access@example.com");
         var noted = new WorkOrder { Number = notedNumber, Title = "Noted", Creator = creator, AccessNotes = "Use the side door" };
@@ -563,10 +563,10 @@ public class WorkOrderMappingTests
         }
 
         var id = Guid.NewGuid();
-        var number = TestData.Number("A");
+        string number = TestData.Number("A");
         using (var context = TestHost.GetRequiredService<DbContext>())
         {
-            var table = context.Database.ProviderName!.Contains("Sqlite", StringComparison.OrdinalIgnoreCase)
+            string table = context.Database.ProviderName!.Contains("Sqlite", StringComparison.OrdinalIgnoreCase)
                 ? "\"WorkOrder\""
                 : "[dbo].[WorkOrder]";
 #pragma warning disable EF1002, EF1003 // The table name is one of two constants; every value is a parameter

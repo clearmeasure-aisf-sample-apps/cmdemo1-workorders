@@ -33,7 +33,7 @@ public static class ApiRateLimitingExtensions
             }
 
             var window = TimeSpan.FromSeconds(Math.Max(1, opts.WindowSeconds));
-            var partitionKey = ResolvePartitionKey(httpContext, opts.ApiKeyHeaderName);
+            string partitionKey = ResolvePartitionKey(httpContext, opts.ApiKeyHeaderName);
 
             return RateLimitPartition.GetSlidingWindowLimiter(
                 partitionKey,

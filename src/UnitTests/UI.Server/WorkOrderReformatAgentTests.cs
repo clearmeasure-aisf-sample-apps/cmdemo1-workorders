@@ -11,7 +11,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldParseResponseWithTitleAndDescription()
     {
         var workOrder = new WorkOrder { Title = "old title", Description = "old description" };
-        var responseText = "TITLE: New Title\nDESCRIPTION: New description with proper grammar.";
+        string responseText = "TITLE: New Title\nDESCRIPTION: New description with proper grammar.";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -24,7 +24,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldReturnNullWhenNoChangesNeeded()
     {
         var workOrder = new WorkOrder { Title = "Same title", Description = "Same description" };
-        var responseText = "TITLE: Same title\nDESCRIPTION: Same description";
+        string responseText = "TITLE: Same title\nDESCRIPTION: Same description";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -35,7 +35,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldParseResponseWithOnlyTitleChange()
     {
         var workOrder = new WorkOrder { Title = "lowercase title", Description = "Good description." };
-        var responseText = "TITLE: Lowercase title\nDESCRIPTION: Good description.";
+        string responseText = "TITLE: Lowercase title\nDESCRIPTION: Good description.";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -48,7 +48,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldParseResponseWithOnlyDescriptionChange()
     {
         var workOrder = new WorkOrder { Title = "Good Title", Description = "bad grammar here" };
-        var responseText = "TITLE: Good Title\nDESCRIPTION: Bad grammar here.";
+        string responseText = "TITLE: Good Title\nDESCRIPTION: Bad grammar here.";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -61,7 +61,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldDefaultToOriginalTitleWhenMissingFromResponse()
     {
         var workOrder = new WorkOrder { Title = "Original Title", Description = "old desc" };
-        var responseText = "DESCRIPTION: New corrected description.";
+        string responseText = "DESCRIPTION: New corrected description.";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -74,7 +74,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldDefaultToOriginalDescriptionWhenMissingFromResponse()
     {
         var workOrder = new WorkOrder { Title = "old title", Description = "Original Description" };
-        var responseText = "TITLE: Old title";
+        string responseText = "TITLE: Old title";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -87,7 +87,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldHandleCaseInsensitivePrefixes()
     {
         var workOrder = new WorkOrder { Title = "test", Description = "test" };
-        var responseText = "title: Corrected Title\ndescription: Corrected description.";
+        string responseText = "title: Corrected Title\ndescription: Corrected description.";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -100,7 +100,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldReturnNullWhenResponseHasNoParsableContent()
     {
         var workOrder = new WorkOrder { Title = "My Title", Description = "My Description" };
-        var responseText = "Some unexpected LLM response without proper format";
+        string responseText = "Some unexpected LLM response without proper format";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 
@@ -111,7 +111,7 @@ public class WorkOrderReformatAgentTests
     public void ShouldTrimWhitespaceFromParsedValues()
     {
         var workOrder = new WorkOrder { Title = "old", Description = "old" };
-        var responseText = "TITLE:   New Title With Spaces   \nDESCRIPTION:   Cleaned up description.   ";
+        string responseText = "TITLE:   New Title With Spaces   \nDESCRIPTION:   Cleaned up description.   ";
 
         var result = WorkOrderReformatAgent.ParseResponse(responseText, workOrder);
 

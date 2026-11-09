@@ -36,7 +36,7 @@ public class ToolsBase64Controller : ControllerBase
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
-        var mode = string.IsNullOrWhiteSpace(request.Mode)
+        string mode = string.IsNullOrWhiteSpace(request.Mode)
             ? "encode"
             : request.Mode.Trim().ToLowerInvariant();
 
@@ -55,7 +55,7 @@ public class ToolsBase64Controller : ControllerBase
     {
         try
         {
-            var bytes = Convert.FromBase64String(text);
+            byte[] bytes = Convert.FromBase64String(text);
             return Ok(new Base64Response(Encoding.UTF8.GetString(bytes)));
         }
         catch (FormatException)

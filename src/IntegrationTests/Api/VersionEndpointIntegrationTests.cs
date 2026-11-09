@@ -37,7 +37,7 @@ public class VersionEndpointIntegrationTests
     {
         var response = await _client!.GetAsync("/_version");
 
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
     }
@@ -47,7 +47,7 @@ public class VersionEndpointIntegrationTests
     {
         var response = await _client!.GetAsync("/_version");
 
-        var body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
         doc.RootElement.TryGetProperty("version", out var versionProp).ShouldBeTrue();
         versionProp.GetString().ShouldNotBeNullOrEmpty();

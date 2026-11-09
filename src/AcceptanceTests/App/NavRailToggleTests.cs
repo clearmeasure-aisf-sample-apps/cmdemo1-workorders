@@ -12,7 +12,7 @@ public class NavRailToggleTests : AcceptanceTestBase
         await LoginAsCurrentUser();
         await Click(nameof(NavMenu.Elements.Search));
 
-        var urlBefore = Page.Url;
+        string urlBefore = Page.Url;
         var toggle = Page.GetByTestId(nameof(MainLayout.Elements.NavRailToggle));
         await Expect(toggle).ToBeVisibleAsync();
 
@@ -56,7 +56,7 @@ public class NavRailToggleTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
 
-        var urlBefore = Page.Url;
+        string urlBefore = Page.Url;
         var searchButton = Page.Locator($"#{nameof(WorkOrderSearch.Elements.CreatorSelect)}");
         await Expect(searchButton).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
 

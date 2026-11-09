@@ -34,7 +34,7 @@ public class StatusBadgeCssClassMapperTests
         {
             if (!status.IsEmpty())
             {
-                var cssClass = StatusBadgeCssClassMapper.CssClass(status);
+                string cssClass = StatusBadgeCssClassMapper.CssClass(status);
                 cssClass.ShouldNotBeEmpty();
                 cssClass.ShouldStartWith("status-badge--");
             }

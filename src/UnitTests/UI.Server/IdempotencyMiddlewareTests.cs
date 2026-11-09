@@ -39,7 +39,7 @@ public class IdempotencyMiddlewareTests
     [Test]
     public async Task BuildCompositeKeyAsync_IncludesBodyHash()
     {
-        var bodyBytes = "payload"u8.ToArray();
+        byte[] bodyBytes = "payload"u8.ToArray();
         var context = new DefaultHttpContext
         {
             Request =
@@ -51,9 +51,9 @@ public class IdempotencyMiddlewareTests
             }
         };
 
-        var key1 = await IdempotencyMiddleware.BuildCompositeKeyAsync(context.Request, "k1", CancellationToken.None);
+        string key1 = await IdempotencyMiddleware.BuildCompositeKeyAsync(context.Request, "k1", CancellationToken.None);
         context.Request.Body = new MemoryStream(bodyBytes);
-        var key2 = await IdempotencyMiddleware.BuildCompositeKeyAsync(context.Request, "k1", CancellationToken.None);
+        string key2 = await IdempotencyMiddleware.BuildCompositeKeyAsync(context.Request, "k1", CancellationToken.None);
         key1.ShouldBe(key2);
         key1.ShouldContain("k1");
     }

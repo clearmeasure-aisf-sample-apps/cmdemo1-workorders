@@ -17,7 +17,7 @@ public class ToolProviderTests
     [OneTimeSetUp]
     public async Task StartMcpHttpHost()
     {
-        var sqlitePath = Path.Combine(Path.GetTempPath(), $"mcp-toolprovider-{Guid.NewGuid():N}.db");
+        string sqlitePath = Path.Combine(Path.GetTempPath(), $"mcp-toolprovider-{Guid.NewGuid():N}.db");
         _application = McpServerApplication.BuildApplication(["--http"], builder =>
         {
             builder.WebHost.UseUrls("http://0.0.0.0:0");

@@ -14,8 +14,8 @@ public class UiSharedPagesArchitectureTests
     [Test]
     public void Pages_ShouldNotReferenceHttpClientOrDataContext_When_ScanningSource()
     {
-        var pages = Path.Combine(FindRepoRoot(), "src", "UI.Shared", "Pages");
-        var hits = Directory.EnumerateFiles(pages, "*.*", SearchOption.AllDirectories)
+        string pages = Path.Combine(FindRepoRoot(), "src", "UI.Shared", "Pages");
+        string[] hits = Directory.EnumerateFiles(pages, "*.*", SearchOption.AllDirectories)
             .Where(path => path.EndsWith(".cs", StringComparison.Ordinal) || path.EndsWith(".razor", StringComparison.Ordinal))
             .Select(path => (Path: path, Match: ForbiddenType.Match(File.ReadAllText(path))))
             .Where(hit => hit.Match.Success)

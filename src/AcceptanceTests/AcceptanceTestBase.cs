@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
@@ -5,7 +6,6 @@ using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using System.Collections.Concurrent;
 using Login = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
 // ReSharper disable MethodHasAsyncOverload -- Qodana C6 (#9039): Playwright/NUnit sync APIs are the
@@ -34,7 +34,7 @@ public class TestState
 public abstract class AcceptanceTestBase
 {
     private static readonly ConcurrentDictionary<string, TestState> TestStates = new();
-    
+
     private bool? Headless { get; } = ServerFixture.HeadlessTestBrowser;
     private bool SkipScreenshotsForSpeed { get; } = ServerFixture.SkipScreenshotsForSpeed;
     protected IBus Bus => TestHost.GetRequiredService<IBus>();
@@ -51,22 +51,22 @@ public abstract class AcceptanceTestBase
     }
 
     private string TestId => TestContext.CurrentContext.Test.ID;
-    
+
     /// <summary>
     /// Gets the current test's state container.
     /// </summary>
     private TestState State => TestStates[TestId];
-    
+
     /// <summary>
     /// Gets the browser page for the current test.
     /// </summary>
     protected IPage Page => State.Page;
-    
+
     /// <summary>
     /// Gets the current user for the current test.
     /// </summary>
     protected Employee CurrentUser => State.CurrentUser;
-    
+
     /// <summary>
     /// Unique tag for this test instance to isolate test data in parallel execution.
     /// </summary>
@@ -79,13 +79,16 @@ public abstract class AcceptanceTestBase
     [SetUp]
     public async Task SetUpAsync()
     {
-        if (!RequiresBrowser) return;
+        if (!RequiresBrowser)
+        {
+            return;
+        }
 
-        var testTag = Guid.NewGuid().ToString("N")[..8];
+        string testTag = Guid.NewGuid().ToString("N")[..8];
         var currentUser = CreateTestUser(testTag);
 
-        var x = RandomPosition.Next(0, 1200);
-        var y = RandomPosition.Next(0, 700);
+        int x = RandomPosition.Next(0, 1200);
+        int y = RandomPosition.Next(0, 700);
         var browser = await ServerFixture.Playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
         {
             Headless = Headless,
@@ -102,7 +105,7 @@ public abstract class AcceptanceTestBase
             ViewportSize = new ViewportSize { Width = 800, Height = 600 }
         });
         browserContext.SetDefaultTimeout(60_000);
-        
+
         await browserContext.Tracing.StartAsync(new TracingStartOptions
         {
             Title = $"{TestContext.CurrentContext.Test.ClassName}.{TestContext.CurrentContext.Test.Name}",
@@ -112,7 +115,7 @@ public abstract class AcceptanceTestBase
         });
 
         var page = await browserContext.NewPageAsync().ConfigureAwait(false);
-        
+
         var state = new TestState
         {
             Page = page,
@@ -121,11 +124,11 @@ public abstract class AcceptanceTestBase
             CurrentUser = currentUser,
             TestTag = testTag
         };
-        
+
         TestStates[TestId] = state;
 
         const int maxRetries = 3;
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
             try
             {
@@ -150,7 +153,9 @@ public abstract class AcceptanceTestBase
     public async Task TearDownAsync()
     {
         if (!TestStates.TryRemove(TestId, out var state))
+        {
             return;
+        }
 
         await SafeStopTracingAsync(state);
         await SafeCloseAsync(() => state.Page.CloseAsync(), "Page");
@@ -190,19 +195,22 @@ public abstract class AcceptanceTestBase
     /// Playwright assertion helper - wraps Assertions.Expect for the current page context.
     /// </summary>
     protected ILocatorAssertions Expect(ILocator locator) => Assertions.Expect(locator);
-    
+
     /// <summary>
     /// Playwright assertion helper - wraps Assertions.Expect for the current page.
     /// </summary>
     protected IPageAssertions Expect(IPage page) => Assertions.Expect(page);
 
-    protected async Task TakeScreenshotAsync(int stepNumber=0, string? stepName = null)
+    protected async Task TakeScreenshotAsync(int stepNumber = 0, string? stepName = null)
     {
-        if (SkipScreenshotsForSpeed) return;
+        if (SkipScreenshotsForSpeed)
+        {
+            return;
+        }
 
         var test = TestContext.CurrentContext.Test;
-        var testName = test.ClassName + "-" + test.Name;
-        var fileName = $"{testName}-{stepNumber}{stepName}{Guid.NewGuid()}.png";
+        string testName = test.ClassName + "-" + test.Name;
+        string fileName = $"{testName}-{stepNumber}{stepName}{Guid.NewGuid()}.png";
         await Page.ScreenshotAsync(new PageScreenshotOptions
         {
             Path = fileName
@@ -231,7 +239,7 @@ public abstract class AcceptanceTestBase
 
     protected async Task LoginAsCurrentUser()
     {
-        var username = CurrentUser.UserName;
+        string username = CurrentUser.UserName;
         await TakeScreenshotAsync();
         await Click(nameof(LoginLink.Elements.LoginLink));
         await Page.WaitForURLAsync("**/login");
@@ -343,9 +351,21 @@ public abstract class AcceptanceTestBase
     protected async Task Input(string elementTestId, string? value)
     {
         var locator = Page.GetByTestId(elementTestId);
-        if (!await locator.IsVisibleAsync()) await locator.WaitForAsync();
-        if (!await locator.IsVisibleAsync()) await locator.WaitForAsync();
-        if (!await locator.IsVisibleAsync()) await locator.WaitForAsync();
+        if (!await locator.IsVisibleAsync())
+        {
+            await locator.WaitForAsync();
+        }
+
+        if (!await locator.IsVisibleAsync())
+        {
+            await locator.WaitForAsync();
+        }
+
+        if (!await locator.IsVisibleAsync())
+        {
+            await locator.WaitForAsync();
+        }
+
         await Expect(locator).ToBeVisibleAsync();
 
         // Under parallel load, the Blazor WASM page may render with disabled fields
@@ -393,10 +413,10 @@ public abstract class AcceptanceTestBase
         var order = Faker<WorkOrder>();
         order.Title = $"[{TestTag}] from automation";
         order.Number = null;
-        var testTitle = order.Title;
-        var testDescription = order.Description;
-        var testInstructions = order.Instructions;
-        var testRoomNumber = order.RoomNumber;
+        string testTitle = order.Title;
+        string? testDescription = order.Description;
+        string? testInstructions = order.Instructions;
+        string? testRoomNumber = order.RoomNumber;
 
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");
@@ -404,7 +424,7 @@ public abstract class AcceptanceTestBase
 
         await WaitForNewWorkOrderFormReadyAsync();
         ILocator woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        var newWorkOrderNumber = await woNumberLocator.InnerTextAsync();
+        string newWorkOrderNumber = await woNumberLocator.InnerTextAsync();
         order.Number = newWorkOrderNumber;
         await Input(nameof(WorkOrderManage.Elements.Title), testTitle);
         await Input(nameof(WorkOrderManage.Elements.Description), testDescription);
@@ -415,7 +435,7 @@ public abstract class AcceptanceTestBase
         await Input(nameof(WorkOrderManage.Elements.RoomNumber), testRoomNumber);
         await TakeScreenshotAsync(2, "FormFilled");
 
-        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        string saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
         var searchTable = Page.Locator(".grid-data tbody");
@@ -426,13 +446,17 @@ public abstract class AcceptanceTestBase
         });
 
         WorkOrder? rehyratedOrder = null;
-        for (var attempt = 0; attempt < 10; attempt++)
+        for (int attempt = 0; attempt < 10; attempt++)
         {
             // Bounded poll of one saved work order until it is readable. Same key each attempt, not a per-row fan-out.
 #pragma warning disable CM0001
             rehyratedOrder = await Bus.Send(new WorkOrderByNumberQuery(order.Number));
 #pragma warning restore CM0001
-            if (rehyratedOrder != null) break;
+            if (rehyratedOrder != null)
+            {
+                break;
+            }
+
             await Task.Delay(1000);
         }
         rehyratedOrder.ShouldNotBeNull();
@@ -449,7 +473,7 @@ public abstract class AcceptanceTestBase
             await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
         }
 
-        var linkTestId = nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number;
+        string linkTestId = nameof(WorkOrderSearch.Elements.WorkOrderLink) + order.Number;
         await WaitForWorkOrderLinkAsync(order.Number!, linkTestId);
         await Click(linkTestId);
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));

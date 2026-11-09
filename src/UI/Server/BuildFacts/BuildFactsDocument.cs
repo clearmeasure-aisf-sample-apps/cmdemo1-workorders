@@ -55,7 +55,7 @@ internal static class BuildFactsDocument
     public static string Create(JsonObject? stamped, string? informationalVersion)
     {
         var document = new JsonObject();
-        foreach (var name in Properties)
+        foreach (string name in Properties)
         {
             document[name] = stamped?[name]?.DeepClone();
         }
@@ -82,7 +82,7 @@ internal static class BuildFactsDocument
             return null;
         }
 
-        var metadata = informationalVersion.IndexOf('+');
+        int metadata = informationalVersion.IndexOf('+');
         return metadata < 0 ? informationalVersion : informationalVersion[..metadata];
     }
 }

@@ -16,7 +16,10 @@ public static class ProcessCleanupHelper
     /// </summary>
     public static async Task StopProcessAsync(Process? process)
     {
-        if (process == null) return;
+        if (process == null)
+        {
+            return;
+        }
 
         try
         {
@@ -93,7 +96,7 @@ public static class ProcessCleanupHelper
     {
         try
         {
-            if (!TryGetPort(url, out var port))
+            if (!TryGetPort(url, out int port))
             {
                 return;
             }
@@ -134,16 +137,16 @@ public static class ProcessCleanupHelper
 
     private static void KillProcessOnPortWindows(int port)
     {
-        var output = RunCapture("netstat", "-ano");
+        string? output = RunCapture("netstat", "-ano");
         if (output == null)
         {
             return;
         }
 
-        var listenPattern = $":{port}";
-        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        string listenPattern = $":{port}";
+        foreach (string line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (TryParseWindowsListeningPid(line, listenPattern, out var pid))
+            if (TryParseWindowsListeningPid(line, listenPattern, out int pid))
             {
                 KillProcessById(pid, port);
             }
@@ -170,7 +173,7 @@ public static class ProcessCleanupHelper
     private static bool TryParseTrailingPid(string line, out int pid)
     {
         pid = 0;
-        var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0)
         {
             return false;
@@ -181,15 +184,15 @@ public static class ProcessCleanupHelper
 
     private static void KillProcessOnPortUnix(int port)
     {
-        var output = RunCapture("lsof", $"-ti :{port}");
+        string? output = RunCapture("lsof", $"-ti :{port}");
         if (output == null)
         {
             return;
         }
 
-        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (int.TryParse(line.Trim(), out var pid) && pid > 0)
+            if (int.TryParse(line.Trim(), out int pid) && pid > 0)
             {
                 KillProcessById(pid, port);
             }
@@ -212,7 +215,7 @@ public static class ProcessCleanupHelper
             return null;
         }
 
-        var output = process.StandardOutput.ReadToEnd();
+        string output = process.StandardOutput.ReadToEnd();
         process.WaitForExit(5000);
         return output;
     }

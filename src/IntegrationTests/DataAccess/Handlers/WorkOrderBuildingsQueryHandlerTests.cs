@@ -13,8 +13,8 @@ public class WorkOrderBuildingsQueryHandlerTests
     [Test]
     public async Task ShouldReturnDistinctNonBlankBuildingsSorted()
     {
-        var tag = TestData.Tag();
-        var userName = TestData.UserName("bldg");
+        string tag = TestData.Tag();
+        string userName = TestData.UserName("bldg");
         var creator = new Employee(userName, "Building", "Creator", TestData.Email(userName));
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -30,7 +30,7 @@ public class WorkOrderBuildingsQueryHandlerTests
         }
 
         var handler = new WorkOrderBuildingsQueryHandler(TestHost.GetRequiredService<DataContext>());
-        var buildings = await handler.Handle(new WorkOrderBuildingsQuery());
+        string[] buildings = await handler.Handle(new WorkOrderBuildingsQuery());
 
         buildings.Where(b => b.Contains(tag)).ShouldBe([$"fellowship Hall {tag}", $"Kitchen {tag}", $"Sanctuary {tag}"]);
         buildings.ShouldAllBe(b => !string.IsNullOrWhiteSpace(b));

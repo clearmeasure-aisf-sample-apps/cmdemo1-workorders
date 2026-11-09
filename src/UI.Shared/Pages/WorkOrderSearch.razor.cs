@@ -169,7 +169,7 @@ public partial class WorkOrderSearch : AppComponentBase
     /// </summary>
     private void EnsureSelectedBuildingIsListed()
     {
-        var building = Model.Filters.Building;
+        string? building = Model.Filters.Building;
         if (!string.IsNullOrEmpty(building) && !BuildingOptions.Contains(building))
         {
             BuildingOptions.Add(building);
@@ -293,8 +293,8 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private async Task HandleSaveView()
     {
-        var query = (_state with { Page = 1 }).ToQueryString();
-        var error = SavedSearchView.ValidateNew(_newViewName, query, _userViews.Select(v => v.Name).ToArray());
+        string query = (_state with { Page = 1 }).ToQueryString();
+        string? error = SavedSearchView.ValidateNew(_newViewName, query, _userViews.Select(v => v.Name).ToArray());
         if (error is not null || _currentUserName is null)
         {
             _saveViewError = error ?? "Sign in to save a view.";
@@ -362,7 +362,7 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private async Task SearchWorkOrders()
     {
-        var version = ++_searchVersion;
+        int version = ++_searchVersion;
         var workOrders = await Bus.Send(await BuildSpecificationAsync());
         if (version != _searchVersion)
         {
@@ -422,12 +422,16 @@ public partial class WorkOrderSearch : AppComponentBase
     {
         var labels = new Dictionary<string, string>
         {
-            [SortColumns.Number] = "Work order", [SortColumns.Title] = "Title", [SortColumns.Status] = "Status",
-            [SortColumns.Priority] = "Priority", [SortColumns.Assignee] = "Assignee", [SortColumns.Room] = "Room",
+            [SortColumns.Number] = "Work order",
+            [SortColumns.Title] = "Title",
+            [SortColumns.Status] = "Status",
+            [SortColumns.Priority] = "Priority",
+            [SortColumns.Assignee] = "Assignee",
+            [SortColumns.Room] = "Room",
             [SortColumns.DueDate] = "Due date"
         };
         var options = new List<(string, string)> { (string.Empty, "Sort: Newest") };
-        foreach (var column in SortColumns.All)
+        foreach (string column in SortColumns.All)
         {
             options.Add(($"{column}:asc", $"Sort: {labels[column]} ↑"));
             options.Add(($"{column}:desc", $"Sort: {labels[column]} ↓"));
@@ -514,7 +518,7 @@ public partial class WorkOrderSearch : AppComponentBase
             return;
         }
 
-        var trigger = $"row-menu-{_openRowMenu}";
+        string trigger = $"row-menu-{_openRowMenu}";
         _openRowMenu = null;
         var module = await ExportModuleAsync();
         await module.InvokeVoidAsync("focusById", trigger);

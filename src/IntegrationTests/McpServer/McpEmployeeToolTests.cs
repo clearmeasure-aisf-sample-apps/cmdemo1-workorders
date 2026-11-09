@@ -22,7 +22,7 @@ public class McpEmployeeToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await EmployeeTools.ListEmployees(bus);
+        string result = await EmployeeTools.ListEmployees(bus);
 
         result.ShouldContain(emp1.UserName);
         result.ShouldContain(emp2.UserName);
@@ -33,9 +33,9 @@ public class McpEmployeeToolTests
     [Test]
     public async Task ShouldReturnJsonArrayWithoutUnknownEmployee()
     {
-        var unknown = TestData.UserName("nobody");
+        string unknown = TestData.UserName("nobody");
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await EmployeeTools.ListEmployees(bus);
+        string result = await EmployeeTools.ListEmployees(bus);
 
         using var json = JsonDocument.Parse(result);
         json.RootElement.ValueKind.ShouldBe(JsonValueKind.Array);
@@ -52,7 +52,7 @@ public class McpEmployeeToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await EmployeeTools.GetEmployee(bus, emp.UserName);
+        string result = await EmployeeTools.GetEmployee(bus, emp.UserName);
 
         result.ShouldContain(emp.UserName);
         result.ShouldContain("John");
@@ -64,7 +64,7 @@ public class McpEmployeeToolTests
     public async Task ShouldReturnNotFoundForMissingEmployee()
     {
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await EmployeeTools.GetEmployee(bus, TestData.UserName("nonexistent"));
+        string result = await EmployeeTools.GetEmployee(bus, TestData.UserName("nonexistent"));
 
         result.ShouldContain("No employee found");
     }

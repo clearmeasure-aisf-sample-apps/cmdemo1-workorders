@@ -137,7 +137,7 @@ public class WorkOrder : EntityBase<WorkOrder>
             return string.Empty;
         }
 
-        var maxLength = Math.Min(InstructionsMaxLength, value.Length);
+        int maxLength = Math.Min(InstructionsMaxLength, value.Length);
         return value.Substring(0, maxLength);
     }
 

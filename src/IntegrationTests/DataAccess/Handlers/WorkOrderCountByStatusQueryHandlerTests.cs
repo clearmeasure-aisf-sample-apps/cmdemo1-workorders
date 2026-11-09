@@ -14,7 +14,7 @@ public class WorkOrderCountByStatusQueryHandlerTests
     public async Task ShouldReturnLiveCountsFromDatabase()
     {
         var before = await CountsAsync();
-        var userName = TestData.UserName("wocbs");
+        string userName = TestData.UserName("wocbs");
         var creator = new Employee(userName, "First", "Last", TestData.Email(userName));
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
@@ -43,7 +43,7 @@ public class WorkOrderCountByStatusQueryHandlerTests
     public async Task ShouldMatchSearchTotal_ForEachStatus()
     {
         var before = await CountsAsync();
-        var userName = TestData.UserName("wocbs");
+        string userName = TestData.UserName("wocbs");
         var creator = new Employee(userName, "First", "Last", TestData.Email(userName));
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -75,7 +75,7 @@ public class WorkOrderCountByStatusQueryHandlerTests
     [Test]
     public async Task ShouldMatchPerStatusFilterCounts()
     {
-        var userName = TestData.UserName("wocbs");
+        string userName = TestData.UserName("wocbs");
         var creator = new Employee(userName, "First", "Last", TestData.Email(userName));
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -97,7 +97,7 @@ public class WorkOrderCountByStatusQueryHandlerTests
         {
             // One count per stored status, compared with the handler's grouped result. Not a product N+1.
 #pragma warning disable CM0002
-            var expected = await WorkOrderQueryFilters.Apply(orders, null, null, status).CountAsync();
+            int expected = await WorkOrderQueryFilters.Apply(orders, null, null, status).CountAsync();
 #pragma warning restore CM0002
             counts[status.Key].ShouldBe(expected, status.Key);
         }

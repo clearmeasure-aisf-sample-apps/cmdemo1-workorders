@@ -113,11 +113,11 @@ public class WorkOrderManageRestyleTests
     [Test]
     public void ShouldKeepFormStylesheetFreeOfHexColours()
     {
-        var path = Path.GetFullPath(Path.Combine(
+        string path = Path.GetFullPath(Path.Combine(
             NUnit.Framework.TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI.Shared", "Pages", "WorkOrderManage.razor.css"));
         File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
-        var css = File.ReadAllText(path);
+        string css = File.ReadAllText(path);
 
         Regex.IsMatch(css, "#[0-9a-fA-F]{3,8}").ShouldBeFalse();
         css.ShouldNotContain("rgba(");

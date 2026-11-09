@@ -194,7 +194,7 @@ public class CustomAuthenticationStateProviderTests
         var authProvider = new CustomAuthenticationStateProvider(store);
         await authProvider.Login("tlovejoy");
         store.Operations.Clear();
-        var notified = false;
+        bool notified = false;
         authProvider.AuthenticationStateChanged += _ => notified = true;
 
         await Should.ThrowAsync<InvalidOperationException>(authProvider.Logout);

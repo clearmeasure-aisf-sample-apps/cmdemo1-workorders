@@ -29,9 +29,9 @@ public static class WorkOrderReportsExporter
         string[] order, Dictionary<string, int> counts)
     {
         AppendLine(csv, ["Category", heading, "Count"]);
-        foreach (var key in order)
+        foreach (string key in order)
         {
-            if (counts.TryGetValue(key, out var count))
+            if (counts.TryGetValue(key, out int count))
             {
                 AppendLine(csv, [category, key, count.ToString(CultureInfo.InvariantCulture)]);
             }

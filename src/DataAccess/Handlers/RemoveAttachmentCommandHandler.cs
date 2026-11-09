@@ -21,8 +21,11 @@ public class RemoveAttachmentCommandHandler(DataContext context)
         var attachment = await context.Set<WorkOrderAttachment>()
             .SingleOrDefaultAsync(a => a.Id == request.AttachmentId, cancellationToken);
 
-        var error = RemoveAttachmentCommand.Validate(workOrder, user, attachment);
-        if (error is not null) return RemoveAttachmentResult.Failure(error);
+        string? error = RemoveAttachmentCommand.Validate(workOrder, user, attachment);
+        if (error is not null)
+        {
+            return RemoveAttachmentResult.Failure(error);
+        }
 
         context.Remove(attachment!);
         await context.SaveChangesAsync(cancellationToken);

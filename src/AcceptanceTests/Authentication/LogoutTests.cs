@@ -19,10 +19,10 @@ public class LogoutTests : AcceptanceTestBase
         await Expect(newLink).ToBeVisibleAsync();
 
         await LogoutViaUserMenu();
-        
+
         var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
         await Expect(loginLink).ToBeVisibleAsync();
-        
+
         var newWorkOrderLink = Page.GetByTestId(nameof(NavMenu.Elements.NewWorkOrder));
         await Expect(newWorkOrderLink).ToBeHiddenAsync();
     }

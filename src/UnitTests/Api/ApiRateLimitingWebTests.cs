@@ -41,8 +41,10 @@ public class ApiRateLimitingWebTests
         await using var factory = new RateLimitedApiWebApplicationFactory();
         using var client = factory.CreateClient();
 
-        for (var i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++)
+        {
             (await client.GetAsync("/_healthcheck")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
     }
 
     [Test]
@@ -104,8 +106,11 @@ public class ApiRateLimitingWebTests
     {
         await using var factory = new TunableApiRateLimitWebApplicationFactory(StrictLimitSettings(3));
         using var client = factory.CreateClient();
-        for (var i = 0; i < 3; i++)
+        for (int i = 0; i < 3; i++)
+        {
             (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+
         (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
     }
 
@@ -133,8 +138,11 @@ public class ApiRateLimitingWebTests
 
         using (var client = loose.CreateClient())
         {
-            for (var i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
+            {
                 (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
+            }
+
             (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
         }
     }
@@ -158,7 +166,9 @@ public class ApiRateLimitingWebTests
         };
         await using var factory = new TunableApiRateLimitWebApplicationFactory(settings);
         using var client = factory.CreateClient();
-        for (var i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++)
+        {
             (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
     }
 }

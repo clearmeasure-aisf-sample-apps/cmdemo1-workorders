@@ -1,7 +1,7 @@
+using System.Diagnostics.Metrics;
 using ClearMeasure.Bootcamp.Core.Model.Events;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.Metrics;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 

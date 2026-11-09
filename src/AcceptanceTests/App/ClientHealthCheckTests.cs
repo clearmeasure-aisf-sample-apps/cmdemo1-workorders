@@ -20,7 +20,7 @@ public class ClientHealthCheckTests : AcceptanceTestBase
         await Page.GotoAsync("/_clienthealthcheck");
         var statusSpan = Page.GetByTestId(nameof(ClientHealthCheck.Elements.Status));
         await statusSpan.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 90_000 });
-        var innerTextAsync = await statusSpan.InnerTextAsync();
+        string innerTextAsync = await statusSpan.InnerTextAsync();
         innerTextAsync.ShouldBeOneOf(AcceptableHealthStatuses);
         AcceptableHealthStatuses.ShouldContain(innerTextAsync);
     }
@@ -38,7 +38,7 @@ public class ClientHealthCheckTests : AcceptanceTestBase
 
         var statusSpan = Page.GetByTestId(nameof(ClientHealthCheck.Elements.Status));
         await statusSpan.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 90_000 });
-        var innerTextAsync = await statusSpan.InnerTextAsync();
+        string innerTextAsync = await statusSpan.InnerTextAsync();
         AcceptableHealthStatuses.ShouldContain(innerTextAsync);
     }
 
@@ -46,7 +46,7 @@ public class ClientHealthCheckTests : AcceptanceTestBase
     public async Task FirstStartShouldValidateServerHealthChecks()
     {
         await Page.GotoAsync("/_healthcheck");
-        var content = await Page.ContentAsync();
+        string content = await Page.ContentAsync();
         AcceptableHealthStatuses.ShouldContain(s =>
             content.Contains(s, StringComparison.OrdinalIgnoreCase));
     }
@@ -55,7 +55,7 @@ public class ClientHealthCheckTests : AcceptanceTestBase
     public async Task HealthCheckEndpoint_ShouldReturnHealthy()
     {
         await Page.GotoAsync("/_healthcheck");
-        var content = await Page.ContentAsync();
+        string content = await Page.ContentAsync();
         AcceptableHealthStatuses.ShouldContain(s =>
             content.Contains(s, StringComparison.OrdinalIgnoreCase));
     }

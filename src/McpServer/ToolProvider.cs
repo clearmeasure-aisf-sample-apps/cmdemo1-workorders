@@ -22,13 +22,17 @@ public class ToolProvider(
     public async Task<IList<AITool>> GetToolsAsync()
     {
         if (_tools != null)
+        {
             return _tools;
+        }
 
         await _lock.WaitAsync();
         try
         {
             if (_tools != null)
+            {
                 return _tools;
+            }
 
             _tools = await DiscoverToolsAsync();
             return _tools;
@@ -41,7 +45,7 @@ public class ToolProvider(
 
     private async Task<IList<AITool>> DiscoverToolsAsync()
     {
-        var mcpUrl = McpEndpointResolver.ResolveMcpUrl(server);
+        string mcpUrl = McpEndpointResolver.ResolveMcpUrl(server);
         logger.LogInformation("ToolProvider: connecting to MCP endpoint at {McpUrl}", mcpUrl);
 
         var httpClient = CreateLoopbackHttpClient(mcpUrl);

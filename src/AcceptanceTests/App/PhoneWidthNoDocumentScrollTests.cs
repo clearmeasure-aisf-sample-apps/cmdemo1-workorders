@@ -19,7 +19,7 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
         await AssertDocumentFitsAsync("/login");
 
         await LoginAsCurrentUser();
-        var number = await SeedWorkOrderAsync();
+        string number = await SeedWorkOrderAsync();
 
         await OpenAndAssertFitsAsync("/", Page.GetByTestId(nameof(HomePage.Elements.HomeTagline)));
         await OpenAndAssertFitsAsync("/workorder/search", Page.Locator(".table-scroll"));
@@ -74,7 +74,7 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
 
     private async Task AssertDocumentFitsAsync(string url)
     {
-        var measured = await Page.EvaluateAsync<string>(
+        string measured = await Page.EvaluateAsync<string>(
             """
             () => {
                 let widest = '';
@@ -90,24 +90,24 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
                 return document.documentElement.scrollWidth + ':' + window.innerWidth + ':' + widest;
             }
             """);
-        var parts = measured.Split(':');
+        string[] parts = measured.Split(':');
         parts[0].ShouldBe(parts[1], $"{url} widest={parts[2]}");
     }
 
     private async Task AssertScrollsInsideAsync(string selector)
     {
-        var scrollsInside = await Page.Locator(selector).EvaluateAsync<bool>(
+        bool scrollsInside = await Page.Locator(selector).EvaluateAsync<bool>(
             "element => element.scrollWidth > element.clientWidth");
         scrollsInside.ShouldBeTrue();
     }
 
     private async Task AssertTopBarWrapsAsync()
     {
-        var wraps = await Page.Locator(".header-content").EvaluateAsync<bool>(
+        bool wraps = await Page.Locator(".header-content").EvaluateAsync<bool>(
             "element => getComputedStyle(element).flexWrap === 'wrap'");
         wraps.ShouldBeTrue();
 
-        var inside = await Page.EvaluateAsync<bool>(
+        bool inside = await Page.EvaluateAsync<bool>(
             """
             () => {
                 const limit = window.innerWidth + 1;
@@ -120,7 +120,7 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
 
     private async Task<string> SeedWorkOrderAsync()
     {
-        var number = TestData.Number("P");
+        string number = TestData.Number("P");
         await using var context = TestHost.NewDbContext();
         context.Attach(CurrentUser);
         context.Add(new WorkOrder

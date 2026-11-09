@@ -21,9 +21,9 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         var clock = TestData.FixedClock(Now);
         var today = ChurchTimeZone.Today(clock);
         var since = clock.GetUtcNow().DateTime.AddDays(-30);
-        var creatorName = TestData.UserName("ewls_creator");
-        var workerName = TestData.UserName("ewls_worker");
-        var idleName = TestData.UserName("ewls_idle");
+        string creatorName = TestData.UserName("ewls_creator");
+        string workerName = TestData.UserName("ewls_worker");
+        string idleName = TestData.UserName("ewls_idle");
 
         var creator = new Employee(creatorName, "Cre", "Ator", TestData.Email(creatorName));
         creator.AddRole(new Role("Creator", true, false));
@@ -54,7 +54,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
 
             budget.ReaderCount.ShouldBe(1, budget.Describe());
             budget.OtherCount.ShouldBe(0);
-            var sql = budget.CommandTexts.Single();
+            string sql = budget.CommandTexts.Single();
             sql.ShouldContain("GROUP BY");
             sql.ShouldContain("SUM(");
         }

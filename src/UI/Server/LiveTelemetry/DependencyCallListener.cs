@@ -131,7 +131,7 @@ public sealed class DependencyCallListener(LiveTelemetryCounters counters) :
     /// </summary>
     internal void OnSqlClientEvent(string name, object? payload)
     {
-        if (!TryReadOperation(payload, out var operationId, out var timestamp))
+        if (!TryReadOperation(payload, out var operationId, out long timestamp))
         {
             return;
         }
@@ -180,7 +180,7 @@ public sealed class DependencyCallListener(LiveTelemetryCounters counters) :
 
     private static bool IsTelemetryIngestionHost(string host)
     {
-        foreach (var suffix in TelemetryIngestionHostSuffixes)
+        foreach (string suffix in TelemetryIngestionHostSuffixes)
         {
             if (host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
             {
@@ -205,7 +205,7 @@ public sealed class DependencyCallListener(LiveTelemetryCounters counters) :
             return false;
         }
 
-        var found = 0;
+        int found = 0;
         foreach (var field in fields)
         {
             switch (field)

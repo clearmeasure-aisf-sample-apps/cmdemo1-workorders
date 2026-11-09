@@ -6,12 +6,12 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -78,9 +78,9 @@ public class ApplicationChatTests
 
         var component = ctx.Render<ApplicationChat>();
 
-        for (var i = 0; i < 12; i++)
+        for (int i = 0; i < 12; i++)
         {
-            var prompt = $"Prompt {i}";
+            string prompt = $"Prompt {i}";
             await component.Find($"[data-testid='{ApplicationChat.Elements.ChatInput}']").ChangeAsync(new() { Value = prompt });
             await component.Find($"[data-testid='{ApplicationChat.Elements.SendButton}']").ClickAsync(new());
             await component.WaitForAssertionAsync(() =>
@@ -131,18 +131,18 @@ public class ApplicationChatTests
 
         component.Find($"[data-testid='{ApplicationChat.Elements.SendButton}']").GetAttribute("class")
             .ShouldBe("btn-app btn-app--primary");
-        var cardClass = component.Find($"[data-testid='{ApplicationChat.Elements.ChatContainer}']").GetAttribute("class") ?? "";
+        string cardClass = component.Find($"[data-testid='{ApplicationChat.Elements.ChatContainer}']").GetAttribute("class") ?? "";
         cardClass.ShouldContain("token-card");
     }
 
     [Test]
     public void ShouldKeepAssistantStylesheetFreeOfHexColours()
     {
-        var path = Path.GetFullPath(Path.Combine(
+        string path = Path.GetFullPath(Path.Combine(
             NUnit.Framework.TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI.Shared", "Pages", "ApplicationChat.razor.css"));
         File.Exists(path).ShouldBeTrue($"Expected scoped stylesheet at {path}");
-        var css = File.ReadAllText(path);
+        string css = File.ReadAllText(path);
 
         Regex.IsMatch(css, "#[0-9a-fA-F]{3,8}").ShouldBeFalse();
         css.ShouldNotContain("rgba(");

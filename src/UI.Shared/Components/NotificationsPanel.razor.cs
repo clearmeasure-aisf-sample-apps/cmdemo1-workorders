@@ -79,30 +79,47 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     private static string GetDueUrgency(WorkOrder order)
     {
         if (order.DueDate == null)
+        {
             return "none";
+        }
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         if (order.DueDate < today)
+        {
             return "overdue";
+        }
+
         if (order.DueDate == today)
+        {
             return "due-today";
+        }
+
         return "upcoming";
     }
 
     private static string GetDueDateText(DateOnly? dueDate)
     {
         if (dueDate == null)
+        {
             return "No due date";
+        }
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         if (dueDate == today)
+        {
             return "Due today";
-        if (dueDate < today)
-            return "Overdue";
+        }
 
-        var daysUntil = (dueDate.Value.DayNumber - today.DayNumber);
+        if (dueDate < today)
+        {
+            return "Overdue";
+        }
+
+        int daysUntil = (dueDate.Value.DayNumber - today.DayNumber);
         if (daysUntil == 1)
+        {
             return "Due tomorrow";
+        }
 
         return dueDate.Value.ToString("M/d");
     }

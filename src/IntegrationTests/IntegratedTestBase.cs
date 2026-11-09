@@ -1,4 +1,4 @@
-﻿namespace ClearMeasure.Bootcamp.IntegrationTests;
+namespace ClearMeasure.Bootcamp.IntegrationTests;
 
 public class IntegratedTestBase
 {

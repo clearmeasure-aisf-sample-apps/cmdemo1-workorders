@@ -45,7 +45,7 @@ public class DatabaseMigrationVersionReaderTests
         await InsertAsync(@"D:\040_AddAccessNotesToWorkOrder.sql");
         await InsertAsync("notes.txt");
 
-        var version = await _reader.ReadAsync();
+        int? version = await _reader.ReadAsync();
 
         version.ShouldBe(40);
     }
@@ -56,7 +56,7 @@ public class DatabaseMigrationVersionReaderTests
         await CreateJournalAsync();
         await InsertAsync("007_Early.sql");
 
-        var version = await _reader.ReadAsync();
+        int? version = await _reader.ReadAsync();
 
         version.ShouldBe(7);
     }
@@ -66,7 +66,7 @@ public class DatabaseMigrationVersionReaderTests
     {
         await CreateJournalAsync();
 
-        var version = await _reader.ReadAsync();
+        int? version = await _reader.ReadAsync();
 
         version.ShouldBeNull();
     }
@@ -74,7 +74,7 @@ public class DatabaseMigrationVersionReaderTests
     [Test]
     public async Task Should_ReturnNull_When_JournalTableIsMissing()
     {
-        var version = await _reader.ReadAsync();
+        int? version = await _reader.ReadAsync();
 
         version.ShouldBeNull();
     }

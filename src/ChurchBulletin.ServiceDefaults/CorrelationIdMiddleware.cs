@@ -21,7 +21,7 @@ public sealed class CorrelationIdMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var correlationId = ResolveCorrelationId(context);
+        string correlationId = ResolveCorrelationId(context);
         context.Items[CorrelationIdConstants.HttpContextItemKey] = correlationId;
         context.Response.Headers[CorrelationIdConstants.HeaderName] = correlationId;
 

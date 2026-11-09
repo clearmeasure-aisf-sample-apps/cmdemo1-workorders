@@ -157,7 +157,9 @@ internal sealed record DetailedHealthEtagFingerprint
         IReadOnlyDictionary<string, object>? data)
     {
         if (data is null || data.Count == 0)
+        {
             return null;
+        }
 
         return data
             .OrderBy(kv => kv.Key, StringComparer.Ordinal)

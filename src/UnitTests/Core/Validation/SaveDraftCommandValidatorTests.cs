@@ -103,7 +103,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldPass_WhenRoomNumberIsAtEntryMaxLength()
     {
-        var roomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength);
+        string roomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength);
         var command = new SaveDraftCommand(
             new WorkOrder { Title = "T", RoomNumber = roomNumber, Creator = new Employee("c", "C", "O", "c@e.com") },
             new Employee("c", "C", "O", "c@e.com"))
@@ -117,7 +117,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldFail_WhenRoomNumberExceedsEntryMaxLength()
     {
-        var roomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength + 1);
+        string roomNumber = new string('R', WorkOrder.RoomNumberEntryMaxLength + 1);
         var command = new SaveDraftCommand(
             new WorkOrder { Title = "T", RoomNumber = roomNumber, Creator = new Employee("c", "C", "O", "c@e.com") },
             new Employee("c", "C", "O", "c@e.com"))
@@ -132,7 +132,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldPass_WhenRoomNumberUnchangedAndLong()
     {
-        var longRoomNumber = new string('R', WorkOrder.RoomNumberMaxLength);
+        string longRoomNumber = new string('R', WorkOrder.RoomNumberMaxLength);
         var command = new SaveDraftCommand(
             new WorkOrder { Title = "T", RoomNumber = longRoomNumber, Creator = new Employee("c", "C", "O", "c@e.com") },
             new Employee("c", "C", "O", "c@e.com"))

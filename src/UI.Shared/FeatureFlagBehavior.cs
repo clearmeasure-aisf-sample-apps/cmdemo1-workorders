@@ -25,7 +25,7 @@ public sealed class FeatureFlagBehavior<TRequest, TResponse>(IFeatureFlagEvaluat
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        foreach (var feature in RequiredFeatures)
+        foreach (string feature in RequiredFeatures)
         {
             if (!await evaluator.IsEnabledAsync(feature, cancellationToken))
             {

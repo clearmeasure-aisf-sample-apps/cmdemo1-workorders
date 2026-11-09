@@ -12,7 +12,7 @@ public class SystemProcessMeterTests
         var meter = new SystemProcessMeter();
         var before = meter.CpuTime;
 
-        var advanced = await Task.Run(
+        bool advanced = await Task.Run(
             () => SpinWait.SpinUntil(() => meter.CpuTime > before, TimeSpan.FromSeconds(30)));
 
         advanced.ShouldBeTrue();
@@ -24,7 +24,7 @@ public class SystemProcessMeterTests
     {
         var meter = new SystemProcessMeter();
 
-        var threads = await Task.Run(() => meter.ThreadPoolThreads);
+        int threads = await Task.Run(() => meter.ThreadPoolThreads);
 
         threads.ShouldBeGreaterThan(0);
         meter.ProcessorCount.ShouldBe(Environment.ProcessorCount);

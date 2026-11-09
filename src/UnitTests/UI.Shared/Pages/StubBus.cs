@@ -119,7 +119,11 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
         if (request is SaveSearchViewCommand save)
         {
             LastSaveCommand = save;
-            if (ThrowOnSaveCommand) throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            if (ThrowOnSaveCommand)
+            {
+                throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            }
+
             if (SaveResult.Succeeded)
             {
                 SavedViews.Add(new SavedSearchView { Name = save.Name, Query = save.Query });
@@ -131,7 +135,11 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
         if (request is DeleteSearchViewCommand delete)
         {
             LastDeleteCommand = delete;
-            if (ThrowOnDeleteCommand) throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            if (ThrowOnDeleteCommand)
+            {
+                throw new InvalidOperationException("Invalid object name 'dbo.SavedSearchView'.");
+            }
+
             SavedViews.RemoveAll(v => v.Id == delete.Id);
             return Task.FromResult<TResponse>((TResponse)(object)SavedSearchViewResult.Success);
         }

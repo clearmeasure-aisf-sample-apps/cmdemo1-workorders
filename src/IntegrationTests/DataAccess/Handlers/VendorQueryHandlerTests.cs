@@ -43,7 +43,7 @@ public class VendorQueryHandlerTests
     [Test]
     public async Task ShouldPersistAllVendorFields()
     {
-        var name = VendorName("Acme Heating");
+        string name = VendorName("Acme Heating");
         var result = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
             .Handle(new CreateVendorCommand($" {name} ", "HVAC", "Pat Smith", "pat@acme.test", "555-0100"));
 
@@ -62,7 +62,7 @@ public class VendorQueryHandlerTests
     [Test]
     public async Task ShouldFail_WhenVendorNameDuplicatesIgnoringCase()
     {
-        var name = VendorName("Acme");
+        string name = VendorName("Acme");
         (await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
             .Handle(new CreateVendorCommand(name, null, null, null, null))).Succeeded.ShouldBeTrue();
 

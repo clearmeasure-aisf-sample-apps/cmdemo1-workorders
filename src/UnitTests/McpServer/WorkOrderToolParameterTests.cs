@@ -155,7 +155,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldValidateBuildingAtMaxLength()
     {
-        var exactLength = new string('x', WorkOrder.BuildingMaxLength);
+        string exactLength = new string('x', WorkOrder.BuildingMaxLength);
         var (result, error) = WorkOrderTools.ValidateBuilding(exactLength);
 
         result.ShouldBe(exactLength);
@@ -165,7 +165,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldRejectBuildingExceedingMaxLength()
     {
-        var tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
+        string tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
         var (_, error) = WorkOrderTools.ValidateBuilding(tooLong);
 
         error!.ShouldContain("Building cannot exceed");
@@ -175,7 +175,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldValidateBuildingBoundaryAt100Characters()
     {
-        var exactly100 = new string('a', 100);
+        string exactly100 = new string('a', 100);
         var (result, error) = WorkOrderTools.ValidateBuilding(exactly100);
 
         result.ShouldBe(exactly100);
@@ -185,7 +185,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldRejectBuildingAt101Characters()
     {
-        var exactly101 = new string('a', 101);
+        string exactly101 = new string('a', 101);
         var (_, error) = WorkOrderTools.ValidateBuilding(exactly101);
 
         error.ShouldNotBeNull();
@@ -224,7 +224,7 @@ public class WorkOrderToolParameterTests
             Creator = new Employee("jsmith", "Jane", "Smith", "jane@test.com")
         };
 
-        var message = WorkOrderTools.FormatUpdateNotAllowed(workOrder);
+        string message = WorkOrderTools.FormatUpdateNotAllowed(workOrder);
 
         message.ShouldContain("cannot be executed");
         message.ShouldContain("'Assigned' status");

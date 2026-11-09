@@ -30,7 +30,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         {
             if (!IsAuthenticated())
             {
-                var username = await _userSessionStore.GetAsync();
+                string? username = await _userSessionStore.GetAsync();
                 if (!string.IsNullOrEmpty(username))
                 {
                     _currentUser = CreatePrincipal(username);

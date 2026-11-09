@@ -1,9 +1,9 @@
+using System.Threading.RateLimiting;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Shouldly;
-using System.Threading.RateLimiting;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 
@@ -13,7 +13,7 @@ public class RateLimitingMiddlewareTests
     [Test]
     public async Task InvokeAsync_CallsNext_WhenEndpointHasNoRateLimitAttribute()
     {
-        var called = false;
+        bool called = false;
 
         Task Next(HttpContext _)
         {

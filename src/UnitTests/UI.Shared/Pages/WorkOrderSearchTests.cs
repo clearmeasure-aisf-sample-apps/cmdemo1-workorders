@@ -5,12 +5,12 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
-using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
+using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -190,7 +190,7 @@ public class WorkOrderSearchTests
 
     private static void AssertLabelForMatchesSelectId(IRenderedComponent<WorkOrderSearch> component, WorkOrderSearch.Elements element)
     {
-        var id = element.ToString();
+        string id = element.ToString();
         var select = component.Find($"#{id}");
         select.ShouldNotBeNull();
         var label = component.Find($"label[for='{id}']");
@@ -219,7 +219,7 @@ public class WorkOrderSearchTests
         await using var ctx = CreateContext();
 
         var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
-        var uri = navigationManager.GetUriWithQueryParameter("Creator", "somename");
+        string uri = navigationManager.GetUriWithQueryParameter("Creator", "somename");
         navigationManager.NavigateTo(uri);
 
         // Act
@@ -237,7 +237,7 @@ public class WorkOrderSearchTests
         await using var ctx = CreateContext();
 
         var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
-        var uri = navigationManager.GetUriWithQueryParameter("Assignee", "somename");
+        string uri = navigationManager.GetUriWithQueryParameter("Assignee", "somename");
         navigationManager.NavigateTo(uri);
 
         // Act
@@ -255,7 +255,7 @@ public class WorkOrderSearchTests
         await using var ctx = CreateContext();
 
         var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
-        var uri = navigationManager.GetUriWithQueryParameter("Status", WorkOrderStatus.Assigned.Key);
+        string uri = navigationManager.GetUriWithQueryParameter("Status", WorkOrderStatus.Assigned.Key);
         navigationManager.NavigateTo(uri);
 
         // Act
@@ -471,7 +471,7 @@ public class WorkOrderSearchTests
         await assigneeSelect.ChangeAsync(new() { Value = "hsimpson" });
         await statusSelect.ChangeAsync(new() { Value = WorkOrderStatus.InProgress.Key });
 
-        var sendCountBeforeClear = stubBus.SendCallCount;
+        int sendCountBeforeClear = stubBus.SendCallCount;
 
         // Click clear
         var clearButton = component.Find($"#{WorkOrderSearch.Elements.ClearFiltersButton}");
@@ -751,7 +751,7 @@ public class WorkOrderSearchTests
         var query = new WorkOrderSpecificationQuery();
         query.MatchOverdueOnly(true);
 
-        var json = System.Text.Json.JsonSerializer.Serialize(query);
+        string json = System.Text.Json.JsonSerializer.Serialize(query);
         var rehydrated = System.Text.Json.JsonSerializer.Deserialize<WorkOrderSpecificationQuery>(json);
 
         rehydrated.ShouldNotBeNull();
@@ -775,7 +775,7 @@ public class WorkOrderSearchTests
         await using var ctx = CreateContext(bus);
         var navigation = ctx.Services.GetRequiredService<NavigationManager>();
         var component = ctx.Render<WorkOrderSearch>();
-        var sendsBefore = bus.SendCallCount;
+        int sendsBefore = bus.SendCallCount;
 
         await component.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").ChangeAsync(new() { Value = "tlovejoy" });
 
@@ -793,7 +793,7 @@ public class WorkOrderSearchTests
         var navigation = ctx.Services.GetRequiredService<NavigationManager>();
         navigation.NavigateTo("workorder/search?Creator=tlovejoy");
         var component = ctx.Render<WorkOrderSearch>();
-        var sendsBefore = bus.SendCallCount;
+        int sendsBefore = bus.SendCallCount;
 
         await component.Find($"#{WorkOrderSearch.Elements.RoomInput}").ChangeAsync(new() { Value = "101" });
 
@@ -940,7 +940,7 @@ public class WorkOrderSearchTests
         await using var ctx = CreateContext(bus, searchState: new WorkOrderSearchState { AssignedToMe = true });
         var navigation = (BunitNavigationManager)ctx.Services.GetRequiredService<NavigationManager>();
         navigation.NavigateTo("workorder/search");
-        var historyBefore = navigation.History.Count;
+        int historyBefore = navigation.History.Count;
 
         ctx.Render<WorkOrderSearch>();
 
@@ -1198,7 +1198,10 @@ public class WorkOrderSearchTests
     {
         var order = new WorkOrder
         {
-            Number = "WO-AS", Title = "Organ", Status = WorkOrderStatus.Assigned, Priority = WorkOrderPriority.High,
+            Number = "WO-AS",
+            Title = "Organ",
+            Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High,
             Assignee = new Employee("gwillie", "Groundskeeper", "Willie", "g@x")
         };
         await using var ctx = CreateContext(new StubBus([order]));
@@ -1217,7 +1220,10 @@ public class WorkOrderSearchTests
     {
         var order = new WorkOrder
         {
-            Number = "WO-HI", Title = "Roof", Status = WorkOrderStatus.Assigned, Priority = WorkOrderPriority.High
+            Number = "WO-HI",
+            Title = "Roof",
+            Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High
         };
         await using var ctx = CreateContext(new StubBus([order]));
 
@@ -1235,7 +1241,10 @@ public class WorkOrderSearchTests
     {
         var order = new WorkOrder
         {
-            Number = "WO-HI", Title = "Roof", Status = WorkOrderStatus.Assigned, Priority = WorkOrderPriority.High
+            Number = "WO-HI",
+            Title = "Roof",
+            Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High
         };
         var flags = new StubFeatureFlags(showPriorityBadges: false);
         await using var ctx = CreateContext(new StubBus([order]), featureFlags: flags);
@@ -1251,11 +1260,17 @@ public class WorkOrderSearchTests
     {
         var low = new WorkOrder
         {
-            Number = "WO-LO", Title = "Low", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.Low
+            Number = "WO-LO",
+            Title = "Low",
+            Status = WorkOrderStatus.Draft,
+            Priority = WorkOrderPriority.Low
         };
         var medium = new WorkOrder
         {
-            Number = "WO-MD", Title = "Med", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.Medium
+            Number = "WO-MD",
+            Title = "Med",
+            Status = WorkOrderStatus.Draft,
+            Priority = WorkOrderPriority.Medium
         };
         await using var ctx = CreateContext(new StubBus([low, medium]));
 
@@ -1423,7 +1438,7 @@ public class WorkOrderSearchTests
 
         var invocation = module.VerifyInvoke("downloadCsv");
         invocation.Arguments[0]!.ToString()!.ShouldStartWith("work-orders-");
-        var csv = invocation.Arguments[1]!.ToString()!;
+        string csv = invocation.Arguments[1]!.ToString()!;
         csv.ShouldContain("WO-KEEP");
         csv.ShouldNotContain("WO-DROP");
         csv.ShouldContain("\"Say \"\"hi\"\", now\"");
@@ -1501,7 +1516,7 @@ public class WorkOrderSearchTests
         var navigation = ctx.Services.GetRequiredService<NavigationManager>();
         var component = ctx.Render<WorkOrderSearch>();
         component.Find($"[data-testid='{WorkOrderSearch.Elements.ResultsCountPill}']").TextContent.ShouldBe("25 of 30");
-        var sendsBefore = bus.SendCallCount;
+        int sendsBefore = bus.SendCallCount;
 
         await component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardViewButton}']").ClickAsync(new());
 
@@ -1562,7 +1577,7 @@ public class WorkOrderSearchTests
         await using var ctx = CreateContext();
         var navigation = (BunitNavigationManager)ctx.Services.GetRequiredService<NavigationManager>();
         var component = ctx.Render<WorkOrderSearch>();
-        var historyBefore = navigation.History.Count;
+        int historyBefore = navigation.History.Count;
 
         await component.Find($"[data-testid='{WorkOrderSearch.Elements.TableViewButton}']").ClickAsync(new());
 
@@ -1591,7 +1606,7 @@ public class WorkOrderSearchTests
         await using var ctx = CreateContext();
         var navigation = ctx.Services.GetRequiredService<NavigationManager>();
         var component = ctx.Render<WorkOrderSearch>();
-        var tableHref = component.Find($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}WO-001']").GetAttribute("href");
+        string? tableHref = component.Find($"[data-testid='{WorkOrderSearch.Elements.WorkOrderLink}WO-001']").GetAttribute("href");
 
         navigation.NavigateTo("workorder/search?View=Board");
 
@@ -1612,7 +1627,7 @@ public class WorkOrderSearchTests
         component.FindAll(".board-column").Count.ShouldBe(5);
         component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}Draft']").TextContent.ShouldBe("30");
         component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}Draft']").Count.ShouldBe(0);
-        foreach (var key in new[] { "Assigned", "InProgress", "Complete", "Cancelled" })
+        foreach (string? key in new[] { "Assigned", "InProgress", "Complete", "Cancelled" })
         {
             component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}{key}']").TextContent.ShouldBe("No work orders");
             component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}{key}']").TextContent.ShouldBe("0");
@@ -1666,7 +1681,10 @@ public class WorkOrderSearchTests
     {
         var order = new WorkOrder
         {
-            Number = "WO-HI", Title = "Roof", Status = WorkOrderStatus.Assigned, Priority = WorkOrderPriority.High
+            Number = "WO-HI",
+            Title = "Roof",
+            Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High
         };
         await using var ctx = CreateContext(new StubBus([order]));
         ctx.Services.GetRequiredService<NavigationManager>().NavigateTo("workorder/search?View=Board");
@@ -1794,7 +1812,7 @@ public class WorkOrderSearchTests
     private static WorkOrder[] OrdersPerStatus(int perStatus)
     {
         var statuses = WorkOrderStatus.GetAllItems();
-        var total = statuses.Length * perStatus;
+        int total = statuses.Length * perStatus;
         var willie = new Employee("gwillie", "Groundskeeper", "Willie", "willie@example.com");
         return Enumerable.Range(1, total)
             .Select(n => new WorkOrder

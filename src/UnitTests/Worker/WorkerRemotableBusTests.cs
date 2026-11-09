@@ -34,7 +34,7 @@ public class WorkerRemotableBusTests
         var handler = new StubHttpMessageHandler(expected);
         var bus = new RemotableBus(new HttpClient(handler) { BaseAddress = new Uri("http://localhost/") }, "api/bus");
 
-        var result = await bus.Send((object)new TestRemotableRequest());
+        object? result = await bus.Send((object)new TestRemotableRequest());
 
         result.ShouldBeOfType<TestRemotableResponse>().Value.ShouldBe("object-ok");
     }

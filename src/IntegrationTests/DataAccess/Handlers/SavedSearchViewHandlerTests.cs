@@ -26,7 +26,7 @@ public class SavedSearchViewHandlerTests
 
     private static Employee NewEmployee(string prefix, string lastName)
     {
-        var userName = TestData.UserName(prefix);
+        string userName = TestData.UserName(prefix);
         return new Employee(userName, "Saved", lastName, TestData.Email(userName));
     }
 
@@ -98,7 +98,7 @@ public class SavedSearchViewHandlerTests
     [Test]
     public async Task Save_TwentyFirstView_Fails()
     {
-        for (var i = 1; i <= SavedSearchView.MaxViewsPerEmployee; i++)
+        for (int i = 1; i <= SavedSearchView.MaxViewsPerEmployee; i++)
         {
             (await NewHandler().Handle(new SaveSearchViewCommand(_owner.UserName, $"View {i}", $"Q={i}"))).Succeeded.ShouldBeTrue();
         }

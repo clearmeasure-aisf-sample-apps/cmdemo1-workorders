@@ -1,8 +1,8 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
-using Grpc.Core;
 using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
 
 namespace ClearMeasure.Bootcamp.UI.Server.Grpc;
 

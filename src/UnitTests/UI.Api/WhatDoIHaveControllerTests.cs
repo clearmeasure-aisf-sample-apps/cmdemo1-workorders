@@ -13,7 +13,7 @@ public class WhatDoIHaveControllerTests
         using var container = new Container(_ => { });
         var controller = new WhatDoIHaveController();
 
-        var result = controller.Services(container);
+        string result = controller.Services(container);
 
         result.ShouldNotBeNullOrEmpty();
         result.ShouldContain("Lamar");
@@ -25,7 +25,7 @@ public class WhatDoIHaveControllerTests
         using var container = new Container(_ => { });
         var controller = new WhatDoIHaveController();
 
-        var result = controller.Scanning(container);
+        string result = controller.Scanning(container);
 
         result.ShouldNotBeNullOrEmpty();
     }

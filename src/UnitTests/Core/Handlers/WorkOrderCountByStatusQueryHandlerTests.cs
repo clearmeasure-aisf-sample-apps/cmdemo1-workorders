@@ -16,7 +16,7 @@ public class WorkOrderCountByStatusQueryHandlerTests
     [SetUp]
     public void SetUp()
     {
-        var dbPath = Path.Combine(Path.GetTempPath(), $"wocbs_test_{Guid.NewGuid():N}.db");
+        string dbPath = Path.Combine(Path.GetTempPath(), $"wocbs_test_{Guid.NewGuid():N}.db");
         _context = new DataContext(new FileDbConfig($"Data Source={dbPath}"));
         _context.Database.EnsureCreated();
     }

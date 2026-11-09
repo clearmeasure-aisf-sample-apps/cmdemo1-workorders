@@ -17,11 +17,11 @@ public class ProblemDetailsWebTests
         var response = await client.GetAsync("/api/v2.0/health");
 
         response.IsSuccessStatusCode.ShouldBeFalse();
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/problem+json");
 
-        var json = await response.Content.ReadAsStringAsync();
+        string json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
         doc.RootElement.TryGetProperty("status", out var statusProp).ShouldBeTrue();
         statusProp.GetInt32().ShouldBe((int)response.StatusCode);
@@ -38,11 +38,11 @@ public class ProblemDetailsWebTests
         var response = await client.GetAsync("/api/v1.0/does-not-exist-" + Guid.NewGuid().ToString("N"));
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/problem+json");
 
-        var json = await response.Content.ReadAsStringAsync();
+        string json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
         doc.RootElement.GetProperty("status").GetInt32().ShouldBe(StatusCodes.Status404NotFound);
     }

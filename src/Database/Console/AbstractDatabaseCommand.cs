@@ -13,7 +13,7 @@ public abstract class AbstractDatabaseCommand : Command<DatabaseOptions>
 
     public override int Execute(CommandContext context, DatabaseOptions options, CancellationToken cancellationToken)
     {
-        var connectionString = GetConnectionString(options);
+        string connectionString = GetConnectionString(options);
         try
         {
             EnsureDatabase.For.SqlDatabase(connectionString, DatabaseUpgradeLogSelector.ForOptions(options));

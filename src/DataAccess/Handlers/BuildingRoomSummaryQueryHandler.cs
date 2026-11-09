@@ -37,8 +37,11 @@ public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider t
 
             rooms.Add(new RoomSummary
             {
-                Room = count.Room, OpenCount = count.Open, OverdueCount = count.Overdue,
-                CompletedLast30Days = count.Completed, TotalCount = count.Total
+                Room = count.Room,
+                OpenCount = count.Open,
+                OverdueCount = count.Overdue,
+                CompletedLast30Days = count.Completed,
+                TotalCount = count.Total
             });
         }
 

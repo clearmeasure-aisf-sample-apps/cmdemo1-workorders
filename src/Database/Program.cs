@@ -1,4 +1,4 @@
-﻿using ClearMeasure.Bootcamp.Database.Console;
+using ClearMeasure.Bootcamp.Database.Console;
 using Spectre.Console.Cli;
 
 var app = new CommandApp();
@@ -9,7 +9,7 @@ app.Configure(config =>
 
     config.AddCommand<BaselineDatabaseCommand>("baseline")
         .WithDescription("Mark all existing scripts as executed without running them (for existing databases)");
-    
+
     config.AddCommand<RebuildDatabaseCommand>("rebuild")
         .WithDescription("Rebuild the database by running Create, Update, Everytime, and TestData scripts");
 

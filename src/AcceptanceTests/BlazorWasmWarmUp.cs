@@ -48,7 +48,7 @@ public class BlazorWasmWarmUp
         var jsErrors = new List<string>();
         page.PageError += (_, error) => jsErrors.Add(error);
 
-        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        for (int attempt = 1; attempt <= MaxAttempts; attempt++)
         {
             jsErrors.Clear();
             TestContext.Out.WriteLine($"Blazor WASM warm-up: attempt {attempt}/{MaxAttempts}");
@@ -74,7 +74,7 @@ public class BlazorWasmWarmUp
                 TestContext.Out.WriteLine(
                     $"Blazor WASM warm-up: LoginLink not visible after {TimeoutSeconds}s. " +
                     $"JS errors captured: {jsErrors.Count}");
-                foreach (var error in jsErrors)
+                foreach (string error in jsErrors)
                 {
                     TestContext.Out.WriteLine($"  JS error: {error}");
                 }

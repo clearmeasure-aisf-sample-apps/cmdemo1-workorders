@@ -15,8 +15,8 @@ public abstract record StateCommandBase(WorkOrder WorkOrder, Employee CurrentUse
 
     public bool IsValid()
     {
-        var beginStatusMatches = WorkOrder.Status == GetBeginStatus();
-        var currentUserIsCorrectRole = UserCanExecute(CurrentUser);
+        bool beginStatusMatches = WorkOrder.Status == GetBeginStatus();
+        bool currentUserIsCorrectRole = UserCanExecute(CurrentUser);
         return beginStatusMatches && currentUserIsCorrectRole && IsAllowedInCurrentState();
     }
 

@@ -1,3 +1,4 @@
+using System.ClientModel;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.LlmGateway;
@@ -5,7 +6,6 @@ using MediatR;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
-using System.ClientModel;
 
 namespace ClearMeasure.Bootcamp.UnitTests.LlmGateway;
 

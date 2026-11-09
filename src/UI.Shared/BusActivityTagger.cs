@@ -14,7 +14,7 @@ internal static class BusActivityTagger
             if (IsScalarProperty(property.PropertyType)
                 && property.GetCustomAttribute<ExcludeFromBusActivityAttribute>() == null)
             {
-                var propertyValue = property.GetValue(message);
+                object? propertyValue = property.GetValue(message);
                 activity.SetTag($"bus.message.{property.Name}", propertyValue?.ToString() ?? string.Empty);
             }
         }

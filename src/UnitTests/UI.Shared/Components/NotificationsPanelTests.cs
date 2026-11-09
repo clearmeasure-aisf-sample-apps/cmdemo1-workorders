@@ -281,7 +281,7 @@ public class NotificationsPanelTests
     {
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-        var closed = 0;
+        int closed = 0;
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []))
@@ -312,7 +312,7 @@ public class NotificationsPanelTests
     {
         await using var ctx = new BunitContext();
         SetupJsInterop(ctx);
-        var closed = false;
+        bool closed = false;
         var workOrder = new WorkOrder { Number = "WO-1", Title = "Fix", Status = WorkOrderStatus.Assigned };
 
         var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p

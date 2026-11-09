@@ -17,14 +17,14 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldChangeTitleAndClearDueDateWhilePreservingOtherFields()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         const string instructions = "Check preschool gate latch before mowing";
         const string room = "Front lawn";
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "mow front grass",
@@ -34,10 +34,10 @@ public class McpSaveWorkOrderTests
             dueDate: "2027-06-15",
             instructions: instructions);
 
-        var number = ExtractWorkOrderNumber(createResult);
+        string? number = ExtractWorkOrderNumber(createResult);
         number.ShouldNotBeNullOrWhiteSpace();
 
-        var saveResult = await WorkOrderTools.SaveWorkOrder(
+        string saveResult = await WorkOrderTools.SaveWorkOrder(
             bus,
             number,
             creatorUserName,
@@ -61,7 +61,7 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldLeaveOmittedFieldsUnchangedWhenOnlyRoomNumberProvided()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
@@ -70,7 +70,7 @@ public class McpSaveWorkOrderTests
         const string instructions = "Original instructions";
         var dueDate = new DateOnly(2027, 6, 15);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             title,
@@ -80,7 +80,7 @@ public class McpSaveWorkOrderTests
             dueDate: dueDate.ToString("yyyy-MM-dd"),
             instructions: instructions);
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
         await WorkOrderTools.SaveWorkOrder(bus, number, creatorUserName, roomNumber: "Room B");
 
@@ -95,12 +95,12 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldPersistEmptyDescriptionInstructionsAndRoom()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Has content",
@@ -109,7 +109,7 @@ public class McpSaveWorkOrderTests
             roomNumber: "Room 101",
             instructions: "Has instructions");
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
         await WorkOrderTools.SaveWorkOrder(
             bus,
@@ -129,20 +129,20 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldPersistValidDueDate()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         var expectedDueDate = new DateOnly(2026, 11, 15);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Due date save",
             "Description",
             creatorUserName);
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
         await WorkOrderTools.SaveWorkOrder(
             bus,
@@ -157,13 +157,13 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldRejectInvalidDueDateWithoutChangingStoredDueDate()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         var originalDueDate = new DateOnly(2027, 6, 15);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Invalid due date",
@@ -171,9 +171,9 @@ public class McpSaveWorkOrderTests
             creatorUserName,
             dueDate: originalDueDate.ToString("yyyy-MM-dd"));
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
-        var result = await WorkOrderTools.SaveWorkOrder(
+        string result = await WorkOrderTools.SaveWorkOrder(
             bus,
             number,
             creatorUserName,
@@ -188,13 +188,13 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldRejectEmptyTitleWithoutChangingStoredRow()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         var originalDueDate = new DateOnly(2027, 6, 15);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Keep this title",
@@ -202,9 +202,9 @@ public class McpSaveWorkOrderTests
             creatorUserName,
             dueDate: originalDueDate.ToString("yyyy-MM-dd"));
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
-        var result = await WorkOrderTools.SaveWorkOrder(
+        string result = await WorkOrderTools.SaveWorkOrder(
             bus,
             number,
             creatorUserName,
@@ -220,13 +220,13 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldRejectWhitespaceTitleAndNotPersistDueDateInSameCall()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
         var originalDueDate = new DateOnly(2027, 6, 15);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Keep this title",
@@ -234,9 +234,9 @@ public class McpSaveWorkOrderTests
             creatorUserName,
             dueDate: originalDueDate.ToString("yyyy-MM-dd"));
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
-        var result = await WorkOrderTools.SaveWorkOrder(
+        string result = await WorkOrderTools.SaveWorkOrder(
             bus,
             number,
             creatorUserName,
@@ -253,23 +253,23 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldTruncateInstructionsTo4000Characters()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var longInstructions = new string('x', WorkOrder.InstructionsMaxLength + 1);
-        var expected = new string('x', WorkOrder.InstructionsMaxLength);
+        string longInstructions = new string('x', WorkOrder.InstructionsMaxLength + 1);
+        string expected = new string('x', WorkOrder.InstructionsMaxLength);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Truncate instructions",
             "Description",
             creatorUserName);
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
-        var saveResult = await WorkOrderTools.SaveWorkOrder(
+        string saveResult = await WorkOrderTools.SaveWorkOrder(
             bus,
             number,
             creatorUserName,
@@ -285,22 +285,22 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldRejectRoomNumberLongerThan50CharactersOnNewWorkOrder()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var tooLongRoom = new string('r', WorkOrder.RoomNumberEntryMaxLength + 1);
+        string tooLongRoom = new string('r', WorkOrder.RoomNumberEntryMaxLength + 1);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Reject long room",
             "Description",
             creatorUserName);
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
-        var result = await WorkOrderTools.SaveWorkOrder(bus, number, creatorUserName, roomNumber: tooLongRoom);
+        string result = await WorkOrderTools.SaveWorkOrder(bus, number, creatorUserName, roomNumber: tooLongRoom);
 
         result.ShouldContain("cannot exceed");
 
@@ -311,13 +311,13 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldAllowPreservingLongRoomNumberViaMcpOnExistingWorkOrder()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var longRoom = new string('r', WorkOrder.RoomNumberMaxLength);
+        string longRoom = new string('r', WorkOrder.RoomNumberMaxLength);
 
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Preserve long room",
@@ -325,7 +325,7 @@ public class McpSaveWorkOrderTests
             creatorUserName,
             roomNumber: null);
 
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
         var legacy = (await bus.Send(new WorkOrderByNumberQuery(number)))!;
         legacy.RoomNumber = longRoom;
         await bus.Send(new SaveDraftCommand(legacy, legacy.Creator!) { PreviousRoomNumber = longRoom });
@@ -340,8 +340,8 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldFailForAssignedWorkOrderWithoutChangingFields()
     {
-        var creatorUserName = TestData.UserName("creator");
-        var workOrderNumber = TestData.Number("W");
+        string creatorUserName = TestData.UserName("creator");
+        string workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Smith", "jane@test.com");
         var assignedOrder = new WorkOrder
@@ -362,7 +362,7 @@ public class McpSaveWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.SaveWorkOrder(
+        string result = await WorkOrderTools.SaveWorkOrder(
             bus,
             workOrderNumber,
             creatorUserName,
@@ -383,8 +383,8 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldFailForCompleteWorkOrderWithoutChangingFields()
     {
-        var creatorUserName = TestData.UserName("creator");
-        var workOrderNumber = TestData.Number("W");
+        string creatorUserName = TestData.UserName("creator");
+        string workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Smith", "jane@test.com");
         var completeOrder = new WorkOrder
@@ -401,7 +401,7 @@ public class McpSaveWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.SaveWorkOrder(
+        string result = await WorkOrderTools.SaveWorkOrder(
             bus,
             workOrderNumber,
             creatorUserName,
@@ -418,9 +418,9 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldFailForNonCreatorWithoutChangingFields()
     {
-        var creatorUserName = TestData.UserName("creator");
-        var otherUserName = TestData.UserName("other");
-        var workOrderNumber = TestData.Number("W");
+        string creatorUserName = TestData.UserName("creator");
+        string otherUserName = TestData.UserName("other");
+        string workOrderNumber = TestData.Number("W");
 
         var creator = new Employee(creatorUserName, "Jane", "Smith", "jane@test.com");
         var otherUser = new Employee(otherUserName, "Other", "User", "other@test.com");
@@ -439,7 +439,7 @@ public class McpSaveWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.SaveWorkOrder(
+        string result = await WorkOrderTools.SaveWorkOrder(
             bus,
             workOrderNumber,
             otherUserName,
@@ -454,41 +454,41 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldFailWhenWorkOrderNumberMissing()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.SaveWorkOrder(bus, string.Empty, creatorUserName, title: "New title");
+        string result = await WorkOrderTools.SaveWorkOrder(bus, string.Empty, creatorUserName, title: "New title");
         result.ShouldBe("Work order number is required.");
     }
 
     [Test]
     public async Task ShouldFailWhenWorkOrderNumberUnknown()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.SaveWorkOrder(bus, "UNKNOWN-WO", creatorUserName, title: "New title");
+        string result = await WorkOrderTools.SaveWorkOrder(bus, "UNKNOWN-WO", creatorUserName, title: "New title");
         result.ShouldBe("No work order found with number 'UNKNOWN-WO'.");
     }
 
     [Test]
     public async Task ShouldFailWhenExecutingUserUnknown()
     {
-        var creatorUserName = TestData.UserName("creator");
-        var missingUserName = TestData.UserName("missing");
+        string creatorUserName = TestData.UserName("creator");
+        string missingUserName = TestData.UserName("missing");
 
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Title",
             "Description",
             creatorUserName);
-        var number = ExtractWorkOrderNumber(createResult)!;
+        string number = ExtractWorkOrderNumber(createResult)!;
 
-        var result = await WorkOrderTools.SaveWorkOrder(bus, number, missingUserName, title: "New title");
+        string result = await WorkOrderTools.SaveWorkOrder(bus, number, missingUserName, title: "New title");
         result.ShouldBe($"Employee with username '{missingUserName}' not found.");
 
         var reloaded = await bus.Send(new WorkOrderByNumberQuery(number));
@@ -498,13 +498,13 @@ public class McpSaveWorkOrderTests
     [Test]
     public async Task ShouldRejectDescriptionLongerThan4000CharactersWhenCreatingWorkOrder()
     {
-        var creatorUserName = TestData.UserName("creator");
+        string creatorUserName = TestData.UserName("creator");
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var tooLongDescription = new string('d', WorkOrder.DescriptionMaxLength + 1);
+        string tooLongDescription = new string('d', WorkOrder.DescriptionMaxLength + 1);
 
-        var result = await WorkOrderTools.CreateWorkOrder(
+        string result = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Title",
@@ -521,7 +521,7 @@ public class McpSaveWorkOrderTests
         var field = executorType.GetField("CommandFactories", BindingFlags.NonPublic | BindingFlags.Static);
         field.ShouldNotBeNull();
 
-        var fieldValue = field.GetValue(null);
+        object? fieldValue = field.GetValue(null);
         fieldValue.ShouldNotBeNull();
 
         var factories = (IReadOnlyDictionary<string, Func<WorkOrder, Employee, StateCommandBase>>)fieldValue;

@@ -46,7 +46,7 @@ public class WorkOrdersBulkImportIntegrationTests
             await db.SaveChangesAsync();
         }
 
-        var csv = "Title,Description,CreatorUsername,RoomNumber\n"
+        string csv = "Title,Description,CreatorUsername,RoomNumber\n"
                   + "First,Desc one,bulk-user,1A\n"
                   + "Second,Desc two,bulk-user,\n";
 
@@ -56,7 +56,7 @@ public class WorkOrdersBulkImportIntegrationTests
 
         var response = await _httpClient!.PostAsync(new Uri(_httpClient.BaseAddress!, "api/v1.0/work-orders/bulk-import"), content);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var json = await response.Content.ReadAsStringAsync();
+        string json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         root.GetProperty("createdCount").GetInt32().ShouldBe(2);
@@ -64,7 +64,7 @@ public class WorkOrdersBulkImportIntegrationTests
 
         using var scope2 = _factory.Services.CreateScope();
         var db2 = scope2.ServiceProvider.GetRequiredService<DataContext>();
-        var count = await db2.Set<WorkOrder>().CountAsync(w => w.Creator!.UserName == "bulk-user");
+        int count = await db2.Set<WorkOrder>().CountAsync(w => w.Creator!.UserName == "bulk-user");
         count.ShouldBe(2);
     }
 
@@ -77,13 +77,13 @@ public class WorkOrdersBulkImportIntegrationTests
             await db.Database.EnsureCreatedAsync();
         }
 
-        var csv = "Title,Description,CreatorUsername\nT,D,nobody\n";
+        string csv = "Title,Description,CreatorUsername\nT,D,nobody\n";
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent(csv, Encoding.UTF8, "text/csv"), "file", "x.csv");
 
         var response = await _httpClient!.PostAsync(new Uri(_httpClient.BaseAddress!, "api/v1.0/work-orders/bulk-import"), content);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var json = await response.Content.ReadAsStringAsync();
+        string json = await response.Content.ReadAsStringAsync();
         json.ShouldContain("\"success\":false");
         json.ShouldContain("createdCount\":0");
     }
@@ -98,7 +98,7 @@ public class WorkOrdersBulkImportIntegrationTests
             await db.SaveChangesAsync();
         }
 
-        var csv = "Title,Description,CreatorUsername,RoomNumber,Building,Priority,DueDate\n"
+        string csv = "Title,Description,CreatorUsername,RoomNumber,Building,Priority,DueDate\n"
                   + "Seven A,Desc A,bulk-seven,2B,East Wing,high,2026-12-01\n"
                   + "Seven B,Desc B,bulk-seven,,,,\n";
         using var content = new MultipartFormDataContent();

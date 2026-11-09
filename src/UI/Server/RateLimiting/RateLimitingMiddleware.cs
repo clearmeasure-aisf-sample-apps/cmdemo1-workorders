@@ -41,7 +41,7 @@ internal static class RateLimitResponseWriter
         ApiRateLimitingOptions opts)
     {
         var stats = limiter.GetStatistics(context);
-        var remaining = stats?.CurrentAvailablePermits ?? 0;
+        long remaining = stats?.CurrentAvailablePermits ?? 0;
         context.Response.Headers[RateLimitingMiddleware.HeaderLimit] =
             opts.PermitLimit.ToString(NumberFormatInfo.InvariantInfo);
         context.Response.Headers[RateLimitingMiddleware.HeaderRemaining] =
@@ -54,7 +54,7 @@ internal static class RateLimitResponseWriter
     internal static async Task WriteRateLimitedResponseAsync(HttpContext context, ApiRateLimitingOptions opts)
     {
         context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        var retryAfter = Math.Max(1, opts.WindowSeconds);
+        int retryAfter = Math.Max(1, opts.WindowSeconds);
         context.Response.Headers.RetryAfter = retryAfter.ToString(NumberFormatInfo.InvariantInfo);
         context.Response.Headers[RateLimitingMiddleware.HeaderLimit] =
             opts.PermitLimit.ToString(NumberFormatInfo.InvariantInfo);

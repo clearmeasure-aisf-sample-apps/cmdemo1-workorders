@@ -49,7 +49,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
         const string instructions = "Watch for preschool play area";
         const string room = "Front lawn";
         const string dueDate = "2027-06-15";
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] mow front grass",
@@ -60,10 +60,10 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
                 ["dueDate"] = dueDate
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
-        var saveResult = await _helper.CallToolDirectly("save-work-order",
+        string saveResult = await _helper.CallToolDirectly("save-work-order",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber,
@@ -103,7 +103,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
     {
         await LoginAsTlovejoyAsync();
 
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] due today via save",
@@ -111,11 +111,11 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
                 ["creatorUsername"] = "tlovejoy"
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
         var today = ChurchTimeZone.Today(TimeProvider.System);
-        var todayText = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        string todayText = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         await _helper.CallToolDirectly("save-work-order",
             new Dictionary<string, object?>
@@ -146,7 +146,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
     {
         await LoginAsTlovejoyAsync();
 
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] save truncate instructions",
@@ -154,11 +154,11 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
                 ["creatorUsername"] = "tlovejoy"
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
-        var longInstructions = new string('S', WorkOrder.InstructionsMaxLength + 1);
-        var expectedInstructions = new string('S', WorkOrder.InstructionsMaxLength);
+        string longInstructions = new string('S', WorkOrder.InstructionsMaxLength + 1);
+        string expectedInstructions = new string('S', WorkOrder.InstructionsMaxLength);
 
         await _helper.CallToolDirectly("save-work-order",
             new Dictionary<string, object?>
@@ -181,7 +181,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
         await LoginAsTlovejoyAsync();
 
         const string originalTitle = "Assigned save guard";
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] {originalTitle}",
@@ -189,7 +189,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
                 ["creatorUsername"] = "tlovejoy"
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
         await _helper.CallToolDirectly("execute-work-order-command",
@@ -201,7 +201,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
                 ["assigneeUsername"] = "gwillie"
             });
 
-        var saveResult = await _helper.CallToolDirectly("save-work-order",
+        string saveResult = await _helper.CallToolDirectly("save-work-order",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber,
@@ -224,7 +224,7 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
         await LoginAsTlovejoyAsync();
 
         const string originalTitle = "Non-creator save guard";
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
                 ["title"] = $"[{TestTag}] {originalTitle}",
@@ -232,10 +232,10 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
                 ["creatorUsername"] = "tlovejoy"
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
-        var saveResult = await _helper.CallToolDirectly("save-work-order",
+        string saveResult = await _helper.CallToolDirectly("save-work-order",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber,

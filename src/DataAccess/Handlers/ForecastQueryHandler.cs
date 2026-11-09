@@ -24,7 +24,7 @@ public class ForecastQueryHandler : IRequestHandler<ForecastQuery, WeatherForeca
         public WeatherForecastData()
         {
             var forecasts = new List<WeatherForecast>();
-            for (var i = 1; i <= 5; i++)
+            for (int i = 1; i <= 5; i++)
             {
                 var forecast = new WeatherForecast
                 {

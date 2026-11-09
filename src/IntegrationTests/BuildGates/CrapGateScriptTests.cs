@@ -9,7 +9,7 @@ public class CrapGateScriptTests
     [Test]
     public void AssertCrapGate_WhenNoProductionViolations_ExitsZero()
     {
-        var exitCode = RunAssertScript("crap-production-violations-pass.json");
+        int exitCode = RunAssertScript("crap-production-violations-pass.json");
 
         exitCode.ShouldBe(0);
     }
@@ -17,7 +17,7 @@ public class CrapGateScriptTests
     [Test]
     public void AssertCrapGate_WhenProductionMethodOverThreshold_ExitsOne()
     {
-        var exitCode = RunAssertScript("crap-production-violations-fail.json");
+        int exitCode = RunAssertScript("crap-production-violations-fail.json");
 
         exitCode.ShouldBe(1);
     }
@@ -27,7 +27,7 @@ public class CrapGateScriptTests
     [TestCase("crap-production-violations-inconsistent.json")]
     public void AssertCrapGate_WhenViolationCountIsInvalid_ExitsTwo(string fixtureFileName)
     {
-        var exitCode = RunAssertScript(fixtureFileName);
+        int exitCode = RunAssertScript(fixtureFileName);
 
         exitCode.ShouldBe(2);
     }
@@ -35,19 +35,19 @@ public class CrapGateScriptTests
     [Test]
     public void FlattenCobertura_WhenAsyncStateMachine_CopiesHitsOntoOriginalMethod()
     {
-        var repoRoot = FindRepoRoot();
-        var script = Path.Combine(repoRoot, "scripts", "crap",
+        string repoRoot = FindRepoRoot();
+        string script = Path.Combine(repoRoot, "scripts", "crap",
             "flatten-cobertura.csx");
-        var fixture = Path.Combine(TestContext.CurrentContext.TestDirectory, "BuildGates", "Fixtures",
+        string fixture = Path.Combine(TestContext.CurrentContext.TestDirectory, "BuildGates", "Fixtures",
             "cobertura-async-state-machine.xml");
-        var output = Path.Combine(Path.GetTempPath(), $"crap-flat-{Guid.NewGuid():N}.xml");
+        string output = Path.Combine(Path.GetTempPath(), $"crap-flat-{Guid.NewGuid():N}.xml");
         File.Exists(script).ShouldBeTrue(script);
         File.Exists(fixture).ShouldBeTrue(fixture);
 
-        var logs = RunDotnetScript(script, output, fixture, out var exitCode);
+        string logs = RunDotnetScript(script, output, fixture, out int exitCode);
         exitCode.ShouldBe(0, logs);
 
-        var xml = File.ReadAllText(output);
+        string xml = File.ReadAllText(output);
         xml.ShouldContain("name=\"ExecuteCommandAsync\"");
         xml.ShouldContain("number=\"90\"");
         File.Delete(output);
@@ -56,18 +56,18 @@ public class CrapGateScriptTests
     [Test]
     public void FlattenCobertura_WhenOnlyStateMachineClassExists_SynthesizesParentMethod()
     {
-        var repoRoot = FindRepoRoot();
-        var script = Path.Combine(repoRoot, "scripts", "crap",
+        string repoRoot = FindRepoRoot();
+        string script = Path.Combine(repoRoot, "scripts", "crap",
             "flatten-cobertura.csx");
-        var fixture = Path.Combine(TestContext.CurrentContext.TestDirectory, "BuildGates", "Fixtures",
+        string fixture = Path.Combine(TestContext.CurrentContext.TestDirectory, "BuildGates", "Fixtures",
             "cobertura-orphan-async-state-machine.xml");
-        var output = Path.Combine(Path.GetTempPath(), $"crap-orphan-{Guid.NewGuid():N}.xml");
+        string output = Path.Combine(Path.GetTempPath(), $"crap-orphan-{Guid.NewGuid():N}.xml");
         File.Exists(fixture).ShouldBeTrue(fixture);
 
-        var logs = RunDotnetScript(script, output, fixture, out var exitCode);
+        string logs = RunDotnetScript(script, output, fixture, out int exitCode);
         exitCode.ShouldBe(0, logs);
 
-        var xml = File.ReadAllText(output);
+        string xml = File.ReadAllText(output);
         xml.ShouldContain("name=\"ClearMeasure.Bootcamp.UI.Server.RequestBodyBufferingPipeline\"");
         xml.ShouldContain("name=\"InvokeAsync\"");
         File.Delete(output);
@@ -75,7 +75,7 @@ public class CrapGateScriptTests
 
     private static string RunDotnetScript(string script, string output, string fixture, out int exitCode)
     {
-        var tool = EnsureDotnetScript();
+        string tool = EnsureDotnetScript();
         using var process = Process.Start(new ProcessStartInfo
         {
             FileName = tool,
@@ -92,8 +92,8 @@ public class CrapGateScriptTests
 
     private static string EnsureDotnetScript()
     {
-        var fileName = OperatingSystem.IsWindows() ? "dotnet-script.exe" : "dotnet-script";
-        var installed = Path.Combine(
+        string fileName = OperatingSystem.IsWindows() ? "dotnet-script.exe" : "dotnet-script";
+        string installed = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             ".dotnet", "tools", fileName);
         if (File.Exists(installed))
@@ -101,7 +101,7 @@ public class CrapGateScriptTests
             return installed;
         }
 
-        var existing = FindOnPath(fileName);
+        string? existing = FindOnPath(fileName);
         if (existing != null)
         {
             return existing;
@@ -117,28 +117,28 @@ public class CrapGateScriptTests
         });
         install.ShouldNotBeNull();
         install.WaitForExit(120_000).ShouldBeTrue();
-        var logs = install.StandardError.ReadToEnd() + install.StandardOutput.ReadToEnd();
+        string logs = install.StandardError.ReadToEnd() + install.StandardOutput.ReadToEnd();
         if (File.Exists(installed))
         {
             return installed;
         }
 
-        var pathLookup = FindOnPath(fileName);
+        string? pathLookup = FindOnPath(fileName);
         pathLookup.ShouldNotBeNull($"dotnet-script not found after install. {logs}");
         return pathLookup;
     }
 
     private static string? FindOnPath(string fileName)
     {
-        var path = Environment.GetEnvironmentVariable("PATH");
+        string? path = Environment.GetEnvironmentVariable("PATH");
         if (string.IsNullOrWhiteSpace(path))
         {
             return null;
         }
 
-        foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        foreach (string dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
         {
-            var candidate = Path.Combine(dir.Trim(), fileName);
+            string candidate = Path.Combine(dir.Trim(), fileName);
             if (File.Exists(candidate))
             {
                 return candidate;
@@ -150,10 +150,10 @@ public class CrapGateScriptTests
 
     private static int RunAssertScript(string fixtureFileName)
     {
-        var repoRoot = FindRepoRoot();
-        var script = Path.Combine(repoRoot, "scripts", "crap",
+        string repoRoot = FindRepoRoot();
+        string script = Path.Combine(repoRoot, "scripts", "crap",
             "assert-crap-gate.ps1");
-        var fixture = Path.Combine(TestContext.CurrentContext.TestDirectory, "BuildGates", "Fixtures",
+        string fixture = Path.Combine(TestContext.CurrentContext.TestDirectory, "BuildGates", "Fixtures",
             fixtureFileName);
         File.Exists(script).ShouldBeTrue(script);
         File.Exists(fixture).ShouldBeTrue(fixture);

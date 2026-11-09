@@ -22,7 +22,7 @@ public class WebServiceMessageValidationMiddlewareWebTests
         var response = await PostSingleApiAsync(client, message);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        var json = await response.Content.ReadAsStringAsync();
+        string json = await response.Content.ReadAsStringAsync();
         json.ShouldContain("errors");
     }
 
@@ -54,7 +54,7 @@ public class WebServiceMessageValidationMiddlewareWebTests
         HttpClient client,
         WebServiceMessage message)
     {
-        var json = message.GetJson();
+        string json = message.GetJson();
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
         return await client.PostAsync(PublisherGateway.ApiRelativeUrlV1, content);
     }

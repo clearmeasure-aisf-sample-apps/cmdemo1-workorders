@@ -34,7 +34,7 @@ public sealed class WorkOrdersBulkImportController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Post(IFormFile file, CancellationToken cancellationToken)
     {
-        var uploadError = WorkOrderBulkImportProcessor.ValidateUpload(file);
+        string? uploadError = WorkOrderBulkImportProcessor.ValidateUpload(file);
         if (uploadError != null)
         {
             return Problem(detail: uploadError, statusCode: StatusCodes.Status400BadRequest);

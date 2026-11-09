@@ -42,7 +42,7 @@ public class WorkOrderTitleCharCountTests : AcceptanceTestBase
         await Expect(caption).ToHaveTextAsync("0 characters remaining");
         await Expect(caption).ToHaveClassAsync(new System.Text.RegularExpressions.Regex("text-danger"));
 
-        var valueLength = await titleField.EvaluateAsync<int>("el => el.value.length");
+        int valueLength = await titleField.EvaluateAsync<int>("el => el.value.length");
         valueLength.ShouldBe(WorkOrder.TitleMaxLength);
     }
 
@@ -56,7 +56,7 @@ public class WorkOrderTitleCharCountTests : AcceptanceTestBase
         await titleField.PressSequentiallyAsync("B");
         await titleField.BlurAsync();
 
-        var valueLength = await titleField.EvaluateAsync<int>("el => el.value.length");
+        int valueLength = await titleField.EvaluateAsync<int>("el => el.value.length");
         valueLength.ShouldBe(WorkOrder.TitleMaxLength);
     }
 

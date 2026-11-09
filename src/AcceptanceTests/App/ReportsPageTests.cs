@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Microsoft.EntityFrameworkCore;
@@ -88,8 +88,8 @@ public class ReportsPageTests : AcceptanceTestBase
         // 30-day completion window holds only the two orders this test completes.
         var clock = TestData.FutureClock();
         var now = clock.GetUtcNow().UtcDateTime;
-        var tag = TestData.Tag();
-        var userName = TestData.UserName("rpavg");
+        string tag = TestData.Tag();
+        string userName = TestData.UserName("rpavg");
         var employee = new Employee(userName, "Reports", "Average", TestData.Email(userName));
         WorkOrder[] orders =
         [
@@ -191,16 +191,16 @@ public class ReportsPageTests : AcceptanceTestBase
             var download = await Page.RunAndWaitForDownloadAsync(async () =>
                 await Click(nameof(Reports.Elements.ExportButton)));
 
-            var fileName = download.SuggestedFilename;
+            string fileName = download.SuggestedFilename;
 
             // Verify filename matches expected pattern
             fileName.ShouldStartWith("reports-");
             fileName.ShouldEndWith(".csv");
 
             // Read and verify file content
-            var filePath = await download.PathAsync();
-            var content = await File.ReadAllTextAsync(filePath);
-            var lines = content.Split("\r\n");
+            string filePath = await download.PathAsync();
+            string content = await File.ReadAllTextAsync(filePath);
+            string[] lines = content.Split("\r\n");
 
             // Verify header rows exist
             lines.ShouldContain("Category,Status,Count");
@@ -210,13 +210,13 @@ public class ReportsPageTests : AcceptanceTestBase
             lines.ShouldContain("Metric,Value");
 
             // Verify summary metrics exist
-            var completedLine = lines.FirstOrDefault(l => l.StartsWith("Completed (30 days),"));
+            string? completedLine = lines.FirstOrDefault(l => l.StartsWith("Completed (30 days),"));
             completedLine.ShouldNotBeNull();
 
-            var avgLine = lines.FirstOrDefault(l => l.StartsWith("Average Days to Close,"));
+            string? avgLine = lines.FirstOrDefault(l => l.StartsWith("Average Days to Close,"));
             avgLine.ShouldNotBeNull();
 
-            var overdueLineIndex = Array.FindIndex(lines, l => l.StartsWith("Overdue Count,"));
+            int overdueLineIndex = Array.FindIndex(lines, l => l.StartsWith("Overdue Count,"));
             overdueLineIndex.ShouldBeGreaterThanOrEqualTo(0);
 
             // The building row counts this test's open orders only, not its completed one
@@ -252,9 +252,9 @@ public class ReportsPageTests : AcceptanceTestBase
         }
 
         // Above every building already stored, and above the 3 orders a parallel test puts in one building
-        var openCount = Math.Max(highest, 3) + 1;
-        var building = $"Download {TestTag}";
-        var userName = TestData.UserName("rd");
+        int openCount = Math.Max(highest, 3) + 1;
+        string building = $"Download {TestTag}";
+        string userName = TestData.UserName("rd");
         var creator = new Employee(userName, "Reports", "Download", TestData.Email(userName));
         WorkOrderStatus[] openStatuses = [WorkOrderStatus.Draft, WorkOrderStatus.Assigned, WorkOrderStatus.InProgress];
         var now = DateTime.UtcNow;
@@ -295,11 +295,11 @@ public class ReportsPageTests : AcceptanceTestBase
     {
         // Seed this test's own rows for the Reports page: unique numbers, titles, creator and buildings
         await using var context = TestHost.NewDbContext();
-        var userName = TestData.UserName("rc");
+        string userName = TestData.UserName("rc");
         var creator = new Employee(userName, "Reports", "Creator", TestData.Email(userName));
-        var numbers = TestData.NumberSeries(5);
-        var sanctuary = $"Sanctuary {TestTag}";
-        var kitchen = $"Kitchen {TestTag}";
+        string[] numbers = TestData.NumberSeries(5);
+        string sanctuary = $"Sanctuary {TestTag}";
+        string kitchen = $"Kitchen {TestTag}";
         var now = DateTime.UtcNow;
 
         WorkOrder[] orders =

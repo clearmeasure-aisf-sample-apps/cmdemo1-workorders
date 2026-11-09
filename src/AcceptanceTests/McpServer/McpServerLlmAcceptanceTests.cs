@@ -21,14 +21,20 @@ public class McpServerLlmAcceptanceTests : AcceptanceTestBase
     [OneTimeTearDown]
     public async Task McpTearDown()
     {
-        if (_helper != null) await _helper.DisposeAsync();
+        if (_helper != null)
+        {
+            await _helper.DisposeAsync();
+        }
     }
 
     [SetUp]
     public async Task EnsureAvailability()
     {
         if (!_helper!.Connected)
+        {
             Assert.Inconclusive("MCP server is not available");
+        }
+
         await SkipIfNoChatClient();
     }
 
@@ -70,7 +76,7 @@ public class McpServerLlmAcceptanceTests : AcceptanceTestBase
             $"creatorUsername='{creator.UserName}'.");
 
         response.Text.ShouldNotBeNullOrEmpty();
-        var responseText = response.Text.ToLowerInvariant();
+        string responseText = response.Text.ToLowerInvariant();
         (responseText.Contains("repair") || responseText.Contains("draft") || responseText.Contains("created") || responseText.Contains("wo-"))
             .ShouldBeTrue($"Expected creation confirmation in response: {response.Text}");
     }

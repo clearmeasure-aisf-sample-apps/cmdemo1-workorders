@@ -34,7 +34,7 @@ public class DetailedHealthEndpointIntegrationTests
         var response = await _client!.GetAsync("/api/health");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 
@@ -74,7 +74,7 @@ public class DetailedHealthEndpointIntegrationTests
         var response = await _client!.GetAsync("/api/health/detailed");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 
@@ -155,7 +155,7 @@ public class DetailedHealthEndpointIntegrationTests
         await using var stream = await response.Content.ReadAsStreamAsync();
         using var doc = await JsonDocument.ParseAsync(stream);
         doc.RootElement.TryGetProperty("osDescription", out var osDescription).ShouldBeTrue();
-        var value = osDescription.GetString();
+        string? value = osDescription.GetString();
         value.ShouldNotBeNull();
         value.ShouldNotBeEmpty();
     }
@@ -182,7 +182,7 @@ public class DetailedHealthEndpointIntegrationTests
         await using var stream = await response.Content.ReadAsStreamAsync();
         using var doc = await JsonDocument.ParseAsync(stream);
         doc.RootElement.TryGetProperty("frameworkDescription", out var frameworkDescription).ShouldBeTrue();
-        var value = frameworkDescription.GetString();
+        string? value = frameworkDescription.GetString();
         value.ShouldNotBeNull();
         value.ShouldNotBeEmpty();
     }
@@ -323,7 +323,7 @@ public class DetailedHealthEndpointIntegrationTests
         using var doc = await JsonDocument.ParseAsync(stream);
         doc.RootElement.TryGetProperty("processPriority", out var processPriority).ShouldBeTrue();
         processPriority.ValueKind.ShouldBe(JsonValueKind.String);
-        var value = processPriority.GetString();
+        string? value = processPriority.GetString();
         value.ShouldNotBeNull();
         value.ShouldNotBeEmpty();
         value.ShouldBe(Process.GetCurrentProcess().PriorityClass.ToString());
@@ -372,7 +372,7 @@ public class DetailedHealthEndpointIntegrationTests
         var response = await _client!.GetAsync("/api/v1.0/health/detailed");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 

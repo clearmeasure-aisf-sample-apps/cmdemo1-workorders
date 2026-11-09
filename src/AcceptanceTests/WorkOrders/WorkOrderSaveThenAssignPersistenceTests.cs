@@ -49,13 +49,13 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldKeepAssignedAfterSaveThenAssign_Reload_WillieAssignedToMe_AndGetWorkOrder()
     {
-        var token = TestTag[..4];
-        var title = $"mow front grass {token}";
+        string token = TestTag[..4];
+        string title = $"mow front grass {token}";
         const string description = "edge the walk";
         const string instructions = "do a good job";
         const string room = "front lawn";
 
-        var inProgressNumber = await SeedNearbyInProgressAsync();
+        string inProgressNumber = await SeedNearbyInProgressAsync();
 
         await LoginAsTlovejoyAsync();
 
@@ -65,7 +65,7 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
 
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
         await Expect(woNumberLocator).ToBeVisibleAsync();
-        var workOrderNumber = (await woNumberLocator.InnerTextAsync()).Trim();
+        string workOrderNumber = (await woNumberLocator.InnerTextAsync()).Trim();
         workOrderNumber.Length.ShouldBeLessThanOrEqualTo(7);
 
         await Select(nameof(WorkOrderManage.Elements.Assignee), "gwillie");
@@ -135,7 +135,7 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrderNumber))
             .ToHaveCountAsync(0);
 
-        var getResult = await Helper.CallToolDirectly("get-work-order",
+        string getResult = await Helper.CallToolDirectly("get-work-order",
             new Dictionary<string, object?> { ["workOrderNumber"] = workOrderNumber });
         using var doc = JsonDocument.Parse(getResult);
         var detail = doc.RootElement;
@@ -154,7 +154,7 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         await using var context = TestHost.NewDbContext();
         var lovejoy = await context.Set<Employee>().SingleAsync(e => e.UserName == "tlovejoy");
         var willie = await context.Set<Employee>().SingleAsync(e => e.UserName == "gwillie");
-        var number = $"IP{TestTag[..4]}";
+        string number = $"IP{TestTag[..4]}";
         var inProgress = new WorkOrder
         {
             Number = number,

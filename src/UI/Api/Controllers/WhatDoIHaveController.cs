@@ -1,4 +1,4 @@
-﻿using Lamar;
+using Lamar;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;

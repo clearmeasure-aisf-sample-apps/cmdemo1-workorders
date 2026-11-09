@@ -36,7 +36,7 @@ public class FeatureFlagsEndpointIntegrationTests
         var response = await _client!.GetAsync("/api/features/flags");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 
@@ -49,7 +49,7 @@ public class FeatureFlagsEndpointIntegrationTests
         var response = await _client!.GetAsync("/api/v1.0/features/flags");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        string? mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 

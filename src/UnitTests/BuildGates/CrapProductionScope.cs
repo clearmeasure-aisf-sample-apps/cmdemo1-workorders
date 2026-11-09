@@ -18,7 +18,7 @@ public static class CrapProductionScope
             return false;
         }
 
-        var normalized = "/" + path.Replace('\\', '/').ToLowerInvariant().TrimStart('/');
+        string normalized = "/" + path.Replace('\\', '/').ToLowerInvariant().TrimStart('/');
         if (IsExcludedTestPath(normalized) || IsGeneratedPath(normalized))
         {
             return false;

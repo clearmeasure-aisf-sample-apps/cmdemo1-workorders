@@ -23,7 +23,7 @@ public class SidebarHeightTests : AcceptanceTestBase
         await Page.EvaluateAsync("() => document.documentElement.setAttribute('data-theme', 'dark')");
         await AssertRailReachesPage(2500);
 
-        var background = await Page.Locator("#app-navigation-rail")
+        string background = await Page.Locator("#app-navigation-rail")
             .EvaluateAsync<string>("e => getComputedStyle(e).backgroundImage");
         background.ShouldContain("rgb(7, 12, 22)");
         background.ShouldContain("rgb(11, 18, 32)");
@@ -31,9 +31,9 @@ public class SidebarHeightTests : AcceptanceTestBase
 
     private async Task AssertRailReachesPage(double minimum)
     {
-        var bottom = await Page.EvaluateAsync<double>(
+        double bottom = await Page.EvaluateAsync<double>(
             "() => { const rail = document.getElementById('app-navigation-rail'); return rail.getBoundingClientRect().bottom + window.scrollY; }");
-        var scrollHeight = await Page.EvaluateAsync<double>("() => document.documentElement.scrollHeight");
+        double scrollHeight = await Page.EvaluateAsync<double>("() => document.documentElement.scrollHeight");
         bottom.ShouldBeGreaterThanOrEqualTo(minimum);
         scrollHeight.ShouldBeGreaterThanOrEqualTo(minimum);
     }

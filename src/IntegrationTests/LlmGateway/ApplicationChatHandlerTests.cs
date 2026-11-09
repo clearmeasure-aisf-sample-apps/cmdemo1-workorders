@@ -1,3 +1,4 @@
+using System.ClientModel;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
@@ -8,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
-using System.ClientModel;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.LlmGateway;
 
@@ -69,7 +69,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
     {
         new ZDataLoader().LoadData();
         var handler = TestHost.GetRequiredService<ApplicationChatHandler>();
-        var currentUser = "tlovejoy";
+        string currentUser = "tlovejoy";
         var query = new ApplicationChatQuery("Show me all the work orders that I created", currentUser);
 
         ApplicationChatResult response = await ExecuteLlmAsync(() => handler.Handle(query, CancellationToken.None));
@@ -91,7 +91,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
 
         ApplicationChatResult response = await ExecuteLlmAsync(() => handler.Handle(query, CancellationToken.None));
 
-        var responseText = response.Text;
+        string responseText = response.Text;
         await TestContext.Out.WriteLineAsync($"LLM response: {responseText}");
 
         var factory = TestHost.GetRequiredService<ChatClientFactory>();
@@ -103,7 +103,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
                 "Return nothing but the work order number itself, with no extra text."),
             new(ChatRole.User, responseText)
         ]));
-        var workOrderNumber = parseResponse.Messages.Last().Text.Trim();
+        string workOrderNumber = parseResponse.Messages.Last().Text.Trim();
         await TestContext.Out.WriteLineAsync($"Parsed work order number: {workOrderNumber}");
 
         var db = TestHost.GetRequiredService<DataContext>();
@@ -131,7 +131,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
 
         ApplicationChatResult response = await ExecuteLlmAsync(() => handler.Handle(query, CancellationToken.None));
 
-        var responseText = response.Text;
+        string responseText = response.Text;
         await TestContext.Out.WriteLineAsync($"LLM response: {responseText}");
 
         var factory = TestHost.GetRequiredService<ChatClientFactory>();
@@ -143,7 +143,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
                 "Return nothing but the work order number itself, with no extra text."),
             new(ChatRole.User, responseText)
         ]));
-        var workOrderNumber = parseResponse.Messages.Last().Text.Trim();
+        string workOrderNumber = parseResponse.Messages.Last().Text.Trim();
         await TestContext.Out.WriteLineAsync($"Parsed work order number: {workOrderNumber}");
 
         var workOrder = await WaitForWorkOrderAsync(
@@ -154,7 +154,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
         if (workOrder is null || workOrder.Status != WorkOrderStatus.Assigned)
         {
             var bus = TestHost.GetRequiredService<IBus>();
-            var fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
+            string fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
                 bus,
                 workOrderNumber,
                 "DraftToAssignedCommand",
@@ -183,7 +183,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
         new ZDataLoader().LoadData();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var responseText = await ExecuteAsync(
+        string responseText = await ExecuteAsync(
             "I am Timothy Lovejoy (username tlovejoy). " +
             "Create a work order for Groundskeeper Willie (username gwillie) to mow the grass. " +
             "Use 'tlovejoy' as the creatorUsername. " +
@@ -192,7 +192,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
             "Reply with only the work order number.");
         await TestContext.Out.WriteLineAsync($"LLM response: {responseText}");
 
-        var workOrderNumber = await ParseWorkOrderNumberAsync(responseText);
+        string workOrderNumber = await ParseWorkOrderNumberAsync(responseText);
         await TestContext.Out.WriteLineAsync($"Parsed work order number: {workOrderNumber}");
 
         await EnsureAssignedAsync();
@@ -254,7 +254,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
 
                 if (workOrder?.Status == WorkOrderStatus.Draft)
                 {
-                    var fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
+                    string fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
                         bus,
                         workOrderNumber,
                         "DraftToAssignedCommand",
@@ -295,7 +295,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
 
                 if (workOrder is null || workOrder.Status != WorkOrderStatus.InProgress)
                 {
-                    var fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
+                    string fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
                         bus,
                         workOrderNumber,
                         "AssignedToInProgressCommand",
@@ -332,7 +332,7 @@ public class ApplicationChatHandlerTests : LlmTestBase
                     await EnsureInProgressAsync();
                 }
 
-                var fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
+                string fallbackResult = await WorkOrderTools.ExecuteWorkOrderCommand(
                     bus,
                     workOrderNumber,
                     "Shelve",

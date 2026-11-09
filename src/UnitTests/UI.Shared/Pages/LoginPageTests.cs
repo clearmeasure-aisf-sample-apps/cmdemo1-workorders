@@ -1,10 +1,11 @@
-using Bunit;
 using System.ComponentModel.DataAnnotations;
+using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Palermo.BlazorMvc;
 using Shouldly;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -26,7 +26,7 @@ public class LoginPageTests
 
         var validationContext = new ValidationContext(loginModel);
         var validationResults = new List<ValidationResult>();
-        var isValid = Validator.TryValidateObject(loginModel, validationContext, validationResults, true);
+        bool isValid = Validator.TryValidateObject(loginModel, validationContext, validationResults, true);
 
         isValid.ShouldBeTrue();
         validationResults.ShouldBeEmpty();
@@ -39,7 +39,7 @@ public class LoginPageTests
 
         var validationContext = new ValidationContext(loginModel);
         var validationResults = new List<ValidationResult>();
-        var isValid = Validator.TryValidateObject(loginModel, validationContext, validationResults, true);
+        bool isValid = Validator.TryValidateObject(loginModel, validationContext, validationResults, true);
 
         isValid.ShouldBeFalse();
         validationResults.ShouldContain(r => r.MemberNames.Contains("Username"));
@@ -740,9 +740,9 @@ public class LoginPageTests
 
         var versionLabel = component.FindAll("small.text-muted")
             .First(s => s.TextContent.StartsWith("Version "));
-        var versionString = versionLabel.TextContent["Version ".Length..];
+        string versionString = versionLabel.TextContent["Version ".Length..];
         versionString.ShouldNotBeNullOrWhiteSpace();
-        var envSegment = versionLabel.TextContent.Split(" · Environment ", 2);
+        string[] envSegment = versionLabel.TextContent.Split(" · Environment ", 2);
         envSegment.Length.ShouldBe(2);
         envSegment[1].ShouldNotBeNullOrWhiteSpace();
     }

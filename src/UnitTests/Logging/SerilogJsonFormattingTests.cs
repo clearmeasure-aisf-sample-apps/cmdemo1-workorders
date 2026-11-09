@@ -21,7 +21,7 @@ public sealed class SerilogJsonFormattingTests
 
         log.Information("Processed {OrderId}", 42);
 
-        var line = writer.ToString().Trim();
+        string line = writer.ToString().Trim();
         line.ShouldStartWith("{");
         line.ShouldContain("\"@t\"");
         line.ShouldContain("\"@m\"");

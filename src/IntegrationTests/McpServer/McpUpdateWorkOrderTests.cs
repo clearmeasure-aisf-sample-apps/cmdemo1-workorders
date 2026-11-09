@@ -38,7 +38,7 @@ public class McpUpdateWorkOrderTests
 
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "High priority task",
@@ -51,8 +51,8 @@ public class McpUpdateWorkOrderTests
         result.RootElement.GetProperty("Priority").GetString().ShouldBe("High");
         result.RootElement.GetProperty("Building").GetString().ShouldBe("Sanctuary");
 
-        var number = result.RootElement.GetProperty("Number").GetString()!;
-        var getResult = await WorkOrderTools.GetWorkOrder(bus, number);
+        string number = result.RootElement.GetProperty("Number").GetString()!;
+        string getResult = await WorkOrderTools.GetWorkOrder(bus, number);
         var detail = JsonDocument.Parse(getResult);
         detail.RootElement.GetProperty("Priority").GetString().ShouldBe("High");
         detail.RootElement.GetProperty("Building").GetString().ShouldBe("Sanctuary");
@@ -69,7 +69,7 @@ public class McpUpdateWorkOrderTests
 
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        var createResult = await WorkOrderTools.CreateWorkOrder(
+        string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
             numberGenerator,
             "Normal task",
@@ -100,7 +100,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}00",
             _creator,
@@ -133,7 +133,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}01",
             _creator,
@@ -169,7 +169,7 @@ public class McpUpdateWorkOrderTests
 
         var bus = TestHost.GetRequiredService<IBus>();
         var newDueDate = new DateOnly(2026, 12, 25);
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}02",
             _creator,
@@ -324,7 +324,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}10",
             _creator,
@@ -355,8 +355,8 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}11",
             _creator,
@@ -387,7 +387,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}12",
             _creator,
@@ -409,7 +409,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             "UNKNOWN-WO",
             _creator,
@@ -436,7 +436,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}13",
             "unknown-user",
@@ -466,7 +466,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}14",
             _creator,
@@ -501,7 +501,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}15",
             _other,
@@ -573,7 +573,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.ListWorkOrders(bus);
+        string result = await WorkOrderTools.ListWorkOrders(bus);
 
         using var document = JsonDocument.Parse(result);
         var item = document.RootElement.EnumerateArray()
@@ -601,7 +601,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.UpdateWorkOrder(
+        string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}21",
             _creator,
