@@ -94,6 +94,11 @@ which building block it is:
 | Pass-through classes that only delegate | Structure without behavior (#1538) | #1538 structure check |
 | Splitting by line count (the second half of a method into `DoRest`) | Cuts across concepts; reads worse than before | Rationale check: every row names a smell, a move and a new abstraction |
 
+**Contract-bound signatures.** Some parameter lists are a contract, not a design choice: an MCP tool method's
+parameters are its published input schema, and `ILogger.Log<TState>` is fixed by the framework. Introduce the
+parameter object immediately inside such a method and leave the signature on the size baseline, with the reason in
+the pull request, until the owner decides on an exemption.
+
 Exempt from `PartialTypeRule`: a Blazor code-behind (`X.razor.cs` next to `X.razor`, declaring `X`) and a type the
 compiler's source generators require to be partial (`[GeneratedRegex]`, `[LoggerMessage]`, `[JsonSerializable]`).
 
