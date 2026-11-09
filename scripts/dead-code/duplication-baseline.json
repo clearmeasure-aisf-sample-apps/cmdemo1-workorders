@@ -1,5 +1,5 @@
 {
   "minLines": 8,
-  "maxDuplicatedLines": 8329,
-  "note": "Ratchet ceiling for normalized 8-line clones under src, excluding Generated, bin, and obj. May only decrease. #1540. 8329 is the measured count after the superfluous-structure split (#1552)."
+  "maxDuplicatedLines": 7945,
+  "note": "Ratchet ceiling for normalized 8-line clones under src, excluding Generated, bin, and obj. May only decrease. #1540. 7945 is the measured count after the build-gate code moved onto RepositoryCheckout, KeyRatchet, ExternalCommand and WorkflowFile (#1555)."
 }
