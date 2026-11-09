@@ -57,6 +57,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="ClearMeasure.Bootcamp.AcceptanceTests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\ChurchBulletin.ServiceDefaults\ChurchBulletin.ServiceDefaults.csproj" />
 		<ProjectReference Include="..\Core\Core.csproj" />
 		<ProjectReference Include="..\Database\Database.csproj" />
