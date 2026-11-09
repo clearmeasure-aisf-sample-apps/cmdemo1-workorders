@@ -1,0 +1,13 @@
+{
+  "singleImplementationInterfaces": [],
+  "singleSubclassAbstractClasses": [],
+  "passThroughClasses": [],
+  "singleFileFolders": [
+    {
+      "id": "src/AcceptanceTests/Properties",
+      "reason": ".NET convention: the Properties folder holds AssemblyInfo and is not a feature folder."
+    }
+  ],
+  "deepFolders": [],
+  "unreferencedProjects": []
+}

@@ -62,7 +62,7 @@ public class SizeAndNestingBaselineTests
     [Test]
     public void ShouldMatchRatchetBaseline_WhenRepositoryIsScanned()
     {
-        var root = FindRepoRoot();
+        var root = RepoFiles.Root();
         var current = SizeAndNestingScanner.ScanRepository(root);
         var baselinePath = Path.Combine(root, BaselineRelativePath);
         var baseline = SizeAndNestingBaseline.Read(baselinePath);
@@ -71,21 +71,5 @@ public class SizeAndNestingBaselineTests
 
         duplicates.ShouldBeEmpty();
         diff.IsClean.ShouldBeTrue(SizeAndNestingBaseline.Format(diff));
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "PrivateBuild.ps1")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException("Repository root not found from the test directory.");
     }
 }
