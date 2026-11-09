@@ -1,6 +1,8 @@
-# Hourly check that tdd request operations stay within a SQL dependency budget.
-# The query script no-ops when the Azure login variables are absent. It does not
-# deploy the scheduled query rule in scripts/appinsights/sql-dependency-budget-alert.bicep.
+# Hourly check that tdd request operations stay within a SQL dependency budget, and that
+# scheduled query rule sql-dependency-count-budget still matches the rendered KQL
+# (budget 20, lookback 1h, window PT1H, evaluation PT15M) and notifies
+# ag-cmdemo1-tdd-incident. The script no-ops when the Azure login variables are absent.
+# It does not deploy the rule in scripts/appinsights/sql-dependency-budget-alert.bicep.
 # An operator applies that template by hand. See scripts/appinsights/README.md.
 # This job does not set the GitHub environment "release": a job that names it creates a
 # GitHub deployment, and this check must not record hourly deployments on that environment.
@@ -94,6 +96,14 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID_APP_INSIGHTS != '' && vars.AZURE_CLIENT_ID_APP_INSIGHTS || vars.AZURE_CLIENT_ID_ACR_PUSH }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Check scheduled query rule configuration
+        if: steps.gate.outputs.skip != 'true'
+        shell: pwsh
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          ./scripts/appinsights/Invoke-SqlDependencyBudget.ps1 -CheckAlertConfiguration -UseDiscoveredTddTarget -RequireAzure -SubscriptionId "$env:AZURE_SUBSCRIPTION_ID" -Budget 20 -Lookback 1h -EvaluationFrequency PT15M -ActionGroupName ag-cmdemo1-tdd-incident -AlertName sql-dependency-count-budget
 
       - name: Query SQL dependency budget
         if: steps.gate.outputs.skip != 'true'

@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// <summary>
 /// The tdd SQL dependency budget is a script and a KQL query. The self-test is the
 /// deterministic check; this fixture runs it so the private build fails when the query,
-/// threshold, or credential skip regresses.
+/// threshold, credential skip, or scheduled-query-rule drift comparison regresses.
 /// </summary>
 [TestFixture]
 public class SqlDependencyBudgetAlertTests
