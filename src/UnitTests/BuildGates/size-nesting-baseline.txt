@@ -11,10 +11,7 @@ file src/AcceptanceTests/WorkOrders/WorkOrderSearchTests.cs
 file src/IntegrationTests/DataAccess/WorkOrderSpecificationHandlerTests.cs
 file src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs
 file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
-file src/UI.Shared/MainLayout.razor.cs
 file src/UI.Shared/Pages/TeamsAndVendors.razor
-file src/UI.Shared/Pages/WorkOrderManage.razor
-file src/UI.Shared/Pages/WorkOrderManage.razor.cs
 file src/UI.Shared/Pages/WorkOrderSearch.razor
 file src/UI.Shared/Pages/WorkOrderSearch.razor.cs
 file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
@@ -222,9 +219,6 @@ method src/LlmGateway/ApplicationChatHandler.cs ApplicationChatHandler.BuildChat
 method src/LlmGateway/TracingChatClient.cs TracingChatClient.GetResponseAsync(IEnumerable<ChatMessage>,ChatOptions?,CancellationToken)
 method src/LlmGateway/TracingChatClient.cs TracingChatClient.GetStreamingResponseAsync(IEnumerable<ChatMessage>,ChatOptions?,CancellationToken)
 method src/LlmGateway/TranslationService.cs TranslationService.TranslateAsync(string,string)
-method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.LoadWorkOrder()
-method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.SubmitAsync()
-method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.ToggleDictationAsync(DictationTarget)
 method src/UnitTests/Analyzers/DataAccessNPlusOneCanaryTests.cs DataAccessNPlusOneCanaryTests.TryReadDiagnostic(string)
 method src/UnitTests/Analyzers/DataAccessNPlusOneCanaryTests.cs DataAccessNPlusOneCanaryTests.WriteProject(string,string,IReadOnlyList<PackageReference>)
 method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportCm0001_When_LoopAwaitsSameTypeHelperThatAwaitsBus()
@@ -317,9 +311,6 @@ parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.CreateWorkOrder(
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ExecuteWorkOrderCommand(IBus,string,string,string,string?,string?)
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.SaveWorkOrder(IBus,string,string,string?,string?,string?,string?,string?)
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.UpdateWorkOrder(IBus,string,string,string?,string?,string?,string?)
-parameters src/UI.Shared/Models/WorkOrderReportsExporter.cs WorkOrderReportsExporter.AppendOrderedCounts(StringBuilder,string,string,string[],Dictionary<string,int>)
-parameters src/UI.Shared/Models/WorkOrderSearchPager.cs SearchResultPage(WorkOrderSearchResultRow[],int,int,int,int,int)
-parameters src/UI.Shared/Services/WorkOrderBulkActionService.cs WorkOrderBulkActionService.ApplyLoadedAsync(string[],Dictionary<string,WorkOrder>,string,Employee,Action<WorkOrder>)
 parameters src/UI/Api/Controllers/EchoController.cs EchoResponse(string,string,string,string,string,string,string?,IReadOnlyDictionary<string,string>)
 parameters src/UI/Api/Controllers/EnvironmentStatusController.cs EnvironmentStatusResponse(string,int,string,IReadOnlyList<string>,IReadOnlyDictionary<string,string>,string,string,string)
 parameters src/UI/Api/Controllers/VersionController.cs VersionMetadataResponse(string?,string?,string,string?,string,string,string)

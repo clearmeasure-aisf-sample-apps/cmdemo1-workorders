@@ -1,0 +1,94 @@
+@using ClearMeasure.Bootcamp.Core.Model
+@using ClearMeasure.Bootcamp.Core.Model.StateCommands
+@using ClearMeasure.Bootcamp.Core.Queries
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+
+@if (Attachments.Length > 0)
+{
+    <div class="attachments-section token-card" data-testid="@WorkOrderManage.Elements.AttachmentsSection">
+        <h2 class="card-title">Attachments</h2>
+        @if (_removeError is not null)
+        {
+            <div role="alert" class="text-danger" data-testid="@WorkOrderManage.Elements.AttachmentRemoveError">@_removeError</div>
+        }
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Content Type</th>
+                    <th>Size</th>
+                    <th>Uploaded By</th>
+                    <th>Upload Date</th>
+                    @if (CanRemove)
+                    {
+                        <th></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var attachment in Attachments)
+                {
+                    <tr data-testid="@WorkOrderManage.Elements.AttachmentRow">
+                        <td data-testid="@WorkOrderManage.Elements.AttachmentFileName">@attachment.FileName</td>
+                        <td data-testid="@WorkOrderManage.Elements.AttachmentContentType">@attachment.ContentType</td>
+                        <td data-testid="@WorkOrderManage.Elements.AttachmentFileSize">@attachment.FileSize</td>
+                        <td data-testid="@WorkOrderManage.Elements.AttachmentUploadedBy">@attachment.UploadedBy?.GetFullName()</td>
+                        <td data-testid="@WorkOrderManage.Elements.AttachmentUploadedDate">@ClientDateFormatter.Format(attachment.UploadedDate)</td>
+                        @if (CanRemove)
+                        {
+                            <td>
+                                @if (_pendingRemoveId == attachment.Id)
+                                {
+                                    <span>Remove @attachment.FileName?</span>
+                                    <button type="button" class="btn-app btn-app--danger" data-testid="@WorkOrderManage.Elements.AttachmentRemoveConfirm" @onclick="() => ConfirmRemoveAsync(attachment)">Confirm</button>
+                                    <button type="button" class="btn-app btn-app--secondary" data-testid="@WorkOrderManage.Elements.AttachmentRemoveCancel" @onclick="CancelRemove">Cancel</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn-app btn-app--danger" data-testid="@WorkOrderManage.Elements.AttachmentRemove" aria-label="@($"Remove attachment {attachment.FileName}")" @onclick="() => BeginRemove(attachment)">Remove</button>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private Guid? _pendingRemoveId;
+    private string? _removeError;
+
+    /// <summary>The work order's attachments; the section is hidden when there are none.</summary>
+    [Parameter, EditorRequired] public WorkOrderAttachment[] Attachments { get; set; } = [];
+
+    /// <summary>Whether the current user may remove attachments (adds the Remove column).</summary>
+    [Parameter] public bool CanRemove { get; set; }
+
+    [Parameter, EditorRequired] public Guid WorkOrderId { get; set; }
+
+    [Parameter, EditorRequired] public string CurrentUserName { get; set; } = "";
+
+    /// <summary>Raised after an attachment was removed, so the page reloads the list.</summary>
+    [Parameter] public EventCallback AttachmentsChanged { get; set; }
+
+    private void BeginRemove(WorkOrderAttachment attachment)
+    {
+        _pendingRemoveId = attachment.Id;
+        _removeError = null;
+    }
+
+    private void CancelRemove() => _pendingRemoveId = null;
+
+    private async Task ConfirmRemoveAsync(WorkOrderAttachment attachment)
+    {
+        var result = await Bus.Send(new RemoveAttachmentCommand(WorkOrderId, attachment.Id, CurrentUserName));
+        _pendingRemoveId = null;
+        _removeError = result.Succeeded ? null : result.Error;
+        if (result.Succeeded)
+        {
+            await AttachmentsChanged.InvokeAsync();
+        }
+    }
+}

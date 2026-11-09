@@ -3,11 +3,53 @@
 using System.ComponentModel.DataAnnotations;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
 public class WorkOrderManageModel : IValidatableObject
 {
+    /// <summary>The form for <paramref name="workOrder"/>, with its dates shown in the church time zone.</summary>
+    public static WorkOrderManageModel For(EditMode mode, WorkOrder workOrder, TimeProvider clock) => new()
+    {
+        WorkOrder = workOrder,
+        Mode = mode,
+        WorkOrderNumber = workOrder.Number,
+        CreatorFullName = workOrder.Creator!.DisplayName,
+        AssignedToUserName = workOrder.Assignee?.UserName,
+        Title = workOrder.Title,
+        Description = workOrder.Description,
+        Instructions = workOrder.Instructions,
+        RoomNumber = workOrder.RoomNumber,
+        OriginalRoomNumber = workOrder.RoomNumber,
+        CreatedDate = ClientDateFormatter.Format(workOrder.CreatedDate),
+        CreatedRelativeTime = RelativeTimeFormatter.Format(workOrder.CreatedDate, clock),
+        AssignedDate = ClientDateFormatter.Format(workOrder.AssignedDate),
+        CompletedDate = ClientDateFormatter.Format(workOrder.CompletedDate),
+        DueDateInput = workOrder.DueDate,
+        OriginalDueDate = workOrder.DueDate,
+        ChurchToday = ChurchTimeZone.Today(clock),
+        Priority = workOrder.Priority,
+        Building = workOrder.Building,
+        Floor = workOrder.Floor,
+        DueDateDisplay = ClientDateFormatter.Format(workOrder.DueDate)
+    };
+
+    /// <summary>Copies the edited fields onto <paramref name="workOrder"/>; blank building and floor are cleared.</summary>
+    public void ApplyTo(WorkOrder workOrder, Employee? assignee)
+    {
+        workOrder.Number = WorkOrderNumber;
+        workOrder.Assignee = assignee;
+        workOrder.Title = Title;
+        workOrder.Description = Description;
+        workOrder.Instructions = Instructions;
+        workOrder.RoomNumber = RoomNumber;
+        workOrder.DueDate = DueDateInput;
+        workOrder.Priority = Priority;
+        workOrder.Building = string.IsNullOrWhiteSpace(Building) ? null : Building.Trim();
+        workOrder.Floor = string.IsNullOrWhiteSpace(Floor) ? null : Floor.Trim();
+    }
+
     public WorkOrder? WorkOrder { get; set; }
     public EditMode Mode { get; set; }
 
