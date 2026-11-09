@@ -34,26 +34,30 @@ public sealed class WorkOrdersBulkImportController(
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Post(IFormFile file, CancellationToken cancellationToken)
     {
-        var uploadError = WorkOrderBulkImportProcessor.ValidateUpload(file);
-        if (uploadError != null)
+        if (WorkOrderBulkImportProcessor.ValidateUpload(file) is { } uploadError)
         {
-            return Problem(detail: uploadError, statusCode: StatusCodes.Status400BadRequest);
+            return BadRequestProblem(uploadError);
         }
 
         await using var stream = file.OpenReadStream();
         var parseResult = WorkOrderBulkImportCsvParser.Parse(stream, cancellationToken);
-        if (!parseResult.Success)
+        if (RowsProblem(parseResult) is { } rowsError)
         {
-            return Problem(detail: parseResult.Error, statusCode: StatusCodes.Status400BadRequest);
-        }
-
-        if (parseResult.Rows.Count == 0)
-        {
-            return Problem(detail: "CSV contains no data rows.", statusCode: StatusCodes.Status400BadRequest);
+            return BadRequestProblem(rowsError);
         }
 
         var processor = new WorkOrderBulkImportProcessor(bus, numberGenerator);
-        var response = await processor.ImportAsync(parseResult.Rows, cancellationToken);
-        return Ok(response);
+        return Ok(await processor.ImportAsync(parseResult.Rows, cancellationToken));
     }
+
+    /// <summary>Why the CSV cannot be imported: it did not parse, or it has a header and no data rows.</summary>
+    private static string? RowsProblem(WorkOrderBulkImportParseResult parseResult) => parseResult switch
+    {
+        { Success: false } => parseResult.Error,
+        { Rows.Count: 0 } => "CSV contains no data rows.",
+        _ => null
+    };
+
+    private ObjectResult BadRequestProblem(string? detail) =>
+        Problem(detail: detail, statusCode: StatusCodes.Status400BadRequest);
 }

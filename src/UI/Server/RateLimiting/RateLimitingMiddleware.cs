@@ -19,8 +19,30 @@ public sealed class RateLimitingMiddleware(
     public const string HeaderRemaining = "X-RateLimit-Remaining";
     public const string HeaderReset = "X-RateLimit-Reset";
 
-    public Task InvokeAsync(HttpContext context) =>
-        RateLimitingPipeline.InvokeAsync(context, next, optionsMonitor, limiter);
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var options = optionsMonitor.CurrentValue;
+        if (!ShouldLimit(context, options))
+        {
+            await next(context);
+            return;
+        }
+
+        using var permit = await limiter.AcquireAsync(context, permitCount: 1, context.RequestAborted);
+        if (!permit.IsAcquired)
+        {
+            await RateLimitResponseWriter.WriteRateLimitedResponseAsync(context, options);
+            return;
+        }
+
+        RateLimitResponseWriter.AddRateLimitHeaders(context, limiter, options);
+        await next(context);
+    }
+
+    private static bool ShouldLimit(HttpContext context, ApiRateLimitingOptions options) =>
+        RateLimitingMiddlewareRules.ShouldApply(context)
+        && options.Enabled
+        && ApiRateLimitingExtensions.ShouldApplyToPath(context.Request.Path);
 }
 
 internal static class RateLimitingMiddlewareRules

@@ -27,12 +27,21 @@ public class UiServiceRegistry : ServiceRegistry
         this.AddSingleton<IStartupFilter, TestingDatabaseStartupFilter>();
         this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>();
         this.AddValidatorsFromAssemblyContaining<EmployeeGetAllQueryValidator>();
-
         this.AddScoped<DbContext, DataContext>();
+        AddRealtimeBus();
+        this.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();
+        this.AddTransient<WorkOrderReformatAgent>();
+        this.AddHostedService<AutoReformatAgentService>();
+        ScanForHandlersAndHealthChecks();
+        this.AddScoped<DatabaseMigrationVersionReader>();
+        AddHealthReporting();
+    }
 
+    /// <summary>MediatR with the feature-flag behavior, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
+    private void AddRealtimeBus()
+    {
         this.AddSingleton<RealtimeNotificationHub>();
         this.AddSingleton<IRealtimeNotificationHub>(sp => sp.GetRequiredService<RealtimeNotificationHub>());
-
         this.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<UiServiceRegistry>();
@@ -40,19 +49,12 @@ public class UiServiceRegistry : ServiceRegistry
             cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
-        this.AddTransient<IBus>(provider =>
-        {
-            var mediator = provider.GetRequiredService<IMediator>();
-            var hub = provider.GetRequiredService<IRealtimeNotificationHub>();
-            return new ServerRealtimeBus(mediator, hub);
-        });
+        this.AddTransient<IBus>(provider => new ServerRealtimeBus(
+            provider.GetRequiredService<IMediator>(),
+            provider.GetRequiredService<IRealtimeNotificationHub>()));
+    }
 
-        this.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();
-
-        // Register AI agent and background service
-        this.AddTransient<WorkOrderReformatAgent>();
-        this.AddHostedService<AutoReformatAgentService>();
-
+    private void ScanForHandlersAndHealthChecks() =>
         Scan(scanner =>
         {
             scanner.WithDefaultConventions();
@@ -66,8 +68,8 @@ public class UiServiceRegistry : ServiceRegistry
             scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
         });
 
-        this.AddScoped<DatabaseMigrationVersionReader>();
-
+    private void AddHealthReporting()
+    {
         this.AddHealthChecks()
             .AddCheck<CanConnectToLlmServerHealthCheck>("LlmGateway")
             .AddCheck<CanConnectToDatabaseHealthCheck>("DataAccess")
@@ -76,9 +78,7 @@ public class UiServiceRegistry : ServiceRegistry
             .AddCheck<FunJeffreyCustomEventHealthCheck>("Jeffrey")
             .AddCheck<NeedsRebootHealthCheck>("NeedsReboot")
             .AddCheck<ProcessThreadCountHealthCheck>("ProcessThreadCount");
-
         this.AddSingleton<ILlmHealthCheckCache>(_ => new LlmHealthCheckCache());
-
         this.AddSingleton<IDetailedHealthReportProvider, DetailedHealthReportProvider>();
         this.AddSingleton<IHttpRequestMetricsCounter, HttpRequestMetricsCounter>();
     }

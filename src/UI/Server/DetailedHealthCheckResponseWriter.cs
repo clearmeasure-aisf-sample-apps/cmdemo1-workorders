@@ -43,21 +43,7 @@ public static class DetailedHealthCheckResponseWriter
             TotalDurationMs = report.TotalDuration.TotalMilliseconds,
             Entries = report.Entries
                 .OrderBy(e => e.Key, StringComparer.Ordinal)
-                .Select(pair => new DetailedHealthCheckEntry
-                {
-                    Name = pair.Key,
-                    Status = pair.Value.Status.ToString(),
-                    Description = pair.Value.Description,
-                    DurationMs = pair.Value.Duration.TotalMilliseconds,
-                    ExceptionMessage = pair.Value.Exception?.Message,
-                    ExceptionDetail = pair.Value.Exception?.ToString(),
-                    Data = pair.Value.Data.Count > 0
-                        ? pair.Value.Data.ToDictionary(
-                            d => d.Key,
-                            d => d.Value?.ToString() ?? string.Empty)
-                        : null,
-                    Tags = pair.Value.Tags.Any() ? pair.Value.Tags.ToList() : null
-                })
+                .Select(pair => DetailedHealthCheckEntry.From(pair.Key, pair.Value))
                 .ToList(),
             Version = AssemblyVersion()
         };
@@ -120,6 +106,20 @@ public static class DetailedHealthCheckResponseWriter
 
     internal sealed class DetailedHealthCheckEntry
     {
+        public static DetailedHealthCheckEntry From(string name, HealthReportEntry entry) => new()
+        {
+            Name = name,
+            Status = entry.Status.ToString(),
+            Description = entry.Description,
+            DurationMs = entry.Duration.TotalMilliseconds,
+            ExceptionMessage = entry.Exception?.Message,
+            ExceptionDetail = entry.Exception?.ToString(),
+            Data = entry.Data.Count > 0
+                ? entry.Data.ToDictionary(d => d.Key, d => d.Value?.ToString() ?? string.Empty)
+                : null,
+            Tags = entry.Tags.Any() ? entry.Tags.ToList() : null
+        };
+
         /// <summary>Registered name of the health check.</summary>
         public required string Name { get; init; }
 

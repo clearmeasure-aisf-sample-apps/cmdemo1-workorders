@@ -46,40 +46,32 @@ public class EnvironmentStatusController : ControllerBase
 
     private static EnvironmentStatusResponse BuildResponse()
     {
-        var names = new List<string>();
-        var variables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var name in ReportedEnvironmentVariableNames)
-        {
-            if (Environment.GetEnvironmentVariable(name) is null)
-            {
-                continue;
-            }
-
-            names.Add(name);
-            variables[name] = RedactedValue;
-        }
-
-        var version = Assembly.GetEntryAssembly()
-            ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion ?? "unknown";
-        var gitSha = Assembly.GetEntryAssembly()
-            ?.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .FirstOrDefault(a => a.Key == "SourceRevisionId")
-            ?.Value ?? "unknown";
-        var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
-            ?? "unknown";
-
+        var names = ReportedEnvironmentVariableNames
+            .Where(name => Environment.GetEnvironmentVariable(name) is not null)
+            .ToList();
         return new EnvironmentStatusResponse(
             OsDescription: RuntimeInformation.OSDescription,
             ProcessorCount: Environment.ProcessorCount,
             ClrVersion: Environment.Version.ToString(),
             EnvironmentVariableNames: names,
-            EnvironmentVariables: variables,
-            Version: version,
-            GitSha: gitSha,
-            EnvironmentName: environmentName);
+            EnvironmentVariables: names.ToDictionary(name => name, _ => RedactedValue, StringComparer.OrdinalIgnoreCase),
+            Version: EntryAssemblyVersion(),
+            GitSha: EntryAssemblySourceRevision(),
+            EnvironmentName: Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+                ?? "unknown");
     }
+
+    private static string EntryAssemblyVersion() =>
+        Assembly.GetEntryAssembly()
+            ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? "unknown";
+
+    private static string EntryAssemblySourceRevision() =>
+        Assembly.GetEntryAssembly()
+            ?.GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(a => a.Key == "SourceRevisionId")
+            ?.Value ?? "unknown";
 }
 
 /// <summary>

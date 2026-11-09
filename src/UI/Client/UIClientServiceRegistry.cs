@@ -17,30 +17,9 @@ public class UIClientServiceRegistry : ServiceRegistry
 {
     public UIClientServiceRegistry()
     {
-        this.AddSingleton<IUserSessionStore, LocalStorageUserSessionStore>();
-        this.AddScoped<CustomAuthenticationStateProvider>();
-        this.AddScoped<AuthenticationStateProvider>(provider =>
-            provider.GetRequiredService<CustomAuthenticationStateProvider>());
-
-        this.AddScoped<IUiBus>(_ => new MvcBus(NullLogger<MvcBus>.Instance));
-        this.AddScoped<IUserSession, UserSession>();
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RemotableBus>());
-        this.AddTransient<IPublisherGateway>(sp =>
-            new PublisherGateway(sp.GetRequiredService<HttpClient>(), sp.GetRequiredService<IConfiguration>()));
-        this.AddTransient<IBus, RemotableBus>();
-
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<UIClientServiceRegistry>());
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CanConnectToLlmServerHealthCheck>());
-        
-        
-        this.AddSingleton<ChatClientFactory>();
-        this.AddTransient<WorkOrderTool>();
-        this.AddSingleton<ThemePreferenceService>();
-        this.AddSingleton<WorkOrderSearchState>();
-        this.AddScoped<IFeatureFlags, BusFeatureFlags>();
-        this.AddTransient<WorkOrderBulkActionService>();
-        this.AddSingleton(TimeProvider.System);
-
+        AddAuthentication();
+        AddRemotableBus();
+        AddClientServices();
         Scan(scanner =>
         {
             scanner.WithDefaultConventions();
@@ -50,9 +29,40 @@ public class UIClientServiceRegistry : ServiceRegistry
             scanner.ConnectImplementationsToTypesClosing(typeof(IRequestHandler<,>));
             scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
         });
-
         this.AddHealthChecks().AddCheck<HealthCheckTracer>("UI.Client");
         this.AddHealthChecks().AddCheck<RemotableBusHealthCheck>("Remotable Bus");
         this.AddHealthChecks().AddCheck<ServerHealthCheck>("Server health check");
+    }
+
+    private void AddAuthentication()
+    {
+        this.AddSingleton<IUserSessionStore, LocalStorageUserSessionStore>();
+        this.AddScoped<CustomAuthenticationStateProvider>();
+        this.AddScoped<AuthenticationStateProvider>(provider =>
+            provider.GetRequiredService<CustomAuthenticationStateProvider>());
+    }
+
+    /// <summary>Requests go to the server through the remotable bus; UI events through the MVC bus.</summary>
+    private void AddRemotableBus()
+    {
+        this.AddScoped<IUiBus>(_ => new MvcBus(NullLogger<MvcBus>.Instance));
+        this.AddScoped<IUserSession, UserSession>();
+        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RemotableBus>());
+        this.AddTransient<IPublisherGateway>(sp =>
+            new PublisherGateway(sp.GetRequiredService<HttpClient>(), sp.GetRequiredService<IConfiguration>()));
+        this.AddTransient<IBus, RemotableBus>();
+        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<UIClientServiceRegistry>());
+        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CanConnectToLlmServerHealthCheck>());
+    }
+
+    private void AddClientServices()
+    {
+        this.AddSingleton<ChatClientFactory>();
+        this.AddTransient<WorkOrderTool>();
+        this.AddSingleton<ThemePreferenceService>();
+        this.AddSingleton<WorkOrderSearchState>();
+        this.AddScoped<IFeatureFlags, BusFeatureFlags>();
+        this.AddTransient<WorkOrderBulkActionService>();
+        this.AddSingleton(TimeProvider.System);
     }
 }
