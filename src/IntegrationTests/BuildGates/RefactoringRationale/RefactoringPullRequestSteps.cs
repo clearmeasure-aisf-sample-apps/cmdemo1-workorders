@@ -64,6 +64,9 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     public void AddGuardrailBaselineLine() =>
         File.AppendAllText(PathOf(GuardrailBaseline), "src/Core/SearchUtils.cs :: SearchUtils\n");
 
+    public void AddNewGuardrailBaseline() =>
+        Write("src/UnitTests/BuildGates/Refactoring/Baselines/partial-types.txt", "# new baseline\nsrc/Core/Legacy.cs :: Legacy\n");
+
     public void DescribeWithRationale(string row) =>
         File.WriteAllText(
             _bodyPath,

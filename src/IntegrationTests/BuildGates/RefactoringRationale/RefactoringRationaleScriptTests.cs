@@ -118,6 +118,18 @@ public class RefactoringRationaleScriptTests
     }
 
     [Test]
+    public void ShouldPass_WhenAPullRequestIntroducesABaselineTheBaseDoesNotHave()
+    {
+        _steps.CommitBaseWithOversizedFile();
+        _steps.AddNewGuardrailBaseline();
+        _steps.DescribeWithoutRationale();
+
+        var run = _steps.RunRationaleCheck();
+
+        run.ExitCode.ShouldBe(0, run.Output);
+    }
+
+    [Test]
     public void ShouldPassWithoutARationale_WhenNoOversizedFileChanges()
     {
         _steps.CommitBaseWithOversizedFile();

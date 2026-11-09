@@ -88,7 +88,8 @@ function Test-Ratchet {
     $baselines = @(Invoke-Git @('ls-tree', '-r', '--name-only', $HeadRef, '--', $GuardrailBaselineFolder))
     if ($OversizedBaselinePath) { $baselines += $OversizedBaselinePath }
     foreach ($baseline in $baselines | Where-Object { $_ } | Sort-Object -Unique) {
-        $before = [System.Collections.Generic.HashSet[string]]::new([string[]](Get-BaselineEntries $BaseRef $baseline))
+        $before = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+        foreach ($entry in Get-BaselineEntries $BaseRef $baseline) { [void]$before.Add($entry) }
         $added = @(Get-BaselineEntries $HeadRef $baseline | Where-Object { -not $before.Contains($_) })
         if ($added.Count -gt 0 -and (Test-GitPath $BaseRef $baseline)) {
             Add-Failure "Baseline $baseline gained $($added.Count) line(s); baselines only shrink. Fix the code instead of baselining it: $($added -join '; ')"
