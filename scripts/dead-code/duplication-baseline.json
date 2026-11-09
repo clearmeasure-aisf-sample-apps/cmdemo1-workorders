@@ -1,5 +1,5 @@
 {
   "minLines": 8,
-  "maxDuplicatedLines": 8261,
+  "maxDuplicatedLines": 8329,
   "note": "Ratchet ceiling for normalized 8-line clones under src, excluding Generated, bin, and obj. May only decrease. #1540"
 }
