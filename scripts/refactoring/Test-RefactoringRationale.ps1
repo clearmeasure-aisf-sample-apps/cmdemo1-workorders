@@ -121,7 +121,8 @@ function Get-PlaybookNames([string[]] $Playbook, [string] $Heading) {
         elseif ($rows.Count -gt 0) { break }
     }
     return @($rows | Select-Object -Skip 2 | ForEach-Object {
-        $name = ($_.Trim('|') -split '\|')[0]
+        $name = ($_.Trim('|') -split '\|')[0].Trim()
+        $name
         $name -split '[()]' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
     })
 }

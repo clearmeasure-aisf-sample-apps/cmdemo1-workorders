@@ -76,6 +76,22 @@ public class RefactoringRationaleScriptTests
         run.Output.ShouldContain(expectedFailure);
     }
 
+    [TestCase("Replace Primitive with Object (Value Object)")]
+    [TestCase("Replace Primitive with Object")]
+    [TestCase("Value Object")]
+    public void ShouldAcceptAMove_WhenItIsWrittenAsThePlaybookNamesItOrByAnAlias(string move)
+    {
+        _steps.CommitBaseWithOversizedFile();
+        _steps.ExtractType("WorkOrderDraft");
+        _steps.AddFixtureFor("WorkOrderDraftTests");
+        _steps.DescribeWithRationale(
+            $"| Primitive Obsession | {move} | WorkOrderDraft | The draft fields were raw strings validated separately in every tool |");
+
+        var run = _steps.RunRationaleCheck();
+
+        run.ExitCode.ShouldBe(0, run.Output);
+    }
+
     [Test]
     public void ShouldPass_WhenAnotherMoveIsNamedWithItsReason()
     {
