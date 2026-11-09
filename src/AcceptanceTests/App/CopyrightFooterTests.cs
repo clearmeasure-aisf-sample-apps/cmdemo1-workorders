@@ -57,7 +57,7 @@ public class CopyrightFooterTests : AcceptanceTestBase
 
         var footerNote = Page.GetByTestId(nameof(MainLayout.Elements.FooterNote));
         await footerNote.WaitForAsync();
-        await Expect(footerNote).ToContainTextAsync("Requests are typically reviewed within one business day.");
+        await Expect(footerNote).ToContainTextAsync("Facility requests are typically reviewed within one business day.");
     }
 
     [Test, Retry(2)]
