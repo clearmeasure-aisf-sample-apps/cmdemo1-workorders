@@ -153,8 +153,10 @@ internal static class PassThroughExpressions
 
     private static bool IsNameof(ExpressionSyntax expr)
     {
-        return expr is InvocationExpressionSyntax { Expression: IdentifierNameSyntax name }
-            && name.Identifier.ValueText == "nameof";
+        return expr is InvocationExpressionSyntax
+        {
+            Expression: IdentifierNameSyntax { Identifier.ValueText: "nameof" },
+        };
     }
 
     private static ExpressionSyntax Unwrap(ExpressionSyntax expression)

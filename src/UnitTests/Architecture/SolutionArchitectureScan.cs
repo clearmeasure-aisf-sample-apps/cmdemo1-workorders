@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
@@ -32,7 +33,7 @@ internal static class SolutionArchitectureScan
     /// </summary>
     internal static string FindRepoRoot()
     {
-        return ClearMeasure.Bootcamp.UnitTests.BuildGates.RepoFiles.Root();
+        return RepoFiles.Root();
     }
 
     /// <summary>

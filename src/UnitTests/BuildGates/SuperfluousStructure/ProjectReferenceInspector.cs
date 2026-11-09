@@ -158,11 +158,11 @@ internal static class ProjectReferenceInspector
 
     private sealed class ProjectFile
     {
-        public string FullPath { get; init; } = "";
+        public string FullPath { get; private init; } = "";
 
-        public string RelativePath { get; init; } = "";
+        public string RelativePath { get; private init; } = "";
 
-        public bool IsExcluded { get; init; }
+        public bool IsExcluded { get; private init; }
 
         public static ProjectFile Read(string fullPath, string repositoryRoot)
         {
@@ -190,10 +190,9 @@ internal static class ProjectReferenceInspector
                 return true;
             }
 
-            var output = document.Descendants()
-                .FirstOrDefault(element => element.Name.LocalName == "OutputType")
-                ?.Value
-                ?.Trim() ?? "";
+            var outputElement = document.Descendants()
+                .FirstOrDefault(element => element.Name.LocalName == "OutputType");
+            var output = outputElement == null ? "" : outputElement.Value.Trim();
             return output.Equals("Exe", StringComparison.OrdinalIgnoreCase)
                 || output.Equals("WinExe", StringComparison.OrdinalIgnoreCase);
         }

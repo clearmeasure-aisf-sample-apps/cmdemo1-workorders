@@ -27,7 +27,7 @@ public static class SuperfluousStructureScanner
     private static IReadOnlyList<string> PassThroughClasses(IReadOnlyList<ParsedType> types)
     {
         return types
-            .Where(type => type.SawForwarder && !type.PassThroughDisqualified && type.ForwardTarget != null)
+            .Where(type => type is { SawForwarder: true, PassThroughDisqualified: false, ForwardTarget: not null })
             .Select(type => type.Id)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(id => id, StringComparer.Ordinal)

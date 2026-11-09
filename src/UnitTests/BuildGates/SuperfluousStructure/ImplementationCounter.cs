@@ -32,9 +32,12 @@ internal static class ImplementationCounter
 
     private static bool IsAbstractClass(ParsedType type)
     {
-        return type.IsAbstract
-            && !type.IsStatic
-            && type.Kind is DeclaredTypeKind.Class or DeclaredTypeKind.Record;
+        return type is
+        {
+            IsAbstract: true,
+            IsStatic: false,
+            Kind: DeclaredTypeKind.Class or DeclaredTypeKind.Record,
+        };
     }
 
     private sealed class TypeGraph
@@ -107,7 +110,7 @@ internal static class ImplementationCounter
 
         private static bool IsConcrete(ParsedType type)
         {
-            return !type.IsAbstract && !type.IsStatic && type.Kind != DeclaredTypeKind.Interface;
+            return type is { IsAbstract: false, IsStatic: false, Kind: not DeclaredTypeKind.Interface };
         }
     }
 

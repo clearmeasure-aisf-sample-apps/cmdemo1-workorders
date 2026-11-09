@@ -136,14 +136,14 @@ public static class UnusedPackageGate
         return unexpected;
     }
 
-    private readonly record struct ProjectInputs(string RepoRoot, string Configuration, string Project);
+    private readonly record struct ProjectInputs(string RepoRoot, string OutputConfiguration, string Project);
 
     private static void CollectProject(ProjectInputs input, List<string> missing, List<UnusedPackage> unused)
     {
         var relative = Relative(input.RepoRoot, input.Project);
         var projectDirectory = Path.GetDirectoryName(input.Project)!;
         var assets = Path.Combine(projectDirectory, "obj", "project.assets.json");
-        var output = ResolveOutputPath(input.Project, input.Configuration);
+        var output = ResolveOutputPath(input.Project, input.OutputConfiguration);
         if (!File.Exists(assets) || !File.Exists(output))
         {
             missing.Add(relative);

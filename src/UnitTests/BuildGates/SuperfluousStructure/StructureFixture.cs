@@ -19,7 +19,7 @@ internal static class StructureFixture
         </Project>
         """;
 
-    public static string CreateRepo()
+    private static string CreateRepo()
     {
         var path = Path.Combine(Path.GetTempPath(), "structure-gate-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
@@ -38,7 +38,7 @@ internal static class StructureFixture
         File.WriteAllText(full, content);
     }
 
-    public static void Delete(string repo)
+    private static void Delete(string repo)
     {
         if (Directory.Exists(repo))
         {

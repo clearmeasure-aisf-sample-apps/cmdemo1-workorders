@@ -5,7 +5,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.SuperfluousStructure;
 /// </summary>
 internal static class FolderShapeInspector
 {
-    public const int MaxDepth = 4;
+    private const int MaxDepth = 4;
 
     public static IReadOnlyList<string> SingleFileFolders(string repositoryRoot)
     {

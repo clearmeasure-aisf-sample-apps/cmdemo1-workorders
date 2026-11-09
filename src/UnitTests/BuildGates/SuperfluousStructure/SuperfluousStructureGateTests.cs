@@ -5,10 +5,10 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.SuperfluousStructure;
 [TestFixture]
 public class SuperfluousStructureGateTests
 {
-    public const string AllowListPath =
+    private const string AllowListPath =
         "src/UnitTests/BuildGates/SuperfluousStructure/superfluous-structure-allowlist.json";
 
-    public const string BaselinePath =
+    private const string BaselinePath =
         "src/UnitTests/BuildGates/SuperfluousStructure/superfluous-structure-baseline.json";
 
     [Test]

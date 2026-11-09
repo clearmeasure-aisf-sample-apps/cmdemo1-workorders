@@ -2,25 +2,25 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.SuperfluousStructure;
 
 internal sealed class ParseContext
 {
-    public string Namespace { get; init; } = "";
+    public string Namespace { get; private init; } = "";
 
-    public string ParentPlus { get; init; } = "";
+    public string ParentPlus { get; private init; } = "";
 
-    public string ParentDots { get; init; } = "";
+    public string ParentDots { get; private init; } = "";
 
-    public List<string> Usings { get; init; } = [];
+    public List<string> Usings { get; private init; } = [];
 
-    public List<UsingAlias> Aliases { get; init; } = [];
+    public List<UsingAlias> Aliases { get; private init; } = [];
 
     public string ProjectDirectory { get; init; } = "";
 
     public string RelativePath { get; init; } = "";
 
-    public List<ParsedType> Sink { get; init; } = [];
+    public List<ParsedType> Sink { get; private init; } = [];
 
-    public List<string> GlobalUsings { get; init; } = [];
+    public List<string> GlobalUsings { get; private init; } = [];
 
-    public List<UsingAlias> GlobalAliases { get; init; } = [];
+    public List<UsingAlias> GlobalAliases { get; private init; } = [];
 
     public ParseContext WithNamespace(string namespaceName, List<string> usings, List<UsingAlias> aliases)
     {
