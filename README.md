@@ -15,7 +15,7 @@ This codebase serves as both a working application and a teaching reference for 
 
 ## AI ops bot
 
-Issues assigned to `cm-ai-ops-bot` are picked up automatically. The bot comments a plan, opens a pull request that links the issue, and a human reviews and merges.
+Issues assigned to `cm-ai-ops-bot` are picked up automatically. The bot comments a plan, opens a pull request that links the issue, and a human reviews and merges. For the full board flow, see [docs/ai-ops-bot.md](docs/ai-ops-bot.md).
 
 ## Solution Structure
 
