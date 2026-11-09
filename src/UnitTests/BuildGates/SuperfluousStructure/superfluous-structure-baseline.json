@@ -1,0 +1,48 @@
+{
+  "singleImplementationInterfaces": {
+    "max": 1,
+    "ids": [
+      "ClearMeasure.Bootcamp.Core.Model.Events.IStateTransitionEvent"
+    ]
+  },
+  "singleSubclassAbstractClasses": {
+    "max": 0,
+    "ids": []
+  },
+  "passThroughClasses": {
+    "max": 0,
+    "ids": []
+  },
+  "singleFileFolders": {
+    "max": 19,
+    "ids": [
+      "src/AcceptanceTests/Buildings",
+      "src/AcceptanceTests/NServiceBus",
+      "src/AcceptanceTests/TeamsAndVendors",
+      "src/Core/Messaging",
+      "src/Core/Model/Constants",
+      "src/DataAccess/FeatureFlags",
+      "src/IntegrationTests/Handlers",
+      "src/IntegrationTests/UI/Server",
+      "src/IntegrationTests/Worker",
+      "src/McpServer/Resources",
+      "src/UI.Shared/App_Code",
+      "src/UI/Server/Grpc",
+      "src/UI/Server/Handlers",
+      "src/UI/Server/Testing",
+      "src/UnitTests/Core/Import",
+      "src/UnitTests/Logging",
+      "src/Worker/Messaging",
+      "src/Worker/Sagas/AiBotWorkerOrder/Commands",
+      "src/src/IntegrationTests/LlmGateway"
+    ]
+  },
+  "deepFolders": {
+    "max": 0,
+    "ids": []
+  },
+  "unreferencedProjects": {
+    "max": 0,
+    "ids": []
+  }
+}
