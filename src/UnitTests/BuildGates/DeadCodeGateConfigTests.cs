@@ -31,7 +31,7 @@ public class DeadCodeGateConfigTests
     [Test]
     public void QodanaYaml_EnablesUnusedSymbolInspectionsAndFailThreshold()
     {
-        var yaml = File.ReadAllText(Path.Combine(RepoFiles.Root(), "qodana.yaml"));
+        var yaml = RepositoryCheckout.Current.ReadText("qodana.yaml");
 
         yaml.ShouldContain("failThreshold: 0");
         foreach (var inspection in UnusedSymbolInspections)
@@ -43,7 +43,7 @@ public class DeadCodeGateConfigTests
     [Test]
     public void PrivateBuild_InvokesDeadCodeGates()
     {
-        var script = File.ReadAllText(Path.Combine(RepoFiles.Root(), "PrivateBuild.ps1"));
+        var script = RepositoryCheckout.Current.ReadText("PrivateBuild.ps1");
 
         script.ShouldContain("scripts/dead-code/Invoke-DeadCodeGates.ps1");
     }
@@ -51,10 +51,7 @@ public class DeadCodeGateConfigTests
     [Test]
     public void BuildWorkflow_CodeAnalysis_InvokesDeadCodeGates()
     {
-        var yaml = File.ReadAllText(Path.Combine(RepoFiles.Root(), ".github", "workflows", "build.yml"));
-        var jobStart = yaml.IndexOf("  code-analysis:", StringComparison.Ordinal);
-        var nextJob = yaml.IndexOf("\n  qodana:", jobStart, StringComparison.Ordinal);
-        var job = yaml.Substring(jobStart, nextJob - jobStart);
+        var job = WorkflowFile.Read(RepositoryCheckout.Current, "build.yml").Job("code-analysis").Text;
 
         job.ShouldContain("scripts/dead-code/Invoke-DeadCodeGates.ps1");
         job.ShouldContain("dotnet build src/ChurchBulletin.sln");

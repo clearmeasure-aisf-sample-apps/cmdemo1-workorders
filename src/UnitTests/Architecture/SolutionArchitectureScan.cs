@@ -12,12 +12,12 @@ internal static class SolutionArchitectureScan
     private static readonly char[] FolderSeparators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
 
     /// <summary>
-    /// Findings for the five architecture rules against <paramref name="repoRoot"/>.
+    /// Findings for the five architecture rules against the hand-written sources of <paramref name="checkout"/>.
     /// </summary>
-    internal static Result Scan(string repoRoot)
+    internal static Result Scan(RepositoryCheckout checkout)
     {
-        var (coreProjectReferences, uiDataAccessReferences) = ScanProjects(repoRoot);
-        var (handlerNamingViolations, multiplePublicTypeFiles, namespaceMismatches) = ScanSources(repoRoot);
+        var (coreProjectReferences, uiDataAccessReferences) = ScanProjects(checkout);
+        var (handlerNamingViolations, multiplePublicTypeFiles, namespaceMismatches) = ScanSources(checkout);
         return new Result
         {
             CoreProjectReferences = coreProjectReferences,
@@ -29,51 +29,20 @@ internal static class SolutionArchitectureScan
     }
 
     /// <summary>
-    /// Repository root, found by walking up from the test output directory.
+    /// The ratchet committed at <c>src/UnitTests/Architecture/Baselines/{fileName}</c>.
     /// </summary>
-    internal static string FindRepoRoot()
+    internal static KeyRatchet ReadBaseline(RepositoryCheckout checkout, string fileName)
     {
-        return RepoFiles.Root();
+        return checkout.ReadRatchet($"src/UnitTests/Architecture/Baselines/{fileName}");
     }
 
-    /// <summary>
-    /// Reads <c>src/UnitTests/Architecture/Baselines/{fileName}</c>.
-    /// </summary>
-    internal static IReadOnlySet<string> ReadBaseline(string repoRoot, string fileName)
-    {
-        var path = Path.Combine(repoRoot, "src", "UnitTests", "Architecture", "Baselines", fileName);
-        if (!File.Exists(path))
-        {
-            throw new FileNotFoundException("Architecture baseline was not found.", path);
-        }
-
-        return ArchitectureRules.ParseBaseline(File.ReadAllText(path));
-    }
-
-    /// <summary>
-    /// True for generated source, designer files, and build output. Those paths are not architecture-gated.
-    /// </summary>
-    internal static bool IsExcludedSource(string path)
-    {
-        var normalized = path.Replace('\\', '/');
-        if (normalized.Contains("/bin/", StringComparison.Ordinal)
-            || normalized.Contains("/obj/", StringComparison.Ordinal)
-            || normalized.Contains("/Generated/", StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        return normalized.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)
-            || normalized.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static (IReadOnlyList<string> Core, IReadOnlyList<string> UiDataAccess) ScanProjects(string repoRoot)
+    private static (IReadOnlyList<string> Core, IReadOnlyList<string> UiDataAccess) ScanProjects(RepositoryCheckout checkout)
     {
         var core = new List<string>();
         var uiDataAccess = new List<string>();
-        foreach (var projectFile in ProjectFiles(repoRoot))
+        foreach (var projectFile in checkout.SourceFiles(".csproj"))
         {
-            var relative = RelativePath(repoRoot, projectFile);
+            var relative = checkout.Relative(projectFile);
             var xml = File.ReadAllText(projectFile);
             core.AddRange(ArchitectureRules.CoreProjectReferenceViolations(relative, xml));
             if (ArchitectureRules.IsUiProject(relative) && ArchitectureRules.ReferencesDataAccess(xml))
@@ -88,15 +57,15 @@ internal static class SolutionArchitectureScan
     private static (
         IReadOnlyList<string> Handlers,
         IReadOnlyList<string> MultiplePublicTypes,
-        IReadOnlyList<string> NamespaceMismatches) ScanSources(string repoRoot)
+        IReadOnlyList<string> NamespaceMismatches) ScanSources(RepositoryCheckout checkout)
     {
         var handlers = new List<string>();
         var multiplePublicTypes = new List<string>();
         var namespaceMismatches = new List<string>();
         var projects = new Dictionary<string, (string RootNamespace, string Directory)>(StringComparer.Ordinal);
-        foreach (var sourceFile in SourceFiles(repoRoot))
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
         {
-            var relative = RelativePath(repoRoot, sourceFile);
+            var relative = checkout.Relative(sourceFile);
             var root = ArchitectureRules.Parse(File.ReadAllText(sourceFile));
             foreach (var name in ArchitectureRules.MisnamedHandlerTypeNames(root))
             {
@@ -204,33 +173,6 @@ internal static class SolutionArchitectureScan
         }
 
         return null;
-    }
-
-    private static IEnumerable<string> ProjectFiles(string repoRoot)
-    {
-        return EnumerateUnderSrc(repoRoot, "*.csproj");
-    }
-
-    private static IEnumerable<string> SourceFiles(string repoRoot)
-    {
-        return EnumerateUnderSrc(repoRoot, "*.cs");
-    }
-
-    private static IEnumerable<string> EnumerateUnderSrc(string repoRoot, string pattern)
-    {
-        var src = Path.Combine(repoRoot, "src");
-        foreach (var file in Directory.EnumerateFiles(src, pattern, SearchOption.AllDirectories))
-        {
-            if (!IsExcludedSource(file))
-            {
-                yield return file;
-            }
-        }
-    }
-
-    private static string RelativePath(string repoRoot, string fullPath)
-    {
-        return Path.GetRelativePath(repoRoot, fullPath).Replace('\\', '/');
     }
 
     private static IReadOnlyList<string> Sorted(List<string> items)

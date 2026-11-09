@@ -9,29 +9,25 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 [TestFixture]
 public class BuildFactsWorkflowTests
 {
-    private const string StampStep = "name: Stamp the build facts into the image's files";
+    private const string StampStep = "Stamp the build facts into the image's files";
+
+    private const string ScriptPath = "scripts/Write-BuildFacts.ps1";
 
     [Test]
     public void ReleaseWorkflow_WhenRead_StampsTheFactsBetweenExtractingTheUiAndBuildingTheImage()
     {
-        var yaml = ReadReleaseWorkflowWithTheStampStep();
+        var steps = ReleaseWorkflowWithTheStampStep().StepNames().ToList();
 
-        var extract = yaml.IndexOf("name: Extract the UI for the image", StringComparison.Ordinal);
-        var stamp = yaml.IndexOf(StampStep, StringComparison.Ordinal);
-        var image = yaml.IndexOf("name: Build and push the image", StringComparison.Ordinal);
-
-        extract.ShouldBeGreaterThan(-1);
-        stamp.ShouldBeGreaterThan(extract);
-        image.ShouldBeGreaterThan(stamp);
+        steps.IndexOf("Extract the UI for the image").ShouldBeGreaterThan(-1);
+        steps.IndexOf(StampStep).ShouldBeGreaterThan(steps.IndexOf("Extract the UI for the image"));
+        steps.IndexOf("Build and push the image").ShouldBeGreaterThan(steps.IndexOf(StampStep));
     }
 
     [Test]
     public void ReleaseWorkflow_WhenRead_CallsTheScriptWithParametersItHas()
     {
-        var yaml = ReadReleaseWorkflowWithTheStampStep();
-        var script = File.ReadAllText(FindRepoFile(Path.Combine("scripts", "Write-BuildFacts.ps1")));
-        var start = yaml.IndexOf(StampStep, StringComparison.Ordinal);
-        var step = yaml.Substring(start, yaml.IndexOf("\n      - ", start, StringComparison.Ordinal) - start);
+        var step = ReleaseWorkflowWithTheStampStep().Step(StampStep);
+        var script = RepositoryCheckout.Current.ReadText(ScriptPath);
 
         step.ShouldContain("if: hashFiles('scripts/Write-BuildFacts.ps1') != ''");
         step.ShouldContain("GH_TOKEN: ${{ github.token }}");
@@ -55,8 +51,8 @@ public class BuildFactsWorkflowTests
     [TestCase("qodana-report")]
     public void BuildWorkflow_WhenRead_UploadsTheArtifactTheScriptReads(string artifact)
     {
-        var yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
-        var script = File.ReadAllText(FindRepoFile(Path.Combine("scripts", "Write-BuildFacts.ps1")));
+        var yaml = WorkflowFile.Read(RepositoryCheckout.Current, "build.yml").Text;
+        var script = RepositoryCheckout.Current.ReadText(ScriptPath);
 
         yaml.ShouldContain($"name: {artifact}");
         script.ShouldContain($"'{artifact}'");
@@ -64,32 +60,15 @@ public class BuildFactsWorkflowTests
 
     // release.yml is the demo-environment kit's file (its sync-app-workflows.ps1 writes it; it is not edited here).
     // A copy older than the kit's build-facts step has nothing to check yet, and the release then stamps no facts.
-    private static string ReadReleaseWorkflowWithTheStampStep()
+    private static WorkflowFile ReleaseWorkflowWithTheStampStep()
     {
-        var yaml = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "release.yml")));
-        if (!yaml.Contains(StampStep, StringComparison.Ordinal))
+        var workflow = WorkflowFile.Read(RepositoryCheckout.Current, "release.yml");
+        if (!workflow.StepNames().Contains(StampStep))
         {
             Assert.Ignore(
                 "release.yml has no build-facts step: it is older than the kit's template. Run the kit's sync-app-workflows.ps1.");
         }
 
-        return yaml;
-    }
-
-    private static string FindRepoFile(string relativePath)
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, relativePath);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException($"{relativePath} not found from test directory.");
+        return workflow;
     }
 }

@@ -11,51 +11,21 @@ internal static class SourceTypeParser
 {
     private static readonly CSharpParseOptions ParseOptions = new(LanguageVersion.Preview);
 
-    public static IReadOnlyList<ParsedType> ParseRepository(string repositoryRoot)
+    public static IReadOnlyList<ParsedType> ParseRepository(RepositoryCheckout checkout)
     {
-        var files = EnumerateFiles(repositoryRoot);
-        var contexts = files.Select(path => ParseFile(repositoryRoot, path)).ToList();
+        var contexts = checkout.SourceFiles(".cs").Select(path => ParseFile(checkout, path)).ToList();
         ApplyGlobalUsings(contexts);
         return MergePartials(contexts.SelectMany(context => context.Sink));
     }
 
-    private static List<string> EnumerateFiles(string repositoryRoot)
-    {
-        var src = Path.Combine(repositoryRoot, "src");
-        var files = new List<string>();
-        if (!Directory.Exists(src))
-        {
-            return files;
-        }
-
-        Walk(src, files);
-        return files;
-    }
-
-    private static void Walk(string directory, List<string> files)
-    {
-        foreach (var file in Directory.GetFiles(directory).Where(StructurePaths.IsParsedCSharp))
-        {
-            files.Add(file);
-        }
-
-        foreach (var child in Directory.GetDirectories(directory))
-        {
-            if (!StructurePaths.IsSkippedDirectory(Path.GetFileName(child)))
-            {
-                Walk(child, files);
-            }
-        }
-    }
-
-    private static ParseContext ParseFile(string repositoryRoot, string path)
+    private static ParseContext ParseFile(RepositoryCheckout checkout, string path)
     {
         var text = File.ReadAllText(path);
         var root = CSharpSyntaxTree.ParseText(text, ParseOptions).GetCompilationUnitRoot();
         var context = new ParseContext
         {
-            ProjectDirectory = ProjectDirectory(repositoryRoot, path),
-            RelativePath = StructurePaths.Relative(repositoryRoot, path)
+            ProjectDirectory = ProjectDirectory(checkout, path),
+            RelativePath = checkout.Relative(path)
         };
         ReadUsings(root.Usings, context);
         WalkMembers(root.Members, context);
@@ -273,9 +243,9 @@ internal static class SourceTypeParser
         };
     }
 
-    private static string ProjectDirectory(string repositoryRoot, string filePath)
+    private static string ProjectDirectory(RepositoryCheckout checkout, string filePath)
     {
-        var src = Path.Combine(repositoryRoot, "src");
+        var src = checkout.PathOf("src");
         var directory = Path.GetDirectoryName(filePath) ?? src;
         while (IsUnder(directory, src))
         {

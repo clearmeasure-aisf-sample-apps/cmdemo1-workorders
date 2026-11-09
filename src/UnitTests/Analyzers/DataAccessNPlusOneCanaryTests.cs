@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using System.Xml.Linq;
+using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Analyzers;
@@ -91,40 +91,24 @@ public class DataAccessNPlusOneCanaryTests
             .ShouldBeEmpty(result.Output);
     }
 
-    private static async Task<BuildResult> BuildCanaryAsync(string source)
+    private static async Task<CommandOutcome> BuildCanaryAsync(string source)
     {
-        var repoRoot = FindRepoRoot();
-        var dataAccessProject = Path.Combine(repoRoot, "src", "DataAccess", "DataAccess.csproj");
-        var editorConfig = Path.Combine(repoRoot, "src", "DataAccess", ".editorconfig");
+        var checkout = RepositoryCheckout.Current;
+        var dataAccessProject = checkout.PathOf("src/DataAccess/DataAccess.csproj");
+        var editorConfig = checkout.PathOf("src/DataAccess/.editorconfig");
         File.Exists(dataAccessProject).ShouldBeTrue(dataAccessProject);
         File.Exists(editorConfig).ShouldBeTrue(editorConfig);
         RequireErrorSeverity(editorConfig, "NP0001");
         RequireErrorSeverity(editorConfig, "LC007");
 
         var project = XDocument.Load(dataAccessProject);
-        var packages = ReadCanaryPackages(project);
-        var targetFramework = ReadTargetFramework(project);
-        var projectDirectory = Path.Combine(
-            Path.GetTempPath(),
-            $"dataaccess-nplusone-canary-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(projectDirectory);
-
-        try
-        {
-            File.Copy(editorConfig, Path.Combine(projectDirectory, ".editorconfig"));
-            await File.WriteAllTextAsync(
-                Path.Combine(projectDirectory, "OrderByCustomerQueryHandler.cs"),
-                source);
-            WriteProject(
-                Path.Combine(projectDirectory, "Canary.csproj"),
-                targetFramework,
-                packages);
-            return await RunDotNetBuild(projectDirectory);
-        }
-        finally
-        {
-            Directory.Delete(projectDirectory, recursive: true);
-        }
+        using var canary = new ScratchTree("dataaccess-nplusone-canary")
+            .Write(".editorconfig", await File.ReadAllTextAsync(editorConfig))
+            .Write("OrderByCustomerQueryHandler.cs", source);
+        WriteProject(canary.PathOf("Canary.csproj"), ReadTargetFramework(project), ReadCanaryPackages(project));
+        return await ExternalCommand.Dotnet("build", "Canary.csproj", "--nologo", "--no-incremental")
+            .In(canary.Root)
+            .RunAsync();
     }
 
     private static void RequireErrorSeverity(string editorConfigPath, string diagnosticId)
@@ -279,45 +263,6 @@ public class DataAccessNPlusOneCanaryTests
         document.Save(path);
     }
 
-    private static async Task<BuildResult> RunDotNetBuild(string workingDirectory)
-    {
-        var startInfo = new ProcessStartInfo("dotnet")
-        {
-            WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        startInfo.ArgumentList.Add("build");
-        startInfo.ArgumentList.Add("Canary.csproj");
-        startInfo.ArgumentList.Add("--nologo");
-        startInfo.ArgumentList.Add("--no-incremental");
-
-        using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("Failed to start dotnet build.");
-        var standardOutput = process.StandardOutput.ReadToEndAsync();
-        var standardError = process.StandardError.ReadToEndAsync();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(4));
-        try
-        {
-            await process.WaitForExitAsync(timeout.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            process.Kill(entireProcessTree: true);
-            var partial = await CombineOutput(standardOutput, standardError);
-            throw new TimeoutException(
-                $"dotnet build did not finish within 4 minutes.{Environment.NewLine}{partial}");
-        }
-
-        return new BuildResult(process.ExitCode, await CombineOutput(standardOutput, standardError));
-    }
-
-    private static async Task<string> CombineOutput(Task<string> standardOutput, Task<string> standardError)
-    {
-        return $"{await standardOutput}{Environment.NewLine}{await standardError}";
-    }
-
     private static IReadOnlyList<AnalyzerDiagnostic> ReadDiagnostics(string output)
     {
         var found = new List<AnalyzerDiagnostic>();
@@ -378,21 +323,6 @@ public class DataAccessNPlusOneCanaryTests
         return new AnalyzerDiagnostic(severity, id);
     }
 
-    private static string FindRepoRoot()
-    {
-        var directory = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "build.ps1")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Repository root not found from test directory.");
-    }
 
     private sealed record AnalyzerDiagnostic(string Severity, string Id);
 
@@ -402,5 +332,4 @@ public class DataAccessNPlusOneCanaryTests
         string? PrivateAssets,
         string? IncludeAssets);
 
-    private sealed record BuildResult(int ExitCode, string Output);
 }

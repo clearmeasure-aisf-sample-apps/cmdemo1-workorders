@@ -19,54 +19,18 @@ internal static class StructureFixture
         </Project>
         """;
 
-    private static string CreateRepo()
-    {
-        var path = Path.Combine(Path.GetTempPath(), "structure-gate-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(path);
-        return path;
-    }
-
-    public static void Write(string repo, string relativePath, string content)
-    {
-        var full = Path.Combine(repo, relativePath.Replace('/', Path.DirectorySeparatorChar));
-        var directory = Path.GetDirectoryName(full);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        File.WriteAllText(full, content);
-    }
-
-    private static void Delete(string repo)
-    {
-        if (Directory.Exists(repo))
-        {
-            Directory.Delete(repo, recursive: true);
-        }
-    }
-
     public static StructureReport ScanDemo(string source)
     {
-        return Scan(repo =>
-        {
-            Write(repo, "src/Demo/Demo.csproj", LibraryProject);
-            Write(repo, "src/Demo/Sample.cs", source);
-        });
+        return Scan(repo => repo
+            .Write("src/Demo/Demo.csproj", LibraryProject)
+            .Write("src/Demo/Sample.cs", source));
     }
 
-    public static StructureReport Scan(Action<string> arrange)
+    public static StructureReport Scan(Action<ScratchTree> arrange)
     {
-        var repo = CreateRepo();
-        try
-        {
-            arrange(repo);
-            return SuperfluousStructureScanner.Scan(repo);
-        }
-        finally
-        {
-            Delete(repo);
-        }
+        using var repo = new ScratchTree("structure-gate");
+        arrange(repo);
+        return SuperfluousStructureScanner.Scan(repo.Checkout);
     }
 
     public static string EmptyAllowList()

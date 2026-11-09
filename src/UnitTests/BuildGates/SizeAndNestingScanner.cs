@@ -28,14 +28,13 @@ internal sealed class SizeViolation(string rule, string relativePath, string? sy
 /// </summary>
 internal static class SizeAndNestingScanner
 {
-    /// <summary>Sorted violation keys under <c>src/</c>.</summary>
-    public static IReadOnlyList<string> ScanRepository(string repoRoot)
+    /// <summary>Sorted violation keys for the hand-written sources of <paramref name="checkout"/>.</summary>
+    public static IReadOnlyList<string> ScanRepository(RepositoryCheckout checkout)
     {
-        var src = Path.Combine(repoRoot, "src");
         var keys = new List<string>();
-        foreach (var path in Directory.EnumerateFiles(src, "*.*", SearchOption.AllDirectories))
+        foreach (var path in checkout.SourceFiles(".cs", ".razor"))
         {
-            keys.AddRange(ScanPath(repoRoot, path));
+            keys.AddRange(ScanFile(checkout.Relative(path), File.ReadAllText(path)).Select(violation => violation.Key));
         }
 
         keys.Sort(StringComparer.Ordinal);
@@ -58,31 +57,6 @@ internal static class SizeAndNestingScanner
         }
 
         return violations;
-    }
-
-    private static IEnumerable<string> ScanPath(string repoRoot, string path)
-    {
-        if (!IsCandidate(path))
-        {
-            yield break;
-        }
-
-        var relative = Path.GetRelativePath(repoRoot, path).Replace('\\', '/');
-        if (SizeAndNestingLimits.IsExcluded(relative))
-        {
-            yield break;
-        }
-
-        foreach (var violation in ScanFile(relative, File.ReadAllText(path)))
-        {
-            yield return violation.Key;
-        }
-    }
-
-    private static bool IsCandidate(string path)
-    {
-        return path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
-            || path.EndsWith(".razor", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddFileViolation(

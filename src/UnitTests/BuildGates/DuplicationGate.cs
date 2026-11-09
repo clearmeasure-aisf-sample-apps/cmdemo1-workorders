@@ -6,25 +6,22 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 
 /// <summary>
 /// Line-clone gate for <c>src</c>. Counts normalized lines that sit in a repeated
-/// block of <see cref="MinLines"/> or more. <c>Generated</c>, <c>bin</c>, and <c>obj</c> are ignored.
+/// block of <see cref="MinLines"/> or more. Only <see cref="RepositoryCheckout.SourceFiles"/> are read,
+/// so build output and generated code are ignored.
 /// </summary>
 public static class DuplicationGate
 {
     public const int MinLines = 8;
 
-    private static readonly HashSet<string> SkipDirectories = new(StringComparer.Ordinal)
-    {
-        "bin", "obj", "Generated",
-    };
-
-    private static readonly string[] SourceExtensions = [".cs", ".razor", ".cshtml"];
+    /// <summary>Checkout-relative path of the committed ceiling.</summary>
+    private const string BaselinePath = "scripts/dead-code/duplication-baseline.json";
 
     /// <summary>
-    /// Scans <paramref name="sourceRoot"/> for repeated normalized line blocks.
+    /// Scans the hand-written sources of <paramref name="checkout"/> for repeated normalized line blocks.
     /// </summary>
-    public static DuplicationScan Scan(string sourceRoot)
+    public static DuplicationScan Scan(RepositoryCheckout checkout)
     {
-        var files = CollectFiles(sourceRoot);
+        var files = checkout.SourceFiles(".cs", ".razor", ".cshtml");
         var normalized = NormalizeFiles(files);
         var duplicated = CountDuplicatedLines(IndexWindows(normalized));
         return new DuplicationScan(MinLines, TotalLines(normalized), duplicated);
@@ -33,9 +30,9 @@ public static class DuplicationGate
     /// <summary>
     /// Reads the ratchet ceiling. The committed value may only decrease.
     /// </summary>
-    public static int ReadMaxDuplicatedLines(string baselinePath)
+    public static int ReadMaxDuplicatedLines(RepositoryCheckout checkout)
     {
-        using var document = JsonDocument.Parse(File.ReadAllText(baselinePath));
+        using var document = JsonDocument.Parse(checkout.ReadText(BaselinePath));
         var minLines = document.RootElement.GetProperty("minLines").GetInt32();
         if (minLines != MinLines)
         {
@@ -58,7 +55,7 @@ public static class DuplicationGate
         }
     }
 
-    private static Dictionary<string, string[]> NormalizeFiles(List<string> files)
+    private static Dictionary<string, string[]> NormalizeFiles(IReadOnlyList<string> files)
     {
         var normalized = new Dictionary<string, string[]>(StringComparer.Ordinal);
         foreach (var file in files)
@@ -78,53 +75,6 @@ public static class DuplicationGate
         }
 
         return total;
-    }
-
-    private static List<string> CollectFiles(string sourceRoot)
-    {
-        var files = new List<string>();
-        var pending = new Stack<string>();
-        pending.Push(sourceRoot);
-        while (pending.Count > 0)
-        {
-            CollectDirectory(pending, files);
-        }
-
-        files.Sort(StringComparer.Ordinal);
-        return files;
-    }
-
-    private static void CollectDirectory(Stack<string> pending, List<string> files)
-    {
-        var dir = pending.Pop();
-        foreach (var sub in Directory.GetDirectories(dir))
-        {
-            if (!SkipDirectories.Contains(Path.GetFileName(sub)))
-            {
-                pending.Push(sub);
-            }
-        }
-
-        foreach (var file in Directory.GetFiles(dir))
-        {
-            if (IsSource(file))
-            {
-                files.Add(file);
-            }
-        }
-    }
-
-    private static bool IsSource(string path)
-    {
-        foreach (var extension in SourceExtensions)
-        {
-            if (path.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static string[] Normalize(string path)

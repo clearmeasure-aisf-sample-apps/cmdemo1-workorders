@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
@@ -13,7 +12,7 @@ public sealed class SuppressionBudgetGateTests
     [Test]
     public async Task ShouldPass_WhenSelfTestRuns()
     {
-        var result = await RunScript(selfTest: true);
+        var result = await RunScript("-SelfTest");
 
         result.ExitCode.ShouldBe(0, result.Output);
         result.Output.ShouldContain("missing reason fails");
@@ -25,57 +24,16 @@ public sealed class SuppressionBudgetGateTests
     [Test]
     public async Task ShouldPass_WhenRepositoryStaysWithinSuppressionBudget()
     {
-        var result = await RunScript(selfTest: false);
+        var result = await RunScript();
 
         result.ExitCode.ShouldBe(0, result.Output);
         result.Output.ShouldContain("suppression budget passed:");
     }
 
-    private static async Task<ScriptResult> RunScript(bool selfTest)
+    private static Task<CommandOutcome> RunScript(params string[] arguments)
     {
-        var repoRoot = FindRepoRoot();
-        var script = Path.Combine(repoRoot, "scripts", "quality", "Test-SuppressionBudget.ps1");
-        File.Exists(script).ShouldBeTrue(script);
-
-        var startInfo = new ProcessStartInfo("pwsh")
-        {
-            WorkingDirectory = repoRoot,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        startInfo.ArgumentList.Add("-NoProfile");
-        startInfo.ArgumentList.Add("-File");
-        startInfo.ArgumentList.Add(script);
-        if (selfTest)
-        {
-            startInfo.ArgumentList.Add("-SelfTest");
-        }
-
-        using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("Failed to start pwsh.");
-        var stdoutTask = process.StandardOutput.ReadToEndAsync();
-        var stderrTask = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync(CancellationToken.None);
-        var output = $"{await stdoutTask}{Environment.NewLine}{await stderrTask}";
-        return new ScriptResult(process.ExitCode, output);
+        var checkout = RepositoryCheckout.Current;
+        var script = checkout.PathOf("scripts/quality/Test-SuppressionBudget.ps1");
+        return ExternalCommand.Pwsh(script, arguments).In(checkout.Root).RunAsync();
     }
-
-    private static string FindRepoRoot()
-    {
-        var directory = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "build.ps1")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Repository root not found from test directory.");
-    }
-
-    private sealed record ScriptResult(int ExitCode, string Output);
 }

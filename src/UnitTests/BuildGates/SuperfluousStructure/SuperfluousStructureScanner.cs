@@ -8,19 +8,19 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.SuperfluousStructure;
 public static class SuperfluousStructureScanner
 {
     /// <summary>
-    /// Scans <paramref name="repositoryRoot"/> (the directory that contains <c>src/</c>).
+    /// Scans the <c>src/</c> tree of <paramref name="checkout"/>.
     /// </summary>
-    public static StructureReport Scan(string repositoryRoot)
+    public static StructureReport Scan(RepositoryCheckout checkout)
     {
-        var types = SourceTypeParser.ParseRepository(repositoryRoot);
+        var types = SourceTypeParser.ParseRepository(checkout);
         return new StructureReport
         {
             SingleImplementationInterfaces = ImplementationCounter.SingleImplementationInterfaces(types),
             SingleSubclassAbstractClasses = ImplementationCounter.SingleSubclassAbstractClasses(types),
             PassThroughClasses = PassThroughClasses(types),
-            SingleFileFolders = FolderShapeInspector.SingleFileFolders(repositoryRoot),
-            DeepFolders = FolderShapeInspector.DeepFolders(repositoryRoot),
-            UnreferencedProjects = ProjectReferenceInspector.UnreferencedProjects(repositoryRoot),
+            SingleFileFolders = FolderShapeInspector.SingleFileFolders(checkout),
+            DeepFolders = FolderShapeInspector.DeepFolders(checkout),
+            UnreferencedProjects = ProjectReferenceInspector.UnreferencedProjects(checkout),
         };
     }
 

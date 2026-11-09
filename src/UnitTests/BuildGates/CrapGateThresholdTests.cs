@@ -17,13 +17,11 @@ public class CrapGateThresholdTests
     public void EnforcementEntrypoints_WhenRead_DoNotHardcodeGateThresholdLiterals()
     {
         var threshold = CrapGateThreshold.ReadProductionThreshold();
-        var privateBuild = File.ReadAllText(FindRepoFile("PrivateBuild.ps1"));
-        var workflow = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
-        var auditScript = File.ReadAllText(FindRepoFile(Path.Combine(
-            "scripts", "crap", "run-crap-audit.ps1")));
-        var auditDoc = File.ReadAllText(FindRepoFile(Path.Combine(
-            "docs", "crap-score-audit.md")));
-        var config = File.ReadAllText(FindRepoFile(CrapGateThreshold.RelativeConfigPath));
+        var privateBuild = RepositoryCheckout.Current.ReadText("PrivateBuild.ps1");
+        var workflow = RepositoryCheckout.Current.ReadText(".github/workflows/build.yml");
+        var auditScript = RepositoryCheckout.Current.ReadText("scripts/crap/run-crap-audit.ps1");
+        var auditDoc = RepositoryCheckout.Current.ReadText("docs/crap-score-audit.md");
+        var config = RepositoryCheckout.Current.ReadText(CrapGateThreshold.RelativeConfigPath);
         using var configDoc = System.Text.Json.JsonDocument.Parse(config);
         configDoc.RootElement.GetProperty("productionThreshold").GetInt32().ShouldBe(threshold);
 
@@ -40,20 +38,4 @@ public class CrapGateThresholdTests
         auditDoc.ShouldNotContain($"-Threshold {threshold}");
     }
 
-    private static string FindRepoFile(string relativePath)
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, relativePath);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException($"{relativePath} not found from test directory.");
-    }
 }

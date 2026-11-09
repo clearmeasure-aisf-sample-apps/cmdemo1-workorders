@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
@@ -79,43 +80,6 @@ public class ArchitectureRulesTests
     public void UiProjectsReferencingDataAccess_WhenMasterIsScanned_MatchesBaseline()
     {
         ShouldMatchBaseline(Master.Value.UiDataAccessReferences, "ui-dataaccess-references.txt");
-    }
-
-    [Test]
-    public void AboveBaseline_WhenActualAddsAnEntry_ReturnsThatEntry()
-    {
-        var baseline = new HashSet<string>(StringComparer.Ordinal) { "src/UI/Server/UI.Server.csproj" };
-
-        var extras = ArchitectureRules.AboveBaseline(
-            ["src/UI/Server/UI.Server.csproj", "src/UI/Client/UI.Client.csproj"],
-            baseline);
-
-        extras.ShouldBe(["src/UI/Client/UI.Client.csproj"]);
-    }
-
-    [Test]
-    public void AboveBaseline_WhenActualDropsAnEntry_IsEmpty()
-    {
-        var baseline = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "src/UI/Server/UI.Server.csproj",
-            "src/UI/Client/UI.Client.csproj",
-        };
-
-        ArchitectureRules.AboveBaseline(["src/UI/Server/UI.Server.csproj"], baseline).ShouldBeEmpty();
-    }
-
-    [Test]
-    public void ParseBaseline_WhenCommentsAndBlankLines_KeepsPathsOnly()
-    {
-        var baseline = ArchitectureRules.ParseBaseline("""
-            # UI.Server is the composition host.
-
-            src/UI/Server/UI.Server.csproj
-            """);
-
-        baseline.Count.ShouldBe(1);
-        baseline.Contains("src/UI/Server/UI.Server.csproj").ShouldBeTrue();
     }
 
     [Test]
@@ -319,17 +283,6 @@ public class ArchitectureRulesTests
     }
 
     [Test]
-    public void IsExcludedSource_WhenGeneratedOrBuildOutput_IsTrue()
-    {
-        SolutionArchitectureScan.IsExcludedSource("/repo/src/UI/Server/Generated/Protos/Workorders.cs").ShouldBeTrue();
-        SolutionArchitectureScan.IsExcludedSource("/repo/src/UnitTests/bin/Debug/Foo.cs").ShouldBeTrue();
-        SolutionArchitectureScan.IsExcludedSource("/repo/src/Core/obj/Debug/Foo.cs").ShouldBeTrue();
-        SolutionArchitectureScan.IsExcludedSource("/repo/src/UI/Server/Foo.g.cs").ShouldBeTrue();
-        SolutionArchitectureScan.IsExcludedSource("/repo/src/UI/Server/Foo.Designer.cs").ShouldBeTrue();
-        SolutionArchitectureScan.IsExcludedSource("/repo/src/Core/Model/WorkOrder.cs").ShouldBeFalse();
-    }
-
-    [Test]
     public void Namespace_WhenMasterIsScanned_MatchesBaselineAndSkipsGeneratedProtos()
     {
         var mismatches = Master.Value.NamespaceMismatches;
@@ -340,19 +293,12 @@ public class ArchitectureRulesTests
 
     private static void ShouldMatchBaseline(IReadOnlyList<string> actual, string baselineFile)
     {
-        var baseline = SolutionArchitectureScan.ReadBaseline(RepoRoot(), baselineFile)
-            .OrderBy(path => path, StringComparer.Ordinal)
-            .ToArray();
-        actual.ToArray().ShouldBe(baseline);
+        var comparison = SolutionArchitectureScan.ReadBaseline(RepositoryCheckout.Current, baselineFile).Compare(actual);
+        comparison.IsClean.ShouldBeTrue(comparison.Report(baselineFile));
     }
 
     private static SolutionArchitectureScan.Result ScanMaster()
     {
-        return SolutionArchitectureScan.Scan(RepoRoot());
-    }
-
-    private static string RepoRoot()
-    {
-        return SolutionArchitectureScan.FindRepoRoot();
+        return SolutionArchitectureScan.Scan(RepositoryCheckout.Current);
     }
 }

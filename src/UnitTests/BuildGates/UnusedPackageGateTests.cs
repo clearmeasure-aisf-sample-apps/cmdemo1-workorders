@@ -70,19 +70,13 @@ public class UnusedPackageGateTests
     [Test]
     public void ReadBaseline_WhenReasonIsBlank_Fails()
     {
-        var path = Path.Combine(Path.GetTempPath(), "unused-baseline-" + Guid.NewGuid().ToString("N") + ".json");
-        File.WriteAllText(path, """
+        using var tree = new ScratchTree("unused-baseline").Write(UnusedPackageGate.BaselinePath, """
             { "entries": [ { "project": "src/Core/Core.csproj", "package": "X", "reason": "  " } ] }
             """);
-        try
-        {
-            var error = Should.Throw<InvalidOperationException>(() => UnusedPackageGate.ReadBaseline(path));
-            error.Message.ShouldContain("no reason");
-        }
-        finally
-        {
-            File.Delete(path);
-        }
+
+        var error = Should.Throw<InvalidOperationException>(() => UnusedPackageGate.ReadBaseline(tree.Checkout));
+
+        error.Message.ShouldContain("no reason");
     }
 
     [Test]
@@ -96,16 +90,15 @@ public class UnusedPackageGateTests
     [Test]
     public void Solution_UnusedPackages_StayWithinBaseline()
     {
-        var root = RepoFiles.Root();
-        var scan = UnusedPackageGate.ScanSolution(root, UnusedPackageGate.Configuration());
+        var checkout = RepositoryCheckout.Current;
+        var scan = UnusedPackageGate.ScanSolution(checkout, UnusedPackageGate.Configuration());
         if (scan.MissingOutputs.Count > 0 && !UnusedPackageGate.RequireOutputs)
         {
             Assert.Ignore("Project outputs are not built yet: " + string.Join(", ", scan.MissingOutputs));
         }
 
         scan.MissingOutputs.ShouldBeEmpty();
-        var baseline = UnusedPackageGate.ReadBaseline(
-            Path.Combine(root, "scripts", "dead-code", "unused-package-baseline.json"));
+        var baseline = UnusedPackageGate.ReadBaseline(checkout);
         var unexpected = UnusedPackageGate.NotInBaseline(scan.Unused, baseline);
         unexpected.ShouldBeEmpty(Format(scan.Unused, unexpected));
     }

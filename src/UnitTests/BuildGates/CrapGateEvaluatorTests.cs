@@ -19,11 +19,12 @@ public class CrapGateEvaluatorTests
     public void EvaluateReport_WhenProductionMethodExceedsThreshold_ReturnsThatMethod()
     {
         var gate = CrapGateThreshold.ReadProductionThreshold();
-        var result = CrapGateEvaluator.EvaluateReport(FailFixture(gate), threshold: gate);
 
-        result.ViolationCount.ShouldBe(1);
-        result.Methods[0].FullName.ShouldBe("ClearMeasure.Bootcamp.Core.Import.WorkOrderBulkImportCsvParser.Parse");
-        result.Methods[0].Crap.ShouldBe(20);
+        var (threshold, violationCount, methods) = CrapGateEvaluator.EvaluateReport(FailFixture(gate), threshold: gate);
+
+        threshold.ShouldBe(gate);
+        violationCount.ShouldBe(1);
+        ShouldBeTheCsvParser(methods.Single());
     }
 
     [Test]
@@ -82,8 +83,7 @@ public class CrapGateEvaluatorTests
     [Test]
     public void RollupScript_WhenRead_ContainsProductionExclusionTokens()
     {
-        var scriptPath = FindRollupScript();
-        var source = File.ReadAllText(scriptPath);
+        var source = RepositoryCheckout.Current.ReadText("scripts/crap/rollup-file-scores.csx");
 
         source.ShouldContain("IsProductionFile");
         source.ShouldContain("NormalizePath(path)");
@@ -102,7 +102,7 @@ public class CrapGateEvaluatorTests
     [Test]
     public void RollupScript_WriteSummary_UsesProductionGateStatsNotWholeSolutionStats()
     {
-        var source = File.ReadAllText(FindRollupScript());
+        var source = RepositoryCheckout.Current.ReadText("scripts/crap/rollup-file-scores.csx");
         var writeSummaryStart = source.IndexOf("static async Task WriteSummaryAsync", StringComparison.Ordinal);
         writeSummaryStart.ShouldBeGreaterThan(-1);
         var writeSummaryEnd = source.IndexOf("static double Median", writeSummaryStart, StringComparison.Ordinal);
@@ -123,66 +123,32 @@ public class CrapGateEvaluatorTests
     [Test]
     public void AuditScript_WhenRead_PrependsDotnetToolsToPath()
     {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName,
-                "scripts", "crap", "run-crap-audit.ps1");
-            if (File.Exists(candidate))
-            {
-                var source = File.ReadAllText(candidate);
-                source.ShouldContain("Join-Path $HOME \".dotnet\" \"tools\"");
-                source.ShouldContain("$env:PATH = \"$dotnetTools");
-                source.ShouldContain("dotnet-script\" -Command \"dotnet-script\" -Version \"2.0.0\"");
-                source.ShouldContain("Failed to roll up CRAP scores");
-                return;
-            }
+        var source = RepositoryCheckout.Current.ReadText("scripts/crap/run-crap-audit.ps1");
 
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException("run-crap-audit.ps1 not found from test directory.");
+        source.ShouldContain("Join-Path $HOME \".dotnet\" \"tools\"");
+        source.ShouldContain("$env:PATH = \"$dotnetTools");
+        source.ShouldContain("dotnet-script\" -Command \"dotnet-script\" -Version \"2.0.0\"");
+        source.ShouldContain("Failed to roll up CRAP scores");
     }
 
     [Test]
     public void FlattenScript_WhenRead_ContainsAsyncStateMachinePattern()
     {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName,
-                "scripts", "crap", "flatten-cobertura.csx");
-            if (File.Exists(candidate))
-            {
-                var source = File.ReadAllText(candidate);
-                source.ShouldContain("StateMachineClassName");
-                source.ShouldContain("FlattenAndMerge");
-                source.ShouldContain("<(?<method>[^>]+)>d__");
-                return;
-            }
+        var source = RepositoryCheckout.Current.ReadText("scripts/crap/flatten-cobertura.csx");
 
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException("flatten-cobertura.csx not found from test directory.");
+        source.ShouldContain("StateMachineClassName");
+        source.ShouldContain("FlattenAndMerge");
+        source.ShouldContain("<(?<method>[^>]+)>d__");
     }
 
-    private static string FindRollupScript()
+    private static void ShouldBeTheCsvParser(CrapMethodViolation violation)
     {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName,
-                "scripts", "crap", "rollup-file-scores.csx");
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException("rollup-file-scores.csx not found from test directory.");
+        var (fullName, filePath, (crap, complexity, coverage)) = violation;
+        fullName.ShouldBe("ClearMeasure.Bootcamp.Core.Import.WorkOrderBulkImportCsvParser.Parse");
+        filePath.ShouldBe("D:/repo/src/Core/Import/WorkOrderBulkImportCsvParser.cs");
+        crap.ShouldBe(20);
+        complexity.ShouldBe(4);
+        coverage.ShouldBe(0);
     }
 
     private static string PassFixture(int threshold) => $$"""

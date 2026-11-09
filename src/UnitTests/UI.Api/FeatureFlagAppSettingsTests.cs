@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
@@ -30,8 +31,7 @@ public class FeatureFlagAppSettingsTests
 
     private static Dictionary<string, bool> ReadFlags(string fileName)
     {
-        var path = Path.Combine(FindRepoRoot(), "src", "UI", "Server", fileName);
-        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        using var document = JsonDocument.Parse(RepositoryCheckout.Current.ReadText($"src/UI/Server/{fileName}"));
         var section = document.RootElement.GetProperty("FeatureFlags");
         var flags = new Dictionary<string, bool>(StringComparer.Ordinal);
         foreach (var property in section.EnumerateObject())
@@ -42,19 +42,4 @@ public class FeatureFlagAppSettingsTests
         return flags;
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root from test directory.");
-    }
 }
