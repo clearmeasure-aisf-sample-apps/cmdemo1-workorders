@@ -1,0 +1,50 @@
+# Permitted repo-root names for this teaching repo.
+# The build fails when the root contains any other name.
+# Shrink this list when an entry is removed so that name cannot come back.
+# Generated build output (build/, private-build.json, build-facts.json,
+# build_version.txt, crap-metrics/, ChurchBulletin.db*) is ignored by the script and is not listed.
+#
+# owner decision pending — allowlisted, not deleted, until an owner decides:
+#   .bob  .claude  .cursor  .cursorrules  .squad
+#   AGENTS.md  CLAUDE.md  codebase-audit-report  plan.md
+
+.bob # owner decision pending
+.claude # owner decision pending
+.cursor # owner decision pending
+.cursorrules # owner decision pending
+.githooks
+.github
+.gitignore
+.gitleaks.toml
+.squad # owner decision pending
+.vscode
+AGENTS.md # owner decision pending
+AcceptanceTests.ps1
+BuildFunctions.ps1
+CLAUDE.md # owner decision pending
+CONTRIBUTING.md
+Dockerfile
+INTEGRATION-BUILD-SETUP.md
+LICENSE
+NuGet.Config
+PrivateBuild.ps1
+README.md
+arch
+build.bat
+build.ps1
+build.sh
+codebase-audit-report # owner decision pending
+codecov.yml
+coverlet.runsettings
+docs
+feature-proposals
+global.json
+images
+labs
+openspec
+plan.md # owner decision pending
+qodana.sarif.json
+qodana.yaml
+scripts
+src
+video

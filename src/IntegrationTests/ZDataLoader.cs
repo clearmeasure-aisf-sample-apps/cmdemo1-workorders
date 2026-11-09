@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.DemoData;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,7 +31,7 @@ public class ZDataLoader
         // Create Christmas Concert Work Orders
         var christmasOrder1 = new WorkOrder
         {
-            Number = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+            Number = NextUnusedNumber(db),
             Creator = revLovejoy,
             Assignee = maudeFlanders,
             Status = WorkOrderStatus.Draft,
@@ -43,7 +44,7 @@ public class ZDataLoader
 
         var christmasOrder2 = new WorkOrder
         {
-            Number = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+            Number = NextUnusedNumber(db),
             Creator = revLovejoy,
             Assignee = groundskeeperWillie,
             Status = WorkOrderStatus.Assigned,
@@ -57,7 +58,7 @@ public class ZDataLoader
 
         var christmasOrder3 = new WorkOrder
         {
-            Number = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+            Number = NextUnusedNumber(db),
             Creator = nedFlanders,
             Assignee = organistEmployee,
             Status = WorkOrderStatus.InProgress,
@@ -71,7 +72,7 @@ public class ZDataLoader
 
         var christmasOrder4 = new WorkOrder
         {
-            Number = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+            Number = NextUnusedNumber(db),
             Creator = revLovejoy,
             Assignee = nedFlanders,
             Status = WorkOrderStatus.Draft,
@@ -84,7 +85,7 @@ public class ZDataLoader
 
         var christmasOrder5 = new WorkOrder
         {
-            Number = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+            Number = NextUnusedNumber(db),
             Creator = nedFlanders,
             Assignee = groundskeeperWillie,
             Status = WorkOrderStatus.Complete,
@@ -99,7 +100,7 @@ public class ZDataLoader
 
         var christmasOrder6 = new WorkOrder
         {
-            Number = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+            Number = NextUnusedNumber(db),
             Creator = revLovejoy,
             Assignee = maudeFlanders,
             Status = WorkOrderStatus.Assigned,
@@ -111,6 +112,31 @@ public class ZDataLoader
         };
         AddIfMissing(db, christmasOrder6);
         db.SaveChanges();
+    }
+
+    /// <summary>
+    /// A five-character guid prefix collides often enough to fail acceptance setup on
+    /// <c>IX_WorkOrder_Number</c>. Use the domain generator and skip numbers already staged or stored.
+    /// </summary>
+    private static string NextUnusedNumber(DbContext db)
+    {
+        var generator = new WorkOrderNumberGenerator();
+        for (var attempt = 0; attempt < 8; attempt++)
+        {
+            var number = generator.GenerateNumber();
+            var takenLocally = db.Set<WorkOrder>().Local.Any(workOrder => workOrder.Number == number);
+            if (takenLocally)
+            {
+                continue;
+            }
+
+            if (!db.Set<WorkOrder>().Any(workOrder => workOrder.Number == number))
+            {
+                return number;
+            }
+        }
+
+        throw new InvalidOperationException("Could not allocate a unique work order number for demo data.");
     }
 
     /// <summary>Adds the work order unless one with the same title and creator is already stored.</summary>
