@@ -26,8 +26,6 @@ public static class IdempotencyMother
 
     public static HttpContext ContextWithBufferedResponse()
     {
-        var context = new DefaultHttpContext();
-        context.Response.Body = new MemoryStream();
-        return context;
+        return new DefaultHttpContext { Response = { Body = new MemoryStream() } };
     }
 }

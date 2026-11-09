@@ -10,7 +10,6 @@ using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using ClearMeasure.Bootcamp.UI.Server.BuildFacts;
 using ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
-using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
 using ClearMeasure.Bootcamp.UI.Server.Testing;
 using ChurchBulletin.ServiceDefaults;
 using Microsoft.AspNetCore.ResponseCompression;
