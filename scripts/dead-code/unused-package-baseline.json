@@ -1,0 +1,139 @@
+{
+  "entries": [
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "Azure.AI.OpenAI",
+      "reason": "Acceptance project mirrors the LlmGateway client packages. No acceptance test calls Azure.AI.OpenAI."
+    },
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "Microsoft.Extensions.AI.OpenAI",
+      "reason": "Acceptance project mirrors the LlmGateway client packages. No acceptance test calls Microsoft.Extensions.AI.OpenAI."
+    },
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "Microsoft.Extensions.Hosting",
+      "reason": "Generic host package is on the acceptance project for host bootstrapping. The test assembly does not call it."
+    },
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "microsoft.playwright.nunit",
+      "reason": "Pulls Playwright browser targets and the NUnit base. Tests call Microsoft.Playwright directly and do not reference Microsoft.Playwright.NUnit."
+    },
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "OpenTelemetry.Instrumentation.AspNetCore",
+      "reason": "Same instrumentation package as UI.Server so the acceptance host restore matches production. Registration lives in ServiceDefaults, so this assembly is not referenced here."
+    },
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "OpenTelemetry.Instrumentation.Http",
+      "reason": "Same instrumentation package as UI.Server so the acceptance host restore matches production. Registration lives in ServiceDefaults, so this assembly is not referenced here."
+    },
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "OpenTelemetry.Instrumentation.Runtime",
+      "reason": "Same instrumentation package as UI.Server so the acceptance host restore matches production. Registration lives in ServiceDefaults, so this assembly is not referenced here."
+    },
+    {
+      "project": "src/AcceptanceTests/AcceptanceTests.csproj",
+      "package": "OpenTelemetry.Instrumentation.SqlClient",
+      "reason": "Same instrumentation package as UI.Server so the acceptance host restore matches production. Registration lives in ServiceDefaults, so this assembly is not referenced here."
+    },
+    {
+      "project": "src/ChurchBulletin.AppHost/ChurchBulletin.AppHost.csproj",
+      "package": "MessagePack",
+      "reason": "Direct pin above the vulnerable MessagePack version the Aspire SDK pulls in (NU1902/NU1903). AppHost code does not call MessagePack."
+    },
+    {
+      "project": "src/ChurchBulletin.ServiceDefaults/ChurchBulletin.ServiceDefaults.csproj",
+      "package": "OpenTelemetry.Exporter.Console",
+      "reason": "Console exporter is part of the shared telemetry package set. No ServiceDefaults call site references that assembly."
+    },
+    {
+      "project": "src/DataAccess/DataAccess.csproj",
+      "package": "ClearMeasureLabs.HostedEndpoint.SqlServerTransport",
+      "reason": "SQL transport assembly is loaded by the NServiceBus host, not by a DataAccess call site."
+    },
+    {
+      "project": "src/DataAccess/DataAccess.csproj",
+      "package": "NServiceBus.Persistence.Sql.TransactionalSession",
+      "reason": "Transactional session assembly is activated by the NServiceBus SQL persistence pipeline, not by a DataAccess call site."
+    },
+    {
+      "project": "src/DataAccess/DataAccess.csproj",
+      "package": "SQLitePCLRaw.bundle_e_sqlite3",
+      "reason": "Direct pin above SQLitePCLRaw 2.1.11 (GHSA-2m69-gcr7-jv3q). EF Core's provider loads batteries_v2; DataAccess does not call it."
+    },
+    {
+      "project": "src/DataAccess/DataAccess.csproj",
+      "package": "System.Security.Cryptography.Xml",
+      "reason": "Direct reference to System.Security.Cryptography.Xml 10.0.11 in the cryptography closure. DataAccess has no call site."
+    },
+    {
+      "project": "src/LlmGateway/LlmGateway.csproj",
+      "package": "Microsoft.Extensions.Logging.Console",
+      "reason": "Console logger package stays on the gateway so a host can enable it. The gateway project does not call AddConsole."
+    },
+    {
+      "project": "src/McpServer/McpServer.csproj",
+      "package": "Microsoft.EntityFrameworkCore.SqlServer",
+      "reason": "SQL Server provider is deployed with the MCP host. The UseSqlServer call site lives in DataAccess, so this assembly is not referenced here."
+    },
+    {
+      "project": "src/McpServer/McpServer.csproj",
+      "package": "OpenTelemetry.Instrumentation.AspNetCore",
+      "reason": "MCP host repeats the instrumentation package so the exporter ships with the process. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/McpServer/McpServer.csproj",
+      "package": "OpenTelemetry.Instrumentation.Http",
+      "reason": "MCP host repeats the instrumentation package so the exporter ships with the process. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/McpServer/McpServer.csproj",
+      "package": "OpenTelemetry.Instrumentation.Runtime",
+      "reason": "MCP host repeats the instrumentation package so the exporter ships with the process. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/McpServer/McpServer.csproj",
+      "package": "OpenTelemetry.Instrumentation.SqlClient",
+      "reason": "MCP host repeats the instrumentation package so the exporter ships with the process. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/McpServer/McpServer.csproj",
+      "package": "SQLitePCLRaw.bundle_e_sqlite3",
+      "reason": "Direct pin above SQLitePCLRaw 2.1.11 (GHSA-2m69-gcr7-jv3q). The native bundle is not called from MCP code."
+    },
+    {
+      "project": "src/UI/Api/UI.Api.csproj",
+      "package": "Lamar.Microsoft.DependencyInjection",
+      "reason": "UI.Api calls Lamar types. Lamar.dll arrives through this package; the adapter assembly itself is not referenced."
+    },
+    {
+      "project": "src/UI/Server/UI.Server.csproj",
+      "package": "OpenTelemetry.Instrumentation.AspNetCore",
+      "reason": "Server repeats the instrumentation package so the exporter ships with the deployed app. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/UI/Server/UI.Server.csproj",
+      "package": "OpenTelemetry.Instrumentation.Http",
+      "reason": "Server repeats the instrumentation package so the exporter ships with the deployed app. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/UI/Server/UI.Server.csproj",
+      "package": "OpenTelemetry.Instrumentation.Runtime",
+      "reason": "Server repeats the instrumentation package so the exporter ships with the deployed app. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/UI/Server/UI.Server.csproj",
+      "package": "OpenTelemetry.Instrumentation.SqlClient",
+      "reason": "Server repeats the instrumentation package so the exporter ships with the deployed app. Registration lives in ServiceDefaults."
+    },
+    {
+      "project": "src/Worker/Worker.csproj",
+      "package": "ClearMeasureLabs.HostedEndpoint.SqlServerTransport",
+      "reason": "SQL transport assembly is loaded by the NServiceBus worker host, not by a Worker call site."
+    }
+  ]
+}

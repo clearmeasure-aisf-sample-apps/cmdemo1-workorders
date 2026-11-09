@@ -11,6 +11,32 @@ dotnet:
 # (verified: even global name-only excludes leave findings). Path scope is
 # enforced with file-level `// ReSharper disable <InspectionId>` on the same
 # DTO/helper files listed below; this block documents the intentional set.
+#
+# #1540: unused-symbol inspections fail this build (failThreshold: 0). `include`
+# turns on solution-wide unused-symbol inspections the starter profile leaves out.
+# Community qodana-cdnet 2026.2 ships no unused-NuGet inspection (the linter rule
+# catalog contains none). Direct unused packages are gated by
+# scripts/dead-code/Invoke-DeadCodeGates.ps1 instead, with a ratchet baseline.
+include:
+  - name: UnusedMember.Global
+  - name: UnusedMember.Local
+  - name: UnusedType.Global
+  - name: UnusedType.Local
+  - name: UnusedParameter.Global
+  - name: UnusedParameter.Local
+  - name: UnusedVariable
+  - name: UnusedVariable.Compiler
+  - name: UnusedMethodReturnValue.Global
+  - name: UnusedMethodReturnValue.Local
+  - name: UnusedAutoPropertyAccessor.Global
+  - name: UnusedAutoPropertyAccessor.Local
+  - name: UnusedLocalFunction
+  - name: UnusedField.Compiler
+  - name: UnusedMemberInSuper.Global
+  - name: UnusedMemberHierarchy.Global
+  - name: ClassNeverInstantiated.Global
+  - name: NotAccessedField.Global
+  - name: NotAccessedPositionalProperty.Global
 failThreshold: 0
 exclude:
   - name: All

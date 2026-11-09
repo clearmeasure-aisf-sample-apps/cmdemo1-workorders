@@ -37,3 +37,9 @@ if (-not [int]::TryParse([string]$crapThresholdPayload.productionThreshold, [ref
 if ($LASTEXITCODE -ne 0) {
     throw "CRAP gate failed: in-scope production methods exceed threshold $crapThreshold. See crap-metrics/crap-production-violations.json"
 }
+
+$deadCodeGates = Join-Path $PSScriptRoot "scripts/dead-code/Invoke-DeadCodeGates.ps1"
+& $deadCodeGates
+if ($LASTEXITCODE -ne 0) {
+    throw "Dead-code gates failed: duplicated lines or unused NuGet packages exceeded the ratchet. See scripts/dead-code/."
+}
