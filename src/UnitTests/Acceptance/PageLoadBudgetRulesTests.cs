@@ -13,11 +13,7 @@ public class PageLoadBudgetRulesTests
     [Test]
     public void Evaluate_ShouldFail_WhenFiftyOneApiCallsExceedMaxOfFive()
     {
-        var requests = new PageLoadBudgetRules.RecordedRequest[51];
-        for (var index = 0; index < requests.Length; index++)
-        {
-            requests[index] = new PageLoadBudgetRules.RecordedRequest($"{App}/api/items/{index}", "fetch");
-        }
+        var requests = ApiFetches(51);
 
         var verdict = PageLoadBudgetRules.Evaluate(requests, App, minimumCalls: 1, maximumCalls: 5);
 
@@ -46,11 +42,7 @@ public class PageLoadBudgetRulesTests
     [Test]
     public void Evaluate_ShouldPass_WhenCountEqualsTheMaximum()
     {
-        var requests = new PageLoadBudgetRules.RecordedRequest[5];
-        for (var index = 0; index < requests.Length; index++)
-        {
-            requests[index] = new PageLoadBudgetRules.RecordedRequest($"{App}/api/items/{index}", "fetch");
-        }
+        var requests = ApiFetches(5);
 
         var verdict = PageLoadBudgetRules.Evaluate(requests, App, minimumCalls: 1, maximumCalls: 5);
 
@@ -100,4 +92,9 @@ public class PageLoadBudgetRulesTests
         verdict.ApiCallCount.ShouldBe(2);
         verdict.Detail.ShouldContain("below the minimum");
     }
+
+    private static PageLoadBudgetRules.RecordedRequest[] ApiFetches(int count) =>
+        Enumerable.Range(0, count)
+            .Select(index => new PageLoadBudgetRules.RecordedRequest($"{App}/api/items/{index}", "fetch"))
+            .ToArray();
 }
