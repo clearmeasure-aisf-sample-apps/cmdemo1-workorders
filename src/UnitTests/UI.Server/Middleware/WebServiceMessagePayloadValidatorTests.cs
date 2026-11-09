@@ -5,7 +5,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.Middleware.Validation;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.Middleware;
 
 [TestFixture]
 public class WebServiceMessagePayloadValidatorTests
