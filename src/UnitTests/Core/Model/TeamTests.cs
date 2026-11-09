@@ -29,6 +29,30 @@ public class TeamTests
     }
 
     [Test]
+    public void Should_ThrowArgumentException_When_NameIsNull()
+    {
+        var exception = Should.Throw<ArgumentException>(() => new Team(null!, "desc"));
+        exception.ParamName.ShouldBe("name");
+        exception.Message.ShouldContain("name");
+    }
+
+    [Test]
+    public void Should_ThrowArgumentException_When_NameIsEmpty()
+    {
+        var exception = Should.Throw<ArgumentException>(() => new Team(string.Empty, "desc"));
+        exception.ParamName.ShouldBe("name");
+        exception.Message.ShouldContain("name");
+    }
+
+    [Test]
+    public void Should_ThrowArgumentException_When_NameIsWhitespaceOnly()
+    {
+        var exception = Should.Throw<ArgumentException>(() => new Team("   \t  ", null));
+        exception.ParamName.ShouldBe("name");
+        exception.Message.ShouldContain("name");
+    }
+
+    [Test]
     public void ShouldAddMemberAndIncreaseMemberCount()
     {
         var team = new Team("Grounds", null);

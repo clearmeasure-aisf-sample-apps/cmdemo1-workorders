@@ -26,9 +26,13 @@ public class Team : EntityBase<Team>
     /// <summary>
     /// Creates a team with a name and an optional description.
     /// </summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null, empty, or whitespace-only.</exception>
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
     public Team(string name, string? description)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name is required.", nameof(name));
+
         Name = name;
         Description = description;
     }
