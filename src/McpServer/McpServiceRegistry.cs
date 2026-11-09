@@ -14,24 +14,34 @@ public class McpServiceRegistry : ServiceRegistry
     public McpServiceRegistry()
     {
         this.AddScoped<DbContext, DataContext>();
+        AddBus();
+        AddApplicationServices();
+        ScanForHandlers();
 
+        // Register after scanning to override the auto-discovered DistributedBus
+        // which requires NServiceBus IMessageSession (not available in the MCP server)
+        this.AddTransient<IDistributedBus, NullDistributedBus>();
+    }
+
+    private void AddBus()
+    {
         this.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<McpServiceRegistry>();
             cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
         this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DataContext>());
+        this.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
+    }
 
-        this.AddTransient<IBus>(provider =>
-        {
-            var mediator = provider.GetRequiredService<IMediator>();
-            return new Bus(mediator);
-        });
-
+    private void AddApplicationServices()
+    {
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
         this.AddSingleton(TimeProvider.System);
+    }
 
+    private void ScanForHandlers() =>
         Scan(scanner =>
         {
             scanner.WithDefaultConventions();
@@ -40,9 +50,4 @@ public class McpServiceRegistry : ServiceRegistry
             scanner.ConnectImplementationsToTypesClosing(typeof(IRequestHandler<,>));
             scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
         });
-
-        // Register after scanning to override the auto-discovered DistributedBus
-        // which requires NServiceBus IMessageSession (not available in the MCP server)
-        this.AddTransient<IDistributedBus, NullDistributedBus>();
-    }
 }

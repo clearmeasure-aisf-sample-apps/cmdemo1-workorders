@@ -34,7 +34,23 @@ public static class McpServerApplication
 
         builder.Host.UseLamar(registry => { registry.IncludeRegistry<McpServiceRegistry>(); });
 
-        var mcpBuilder = builder.Services
+        var mcpBuilder = AddMcpServerWithTools(builder.Services);
+
+        configureBuilder?.Invoke(builder);
+
+        var useHttp = ShouldUseHttpTransport(args, builder.Configuration);
+        ConfigureTransport(mcpBuilder, useHttp);
+
+        var app = builder.Build();
+
+        app.UseSerilogShutdown();
+        ConfigurePipeline(app, useHttp);
+
+        return app;
+    }
+
+    private static IMcpServerBuilder AddMcpServerWithTools(IServiceCollection services) =>
+        services
             .AddMcpServer(options =>
             {
                 options.ServerInfo = new()
@@ -49,19 +65,6 @@ public static class McpServerApplication
             .WithTools<TeamTools>()
             .WithTools<VendorTools>()
             .WithResources<ReferenceResources>();
-
-        configureBuilder?.Invoke(builder);
-
-        var useHttp = ShouldUseHttpTransport(args, builder.Configuration);
-        ConfigureTransport(mcpBuilder, useHttp);
-
-        var app = builder.Build();
-
-        app.UseSerilogShutdown();
-        ConfigurePipeline(app, useHttp);
-
-        return app;
-    }
 
     private static void ConfigureTransport(IMcpServerBuilder mcpBuilder, bool useHttp)
     {

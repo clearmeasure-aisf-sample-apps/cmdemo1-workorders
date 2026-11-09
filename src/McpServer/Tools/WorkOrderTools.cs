@@ -1,15 +1,18 @@
 using System.ComponentModel;
-using System.Globalization;
-using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.McpServer.Tools.Arguments;
 using ModelContextProtocol.Server;
 
 namespace ClearMeasure.Bootcamp.McpServer.Tools;
 
+/// <summary>
+/// The work-order MCP tools. Each tool's parameters are its MCP input schema; the tool turns them into an argument
+/// object, sends the request through <see cref="IBus"/> and answers with <see cref="WorkOrderJson"/> or a message.
+/// </summary>
 [McpServerToolType]
 public class WorkOrderTools
 {
@@ -20,37 +23,8 @@ public class WorkOrderTools
         [Description("Optional creator username filter")] string? creatorUsername = null,
         [Description("Optional assignee username filter")] string? assigneeUsername = null)
     {
-        var query = new WorkOrderSpecificationQuery();
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            query.MatchStatus(WorkOrderStatus.FromKey(status));
-        }
-
-        if (!string.IsNullOrWhiteSpace(creatorUsername))
-        {
-            var creator = await FindEmployeeByUsername(bus, creatorUsername);
-            if (creator == null)
-            {
-                return "[]";
-            }
-
-            query.MatchCreator(creator);
-        }
-
-        if (!string.IsNullOrWhiteSpace(assigneeUsername))
-        {
-            var assignee = await FindEmployeeByUsername(bus, assigneeUsername);
-            if (assignee == null)
-            {
-                return "[]";
-            }
-
-            query.MatchAssignee(assignee);
-        }
-
-        var workOrders = await bus.Send(query);
-        return JsonSerializer.Serialize(workOrders.Select(FormatWorkOrderSummary).ToArray(),
-            new JsonSerializerOptions { WriteIndented = true });
+        var query = await new WorkOrderListFilter(status, creatorUsername, assigneeUsername).ToQueryAsync(bus);
+        return query == null ? "[]" : WorkOrderJson.Summaries(await bus.Send(query));
     }
 
     [McpServerTool(Name = "get-work-order"), Description("Retrieves a single work order by its number, including full details.")]
@@ -59,13 +33,7 @@ public class WorkOrderTools
         [Description("The work order number")] string workOrderNumber)
     {
         var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
-        if (workOrder == null)
-        {
-            return $"No work order found with number '{workOrderNumber}'.";
-        }
-
-        return JsonSerializer.Serialize(FormatWorkOrderDetail(workOrder),
-            new JsonSerializerOptions { WriteIndented = true });
+        return workOrder == null ? NotFound(workOrderNumber) : WorkOrderJson.Detail(workOrder);
     }
 
     [McpServerTool(Name = "create-work-order"), Description("Creates a new draft work order. Requires a title, description, and the username of the creator. Optionally accepts a room number, due date (yyyy-MM-dd), and instructions. Priority values: Low, Medium (default), High (case-insensitive). Building is a short name (max 100 characters).")]
@@ -81,40 +49,12 @@ public class WorkOrderTools
         [Description("Optional priority: Low, Medium (default), High; case-insensitive")] string? priority = null,
         [Description("Optional building name; max 100 characters")] string? building = null)
     {
+        var arguments = new NewWorkOrderArguments(title, description, roomNumber, dueDate, instructions, priority, building);
         try
         {
-            var creator = await FindEmployeeByUsername(bus, creatorUsername);
-            if (creator == null)
-            {
-                return $"Employee with username '{creatorUsername}' not found.";
-            }
-
-            var (inputError, parsedDueDate, parsedPriority, trimmedBuilding) =
-                ValidateCreateInputs(description, dueDate, priority, building);
-            if (inputError != null)
-            {
-                return inputError;
-            }
-
-            var workOrder = new WorkOrder
-            {
-                Title = title,
-                Description = description,
-                Instructions = instructions,
-                Creator = creator,
-                Status = WorkOrderStatus.Draft,
-                Number = numberGenerator.GenerateNumber(),
-                RoomNumber = roomNumber,
-                DueDate = parsedDueDate,
-                Priority = parsedPriority,
-                Building = trimmedBuilding
-            };
-
-            var command = new SaveDraftCommand(workOrder, creator);
-            var result = await bus.Send(command);
-
-            return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
-                new JsonSerializerOptions { WriteIndented = true });
+            var creator = await EmployeeLookup.FindAsync(bus, creatorUsername);
+            var error = creator == null ? $"Employee with username '{creatorUsername}' not found." : arguments.Error;
+            return error ?? await SaveDraftAsync(bus, arguments.ToDraft(creator!, numberGenerator.GenerateNumber()));
         }
         catch (Exception ex)
         {
@@ -140,25 +80,9 @@ public class WorkOrderTools
         try
         {
             var (dates, resolveError) = DatedWorkOrderScheduling.ResolveDueDates(timeProvider, dueDates, saturdayCount);
-            if (resolveError != null)
-            {
-                return resolveError;
-            }
-
-            var validationError = ValidateCreateParameters(description);
-            if (validationError != null)
-            {
-                return validationError;
-            }
-
-            var result = await bus.Send(new CreateDatedWorkOrdersCommand(
-                creatorUsername,
-                assigneeUsername,
-                title,
-                description,
-                dates));
-
-            return DatedWorkOrderScheduling.FormatResult(result);
+            var error = resolveError ?? NewWorkOrderArguments.DescriptionError(description);
+            return error ?? DatedWorkOrderScheduling.FormatResult(await bus.Send(
+                new CreateDatedWorkOrdersCommand(creatorUsername, assigneeUsername, title, description, dates)));
         }
         catch (Exception ex)
         {
@@ -181,40 +105,10 @@ public class WorkOrderTools
         [Description("Optional room number patch")] string? roomNumber = null,
         [Description("Optional due date patch as yyyy-MM-dd; empty clears")] string? dueDate = null)
     {
-        if (string.IsNullOrWhiteSpace(workOrderNumber))
-        {
-            return "Work order number is required.";
-        }
-
-        var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
-        if (workOrder == null)
-        {
-            return $"No work order found with number '{workOrderNumber}'.";
-        }
-
-        var executingUser = await FindEmployeeByUsername(bus, executingUsername);
-        if (executingUser == null)
-        {
-            return $"Employee with username '{executingUsername}' not found.";
-        }
-
-        var validationError = ValidateSave(workOrder, executingUser, title, dueDate, roomNumber, description);
-        if (validationError != null)
-        {
-            return validationError;
-        }
-
-        var originalRoomNumber = workOrder.RoomNumber;
-        var originalDueDate = workOrder.DueDate;
-        ApplySavePatches(workOrder, title, description, instructions, roomNumber, dueDate);
-
-        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser)
-        {
-            PreviousRoomNumber = originalRoomNumber,
-            PreviousDueDate = originalDueDate
-        });
-        return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
-            new JsonSerializerOptions { WriteIndented = true });
+        var patch = new SaveWorkOrderPatch(title, description, instructions, new RoomNumberPatch(roomNumber), new DueDatePatch(dueDate));
+        var (context, error) = await WorkOrderRequestContext.LoadForEditAsync(bus, workOrderNumber, executingUsername);
+        error ??= patch.ErrorFor(context!.WorkOrder, context.ExecutingUser);
+        return error ?? WorkOrderJson.Detail((await bus.Send(patch.ApplyAsSave(context!))).WorkOrder);
     }
 
     [McpServerTool(Name = "update-work-order"), Description(
@@ -231,38 +125,10 @@ public class WorkOrderTools
         [Description("Optional room number; empty clears")] string? roomNumber = null,
         [Description("Optional due date as yyyy-MM-dd; empty clears")] string? dueDate = null)
     {
-        if (string.IsNullOrWhiteSpace(workOrderNumber))
-        {
-            return "Work order number is required.";
-        }
-
-        var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
-        if (workOrder == null)
-        {
-            return $"No work order found with number '{workOrderNumber}'.";
-        }
-
-        var executingUser = await FindEmployeeByUsername(bus, executingUsername);
-        if (executingUser == null)
-        {
-            return $"Employee with username '{executingUsername}' not found.";
-        }
-
-        var validationError = ValidateUpdate(workOrder, executingUser, priority, building, dueDate);
-        if (validationError != null)
-        {
-            return validationError;
-        }
-
-        var originalDueDate = workOrder.DueDate;
-        ApplyUpdatePatches(workOrder, priority, building, roomNumber, dueDate);
-
-        var result = await bus.Send(new SaveDraftCommand(workOrder, executingUser)
-        {
-            PreviousDueDate = originalDueDate
-        });
-        return JsonSerializer.Serialize(FormatWorkOrderDetail(result.WorkOrder),
-            new JsonSerializerOptions { WriteIndented = true });
+        var patch = new UpdateWorkOrderPatch(priority, building, new RoomNumberPatch(roomNumber), new DueDatePatch(dueDate));
+        var (context, error) = await WorkOrderRequestContext.LoadForEditAsync(bus, workOrderNumber, executingUsername);
+        error ??= patch.ErrorFor(context!.WorkOrder, context.ExecutingUser);
+        return error ?? WorkOrderJson.Detail((await bus.Send(patch.ApplyAsSave(context!))).WorkOrder);
     }
 
     [McpServerTool(Name = "execute-work-order-command"), Description("Executes a state command on a work order. Available commands: DraftToAssignedCommand (requires assigneeUsername), AssignedToInProgressCommand, InProgressToAssignedCommand, Shelve, InProgressToCompleteCommand, AssignedToCancelledCommand. Shelve and InProgressToAssignedCommand require a reason of at most 200 characters.")]
@@ -275,11 +141,7 @@ public class WorkOrderTools
         [Description("Reason for shelving (required for Shelve and InProgressToAssignedCommand, at most 200 characters)")] string? reason = null) =>
         WorkOrderCommandExecutor.ExecuteCommandAsync(
             bus,
-            workOrderNumber,
-            commandName,
-            executingUsername,
-            assigneeUsername,
-            reason);
+            new WorkOrderCommandRequest(workOrderNumber, commandName, executingUsername, assigneeUsername, reason));
 
     [McpServerTool(Name = "list-work-order-attachments"), Description("Lists all attachment metadata for a given work order by its number.")]
     public static async Task<string> ListWorkOrderAttachments(
@@ -287,366 +149,13 @@ public class WorkOrderTools
         [Description("The work order number")] string workOrderNumber)
     {
         var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
-        if (workOrder == null)
-        {
-            return $"No work order found with number '{workOrderNumber}'.";
-        }
-
-        var attachments = await bus.Send(new WorkOrderAttachmentsQuery(workOrder.Id));
-        return JsonSerializer.Serialize(attachments.Select(a => new
-        {
-            a.Id,
-            a.FileName,
-            a.ContentType,
-            a.FileSize,
-            UploadedBy = a.UploadedBy?.GetFullName(),
-            UploadedByUsername = a.UploadedBy?.UserName,
-            a.UploadedDate
-        }).ToArray(), new JsonSerializerOptions { WriteIndented = true });
+        return workOrder == null
+            ? NotFound(workOrderNumber)
+            : WorkOrderJson.Attachments(await bus.Send(new WorkOrderAttachmentsQuery(workOrder.Id)));
     }
 
-    private static string? ValidateSave(
-        WorkOrder workOrder,
-        Employee executingUser,
-        string? title,
-        string? dueDate,
-        string? roomNumber = null,
-        string? description = null)
-    {
-        if (!new SaveDraftCommand(workOrder, executingUser).IsValid())
-        {
-            return FormatInvalidSaveCommand(workOrder);
-        }
+    private static async Task<string> SaveDraftAsync(IBus bus, WorkOrder draft) =>
+        WorkOrderJson.Detail((await bus.Send(new SaveDraftCommand(draft, draft.Creator!))).WorkOrder);
 
-        return ValidateTitlePatch(title)
-            ?? ValidateDescriptionPatch(description)
-            ?? ValidateRoomNumberPatch(workOrder, roomNumber)
-            ?? ValidateDueDatePatch(dueDate);
-    }
-
-    private static string? ValidateTitlePatch(string? title)
-    {
-        if (IsBlankPatch(title))
-        {
-            return "The Title field is required.";
-        }
-
-        if (title is { Length: > WorkOrder.TitleMaxLength })
-        {
-            return $"Title cannot exceed {WorkOrder.TitleMaxLength} characters.";
-        }
-
-        return null;
-    }
-
-    private static string? ValidateDescriptionPatch(string? description)
-    {
-        if (description is { Length: > WorkOrder.DescriptionMaxLength })
-        {
-            return $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.";
-        }
-
-        return null;
-    }
-
-    private static (string? Error, DateOnly? DueDate, WorkOrderPriority Priority, string? Building) ValidateCreateInputs(
-        string description,
-        string? dueDate,
-        string? priority,
-        string? building)
-    {
-        var validationError = ValidateCreateParameters(description);
-        if (validationError != null)
-        {
-            return (validationError, null, WorkOrderPriority.Medium, null);
-        }
-
-        if (!DatedWorkOrderScheduling.TryParseOptionalDueDate(dueDate, out var parsedDueDate, out var dueDateError))
-        {
-            return (dueDateError, null, WorkOrderPriority.Medium, null);
-        }
-
-        var (parsedPriority, trimmedBuilding, optionError) = ParsePriorityAndBuilding(priority, building);
-        return (optionError, parsedDueDate, parsedPriority, trimmedBuilding);
-    }
-
-    private static string? ValidateCreateParameters(string? description)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-        {
-            return "Description is required.";
-        }
-
-        return ValidateDescriptionPatch(description);
-    }
-
-    private static string? ValidateRoomNumberPatch(WorkOrder workOrder, string? roomNumber)
-    {
-        if (roomNumber is { Length: > WorkOrder.RoomNumberEntryMaxLength } && roomNumber != workOrder.RoomNumber)
-        {
-            return $"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters.";
-        }
-
-        return null;
-    }
-
-    private static string? ValidateDueDatePatch(string? dueDate) =>
-        IsInvalidDueDatePatch(dueDate) ? $"Invalid due date '{dueDate}'. Use yyyy-MM-dd." : null;
-
-    private static bool IsBlankPatch(string? value) => value != null && string.IsNullOrWhiteSpace(value);
-
-    private static bool IsInvalidDueDatePatch(string? dueDate) =>
-        dueDate != null && !string.IsNullOrWhiteSpace(dueDate) && !TryParseDueDatePatch(dueDate, out _);
-
-    private static bool TryParseDueDatePatch(string dueDate, out DateOnly parsedDueDate) =>
-        DateOnly.TryParseExact(dueDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
-            DateTimeStyles.None, out parsedDueDate);
-
-    private static void ApplySavePatches(
-        WorkOrder workOrder,
-        string? title,
-        string? description,
-        string? instructions,
-        string? roomNumber,
-        string? dueDate)
-    {
-        ApplyTitlePatch(workOrder, title);
-        ApplyDescriptionPatch(workOrder, description);
-        ApplyInstructionsPatch(workOrder, instructions);
-        ApplyRoomNumberPatch(workOrder, roomNumber);
-        ApplyDueDatePatch(workOrder, dueDate);
-    }
-
-    private static void ApplyTitlePatch(WorkOrder workOrder, string? title)
-    {
-        if (title != null)
-        {
-            workOrder.Title = title;
-        }
-    }
-
-    private static void ApplyDescriptionPatch(WorkOrder workOrder, string? description)
-    {
-        if (description != null)
-        {
-            workOrder.Description = BlankToEmpty(description);
-        }
-    }
-
-    private static void ApplyInstructionsPatch(WorkOrder workOrder, string? instructions)
-    {
-        if (instructions != null)
-        {
-            workOrder.Instructions = BlankToEmpty(instructions);
-        }
-    }
-
-    private static void ApplyRoomNumberPatch(WorkOrder workOrder, string? roomNumber)
-    {
-        if (roomNumber != null)
-        {
-            workOrder.RoomNumber = TruncateRoomNumber(BlankToEmpty(roomNumber));
-        }
-    }
-
-    private static void ApplyDueDatePatch(WorkOrder workOrder, string? dueDate)
-    {
-        if (dueDate != null)
-        {
-            workOrder.DueDate = ParseDueDatePatch(dueDate);
-        }
-    }
-
-    private static DateOnly? ParseDueDatePatch(string dueDate)
-    {
-        if (string.IsNullOrWhiteSpace(dueDate))
-        {
-            return null;
-        }
-
-        TryParseDueDatePatch(dueDate, out var parsedDueDate);
-        return parsedDueDate;
-    }
-
-    private static string BlankToEmpty(string value) =>
-        string.IsNullOrWhiteSpace(value) ? string.Empty : value;
-
-    private static string TruncateRoomNumber(string roomNumber) =>
-        roomNumber.Length <= WorkOrder.RoomNumberMaxLength
-            ? roomNumber
-            : roomNumber[..WorkOrder.RoomNumberMaxLength];
-
-    private static string FormatInvalidSaveCommand(WorkOrder workOrder) =>
-        $"Command '{SaveDraftCommand.Name}' cannot be executed. Work order is in '{workOrder.Status.FriendlyName}' status but the command requires '{WorkOrderStatus.Draft.FriendlyName}' status.";
-
-    /// <summary>
-    /// Message for an update-work-order request whose Save command is not valid: a draft work order
-    /// updated by someone other than its creator gets a permission message; any other status gets the
-    /// standard invalid-status message.
-    /// </summary>
-    internal static string FormatUpdateNotAllowed(WorkOrder workOrder)
-    {
-        if (workOrder.Status != WorkOrderStatus.Draft)
-        {
-            return FormatInvalidSaveCommand(workOrder);
-        }
-
-        var creatorUserName = workOrder.Creator?.UserName;
-        return string.IsNullOrWhiteSpace(creatorUserName)
-            ? $"Only the creator can update draft work order '{workOrder.Number}'."
-            : $"Only the creator '{creatorUserName}' can update draft work order '{workOrder.Number}'.";
-    }
-
-    private static async Task<Employee?> FindEmployeeByUsername(IBus bus, string username)
-    {
-        try
-        {
-            return await bus.Send(new EmployeeByUserNameQuery(username));
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
-    }
-
-    internal static (WorkOrderPriority, string?) ParseAndValidatePriority(string? priorityStr)
-    {
-        if (string.IsNullOrWhiteSpace(priorityStr))
-        {
-            return (WorkOrderPriority.Medium, null);
-        }
-
-        var trimmed = priorityStr.Trim();
-        var match = Enum.GetNames<WorkOrderPriority>()
-            .FirstOrDefault(n => string.Equals(n, trimmed, StringComparison.OrdinalIgnoreCase));
-        if (match != null)
-        {
-            return (Enum.Parse<WorkOrderPriority>(match), null);
-        }
-
-        return (WorkOrderPriority.Medium, $"Invalid priority '{priorityStr}'. Valid values are: Low, Medium, High.");
-    }
-
-    internal static (WorkOrderPriority, string?, string?) ParsePriorityAndBuilding(string? priority, string? building)
-    {
-        var (parsedPriority, priorityError) = ParseAndValidatePriority(priority);
-        var (trimmedBuilding, buildingError) = ValidateBuilding(building);
-        return (parsedPriority, trimmedBuilding, priorityError ?? buildingError);
-    }
-
-    internal static (string?, string?) ValidateBuilding(string? building)
-    {
-        if (string.IsNullOrWhiteSpace(building))
-        {
-            return (null, null);
-        }
-
-        var trimmed = building.Trim();
-        if (trimmed.Length > WorkOrder.BuildingMaxLength)
-        {
-            return (null, $"Building cannot exceed {WorkOrder.BuildingMaxLength} characters.");
-        }
-
-        return (trimmed, null);
-    }
-
-    private static string? ValidateUpdate(
-        WorkOrder workOrder,
-        Employee executingUser,
-        string? priority,
-        string? building,
-        string? dueDate)
-    {
-        if (!new SaveDraftCommand(workOrder, executingUser).IsValid())
-        {
-            return FormatUpdateNotAllowed(workOrder);
-        }
-
-        if (IsBlankPatch(priority))
-        {
-            return "Priority cannot be cleared; omit it to leave unchanged.";
-        }
-
-        var (_, priorityError) = ParseAndValidatePriority(priority);
-        if (priorityError != null)
-        {
-            return priorityError;
-        }
-
-        var (_, buildingError) = ValidateBuilding(building);
-        if (buildingError != null)
-        {
-            return buildingError;
-        }
-
-        if (IsInvalidDueDatePatch(dueDate))
-        {
-            return $"Invalid due date '{dueDate}'. Use yyyy-MM-dd.";
-        }
-
-        return null;
-    }
-
-    private static void ApplyUpdatePatches(
-        WorkOrder workOrder,
-        string? priority,
-        string? building,
-        string? roomNumber,
-        string? dueDate)
-    {
-        ApplyPriorityPatch(workOrder, priority);
-        ApplyBuildingPatch(workOrder, building);
-        ApplyRoomNumberPatch(workOrder, roomNumber);
-        ApplyDueDatePatch(workOrder, dueDate);
-    }
-
-    private static void ApplyPriorityPatch(WorkOrder workOrder, string? priority)
-    {
-        if (priority != null)
-        {
-            var (parsed, _) = ParseAndValidatePriority(priority);
-            workOrder.Priority = parsed;
-        }
-    }
-
-    private static void ApplyBuildingPatch(WorkOrder workOrder, string? building)
-    {
-        if (building != null)
-        {
-            var (trimmed, _) = ValidateBuilding(building);
-            workOrder.Building = trimmed;
-        }
-    }
-
-    private static object FormatWorkOrderSummary(WorkOrder wo) => new
-    {
-        wo.Number,
-        wo.Title,
-        Status = wo.Status.FriendlyName,
-        Creator = wo.Creator?.GetFullName(),
-        Assignee = wo.Assignee?.GetFullName(),
-        DueDate = wo.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        Priority = wo.Priority.ToString(),
-        wo.Building
-    };
-
-    internal static object FormatWorkOrderDetail(WorkOrder wo) => new
-    {
-        wo.Number,
-        wo.Title,
-        wo.Description,
-        Instructions = wo.Instructions ?? "",
-        Status = wo.Status.FriendlyName,
-        wo.RoomNumber,
-        Creator = wo.Creator?.GetFullName(),
-        CreatorUsername = wo.Creator?.UserName,
-        Assignee = wo.Assignee?.GetFullName(),
-        AssigneeUsername = wo.Assignee?.UserName,
-        wo.CreatedDate,
-        wo.AssignedDate,
-        wo.CompletedDate,
-        DueDate = wo.DueDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-        Priority = wo.Priority.ToString(),
-        wo.Building
-    };
+    private static string NotFound(string workOrderNumber) => $"No work order found with number '{workOrderNumber}'.";
 }
