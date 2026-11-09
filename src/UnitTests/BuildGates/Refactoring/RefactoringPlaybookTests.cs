@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.UnitTests.Architecture;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.Refactoring;
@@ -72,21 +73,5 @@ public class RefactoringPlaybookTests
     }
 
     private static string ReadRepositoryFile(string relativePath) =>
-        File.ReadAllText(Path.Combine(FindRepoRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar)));
-
-    private static string FindRepoRoot()
-    {
-        var directory = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Repository root not found from test directory.");
-    }
+        File.ReadAllText(Path.Combine(SolutionArchitectureScan.FindRepoRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar)));
 }

@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.UnitTests.Architecture;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.Refactoring;
@@ -7,7 +8,7 @@ public class StructureGuardrailGateTests
 {
     private const string Playbook = "docs/refactoring-oversized-code.md";
 
-    private static readonly Lazy<SourceSet> Repository = new(() => SourceSet.FromRepository(FindRepoRoot()));
+    private static readonly Lazy<SourceSet> Repository = new(() => SourceSet.FromRepository(SolutionArchitectureScan.FindRepoRoot()));
 
     private static IEnumerable<TestCaseData> Rules() =>
         new IStructureRule[]
@@ -49,21 +50,5 @@ public class StructureGuardrailGateTests
         RatchetBaseline.Load(BaselinePath(rule)).Compare(rule.FindViolations(Repository.Value));
 
     private static string BaselinePath(IStructureRule rule) =>
-        Path.Combine(FindRepoRoot(), "src", "UnitTests", "BuildGates", "Refactoring", "Baselines", rule.BaselineFileName);
-
-    private static string FindRepoRoot()
-    {
-        var directory = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Repository root not found from test directory.");
-    }
+        Path.Combine(SolutionArchitectureScan.FindRepoRoot(), "src", "UnitTests", "BuildGates", "Refactoring", "Baselines", rule.BaselineFileName);
 }
