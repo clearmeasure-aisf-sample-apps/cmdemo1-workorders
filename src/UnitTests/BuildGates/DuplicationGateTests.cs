@@ -19,11 +19,9 @@ public class DuplicationGateTests
     [Test]
     public void Scan_WhenSameBlockAppearsInTwoFiles_CountsThoseLines()
     {
-        using var dir = new TempTree();
-        dir.Write("A.cs", Block);
-        dir.Write("B.cs", Block);
+        using var tree = SourceTree(("A.cs", Block), ("B.cs", Block));
 
-        var scan = DuplicationGate.Scan(dir.Root);
+        var scan = DuplicationGate.Scan(tree.Checkout);
 
         scan.DuplicatedLines.ShouldBe(16);
         scan.TotalLines.ShouldBe(16);
@@ -33,32 +31,26 @@ public class DuplicationGateTests
     [Test]
     public void Scan_WhenBlockIsUnique_CountsZero()
     {
-        using var dir = new TempTree();
-        dir.Write("A.cs", Block);
+        using var tree = SourceTree(("A.cs", Block));
 
-        DuplicationGate.Scan(dir.Root).DuplicatedLines.ShouldBe(0);
+        DuplicationGate.Scan(tree.Checkout).DuplicatedLines.ShouldBe(0);
     }
 
     [Test]
     public void Scan_WhenRepeatIsShorterThanMinimum_CountsZero()
     {
-        using var dir = new TempTree();
         var shortBlock = string.Join('\n', Block.Split('\n').Take(7));
-        dir.Write("A.cs", shortBlock);
-        dir.Write("B.cs", shortBlock);
+        using var tree = SourceTree(("A.cs", shortBlock), ("B.cs", shortBlock));
 
-        DuplicationGate.Scan(dir.Root).DuplicatedLines.ShouldBe(0);
+        DuplicationGate.Scan(tree.Checkout).DuplicatedLines.ShouldBe(0);
     }
 
     [Test]
     public void Scan_WhenRepeatIsUnderGenerated_IgnoresIt()
     {
-        using var dir = new TempTree();
-        dir.Write(Path.Combine("Generated", "A.cs"), Block);
-        dir.Write(Path.Combine("Generated", "B.cs"), Block);
-        dir.Write("Unique.cs", "only one line");
+        using var tree = SourceTree(("Generated/A.cs", Block), ("Generated/B.cs", Block), ("Unique.cs", "only one line"));
 
-        DuplicationGate.Scan(dir.Root).DuplicatedLines.ShouldBe(0);
+        DuplicationGate.Scan(tree.Checkout).DuplicatedLines.ShouldBe(0);
     }
 
     [Test]
@@ -80,38 +72,22 @@ public class DuplicationGateTests
     [Test]
     public void Src_DuplicatedLines_DoNotExceedBaseline()
     {
-        var root = RepoFiles.Root();
-        var scan = DuplicationGate.Scan(Path.Combine(root, "src"));
-        var ceiling = DuplicationGate.ReadMaxDuplicatedLines(
-            Path.Combine(root, "scripts", "dead-code", "duplication-baseline.json"));
+        var checkout = RepositoryCheckout.Current;
+        var scan = DuplicationGate.Scan(checkout);
+        var ceiling = DuplicationGate.ReadMaxDuplicatedLines(checkout);
 
         DuplicationGate.EnsureWithinCeiling(scan.DuplicatedLines, ceiling);
         scan.DuplicatedLines.ShouldBeLessThanOrEqualTo(ceiling);
     }
 
-    private sealed class TempTree : IDisposable
+    private static ScratchTree SourceTree(params (string Path, string Contents)[] files)
     {
-        public TempTree()
+        var tree = new ScratchTree("dup-gate");
+        foreach (var (path, contents) in files)
         {
-            Root = Path.Combine(Path.GetTempPath(), "dup-gate-" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Root);
+            tree.Write("src/" + path, contents);
         }
 
-        public string Root { get; }
-
-        public void Write(string relative, string contents)
-        {
-            var path = Path.Combine(Root, relative);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, contents);
-        }
-
-        public void Dispose()
-        {
-            if (Directory.Exists(Root))
-            {
-                Directory.Delete(Root, recursive: true);
-            }
-        }
+        return tree;
     }
 }

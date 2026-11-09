@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared;
@@ -14,7 +15,7 @@ public class UiSharedPagesArchitectureTests
     [Test]
     public void Pages_ShouldNotReferenceHttpClientOrDataContext_When_ScanningSource()
     {
-        var pages = Path.Combine(FindRepoRoot(), "src", "UI.Shared", "Pages");
+        var pages = RepositoryCheckout.Current.PathOf("src/UI.Shared/Pages");
         var hits = Directory.EnumerateFiles(pages, "*.*", SearchOption.AllDirectories)
             .Where(path => path.EndsWith(".cs", StringComparison.Ordinal) || path.EndsWith(".razor", StringComparison.Ordinal))
             .Select(path => (Path: path, Match: ForbiddenType.Match(File.ReadAllText(path))))
@@ -25,19 +26,4 @@ public class UiSharedPagesArchitectureTests
         hits.ShouldBeEmpty();
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root from test directory.");
-    }
 }

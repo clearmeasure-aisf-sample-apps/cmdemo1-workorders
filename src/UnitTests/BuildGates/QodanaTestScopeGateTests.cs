@@ -8,7 +8,7 @@ public class QodanaTestScopeGateTests
     [Test]
     public void QodanaYaml_StillHasWholeSolutionFailThresholdZero()
     {
-        var yaml = File.ReadAllText(FindRepoFile("qodana.yaml"));
+        var yaml = RepositoryCheckout.Current.ReadText("qodana.yaml");
 
         yaml.ShouldContain("failThreshold: 0");
         yaml.ShouldContain("solution: src/ChurchBulletin.sln");
@@ -17,7 +17,7 @@ public class QodanaTestScopeGateTests
     [Test]
     public void BuildYml_QodanaStep_StillPassesFailThresholdZero()
     {
-        var workflow = File.ReadAllText(FindRepoFile(Path.Combine(".github", "workflows", "build.yml")));
+        var workflow = RepositoryCheckout.Current.ReadText(".github/workflows/build.yml");
 
         workflow.ShouldContain("--fail-threshold,0");
         workflow.ShouldContain("--solution,src/ChurchBulletin.sln");
@@ -26,25 +26,25 @@ public class QodanaTestScopeGateTests
     [Test]
     public void UnitTests_EditorConfig_DowngradesRedundantUsingAndNullableSuppression()
     {
-        AssertEditorConfigDowngrades(Path.Combine("src", "UnitTests", ".editorconfig"));
+        AssertEditorConfigDowngrades("src/UnitTests/.editorconfig");
     }
 
     [Test]
     public void IntegrationTests_EditorConfig_DowngradesRedundantUsingAndNullableSuppression()
     {
-        AssertEditorConfigDowngrades(Path.Combine("src", "IntegrationTests", ".editorconfig"));
+        AssertEditorConfigDowngrades("src/IntegrationTests/.editorconfig");
     }
 
     [Test]
     public void AcceptanceTests_EditorConfig_DowngradesRedundantUsingAndNullableSuppression()
     {
-        AssertEditorConfigDowngrades(Path.Combine("src", "AcceptanceTests", ".editorconfig"));
+        AssertEditorConfigDowngrades("src/AcceptanceTests/.editorconfig");
     }
 
     [Test]
     public void SrcEditorConfig_DoesNotDowngradeQodanaGatingInspections()
     {
-        var config = File.ReadAllText(FindRepoFile(Path.Combine("src", ".editorconfig")));
+        var config = RepositoryCheckout.Current.ReadText("src/.editorconfig");
 
         config.ShouldNotContain("resharper_redundant_using_directive_highlighting = none");
         config.ShouldNotContain("resharper_redundant_nullable_warning_suppression_highlighting = none");
@@ -52,27 +52,11 @@ public class QodanaTestScopeGateTests
 
     private static void AssertEditorConfigDowngrades(string relativePath)
     {
-        var config = File.ReadAllText(FindRepoFile(relativePath));
+        var config = RepositoryCheckout.Current.ReadText(relativePath);
 
         config.ShouldContain("resharper_redundant_using_directive_highlighting = none");
         config.ShouldContain("resharper_redundant_nullable_warning_suppression_highlighting = none");
         config.ShouldContain("root = false");
     }
 
-    private static string FindRepoFile(string relativePath)
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, relativePath);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException($"{relativePath} not found from test directory.");
-    }
 }

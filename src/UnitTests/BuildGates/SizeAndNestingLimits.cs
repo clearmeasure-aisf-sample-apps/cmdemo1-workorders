@@ -51,24 +51,6 @@ internal static class SizeAndNestingLimits
             || ContainsSegment(normalized, "AcceptanceTests");
     }
 
-    /// <summary>
-    /// True for build output, generated source, and files that are not hand-written.
-    /// </summary>
-    public static bool IsExcluded(string relativePath)
-    {
-        var normalized = Normalize(relativePath);
-        if (ContainsSegment(normalized, "bin")
-            || ContainsSegment(normalized, "obj")
-            || ContainsSegment(normalized, "Generated")
-            || ContainsSegment(normalized, "TestResults"))
-        {
-            return true;
-        }
-
-        return normalized.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)
-            || normalized.EndsWith(".designer.cs", StringComparison.OrdinalIgnoreCase);
-    }
-
     /// <summary>Editor line count. A trailing newline does not add an extra line.</summary>
     public static int CountLines(string text)
     {

@@ -7,23 +7,25 @@ internal static class FolderShapeInspector
 {
     private const int MaxDepth = 4;
 
-    public static IReadOnlyList<string> SingleFileFolders(string repositoryRoot)
+    private static readonly string[] SourceExtensions = [".cs", ".razor", ".cshtml"];
+
+    public static IReadOnlyList<string> SingleFileFolders(RepositoryCheckout checkout)
     {
-        return Scan(repositoryRoot).SingleFile;
+        return Scan(checkout).SingleFile;
     }
 
-    public static IReadOnlyList<string> DeepFolders(string repositoryRoot)
+    public static IReadOnlyList<string> DeepFolders(RepositoryCheckout checkout)
     {
-        return Scan(repositoryRoot).Deep;
+        return Scan(checkout).Deep;
     }
 
-    private static FolderFindings Scan(string repositoryRoot)
+    private static FolderFindings Scan(RepositoryCheckout checkout)
     {
         var findings = new FolderFindings();
-        var src = Path.Combine(repositoryRoot, "src");
+        var src = checkout.PathOf("src");
         if (Directory.Exists(src))
         {
-            Walk(src, repositoryRoot, src, findings);
+            Walk(src, checkout, src, findings);
             findings.SingleFile.Sort(StringComparer.Ordinal);
             findings.Deep.Sort(StringComparer.Ordinal);
         }
@@ -31,30 +33,35 @@ internal static class FolderShapeInspector
         return findings;
     }
 
-    private static void Walk(string directory, string root, string src, FolderFindings findings)
+    private static void Walk(string directory, RepositoryCheckout checkout, string src, FolderFindings findings)
     {
         var children = ChildDirectories(directory);
-        var sources = Directory.GetFiles(directory).Where(StructurePaths.IsSourceFile).ToArray();
+        var sources = Directory.GetFiles(directory).Where(IsSourceFile).ToArray();
         if (sources.Length == 1 && children.Length == 0)
         {
-            findings.SingleFile.Add(StructurePaths.Relative(root, directory));
+            findings.SingleFile.Add(checkout.Relative(directory));
         }
 
         if (Depth(src, directory) > MaxDepth && sources.Length > 0)
         {
-            findings.Deep.Add(StructurePaths.Relative(root, directory));
+            findings.Deep.Add(checkout.Relative(directory));
         }
 
         foreach (var child in children)
         {
-            Walk(child, root, src, findings);
+            Walk(child, checkout, src, findings);
         }
+    }
+
+    private static bool IsSourceFile(string path)
+    {
+        return SourceExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
     }
 
     private static string[] ChildDirectories(string directory)
     {
         return Directory.GetDirectories(directory)
-            .Where(path => !StructurePaths.IsSkippedDirectory(Path.GetFileName(path)))
+            .Where(path => !RepositoryCheckout.IsSkippedDirectory(Path.GetFileName(path)))
             .ToArray();
     }
 

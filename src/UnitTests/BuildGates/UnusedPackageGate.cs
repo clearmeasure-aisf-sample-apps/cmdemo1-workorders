@@ -12,6 +12,9 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// </summary>
 public static class UnusedPackageGate
 {
+    /// <summary>Checkout-relative path of the committed ratchet list.</summary>
+    public const string BaselinePath = "scripts/dead-code/unused-package-baseline.json";
+
     public static bool RequireOutputs =>
         string.Equals(Environment.GetEnvironmentVariable("DEAD_CODE_GATE_REQUIRE_OUTPUTS"), "1", StringComparison.Ordinal);
 
@@ -40,16 +43,15 @@ public static class UnusedPackageGate
     }
 
     /// <summary>
-    /// Scans every project under <paramref name="repoRoot"/>/<c>src</c>.
+    /// Scans every project under <c>src</c> in <paramref name="checkout"/>.
     /// </summary>
-    public static UnusedPackageScan ScanSolution(string repoRoot, string configuration)
+    public static UnusedPackageScan ScanSolution(RepositoryCheckout checkout, string configuration)
     {
-        var src = Path.Combine(repoRoot, "src");
         var missing = new List<string>();
         var unused = new List<UnusedPackage>();
-        foreach (var project in ProjectFiles(src))
+        foreach (var project in checkout.SourceFiles(".csproj"))
         {
-            CollectProject(new ProjectInputs(repoRoot, configuration, project), missing, unused);
+            CollectProject(new ProjectInputs(checkout, configuration, project), missing, unused);
         }
 
         unused.Sort(ComparePackages);
@@ -102,11 +104,11 @@ public static class UnusedPackageGate
     }
 
     /// <summary>
-    /// Reads the ratchet list. Every entry needs a reason. The list may only shrink.
+    /// Reads the ratchet list committed at <see cref="BaselinePath"/>. Every entry needs a reason. The list may only shrink.
     /// </summary>
-    public static IReadOnlyList<PackageBaselineEntry> ReadBaseline(string path)
+    public static IReadOnlyList<PackageBaselineEntry> ReadBaseline(RepositoryCheckout checkout)
     {
-        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        using var document = JsonDocument.Parse(checkout.ReadText(BaselinePath));
         var entries = new List<PackageBaselineEntry>();
         foreach (var element in document.RootElement.GetProperty("entries").EnumerateArray())
         {
@@ -136,11 +138,11 @@ public static class UnusedPackageGate
         return unexpected;
     }
 
-    private readonly record struct ProjectInputs(string RepoRoot, string OutputConfiguration, string Project);
+    private readonly record struct ProjectInputs(RepositoryCheckout Checkout, string OutputConfiguration, string Project);
 
     private static void CollectProject(ProjectInputs input, List<string> missing, List<UnusedPackage> unused)
     {
-        var relative = Relative(input.RepoRoot, input.Project);
+        var relative = input.Checkout.Relative(input.Project);
         var projectDirectory = Path.GetDirectoryName(input.Project)!;
         var assets = Path.Combine(projectDirectory, "obj", "project.assets.json");
         var output = ResolveOutputPath(input.Project, input.OutputConfiguration);
@@ -288,21 +290,6 @@ public static class UnusedPackageGate
 
         assemblies = new HashSet<string>();
         return false;
-    }
-
-    private static List<string> ProjectFiles(string srcRoot)
-    {
-        var files = new List<string>();
-        foreach (var path in Directory.EnumerateFiles(srcRoot, "*.csproj", SearchOption.AllDirectories))
-        {
-            if (!IsUnderSkippedDirectory(path))
-            {
-                files.Add(path);
-            }
-        }
-
-        files.Sort(StringComparer.Ordinal);
-        return files;
     }
 
     private static bool IsUnderSkippedDirectory(string path)
@@ -497,11 +484,6 @@ public static class UnusedPackageGate
     {
         var slash = key.IndexOf('/');
         return slash < 0 ? key : key[..slash];
-    }
-
-    private static string Relative(string root, string path)
-    {
-        return Normalize(Path.GetRelativePath(root, path));
     }
 
     private static string Normalize(string path) => path.Replace('\\', '/');

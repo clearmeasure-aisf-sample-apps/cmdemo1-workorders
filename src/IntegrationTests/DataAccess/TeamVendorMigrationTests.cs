@@ -1,5 +1,6 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using DbUp;
 using DbUp.Engine.Output;
 using DbUp.ScriptProviders;
@@ -47,7 +48,7 @@ public class TeamVendorMigrationTests
         };
         _connectionString = builder.ConnectionString;
         EnsureDatabase.For.SqlDatabase(_connectionString, new NoOpUpgradeLog());
-        var scriptDirectory = Path.Combine(FindRepoRoot(), "src", "Database", "scripts", "Update");
+        var scriptDirectory = RepositoryCheckout.Current.PathOf("src/Database/scripts/Update");
 
         var previous = Upgrade(scriptDirectory,
             file => string.CompareOrdinal(Path.GetFileName(file), "036_") < 0);
@@ -160,19 +161,4 @@ public class TeamVendorMigrationTests
         return rows.ToArray();
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root from test directory.");
-    }
 }

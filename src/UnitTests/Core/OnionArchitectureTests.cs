@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core;
@@ -28,7 +29,7 @@ public class OnionArchitectureTests
     [Test]
     public void CoreProjectShouldHaveNoProjectReference()
     {
-        var project = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", "Core", "Core.csproj"));
+        var project = RepositoryCheckout.Current.ReadText("src/Core/Core.csproj");
 
         project.ShouldNotContain("<ProjectReference");
     }
@@ -55,19 +56,4 @@ public class OnionArchitectureTests
         type.Assembly.ShouldBe(typeof(DataContext).Assembly);
     }
 
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root from test directory.");
-    }
 }

@@ -149,45 +149,6 @@ internal static partial class ArchitectureRules
         return string.Join('.', parts);
     }
 
-    /// <summary>
-    /// Entries in <paramref name="actual"/> that are not in <paramref name="baseline"/>.
-    /// A smaller actual set returns empty (the ratchet may go down). A new entry is returned (the ratchet may not go up).
-    /// </summary>
-    internal static IReadOnlyList<string> AboveBaseline(IEnumerable<string> actual, IReadOnlySet<string> baseline)
-    {
-        var extras = new List<string>();
-        foreach (var item in actual)
-        {
-            if (!baseline.Contains(item))
-            {
-                extras.Add(item);
-            }
-        }
-
-        return SortedDistinct(extras);
-    }
-
-    /// <summary>
-    /// Parses a baseline file. Blank lines and lines starting with <c>#</c> are ignored.
-    /// </summary>
-    internal static IReadOnlySet<string> ParseBaseline(string text)
-    {
-        var entries = new HashSet<string>(StringComparer.Ordinal);
-        var lines = StripBom(text).Split('\n');
-        foreach (var line in lines)
-        {
-            var trimmed = line.Trim();
-            if (trimmed.Length == 0 || trimmed.StartsWith('#'))
-            {
-                continue;
-            }
-
-            entries.Add(trimmed);
-        }
-
-        return entries;
-    }
-
     private static string ExpandRootNamespace(string value, string projectName)
     {
         var withUnderscores = projectName.Replace(" ", "_", StringComparison.Ordinal);

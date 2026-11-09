@@ -26,9 +26,9 @@ public class UnreferencedProjectTests
     {
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/Orphan/Orphan.csproj", StructureFixture.LibraryProject);
-            StructureFixture.Write(repo, "src/Lib/Lib.csproj", StructureFixture.LibraryProject);
-            StructureFixture.Write(repo, "src/App/App.csproj", ReferencesLib);
+            repo.Write("src/Orphan/Orphan.csproj", StructureFixture.LibraryProject);
+            repo.Write("src/Lib/Lib.csproj", StructureFixture.LibraryProject);
+            repo.Write("src/App/App.csproj", ReferencesLib);
         });
 
         report.UnreferencedProjects.ShouldBe(["src/Orphan/Orphan.csproj"]);
@@ -39,10 +39,10 @@ public class UnreferencedProjectTests
     {
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/Database/Database.csproj", StructureFixture.ExeProject);
-            StructureFixture.Write(repo, "src/Worker/Worker.csproj", """<Project Sdk="Microsoft.NET.Sdk.Worker"></Project>""");
-            StructureFixture.Write(repo, "src/ChurchBulletin.AppHost/ChurchBulletin.AppHost.csproj", """<Project Sdk="Aspire.AppHost.Sdk/13.1.2"></Project>""");
-            StructureFixture.Write(repo, "src/UnitTests/UnitTests.csproj", StructureFixture.LibraryProject);
+            repo.Write("src/Database/Database.csproj", StructureFixture.ExeProject);
+            repo.Write("src/Worker/Worker.csproj", """<Project Sdk="Microsoft.NET.Sdk.Worker"></Project>""");
+            repo.Write("src/ChurchBulletin.AppHost/ChurchBulletin.AppHost.csproj", """<Project Sdk="Aspire.AppHost.Sdk/13.1.2"></Project>""");
+            repo.Write("src/UnitTests/UnitTests.csproj", StructureFixture.LibraryProject);
         });
 
         report.UnreferencedProjects.ShouldBeEmpty();
@@ -53,9 +53,9 @@ public class UnreferencedProjectTests
     {
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/Directory.Build.props", AnalyzerProps);
-            StructureFixture.Write(repo, "src/Analyzer/Analyzer.csproj", StructureFixture.LibraryProject);
-            StructureFixture.Write(repo, "src/App/App.csproj", StructureFixture.ExeProject);
+            repo.Write("src/Directory.Build.props", AnalyzerProps);
+            repo.Write("src/Analyzer/Analyzer.csproj", StructureFixture.LibraryProject);
+            repo.Write("src/App/App.csproj", StructureFixture.ExeProject);
         });
 
         report.UnreferencedProjects.ShouldBeEmpty();

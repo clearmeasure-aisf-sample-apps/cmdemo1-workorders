@@ -174,24 +174,11 @@ public class SizeAndNestingGateTests
     [Test]
     public void ShouldSkipBuildOutputAndGeneratedFiles_WhenRepositoryIsScanned()
     {
-        var root = Path.Combine(Path.GetTempPath(), "size-gate-" + Guid.NewGuid().ToString("N"));
-        try
-        {
-            Write(root, "src/Core/Wide.cs", Lines(301));
-            Write(root, "src/Core/obj/Wide.cs", Lines(301));
-            Write(root, "src/Core/Foo.g.cs", Lines(400));
-            Write(root, "src/UI/Server/Generated/Wide.cs", Lines(400));
-            Write(root, "src/UnitTests/TestResults/Wide.cs", Lines(700));
-            Write(root, "src/Core/Narrow.cs", "class Narrow { void Run() { } }\n");
+        using var tree = TreeWithOversizedFilesInEveryExcludedPlace();
 
-            var keys = SizeAndNestingScanner.ScanRepository(root);
+        var keys = SizeAndNestingScanner.ScanRepository(tree.Checkout);
 
-            keys.ShouldBe(["file src/Core/Wide.cs"]);
-        }
-        finally
-        {
-            Directory.Delete(root, recursive: true);
-        }
+        keys.ShouldBe(["file src/Core/Wide.cs"]);
     }
 
     private static IReadOnlyList<string> Keys(IReadOnlyList<SizeViolation> hits, string rule)
@@ -224,10 +211,14 @@ public class SizeAndNestingGateTests
         return "class Sample { void Run(int value) { " + open + "var x = 1; " + close + " } }\n";
     }
 
-    private static void Write(string root, string relative, string contents)
+    private static ScratchTree TreeWithOversizedFilesInEveryExcludedPlace()
     {
-        var path = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, contents);
+        return new ScratchTree("size-gate")
+            .Write("src/Core/Wide.cs", Lines(301))
+            .Write("src/Core/obj/Wide.cs", Lines(301))
+            .Write("src/Core/Foo.g.cs", Lines(400))
+            .Write("src/UI/Server/Generated/Wide.cs", Lines(400))
+            .Write("src/UnitTests/TestResults/Wide.cs", Lines(700))
+            .Write("src/Core/Narrow.cs", "class Narrow { void Run() { } }\n");
     }
 }

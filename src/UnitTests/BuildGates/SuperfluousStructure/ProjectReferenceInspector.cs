@@ -8,16 +8,10 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.SuperfluousStructure;
 /// </summary>
 internal static class ProjectReferenceInspector
 {
-    public static IReadOnlyList<string> UnreferencedProjects(string repositoryRoot)
+    public static IReadOnlyList<string> UnreferencedProjects(RepositoryCheckout checkout)
     {
-        var src = Path.Combine(repositoryRoot, "src");
-        if (!Directory.Exists(src))
-        {
-            return [];
-        }
-
-        var projects = EnumerateProjects(src, repositoryRoot);
-        var referenced = ReferencedProjects(repositoryRoot, projects);
+        var projects = checkout.SourceFiles(".csproj").Select(file => ProjectFile.Read(file, checkout)).ToList();
+        var referenced = ReferencedProjects(checkout.Root, projects);
         return projects
             .Where(project => !project.IsExcluded && !referenced.Contains(project.FullPath))
             .Select(project => project.RelativePath)
@@ -58,29 +52,6 @@ internal static class ProjectReferenceInspector
         }
 
         return files;
-    }
-
-    private static List<ProjectFile> EnumerateProjects(string src, string repositoryRoot)
-    {
-        var projects = new List<ProjectFile>();
-        Walk(src, repositoryRoot, projects);
-        return projects;
-    }
-
-    private static void Walk(string directory, string repositoryRoot, List<ProjectFile> projects)
-    {
-        foreach (var file in Directory.GetFiles(directory, "*.csproj"))
-        {
-            projects.Add(ProjectFile.Read(file, repositoryRoot));
-        }
-
-        foreach (var child in Directory.GetDirectories(directory))
-        {
-            if (!StructurePaths.IsSkippedDirectory(Path.GetFileName(child)))
-            {
-                Walk(child, repositoryRoot, projects);
-            }
-        }
     }
 
     private static IEnumerable<string> ReadReferences(string filePath)
@@ -164,13 +135,13 @@ internal static class ProjectReferenceInspector
 
         public bool IsExcluded { get; private init; }
 
-        public static ProjectFile Read(string fullPath, string repositoryRoot)
+        public static ProjectFile Read(string fullPath, RepositoryCheckout checkout)
         {
             var document = XDocument.Load(fullPath);
             return new ProjectFile
             {
                 FullPath = Path.GetFullPath(fullPath),
-                RelativePath = StructurePaths.Relative(repositoryRoot, fullPath),
+                RelativePath = checkout.Relative(fullPath),
                 IsExcluded = IsHost(document) || IsTestProject(fullPath)
             };
         }

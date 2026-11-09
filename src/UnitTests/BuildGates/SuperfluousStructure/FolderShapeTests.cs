@@ -10,10 +10,10 @@ public class FolderShapeTests
     {
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/App/App.csproj", StructureFixture.LibraryProject);
-            StructureFixture.Write(repo, "src/App/Lonely/Only.cs", "namespace Demo; public sealed class Only { }");
-            StructureFixture.Write(repo, "src/App/Pair/One.cs", "namespace Demo; public sealed class One { }");
-            StructureFixture.Write(repo, "src/App/Pair/Two.cs", "namespace Demo; public sealed class Two { }");
+            repo.Write("src/App/App.csproj", StructureFixture.LibraryProject);
+            repo.Write("src/App/Lonely/Only.cs", "namespace Demo; public sealed class Only { }");
+            repo.Write("src/App/Pair/One.cs", "namespace Demo; public sealed class One { }");
+            repo.Write("src/App/Pair/Two.cs", "namespace Demo; public sealed class Two { }");
         });
 
         report.SingleFileFolders.ShouldBe(["src/App/Lonely"]);
@@ -24,8 +24,8 @@ public class FolderShapeTests
     {
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/A/B/C/D/Keep.cs", "namespace Demo; public sealed class Keep { }");
-            StructureFixture.Write(repo, "src/A/B/C/D/Also.cs", "namespace Demo; public sealed class Also { }");
+            repo.Write("src/A/B/C/D/Keep.cs", "namespace Demo; public sealed class Keep { }");
+            repo.Write("src/A/B/C/D/Also.cs", "namespace Demo; public sealed class Also { }");
         });
 
         report.DeepFolders.ShouldBeEmpty();
@@ -36,8 +36,8 @@ public class FolderShapeTests
     {
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/A/B/C/D/E/Deep.cs", "namespace Demo; public sealed class Deep { }");
-            StructureFixture.Write(repo, "src/A/B/C/D/E/Also.cs", "namespace Demo; public sealed class Also { }");
+            repo.Write("src/A/B/C/D/E/Deep.cs", "namespace Demo; public sealed class Deep { }");
+            repo.Write("src/A/B/C/D/E/Also.cs", "namespace Demo; public sealed class Also { }");
         });
 
         report.DeepFolders.ShouldBe(["src/A/B/C/D/E"]);

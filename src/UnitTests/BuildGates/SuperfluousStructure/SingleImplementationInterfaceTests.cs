@@ -22,10 +22,10 @@ public class SingleImplementationInterfaceTests
     {
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/Core/Core.csproj", StructureFixture.LibraryProject);
-            StructureFixture.Write(repo, "src/Core/IFoo.cs", "namespace Demo; public interface IFoo { void Run(); }");
-            StructureFixture.Write(repo, "src/App/Foo.cs", "using Demo; namespace App; public sealed class Foo : IFoo { public void Run() { } }");
-            StructureFixture.Write(repo, "src/Tests/StubFoo.cs", "using Demo; namespace Tests; public sealed class StubFoo : IFoo { public void Run() { } }");
+            repo.Write("src/Core/Core.csproj", StructureFixture.LibraryProject);
+            repo.Write("src/Core/IFoo.cs", "namespace Demo; public interface IFoo { void Run(); }");
+            repo.Write("src/App/Foo.cs", "using Demo; namespace App; public sealed class Foo : IFoo { public void Run() { } }");
+            repo.Write("src/Tests/StubFoo.cs", "using Demo; namespace Tests; public sealed class StubFoo : IFoo { public void Run() { } }");
         });
 
         report.SingleImplementationInterfaces.ShouldBeEmpty();
@@ -71,8 +71,8 @@ public class SingleImplementationInterfaceTests
 
         var report = StructureFixture.Scan(repo =>
         {
-            StructureFixture.Write(repo, "src/Demo/Demo.csproj", StructureFixture.ExeProject);
-            StructureFixture.Write(repo, "src/Demo/Sample.cs", source);
+            repo.Write("src/Demo/Demo.csproj", StructureFixture.ExeProject);
+            repo.Write("src/Demo/Sample.cs", source);
         });
         var problems = StructureRatchet.Evaluate(
             report,

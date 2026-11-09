@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Xml.Linq;
 using Shouldly;
 
@@ -7,10 +6,13 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 [TestFixture]
 public class CompilerWarningGateTests
 {
+    private static readonly string[] StrictBuildProperties =
+        ["/p:TreatWarningsAsErrors=true", "/p:MSBuildTreatAllWarningsAsErrors=true"];
+
     [Test]
     public void ShouldConfigurePrivateBuildCompile_WhenBuildScriptIsRead()
     {
-        string source = File.ReadAllText(Path.Combine(FindRepoRoot(), "build.ps1"));
+        string source = RepositoryCheckout.Current.ReadText("build.ps1");
         int compileStart = source.IndexOf("Function Compile", StringComparison.Ordinal);
         int compileEnd = source.IndexOf("Function UnitTests", compileStart, StringComparison.Ordinal);
 
@@ -24,7 +26,7 @@ public class CompilerWarningGateTests
     [Test]
     public void ShouldTreatWarningsAsErrors_WhenDirectoryBuildPropsIsRead()
     {
-        var props = XDocument.Load(Path.Combine(FindRepoRoot(), "src", "Directory.Build.props"));
+        var props = XDocument.Parse(RepositoryCheckout.Current.ReadText("src/Directory.Build.props"));
 
         var treatWarningsAsErrors = props.Descendants()
             .Single(element => element.Name.LocalName == "TreatWarningsAsErrors");
@@ -50,7 +52,7 @@ public class CompilerWarningGateTests
     [Test]
     public void ShouldSuppressTodaysNuGetAdvisories_WhenDirectoryBuildPropsIsRead()
     {
-        var props = XDocument.Load(Path.Combine(FindRepoRoot(), "src", "Directory.Build.props"));
+        var props = XDocument.Parse(RepositoryCheckout.Current.ReadText("src/Directory.Build.props"));
         string[] auditSuppressions = props.Descendants()
             .Where(element => element.Name.LocalName == "NuGetAuditSuppress")
             .Select(element => element.Attribute("Include")?.Value ?? "")
@@ -72,7 +74,7 @@ public class CompilerWarningGateTests
     [Test]
     public void ShouldNotDisableWarningsAsErrors_WhenProjectFilesAreRead()
     {
-        string repoRoot = FindRepoRoot();
+        string repoRoot = RepositoryCheckout.Current.Root;
         var projectFiles = Directory
             .EnumerateFiles(repoRoot, "*.csproj", SearchOption.AllDirectories)
             .Concat(Directory.EnumerateFiles(repoRoot, "Directory.Build.props", SearchOption.AllDirectories))
@@ -95,12 +97,11 @@ public class CompilerWarningGateTests
     [Test]
     public void ShouldVerifyFormatting_WhenPrivateBuildAndCiAreRead()
     {
-        string repoRoot = FindRepoRoot();
-        string privateBuild = File.ReadAllText(Path.Combine(repoRoot, "PrivateBuild.ps1"));
+        string privateBuild = RepositoryCheckout.Current.ReadText("PrivateBuild.ps1");
         privateBuild.ShouldContain("dotnet format");
         privateBuild.ShouldContain("--verify-no-changes");
 
-        string workflow = File.ReadAllText(Path.Combine(repoRoot, ".github", "workflows", "build.yml"));
+        string workflow = RepositoryCheckout.Current.ReadText(".github/workflows/build.yml");
         workflow.ShouldContain("dotnet format style src/ChurchBulletin.sln --verify-no-changes --severity warn");
         workflow.ShouldContain("/p:TreatWarningsAsErrors=true");
         workflow.ShouldContain("/p:EnforceCodeStyleInBuild=true");
@@ -109,7 +110,7 @@ public class CompilerWarningGateTests
     [Test]
     public void ShouldDefineHouseStyle_WhenEditorConfigIsRead()
     {
-        string config = File.ReadAllText(Path.Combine(FindRepoRoot(), "src", ".editorconfig"));
+        string config = RepositoryCheckout.Current.ReadText("src/.editorconfig");
 
         config.ShouldContain("csharp_style_var_for_built_in_types = false:silent");
         config.ShouldContain("csharp_style_var_when_type_is_apparent = true:silent");
@@ -129,92 +130,29 @@ public class CompilerWarningGateTests
     [Test]
     public async Task ShouldFailOnlyStrictBuild_WhenCompilerWarningIsPresent()
     {
-        string projectDirectory = Path.Combine(
-            Path.GetTempPath(),
-            $"compiler-warning-gate-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(projectDirectory);
+        using var project = CompilerWarningProjectMother.ProgramWithAWarningDirective();
 
-        try
-        {
-            await File.WriteAllTextAsync(
-                Path.Combine(projectDirectory, "WarningGate.csproj"),
-                """
-                <Project Sdk="Microsoft.NET.Sdk">
-                  <PropertyGroup>
-                    <TargetFramework>net10.0</TargetFramework>
-                    <OutputType>Exe</OutputType>
-                  </PropertyGroup>
-                </Project>
-                """);
-            await File.WriteAllTextAsync(
-                Path.Combine(projectDirectory, "Program.cs"),
-                """
-                #warning Warning gate contract
-                System.Console.WriteLine("warning gate");
-                """);
+        var ordinaryBuild = await BuildAsync(project);
+        var strictBuild = await BuildAsync(project, StrictBuildProperties);
 
-            var ordinaryBuild = await RunDotNetBuild(projectDirectory);
-            var strictBuild = await RunDotNetBuild(
-                projectDirectory,
-                "/p:TreatWarningsAsErrors=true",
-                "/p:MSBuildTreatAllWarningsAsErrors=true");
-
-            ordinaryBuild.ExitCode.ShouldBe(0, ordinaryBuild.Output);
-            ordinaryBuild.Output.ShouldContain("warning CS1030");
-            strictBuild.ExitCode.ShouldNotBe(0, strictBuild.Output);
-            strictBuild.Output.ShouldContain("error CS1030");
-        }
-        finally
-        {
-            Directory.Delete(projectDirectory, recursive: true);
-        }
+        ShouldSucceedWithTheWarning(ordinaryBuild);
+        ShouldFailWithTheWarningAsAnError(strictBuild);
     }
 
-    private static async Task<BuildResult> RunDotNetBuild(
-        string workingDirectory,
-        params string[] additionalArguments)
+    private static Task<CommandOutcome> BuildAsync(ScratchTree project, params string[] properties)
     {
-        var startInfo = new ProcessStartInfo("dotnet")
-        {
-            WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        startInfo.ArgumentList.Add("build");
-        startInfo.ArgumentList.Add("--nologo");
-        startInfo.ArgumentList.Add("--no-incremental");
-        foreach (string argument in additionalArguments)
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
-
-        using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("Failed to start dotnet build.");
-        var standardOutput = process.StandardOutput.ReadToEndAsync();
-        var standardError = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
-
-        return new BuildResult(
-            process.ExitCode,
-            $"{await standardOutput}{Environment.NewLine}{await standardError}");
+        return ExternalCommand.Dotnet(["build", "--nologo", "--no-incremental", .. properties]).In(project.Root).RunAsync();
     }
 
-    private static string FindRepoRoot()
+    private static void ShouldSucceedWithTheWarning(CommandOutcome build)
     {
-        var directory = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "build.ps1")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Repository root not found from test directory.");
+        build.ExitCode.ShouldBe(0, build.Output);
+        build.Output.ShouldContain($"warning {CompilerWarningProjectMother.WarningId}");
     }
 
-    private sealed record BuildResult(int ExitCode, string Output);
+    private static void ShouldFailWithTheWarningAsAnError(CommandOutcome build)
+    {
+        build.ExitCode.ShouldNotBe(0, build.Output);
+        build.Output.ShouldContain($"error {CompilerWarningProjectMother.WarningId}");
+    }
 }

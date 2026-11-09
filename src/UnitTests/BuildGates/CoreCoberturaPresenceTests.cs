@@ -8,25 +8,25 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void HasProductionCoreHits_WhenCorePackageHasHits_ReturnsTrue()
     {
-        CoreCoberturaPresence.HasProductionCoreHits(CorePackageWithHitsFixture).ShouldBeTrue();
+        CoreCoberturaPresence.HasProductionCoreHits(CoberturaMother.CorePackageWithHits()).ShouldBeTrue();
     }
 
     [Test]
     public void HasProductionCoreHits_WhenCoreFileHasHits_ReturnsTrue()
     {
-        CoreCoberturaPresence.HasProductionCoreHits(CoreWithHitsFixture).ShouldBeTrue();
+        CoreCoberturaPresence.HasProductionCoreHits(CoberturaMother.CoreSourcePathWithHits()).ShouldBeTrue();
     }
 
     [Test]
     public void HasProductionCoreHits_WhenOnlyUnitTestsCorePaths_ReturnsFalse()
     {
-        CoreCoberturaPresence.HasProductionCoreHits(UnitTestsCoreOnlyFixture).ShouldBeFalse();
+        CoreCoberturaPresence.HasProductionCoreHits(CoberturaMother.UnitTestsCoreFolderOnly()).ShouldBeFalse();
     }
 
     [Test]
     public void HasProductionCoreHits_WhenCorePresentButZeroHits_ReturnsFalse()
     {
-        CoreCoberturaPresence.HasProductionCoreHits(CoreZeroHitsFixture).ShouldBeFalse();
+        CoreCoberturaPresence.HasProductionCoreHits(CoberturaMother.CorePackageWithoutHits()).ShouldBeFalse();
     }
 
     [Test]
@@ -55,8 +55,7 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void CoverletRunSettings_WhenRead_IncludesBootcampAndExcludesTests()
     {
-        var path = FindRepoFile("coverlet.runsettings");
-        var xml = File.ReadAllText(path);
+        var xml = RepositoryCheckout.Current.ReadText("coverlet.runsettings");
 
         xml.ShouldContain("<Include>[ClearMeasure.Bootcamp.*]*,[Worker]*,[ChurchBulletin.ServiceDefaults]*</Include>");
         xml.ShouldContain("UnitTests");
@@ -68,8 +67,7 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void BuildScript_WhenRead_PassesCoverletRunSettingsToUnitAndIntegration()
     {
-        var path = FindRepoFile("build.ps1");
-        var source = File.ReadAllText(path);
+        var source = RepositoryCheckout.Current.ReadText("build.ps1");
 
         source.ShouldContain("coverlet.runsettings");
         source.ShouldContain("--settings:");
@@ -79,9 +77,7 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void AssertCoreCoberturaScript_WhenRead_FailsWhenCoreMissing()
     {
-        var path = FindRepoFile(Path.Combine(
-            "scripts", "crap", "assert-core-cobertura.ps1"));
-        var source = File.ReadAllText(path);
+        var source = RepositoryCheckout.Current.ReadText("scripts/crap/assert-core-cobertura.ps1");
 
         source.ShouldContain("ClearMeasure.Bootcamp.Core");
         source.ShouldContain("exit 1");
@@ -90,101 +86,14 @@ public class CoreCoberturaPresenceTests
     [Test]
     public void CoreProject_WhenRead_EnablesCopyLocalLockFileAssemblies()
     {
-        var path = FindRepoFile(Path.Combine("src", "Core", "Core.csproj"));
-        File.ReadAllText(path).ShouldContain("CopyLocalLockFileAssemblies");
+        RepositoryCheckout.Current.ReadText("src/Core/Core.csproj").ShouldContain("CopyLocalLockFileAssemblies");
     }
 
     [Test]
     public void UnitTestsProject_WhenRead_CopiesCoreCoverletResolutionAssemblies()
     {
-        var path = FindRepoFile(Path.Combine("src", "UnitTests", "UnitTests.csproj"));
-        var source = File.ReadAllText(path);
+        var source = RepositoryCheckout.Current.ReadText("src/UnitTests/UnitTests.csproj");
         source.ShouldContain("CopyCoreCoverletResolutionAssemblies");
         source.ShouldContain("HealthChecks.Abstractions");
     }
-
-    private static string FindRepoFile(string relativePath)
-    {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir.FullName, relativePath);
-            if (File.Exists(candidate))
-            {
-                return candidate;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException($"Repo file not found: {relativePath}");
-    }
-
-    private const string CorePackageWithHitsFixture = """
-        <?xml version="1.0" encoding="utf-8"?>
-        <coverage>
-          <packages>
-            <package name="ClearMeasure.Bootcamp.Core">
-              <classes>
-                <class name="ClearMeasure.Bootcamp.Core.Model.Employee" filename="Model/Employee.cs" line-rate="1">
-                  <lines>
-                    <line number="10" hits="3" />
-                  </lines>
-                </class>
-              </classes>
-            </package>
-          </packages>
-        </coverage>
-        """;
-
-    private const string CoreWithHitsFixture = """
-        <?xml version="1.0" encoding="utf-8"?>
-        <coverage>
-          <packages>
-            <package name="ClearMeasure.Bootcamp.Core">
-              <classes>
-                <class name="ClearMeasure.Bootcamp.Core.Model.Employee" filename="src/Core/Model/Employee.cs" line-rate="1">
-                  <lines>
-                    <line number="10" hits="3" />
-                  </lines>
-                </class>
-              </classes>
-            </package>
-          </packages>
-        </coverage>
-        """;
-
-    private const string UnitTestsCoreOnlyFixture = """
-        <?xml version="1.0" encoding="utf-8"?>
-        <coverage>
-          <packages>
-            <package name="ClearMeasure.Bootcamp.UnitTests">
-              <classes>
-                <class name="ClearMeasure.Bootcamp.UnitTests.Core.Model.EmployeeTests" filename="src/UnitTests/Core/Model/EmployeeTests.cs" line-rate="1">
-                  <lines>
-                    <line number="10" hits="5" />
-                  </lines>
-                </class>
-              </classes>
-            </package>
-          </packages>
-        </coverage>
-        """;
-
-    private const string CoreZeroHitsFixture = """
-        <?xml version="1.0" encoding="utf-8"?>
-        <coverage>
-          <packages>
-            <package name="ClearMeasure.Bootcamp.Core">
-              <classes>
-                <class name="ClearMeasure.Bootcamp.Core.Model.Employee" filename="Model/Employee.cs" line-rate="0">
-                  <lines>
-                    <line number="10" hits="0" />
-                  </lines>
-                </class>
-              </classes>
-            </package>
-          </packages>
-        </coverage>
-        """;
 }

@@ -1,5 +1,3 @@
-// ReSharper disable NotAccessedPositionalProperty.Global -- result records are the gate contract returned to callers
-// ReSharper disable NotAccessedPositionalProperty.Local -- result records are the gate contract returned to callers
 using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
@@ -29,7 +27,7 @@ public static class CrapGateEvaluator
             }
         }
 
-        methods.Sort((left, right) => right.Crap.CompareTo(left.Crap));
+        methods.Sort((left, right) => right.Score.Crap.CompareTo(left.Score.Crap));
         return new CrapGateResult(threshold, methods.Count, methods);
     }
 
@@ -55,12 +53,8 @@ public static class CrapGateEvaluator
             return false;
         }
 
-        violation = new CrapMethodViolation(
-            ReadString(method, "fullName") ?? "",
-            filePath ?? "",
-            crap,
-            ReadInt(method, "complexity"),
-            ReadDouble(method, "coverage"));
+        var score = new CrapScore(crap, ReadInt(method, "complexity"), ReadDouble(method, "coverage"));
+        violation = new CrapMethodViolation(ReadString(method, "fullName") ?? "", filePath ?? "", score);
         return true;
     }
 
@@ -85,18 +79,3 @@ public static class CrapGateEvaluator
             : 0;
     }
 }
-
-/// <summary>
-/// Outcome of a CRAP production-scope gate evaluation.
-/// </summary>
-public sealed record CrapGateResult(int Threshold, int ViolationCount, IReadOnlyList<CrapMethodViolation> Methods);
-
-/// <summary>
-/// One production method over the CRAP threshold.
-/// </summary>
-public sealed record CrapMethodViolation(
-    string FullName,
-    string FilePath,
-    double Crap,
-    int Complexity,
-    double Coverage);

@@ -14,10 +14,10 @@ public class SuperfluousStructureGateTests
     [Test]
     public void ShouldMatchBaseline_When_RepositoryIsScanned()
     {
-        var root = RepoFiles.Root();
-        var report = SuperfluousStructureScanner.Scan(root);
-        var allowList = StructureAllowList.Load(File.ReadAllText(Path.Combine(root, AllowListPath)));
-        var baseline = StructureBaseline.Load(File.ReadAllText(Path.Combine(root, BaselinePath)));
+        var checkout = RepositoryCheckout.Current;
+        var report = SuperfluousStructureScanner.Scan(checkout);
+        var allowList = StructureAllowList.Load(checkout.ReadText(AllowListPath));
+        var baseline = StructureBaseline.Load(checkout.ReadText(BaselinePath));
         foreach (var rule in StructureRule.All)
         {
             foreach (var id in allowList.Ids(rule))
