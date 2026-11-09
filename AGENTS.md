@@ -10,6 +10,16 @@ See `CLAUDE.md` for full project overview, solution structure, architecture, cod
 - **PowerShell 7 (pwsh)** - required for all build scripts (`build.ps1`, `PrivateBuild.ps1`, `BuildFunctions.ps1`)
 - **Docker** - required for SQL Server container on Linux; needs `fuse-overlayfs` storage driver and `iptables-legacy` in the cloud VM
 
+### Size-gate failures and oversized code
+
+On a size-gate failure, a structure-guardrail failure (`src/UnitTests/BuildGates/Refactoring/`) or a Refactoring
+rationale failure (workflow `refactoring-rationale.yml`), **read and follow `docs/refactoring-oversized-code.md`
+before editing**. Diagnose the smell and the emerging concept, use a preferred move (never `partial`, helper/util
+classes, own-type extensions, numbered names or line-count splits), give every extracted class its own fixture, write
+tests as visible procedural steps, delete the fixed line from the baseline, and fill in the pull request's
+**Refactoring rationale** table. Check locally:
+`pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -PrBodyPath pr-body.md`.
+
 ### Running the Full Build
 
 ```bash

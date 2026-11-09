@@ -1,0 +1,21 @@
+---
+description: Size-gate failures and oversized files or methods; splitting, extracting or refactoring classes, pages, tools or test files
+alwaysApply: false
+---
+
+# Refactoring oversized code
+
+On a size-gate failure (file over ~300 lines, method over ~30 lines, more than 4 parameters, nesting deeper than 3,
+or an oversized test file), a structure-guardrail failure (`src/UnitTests/BuildGates/Refactoring/`), or a
+Refactoring rationale failure: **read and follow `docs/refactoring-oversized-code.md` before editing.**
+
+- Diagnose first: name the smells and the domain concept trying to emerge.
+- Use a preferred move from the playbook; any other move needs a written reason (`Other: <move>`).
+- Never: `partial` types to dodge a limit, extension methods on our own types, static `*Helper`/`*Util` classes,
+  numbered or vague names (`Part1`, `Extra`, `More`, `Misc`, `Manager2`), pass-through classes, splitting by line count.
+- Tests: extract similar tests into their own fixtures in a category folder and namespace; every test method reads as
+  visible steps (one well-named helper call each, no loops or branches, no whole-scenario helper); `[SetUp]` does
+  infrastructure, plus shared arrange steps only in a `Given...` fixture; data in ObjectMother/builders, actions in
+  small `*Steps` classes.
+- Every extracted class gets its own fixture; delete the fixed file's line from the baseline (baselines only shrink).
+- Fill in the pull request's **Refactoring rationale** table (Smell | Refactoring | New abstraction | Why).

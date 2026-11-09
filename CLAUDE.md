@@ -262,6 +262,11 @@ Format: `{username}/{branch-description}`. AI agents use the username of the acc
 | Before PR | `.\acceptancetests.ps1` |
 | Docs-only changes | Skip builds |
 
+**Oversized code:** on a size-gate failure, a structure-guardrail failure (`src/UnitTests/BuildGates/Refactoring/`) or a
+Refactoring rationale failure, read and follow `docs/refactoring-oversized-code.md` before editing: a real refactoring
+(smell → preferred move → named abstraction), never a mechanical split; tests as visible procedural steps; the pull
+request's **Refactoring rationale** table filled in (checked by `scripts/refactoring/Test-RefactoringRationale.ps1`).
+
 CRAP gate (crap4dotnet): `pwsh scripts/crap/run-crap-audit.ps1 -SkipTests -FailOnViolations`. Threshold in `scripts/crap/crap-gate-threshold.json`; reports land in `crap-metrics/` (gitignored) and CI publishes them as the `crap-metrics-linux` artifact plus job summary. See `docs/crap-score-audit.md`.
 
 **Qodana static analysis:** findings are tracked in `qodana.sarif.json`. When fixing Qodana P1 mechanical cleanups, read the SARIF to get the exact snippet context — SARIF line numbers may differ from the current file when the file has changed since the baseline scan. Use `python3 -c "import json; ..."` to extract the `contextRegion.snippet` for each finding. After all fixes, run `dotnet build` before committing. Warnings are already errors (`TreatWarningsAsErrors` in `src/Directory.Build.props`).
