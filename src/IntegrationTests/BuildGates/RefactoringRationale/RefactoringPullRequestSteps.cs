@@ -11,7 +11,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     public const string OversizedFile = "src/McpServer/Tools/WorkOrderTools.cs";
     public const string ListedFile = "src/Core/WorkOrderRules.cs";
     public const string ListedCodeBehind = "src/UI.Shared/Pages/WorkOrderBoard.razor.cs";
-    public const string SizeBaseline = "src/UnitTests/BuildGates/size-nesting-baseline.txt";
+    private const string SizeBaseline = "src/UnitTests/BuildGates/size-nesting-baseline.txt";
     private const string GuardrailBaseline = "src/UnitTests/BuildGates/Refactoring/Baselines/static-helper-classes.txt";
     private const string BaseTag = "pull-request-base";
 

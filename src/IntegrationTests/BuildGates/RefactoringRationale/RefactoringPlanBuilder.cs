@@ -7,7 +7,7 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.BuildGates.RefactoringRationale
 /// </summary>
 public sealed class RefactoringPlanBuilder
 {
-    public const string ValidRow =
+    private const string ValidRow =
         "| Long Parameter List, Data Clumps | Introduce Parameter Object | WorkOrderDraft | The ten create arguments always travel together and are validated together |";
 
     private const string BeforeDiagram = "classDiagram\n    class WorkOrderTools";
