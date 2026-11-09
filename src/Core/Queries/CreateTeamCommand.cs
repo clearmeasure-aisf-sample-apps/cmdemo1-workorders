@@ -25,7 +25,7 @@ public record CreateTeamCommand(string Name, string? Description, IReadOnlyList<
         }
 
         var known = new HashSet<string>(knownUserNames, StringComparer.OrdinalIgnoreCase);
-        foreach (string? userName in MemberUserNames.Where(userName => !known.Contains(userName)))
+        foreach (string userName in MemberUserNames.Where(userName => !known.Contains(userName)))
         {
             violations.Add($"No employee with user name '{userName}' exists.");
         }

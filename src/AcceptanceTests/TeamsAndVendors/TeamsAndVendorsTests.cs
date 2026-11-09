@@ -37,7 +37,7 @@ public class TeamsAndVendorsTests : AcceptanceTestBase
 
         // Match the column headers exactly: a loose text match also finds employee names in the rows
         // (for example "Role" in "Carole") and fails Playwright's strict mode.
-        foreach (string? header in new[] { "Name", "Role", "Assigned Open", "In Progress", "Overdue", "Completed 30d" })
+        foreach (string header in new[] { "Name", "Role", "Assigned Open", "In Progress", "Overdue", "Completed 30d" })
         {
             await Expect(table.GetByRole(AriaRole.Columnheader, new() { Name = header, Exact = true })).ToBeVisibleAsync();
         }

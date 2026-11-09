@@ -155,7 +155,7 @@ public class AppShellTests : AcceptanceTestBase
         string folder = Path.Combine(TestContext.CurrentContext.WorkDirectory, "screenshots");
         Directory.CreateDirectory(folder);
 
-        foreach (string? theme in new[] { "light", "dark" })
+        foreach (string theme in new[] { "light", "dark" })
         {
             await SetThemeAsync(theme);
             foreach (int width in new[] { 1440, 1280, 900 })

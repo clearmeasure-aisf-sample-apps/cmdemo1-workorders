@@ -394,8 +394,8 @@ public class NpoAnalyzerRulesTests
     [Test]
     public async Task ShouldReportNothing_When_InMemoryMaterializerIsInsideForeach()
     {
-        string[] sources = new[]
-        {
+        string[] sources =
+        [
             """
             using System.Collections.Generic;
             using System.Linq;
@@ -424,9 +424,9 @@ public class NpoAnalyzerRulesTests
                 new[] { 1, 2 }.Select(status => rows.Where(row => row == status).ToArray()).ToArray();
             }
             """
-        };
+        ];
 
-        foreach (string? source in sources)
+        foreach (string source in sources)
         {
             (await Cm0002Async(source)).ShouldBeEmpty();
         }

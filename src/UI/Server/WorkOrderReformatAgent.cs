@@ -94,7 +94,7 @@ internal static class ReformatResponseLineParser
     {
         foreach (string line in responseText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (TryParseTitle(line, out string? title))
+            if (TryParseTitle(line, out string title))
             {
                 return title;
             }
@@ -107,7 +107,7 @@ internal static class ReformatResponseLineParser
     {
         foreach (string line in responseText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            if (TryParseDescription(line, out string? description))
+            if (TryParseDescription(line, out string description))
             {
                 return description;
             }

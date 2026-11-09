@@ -43,7 +43,7 @@ public class ToolsCaseController : ControllerBase
             return MissingText();
         }
 
-        if (!TryConvert(request.Text, request.To, out string? converted))
+        if (!TryConvert(request.Text, request.To, out string converted))
         {
             return UnknownTo();
         }

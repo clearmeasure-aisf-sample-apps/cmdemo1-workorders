@@ -62,7 +62,7 @@ internal static class McpEndpointResolver
     private static string RewriteUnparseableWildcard(string address)
     {
         // Kestrel may advertise http://+:port or http://*:port, which Uri rejects.
-        foreach (string? token in new[] { "://+:", "://*:" })
+        foreach (string token in new[] { "://+:", "://*:" })
         {
             int index = address.IndexOf(token, StringComparison.OrdinalIgnoreCase);
             if (index < 0)

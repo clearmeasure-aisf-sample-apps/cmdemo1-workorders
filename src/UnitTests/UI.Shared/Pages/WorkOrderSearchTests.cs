@@ -1627,7 +1627,7 @@ public class WorkOrderSearchTests
         component.FindAll(".board-column").Count.ShouldBe(5);
         component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}Draft']").TextContent.ShouldBe("30");
         component.FindAll($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}Draft']").Count.ShouldBe(0);
-        foreach (string? key in new[] { "Assigned", "InProgress", "Complete", "Cancelled" })
+        foreach (string key in new[] { "Assigned", "InProgress", "Complete", "Cancelled" })
         {
             component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnEmpty}{key}']").TextContent.ShouldBe("No work orders");
             component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardColumnCount}{key}']").TextContent.ShouldBe("0");

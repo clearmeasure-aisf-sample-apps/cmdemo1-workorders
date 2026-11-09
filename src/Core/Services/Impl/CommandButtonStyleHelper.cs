@@ -43,12 +43,12 @@ public static class CommandButtonStyleHelper
         var validNames = validCommandNames.ToList();
 
         // Map of state transitions that are the primary forward action for each state
-        string[] primaryCommands = new[]
-        {
+        string[] primaryCommands =
+        [
             "Assign",    // Draft -> Assigned (primary forward action in Draft state)
             "Begin",     // Assigned -> InProgress (primary forward action in Assigned state)
             "Complete"   // InProgress -> Complete (primary forward action in InProgress state)
-        };
+        ];
 
         return primaryCommands.Contains(commandName) && validNames.Contains(commandName);
     }

@@ -18,7 +18,7 @@ public sealed class ApiKeyAuthenticationMiddleware(RequestDelegate next)
         || pathValue.Equals("/api", StringComparison.OrdinalIgnoreCase);
 
     internal static bool IsPublicVersionOrTimePath(string pathValue) =>
-        ApiPublicPathRules.TryGetLeafSegment(pathValue, out string? leaf) && ApiPublicPathRules.IsPublicLeaf(leaf);
+        ApiPublicPathRules.TryGetLeafSegment(pathValue, out string leaf) && ApiPublicPathRules.IsPublicLeaf(leaf);
 
     internal static bool IsAuthorized(HttpRequest request, string expectedKey)
     {

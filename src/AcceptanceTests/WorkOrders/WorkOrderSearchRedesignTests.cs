@@ -454,7 +454,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
             await Expect(Page.Locator(".modern-sidebar.open")).ToHaveCountAsync(0);
         }
 
-        foreach (string? theme in new[] { "light", "dark" })
+        foreach (string theme in new[] { "light", "dark" })
         {
             await EnsureThemeAsync(theme);
             await ExpectPhoneHeaderCollapsedAsync();

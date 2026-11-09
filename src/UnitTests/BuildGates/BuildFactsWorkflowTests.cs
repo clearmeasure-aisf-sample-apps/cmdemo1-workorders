@@ -41,7 +41,7 @@ public class BuildFactsWorkflowTests
         // The image is built from ./built (Dockerfile: COPY /built/ /app): the file is written there, not into a zip.
         step.ShouldContain("-OutputPath 'built/build-facts.json'");
         step.ShouldNotContain("-Package");
-        foreach (string? parameter in new[] { "DownloadArtifacts", "Version", "RunId", "BuiltAt", "OutputPath" })
+        foreach (string parameter in new[] { "DownloadArtifacts", "Version", "RunId", "BuiltAt", "OutputPath" })
         {
             step.ShouldContain($"-{parameter}");
             script.ShouldMatch($@"\[(string|switch)\]\${parameter}\b");

@@ -58,7 +58,7 @@ public class ApiKeyAuthenticationMiddlewarePublicPathTests
     [TestCase("/api/v1.0/health/detailed", "health/detailed")]
     public void TryGetLeafSegment_ReturnsLeaf(string path, string expectedLeaf)
     {
-        ApiPublicPathRules.TryGetLeafSegment(path, out string? leaf).ShouldBeTrue();
+        ApiPublicPathRules.TryGetLeafSegment(path, out string leaf).ShouldBeTrue();
         leaf.ShouldBe(expectedLeaf);
     }
 
@@ -75,7 +75,7 @@ public class ApiKeyAuthenticationMiddlewarePublicPathTests
 
         foreach (string path in publicHealthPaths)
         {
-            ApiPublicPathRules.TryGetLeafSegment(path, out string? leaf).ShouldBeTrue(path);
+            ApiPublicPathRules.TryGetLeafSegment(path, out string leaf).ShouldBeTrue(path);
             ApiPublicPathRules.IsPublicLeaf(leaf).ShouldBeTrue(path);
             ApiKeyAuthenticationMiddleware.IsPublicVersionOrTimePath(path).ShouldBeTrue(path);
             ApiKeyAuthenticationMiddleware.ShouldValidate(

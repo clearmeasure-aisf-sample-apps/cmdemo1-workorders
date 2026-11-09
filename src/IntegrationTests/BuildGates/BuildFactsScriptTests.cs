@@ -126,7 +126,7 @@ public class BuildFactsScriptTests
         var root = facts.RootElement;
         root.GetProperty("version").GetString().ShouldBe("2.4.15");
         root.GetProperty("code").GetProperty("files").GetInt32().ShouldBe(5);
-        foreach (string? section in new[] { "tests", "coverage", "complexity", "crap", "analysis" })
+        foreach (string section in new[] { "tests", "coverage", "complexity", "crap", "analysis" })
         {
             root.GetProperty(section).ValueKind.ShouldBe(JsonValueKind.Null, section);
         }
@@ -142,7 +142,7 @@ public class BuildFactsScriptTests
             Path.Combine(broken, "code-coverage-linux", "UnitTests", "run", "In", "host", "coverage.cobertura.xml"),
             "<coverage><packages>");
 
-        using var facts = RunScript(broken, out string? log);
+        using var facts = RunScript(broken, out string log);
 
         var root = facts.RootElement;
         root.GetProperty("analysis").ValueKind.ShouldBe(JsonValueKind.Null);
@@ -171,7 +171,7 @@ public class BuildFactsScriptTests
             WriteEntry(archive, "qodana.sarif.json", Sarif("unchanged", "new", "absent", "unchanged", "unchanged", "new"));
         }
 
-        using var facts = RunScript(artifacts, out string? log);
+        using var facts = RunScript(artifacts, out string log);
 
         facts.RootElement.GetProperty("analysis").GetProperty("qodanaProblems").GetInt32().ShouldBe(5);
         log.ShouldContain("PASS analysis");
@@ -190,7 +190,7 @@ public class BuildFactsScriptTests
             WriteEntry(archive, "qodana-short.sarif.json", Sarif("new"));
         }
 
-        using var facts = RunScript(artifacts, out string? log);
+        using var facts = RunScript(artifacts, out string log);
 
         facts.RootElement.GetProperty("analysis").ValueKind.ShouldBe(JsonValueKind.Null);
         facts.RootElement.GetProperty("tests").GetProperty("unit").GetInt32().ShouldBe(4);
@@ -206,7 +206,7 @@ public class BuildFactsScriptTests
         File.Delete(Path.Combine(report, "qodana.sarif.json"));
         File.WriteAllText(Path.Combine(report, "qodana-report.zip"), "not a zip");
 
-        using var facts = RunScript(artifacts, out string? log);
+        using var facts = RunScript(artifacts, out string log);
 
         facts.RootElement.GetProperty("analysis").ValueKind.ShouldBe(JsonValueKind.Null);
         facts.RootElement.GetProperty("crap").GetProperty("threshold").GetInt32().ShouldBe(6);
@@ -245,7 +245,7 @@ public class BuildFactsScriptTests
         string output = Path.Combine(_workDirectory, $"facts-{Guid.NewGuid():N}.json");
 
         int exitCode = RunPwsh(
-            out string? log,
+            out string log,
             "-OutputPath", output,
             "-RepoRoot", _repository,
             "-Commit", Commit,
@@ -331,7 +331,7 @@ public class BuildFactsScriptTests
 
     private void RunGit(params string[] arguments)
     {
-        Run("git", arguments, _repository, out string? log).ShouldBe(0, log);
+        Run("git", arguments, _repository, out string log).ShouldBe(0, log);
     }
 
     private static void WriteArtifacts(string artifacts)

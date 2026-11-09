@@ -10,11 +10,12 @@ dotnet_diagnostic.s4035.severity = suggestion
 
 #### Var, braces, namespaces, usings ####
 
-# Explicit type for built-ins (int, string, bool). var when the type is already on the right.
-# var elsewhere stays a suggestion: the tree mixes both, and either warning would rewrite it.
+# Explicit type for built-ins (int, string, bool). That one is a build warning.
+# The other two var preferences are silent: the tree mixes them, and suggestion
+# severity is a Qodana note that fails the baseline gate.
 csharp_style_var_for_built_in_types = false:warning
-csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_style_var_elsewhere = true:suggestion
+csharp_style_var_when_type_is_apparent = true:silent
+csharp_style_var_elsewhere = true:silent
 
 csharp_prefer_braces = true:warning
 csharp_style_namespace_declarations = file_scoped:warning
@@ -58,14 +59,6 @@ dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
 dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
 
-dotnet_naming_rule.private_instance_fields_should_be_underscore_camel.severity = suggestion
-dotnet_naming_rule.private_instance_fields_should_be_underscore_camel.symbols = private_instance_fields
-dotnet_naming_rule.private_instance_fields_should_be_underscore_camel.style = underscore_camel
-
-dotnet_naming_rule.constants_should_be_pascal_case.severity = suggestion
-dotnet_naming_rule.constants_should_be_pascal_case.symbols = constants
-dotnet_naming_rule.constants_should_be_pascal_case.style = pascal_case
-
 dotnet_naming_symbols.interface.applicable_kinds = interface
 dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.interface.required_modifiers =
@@ -78,14 +71,6 @@ dotnet_naming_symbols.non_field_members.applicable_kinds = property, event, meth
 dotnet_naming_symbols.non_field_members.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.non_field_members.required_modifiers =
 
-dotnet_naming_symbols.private_instance_fields.applicable_kinds = field
-dotnet_naming_symbols.private_instance_fields.applicable_accessibilities = private
-dotnet_naming_symbols.private_instance_fields.required_modifiers =
-
-dotnet_naming_symbols.constants.applicable_kinds = field
-dotnet_naming_symbols.constants.applicable_accessibilities = *
-dotnet_naming_symbols.constants.required_modifiers = const
-
 dotnet_naming_style.begins_with_i.required_prefix = I
 dotnet_naming_style.begins_with_i.required_suffix =
 dotnet_naming_style.begins_with_i.word_separator =
@@ -95,11 +80,6 @@ dotnet_naming_style.pascal_case.required_prefix =
 dotnet_naming_style.pascal_case.required_suffix =
 dotnet_naming_style.pascal_case.word_separator =
 dotnet_naming_style.pascal_case.capitalization = pascal_case
-
-dotnet_naming_style.underscore_camel.required_prefix = _
-dotnet_naming_style.underscore_camel.required_suffix =
-dotnet_naming_style.underscore_camel.word_separator =
-dotnet_naming_style.underscore_camel.capitalization = camel_case
 
 #### Whitespace and other dotnet style ####
 

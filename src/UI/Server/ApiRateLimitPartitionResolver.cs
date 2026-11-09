@@ -5,17 +5,17 @@ internal static class ApiRateLimitPartitionResolver
 {
     internal static string Resolve(HttpContext httpContext, string apiKeyHeaderName)
     {
-        if (TryGetKeyPartition(httpContext, apiKeyHeaderName, out string? keyPartition))
+        if (TryGetKeyPartition(httpContext, apiKeyHeaderName, out string keyPartition))
         {
             return keyPartition;
         }
 
-        if (TryGetUserPartition(httpContext, out string? userPartition))
+        if (TryGetUserPartition(httpContext, out string userPartition))
         {
             return userPartition;
         }
 
-        return TryGetIpPartition(httpContext, out string? ipPartition) ? ipPartition : "anonymous";
+        return TryGetIpPartition(httpContext, out string ipPartition) ? ipPartition : "anonymous";
     }
 
     private static bool TryGetKeyPartition(HttpContext httpContext, string apiKeyHeaderName, out string partition)

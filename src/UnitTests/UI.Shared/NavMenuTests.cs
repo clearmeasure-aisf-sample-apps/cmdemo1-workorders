@@ -34,7 +34,7 @@ public class NavMenuTests
         }
 
         string text = component.Markup;
-        foreach (string? label in new[] { "Dashboard", "Work Orders", "New Request", "AI Assistant", "Assigned to Me", "Created by Me", "In Progress", "Overdue", "Buildings &amp; Rooms", "Teams &amp; Vendors", "Reports", "Settings" })
+        foreach (string label in new[] { "Dashboard", "Work Orders", "New Request", "AI Assistant", "Assigned to Me", "Created by Me", "In Progress", "Overdue", "Buildings &amp; Rooms", "Teams &amp; Vendors", "Reports", "Settings" })
         {
             text.ShouldContain(label);
         }

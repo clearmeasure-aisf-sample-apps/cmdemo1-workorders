@@ -8,7 +8,7 @@ internal static class CorrelationIdResolver
 
     public static string Resolve(HttpContext context)
     {
-        if (TryGetValidHeaderValue(context, out string? id))
+        if (TryGetValidHeaderValue(context, out string id))
         {
             return id;
         }

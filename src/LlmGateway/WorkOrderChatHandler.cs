@@ -37,7 +37,7 @@ public class WorkOrderChatHandler(ChatClientFactory factory, WorkOrderTool workO
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or ClientResultException)
         {
-            int? statusCode = ex is ClientResultException cre ? cre.Status : (int?)null;
+            int? statusCode = ex is ClientResultException cre ? cre.Status : null;
             logger.LogWarning(ex, "LLM provider refused or timed out: {StatusCode} {Reason}",
                 statusCode, ex.Message);
             return new ChatResponse([new ChatMessage(ChatRole.Assistant, FriendlyProviderErrorMessage)]);

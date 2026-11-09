@@ -21,7 +21,7 @@ public class BuildFactsDocumentTests
         var root = document.RootElement;
         PropertyNames(root).ShouldBe(Contract);
         root.GetProperty("version").GetString().ShouldBe("2.4.15");
-        foreach (string? name in Contract.Skip(1))
+        foreach (string name in Contract.Skip(1))
         {
             root.GetProperty(name).ValueKind.ShouldBe(JsonValueKind.Null, name);
         }
