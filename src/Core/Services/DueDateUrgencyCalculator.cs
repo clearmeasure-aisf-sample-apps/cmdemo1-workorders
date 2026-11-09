@@ -27,28 +27,17 @@ public static class DueDateUrgencyCalculator
         ArgumentNullException.ThrowIfNull(status);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        if (dueDate is null)
+        if (dueDate is not { } due || !IsOpen(status))
         {
             return DueDateUrgency.None;
         }
 
-        if (!IsOpen(status))
+        return due.CompareTo(ChurchTimeZone.Today(timeProvider)) switch
         {
-            return DueDateUrgency.None;
-        }
-
-        var today = ChurchTimeZone.Today(timeProvider);
-        if (dueDate.Value == today)
-        {
-            return DueDateUrgency.DueToday;
-        }
-
-        if (dueDate.Value < today)
-        {
-            return DueDateUrgency.Overdue;
-        }
-
-        return DueDateUrgency.None;
+            0 => DueDateUrgency.DueToday,
+            < 0 => DueDateUrgency.Overdue,
+            _ => DueDateUrgency.None
+        };
     }
 
     /// <summary>

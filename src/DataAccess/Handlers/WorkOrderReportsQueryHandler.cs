@@ -96,41 +96,17 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
         }
     }
 
-    private async Task AddCompletedPerWeekAsync(WorkOrderReportsData data, IQueryable<WorkOrder> orders,
+    private static async Task AddCompletedPerWeekAsync(WorkOrderReportsData data, IQueryable<WorkOrder> orders,
         DateOnly today, CancellationToken cancellationToken)
     {
-        var startDate = today.AddDays(-(WeeksToShow * 7));
-        var startDateTime = startDate.ToDateTime(TimeOnly.MinValue);
-        var completions = await orders
+        var weeks = new CompletionWeeks(today, WeeksToShow);
+        var startDateTime = weeks.StartDate.ToDateTime(TimeOnly.MinValue);
+        var completedDates = await orders
             .Where(wo => wo.Status == WorkOrderStatus.Complete && wo.CompletedDate >= startDateTime)
-            .Select(wo => new { wo.CompletedDate })
+            .Select(wo => wo.CompletedDate)
             .ToListAsync(cancellationToken);
 
-        // Generate all weeks in the range (some may have zero count)
-        var weeklyData = new Dictionary<DateOnly, int>();
-        for (int i = WeeksToShow - 1; i >= 0; i--)
-        {
-            var weekEnd = GetWeekEndingDate(today.AddDays(-i * 7));
-            weeklyData[weekEnd] = 0;
-        }
-
-        // Count completions by week
-        foreach (var completion in completions)
-        {
-            if (completion.CompletedDate.HasValue)
-            {
-                var weekEnd = GetWeekEndingDate(DateOnly.FromDateTime(completion.CompletedDate.Value));
-                if (weeklyData.ContainsKey(weekEnd))
-                {
-                    weeklyData[weekEnd]++;
-                }
-            }
-        }
-
-        data.CompletedPerWeek = weeklyData
-            .OrderBy(kvp => kvp.Key)
-            .Select(kvp => new WorkOrderReportsData.WeeklyCount { WeekEndingDate = kvp.Key, Count = kvp.Value })
-            .ToList();
+        data.CompletedPerWeek = weeks.CountCompletions(completedDates.OfType<DateTime>());
     }
 
     private async Task AddAverageDaysToCloseAsync(WorkOrderReportsData data, IQueryable<WorkOrder> orders,
@@ -147,23 +123,5 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
 
         data.CompletedLast30Days = completions.Count;
         data.AverageDaysToClose = durations.Count == 0 ? null : durations.Average();
-    }
-
-    /// <summary>
-    /// Returns the week-ending date (Sunday) for a given date.
-    /// The week-ending Sunday is the most recent Sunday on or before the given date.
-    /// </summary>
-    private static DateOnly GetWeekEndingDate(DateOnly date)
-    {
-        // Calculate days since the most recent Sunday
-        var daysSinceSunday = (int)date.DayOfWeek;
-        if (daysSinceSunday == 0)
-        {
-            // If it's already Sunday, that's the week-ending date
-            return date;
-        }
-
-        // Return the most recent Sunday (backwards from date)
-        return date.AddDays(-daysSinceSunday);
     }
 }

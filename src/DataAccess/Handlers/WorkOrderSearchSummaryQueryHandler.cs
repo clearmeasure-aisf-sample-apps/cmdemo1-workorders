@@ -36,7 +36,11 @@ public class WorkOrderSearchSummaryQueryHandler(DataContext context, TimeProvide
         };
 
         await AddCompletionsAsync(summary, orders, cancellationToken);
-        await AddUserCountsAsync(summary, orders, request.UserName, today, cancellationToken);
+        if (await FindUserAsync(request.UserName, cancellationToken) is { } user)
+        {
+            await AddUserCountsAsync(summary, new UserWorkOrders(orders, user.Id, today), cancellationToken);
+        }
+
         return summary;
     }
 
@@ -55,24 +59,18 @@ public class WorkOrderSearchSummaryQueryHandler(DataContext context, TimeProvide
         summary.AverageDaysToClose = durations.Count == 0 ? null : durations.Average();
     }
 
-    private async Task AddUserCountsAsync(WorkOrderSearchSummary summary, IQueryable<WorkOrder> orders,
-        string? userName, DateOnly today, CancellationToken cancellationToken)
-    {
-        var user = string.IsNullOrWhiteSpace(userName)
+    private async Task<Employee?> FindUserAsync(string? userName, CancellationToken cancellationToken) =>
+        string.IsNullOrWhiteSpace(userName)
             ? null
             : await context.Set<Employee>().AsNoTracking()
                 .FirstOrDefaultAsync(e => e.UserName == userName, cancellationToken);
-        if (user == null)
-        {
-            return;
-        }
 
-        var userId = user.Id;
-        var assignedToMe = orders.Where(wo => wo.Assignee != null && wo.Assignee.Id == userId);
-        var openAssignedToMe = WorkOrderQueryFilters.OpenOnly(assignedToMe);
-        summary.AssignedToMeTotal = await assignedToMe.CountAsync(cancellationToken);
-        summary.AssignedToMeCount = await openAssignedToMe.CountAsync(cancellationToken);
-        summary.AssignedToMeDueToday = await openAssignedToMe.CountAsync(wo => wo.DueDate == today, cancellationToken);
-        summary.CreatedByMeCount = await orders.CountAsync(wo => wo.Creator != null && wo.Creator.Id == userId, cancellationToken);
+    private static async Task AddUserCountsAsync(WorkOrderSearchSummary summary, UserWorkOrders mine,
+        CancellationToken cancellationToken)
+    {
+        summary.AssignedToMeTotal = await mine.AssignedToMe.CountAsync(cancellationToken);
+        summary.AssignedToMeCount = await mine.OpenAssignedToMe.CountAsync(cancellationToken);
+        summary.AssignedToMeDueToday = await mine.OpenAssignedToMeDueToday.CountAsync(cancellationToken);
+        summary.CreatedByMeCount = await mine.CreatedByMe.CountAsync(cancellationToken);
     }
 }

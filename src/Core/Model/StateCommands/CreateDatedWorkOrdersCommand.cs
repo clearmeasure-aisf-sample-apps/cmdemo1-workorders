@@ -24,7 +24,16 @@ public record CreateDatedWorkOrdersCommand(
 public record CreateDatedWorkOrdersResult(
     bool Success,
     string Message,
-    IReadOnlyList<CreatedDatedWorkOrder> WorkOrders);
+    IReadOnlyList<CreatedDatedWorkOrder> WorkOrders)
+{
+    /// <summary>A batch that created nothing, and why.</summary>
+    public static CreateDatedWorkOrdersResult Failed(string message) => new(false, message, []);
+
+    public static CreateDatedWorkOrdersResult Created(IReadOnlyList<WorkOrder> workOrders) =>
+        new(true,
+            $"Created {workOrders.Count} work orders.",
+            workOrders.Select(workOrder => new CreatedDatedWorkOrder(workOrder.Number!, workOrder.DueDate!.Value)).ToList());
+}
 
 /// <summary>
 /// Summary of one work order created by <see cref="CreateDatedWorkOrdersCommand"/>.

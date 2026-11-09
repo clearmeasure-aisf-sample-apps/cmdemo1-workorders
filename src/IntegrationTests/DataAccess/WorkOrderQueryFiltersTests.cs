@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using Shouldly;
 
@@ -21,7 +22,12 @@ public class WorkOrderQueryFiltersTests
             new WorkOrder { Number = "2", Assignee = assignee, Creator = creator, Status = WorkOrderStatus.Draft }
         }.AsQueryable();
 
-        var filtered = WorkOrderQueryFilters.Apply(orders, assignee, creator, WorkOrderStatus.Assigned).ToArray();
+        var specification = new WorkOrderSearchSpecification();
+        specification.MatchAssignee(assignee);
+        specification.MatchCreator(creator);
+        specification.MatchStatus(WorkOrderStatus.Assigned);
+
+        var filtered = WorkOrderQueryFilters.Apply(orders, specification).ToArray();
 
         filtered.Length.ShouldBe(1);
         filtered[0].Number.ShouldBe("1");
