@@ -342,7 +342,7 @@ public class MainLayoutTests
         var layout = component.FindComponent<MainLayout>();
 
         var note = layout.Find($"[data-testid='{nameof(MainLayout.Elements.FooterNote)}']");
-        note.TextContent.Trim().ShouldBe("Requests are typically reviewed within one business day.");
+        note.TextContent.Trim().ShouldBe("Facility requests are typically reviewed within one business day.");
 
         var footer = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}']");
         footer.QuerySelector($"[data-testid='{nameof(MainLayout.Elements.FooterNote)}']").ShouldNotBeNull();
