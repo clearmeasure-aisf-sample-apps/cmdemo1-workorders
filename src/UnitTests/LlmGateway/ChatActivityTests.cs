@@ -18,7 +18,7 @@ public class ChatActivityTests
         _listener = new ActivityListener
         {
             ShouldListenTo = source => source.Name == ChatActivity.SourceName,
-            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
+            Sample = (ref _) => ActivitySamplingResult.AllDataAndRecorded,
             ActivityStopped = activity =>
             {
                 lock (_recorded)
