@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ClearMeasure.Bootcamp.UnitTests.Acceptance;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests;
 
@@ -142,7 +143,6 @@ public static class PageLoadBudget
         {
             var recorded = new PageLoadBudgetRules.RecordedRequest(request.Url, request.ResourceType);
             var isApi = PageLoadBudgetRules.IsAppApiRequest(request.Url, _appBaseUrl);
-            var trackInFlight = false;
             lock (_gate)
             {
                 if (!_seen.Add(request))
@@ -158,11 +158,6 @@ public static class PageLoadBudget
 
                 _tracked.Add(request);
                 _calls.Add(Describe(request));
-                trackInFlight = true;
-            }
-
-            if (trackInFlight)
-            {
                 Interlocked.Increment(ref _inFlight);
             }
         }

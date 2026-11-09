@@ -1,4 +1,3 @@
-using ClearMeasure.Bootcamp.AcceptanceTests;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Acceptance;

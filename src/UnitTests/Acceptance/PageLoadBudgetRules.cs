@@ -1,4 +1,4 @@
-namespace ClearMeasure.Bootcamp.AcceptanceTests;
+namespace ClearMeasure.Bootcamp.UnitTests.Acceptance;
 
 /// <summary>
 /// Counts application API calls in a recorded browser trace and checks that count against a min/max.

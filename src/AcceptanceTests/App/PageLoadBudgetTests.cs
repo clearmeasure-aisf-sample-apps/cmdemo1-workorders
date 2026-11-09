@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UnitTests.Acceptance;
 using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
