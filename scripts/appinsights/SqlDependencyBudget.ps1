@@ -359,3 +359,417 @@ function New-SqlDependencyBudgetDeployment {
         }
     }
 }
+
+function Get-NormalizedSqlDependencyBudgetQuery {
+    param(
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$Query
+    )
+
+    if ([string]::IsNullOrEmpty($Query)) {
+        return ''
+    }
+
+    $normalized = $Query.Replace("`r`n", "`n").Replace("`r", "`n")
+    if ($normalized.Length -gt 0 -and [int]$normalized[0] -eq 0xFEFF) {
+        $normalized = $normalized.Substring(1)
+    }
+
+    $lines = $normalized.Split([char]10)
+    $trimmed = [System.Collections.Generic.List[string]]::new()
+    foreach ($line in $lines) {
+        $trimmed.Add($line.TrimEnd())
+    }
+
+    return ($trimmed -join "`n").Trim()
+}
+
+function ConvertTo-SqlDependencyBudgetJsonValue {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Text.Json.JsonElement]$Element
+    )
+
+    switch ($Element.ValueKind) {
+        'Object' {
+            $map = [System.Collections.Generic.Dictionary[string, object]]::new([StringComparer]::OrdinalIgnoreCase)
+            foreach ($property in $Element.EnumerateObject()) {
+                $map[$property.Name] = ConvertTo-SqlDependencyBudgetJsonValue -Element $property.Value
+            }
+
+            return ,$map
+        }
+        'Array' {
+            $list = [System.Collections.Generic.List[object]]::new()
+            foreach ($item in $Element.EnumerateArray()) {
+                $list.Add((ConvertTo-SqlDependencyBudgetJsonValue -Element $item))
+            }
+
+            return ,$list
+        }
+        default {
+            return ConvertFrom-JsonElementValue -Element $Element
+        }
+    }
+}
+
+function ConvertFrom-SqlDependencyBudgetAlertJson {
+    param(
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$RuleJson
+    )
+
+    if ([string]::IsNullOrWhiteSpace($RuleJson)) {
+        return $null
+    }
+
+    $document = $null
+    try {
+        $document = [System.Text.Json.JsonDocument]::Parse($RuleJson)
+        $value = ConvertTo-SqlDependencyBudgetJsonValue -Element $document.RootElement
+        if ($value -isnot [System.Collections.IDictionary]) {
+            throw 'Scheduled query rule JSON is not an object.'
+        }
+
+        return ,$value
+    }
+    catch [System.Text.Json.JsonException] {
+        throw 'Scheduled query rule JSON is not valid.'
+    }
+    finally {
+        if ($null -ne $document) {
+            $document.Dispose()
+        }
+    }
+}
+
+function ConvertTo-SqlDependencyBudgetItemList {
+    param($Value)
+
+    $items = [System.Collections.Generic.List[object]]::new()
+    if ($null -eq $Value) {
+        return ,$items
+    }
+
+    if ($Value -is [string] -or $Value -is [System.Collections.IDictionary]) {
+        $items.Add($Value)
+        return ,$items
+    }
+
+    if ($Value -is [System.Collections.IEnumerable]) {
+        foreach ($item in $Value) {
+            if ($null -ne $item) {
+                $items.Add($item)
+            }
+        }
+
+        return ,$items
+    }
+
+    $items.Add($Value)
+    return ,$items
+}
+
+function Get-SqlDependencyBudgetMapValue {
+    param(
+        $Map,
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    $dictionary = $Map -as [System.Collections.IDictionary]
+    if ($null -eq $dictionary) {
+        return $null
+    }
+
+    foreach ($key in @($dictionary.Keys)) {
+        if ([string]::Equals([string]$key, $Name, [StringComparison]::OrdinalIgnoreCase)) {
+            return ,$dictionary[$key]
+        }
+    }
+
+    return $null
+}
+
+function Test-SqlDependencyBudgetAlertEnabledValue {
+    param($Value)
+
+    if ($Value -is [bool]) {
+        return $Value
+    }
+
+    if ($null -eq $Value) {
+        return $false
+    }
+
+    $text = [string]$Value
+    return [string]::Equals($text, 'true', [StringComparison]::OrdinalIgnoreCase) -or $text -eq '1'
+}
+
+function Test-SqlDependencyBudgetZeroThreshold {
+    param($Value)
+
+    if ($null -eq $Value) {
+        return $false
+    }
+
+    $number = [double]::NaN
+    if ($Value -is [string]) {
+        $parsed = [double]::NaN
+        if (-not [double]::TryParse($Value, [System.Globalization.NumberStyles]::Float, [System.Globalization.CultureInfo]::InvariantCulture, [ref]$parsed)) {
+            return $false
+        }
+
+        $number = $parsed
+    }
+    else {
+        try {
+            $number = [double]$Value
+        }
+        catch {
+            return $false
+        }
+    }
+
+    if ([double]::IsNaN($number) -or [double]::IsInfinity($number)) {
+        return $false
+    }
+
+    return [Math]::Abs($number) -lt 0.000000001
+}
+
+function Get-SqlDependencyBudgetAlertReaderRoleCommand {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Scope
+    )
+
+    # Single-quoted so the $(az ...) lookup stays literal text for an operator to run.
+    $lookup = 'az identity list --query "[?name==''id-cmdemo1-acr-push''].principalId | [0]" --output tsv'
+    return 'az role assignment create --assignee-object-id "$(' + $lookup + ')" --assignee-principal-type ServicePrincipal --role "Monitoring Reader" --scope "' + $Scope + '"'
+}
+
+function Get-SqlDependencyBudgetActionGroupIds {
+    param($Properties)
+
+    $actions = Get-SqlDependencyBudgetMapValue -Map $Properties -Name 'actions'
+    $groups = Get-SqlDependencyBudgetMapValue -Map $actions -Name 'actionGroups'
+    if ($null -eq $groups) {
+        $groups = Get-SqlDependencyBudgetMapValue -Map $Properties -Name 'actionGroups'
+    }
+
+    $ids = [System.Collections.Generic.List[string]]::new()
+    foreach ($group in (ConvertTo-SqlDependencyBudgetItemList $groups)) {
+        $id = $null
+        if ($group -is [string]) {
+            $id = $group
+        }
+        elseif ($group -is [System.Collections.IDictionary]) {
+            foreach ($key in @('actionGroupId', 'id', 'resourceId')) {
+                $candidate = Get-SqlDependencyBudgetMapValue -Map $group -Name $key
+                if (-not [string]::IsNullOrWhiteSpace([string]$candidate)) {
+                    $id = [string]$candidate
+                    break
+                }
+            }
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($id)) {
+            $ids.Add($id.Trim())
+        }
+    }
+
+    return ,$ids
+}
+
+function Test-SqlDependencyBudgetActionGroupId {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ActionGroupId,
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedName,
+        [string]$ExpectedSubscriptionId = ''
+    )
+
+    $trimmed = $ActionGroupId.Trim().TrimEnd('/')
+    if ($trimmed -notmatch '(?i)^/subscriptions/([^/]+)/resourceGroups/[^/]+/providers/microsoft\.insights/actionGroups/([^/]+)$') {
+        return $false
+    }
+
+    if (-not [string]::Equals($Matches[2], $ExpectedName, [StringComparison]::OrdinalIgnoreCase)) {
+        return $false
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedSubscriptionId) -and
+        -not [string]::Equals($Matches[1], $ExpectedSubscriptionId, [StringComparison]::OrdinalIgnoreCase)) {
+        return $false
+    }
+
+    return $true
+}
+
+# Compares a scheduled query rule payload to the rendered alert. Does not call Azure.
+function Get-SqlDependencyBudgetAlertDrift {
+    param(
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$RuleJson,
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedQuery,
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedWindowSize,
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedEvaluationFrequency,
+        [Parameter(Mandatory = $true)]
+        [string]$ExpectedActionGroupName,
+        [string]$ExpectedScope = '',
+        [string]$ExpectedSubscriptionId = '',
+        [string]$AlertName = 'sql-dependency-count-budget'
+    )
+
+    $drifts = [System.Collections.Generic.List[string]]::new()
+    $document = ConvertFrom-SqlDependencyBudgetAlertJson -RuleJson $RuleJson
+    if ($null -eq $document) {
+        $drifts.Add("Scheduled query rule '$AlertName' is missing.")
+        Write-Output -NoEnumerate $drifts
+        return
+    }
+
+    $properties = Get-SqlDependencyBudgetMapValue -Map $document -Name 'properties'
+    if ($properties -isnot [System.Collections.IDictionary]) {
+        $properties = $document
+    }
+
+    if (-not (Test-SqlDependencyBudgetAlertEnabledValue (Get-SqlDependencyBudgetMapValue -Map $properties -Name 'enabled'))) {
+        $drifts.Add("Scheduled query rule '$AlertName' is disabled.")
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedScope)) {
+        $scopes = ConvertTo-SqlDependencyBudgetItemList (Get-SqlDependencyBudgetMapValue -Map $properties -Name 'scopes')
+        $scopeFound = $false
+        foreach ($scope in $scopes) {
+            $actualScope = ([string]$scope).Trim().TrimEnd('/')
+            if ([string]::Equals($actualScope, $ExpectedScope.Trim().TrimEnd('/'), [StringComparison]::OrdinalIgnoreCase)) {
+                $scopeFound = $true
+                break
+            }
+        }
+
+        if (-not $scopeFound) {
+            $drifts.Add("Scheduled query rule '$AlertName' scopes do not include '$ExpectedScope'.")
+        }
+    }
+
+    $window = [string](Get-SqlDependencyBudgetMapValue -Map $properties -Name 'windowSize')
+    if (-not [string]::Equals($window.Trim(), $ExpectedWindowSize.Trim(), [StringComparison]::OrdinalIgnoreCase)) {
+        $drifts.Add("Scheduled query rule '$AlertName' windowSize is '$window'; expected '$ExpectedWindowSize'.")
+    }
+
+    $frequency = [string](Get-SqlDependencyBudgetMapValue -Map $properties -Name 'evaluationFrequency')
+    if (-not [string]::Equals($frequency.Trim(), $ExpectedEvaluationFrequency.Trim(), [StringComparison]::OrdinalIgnoreCase)) {
+        $drifts.Add("Scheduled query rule '$AlertName' evaluationFrequency is '$frequency'; expected '$ExpectedEvaluationFrequency'.")
+    }
+
+    $criteria = Get-SqlDependencyBudgetMapValue -Map $properties -Name 'criteria'
+    $allOf = ConvertTo-SqlDependencyBudgetItemList (Get-SqlDependencyBudgetMapValue -Map $criteria -Name 'allOf')
+    if ($allOf.Count -ne 1 -or $allOf[0] -isnot [System.Collections.IDictionary]) {
+        $drifts.Add("Scheduled query rule '$AlertName' must have one criterion.")
+    }
+    else {
+        $criterion = $allOf[0]
+        $actualQuery = Get-NormalizedSqlDependencyBudgetQuery -Query ([string](Get-SqlDependencyBudgetMapValue -Map $criterion -Name 'query'))
+        $expectedQuery = Get-NormalizedSqlDependencyBudgetQuery -Query $ExpectedQuery
+        if (-not [string]::Equals($actualQuery, $expectedQuery, [StringComparison]::Ordinal)) {
+            $drifts.Add("Scheduled query rule '$AlertName' query does not match the rendered KQL.")
+        }
+
+        $aggregation = [string](Get-SqlDependencyBudgetMapValue -Map $criterion -Name 'timeAggregation')
+        if (-not [string]::Equals($aggregation.Trim(), 'Count', [StringComparison]::OrdinalIgnoreCase)) {
+            $drifts.Add("Scheduled query rule '$AlertName' criterion timeAggregation is '$aggregation'; expected Count.")
+        }
+
+        $operatorName = [string](Get-SqlDependencyBudgetMapValue -Map $criterion -Name 'operator')
+        if (-not [string]::Equals($operatorName.Trim(), 'GreaterThan', [StringComparison]::OrdinalIgnoreCase)) {
+            $drifts.Add("Scheduled query rule '$AlertName' criterion operator is '$operatorName'; expected GreaterThan.")
+        }
+
+        $threshold = Get-SqlDependencyBudgetMapValue -Map $criterion -Name 'threshold'
+        if (-not (Test-SqlDependencyBudgetZeroThreshold $threshold)) {
+            $drifts.Add("Scheduled query rule '$AlertName' criterion threshold is '$threshold'; expected 0.")
+        }
+    }
+
+    $actionGroupIds = Get-SqlDependencyBudgetActionGroupIds -Properties $properties
+    $actionGroupFound = $false
+    foreach ($actionGroupId in $actionGroupIds) {
+        if (Test-SqlDependencyBudgetActionGroupId -ActionGroupId $actionGroupId -ExpectedName $ExpectedActionGroupName -ExpectedSubscriptionId $ExpectedSubscriptionId) {
+            $actionGroupFound = $true
+            break
+        }
+    }
+
+    if (-not $actionGroupFound) {
+        $drifts.Add("Scheduled query rule '$AlertName' actions do not include '$ExpectedActionGroupName'.")
+    }
+
+    Write-Output -NoEnumerate $drifts
+    return
+}
+
+function Get-SqlDependencyBudgetAlertReadFailure {
+    param(
+        [Parameter(Mandatory = $true)]
+        [int]$ExitCode,
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]$ErrorText,
+        [Parameter(Mandatory = $true)]
+        [string]$Scope
+    )
+
+    if ($ExitCode -eq 0) {
+        return $null
+    }
+
+    $text = [string]$ErrorText
+    $authorization = $text -match '(?i)AuthorizationFailed' -or
+        $text -match '(?i)does not have authorization' -or
+        $text -match '(?i)\(403\)' -or
+        $text -match '(?i)StatusCode:\s*403'
+    if ($authorization) {
+        $command = Get-SqlDependencyBudgetAlertReaderRoleCommand -Scope $Scope
+        $message = ('Not authorized to read scheduled query rule ''{0}''. Assign Monitoring Reader to id-cmdemo1-acr-push on that rule: {1}' -f $Scope, $command)
+        return [pscustomobject]@{
+            Kind    = 'Authorization'
+            Message = $message
+        }
+    }
+
+    $notFoundText = $text -match '(?i)ResourceNotFound' -or
+        $text -match '(?i)ResourceGroupNotFound' -or
+        $text -match '(?i)was not found' -or
+        $text -match '(?i)could not be found'
+    if ($notFoundText -or ($ExitCode -eq 3 -and [string]::IsNullOrWhiteSpace($text))) {
+        return [pscustomobject]@{
+            Kind    = 'Missing'
+            Message = "Scheduled query rule is missing at '$Scope'."
+        }
+    }
+
+    $errorCode = ''
+    if ($text -match '\(([A-Za-z][A-Za-z0-9]+)\)') {
+        $errorCode = $Matches[1]
+    }
+
+    $detail = "Azure CLI exit $ExitCode"
+    if (-not [string]::IsNullOrWhiteSpace($errorCode)) {
+        $detail = "$detail, $errorCode"
+    }
+
+    return [pscustomobject]@{
+        Kind    = 'Failed'
+        Message = "Reading the scheduled query rule at '$Scope' failed ($detail)."
+    }
+}
