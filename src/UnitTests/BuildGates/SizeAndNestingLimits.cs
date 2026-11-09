@@ -43,7 +43,7 @@ internal static class SizeAndNestingLimits
     }
 
     /// <summary>True when the path sits in a test project.</summary>
-    public static bool IsTestFile(string relativePath)
+    private static bool IsTestFile(string relativePath)
     {
         var normalized = Normalize(relativePath);
         return ContainsSegment(normalized, "UnitTests")

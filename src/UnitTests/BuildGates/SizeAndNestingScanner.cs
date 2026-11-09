@@ -5,17 +5,20 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 
 /// <summary>
-/// One size or nesting violation. <see cref="Symbol"/> is null for a file-length hit.
+/// One size or nesting violation. A file-length hit has no member name.
 /// The key omits the measured size so an already-listed member can change length
 /// without churning the ratchet. A new member, or a member that newly crosses a
 /// limit, is a new key and fails the gate.
 /// </summary>
-internal sealed record SizeViolation(string Rule, string RelativePath, string? Symbol)
+internal sealed class SizeViolation(string rule, string relativePath, string? symbol)
 {
+    /// <summary>Which limit was crossed.</summary>
+    public string Rule { get; } = rule;
+
     /// <summary>Stable baseline line.</summary>
-    public string Key { get; } = Symbol is null
-        ? $"{Rule} {RelativePath}"
-        : $"{Rule} {RelativePath} {Symbol}";
+    public string Key { get; } = symbol is null
+        ? $"{rule} {relativePath}"
+        : $"{rule} {relativePath} {symbol}";
 }
 
 /// <summary>
@@ -143,7 +146,7 @@ internal static class SizeAndNestingScanner
 
     private static bool TryInspectSignature(ScanBuffer context, SyntaxNode node)
     {
-        if (node is PropertyDeclarationSyntax property && property.ExpressionBody != null)
+        if (node is PropertyDeclarationSyntax { ExpressionBody: not null } property)
         {
             InspectCallable(context, property, null, hasBody: true);
             return true;
@@ -166,7 +169,7 @@ internal static class SizeAndNestingScanner
 
     private static void InspectTypeOrTopLevel(ScanBuffer context, SyntaxNode node)
     {
-        if (node is TypeDeclarationSyntax type && type.ParameterList != null)
+        if (node is TypeDeclarationSyntax { ParameterList: not null } type)
         {
             InspectCallable(context, type, type.ParameterList, hasBody: false);
             return;
