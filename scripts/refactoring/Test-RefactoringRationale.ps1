@@ -13,9 +13,9 @@
     3. In such a pull request every type added to production code has a fixture named <Type>Tests or
        <Type><Behavior>Tests.
 
-    The oversized baseline is the size gate's (#1536) committed list: any src/...cs or src/...razor path in the file at
-    -OversizedBaselinePath. Without that file, the oversized files are the production files over 300 lines and the
-    test files over 500 lines at BaseRef.
+    The oversized baseline is the size gate's committed ratchet, src/UnitTests/BuildGates/size-nesting-baseline.txt:
+    every src/...cs or src/...razor path on it (file, method or parameter lines). When the file does not exist at
+    BaseRef, the oversized files are the production files over 300 lines and the test files over 600 lines.
 
 .EXAMPLE
     pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -PrBodyPath pr-body.md
@@ -26,7 +26,7 @@ param(
     [Parameter(Mandatory)] [string] $PrBodyPath,
     [string] $HeadRef = 'HEAD',
     [string] $RepoRoot = '',
-    [string] $OversizedBaselinePath = '',
+    [string] $OversizedBaselinePath = 'src/UnitTests/BuildGates/size-nesting-baseline.txt',
     [string] $PlaybookPath = 'docs/refactoring-oversized-code.md'
 )
 
@@ -36,7 +36,7 @@ $ErrorActionPreference = 'Stop'
 $GuardrailBaselineFolder = 'src/UnitTests/BuildGates/Refactoring/Baselines'
 $TestProjects = @('src/UnitTests', 'src/IntegrationTests', 'src/AcceptanceTests')
 $ProductionFileLimit = 300
-$TestFileLimit = 500
+$TestFileLimit = 600
 $MinimumReasonWords = 8
 $TopLevelType = '(?m)^(?:(?:public|internal|file|sealed|abstract|static|partial|readonly|ref|unsafe)\s+)*(?:class|struct|record(?:\s+(?:class|struct))?)\s+(?<name>[A-Za-z_]\w*)'
 

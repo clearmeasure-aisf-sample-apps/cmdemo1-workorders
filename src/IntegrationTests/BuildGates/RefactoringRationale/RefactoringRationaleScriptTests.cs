@@ -14,7 +14,7 @@ public class RefactoringRationaleScriptTests
     private RefactoringPullRequestSteps _steps = null!;
 
     [SetUp]
-    public void CreateThrowawayRepository() => _steps = new RefactoringPullRequestSteps(FindRepoRoot());
+    public void CreateThrowawayRepository() => _steps = new RefactoringPullRequestSteps();
 
     [TearDown]
     public void DeleteThrowawayRepository() => _steps.Dispose();
@@ -171,19 +171,16 @@ public class RefactoringRationaleScriptTests
         run.Output.ShouldContain($"changes oversized-baseline file(s) ({RefactoringPullRequestSteps.ListedFile})");
     }
 
-    private static string FindRepoRoot()
+    [Test]
+    public void ShouldReadTheSizeGateBaseline_WhenNoBaselinePathIsGiven()
     {
-        var directory = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (directory != null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return directory.FullName;
-            }
+        _steps.CommitBaseWithSizeBaselineListing();
+        _steps.ChangeListedFile();
+        _steps.DescribeWithoutRationale();
 
-            directory = directory.Parent;
-        }
+        var run = _steps.RunRationaleCheck(oversizedBaselinePath: null);
 
-        throw new DirectoryNotFoundException("Repository root not found from test directory.");
+        run.ExitCode.ShouldBe(1, run.Output);
+        run.Output.ShouldContain($"changes oversized-baseline file(s) ({RefactoringPullRequestSteps.ListedFile})");
     }
 }

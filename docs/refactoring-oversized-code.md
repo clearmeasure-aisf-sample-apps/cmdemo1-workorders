@@ -1,7 +1,8 @@
 # Refactoring oversized code
 
-The size gate (#1536) flags production files over ~300 lines, methods over ~30 lines, more than 4 parameters and
-nesting deeper than 3 (test files have a looser file cap). When it flags code, the fix is a **refactoring that
+The size gate (#1536, `src/UnitTests/BuildGates/SizeAndNesting*`) flags production files over 300 lines, test files
+over 600 lines, methods over 30 lines, more than 4 parameters (positional record parameters included) and nesting
+deeper than 3. When it flags code, the fix is a **refactoring that
 surfaces the abstraction trying to emerge**, never a mechanical split. This codebase teaches a class: every refactor
 should read like a worked example.
 
@@ -19,7 +20,7 @@ written reason (write `Other: <move>` in the rationale row). Banned moves are ne
 3. Pin the behavior with tests first (characterization tests) when coverage is thin.
 4. Apply one preferred move at a time, building and testing after each step.
 5. Give every extracted class its own test fixture (`<ClassName>Tests`), written to the test rules below.
-6. Delete the file's line from the oversized baseline; baselines only shrink.
+6. Delete the fixed lines from `src/UnitTests/BuildGates/size-nesting-baseline.txt`; baselines only shrink.
 7. Fill in the **Refactoring rationale** section of the pull request template, one row per move.
 
 ## Diagnose first
@@ -157,8 +158,8 @@ All checks are deterministic: build-gate tests and a script, no AI review.
 |-------|-------|-----------|
 | Banned moves: `PartialTypeRule`, `StaticHelperClassRule`, `OwnTypeExtensionRule`, `BannedTypeNameRule` | `src/UnitTests/BuildGates/Refactoring/` (runs in `PrivateBuild.ps1` and CI) | A violation is not on its baseline in `Baselines/`, or a baseline line is no longer a violation |
 | Test rules: `TestControlFlowRule` (no loops or branches in a test), `WholeScenarioTestRule` (no single whole-scenario helper), `SetUpActAssertRule` (setup never asserts; it invokes the subject under test only in a `Given...` fixture), `TestNamespaceRule` (namespace matches folder), `TestSupportPlacementRule` (ObjectMother, builder and step placement) | Same | Same |
-| Size limits | The size gate (#1536) | A file, method, parameter list or nesting depth over its limit that is not on the oversized baseline |
-| Refactoring rationale | `scripts/refactoring/Test-RefactoringRationale.ps1`, workflow `refactoring-rationale.yml` on every pull request | The pull request changes an oversized-baseline file and the section is missing, a row names a smell or move not in the tables above (without `Other:`), the new abstraction does not appear in the added code, the reason has fewer than 8 words, or an extracted class has no fixture |
+| Size limits | The size gate (#1536): `SizeAndNestingBaselineTests` against `src/UnitTests/BuildGates/size-nesting-baseline.txt`; its failure message points here | A file, method, parameter list or nesting depth over its limit that is not on the baseline, or a baseline line that is fixed |
+| Refactoring rationale | `scripts/refactoring/Test-RefactoringRationale.ps1`, workflow `refactoring-rationale.yml` on every pull request | The pull request changes a file on the size baseline (any `file`, `method` or `parameters` line) and the section is missing, a row names a smell or move not in the tables above (without `Other:`), the new abstraction does not appear in the added code, the reason has fewer than 8 words, or an extracted class has no fixture |
 | Ratchet | Same script | Any guardrail or oversized baseline gains a line |
 
 The script reads the **Smells** and **Preferred moves** tables of this file, so adding a row here is how a smell or a

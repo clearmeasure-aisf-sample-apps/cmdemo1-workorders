@@ -10,7 +10,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
 {
     public const string OversizedFile = "src/McpServer/Tools/WorkOrderTools.cs";
     public const string ListedFile = "src/Core/WorkOrderRules.cs";
-    public const string SizeBaseline = "src/UnitTests/BuildGates/size-baseline.json";
+    public const string SizeBaseline = "src/UnitTests/BuildGates/size-nesting-baseline.txt";
     private const string GuardrailBaseline = "src/UnitTests/BuildGates/Refactoring/Baselines/static-helper-classes.txt";
     private const string BaseTag = "pull-request-base";
 
@@ -18,9 +18,9 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     private readonly string _workDirectory;
     private readonly string _bodyPath;
 
-    public RefactoringPullRequestSteps(string repositoryRoot)
+    public RefactoringPullRequestSteps()
     {
-        _repositoryRoot = repositoryRoot;
+        _repositoryRoot = RepositoryRootAbove(new DirectoryInfo(TestContext.CurrentContext.TestDirectory));
         _workDirectory = Path.Combine(Path.GetTempPath(), $"refactoring-rationale-{Guid.NewGuid():N}");
         _bodyPath = Path.Combine(_workDirectory, "pr-body.md");
         Directory.CreateDirectory(_workDirectory);
@@ -42,7 +42,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
     public void CommitBaseWithSizeBaselineListing()
     {
         Write(ListedFile, "namespace Core;\n\npublic class WorkOrderRules\n{\n}\n");
-        Write(SizeBaseline, $$"""{ "violations": [ { "path": "{{ListedFile}}", "rule": "MethodLength" } ] }""");
+        Write(SizeBaseline, $"# Size and nesting ratchet baseline.\nmethod {ListedFile} WorkOrderRules.Decide()\n");
         WriteBaseCommonFiles();
         CommitBase();
     }
@@ -89,7 +89,11 @@ public sealed class RefactoringPullRequestSteps : IDisposable
 
     public void DescribeWithoutRationale() => File.WriteAllText(_bodyPath, "## Summary\n\nRefactors the work-order tools.\n");
 
-    public ScriptRun RunRationaleCheck(string oversizedBaselinePath = "")
+    /// <summary>
+    /// Commits the pull request and runs the script. An empty <paramref name="oversizedBaselinePath"/> makes the
+    /// script measure file sizes; <c>null</c> leaves the script's default baseline path.
+    /// </summary>
+    public ScriptRun RunRationaleCheck(string? oversizedBaselinePath = "")
     {
         Git("add", "--all");
         Git("commit", "--quiet", "--allow-empty", "-m", "pull request");
@@ -97,7 +101,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
         string[] arguments =
         [
             "-NoProfile", "-File", script, "-BaseRef", BaseTag, "-PrBodyPath", _bodyPath, "-RepoRoot", _workDirectory,
-            "-OversizedBaselinePath", oversizedBaselinePath
+            .. oversizedBaselinePath is null ? Array.Empty<string>() : ["-OversizedBaselinePath", oversizedBaselinePath]
         ];
         return Run("pwsh", arguments);
     }
@@ -116,6 +120,11 @@ public sealed class RefactoringPullRequestSteps : IDisposable
 
         Directory.Delete(_workDirectory, true);
     }
+
+    private static string RepositoryRootAbove(DirectoryInfo directory) =>
+        File.Exists(Path.Combine(directory.FullName, "src", "ChurchBulletin.sln"))
+            ? directory.FullName
+            : RepositoryRootAbove(directory.Parent ?? throw new DirectoryNotFoundException("Repository root not found."));
 
     private void WriteBaseCommonFiles()
     {
@@ -151,18 +160,13 @@ public sealed class RefactoringPullRequestSteps : IDisposable
 
     private ScriptRun Run(string fileName, string[] arguments)
     {
-        var startInfo = new ProcessStartInfo
+        var startInfo = new ProcessStartInfo(fileName, arguments)
         {
-            FileName = fileName,
             WorkingDirectory = _workDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
         };
-        foreach (var argument in arguments)
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
 
         using var process = Process.Start(startInfo)
                             ?? throw new InvalidOperationException($"Could not start {fileName}.");
