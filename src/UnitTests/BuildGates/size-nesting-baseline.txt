@@ -11,7 +11,6 @@ file src/AcceptanceTests/WorkOrders/WorkOrderSearchTests.cs
 file src/IntegrationTests/DataAccess/WorkOrderSpecificationHandlerTests.cs
 file src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs
 file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
-file src/McpServer/Tools/WorkOrderTools.cs
 file src/UI.Shared/MainLayout.razor.cs
 file src/UI.Shared/Pages/TeamsAndVendors.razor
 file src/UI.Shared/Pages/WorkOrderManage.razor
@@ -225,16 +224,6 @@ method src/LlmGateway/ApplicationChatHandler.cs ApplicationChatHandler.BuildChat
 method src/LlmGateway/TracingChatClient.cs TracingChatClient.GetResponseAsync(IEnumerable<ChatMessage>,ChatOptions?,CancellationToken)
 method src/LlmGateway/TracingChatClient.cs TracingChatClient.GetStreamingResponseAsync(IEnumerable<ChatMessage>,ChatOptions?,CancellationToken)
 method src/LlmGateway/TranslationService.cs TranslationService.TranslateAsync(string,string)
-method src/McpServer/McpServerApplication.cs McpServerApplication.BuildApplication(string[],Action<WebApplicationBuilder>?)
-method src/McpServer/McpServiceRegistry.cs McpServiceRegistry.McpServiceRegistry()
-method src/McpServer/Tools/VendorTools.cs VendorTools.CreateVendor(IBus,string,string,string?,string?,string?,bool)
-method src/McpServer/Tools/WorkOrderCommandExecutor.cs WorkOrderCommandExecutor.TryPrepareCommandContextAsync(IBus,string,string,string,string?)
-method src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.CreateDatedWorkOrders(IBus,TimeProvider,string,string,string,string,string?,int)
-method src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.CreateWorkOrder(IBus,IWorkOrderNumberGenerator,string,string,string,string?,string?,string?,string?,string?)
-method src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ListWorkOrders(IBus,string?,string?,string?)
-method src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.SaveWorkOrder(IBus,string,string,string?,string?,string?,string?,string?)
-method src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.UpdateWorkOrder(IBus,string,string,string?,string?,string?,string?)
-method src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ValidateUpdate(WorkOrder,Employee,string?,string?,string?)
 method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.LoadWorkOrder()
 method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.SubmitAsync()
 method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.ToggleDictationAsync(DictationTarget)
@@ -341,18 +330,11 @@ parameters src/IntegrationTests/DataAccess/Handlers/WorkOrderSearchSummaryQueryH
 parameters src/IntegrationTests/DemoData/DemoEmployeeSeeder.cs DemoEmployeeSeedResult(int,int,int,int,int)
 parameters src/IntegrationTests/DemoData/DemoEmployeeSeeder.cs DemoEmployeeSeeder.DemoEmployee(string,string,string,string,string?,string[])
 parameters src/McpServer/Tools/VendorTools.cs VendorTools.CreateVendor(IBus,string,string,string?,string?,string?,bool)
-parameters src/McpServer/Tools/WorkOrderCommandExecutor.cs WorkOrderCommandExecutor.ExecuteCommandAsync(IBus,string,string,string,string?,string?)
-parameters src/McpServer/Tools/WorkOrderCommandExecutor.cs WorkOrderCommandExecutor.RunPreparedCommandAsync(IBus,string,WorkOrder,Employee,string?)
-parameters src/McpServer/Tools/WorkOrderCommandExecutor.cs WorkOrderCommandExecutor.TryPrepareCommandContextAsync(IBus,string,string,string,string?)
-parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ApplySavePatches(WorkOrder,string?,string?,string?,string?,string?)
-parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ApplyUpdatePatches(WorkOrder,string?,string?,string?,string?)
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.CreateDatedWorkOrders(IBus,TimeProvider,string,string,string,string,string?,int)
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.CreateWorkOrder(IBus,IWorkOrderNumberGenerator,string,string,string,string?,string?,string?,string?,string?)
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ExecuteWorkOrderCommand(IBus,string,string,string,string?,string?)
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.SaveWorkOrder(IBus,string,string,string?,string?,string?,string?,string?)
 parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.UpdateWorkOrder(IBus,string,string,string?,string?,string?,string?)
-parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ValidateSave(WorkOrder,Employee,string?,string?,string?,string?)
-parameters src/McpServer/Tools/WorkOrderTools.cs WorkOrderTools.ValidateUpdate(WorkOrder,Employee,string?,string?,string?)
 parameters src/UI.Shared/Models/WorkOrderReportsExporter.cs WorkOrderReportsExporter.AppendOrderedCounts(StringBuilder,string,string,string[],Dictionary<string,int>)
 parameters src/UI.Shared/Models/WorkOrderSearchPager.cs SearchResultPage(WorkOrderSearchResultRow[],int,int,int,int,int)
 parameters src/UI.Shared/Services/WorkOrderBulkActionService.cs WorkOrderBulkActionService.ApplyLoadedAsync(string[],Dictionary<string,WorkOrder>,string,Employee,Action<WorkOrder>)

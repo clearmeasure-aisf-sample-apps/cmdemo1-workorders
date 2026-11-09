@@ -28,7 +28,10 @@ public class SaveWorkOrderPatchTests
     {
         var creator = WorkOrderToolMother.Creator();
         var draft = WorkOrderToolMother.Draft(creator);
-        var patch = new SaveWorkOrderPatch(null, null, null, new RoomNumberPatch("204"), new DueDatePatch("2027-02-01"));
+        var patch = new SaveWorkOrderPatch
+        {
+            RoomNumber = new RoomNumberPatch("204"), DueDate = new DueDatePatch("2027-02-01")
+        };
 
         var save = patch.ApplyAsSave(new WorkOrderRequestContext(draft, creator));
 
@@ -94,5 +97,8 @@ public class SaveWorkOrderPatchTests
         string? description = null,
         string? instructions = null,
         string? dueDate = null) =>
-        new(title, description, instructions, new RoomNumberPatch(null), new DueDatePatch(dueDate));
+        new()
+        {
+            Title = title, Description = description, Instructions = instructions, DueDate = new DueDatePatch(dueDate)
+        };
 }

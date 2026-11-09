@@ -49,7 +49,11 @@ public class WorkOrderTools
         [Description("Optional priority: Low, Medium (default), High; case-insensitive")] string? priority = null,
         [Description("Optional building name; max 100 characters")] string? building = null)
     {
-        var arguments = new NewWorkOrderArguments(title, description, roomNumber, dueDate, instructions, priority, building);
+        var arguments = new NewWorkOrderArguments
+        {
+            Title = title, Description = description, RoomNumber = roomNumber, DueDate = dueDate,
+            Instructions = instructions, Priority = priority, Building = building
+        };
         try
         {
             var creator = await EmployeeLookup.FindAsync(bus, creatorUsername);
@@ -105,7 +109,11 @@ public class WorkOrderTools
         [Description("Optional room number patch")] string? roomNumber = null,
         [Description("Optional due date patch as yyyy-MM-dd; empty clears")] string? dueDate = null)
     {
-        var patch = new SaveWorkOrderPatch(title, description, instructions, new RoomNumberPatch(roomNumber), new DueDatePatch(dueDate));
+        var patch = new SaveWorkOrderPatch
+        {
+            Title = title, Description = description, Instructions = instructions,
+            RoomNumber = new RoomNumberPatch(roomNumber), DueDate = new DueDatePatch(dueDate)
+        };
         var (context, error) = await WorkOrderRequestContext.LoadForEditAsync(bus, workOrderNumber, executingUsername);
         error ??= patch.ErrorFor(context!.WorkOrder, context.ExecutingUser);
         return error ?? WorkOrderJson.Detail((await bus.Send(patch.ApplyAsSave(context!))).WorkOrder);
@@ -139,9 +147,11 @@ public class WorkOrderTools
         [Description("Username of the employee executing the command")] string executingUsername,
         [Description("Username of the employee to assign the work order to (required for DraftToAssignedCommand)")] string? assigneeUsername = null,
         [Description("Reason for shelving (required for Shelve and InProgressToAssignedCommand, at most 200 characters)")] string? reason = null) =>
-        WorkOrderCommandExecutor.ExecuteCommandAsync(
-            bus,
-            new WorkOrderCommandRequest(workOrderNumber, commandName, executingUsername, assigneeUsername, reason));
+        WorkOrderCommandExecutor.ExecuteCommandAsync(bus, new WorkOrderCommandRequest
+        {
+            WorkOrderNumber = workOrderNumber, CommandName = commandName, ExecutingUsername = executingUsername,
+            AssigneeUsername = assigneeUsername, Reason = reason
+        });
 
     [McpServerTool(Name = "list-work-order-attachments"), Description("Lists all attachment metadata for a given work order by its number.")]
     public static async Task<string> ListWorkOrderAttachments(

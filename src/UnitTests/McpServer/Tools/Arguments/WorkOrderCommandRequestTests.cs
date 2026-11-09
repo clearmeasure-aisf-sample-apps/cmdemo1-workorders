@@ -10,7 +10,10 @@ public class WorkOrderCommandRequestTests
     [TestCase("AssignedToInProgressCommand", false)]
     public void ShouldAssignTheWorkOrder_OnlyWhenTheCommandIsDraftToAssigned(string commandName, bool expected)
     {
-        var request = new WorkOrderCommandRequest("WO-1", commandName, "jsmith", "bwayne", null);
+        var request = new WorkOrderCommandRequest
+        {
+            WorkOrderNumber = "WO-1", CommandName = commandName, ExecutingUsername = "jsmith", AssigneeUsername = "bwayne"
+        };
 
         var assigns = request.AssignsTheWorkOrder;
 
@@ -20,7 +23,10 @@ public class WorkOrderCommandRequestTests
     [Test]
     public void ShouldCarryTheShelveReason_WhenTheCommandShelves()
     {
-        var request = new WorkOrderCommandRequest("WO-1", "Shelve", "jsmith", null, " Parts ordered ");
+        var request = new WorkOrderCommandRequest
+        {
+            WorkOrderNumber = "WO-1", CommandName = "Shelve", ExecutingUsername = "jsmith", Reason = " Parts ordered "
+        };
 
         var reason = request.ShelveReason;
 

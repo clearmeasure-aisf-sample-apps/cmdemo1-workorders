@@ -11,7 +11,11 @@ public class NewWorkOrderArgumentsTests
     public void ShouldBuildADraft_WhenEveryArgumentIsValid()
     {
         var creator = WorkOrderToolMother.Creator();
-        var arguments = new NewWorkOrderArguments("Fix the boiler", "It is cold.", "101", "2027-03-01", "Call first", "high", " Annex ");
+        var arguments = new NewWorkOrderArguments
+        {
+            Title = "Fix the boiler", Description = "It is cold.", RoomNumber = "101", DueDate = "2027-03-01",
+            Instructions = "Call first", Priority = "high", Building = " Annex "
+        };
 
         var draft = arguments.ToDraft(creator, "WO-42");
 
@@ -27,7 +31,7 @@ public class NewWorkOrderArgumentsTests
     [Test]
     public void ShouldDefaultTheOptionalFields_WhenTheyAreOmitted()
     {
-        var arguments = new NewWorkOrderArguments("Fix the boiler", "It is cold.", null, null, null, null, null);
+        var arguments = new NewWorkOrderArguments { Title = "Fix the boiler", Description = "It is cold." };
 
         var draft = arguments.ToDraft(WorkOrderToolMother.Creator(), "WO-43");
 
@@ -41,7 +45,10 @@ public class NewWorkOrderArgumentsTests
     [TestCase("It is cold.", null, "Urgent", "Invalid priority 'Urgent'. Valid values are: Low, Medium, High.")]
     public void ShouldReportTheFirstError_WhenAnArgumentBreaksItsRule(string description, string? dueDate, string? priority, string expected)
     {
-        var arguments = new NewWorkOrderArguments("Fix the boiler", description, null, dueDate, null, priority, null);
+        var arguments = new NewWorkOrderArguments
+        {
+            Title = "Fix the boiler", Description = description, DueDate = dueDate, Priority = priority
+        };
 
         var error = arguments.Error;
 

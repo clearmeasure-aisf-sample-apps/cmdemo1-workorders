@@ -7,13 +7,18 @@ namespace ClearMeasure.Bootcamp.McpServer.Tools.Arguments;
 /// The fields save-work-order may change on a draft. An omitted (null) field is left unchanged; a blank
 /// description, instructions or room is stored empty; a blank due date clears it; a blank title is an error.
 /// </summary>
-internal sealed record SaveWorkOrderPatch(
-    string? Title,
-    string? Description,
-    string? Instructions,
-    RoomNumberPatch RoomNumber,
-    DueDatePatch DueDate)
+internal sealed record SaveWorkOrderPatch
 {
+    public string? Title { get; init; }
+
+    public string? Description { get; init; }
+
+    public string? Instructions { get; init; }
+
+    public RoomNumberPatch RoomNumber { get; init; }
+
+    public DueDatePatch DueDate { get; init; }
+
     public string? ErrorFor(WorkOrder workOrder, Employee executingUser) =>
         DraftEditDenial.ForSave(workOrder, executingUser)
         ?? TitleError()

@@ -7,15 +7,22 @@ namespace ClearMeasure.Bootcamp.McpServer.Tools.Arguments;
 /// optional <c>yyyy-MM-dd</c> date; priority and building follow <see cref="PriorityArgument"/> and
 /// <see cref="BuildingArgument"/>.
 /// </summary>
-internal sealed record NewWorkOrderArguments(
-    string Title,
-    string Description,
-    string? RoomNumber,
-    string? DueDate,
-    string? Instructions,
-    string? Priority,
-    string? Building)
+internal sealed record NewWorkOrderArguments
 {
+    public required string Title { get; init; }
+
+    public required string Description { get; init; }
+
+    public string? RoomNumber { get; init; }
+
+    public string? DueDate { get; init; }
+
+    public string? Instructions { get; init; }
+
+    public string? Priority { get; init; }
+
+    public string? Building { get; init; }
+
     public string? Error =>
         DescriptionError(Description)
         ?? DueDateError()
