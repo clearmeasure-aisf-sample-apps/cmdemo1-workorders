@@ -14,7 +14,7 @@ public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
         var order = await CreateAndSaveNewWorkOrder();
 
         // The form limits entry to RoomNumberEntryMaxLength; seed a legacy room up to the column length directly.
-        string room = new string('R', WorkOrder.RoomNumberMaxLength);
+        string room = new('R', WorkOrder.RoomNumberMaxLength);
         var stored = (await Bus.Send(new WorkOrderByNumberQuery(order.Number!)))!;
         stored.RoomNumber = room;
         await Bus.Send(new SaveDraftCommand(stored, stored.Creator!) { PreviousRoomNumber = room });

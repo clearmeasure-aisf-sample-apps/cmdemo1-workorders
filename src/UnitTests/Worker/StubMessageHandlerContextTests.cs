@@ -10,7 +10,7 @@ public class StubMessageHandlerContextTests
     public async Task Context_Publish_ShouldRecordPublishedMessage()
     {
         var stub = StubMessageHandlerContext.Create();
-        object message = new object();
+        object message = new();
 
         await stub.Context.Publish(message, new PublishOptions());
 

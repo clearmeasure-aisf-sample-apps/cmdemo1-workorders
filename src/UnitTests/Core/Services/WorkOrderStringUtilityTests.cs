@@ -20,7 +20,7 @@ public class WorkOrderStringUtilityTests
     [Test]
     public void TruncateDescription_WhenDescriptionAt4000_ReturnsUnchanged()
     {
-        string description = new string('x', WorkOrder.DescriptionMaxLength);
+        string description = new('x', WorkOrder.DescriptionMaxLength);
 
         string result = WorkOrderStringUtility.TruncateDescription(description);
 
@@ -31,7 +31,7 @@ public class WorkOrderStringUtilityTests
     [Test]
     public void TruncateDescription_WhenDescriptionOver4000_TruncatesToMaxLength()
     {
-        string description = new string('x', WorkOrder.DescriptionMaxLength + 100);
+        string description = new('x', WorkOrder.DescriptionMaxLength + 100);
 
         string result = WorkOrderStringUtility.TruncateDescription(description);
 

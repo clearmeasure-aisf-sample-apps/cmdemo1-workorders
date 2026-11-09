@@ -286,7 +286,7 @@ public class WorkOrderMappingTests
         string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
-        string room = new string('R', WorkOrder.RoomNumberMaxLength);
+        string room = new('R', WorkOrder.RoomNumberMaxLength);
         var workOrder = new WorkOrder
         {
             Number = workOrderNumber,
@@ -397,7 +397,7 @@ public class WorkOrderMappingTests
         string workOrderNumber = TestData.Number("M");
 
         var creator = new Employee(TestData.UserName("creator1"), "John", "Doe", "john@example.com");
-        string longInstructions = new string('I', 4001);
+        string longInstructions = new('I', 4001);
         var workOrder = new WorkOrder
         {
             Number = workOrderNumber,

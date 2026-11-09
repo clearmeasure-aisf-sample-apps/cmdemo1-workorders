@@ -36,7 +36,7 @@ public class EmployeeMappingTests
     [Test]
     public void ShouldPersistLastNameUpTo120Characters()
     {
-        string longLastName = new string('A', 120);
+        string longLastName = new('A', 120);
         var emp = new Employee(TestData.UserName("user120"), "First", longLastName, "email120@example.com");
 
         using (var context = TestHost.GetRequiredService<DbContext>())
@@ -91,7 +91,7 @@ public class EmployeeMappingTests
     [Test]
     public void ShouldPersistMiddleNameUpTo100Characters()
     {
-        string longMiddleName = new string('M', 100);
+        string longMiddleName = new('M', 100);
         var emp = new Employee(TestData.UserName("user100"), "First", "Last", "email100@example.com") { MiddleName = longMiddleName };
 
         using (var context = TestHost.GetRequiredService<DbContext>())

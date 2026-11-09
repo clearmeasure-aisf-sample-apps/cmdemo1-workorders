@@ -264,7 +264,7 @@ public class LocalTelemetryFileWriterTests
 
     private static List<string> WriteMessagesPast(LocalTelemetryFileWriter writer, long totalBytes)
     {
-        string padding = new string('x', 1000);
+        string padding = new('x', 1000);
         var written = new List<string>();
         long bytes = 0;
         while (bytes <= totalBytes)

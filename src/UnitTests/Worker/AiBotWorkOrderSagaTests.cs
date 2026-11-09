@@ -155,14 +155,14 @@ public class AiBotWorkOrderSagaTests
     public async Task Handle_Started_ShouldTruncateDescriptionOver4000()
     {
         var sagaId = Guid.NewGuid();
-        string longBaseDescription = new string('b', WorkOrder.DescriptionMaxLength - 100);
+        string longBaseDescription = new('b', WorkOrder.DescriptionMaxLength - 100);
         var workOrder = new WorkOrder
         {
             Number = "WO-6",
             Assignee = new Employee("bot", "AI", "Bot", "bot@test.com"),
             Description = longBaseDescription
         };
-        string longAiResponse = new string('a', 500);
+        string longAiResponse = new('a', 500);
         var bus = new StubBus();
         var saga = new AiBotWorkOrderSaga(bus, new StubChatClientFactory(bus, longAiResponse))
         {

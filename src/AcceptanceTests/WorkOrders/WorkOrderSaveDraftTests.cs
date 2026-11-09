@@ -175,7 +175,7 @@ public class WorkOrderSaveDraftTests : AcceptanceTestBase
 
         await Input(nameof(WorkOrderManage.Elements.Description), order.Description);
 
-        string overLimitInstructions = new string('x', WorkOrder.InstructionsMaxLength + 1);
+        string overLimitInstructions = new('x', WorkOrder.InstructionsMaxLength + 1);
         var instructionsField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions));
         await instructionsField.EvaluateAsync(
             "(el, value) => { el.removeAttribute('maxlength'); el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }",

@@ -127,8 +127,8 @@ public class McpCreateWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
     {
         await LoginAsTlovejoyAsync();
 
-        string longInstructions = new string('M', WorkOrder.InstructionsMaxLength + 1);
-        string expectedInstructions = new string('M', WorkOrder.InstructionsMaxLength);
+        string longInstructions = new('M', WorkOrder.InstructionsMaxLength + 1);
+        string expectedInstructions = new('M', WorkOrder.InstructionsMaxLength);
 
         string createResult = await _helper!.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>

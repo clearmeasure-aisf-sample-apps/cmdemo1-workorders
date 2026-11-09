@@ -88,8 +88,8 @@ public class McpCreateWorkOrderInstructionsTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string longInstructions = new string('I', WorkOrder.InstructionsMaxLength + 1);
-        string expected = new string('I', WorkOrder.InstructionsMaxLength);
+        string longInstructions = new('I', WorkOrder.InstructionsMaxLength + 1);
+        string expected = new('I', WorkOrder.InstructionsMaxLength);
 
         string result = await WorkOrderTools.CreateWorkOrder(
             bus,

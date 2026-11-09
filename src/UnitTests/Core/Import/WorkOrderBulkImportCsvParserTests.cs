@@ -180,7 +180,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldReportError_WhenBuildingTooLong()
     {
-        string building = new string('b', WorkOrder.BuildingMaxLength + 1);
+        string building = new('b', WorkOrder.BuildingMaxLength + 1);
         var result = ParseCsv($"Title,Description,CreatorUsername,Building\nT,D,u,ok\nT,D,u,{building}\n");
 
         result.Rows[0].Error.ShouldBeNull();
@@ -191,7 +191,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldAcceptDescription_WhenAtMaxLength()
     {
-        string description = new string('d', WorkOrder.DescriptionMaxLength);
+        string description = new('d', WorkOrder.DescriptionMaxLength);
         var result = ParseCsv($"Title,Description,CreatorUsername\nT,{description},u\n");
 
         result.Rows[0].Error.ShouldBeNull();
@@ -200,7 +200,7 @@ public class WorkOrderBulkImportCsvParserTests
     [Test]
     public void ShouldReportError_WhenDescriptionTooLong()
     {
-        string description = new string('d', WorkOrder.DescriptionMaxLength + 1);
+        string description = new('d', WorkOrder.DescriptionMaxLength + 1);
         var result = ParseCsv($"Title,Description,CreatorUsername\nT,ok,u\nT,{description},u\n");
 
         result.Rows[0].Error.ShouldBeNull();

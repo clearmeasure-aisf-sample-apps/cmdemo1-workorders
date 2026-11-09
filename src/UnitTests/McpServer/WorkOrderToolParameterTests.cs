@@ -155,7 +155,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldValidateBuildingAtMaxLength()
     {
-        string exactLength = new string('x', WorkOrder.BuildingMaxLength);
+        string exactLength = new('x', WorkOrder.BuildingMaxLength);
         var (result, error) = WorkOrderTools.ValidateBuilding(exactLength);
 
         result.ShouldBe(exactLength);
@@ -165,7 +165,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldRejectBuildingExceedingMaxLength()
     {
-        string tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
+        string tooLong = new('x', WorkOrder.BuildingMaxLength + 1);
         var (_, error) = WorkOrderTools.ValidateBuilding(tooLong);
 
         error!.ShouldContain("Building cannot exceed");
@@ -175,7 +175,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldValidateBuildingBoundaryAt100Characters()
     {
-        string exactly100 = new string('a', 100);
+        string exactly100 = new('a', 100);
         var (result, error) = WorkOrderTools.ValidateBuilding(exactly100);
 
         result.ShouldBe(exactly100);
@@ -185,7 +185,7 @@ public class WorkOrderToolParameterTests
     [Test]
     public void ShouldRejectBuildingAt101Characters()
     {
-        string exactly101 = new string('a', 101);
+        string exactly101 = new('a', 101);
         var (_, error) = WorkOrderTools.ValidateBuilding(exactly101);
 
         error.ShouldNotBeNull();

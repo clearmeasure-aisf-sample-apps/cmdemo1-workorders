@@ -109,6 +109,7 @@ public class CompilerWarningGateTests
         config.ShouldContain("csharp_style_var_for_built_in_types = false:warning");
         config.ShouldContain("csharp_style_var_when_type_is_apparent = true:silent");
         config.ShouldContain("csharp_style_var_elsewhere = true:silent");
+        config.ShouldContain("csharp_style_implicit_object_creation_when_type_is_apparent = true:warning");
         config.ShouldContain("csharp_prefer_braces = true:warning");
         config.ShouldContain("csharp_style_namespace_declarations = file_scoped:warning");
         config.ShouldContain("csharp_style_expression_bodied_methods = false:silent");

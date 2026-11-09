@@ -355,7 +355,7 @@ public class McpUpdateWorkOrderTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        string tooLong = new string('x', WorkOrder.BuildingMaxLength + 1);
+        string tooLong = new('x', WorkOrder.BuildingMaxLength + 1);
         string result = await WorkOrderTools.UpdateWorkOrder(
             bus,
             $"{_stem}11",

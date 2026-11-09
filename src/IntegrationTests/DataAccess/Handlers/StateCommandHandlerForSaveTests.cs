@@ -51,7 +51,7 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
         context.Add(currentUser);
         await context.SaveChangesAsync();
 
-        string expectedTitle = new string('T', WorkOrder.TitleMaxLength);
+        string expectedTitle = new('T', WorkOrder.TitleMaxLength);
         var workOrder = Faker<WorkOrder>();
         workOrder.Id = Guid.Empty;
         workOrder.Creator = currentUser;
@@ -74,7 +74,7 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
         context.Add(currentUser);
         await context.SaveChangesAsync();
 
-        string expectedBuilding = new string('B', WorkOrder.BuildingMaxLength);
+        string expectedBuilding = new('B', WorkOrder.BuildingMaxLength);
         var workOrder = Faker<WorkOrder>();
         workOrder.Id = Guid.Empty;
         workOrder.Creator = currentUser;

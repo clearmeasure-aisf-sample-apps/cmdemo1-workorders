@@ -157,8 +157,8 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
         string workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
 
-        string longInstructions = new string('S', WorkOrder.InstructionsMaxLength + 1);
-        string expectedInstructions = new string('S', WorkOrder.InstructionsMaxLength);
+        string longInstructions = new('S', WorkOrder.InstructionsMaxLength + 1);
+        string expectedInstructions = new('S', WorkOrder.InstructionsMaxLength);
 
         await _helper.CallToolDirectly("save-work-order",
             new Dictionary<string, object?>

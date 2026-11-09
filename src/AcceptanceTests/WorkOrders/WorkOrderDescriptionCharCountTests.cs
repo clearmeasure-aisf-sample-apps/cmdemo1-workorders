@@ -50,7 +50,7 @@ public class WorkOrderDescriptionCharCountTests : AcceptanceTestBase
         var descriptionField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Description));
         await Expect(descriptionField).ToBeEditableAsync(new LocatorAssertionsToBeEditableOptions { Timeout = 30_000 });
 
-        string fullText = new string('A', WorkOrder.DescriptionMaxLength);
+        string fullText = new('A', WorkOrder.DescriptionMaxLength);
         await descriptionField.FillAsync(fullText);
         await descriptionField.BlurAsync();
 

@@ -13,7 +13,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        string room = new string('R', WorkOrder.RoomNumberEntryMaxLength);
+        string room = new('R', WorkOrder.RoomNumberEntryMaxLength);
         var order = Faker<WorkOrder>();
         order.Title = $"[{TestTag}] 50 char room";
         order.Number = null;
@@ -54,7 +54,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
         var order = await CreateAndSaveNewWorkOrder();
 
         // Seed a legacy room number longer than the entry limit, as stored before the 50-character rule.
-        string longRoom = new string('R', WorkOrder.RoomNumberMaxLength);
+        string longRoom = new('R', WorkOrder.RoomNumberMaxLength);
         var stored = (await Bus.Send(new WorkOrderByNumberQuery(order.Number!)))!;
         stored.RoomNumber = longRoom;
         await Bus.Send(new SaveDraftCommand(stored, stored.Creator!) { PreviousRoomNumber = longRoom });
@@ -83,7 +83,7 @@ public class WorkOrderRoomNumberLengthTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        string tooLong = new string('X', WorkOrder.RoomNumberEntryMaxLength + 1);
+        string tooLong = new('X', WorkOrder.RoomNumberEntryMaxLength + 1);
 
         await Click(nameof(NavMenu.Elements.NewWorkOrder));
         await Page.WaitForURLAsync("**/workorder/manage?mode=New");

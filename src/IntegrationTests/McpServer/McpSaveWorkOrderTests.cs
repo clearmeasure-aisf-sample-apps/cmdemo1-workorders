@@ -257,8 +257,8 @@ public class McpSaveWorkOrderTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string longInstructions = new string('x', WorkOrder.InstructionsMaxLength + 1);
-        string expected = new string('x', WorkOrder.InstructionsMaxLength);
+        string longInstructions = new('x', WorkOrder.InstructionsMaxLength + 1);
+        string expected = new('x', WorkOrder.InstructionsMaxLength);
 
         string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
@@ -289,7 +289,7 @@ public class McpSaveWorkOrderTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string tooLongRoom = new string('r', WorkOrder.RoomNumberEntryMaxLength + 1);
+        string tooLongRoom = new('r', WorkOrder.RoomNumberEntryMaxLength + 1);
 
         string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
@@ -315,7 +315,7 @@ public class McpSaveWorkOrderTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string longRoom = new string('r', WorkOrder.RoomNumberMaxLength);
+        string longRoom = new('r', WorkOrder.RoomNumberMaxLength);
 
         string createResult = await WorkOrderTools.CreateWorkOrder(
             bus,
@@ -502,7 +502,7 @@ public class McpSaveWorkOrderTests
         await SeedCreatorAsync(creatorUserName);
         var bus = TestHost.GetRequiredService<IBus>();
         var numberGenerator = new WorkOrderNumberGenerator();
-        string tooLongDescription = new string('d', WorkOrder.DescriptionMaxLength + 1);
+        string tooLongDescription = new('d', WorkOrder.DescriptionMaxLength + 1);
 
         string result = await WorkOrderTools.CreateWorkOrder(
             bus,
