@@ -10,6 +10,7 @@ public sealed class RefactoringPullRequestSteps : IDisposable
 {
     public const string OversizedFile = "src/McpServer/Tools/WorkOrderTools.cs";
     public const string ListedFile = "src/Core/WorkOrderRules.cs";
+    public const string ListedCodeBehind = "src/UI.Shared/Pages/WorkOrderBoard.razor.cs";
     public const string SizeBaseline = "src/UnitTests/BuildGates/size-nesting-baseline.txt";
     private const string GuardrailBaseline = "src/UnitTests/BuildGates/Refactoring/Baselines/static-helper-classes.txt";
     private const string BaseTag = "pull-request-base";
@@ -52,6 +53,17 @@ public sealed class RefactoringPullRequestSteps : IDisposable
         Write(OversizedFile, File.ReadAllText(PathOf(OversizedFile)).Replace("Value1()", $"Value1() => new {typeName}().Count; public int Old1()"));
         Write($"src/McpServer/Tools/{typeName}.cs", $"namespace Tools;\n\npublic sealed record {typeName}\n{{\n    public int Count => 1;\n}}\n");
     }
+
+    public void CommitBaseWithCodeBehindOnTheSizeBaseline()
+    {
+        Write(ListedCodeBehind, "namespace Pages;\n\npublic partial class WorkOrderBoard\n{\n}\n");
+        Write(SizeBaseline, $"# Size and nesting ratchet baseline.\nfile {ListedCodeBehind}\n");
+        WriteBaseCommonFiles();
+        CommitBase();
+    }
+
+    public void ChangeListedCodeBehind() =>
+        Write(ListedCodeBehind, "namespace Pages;\n\npublic partial class WorkOrderBoard\n{\n    private int _columns;\n}\n");
 
     public void ChangeListedFile() =>
         Write(ListedFile, "namespace Core;\n\npublic class WorkOrderRules\n{\n    public bool IsOpen => true;\n}\n");

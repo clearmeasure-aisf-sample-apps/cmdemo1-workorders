@@ -172,6 +172,19 @@ public class RefactoringRationaleScriptTests
     }
 
     [Test]
+    public void ShouldNameTheCodeBehind_WhenTheBaselineListsARazorCodeBehindFile()
+    {
+        _steps.CommitBaseWithCodeBehindOnTheSizeBaseline();
+        _steps.ChangeListedCodeBehind();
+        _steps.DescribeWithoutRationale();
+
+        var run = _steps.RunRationaleCheck(oversizedBaselinePath: null);
+
+        run.ExitCode.ShouldBe(1, run.Output);
+        run.Output.ShouldContain($"changes oversized-baseline file(s) ({RefactoringPullRequestSteps.ListedCodeBehind})");
+    }
+
+    [Test]
     public void ShouldReadTheSizeGateBaseline_WhenNoBaselinePathIsGiven()
     {
         _steps.CommitBaseWithSizeBaselineListing();

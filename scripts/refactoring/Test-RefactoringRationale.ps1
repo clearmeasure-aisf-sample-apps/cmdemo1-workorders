@@ -100,7 +100,7 @@ function Test-Ratchet {
 function Get-OversizedFiles {
     if ($OversizedBaselinePath -and (Test-GitPath $BaseRef $OversizedBaselinePath)) {
         $text = (Get-GitFile $BaseRef $OversizedBaselinePath) -join "`n"
-        return @([regex]::Matches($text, 'src/[^\s"''|,;:]+?\.(?:cs|razor)\b') | ForEach-Object { $_.Value } | Sort-Object -Unique)
+        return @([regex]::Matches($text, 'src/[^\s"''|,;:]+\.(?:cs|razor)(?=$|[\s"''|,;:])') | ForEach-Object { $_.Value } | Sort-Object -Unique)
     }
 
     return @(Find-InGit @('-c', '', $BaseRef, '--', 'src') | ForEach-Object {
