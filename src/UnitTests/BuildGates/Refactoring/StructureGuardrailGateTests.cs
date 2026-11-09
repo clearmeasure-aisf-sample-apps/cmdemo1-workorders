@@ -1,4 +1,3 @@
-using ClearMeasure.Bootcamp.UnitTests.Architecture;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.Refactoring;
@@ -8,7 +7,7 @@ public class StructureGuardrailGateTests
 {
     private const string Playbook = "docs/refactoring-oversized-code.md";
 
-    private static readonly Lazy<SourceSet> Repository = new(() => SourceSet.FromRepository(SolutionArchitectureScan.FindRepoRoot()));
+    private static readonly Lazy<SourceSet> Repository = new(() => SourceSet.FromRepository(RepositoryCheckout.Current));
 
     private static IEnumerable<TestCaseData> Rules() =>
         new IStructureRule[]
@@ -30,9 +29,9 @@ public class StructureGuardrailGateTests
     {
         var comparison = Compare(rule);
 
-        comparison.NewViolations.ShouldBeEmpty(
+        comparison.Unexpected.ShouldBeEmpty(
             $"{rule.GetType().Name}: {rule.Guidance} Read and follow {Playbook} before editing. " +
-            $"New violations:{Environment.NewLine}{string.Join(Environment.NewLine, comparison.NewViolations)}");
+            $"New violations:{Environment.NewLine}{string.Join(Environment.NewLine, comparison.Unexpected)}");
     }
 
     [TestCaseSource(nameof(Rules))]
@@ -40,15 +39,17 @@ public class StructureGuardrailGateTests
     {
         var comparison = Compare(rule);
 
-        comparison.StaleEntries.ShouldBeEmpty(
+        comparison.Repeated.ShouldBeEmpty($"{BaselinePath(rule)} lists these keys more than once: {string.Join(", ", comparison.Repeated)}");
+        comparison.Stale.ShouldBeEmpty(
             $"{rule.GetType().Name}: these lines are no longer violations; delete them from " +
             $"{BaselinePath(rule)} (baselines only shrink):{Environment.NewLine}" +
-            string.Join(Environment.NewLine, comparison.StaleEntries));
+            string.Join(Environment.NewLine, comparison.Stale));
     }
 
     private static RatchetComparison Compare(IStructureRule rule) =>
-        RatchetBaseline.Load(BaselinePath(rule)).Compare(rule.FindViolations(Repository.Value));
+        RepositoryCheckout.Current.ReadRatchet(BaselinePath(rule))
+            .Compare(rule.FindViolations(Repository.Value).Select(violation => violation.Key));
 
     private static string BaselinePath(IStructureRule rule) =>
-        Path.Combine(SolutionArchitectureScan.FindRepoRoot(), "src", "UnitTests", "BuildGates", "Refactoring", "Baselines", rule.BaselineFileName);
+        $"src/UnitTests/BuildGates/Refactoring/Baselines/{rule.BaselineFileName}";
 }

@@ -1,4 +1,3 @@
-using ClearMeasure.Bootcamp.UnitTests.Architecture;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.Refactoring;
@@ -72,6 +71,5 @@ public class RefactoringPlaybookTests
         workflow.ShouldContain("scripts/refactoring/Test-RefactoringRationale.ps1");
     }
 
-    private static string ReadRepositoryFile(string relativePath) =>
-        File.ReadAllText(Path.Combine(SolutionArchitectureScan.FindRepoRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar)));
+    private static string ReadRepositoryFile(string relativePath) => RepositoryCheckout.Current.ReadText(relativePath);
 }

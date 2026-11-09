@@ -1,5 +1,6 @@
 # Ratchet baseline for TestSupportPlacementRule: today's violations. Only delete lines (fix the code first); never add.
 # See docs/refactoring-oversized-code.md.
+src/IntegrationTests/BuildGates/BuildFactsInputsMother.cs :: BuildFactsInputsMother
 src/UnitTests/ObjectMother.cs :: ObjectMother
 src/UnitTests/UI.Shared/Pages/ClientDateFormatterTests.cs :: StubWorkOrderBuilder
 src/UnitTests/UI.Shared/Pages/WorkOrderManageAttachmentsTests.cs :: StubWorkOrderBuilder

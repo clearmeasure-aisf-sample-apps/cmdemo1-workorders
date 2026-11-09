@@ -6,8 +6,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.Refactoring;
 /// </summary>
 public sealed class SourceSet
 {
-    private static readonly string[] ExcludedDirectories = ["bin", "obj", "Generated", "node_modules"];
-
     private SourceSet(IReadOnlyList<SourceFile> files, IEnumerable<string> razorComponents)
     {
         Files = files;
@@ -26,24 +24,14 @@ public sealed class SourceSet
 
     public IReadOnlySet<string> DeclaredTypeNames { get; }
 
-    public static SourceSet FromRepository(string repositoryRoot)
+    public static SourceSet FromRepository(RepositoryCheckout checkout)
     {
-        var sourceRoot = Path.Combine(repositoryRoot, "src");
-        var files = EnumerateHandWritten(sourceRoot, "*.cs")
-            .Where(path => !path.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase))
-            .Select(path => SourceFile.Parse(Path.GetRelativePath(repositoryRoot, path), File.ReadAllText(path)))
+        var files = checkout.SourceFiles(".cs")
+            .Select(path => SourceFile.Parse(checkout.Relative(path), File.ReadAllText(path)))
             .ToList();
-        var razorComponents = EnumerateHandWritten(sourceRoot, "*.razor")
-            .Select(path => Path.GetRelativePath(repositoryRoot, path));
-        return new SourceSet(files, razorComponents);
+        return new SourceSet(files, checkout.SourceFiles(".razor").Select(checkout.Relative));
     }
 
     public static SourceSet FromSamples(IEnumerable<SourceFile> files, params string[] razorComponents) =>
         new(files.ToList(), razorComponents);
-
-    private static IEnumerable<string> EnumerateHandWritten(string sourceRoot, string pattern) =>
-        Directory.EnumerateFiles(sourceRoot, pattern, SearchOption.AllDirectories)
-            .Where(path => !Path.GetRelativePath(sourceRoot, path)
-                .Split(Path.DirectorySeparatorChar)
-                .Any(segment => ExcludedDirectories.Contains(segment, StringComparer.OrdinalIgnoreCase)));
 }

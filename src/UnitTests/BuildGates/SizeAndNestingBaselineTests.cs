@@ -7,25 +7,30 @@ public class SizeAndNestingBaselineTests
 {
     private const string BaselinePath = "src/UnitTests/BuildGates/size-nesting-baseline.txt";
 
+    /// <summary>Shown with every new violation: the fix is a refactoring, never a mechanical split.</summary>
+    private const string PlaybookGuidance =
+        "Each key names the file and the limit it breaks. Read and follow docs/refactoring-oversized-code.md " +
+        "before editing: name the smell, apply a preferred move, name the new abstraction. Never split by line count.";
+
     [Test]
-    public void ShouldNameTheFileAndPointToThePlaybook_WhenANewViolationIsFormatted()
+    public void ShouldNameTheFileAndPointToThePlaybook_WhenANewViolationIsReported()
     {
-        var diff = SizeAndNestingBaseline.Diff(["method src/Core/A.cs A.Run()"], []);
+        var comparison = KeyRatchet.Parse("").Compare(["method src/Core/A.cs A.Run()"]);
 
-        var message = SizeAndNestingBaseline.Format(diff);
+        var report = comparison.Report("Size and nesting", PlaybookGuidance);
 
-        message.ShouldContain("method src/Core/A.cs A.Run()");
-        message.ShouldContain("docs/refactoring-oversized-code.md");
+        report.ShouldContain("method src/Core/A.cs A.Run()");
+        report.ShouldContain("docs/refactoring-oversized-code.md");
     }
 
     [Test]
     public void ShouldOmitThePlaybook_WhenOnlyStaleLinesRemain()
     {
-        var diff = SizeAndNestingBaseline.Diff([], ["file src/Core/A.cs"]);
+        var comparison = KeyRatchet.Parse("file src/Core/A.cs").Compare([]);
 
-        var message = SizeAndNestingBaseline.Format(diff);
+        var report = comparison.Report("Size and nesting", PlaybookGuidance);
 
-        message.ShouldNotContain("docs/refactoring-oversized-code.md");
+        report.ShouldNotContain("docs/refactoring-oversized-code.md");
     }
 
     [Test]
@@ -33,7 +38,7 @@ public class SizeAndNestingBaselineTests
     {
         var comparison = CompareRepositoryWithBaseline();
 
-        comparison.IsClean.ShouldBeTrue(comparison.Report("Size and nesting"));
+        comparison.IsClean.ShouldBeTrue(comparison.Report("Size and nesting", PlaybookGuidance));
     }
 
     private static RatchetComparison CompareRepositoryWithBaseline()
