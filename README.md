@@ -13,6 +13,10 @@ This codebase serves as both a working application and a teaching reference for 
 5. See `docs/work-order-bulk-import.md` for the CSV bulk import API.
 6. For a full local Bootcamp run, see [Quick start — Run locally](#quick-start--run-locally) below.
 
+## AI ops bot
+
+Issues assigned to `cm-ai-ops-bot` are picked up automatically. The bot comments a plan, opens a pull request that links the issue, and a human reviews and merges.
+
 ## Solution Structure
 
 ```
