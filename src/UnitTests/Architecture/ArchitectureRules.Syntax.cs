@@ -9,7 +9,7 @@ internal static partial class ArchitectureRules
     /// <summary>
     /// Namespaces that directly contain a type. Empty when the file declares no namespace.
     /// </summary>
-    internal static IReadOnlyList<string> DeclaredNamespaces(string source)
+    private static IReadOnlyList<string> DeclaredNamespaces(string source)
     {
         return DeclaredNamespaces(Parse(source));
     }
@@ -51,7 +51,7 @@ internal static partial class ArchitectureRules
     /// <summary>
     /// Distinct public top-level type names. Nested types and non-public types are ignored.
     /// </summary>
-    internal static IReadOnlyList<string> PublicTopLevelTypeNames(string source)
+    private static IReadOnlyList<string> PublicTopLevelTypeNames(string source)
     {
         return PublicTopLevelTypeNames(Parse(source));
     }

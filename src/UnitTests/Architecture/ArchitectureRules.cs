@@ -19,7 +19,7 @@ internal static partial class ArchitectureRules
     /// <summary>
     /// ProjectReference include paths in a project file, using forward slashes.
     /// </summary>
-    internal static IReadOnlyList<string> ProjectReferenceIncludes(string projectXml)
+    private static IReadOnlyList<string> ProjectReferenceIncludes(string projectXml)
     {
         var document = XDocument.Parse(StripBom(projectXml));
         var includes = new List<string>();
@@ -45,7 +45,7 @@ internal static partial class ArchitectureRules
     /// <summary>
     /// True when <paramref name="relativeProjectPath"/> is <c>src/Core/Core.csproj</c>.
     /// </summary>
-    internal static bool IsCoreProject(string relativeProjectPath)
+    private static bool IsCoreProject(string relativeProjectPath)
     {
         return string.Equals(NormalizeSlashes(relativeProjectPath), CoreProjectPath, StringComparison.OrdinalIgnoreCase);
     }
