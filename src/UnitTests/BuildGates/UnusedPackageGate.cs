@@ -516,20 +516,3 @@ public static class UnusedPackageGate
             : string.Compare(left.PackageId, right.PackageId, StringComparison.OrdinalIgnoreCase);
     }
 }
-
-/// <summary>
-/// One direct package whose assemblies are not referenced by the built project.
-/// </summary>
-public sealed record UnusedPackage(string Project, string PackageId);
-
-/// <summary>
-/// A justified unused package the ratchet still allows.
-/// </summary>
-public sealed record PackageBaselineEntry(string Project, string PackageId, string Reason);
-
-/// <summary>
-/// Solution scan: unused packages and projects whose build output was missing.
-/// </summary>
-public sealed record UnusedPackageScan(
-    IReadOnlyList<UnusedPackage> Unused,
-    IReadOnlyList<string> MissingOutputs);

@@ -17,31 +17,22 @@ internal static class SolutionArchitectureScan
     {
         var (coreProjectReferences, uiDataAccessReferences) = ScanProjects(repoRoot);
         var (handlerNamingViolations, multiplePublicTypeFiles, namespaceMismatches) = ScanSources(repoRoot);
-        return new Result(
-            coreProjectReferences,
-            uiDataAccessReferences,
-            handlerNamingViolations,
-            multiplePublicTypeFiles,
-            namespaceMismatches);
+        return new Result
+        {
+            CoreProjectReferences = coreProjectReferences,
+            UiDataAccessReferences = uiDataAccessReferences,
+            HandlerNamingViolations = handlerNamingViolations,
+            MultiplePublicTypeFiles = multiplePublicTypeFiles,
+            NamespaceMismatches = namespaceMismatches,
+        };
     }
 
     /// <summary>
-    /// Repository root, found by walking up from the test output directory to <c>src/ChurchBulletin.sln</c>.
+    /// Repository root, found by walking up from the test output directory.
     /// </summary>
     internal static string FindRepoRoot()
     {
-        var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "src", "ChurchBulletin.sln")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Could not find repository root from test directory.");
+        return ClearMeasure.Bootcamp.UnitTests.BuildGates.RepoFiles.Root();
     }
 
     /// <summary>
@@ -102,7 +93,6 @@ internal static class SolutionArchitectureScan
         var multiplePublicTypes = new List<string>();
         var namespaceMismatches = new List<string>();
         var projects = new Dictionary<string, (string RootNamespace, string Directory)>(StringComparer.Ordinal);
-
         foreach (var sourceFile in SourceFiles(repoRoot))
         {
             var relative = RelativePath(repoRoot, sourceFile);
@@ -111,7 +101,6 @@ internal static class SolutionArchitectureScan
             {
                 handlers.Add(relative + ":" + name);
             }
-
             if (ArchitectureRules.PublicTopLevelTypeNames(root).Count > 1)
             {
                 multiplePublicTypes.Add(relative);
@@ -132,30 +121,48 @@ internal static class SolutionArchitectureScan
         Dictionary<string, (string RootNamespace, string Directory)> projects)
     {
         var declared = ArchitectureRules.DeclaredNamespaces(root);
-        if (declared.Count == 0)
+        if (declared.Count == 0 || !TryProject(sourceFile, projects, out var info))
         {
             return false;
         }
 
+        return DeclaredNamespaceDiffers(sourceFile, declared, info);
+    }
+
+    private static bool TryProject(
+        string sourceFile,
+        Dictionary<string, (string RootNamespace, string Directory)> projects,
+        out (string RootNamespace, string Directory) info)
+    {
+        info = default;
         var projectFile = FindProjectFile(sourceFile);
         if (projectFile == null)
         {
             return false;
         }
 
-        if (!projects.TryGetValue(projectFile, out var info))
+        if (projects.TryGetValue(projectFile, out info))
         {
-            var projectName = Path.GetFileNameWithoutExtension(projectFile);
-            var projectDirectory = Path.GetDirectoryName(projectFile);
-            if (projectDirectory == null)
-            {
-                return false;
-            }
-
-            info = (ArchitectureRules.RootNamespace(File.ReadAllText(projectFile), projectName), projectDirectory);
-            projects[projectFile] = info;
+            return true;
         }
 
+        var projectDirectory = Path.GetDirectoryName(projectFile);
+        if (projectDirectory == null)
+        {
+            return false;
+        }
+
+        var projectName = Path.GetFileNameWithoutExtension(projectFile);
+        info = (ArchitectureRules.RootNamespace(File.ReadAllText(projectFile), projectName), projectDirectory);
+        projects[projectFile] = info;
+        return true;
+    }
+
+    private static bool DeclaredNamespaceDiffers(
+        string sourceFile,
+        IReadOnlyList<string> declared,
+        (string RootNamespace, string Directory) info)
+    {
         var sourceDirectory = Path.GetDirectoryName(sourceFile);
         if (sourceDirectory == null)
         {
@@ -234,10 +241,16 @@ internal static class SolutionArchitectureScan
     /// <summary>
     /// Architecture findings for one scan of the repository.
     /// </summary>
-    internal sealed record Result(
-        IReadOnlyList<string> CoreProjectReferences,
-        IReadOnlyList<string> UiDataAccessReferences,
-        IReadOnlyList<string> HandlerNamingViolations,
-        IReadOnlyList<string> MultiplePublicTypeFiles,
-        IReadOnlyList<string> NamespaceMismatches);
+    internal sealed class Result
+    {
+        public IReadOnlyList<string> CoreProjectReferences { get; init; } = [];
+
+        public IReadOnlyList<string> UiDataAccessReferences { get; init; } = [];
+
+        public IReadOnlyList<string> HandlerNamingViolations { get; init; } = [];
+
+        public IReadOnlyList<string> MultiplePublicTypeFiles { get; init; } = [];
+
+        public IReadOnlyList<string> NamespaceMismatches { get; init; } = [];
+    }
 }

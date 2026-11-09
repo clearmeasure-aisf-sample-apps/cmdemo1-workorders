@@ -290,8 +290,3 @@ public static class DuplicationGate
 
     private readonly record struct Location(string Path, int Start);
 }
-
-/// <summary>
-/// Normalized-line clone totals for one source tree.
-/// </summary>
-public sealed record DuplicationScan(int MinLines, int TotalLines, int DuplicatedLines);
