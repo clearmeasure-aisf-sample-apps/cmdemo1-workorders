@@ -51,9 +51,9 @@ public class SaveWorkOrderPatchTests
 
     private static IEnumerable<TestCaseData> BrokenTitlesAndDescriptions() =>
     [
-        new TestCaseData(" ", null, "The Title field is required."),
-        new TestCaseData(new string('t', WorkOrder.TitleMaxLength + 1), null, "Title cannot exceed 300 characters."),
-        new TestCaseData(null, new string('d', WorkOrder.DescriptionMaxLength + 1), "Description cannot exceed 4000 characters.")
+        new(" ", null, "The Title field is required."),
+        new(new string('t', WorkOrder.TitleMaxLength + 1), null, "Title cannot exceed 300 characters."),
+        new(null, new string('d', WorkOrder.DescriptionMaxLength + 1), "Description cannot exceed 4000 characters.")
     ];
 
     [TestCaseSource(nameof(BrokenTitlesAndDescriptions))]
