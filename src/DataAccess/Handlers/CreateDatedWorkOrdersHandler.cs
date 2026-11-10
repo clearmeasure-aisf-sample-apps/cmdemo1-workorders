@@ -24,59 +24,76 @@ public class CreateDatedWorkOrdersHandler(
         CreateDatedWorkOrdersCommand request,
         CancellationToken cancellationToken)
     {
-        var validationFailure = ValidateBatchSize(request.DueDates.Count);
-        if (validationFailure != null)
+        if (BatchSizeFailure(request.DueDates.Count) is { } sizeFailure)
         {
-            return validationFailure;
+            return sizeFailure;
         }
 
+        var (batch, missingEmployee) = await FindBatchAsync(request, cancellationToken);
+        if (batch is null)
+        {
+            return missingEmployee!;
+        }
+
+        var workOrders = batch.CreateWorkOrders(time.GetUtcNow().DateTime, numberGenerator);
+        await SaveInOneTransactionAsync(workOrders, cancellationToken);
+        await PublishCreatedEventAsync(workOrders.Count);
+        logger.LogInformation(
+            "Created {Count} dated work orders for assignee {AssigneeUsername}",
+            workOrders.Count,
+            request.AssigneeUsername);
+        return CreateDatedWorkOrdersResult.Created(workOrders);
+    }
+
+    private static CreateDatedWorkOrdersResult? BatchSizeFailure(int count)
+    {
+        if (count == 0)
+        {
+            return CreateDatedWorkOrdersResult.Failed("At least one due date is required.");
+        }
+
+        return count > CreateDatedWorkOrdersCommand.MaximumBatchSize
+            ? CreateDatedWorkOrdersResult.Failed(
+                $"A dated work-order batch cannot exceed {CreateDatedWorkOrdersCommand.MaximumBatchSize} dates.")
+            : null;
+    }
+
+    /// <summary>The batch, or the failure naming the assignee or creator that was not found (assignee first).</summary>
+    private async Task<(DatedWorkOrderBatch? Batch, CreateDatedWorkOrdersResult? Failure)> FindBatchAsync(
+        CreateDatedWorkOrdersCommand request,
+        CancellationToken cancellationToken)
+    {
         var assignee = await FindEmployeeAsync(request.AssigneeUsername, cancellationToken);
         if (assignee is null)
         {
-            logger.LogWarning("Assignee '{AssigneeUsername}' not found; creating zero work orders",
-                request.AssigneeUsername);
-            return new CreateDatedWorkOrdersResult(
-                false,
-                $"Assignee '{request.AssigneeUsername}' was not found. No work orders were created.",
-                []);
+            return (null, NotFound("Assignee", request.AssigneeUsername));
         }
 
         var creator = await FindEmployeeAsync(request.CreatorUsername, cancellationToken);
-        if (creator is null)
-        {
-            logger.LogWarning("Creator '{CreatorUsername}' not found; creating zero work orders",
-                request.CreatorUsername);
-            return new CreateDatedWorkOrdersResult(
-                false,
-                $"Creator '{request.CreatorUsername}' was not found. No work orders were created.",
-                []);
-        }
+        return creator is null
+            ? (null, NotFound("Creator", request.CreatorUsername))
+            : (new DatedWorkOrderBatch
+            {
+                Title = request.Title,
+                Description = request.Description,
+                Creator = creator,
+                Assignee = assignee,
+                DueDates = request.DueDates
+            }, null);
+    }
 
+    private CreateDatedWorkOrdersResult NotFound(string role, string username)
+    {
+        logger.LogWarning("{Role} '{Username}' not found; creating zero work orders", role, username);
+        return CreateDatedWorkOrdersResult.Failed($"{role} '{username}' was not found. No work orders were created.");
+    }
+
+    private async Task SaveInOneTransactionAsync(IReadOnlyList<WorkOrder> workOrders, CancellationToken cancellationToken)
+    {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        var created = new List<CreatedDatedWorkOrder>(request.DueDates.Count);
         try
         {
-            var now = time.GetUtcNow().DateTime;
-
-            foreach (var dueDate in request.DueDates)
-            {
-                var workOrder = new WorkOrder
-                {
-                    Number = numberGenerator.GenerateNumber(),
-                    Title = request.Title,
-                    Description = request.Description,
-                    Creator = creator,
-                    Assignee = assignee,
-                    Status = WorkOrderStatus.Assigned,
-                    CreatedDate = now,
-                    AssignedDate = now,
-                    DueDate = dueDate
-                };
-
-                dbContext.Add(workOrder);
-                created.Add(new CreatedDatedWorkOrder(workOrder.Number!, dueDate));
-            }
-
+            dbContext.AddRange(workOrders);
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
@@ -86,33 +103,6 @@ public class CreateDatedWorkOrdersHandler(
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
-
-        await PublishCreatedEventAsync(created.Count);
-
-        logger.LogInformation(
-            "Created {Count} dated work orders for assignee {AssigneeUsername}",
-            created.Count,
-            request.AssigneeUsername);
-
-        return new CreateDatedWorkOrdersResult(
-            true,
-            $"Created {created.Count} work orders.",
-            created);
-    }
-
-    private static CreateDatedWorkOrdersResult? ValidateBatchSize(int count)
-    {
-        if (count == 0)
-        {
-            return new CreateDatedWorkOrdersResult(false, "At least one due date is required.", []);
-        }
-
-        return count > CreateDatedWorkOrdersCommand.MaximumBatchSize
-            ? new CreateDatedWorkOrdersResult(
-                false,
-                $"A dated work-order batch cannot exceed {CreateDatedWorkOrdersCommand.MaximumBatchSize} dates.",
-                [])
-            : null;
     }
 
     private async Task PublishCreatedEventAsync(int count)

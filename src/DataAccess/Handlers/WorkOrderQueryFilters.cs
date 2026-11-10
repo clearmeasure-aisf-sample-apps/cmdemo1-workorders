@@ -14,14 +14,6 @@ internal static class WorkOrderQueryFilters
 {
     public static IQueryable<WorkOrder> Apply(
         IQueryable<WorkOrder> query,
-        Employee? assignee,
-        Employee? creator,
-        WorkOrderStatus? status,
-        bool overdueOnly = false) =>
-        ApplyOverdue(ApplyBasics(query, assignee, creator, status), overdueOnly, ChurchTimeZone.Today(TimeProvider.System));
-
-    public static IQueryable<WorkOrder> Apply(
-        IQueryable<WorkOrder> query,
         WorkOrderSearchSpecification specification) =>
         ApplyBasics(query, specification.Assignee, specification.Creator, specification.Status);
 

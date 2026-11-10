@@ -34,7 +34,8 @@ public class StateCommandHandler(
             order.Assignee = order.Creator; //EFCore reference checking
         }
 
-        var persisted = await PersistAsync(order, beginStatus, request.CurrentUser, currentDateTime, request, cancellationToken);
+        var transition = WorkOrderStatusTransition.Of(request, beginStatus, currentDateTime);
+        var persisted = await PersistAsync(order, transition, cancellationToken);
 
         var loweredTransitionVerb = request.TransitionVerbPastTense.ToLower();
         var workOrderNumber = persisted.Number;
@@ -52,29 +53,26 @@ public class StateCommandHandler(
 
     private async Task<WorkOrder> PersistAsync(
         WorkOrder order,
-        WorkOrderStatus beginStatus,
-        Employee changedBy,
-        DateTime changedDate,
-        StateCommandBase request,
-        CancellationToken cancellationToken)
-    {
-        if (order.Id == Guid.Empty)
-        {
-            return await InsertNewAsync(order, beginStatus, changedBy, changedDate, request, cancellationToken);
-        }
-
-        return await UpdateExistingAsync(order, beginStatus, changedBy, changedDate, request, cancellationToken);
-    }
-
-    private async Task<WorkOrder> InsertNewAsync(
-        WorkOrder order,
-        WorkOrderStatus beginStatus,
-        Employee changedBy,
-        DateTime changedDate,
-        StateCommandBase request,
+        WorkOrderStatusTransition transition,
         CancellationToken cancellationToken)
     {
         dbContext.ChangeTracker.Clear();
+        var persisted = order.Id == Guid.Empty
+            ? await InsertNewAsync(order, cancellationToken)
+            : await UpdateExistingAsync(order, cancellationToken);
+
+        // Recorded in the same SaveChanges (one transaction) as the work order.
+        if (transition.ChangeOf(persisted) is { } statusChange)
+        {
+            dbContext.Add(statusChange);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return persisted;
+    }
+
+    private async Task<WorkOrder> InsertNewAsync(WorkOrder order, CancellationToken cancellationToken)
+    {
         if (await dbContext.Set<WorkOrder>().AnyAsync(w => w.Number == order.Number, cancellationToken))
         {
             throw new InvalidOperationException($"Work order number {order.Number} already exists.");
@@ -82,73 +80,18 @@ public class StateCommandHandler(
 
         dbContext.Attach(order);
         dbContext.Add(order);
-
-        // Record status change if this is a state-changing command, in the same transaction
-        if (order.Status != beginStatus)
-        {
-            var statusChange = new WorkOrderStatusChange
-            {
-                Id = Guid.NewGuid(),
-                WorkOrderId = order.Id,
-                FromStatus = beginStatus,
-                ToStatus = order.Status,
-                ChangedById = changedBy.Id,
-                ChangedDate = changedDate,
-                Reason = ShelveReason(request)
-            };
-            dbContext.Add(statusChange);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
         return order;
     }
 
-    private async Task<WorkOrder> UpdateExistingAsync(
-        WorkOrder order,
-        WorkOrderStatus beginStatus,
-        Employee changedBy,
-        DateTime changedDate,
-        StateCommandBase request,
-        CancellationToken cancellationToken)
+    private async Task<WorkOrder> UpdateExistingAsync(WorkOrder order, CancellationToken cancellationToken)
     {
-        dbContext.ChangeTracker.Clear();
-
         var existing = await dbContext.Set<WorkOrder>()
             .SingleAsync(workOrder => workOrder.Id == order.Id, cancellationToken);
 
         dbContext.Entry(existing).CurrentValues.SetValues(order);
         // Attachments remain database-owned; remoted commands do not carry a complete collection.
         await ApplyRelationshipsAsync(existing, order, cancellationToken);
-
-        // Record status change if this is a state-changing command, in the same transaction
-        if (existing.Status != beginStatus)
-        {
-            var statusChange = new WorkOrderStatusChange
-            {
-                Id = Guid.NewGuid(),
-                WorkOrderId = existing.Id,
-                FromStatus = beginStatus,
-                ToStatus = existing.Status,
-                ChangedById = changedBy.Id,
-                ChangedDate = changedDate,
-                Reason = ShelveReason(request)
-            };
-            dbContext.Add(statusChange);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
         return existing;
-    }
-
-    private static string? ShelveReason(StateCommandBase request)
-    {
-        if (request is not InProgressToAssignedCommand { Reason: { } reason })
-        {
-            return null;
-        }
-
-        var trimmed = reason.Trim();
-        return trimmed.Length == 0 ? null : trimmed;
     }
 
     private async Task ApplyRelationshipsAsync(

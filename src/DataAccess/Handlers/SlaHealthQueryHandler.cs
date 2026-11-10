@@ -17,34 +17,11 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
 {
     public async Task<SlaHealth> Handle(SlaHealthQuery request, CancellationToken cancellationToken = default)
     {
-        var today = ChurchTimeZone.Today(time);
-        var currentMonthStart = new DateOnly(today.Year, today.Month, 1);
-        var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
-        var lastMonthStart = currentMonthStart.AddMonths(-1);
-        var lastMonthEnd = currentMonthStart.AddDays(-1);
-        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
-
-        // Completion dates in the two church months only, projected so creator and assignee are not joined.
-        var rows = await context.Set<WorkOrder>()
-            .AsNoTracking()
-            .IgnoreAutoIncludes()
-            .Where(wo => wo.Status == WorkOrderStatus.Complete
-                && wo.DueDate != null
-                && wo.CompletedDate >= windowStart
-                && wo.CompletedDate < windowEnd)
-            .Select(wo => new { wo.DueDate, wo.CompletedDate })
-            .ToListAsync(cancellationToken);
-
-        var orders = rows.Select(row => new WorkOrder
-        {
-            DueDate = row.DueDate,
-            CompletedDate = row.CompletedDate,
-            Status = WorkOrderStatus.Complete
-        }).ToList();
-
-        // Compute both months in memory
-        var currentMonthData = ComputeMonthSlaInMemory(orders, currentMonthStart, currentMonthEnd);
-        var lastMonthData = ComputeMonthSlaInMemory(orders, lastMonthStart, lastMonthEnd);
+        var currentMonth = ChurchMonth.Containing(ChurchTimeZone.Today(time));
+        var lastMonth = currentMonth.Previous();
+        var orders = await CompletedWithDueDateAsync(lastMonth, currentMonth, cancellationToken);
+        var currentMonthData = ComputeMonthSla(orders, currentMonth);
+        var lastMonthData = ComputeMonthSla(orders, lastMonth);
 
         return new SlaHealth
         {
@@ -55,20 +32,42 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         };
     }
 
-    private static MonthSlaData ComputeMonthSlaInMemory(List<WorkOrder> orders, DateOnly monthStart, DateOnly monthEnd)
+    /// <summary>
+    /// Completed work orders with a due date whose church completion date falls in the two months, projected to the
+    /// due and completed dates so creator and assignee are not joined.
+    /// </summary>
+    private async Task<List<WorkOrder>> CompletedWithDueDateAsync(
+        ChurchMonth firstMonth,
+        ChurchMonth lastMonth,
+        CancellationToken cancellationToken)
+    {
+        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(firstMonth.FirstDay, lastMonth.LastDay);
+        var rows = await context.Set<WorkOrder>()
+            .AsNoTracking()
+            .IgnoreAutoIncludes()
+            .Where(wo => wo.Status == WorkOrderStatus.Complete
+                && wo.DueDate != null
+                && wo.CompletedDate >= windowStart
+                && wo.CompletedDate < windowEnd)
+            .Select(wo => new { wo.DueDate, wo.CompletedDate })
+            .ToListAsync(cancellationToken);
+
+        return rows.Select(row => new WorkOrder
+        {
+            DueDate = row.DueDate,
+            CompletedDate = row.CompletedDate,
+            Status = WorkOrderStatus.Complete
+        }).ToList();
+    }
+
+    private static MonthSlaData ComputeMonthSla(List<WorkOrder> orders, ChurchMonth month)
     {
         var monthOrders = orders
-            .Where(wo => IsInMonth(wo.CompletedDate!.Value, monthStart, monthEnd))
+            .Where(wo => month.Contains(SlaHealth.ChurchDate(wo.CompletedDate!.Value)))
             .ToList();
 
         var (percentage, totalCount) = SlaHealth.CalculateOnTimePercentage(monthOrders);
         return new MonthSlaData { TotalCount = totalCount, Percentage = percentage };
-    }
-
-    private static bool IsInMonth(DateTime completedDate, DateOnly monthStart, DateOnly monthEnd)
-    {
-        var completedDateOnly = SlaHealth.ChurchDate(completedDate);
-        return completedDateOnly >= monthStart && completedDateOnly <= monthEnd;
     }
 
     private sealed class MonthSlaData

@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Microsoft.EntityFrameworkCore;
@@ -95,9 +96,11 @@ public class WorkOrderCountByStatusQueryHandlerTests
         var orders = dataContext.Set<WorkOrder>().AsNoTracking();
         foreach (var status in WorkOrderStatus.GetAllItems())
         {
+            var specification = new WorkOrderSearchSpecification();
+            specification.MatchStatus(status);
             // One count per stored status, compared with the handler's grouped result. Not a product N+1.
 #pragma warning disable CM0002
-            var expected = await WorkOrderQueryFilters.Apply(orders, null, null, status).CountAsync();
+            var expected = await WorkOrderQueryFilters.Apply(orders, specification).CountAsync();
 #pragma warning restore CM0002
             counts[status.Key].ShouldBe(expected, status.Key);
         }
