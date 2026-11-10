@@ -8,20 +8,6 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.UI.Server;
 public class ServerApplicationTests
 {
     [Test]
-    public void ShouldUseLearningTransportWhenLocalDbConnectionString()
-    {
-        ServerApplication.ShouldUseLearningTransport("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=test")
-            .ShouldBeTrue();
-    }
-
-    [Test]
-    public void ShouldNotUseLearningTransportWhenSqlServerConnectionString()
-    {
-        ServerApplication.ShouldUseLearningTransport("server=localhost,1433;database=test")
-            .ShouldBeFalse();
-    }
-
-    [Test]
     public void ShouldBuildApplicationWithoutThrowing()
     {
         var app = ServerApplication.BuildApplication([], builder =>

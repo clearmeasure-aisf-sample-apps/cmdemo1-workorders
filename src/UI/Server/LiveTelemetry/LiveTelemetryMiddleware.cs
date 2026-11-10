@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Diagnostics;
-
 namespace ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
 
 /// <summary>
@@ -14,42 +12,29 @@ public sealed class LiveTelemetryMiddleware(RequestDelegate next, LiveTelemetryC
     /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
-        var kind = RequestClassifier.Classify(context.Request);
-        var isWebSocket = context.WebSockets.IsWebSocketRequest;
-        var started = timeProvider.GetTimestamp();
-        var statusCode = StatusCodes.Status500InternalServerError;
-        var endedInException = false;
+        var observation = RequestObservation.Start(context, timeProvider);
         counters.RequestStarted();
         var flow = RequestFlow.Begin();
         try
         {
             await next(context);
-            statusCode = context.Response.StatusCode;
-
-            // The exception handler (it runs after this middleware) leaves this feature behind when it turned an
-            // exception into the response.
-            endedInException = context.Features.Get<IExceptionHandlerFeature>() is not null;
+            observation.Completed(context);
         }
         catch when (context.RequestAborted.IsCancellationRequested)
         {
-            statusCode = context.Response.StatusCode;
+            observation.Aborted(context);
             throw;
         }
         catch
         {
-            endedInException = true;
+            observation.Failed();
             throw;
         }
         finally
         {
             flow.End();
             counters.RequestEnded();
-            if (endedInException)
-            {
-                counters.RecordUnhandledException();
-            }
-
-            counters.RecordRequest(kind, statusCode, isWebSocket ? null : timeProvider.GetElapsedTime(started));
+            observation.RecordIn(counters, timeProvider);
         }
     }
 }

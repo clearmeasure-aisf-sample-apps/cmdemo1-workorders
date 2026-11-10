@@ -1,3 +1,5 @@
+using static ClearMeasure.Bootcamp.UI.Server.LiveTelemetry.RollingCounts;
+
 namespace ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
 
 /// <summary>
@@ -28,8 +30,7 @@ public sealed class LiveTelemetryCounters
     private readonly DateTime _startedAt;
     private readonly long _startedSecond;
     private readonly Lock _gate = new();
-    private readonly long[] _bucketSecond = new long[WindowSeconds];
-    private readonly int[] _counts = new int[WindowSeconds * Counter.Count];
+    private readonly RollingCounts _counts = new(WindowSeconds);
     private readonly LatencySamples _requestLatency = new(LatencySampleCapacity);
     private readonly LatencySamples _sqlLatency = new(LatencySampleCapacity);
     private readonly CpuUsage _cpu;
@@ -50,11 +51,10 @@ public sealed class LiveTelemetryCounters
     {
         _timeProvider = timeProvider;
         _processMeter = processMeter;
-        Array.Fill(_bucketSecond, long.MinValue);
         var now = timeProvider.GetUtcNow().UtcTicks;
         _startedAt = new DateTime(now - now % TimeSpan.TicksPerSecond, DateTimeKind.Utc);
         _startedSecond = NowMilliseconds() / 1000;
-        _cpu = new CpuUsage(NowMilliseconds(), processMeter.CpuTime, processMeter.ProcessorCount);
+        _cpu = new CpuUsage(NowMilliseconds(), processMeter.CpuTime, processMeter.ProcessorCount, CpuSampleSeconds * 1000L);
     }
 
     /// <summary>
@@ -77,25 +77,14 @@ public sealed class LiveTelemetryCounters
         lock (_gate)
         {
             SampleCpuWhenDue(nowMs);
-            switch (kind)
+            if (!CountTraffic(nowMs, kind))
             {
-                case RequestKind.FrontDoorProbe:
-                    Increment(nowMs, Counter.FrontDoorProbes);
-                    return;
-                case RequestKind.Probe:
-                    Increment(nowMs, Counter.Probes);
-                    return;
-                case RequestKind.FrontDoorTraffic:
-                    Increment(nowMs, Counter.FrontDoorTraffic);
-                    break;
-                default:
-                    Increment(nowMs, Counter.DirectTraffic);
-                    break;
+                return;
             }
 
             if (statusCode >= StatusCodes.Status500InternalServerError)
             {
-                Increment(nowMs, Counter.TrafficErrors);
+                _counts.Increment(nowMs, Counter.TrafficErrors);
             }
 
             if (elapsed is { } duration)
@@ -103,6 +92,20 @@ public sealed class LiveTelemetryCounters
                 _requestLatency.Add(nowMs, ToWholeMilliseconds(duration));
             }
         }
+    }
+
+    /// <summary>Counts the request by kind; true when it is traffic (probes have no errors or latency).</summary>
+    private bool CountTraffic(long nowMs, RequestKind kind)
+    {
+        var counter = kind switch
+        {
+            RequestKind.FrontDoorProbe => Counter.FrontDoorProbes,
+            RequestKind.Probe => Counter.Probes,
+            RequestKind.FrontDoorTraffic => Counter.FrontDoorTraffic,
+            _ => Counter.DirectTraffic
+        };
+        _counts.Increment(nowMs, counter);
+        return counter is Counter.FrontDoorTraffic or Counter.DirectTraffic;
     }
 
     /// <summary>
@@ -114,10 +117,10 @@ public sealed class LiveTelemetryCounters
         var nowMs = NowMilliseconds();
         lock (_gate)
         {
-            Increment(nowMs, Counter.SqlCommands);
+            _counts.Increment(nowMs, Counter.SqlCommands);
             if (duringRequest)
             {
-                Increment(nowMs, Counter.SqlCommandsDuringRequests);
+                _counts.Increment(nowMs, Counter.SqlCommandsDuringRequests);
             }
 
             _sqlLatency.Add(nowMs, ToWholeMilliseconds(elapsed));
@@ -130,7 +133,7 @@ public sealed class LiveTelemetryCounters
         var nowMs = NowMilliseconds();
         lock (_gate)
         {
-            Increment(nowMs, Counter.HttpClientCalls);
+            _counts.Increment(nowMs, Counter.HttpClientCalls);
         }
     }
 
@@ -144,7 +147,7 @@ public sealed class LiveTelemetryCounters
         var nowMs = NowMilliseconds();
         lock (_gate)
         {
-            Increment(nowMs, Counter.UnhandledExceptions);
+            _counts.Increment(nowMs, Counter.UnhandledExceptions);
         }
     }
 
@@ -153,7 +156,7 @@ public sealed class LiveTelemetryCounters
     {
         var nowMs = NowMilliseconds();
         var nowSecond = nowMs / 1000;
-        Span<int> totals = stackalloc int[Counter.Count];
+        CounterTotals totals;
         int? requestP95;
         int? sqlP95;
         double cpuPercent;
@@ -161,46 +164,29 @@ public sealed class LiveTelemetryCounters
         {
             SampleCpuWhenDue(nowMs);
             cpuPercent = _cpu.Percent;
-            for (var bucket = 0; bucket < WindowSeconds; bucket++)
-            {
-                var second = _bucketSecond[bucket];
-                if (second <= nowSecond - WindowSeconds || second > nowSecond)
-                {
-                    continue;
-                }
-
-                for (var counter = 0; counter < Counter.Count; counter++)
-                {
-                    totals[counter] += _counts[bucket * Counter.Count + counter];
-                }
-            }
-
+            totals = _counts.Totals(nowSecond);
             requestP95 = _requestLatency.Percentile95(nowMs - WindowMilliseconds);
             sqlP95 = _sqlLatency.Percentile95(nowMs - WindowMilliseconds);
         }
 
-        var frontDoor = totals[Counter.FrontDoorTraffic];
-        var direct = totals[Counter.DirectTraffic];
         return new LiveTelemetrySnapshot(
             WindowSeconds,
             _startedAt,
-            new RequestCounts(frontDoor + direct, frontDoor, direct, totals[Counter.TrafficErrors], requestP95),
-            new ProbeCounts(totals[Counter.Probes], totals[Counter.FrontDoorProbes]),
-            new SqlCounts(
-                totals[Counter.SqlCommands],
-                totals[Counter.SqlCommandsDuringRequests],
-                totals[Counter.SqlCommands] - totals[Counter.SqlCommandsDuringRequests],
-                sqlP95),
-            new HttpClientCounts(totals[Counter.HttpClientCalls]),
-            new ProcessVitals(
-                cpuPercent,
-                ToWholeMegabytes(_processMeter.WorkingSetBytes),
-                ToWholeMegabytes(_processMeter.GcHeapBytes),
-                _processMeter.ThreadPoolThreads,
-                Volatile.Read(ref _inFlight),
-                totals[Counter.UnhandledExceptions],
-                Math.Max(0, nowSecond - _startedSecond)));
+            totals.Requests(requestP95),
+            totals.Probes(),
+            totals.Sql(sqlP95),
+            totals.HttpClient(),
+            Vitals(cpuPercent, totals.UnhandledExceptions, nowSecond));
     }
+
+    private ProcessVitals Vitals(double cpuPercent, int unhandledExceptions, long nowSecond) =>
+        new(cpuPercent,
+            ToWholeMegabytes(_processMeter.WorkingSetBytes),
+            ToWholeMegabytes(_processMeter.GcHeapBytes),
+            _processMeter.ThreadPoolThreads,
+            Volatile.Read(ref _inFlight),
+            unhandledExceptions,
+            Math.Max(0, nowSecond - _startedSecond));
 
     private long NowMilliseconds() => _timeProvider.GetUtcNow().ToUnixTimeMilliseconds();
 
@@ -213,112 +199,9 @@ public sealed class LiveTelemetryCounters
         }
     }
 
-    private void Increment(long nowMs, int counter)
-    {
-        var second = nowMs / 1000;
-        var bucket = (int)(second % WindowSeconds);
-        if (_bucketSecond[bucket] != second)
-        {
-            _bucketSecond[bucket] = second;
-            Array.Clear(_counts, bucket * Counter.Count, Counter.Count);
-        }
-
-        _counts[bucket * Counter.Count + counter]++;
-    }
-
     private static int ToWholeMilliseconds(TimeSpan elapsed) =>
         (int)Math.Clamp(Math.Round(elapsed.TotalMilliseconds, MidpointRounding.AwayFromZero), 0, int.MaxValue);
 
     private static long ToWholeMegabytes(long bytes) =>
         (long)Math.Round(bytes / BytesPerMegabyte, MidpointRounding.AwayFromZero);
-
-    private static class Counter
-    {
-        public const int FrontDoorTraffic = 0;
-        public const int DirectTraffic = 1;
-        public const int TrafficErrors = 2;
-        public const int Probes = 3;
-        public const int FrontDoorProbes = 4;
-        public const int SqlCommands = 5;
-        public const int HttpClientCalls = 6;
-        public const int UnhandledExceptions = 7;
-        public const int SqlCommandsDuringRequests = 8;
-        public const int Count = 9;
-    }
-
-    /// <summary>
-    /// CPU use between two samples as a percentage of all processors available to the process; not thread-safe
-    /// on its own (the owner holds the lock). Zero until the first interval has passed.
-    /// </summary>
-    private sealed class CpuUsage(long startedMs, TimeSpan cpuTime, int processorCount)
-    {
-        private const long SampleMilliseconds = CpuSampleSeconds * 1000L;
-
-        private readonly int _processorCount = Math.Max(1, processorCount);
-        private long _sampledAtMs = startedMs;
-        private TimeSpan _cpuTime = cpuTime;
-
-        /// <summary>Percentage over the last sampled interval: 0 to 100, one decimal.</summary>
-        public double Percent { get; private set; }
-
-        /// <summary>True when the previous sample is a full interval old, or the clock went back.</summary>
-        public bool IsDue(long nowMs) => nowMs < _sampledAtMs || nowMs - _sampledAtMs >= SampleMilliseconds;
-
-        public void Sample(long nowMs, TimeSpan cpuTime)
-        {
-            var wallMs = nowMs - _sampledAtMs;
-            if (wallMs > 0)
-            {
-                var usedMs = (cpuTime - _cpuTime).TotalMilliseconds;
-                var percent = 100.0 * usedMs / (wallMs * (double)_processorCount);
-                Percent = Math.Round(Math.Clamp(percent, 0, 100), 1, MidpointRounding.AwayFromZero);
-            }
-
-            _sampledAtMs = nowMs;
-            _cpuTime = cpuTime;
-        }
-    }
-
-    /// <summary>
-    /// Ring buffer of (time, milliseconds) samples; not thread-safe on its own (the owner holds the lock).
-    /// </summary>
-    private sealed class LatencySamples(int capacity)
-    {
-        private readonly long[] _times = new long[capacity];
-        private readonly int[] _values = new int[capacity];
-        private readonly int[] _scratch = new int[capacity];
-        private int _next;
-        private int _count;
-
-        public void Add(long timeMs, int valueMs)
-        {
-            _times[_next] = timeMs;
-            _values[_next] = valueMs;
-            _next = (_next + 1) % _times.Length;
-            _count = Math.Min(_count + 1, _times.Length);
-        }
-
-        /// <summary>Nearest-rank 95th percentile of the samples newer than <paramref name="afterMs"/>.</summary>
-        public int? Percentile95(long afterMs)
-        {
-            var selected = 0;
-            for (var i = 0; i < _count; i++)
-            {
-                if (_times[i] > afterMs)
-                {
-                    _scratch[selected++] = _values[i];
-                }
-            }
-
-            if (selected == 0)
-            {
-                return null;
-            }
-
-            var window = _scratch.AsSpan(0, selected);
-            window.Sort();
-            var rank = (int)Math.Ceiling(0.95 * selected);
-            return window[rank - 1];
-        }
-    }
 }

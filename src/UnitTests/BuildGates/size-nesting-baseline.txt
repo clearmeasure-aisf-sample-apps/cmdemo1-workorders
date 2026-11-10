@@ -17,8 +17,6 @@ file src/UI.Shared/Pages/WorkOrderManage.razor
 file src/UI.Shared/Pages/WorkOrderManage.razor.cs
 file src/UI.Shared/Pages/WorkOrderSearch.razor
 file src/UI.Shared/Pages/WorkOrderSearch.razor.cs
-file src/UI/Server/LiveTelemetry/LiveTelemetryCounters.cs
-file src/UI/Server/ServerApplication.cs
 file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
 file src/UnitTests/UI.Shared/MainLayoutTests.cs
 file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs
@@ -227,22 +225,6 @@ method src/LlmGateway/TranslationService.cs TranslationService.TranslateAsync(st
 method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.LoadWorkOrder()
 method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.SubmitAsync()
 method src/UI.Shared/Pages/WorkOrderManage.razor.cs WorkOrderManage.ToggleDictationAsync(DictationTarget)
-method src/UI/Api/Controllers/EnvironmentStatusController.cs EnvironmentStatusController.BuildResponse()
-method src/UI/Api/Controllers/WorkOrdersBulkImportController.cs WorkOrdersBulkImportController.Post(IFormFile,CancellationToken)
-method src/UI/Client/UIClientServiceRegistry.cs UIClientServiceRegistry.UIClientServiceRegistry()
-method src/UI/Server/DetailedHealthCheckResponseWriter.cs DetailedHealthCheckResponseWriter.WriteAsync(HttpContext,HealthReport)
-method src/UI/Server/LiveTelemetry/LiveTelemetryCounters.cs LiveTelemetryCounters.RecordRequest(RequestKind,int,TimeSpan?)
-method src/UI/Server/LiveTelemetry/LiveTelemetryCounters.cs LiveTelemetryCounters.Snapshot()
-method src/UI/Server/LiveTelemetry/LiveTelemetryMiddleware.cs LiveTelemetryMiddleware.InvokeAsync(HttpContext)
-method src/UI/Server/Middleware/IdempotencyMiddleware.cs IdempotencyMiddlewareHandler.HandleAsync(HttpContext,RequestDelegate,IMemoryCache,ConcurrentDictionary<string,SemaphoreSlim>,IOptionsMonitor<IdempotencyOptions>)
-method src/UI/Server/Middleware/IdempotencyResponseCache.cs IdempotencyResponseCache.ProcessUnderLockAsync(HttpContext,RequestDelegate,IMemoryCache,ConcurrentDictionary<string,SemaphoreSlim>,string,string,IdempotencyOptions)
-method src/UI/Server/Middleware/WebServiceMessageValidationMiddleware.cs WebServiceMessagePayloadValidator.ValidatePayloadAsync(object,IServiceProvider,CancellationToken)
-method src/UI/Server/Middleware/WebServiceMessageValidationMiddleware.cs WebServiceMessageValidationPipeline.InvokeAsync(HttpContext,RequestDelegate,IValidator<WebServiceMessage>,IServiceProvider,ILogger<WebServiceMessageValidationMiddleware>)
-method src/UI/Server/RateLimiting/RateLimitingPipeline.cs RateLimitingPipeline.InvokeAsync(HttpContext,RequestDelegate,IOptionsMonitor<ApiRateLimitingOptions>,PartitionedRateLimiter<HttpContext>)
-method src/UI/Server/ServerApplication.cs ServerApplication.ConfigurePipeline(WebApplication)
-method src/UI/Server/ServerApplication.cs ServerApplication.MapTestingEndpoints(WebApplication)
-method src/UI/Server/ServerApplication.cs ServerApplication.RegisterServices(WebApplicationBuilder)
-method src/UI/Server/UIServiceRegistry.cs UiServiceRegistry.UiServiceRegistry()
 method src/UnitTests/Analyzers/DataAccessNPlusOneCanaryTests.cs DataAccessNPlusOneCanaryTests.TryReadDiagnostic(string)
 method src/UnitTests/Analyzers/DataAccessNPlusOneCanaryTests.cs DataAccessNPlusOneCanaryTests.WriteProject(string,string,IReadOnlyList<PackageReference>)
 method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportCm0001_When_LoopAwaitsSameTypeHelperThatAwaitsBus()
@@ -345,11 +327,6 @@ parameters src/UI/Api/MetricsSummaryResponse.cs MetricsSummaryResponse(TimeSpan,
 parameters src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs LiveTelemetrySnapshot(int,DateTime,RequestCounts,ProbeCounts,SqlCounts,HttpClientCounts,ProcessVitals)
 parameters src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs ProcessVitals(double,long,long,int,int,int,long)
 parameters src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs RequestCounts(int,int,int,int,int?)
-parameters src/UI/Server/Middleware/IdempotencyMiddleware.cs IdempotencyMiddlewareHandler.HandleAsync(HttpContext,RequestDelegate,IMemoryCache,ConcurrentDictionary<string,SemaphoreSlim>,IOptionsMonitor<IdempotencyOptions>)
-parameters src/UI/Server/Middleware/IdempotencyResponseCache.cs IdempotencyResponseCache.CacheSuccessfulResponse(IMemoryCache,string,string,HttpResponse,MemoryStream,IdempotencyOptions)
-parameters src/UI/Server/Middleware/IdempotencyResponseCache.cs IdempotencyResponseCache.ExecuteCaptureAndForwardAsync(HttpContext,RequestDelegate,IMemoryCache,string,string,IdempotencyOptions)
-parameters src/UI/Server/Middleware/IdempotencyResponseCache.cs IdempotencyResponseCache.ProcessUnderLockAsync(HttpContext,RequestDelegate,IMemoryCache,ConcurrentDictionary<string,SemaphoreSlim>,string,string,IdempotencyOptions)
-parameters src/UI/Server/Middleware/WebServiceMessageValidationMiddleware.cs WebServiceMessageValidationPipeline.InvokeAsync(HttpContext,RequestDelegate,IValidator<WebServiceMessage>,IServiceProvider,ILogger<WebServiceMessageValidationMiddleware>)
 parameters src/UnitTests/Core/Handlers/EmployeeWorkLoadSummaryQueryHandlerTests.cs EmployeeWorkLoadSummaryQueryHandlerTests.Employee(string,string,string,bool,params string[])
 parameters src/UnitTests/Core/Handlers/EmployeeWorkLoadSummaryQueryHandlerTests.cs EmployeeWorkLoadSummaryQueryHandlerTests.Order(string,Employee,Employee?,WorkOrderStatus,DateOnly?,DateTime?)
 parameters src/UnitTests/UI.Server/BuildFacts/BuildFactsProviderTests.cs BuildFactsProviderTests.StubLogger.Log<1>(LogLevel,EventId,TState,Exception?,Func<TState,Exception?,string>)
