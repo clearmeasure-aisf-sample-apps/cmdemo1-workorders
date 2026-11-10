@@ -31,7 +31,7 @@ public class TeamWorkLoadTableTests
         await using var ctx = new BunitContext();
         var table = ctx.Render<TeamWorkLoadTable>(parameters => parameters.Add(p => p.Summaries, TwoEmployees));
 
-        table.Find(".col-assigned-open .sort-header").Click();
+        await table.Find(".col-assigned-open .sort-header").ClickAsync(new());
 
         RowNames(table).ShouldBe([$"{TeamsAndVendors.Elements.TableRowName}amy", $"{TeamsAndVendors.Elements.TableRowName}zed"]);
         table.Find(".col-assigned-open .sort-indicator").TextContent.Trim().ShouldBe("▼");

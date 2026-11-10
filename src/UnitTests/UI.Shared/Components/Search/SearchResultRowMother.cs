@@ -45,7 +45,7 @@ public static class SearchResultRowMother
         };
     }
 
-    public static WorkOrderSearchResultRow[] Numbered(params string[] numbers) => numbers.Select(n => Unassigned(n)).ToArray();
+    public static WorkOrderSearchResultRow[] Numbered(params string[] numbers) => numbers.Select(Unassigned).ToArray();
 
     private static WorkOrder WorkOrderNumbered(string number) =>
         new() { Number = number, Title = $"Work order {number}", Status = WorkOrderStatus.Draft, Priority = WorkOrderPriority.Medium };

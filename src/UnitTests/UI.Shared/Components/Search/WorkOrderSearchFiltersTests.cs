@@ -2,6 +2,7 @@ using Bunit;
 using ClearMeasure.Bootcamp.UI.Shared.Components.Search;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using Microsoft.AspNetCore.Components;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.Search;
@@ -34,7 +35,7 @@ public class WorkOrderSearchFiltersTests
             .Add(p => p.UserOptions, Users)
             .Add(p => p.OnChanged, () => changes++));
 
-        filters.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").Change("ned");
+        await filters.Find($"#{WorkOrderSearch.Elements.CreatorSelect}").ChangeAsync(new ChangeEventArgs { Value = "ned" });
 
         values.Creator.ShouldBe("ned");
         changes.ShouldBe(1);

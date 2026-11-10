@@ -13,7 +13,6 @@ public partial class WorkOrderSearchTable
 {
     private ElementReference _selectAllCheckbox;
     private string? _openRowMenu;
-    private SearchPageScript? _script;
 
     [Inject] private IJSRuntime Js { get; set; } = null!;
 
@@ -99,5 +98,5 @@ public partial class WorkOrderSearchTable
         }
     }
 
-    private SearchPageScript Script => _script ??= new SearchPageScript(Js);
+    private SearchPageScript Script => field ??= new SearchPageScript(Js);
 }

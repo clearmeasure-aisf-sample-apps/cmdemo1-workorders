@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.UI.Shared.Components.Search;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
+using Microsoft.AspNetCore.Components;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.Search;
@@ -33,11 +34,11 @@ public class SearchSavedViewsMenuTests
         var menu = ctx.Render<SearchSavedViewsMenu>(parameters => parameters
             .Add(p => p.CurrentUserName, "ada")
             .Add(p => p.CurrentQuery, "Status=Assigned"));
-        menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewsButton}']").Click();
-        menu.Find($"[data-testid='{WorkOrderSearch.Elements.SaveCurrentViewButton}']").Click();
-        menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewNameInput}']").Input("My assigned");
+        await menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewsButton}']").ClickAsync(new());
+        await menu.Find($"[data-testid='{WorkOrderSearch.Elements.SaveCurrentViewButton}']").ClickAsync(new());
+        await menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewNameInput}']").InputAsync(new ChangeEventArgs { Value = "My assigned" });
 
-        menu.Find("form.save-view-form").Submit();
+        await menu.Find("form.save-view-form").SubmitAsync();
 
         bus.LastSaveCommand.ShouldBe(new SaveSearchViewCommand("ada", "My assigned", "Status=Assigned"));
     }
@@ -47,11 +48,11 @@ public class SearchSavedViewsMenuTests
     {
         await using var ctx = ComponentContextBuilder.WithStubBuses();
         var menu = ctx.Render<SearchSavedViewsMenu>(parameters => parameters.Add(p => p.CurrentQuery, "Status=Assigned"));
-        menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewsButton}']").Click();
-        menu.Find($"[data-testid='{WorkOrderSearch.Elements.SaveCurrentViewButton}']").Click();
-        menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewNameInput}']").Input("My assigned");
+        await menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewsButton}']").ClickAsync(new());
+        await menu.Find($"[data-testid='{WorkOrderSearch.Elements.SaveCurrentViewButton}']").ClickAsync(new());
+        await menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewNameInput}']").InputAsync(new ChangeEventArgs { Value = "My assigned" });
 
-        menu.Find("form.save-view-form").Submit();
+        await menu.Find("form.save-view-form").SubmitAsync();
 
         menu.Find($"[data-testid='{WorkOrderSearch.Elements.SavedViewError}']").TextContent.ShouldBe("Sign in to save a view.");
     }

@@ -32,7 +32,7 @@ public class SearchPaginationTests
             .Add(p => p.Page, WorkOrderSearchPager.GetPage(ThreePagesOfRows, 1))
             .Add(p => p.OnPageSelected, page => chosen = page));
 
-        pagination.Find($"[data-testid='{WorkOrderSearch.Elements.PageButton}2']").Click();
+        await pagination.Find($"[data-testid='{WorkOrderSearch.Elements.PageButton}2']").ClickAsync(new());
 
         chosen.ShouldBe(2);
     }

@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components.Search;
@@ -9,7 +8,6 @@ using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
