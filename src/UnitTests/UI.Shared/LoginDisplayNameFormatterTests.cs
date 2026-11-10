@@ -31,9 +31,15 @@ public class LoginDisplayNameFormatterTests
     }
 
     [Test]
-    public void FormatForLoginDropdown_WhitespaceOnly_PreservesLengthAndCaseMapsToUpperInvariant()
+    public void FormatForLoginDropdown_WhitespaceOnly_ReturnsEmpty()
     {
-        LoginDisplayNameFormatter.FormatForLoginDropdown("  \t ").ShouldBe("  \t ".ToUpperInvariant());
+        LoginDisplayNameFormatter.FormatForLoginDropdown("  \t ").ShouldBe(string.Empty);
+    }
+
+    [Test]
+    public void FormatForLoginDropdown_PaddedMixedCase_TrimsThenUppercases()
+    {
+        LoginDisplayNameFormatter.FormatForLoginDropdown("  jane doe  ").ShouldBe("JANE DOE");
     }
 
     [Test]
