@@ -36,4 +36,36 @@ public class VendorTests
         Vendor.EmailAddressMaxLength.ShouldBe(255);
         Vendor.PhoneNumberMaxLength.ShouldBe(50);
     }
+
+    [Test]
+    public void HasContactEmail_WhenEmailAddressIsNull_ShouldReturnFalse()
+    {
+        var vendor = new Vendor { EmailAddress = null };
+
+        vendor.HasContactEmail.ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasContactEmail_WhenEmailAddressIsEmpty_ShouldReturnFalse()
+    {
+        var vendor = new Vendor { EmailAddress = string.Empty };
+
+        vendor.HasContactEmail.ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasContactEmail_WhenEmailAddressIsWhitespace_ShouldReturnFalse()
+    {
+        var vendor = new Vendor { EmailAddress = "   " };
+
+        vendor.HasContactEmail.ShouldBeFalse();
+    }
+
+    [Test]
+    public void HasContactEmail_WhenEmailAddressHasValue_ShouldReturnTrue()
+    {
+        var vendor = new Vendor { EmailAddress = "a@b.com" };
+
+        vendor.HasContactEmail.ShouldBeTrue();
+    }
 }
