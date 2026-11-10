@@ -1,0 +1,52 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+@if (Teams.Count == 0)
+{
+    <div class="teams-empty-state" data-testid="@TeamsAndVendors.Elements.TeamsEmptyState">
+        <p>No teams found.</p>
+    </div>
+}
+else
+{
+    <section class="teams-section" aria-labelledby="teams-section-heading">
+        <h2 id="teams-section-heading">Teams</h2>
+        <div class="teams-grid">
+            @foreach (var team in Teams)
+            {
+                <div class="team-card" data-testid="@($"{TeamsAndVendors.Elements.TeamCard}{team.Id}")">
+                    <h3 class="team-name" data-testid="@($"{TeamsAndVendors.Elements.TeamName}{team.Id}")">@team.Name</h3>
+                    @if (!string.IsNullOrWhiteSpace(team.Description))
+                    {
+                        <p class="team-description" data-testid="@($"{TeamsAndVendors.Elements.TeamDescription}{team.Id}")">@team.Description</p>
+                    }
+                    <div class="team-info" data-testid="@($"{TeamsAndVendors.Elements.TeamInfo}{team.Id}")">
+                        <span class="member-count" data-testid="@($"{TeamsAndVendors.Elements.TeamMemberCount}{team.Id}")">
+                            @team.MemberCount member@(team.MemberCount != 1 ? "s" : string.Empty)
+                        </span>
+                    </div>
+                    @if (team.Members.Count > 0)
+                    {
+                        <div class="team-members" data-testid="@($"{TeamsAndVendors.Elements.TeamMembers}{team.Id}")">
+                            @foreach (var member in team.Members)
+                            {
+                                <a href="@TeamWorkLoadTable.OpenWorkSearch(member.UserName)" class="member-avatar-link"
+                                   data-testid="@($"{TeamsAndVendors.Elements.TeamMemberLink}{member.UserName}")"
+                                   title="@member.GetFullName()">
+                                    <span class="avatar @UserDisplay.AvatarCssClass(member.UserName)" aria-hidden="true">
+                                        @UserDisplay.Initials(member)
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@code {
+
+    [Parameter, EditorRequired] public IReadOnlyList<Team> Teams { get; set; } = [];
+}

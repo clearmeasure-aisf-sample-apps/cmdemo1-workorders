@@ -1,0 +1,101 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+<section class="filters-card" aria-labelledby="filters-heading">
+    <div class="filters-card-header">
+        <h2 id="filters-heading" class="card-title">Filters</h2>
+        <button id="@WorkOrderSearch.Elements.ClearFiltersButton" type="button" class="link-button" disabled="@(!HasActiveFilters)" @onclick="OnClear">
+            Clear all
+        </button>
+    </div>
+    <EditForm Model="@Filters">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label" for="@WorkOrderSearch.Elements.CreatorSelect">Creator</label>
+                <InputSelect id="@WorkOrderSearch.Elements.CreatorSelect" @bind-Value="Filters.Creator" @bind-Value:after="Changed" class="@SelectClass(Filters.Creator)">
+                    <option value="">Anyone</option>
+                    @foreach (var user in UserOptions)
+                    {
+                        <option value="@user.Value">@user.Text</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="@WorkOrderSearch.Elements.AssigneeSelect">Assignee</label>
+                <InputSelect id="@WorkOrderSearch.Elements.AssigneeSelect" @bind-Value="Filters.Assignee" @bind-Value:after="Changed" class="@SelectClass(AssigneeLocked ? null : Filters.Assignee)" disabled="@AssigneeLocked">
+                    <option value="">Anyone</option>
+                    @foreach (var user in UserOptions)
+                    {
+                        <option value="@user.Value">@user.Text</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="@WorkOrderSearch.Elements.StatusSelect">Status</label>
+                <InputSelect id="@WorkOrderSearch.Elements.StatusSelect" @bind-Value="Filters.Status" @bind-Value:after="Changed" class="@SelectClass(Filters.Status)">
+                    <option value="">All statuses</option>
+                    @foreach (var status in StatusOptions)
+                    {
+                        <option value="@status.Value">@status.Text</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="@WorkOrderSearch.Elements.PrioritySelect">Priority</label>
+                <InputSelect id="@WorkOrderSearch.Elements.PrioritySelect" @bind-Value="Filters.Priority" @bind-Value:after="Changed" class="@SelectClass(Filters.Priority)">
+                    <option value="">All priorities</option>
+                    @foreach (var priority in PriorityOptions)
+                    {
+                        <option value="@priority">@priority</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="@WorkOrderSearch.Elements.BuildingSelect">Building</label>
+                <InputSelect id="@WorkOrderSearch.Elements.BuildingSelect" @bind-Value="Filters.Building" @bind-Value:after="Changed" class="@SelectClass(Filters.Building)">
+                    <option value="">All buildings</option>
+                    @foreach (var building in BuildingOptions)
+                    {
+                        <option value="@building">@building</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="@WorkOrderSearch.Elements.RoomInput">Room</label>
+                <InputText id="@WorkOrderSearch.Elements.RoomInput" @bind-Value="Filters.Room" @bind-Value:after="Changed" class="@RoomInputClass(Filters.Room)" maxlength="@WorkOrder.RoomNumberMaxLength" />
+            </div>
+        </div>
+    </EditForm>
+</section>
+
+@code {
+
+    private static readonly string[] PriorityOptions = Enum.GetNames<WorkOrderPriority>();
+
+    /// <summary>The filter values; the controls bind to them and raise <see cref="OnChanged"/> after each change.</summary>
+    [Parameter, EditorRequired] public WorkOrderSearchModel.SearchFilters Filters { get; set; } = null!;
+
+    [Parameter] public IReadOnlyList<SelectListItem> UserOptions { get; set; } = [];
+    [Parameter] public IReadOnlyList<SelectListItem> StatusOptions { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> BuildingOptions { get; set; } = [];
+
+    /// <summary>True while "Assigned to me" is on: the assignee control is disabled and shows no value style.</summary>
+    [Parameter] public bool AssigneeLocked { get; set; }
+
+    [Parameter] public bool HasActiveFilters { get; set; }
+    [Parameter] public EventCallback OnChanged { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
+
+    private Task Changed() => OnChanged.InvokeAsync();
+
+    private static string SelectClass(string? value) =>
+        string.IsNullOrEmpty(value) ? "form-select filter-select" : "form-select filter-select has-value";
+
+    private static string RoomInputClass(string? value) =>
+        string.IsNullOrEmpty(value) ? "form-control filter-select" : "form-control filter-select has-value";
+}

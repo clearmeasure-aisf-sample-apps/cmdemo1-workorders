@@ -1,0 +1,15 @@
+@inherits ComponentBase
+
+@if (Row.Assignee is null)
+{
+    <span class="avatar avatar--empty" aria-hidden="true"></span>
+}
+else
+{
+    <span class="avatar @Row.AvatarCssClass" aria-hidden="true">@Row.AssigneeInitials</span>
+}
+
+@code {
+
+    [Parameter, EditorRequired] public WorkOrderSearchResultRow Row { get; set; } = null!;
+}

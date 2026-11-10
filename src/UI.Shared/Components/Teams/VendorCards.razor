@@ -1,0 +1,51 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+@if (Vendors.Count == 0)
+{
+    <div class="teams-empty-state" data-testid="@TeamsAndVendors.Elements.VendorsEmptyState">
+        <p>No vendors found.</p>
+    </div>
+}
+else
+{
+    <section class="vendors-section" aria-labelledby="vendors-section-heading">
+        <h2 id="vendors-section-heading">Vendors</h2>
+        <div class="vendors-grid">
+            @foreach (var vendor in Vendors)
+            {
+                <div class="vendor-card" data-testid="@($"{TeamsAndVendors.Elements.VendorCard}{vendor.Id}")">
+                    <div class="vendor-header" data-testid="@($"{TeamsAndVendors.Elements.VendorHeader}{vendor.Id}")">
+                        <h3 class="vendor-name" data-testid="@($"{TeamsAndVendors.Elements.VendorName}{vendor.Id}")">@vendor.Name</h3>
+                        <span class="vendor-status-pill @(vendor.IsActive ? "active" : "inactive")" data-testid="@($"{TeamsAndVendors.Elements.VendorStatus}{vendor.Id}")">@(vendor.IsActive ? "Active" : "Inactive")</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(vendor.Trade))
+                    {
+                        <p class="vendor-trade" data-testid="@($"{TeamsAndVendors.Elements.VendorTrade}{vendor.Id}")">@vendor.Trade</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(vendor.ContactName))
+                    {
+                        <p class="vendor-contact" data-testid="@($"{TeamsAndVendors.Elements.VendorContactName}{vendor.Id}")">@vendor.ContactName</p>
+                    }
+                    <div class="vendor-details">
+                        @if (!string.IsNullOrWhiteSpace(vendor.EmailAddress))
+                        {
+                            <p class="vendor-email" data-testid="@($"{TeamsAndVendors.Elements.VendorEmail}{vendor.Id}")">
+                                <a href="mailto:@vendor.EmailAddress">@vendor.EmailAddress</a>
+                            </p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(vendor.PhoneNumber))
+                        {
+                            <p class="vendor-phone" data-testid="@($"{TeamsAndVendors.Elements.VendorPhone}{vendor.Id}")">@vendor.PhoneNumber</p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@code {
+
+    [Parameter, EditorRequired] public IReadOnlyList<Vendor> Vendors { get; set; } = [];
+}

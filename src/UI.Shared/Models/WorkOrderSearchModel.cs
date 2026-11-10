@@ -1,4 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
@@ -26,6 +28,42 @@ public class WorkOrderSearchModel
 
         /// <summary>Room number to match exactly, or empty for every room.</summary>
         public string? Room { get; set; }
+
+        /// <summary>
+        /// Shows <paramref name="state"/> in the controls. With "Assigned to me" the assignee control shows
+        /// <paramref name="currentUserName"/>.
+        /// </summary>
+        public void Show(WorkOrderSearchUrlState state, string? currentUserName)
+        {
+            Creator = state.Creator;
+            Assignee = state.AssignedToMe ? currentUserName : state.Assignee;
+            Status = state.Status;
+            OverdueOnly = state.OverdueOnly;
+            WaitingOnVendorOnly = state.WaitingOnVendorOnly;
+            Priority = state.Priority?.ToString();
+            Building = state.Building;
+            Room = state.Room;
+        }
+
+        /// <summary>
+        /// The state the controls describe: <paramref name="current"/> with these filters, back on page 1. With
+        /// "Assigned to me" the assignee control is ignored.
+        /// </summary>
+        public WorkOrderSearchUrlState ToState(WorkOrderSearchUrlState current, bool assignedToMe) => current with
+        {
+            Creator = NullIfBlank(Creator),
+            Assignee = assignedToMe ? null : NullIfBlank(Assignee),
+            Status = NullIfBlank(Status),
+            Priority = Enum.TryParse<WorkOrderPriority>(Priority, out var priority) ? priority : null,
+            Building = NullIfBlank(Building),
+            Room = NullIfBlank(Room),
+            OverdueOnly = OverdueOnly,
+            WaitingOnVendorOnly = WaitingOnVendorOnly,
+            AssignedToMe = assignedToMe,
+            Page = 1
+        };
+
+        private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
     }
 }
 
@@ -45,6 +83,20 @@ public class WorkOrderSearchResultRow
     public string? DueDateUrgencyText { get; init; }
     public DueDateUrgency Urgency { get; init; }
 
+    /// <summary>The row for <paramref name="workOrder"/>, with its due date and urgency as of <paramref name="clock"/>.</summary>
+    public static WorkOrderSearchResultRow For(WorkOrder workOrder, TimeProvider clock)
+    {
+        var urgency = DueDateUrgencyCalculator.Calculate(workOrder, clock);
+        return new WorkOrderSearchResultRow
+        {
+            WorkOrder = workOrder,
+            DueDateDisplay = ClientDateFormatter.Format(workOrder.DueDate),
+            DueDateCssClass = DueDateUrgencyCalculator.CssClass(urgency),
+            DueDateUrgencyText = DueDateUrgencyCalculator.ScreenReaderText(urgency),
+            Urgency = urgency
+        };
+    }
+
     /// <summary>Number shown in the table, for example "WO-38173BA"; the stored number stays unprefixed.</summary>
     public string DisplayNumber => "WO-" + Number;
 
@@ -58,8 +110,5 @@ public class WorkOrderSearchResultRow
     public string AssigneeInitials => UserDisplay.Initials(Assignee);
 
     /// <summary>One of six avatar colours, stable for a given assignee.</summary>
-    public string AvatarCssClass => "avatar--" + AvatarIndex(Assignee?.UserName);
-
-    private static int AvatarIndex(string? userName) =>
-        (userName ?? string.Empty).Aggregate(0, (hash, c) => (hash * 31 + c) % 6);
+    public string AvatarCssClass => UserDisplay.AvatarCssClass(Assignee?.UserName);
 }

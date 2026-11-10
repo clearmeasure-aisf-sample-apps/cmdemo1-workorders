@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
 /// <summary>
-/// Text shown for a person in the user menu and assignee cells: initials, full name and roles.
+/// Text shown for a person in the user menu and assignee cells: initials, full name, roles and avatar colour.
 /// </summary>
 public static class UserDisplay
 {
@@ -21,6 +21,10 @@ public static class UserDisplay
         employee == null
             ? string.Empty
             : string.Join(" · ", employee.Roles.Select(r => r.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Order(StringComparer.OrdinalIgnoreCase));
+
+    /// <summary>One of six avatar colours ("avatar--0" to "avatar--5"), stable for a given user name.</summary>
+    public static string AvatarCssClass(string? userName) =>
+        "avatar--" + (userName ?? string.Empty).Aggregate(0, (hash, c) => (hash * 31 + c) % 6);
 
     private static bool HasFirstAndLastName(Employee? employee) =>
         employee is { FirstName: { } first, LastName: { } last } && !string.IsNullOrWhiteSpace(first) && !string.IsNullOrWhiteSpace(last);

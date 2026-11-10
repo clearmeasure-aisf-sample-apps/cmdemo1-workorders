@@ -35,6 +35,28 @@ public static class WorkOrderSearchSorter
             [SortColumns.DueDate] = SortByDueDate
         };
 
+    private static readonly Dictionary<string, string> Labels = new()
+    {
+        [SortColumns.Number] = "Work order", [SortColumns.Title] = "Title", [SortColumns.Status] = "Status",
+        [SortColumns.Priority] = "Priority", [SortColumns.Assignee] = "Assignee", [SortColumns.Room] = "Room",
+        [SortColumns.DueDate] = "Due date"
+    };
+
+    /// <summary>The sort control's options: newest first, then every column ascending and descending.</summary>
+    public static IReadOnlyList<(string Value, string Text)> Options { get; } =
+    [
+        (string.Empty, "Sort: Newest"),
+        .. SortColumns.All.SelectMany(column => new[]
+        {
+            ($"{column}:asc", $"Sort: {Labels[column]} ↑"),
+            ($"{column}:desc", $"Sort: {Labels[column]} ↓")
+        })
+    ];
+
+    /// <summary>The sort control value for a sort, for example "DueDate:desc"; empty when unsorted.</summary>
+    public static string OptionValue(string? column, bool descending) =>
+        column == null ? string.Empty : $"{column}:{(descending ? "desc" : "asc")}";
+
     /// <summary>True when <paramref name="column"/> is a known sortable column.</summary>
     private static bool IsSortable(string? column) => column != null && Sorters.ContainsKey(column);
 

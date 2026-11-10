@@ -1,5 +1,6 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Queries;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
@@ -131,6 +132,31 @@ public sealed record WorkOrderSearchUrlState
         string.IsNullOrEmpty(query) ? SearchPath : $"{SearchPath}?{query.TrimStart('?')}";
 
     /// <summary>The filter set a summary card applies; it replaces every other filter.</summary>
+    /// <summary>
+    /// The work-order query this state describes. The people filters are user names in the URL, so the caller
+    /// looks them up and passes the employees.
+    /// </summary>
+    public WorkOrderSpecificationQuery ToSpecification(Employee? creator, Employee? assignee)
+    {
+        var specification = new WorkOrderSpecificationQuery();
+        specification.MatchCreator(creator);
+        specification.MatchAssignee(assignee);
+        specification.MatchStatus(Status == null ? null : WorkOrderStatus.FromKey(Status));
+        specification.MatchOverdueOnly(OverdueOnly);
+        specification.MatchDueThisWeekOnly(DueThisWeekOnly);
+        specification.MatchWaitingOnVendorOnly(WaitingOnVendorOnly);
+        specification.MatchPriority(Priority);
+        specification.MatchBuilding(Building);
+        specification.MatchNoBuilding(NoBuilding);
+        specification.MatchRoom(Room);
+        specification.MatchNoRoom(NoRoom);
+        specification.MatchOpenOnly(OpenOnly);
+        specification.MatchCompletedWithinDays(CompletedWithinDays);
+        specification.MatchSearchText(Q);
+        specification.MatchDueDateOrder(Sort == SortColumns.DueDate, Descending);
+        return specification;
+    }
+
     public static WorkOrderSearchUrlState ForCard(SummaryCard card) => card switch
     {
         SummaryCard.AssignedToMe => new WorkOrderSearchUrlState { AssignedToMe = true, OpenOnly = true },

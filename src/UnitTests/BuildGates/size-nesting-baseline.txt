@@ -11,9 +11,6 @@ file src/AcceptanceTests/WorkOrders/WorkOrderSearchTests.cs
 file src/IntegrationTests/DataAccess/WorkOrderSpecificationHandlerTests.cs
 file src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs
 file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
-file src/UI.Shared/Pages/TeamsAndVendors.razor
-file src/UI.Shared/Pages/WorkOrderSearch.razor
-file src/UI.Shared/Pages/WorkOrderSearch.razor.cs
 file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
 file src/UnitTests/UI.Shared/MainLayoutTests.cs
 file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs

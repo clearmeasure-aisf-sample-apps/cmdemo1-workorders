@@ -1,0 +1,27 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+<nav aria-label="Pagination" class="pagination-nav">
+    <button type="button" class="page-button" data-testid="@WorkOrderSearch.Elements.PagePrevButton" disabled="@(!Page.HasPrevious)"
+            @onclick="() => OnPageSelected.InvokeAsync(Page.Page - 1)">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i> Prev
+    </button>
+    @foreach (var pageNumber in Page.PageNumbers)
+    {
+        var isCurrent = pageNumber == Page.Page;
+        <button type="button" class="@(isCurrent ? "page-button page-number is-current" : "page-button page-number")"
+                data-testid="@($"{WorkOrderSearch.Elements.PageButton}{pageNumber}")" aria-current="@(isCurrent ? "page" : null)"
+                aria-label="@($"Page {pageNumber}")" @onclick="() => OnPageSelected.InvokeAsync(pageNumber)">@pageNumber</button>
+    }
+    <button type="button" class="page-button" data-testid="@WorkOrderSearch.Elements.PageNextButton" disabled="@(!Page.HasNext)"
+            @onclick="() => OnPageSelected.InvokeAsync(Page.Page + 1)">
+        Next <i class="bi bi-chevron-right" aria-hidden="true"></i>
+    </button>
+</nav>
+
+@code {
+
+    [Parameter, EditorRequired] public SearchResultPage Page { get; set; } = null!;
+
+    [Parameter] public EventCallback<int> OnPageSelected { get; set; }
+}

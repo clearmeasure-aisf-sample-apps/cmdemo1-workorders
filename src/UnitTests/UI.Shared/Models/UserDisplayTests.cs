@@ -8,6 +8,15 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Models;
 public class UserDisplayTests
 {
     [Test]
+    public void AvatarCssClass_SameUserName_GetsTheSameOfSixColours()
+    {
+        var first = UserDisplay.AvatarCssClass("ada");
+
+        UserDisplay.AvatarCssClass("ada").ShouldBe(first);
+        first.ShouldBeOneOf("avatar--0", "avatar--1", "avatar--2", "avatar--3", "avatar--4", "avatar--5");
+    }
+
+    [Test]
     public void Initials_UsesFirstAndLastName()
     {
         UserDisplay.Initials(new Employee("ned", "ned", "Flanders", "n@x")).ShouldBe("NF");
