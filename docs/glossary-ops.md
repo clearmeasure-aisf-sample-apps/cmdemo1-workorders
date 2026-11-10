@@ -8,6 +8,7 @@
 - **Auto Merge** — a label that lets the AI Factory merge a pull request as soon as Functional Testing passes.
 - **AI Factory** — the automation that moves work items across the board and opens pull requests.
 - **Factory worker** — an AI session that takes a work item from the board and carries it through design, development and testing.
+- **AI ops bot** — machine user `cm-ai-ops-bot` that works issues assigned to it on the Clear Measure work orders demo 1 board through to production.
 - **Plant manager** — the supervising AI session that answers the questions factory workers raise about their work items.
 - **Release Queue** — the board column where the merged change waits for the release candidate that carries it.
 - **Functional Testing** — the board column where the change is validated against the work item before merge.
