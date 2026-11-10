@@ -13,6 +13,6 @@ public static class LoginDisplayNameFormatter
         if (string.IsNullOrEmpty(fullName))
             return string.Empty;
 
-        return fullName.ToUpperInvariant();
+        return fullName.Trim().ToUpperInvariant();
     }
 }
