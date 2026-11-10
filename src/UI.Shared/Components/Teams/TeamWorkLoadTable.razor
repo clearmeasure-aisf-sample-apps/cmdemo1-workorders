@@ -1,0 +1,110 @@
+@using ClearMeasure.Bootcamp.Core.Queries
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+@if (_rows.Count == 0)
+{
+    <div class="teams-empty-state">
+        <p>No assignable employees found.</p>
+    </div>
+}
+else
+{
+    <section class="teams-table-card" aria-labelledby="teams-table-heading">
+        <h2 id="teams-table-heading" class="visually-hidden">Teams and vendors list</h2>
+        <div class="table-scroll">
+            <table class="teams-table">
+                <thead>
+                <tr>
+                    <th class="col-name" scope="col">@SortHeader(SortColumn.Name, "Name")</th>
+                    <th class="col-role" scope="col">Role</th>
+                    <th class="col-assigned-open" scope="col">@SortHeader(SortColumn.OpenLoad, "Assigned Open")</th>
+                    <th class="col-in-progress" scope="col">In Progress</th>
+                    <th class="col-overdue" scope="col">Overdue</th>
+                    <th class="col-completed" scope="col">Completed 30d</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var row in _rows)
+                {
+                    var userName = row.Employee.UserName;
+                    <tr class="teams-table-row">
+                        <td class="col-name" data-testid="@($"{TeamsAndVendors.Elements.TableRowName}{userName}")">
+                            <a href="@OpenWorkSearch(userName)" class="assignee-link">
+                                <span class="avatar @UserDisplay.AvatarCssClass(userName)" aria-hidden="true">
+                                    @UserDisplay.Initials(row.Employee)
+                                </span>
+                                <span>@row.Employee.GetFullName()</span>
+                            </a>
+                        </td>
+                        <td class="col-role" data-testid="@($"{TeamsAndVendors.Elements.TableRowRole}{userName}")">
+                            @UserDisplay.Roles(row.Employee)
+                        </td>
+                        <td class="col-assigned-open" data-testid="@($"{TeamsAndVendors.Elements.TableRowAssignedOpen}{userName}")">
+                            @row.Load.AssignedAndOpen
+                        </td>
+                        <td class="col-in-progress" data-testid="@($"{TeamsAndVendors.Elements.TableRowInProgress}{userName}")">
+                            @row.Load.InProgress
+                        </td>
+                        <td class="col-overdue" data-testid="@($"{TeamsAndVendors.Elements.TableRowOverdue}{userName}")">
+                            @row.Load.Overdue
+                        </td>
+                        <td class="col-completed" data-testid="@($"{TeamsAndVendors.Elements.TableRowCompleted}{userName}")">
+                            @row.Load.CompletedLast30Days
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+@code {
+
+    private enum SortColumn
+    {
+        Name,
+        OpenLoad
+    }
+
+    private List<EmployeeWorkLoadSummary> _rows = [];
+    private SortColumn _sortColumn = SortColumn.Name;
+    private bool _sortAscending = true;
+
+    /// <summary>The assignable employees with their load; the table sorts them by name until a header is clicked.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<EmployeeWorkLoadSummary> Summaries { get; set; } = [];
+
+    /// <summary>The search for <paramref name="userName"/>'s open work orders.</summary>
+    public static string OpenWorkSearch(string userName) =>
+        $"workorder/search?Assignee={Uri.EscapeDataString(userName)}&OpenOnly=true";
+
+    protected override void OnParametersSet() => _rows = Sorted(Summaries);
+
+    private void HandleSortColumnClicked(SortColumn column)
+    {
+        _sortAscending = _sortColumn == column ? !_sortAscending : column == SortColumn.Name;
+        _sortColumn = column;
+        _rows = Sorted(_rows);
+    }
+
+    private List<EmployeeWorkLoadSummary> Sorted(IEnumerable<EmployeeWorkLoadSummary> rows) => (_sortColumn, _sortAscending) switch
+    {
+        (SortColumn.Name, true) => rows.OrderBy(r => r.Employee.LastName).ThenBy(r => r.Employee.FirstName).ToList(),
+        (SortColumn.Name, false) => rows.OrderByDescending(r => r.Employee.LastName).ThenByDescending(r => r.Employee.FirstName).ToList(),
+        (SortColumn.OpenLoad, true) => rows.OrderBy(r => r.Load.AssignedAndOpen).ToList(),
+        _ => rows.OrderByDescending(r => r.Load.AssignedAndOpen).ToList()
+    };
+
+    private RenderFragment SortHeader(SortColumn column, string label) =>
+        @<button type="button" class="@(_sortColumn == column ? "sort-header active-sort" : "sort-header")"
+                 @onclick="() => HandleSortColumnClicked(column)">
+            @label
+            @if (_sortColumn == column)
+            {
+                <span class="sort-indicator" aria-hidden="true">
+                    @(_sortAscending ? "▲" : "▼")
+                </span>
+            }
+        </button>;
+}

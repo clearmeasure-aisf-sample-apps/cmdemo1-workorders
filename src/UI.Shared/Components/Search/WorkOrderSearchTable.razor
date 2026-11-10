@@ -1,0 +1,103 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+<div class="table-scroll">
+    <table class="grid-data">
+        <thead>
+        <tr>
+            <th class="col-select" scope="col">
+                <input type="checkbox" id="@WorkOrderSearch.Elements.SelectAllCheckbox" data-testid="@WorkOrderSearch.Elements.SelectAllCheckbox"
+                       class="row-checkbox" aria-label="Select all work orders on this page"
+                       checked="@Selection.AllSelected(PageNumbers)" @ref="_selectAllCheckbox"
+                       @onchange="HandleSelectAllChanged"/>
+            </th>
+            @SortHeader(SortColumns.Number, WorkOrderSearch.Elements.SortByNumberButton, "Work Order", "col-number")
+            @SortHeader(SortColumns.Title, WorkOrderSearch.Elements.SortByTitleButton, "Title", "col-title")
+            @SortHeader(SortColumns.Status, WorkOrderSearch.Elements.SortByStatusButton, "Status", "col-status")
+            @SortHeader(SortColumns.Priority, WorkOrderSearch.Elements.SortByPriorityButton, "Priority", "col-priority")
+            @SortHeader(SortColumns.Assignee, WorkOrderSearch.Elements.SortByAssigneeButton, "Assignee", "col-assignee")
+            @SortHeader(SortColumns.Room, WorkOrderSearch.Elements.SortByRoomButton, "Room", "col-room")
+            @SortHeader(SortColumns.DueDate, WorkOrderSearch.Elements.SortByDueDateButton, "Due Date", "col-due")
+            <th class="col-actions" scope="col"><span class="visually-hidden">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var order in Rows)
+        {
+            var number = order.Number;
+            var pill = order.StatusPill;
+            <tr class="@RowClass(order)">
+                <td class="col-select">
+                    <input type="checkbox" data-testid="@($"{WorkOrderSearch.Elements.RowCheckbox}{number}")" class="row-checkbox"
+                           aria-label="@($"Select {order.DisplayNumber}")" checked="@Selection.IsSelected(number)"
+                           @onchange="() => HandleRowToggled(number)"/>
+                </td>
+                <td class="col-number">
+                    <a data-testid="@(WorkOrderSearch.Elements.WorkOrderLink + number)" href="/workorder/manage/@number?mode=Edit">@order.DisplayNumber</a>
+                </td>
+                <td class="col-title" data-testid="@($"{WorkOrderSearch.Elements.TitleCell}{number}")">@order.Title</td>
+                <td class="col-status" data-testid="@($"{WorkOrderSearch.Elements.StatusCell}{number}")">
+                    <span class="@pill.CssClass">@pill.Text</span>@if (pill.HiddenText != null)
+                    {
+                        <span class="visually-hidden">@pill.HiddenText</span>
+                    }
+                </td>
+                <td class="col-priority" data-testid="@($"{WorkOrderSearch.Elements.PriorityCell}{number}")">
+                    <WorkOrderPriorityLabel Row="order" ShowHighBadge="ShowPriorityBadges"/>
+                </td>
+                <td class="col-assignee" data-testid="@($"{WorkOrderSearch.Elements.AssigneeCell}{number}")">
+                    @if (order.Assignee is null)
+                    {
+                        <span class="assignee assignee--none"><AssigneeAvatar Row="order"/><span class="muted-cell">Unassigned</span></span>
+                    }
+                    else
+                    {
+                        <span class="assignee"><AssigneeAvatar Row="order"/><span>@order.Assignee.DisplayName</span></span>
+                    }
+                </td>
+                <td class="col-room" data-testid="@($"{WorkOrderSearch.Elements.RoomCell}{number}")">
+                    @if (string.IsNullOrWhiteSpace(order.WorkOrder.RoomNumber))
+                    {
+                        <span class="muted-cell" aria-label="No room">–</span>
+                    }
+                    else
+                    {
+                        <span class="room-text" title="@order.WorkOrder.RoomNumber">@order.WorkOrder.RoomNumber</span>
+                    }
+                </td>
+                <td class="col-due">
+                    <WorkOrderDueDate Row="order"/>
+                </td>
+                <td class="col-actions">
+                    <div class="menu-anchor" @onkeydown="HandleRowMenuKeyDown">
+                        <button type="button" class="row-menu-button" id="@($"row-menu-{number}")" data-testid="@($"{WorkOrderSearch.Elements.RowMenu}{number}")"
+                                aria-haspopup="menu" aria-expanded="@(_openRowMenu == number ? "true" : "false")"
+                                aria-label="@($"Actions for {order.DisplayNumber}")" @onclick="() => ToggleRowMenu(number)">
+                            <i class="bi bi-three-dots" aria-hidden="true"></i>
+                        </button>
+                        @if (_openRowMenu == number)
+                        {
+                            <ul class="popover-menu" role="menu" aria-label="@($"Actions for {order.DisplayNumber}")">
+                                <li role="presentation">
+                                    <a role="menuitem" class="popover-menu-item" data-testid="@($"{WorkOrderSearch.Elements.RowMenuOpen}{number}")"
+                                       href="/workorder/manage/@number?mode=Edit">Open</a>
+                                </li>
+                            </ul>
+                        }
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+    private RenderFragment SortHeader(string column, WorkOrderSearch.Elements testId, string label, string cssClass) =>
+        @<th class="@cssClass" scope="col" aria-sort="@AriaSort(column)">
+            <button id="@testId" type="button" class="@(SortColumn == column ? "sort-btn sort-active" : "sort-btn")" @onclick="() => OnSortBy.InvokeAsync(column)">
+                @SortLabel(column, label)
+            </button>
+        </th>;
+}

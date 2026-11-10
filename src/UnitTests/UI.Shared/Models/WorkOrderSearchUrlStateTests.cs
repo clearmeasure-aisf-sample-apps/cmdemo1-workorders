@@ -8,6 +8,20 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Models;
 public class WorkOrderSearchUrlStateTests
 {
     [Test]
+    public void ToSpecification_StateWithFilters_MatchesEachFilterAndTheGivenPeople()
+    {
+        var assignee = new Employee("ada", "Ada", "Lovelace", "ada@example.com");
+        var state = WorkOrderSearchUrlState.Default with { Status = "Assigned", Room = "B1", Sort = SortColumns.DueDate, Descending = true };
+
+        var specification = state.ToSpecification(creator: null, assignee);
+
+        specification.Assignee.ShouldBe(assignee);
+        specification.StatusKey.ShouldBe("Assigned");
+        specification.Room.ShouldBe("B1");
+        specification.DueDateDescending.ShouldBeTrue();
+    }
+
+    [Test]
     public void FromQuery_Empty_ReturnsDefaults()
     {
         var state = WorkOrderSearchUrlState.FromQuery(new Dictionary<string, string?>());

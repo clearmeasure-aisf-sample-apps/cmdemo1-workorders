@@ -1,0 +1,65 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+<div class="board-scroll">
+    <div class="board" data-testid="@WorkOrderSearch.Elements.BoardView">
+        @foreach (var column in WorkOrderBoard.Build(Results))
+        {
+            var key = column.Status.Key;
+            var headingId = $"board-column-{key}";
+            <section class="board-column" data-testid="@($"{WorkOrderSearch.Elements.BoardColumn}{key}")" aria-labelledby="@headingId">
+                <h3 id="@headingId" class="board-column-heading">
+                    <span class="@column.Pill.CssClass">@column.Pill.Text</span>
+                    <span class="board-column-count" data-testid="@($"{WorkOrderSearch.Elements.BoardColumnCount}{key}")">@column.Cards.Length</span>
+                </h3>
+                @if (column.Cards.Length == 0)
+                {
+                    <p class="board-column-empty" data-testid="@($"{WorkOrderSearch.Elements.BoardColumnEmpty}{key}")">No work orders</p>
+                }
+                else
+                {
+                    <ul class="board-cards">
+                        @foreach (var card in column.Cards)
+                        {
+                            <li>
+                                <a class="board-card" data-testid="@(WorkOrderSearch.Elements.BoardCard + card.Number)" href="/workorder/manage/@card.Number?mode=Edit">
+                                    <span class="board-card-number">@card.DisplayNumber</span>
+                                    <span class="board-card-title">@card.Title</span>
+                                    @if (card.WorkOrder.IsWaitingOnVendor)
+                                    {
+                                        <span class="@card.StatusPill.CssClass">@card.StatusPill.Text</span>
+                                    }
+                                    <span class="board-card-meta">
+                                        <WorkOrderPriorityLabel Row="card" ShowHighBadge="ShowPriorityBadges"/>
+                                        <span class="board-card-assignee"><AssigneeAvatar Row="card"/><span class="visually-hidden">@AssigneeText(card)</span></span>
+                                        @if (string.IsNullOrWhiteSpace(card.WorkOrder.RoomNumber))
+                                        {
+                                            <span class="board-card-room muted-cell" aria-label="No room">–</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="board-card-room">@card.WorkOrder.RoomNumber</span>
+                                        }
+                                    </span>
+                                    <span class="board-card-due"><WorkOrderDueDate Row="card"/></span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        }
+    </div>
+</div>
+
+@code {
+
+    /// <summary>Every search result; the board shows one column per status.</summary>
+    [Parameter, EditorRequired] public WorkOrderSearchResultRow[] Results { get; set; } = [];
+
+    [Parameter] public bool ShowPriorityBadges { get; set; }
+
+    /// <summary>Screen-reader text next to a card's avatar.</summary>
+    private static string AssigneeText(WorkOrderSearchResultRow card) =>
+        card.Assignee is null ? "Unassigned" : $"Assigned to {card.Assignee.DisplayName}";
+}

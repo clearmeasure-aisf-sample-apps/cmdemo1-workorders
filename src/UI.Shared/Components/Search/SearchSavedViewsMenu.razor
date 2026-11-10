@@ -1,0 +1,53 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+
+<div class="menu-anchor" @onkeydown="HandleKeyDown">
+    <button type="button" class="btn-app btn-app--secondary" data-testid="@WorkOrderSearch.Elements.SavedViewsButton"
+            aria-haspopup="menu" aria-expanded="@(_open ? "true" : "false")" aria-controls="saved-views-menu"
+            @ref="_button" @onclick="Toggle">
+        <i class="bi bi-bookmark" aria-hidden="true"></i> Saved views
+    </button>
+    <ul id="saved-views-menu" class="popover-menu" role="menu" aria-label="Saved views" hidden="@(!_open || _saveFormOpen)">
+        @foreach (var view in PresetViews)
+        {
+            <li role="presentation">
+                <a role="menuitem" class="popover-menu-item" href="@view.Href" @onclick="Close">@view.Name</a>
+            </li>
+        }
+        <li role="separator" class="popover-menu-separator"></li>
+        @foreach (var view in _userViews)
+        {
+            <li role="presentation" class="user-view-item">
+                <a role="menuitem" class="popover-menu-item" data-testid="@($"{WorkOrderSearch.Elements.UserSavedViewLink}{view.Name}")"
+                   href="@WorkOrderSearchUrlState.RelativeUriForQuery(view.Query)" @onclick="Close">@view.Name</a>
+                <button type="button" role="menuitem" class="user-view-delete" data-testid="@($"{WorkOrderSearch.Elements.UserSavedViewDeleteButton}{view.Name}")"
+                        aria-label="@($"Delete saved view {view.Name}")" title="Delete" @onclick="() => HandleDelete(view)">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+            </li>
+        }
+        @if (_deleteError is not null)
+        {
+            <li role="alert" class="save-view-error" data-testid="@WorkOrderSearch.Elements.SavedViewDeleteError">@_deleteError</li>
+        }
+        <li role="presentation">
+            <button type="button" role="menuitem" class="popover-menu-item" data-testid="@WorkOrderSearch.Elements.SaveCurrentViewButton"
+                    @onclick="OpenSaveForm">Save current view…</button>
+        </li>
+    </ul>
+    @if (_open && _saveFormOpen)
+    {
+        <form class="save-view-form" @onsubmit="HandleSave" @onsubmit:preventDefault>
+            <label for="saved-view-name" class="form-label">View name</label>
+            <input id="saved-view-name" type="text" class="form-control" maxlength="100"
+                   data-testid="@WorkOrderSearch.Elements.SavedViewNameInput" @ref="_nameInput" @bind="_newName" @bind:event="oninput" />
+            @if (_saveError is not null)
+            {
+                <div class="save-view-error" role="alert" data-testid="@WorkOrderSearch.Elements.SavedViewError">@_saveError</div>
+            }
+            <div class="save-view-actions">
+                <button type="submit" class="btn-app btn-app--primary" data-testid="@WorkOrderSearch.Elements.SavedViewSaveButton">Save</button>
+                <button type="button" class="btn-app btn-app--secondary" data-testid="@WorkOrderSearch.Elements.SavedViewCancelButton" @onclick="CancelSaveForm">Cancel</button>
+            </div>
+        </form>
+    }
+</div>

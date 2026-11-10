@@ -1,0 +1,23 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@inherits ComponentBase
+
+<span data-testid="@(WorkOrderSearch.Elements.DueDateCell + Row.Number)" class="@(HasDueDate ? Row.DueDateCssClass : "muted-cell")">@(HasDueDate ? Row.DueDateDisplay : "–")@if (!string.IsNullOrEmpty(Row.DueDateUrgencyText))
+    {
+        <span class="visually-hidden">@Row.DueDateUrgencyText</span>
+    }</span>@if (!HasDueDate)
+{
+    <span class="visually-hidden">No due date</span>
+}
+@if (DueDateUrgencyCalculator.BadgeText(Row.Urgency, Row.WorkOrder.DueDate) is { } badgeText)
+{
+    <span class="urgency-badge @(string.IsNullOrEmpty(Row.DueDateCssClass) ? "on-track" : Row.DueDateCssClass)"
+          data-testid="@(WorkOrderSearch.Elements.UrgencyBadge + Row.Number)"
+          aria-label="@badgeText">@badgeText</span>
+}
+
+@code {
+
+    [Parameter, EditorRequired] public WorkOrderSearchResultRow Row { get; set; } = null!;
+
+    private bool HasDueDate => !string.IsNullOrEmpty(Row.DueDateDisplay);
+}
