@@ -34,24 +34,18 @@ public class VendorTools
             var command = new CreateVendorCommand(name, trade, contactName, emailAddress, phoneNumber, isActive);
             var result = await bus.Send(command);
 
-            if (result.Succeeded)
-            {
-                var options = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-                return JsonSerializer.Serialize(new
-                {
-                    result.Succeeded,
-                    result.Message,
-                    result.Id
-                }, options);
-            }
-
-            return result.Message;
+            return result.Succeeded ? FormatCreated(result) : result.Message;
         }
         catch (ValidationException ex)
         {
             return ex.Message;
         }
     }
+
+    private static string FormatCreated(CreateVendorResult result) =>
+        JsonSerializer.Serialize(
+            new { result.Succeeded, result.Message, result.Id },
+            new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
     private static object FormatVendor(Vendor vendor) => new
     {
