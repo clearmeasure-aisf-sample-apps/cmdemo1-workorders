@@ -34,9 +34,8 @@ public class PingEndpointIntegrationTests
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("text/plain");
         (await response.Content.ReadAsStringAsync()).ShouldBe("pong");
-        response.Headers.TryGetValues("X-Content-Type-Options", out var nosniffValues).ShouldBeTrue();
-        var nosniff = nosniffValues!.ToArray();
-        nosniff.ShouldContain("nosniff");
+        var nosniff = response.Headers.GetValues("X-Content-Type-Options").ToArray();
+        nosniff.ShouldBe(["nosniff"]);
     }
 
     [Test]
