@@ -11,9 +11,10 @@ public class PingControllerTests
     [Test]
     public void Get_Should_ReturnPlainTextPong()
     {
+        var httpContext = new DefaultHttpContext();
         var controller = new PingController
         {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+            ControllerContext = new ControllerContext { HttpContext = httpContext }
         };
 
         var result = controller.Get();
@@ -23,5 +24,6 @@ public class PingControllerTests
         content.ContentType.ShouldNotBeNull();
         content.ContentType.ShouldContain("text/plain");
         content.Content.ShouldBe("pong");
+        httpContext.Response.Headers["X-Content-Type-Options"].ToString().ShouldBe("nosniff");
     }
 }
