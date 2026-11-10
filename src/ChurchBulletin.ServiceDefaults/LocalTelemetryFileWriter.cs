@@ -102,22 +102,7 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Directory.CreateDirectory(TelemetryLogDirectory);
-
-        var date = _timeProvider.GetUtcNow().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var tracesPath = Path.Combine(TelemetryLogDirectory, $"traces_{date}.jsonl");
-        var eventsPath = Path.Combine(TelemetryLogDirectory, $"events_{date}.jsonl");
-        var logsPath = Path.Combine(TelemetryLogDirectory, $"logs_{date}.jsonl");
-        var metricsPath = Path.Combine(TelemetryLogDirectory, $"metrics_{date}.jsonl");
-        _openPaths = [tracesPath, eventsPath, logsPath, metricsPath];
-
-        CleanupOldFiles();
-
-        _traces = new JsonlFile(tracesPath, MaxFileBytes, CleanupOldFiles);
-        _events = new JsonlFile(eventsPath, MaxFileBytes, CleanupOldFiles);
-        _logs = new JsonlFile(logsPath, MaxFileBytes, CleanupOldFiles);
-        _metrics = new JsonlFile(metricsPath, MaxFileBytes, CleanupOldFiles);
-
+        OpenTodaysFiles();
         ActivitySource.AddActivityListener(_activityListener);
         _meterListener.Start();
 
@@ -131,6 +116,25 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
         {
             // Expected when stopping
         }
+    }
+
+    /// <summary>One JSON-lines file per signal and day; older files are cleaned up first.</summary>
+    private void OpenTodaysFiles()
+    {
+        Directory.CreateDirectory(TelemetryLogDirectory);
+        var date = _timeProvider.GetUtcNow().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var tracesPath = Path.Combine(TelemetryLogDirectory, $"traces_{date}.jsonl");
+        var eventsPath = Path.Combine(TelemetryLogDirectory, $"events_{date}.jsonl");
+        var logsPath = Path.Combine(TelemetryLogDirectory, $"logs_{date}.jsonl");
+        var metricsPath = Path.Combine(TelemetryLogDirectory, $"metrics_{date}.jsonl");
+        _openPaths = [tracesPath, eventsPath, logsPath, metricsPath];
+
+        CleanupOldFiles();
+
+        _traces = new JsonlFile(tracesPath, MaxFileBytes, CleanupOldFiles);
+        _events = new JsonlFile(eventsPath, MaxFileBytes, CleanupOldFiles);
+        _logs = new JsonlFile(logsPath, MaxFileBytes, CleanupOldFiles);
+        _metrics = new JsonlFile(metricsPath, MaxFileBytes, CleanupOldFiles);
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
@@ -252,47 +256,5 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
 
         var value = Convert.ToDouble(measurement);
         WriteMetricEntry(instrument.Name, value, instrument.Unit ?? "", tagsDictionary);
-    }
-
-    /// <summary>
-    /// One append-only JSON-lines file that rolls to a numbered sequence file when it reaches its size cap.
-    /// </summary>
-    private sealed class JsonlFile(string path, long maxBytes, Action onRoll) : IDisposable
-    {
-        private readonly Lock _gate = new();
-        private StreamWriter? _writer = Open(path);
-
-        public void WriteLine(string line)
-        {
-            lock (_gate)
-            {
-                if (_writer is null) return;
-
-                RollIfFull();
-                _writer?.WriteLine(line);
-            }
-        }
-
-        public void Dispose()
-        {
-            lock (_gate)
-            {
-                _writer?.Dispose();
-                _writer = null;
-            }
-        }
-
-        private void RollIfFull()
-        {
-            if (_writer!.BaseStream.Length < maxBytes) return;
-
-            _writer.Dispose();
-            _writer = null;
-            TelemetryFileMaintenance.TryMoveToNextSequence(path);
-            onRoll();
-            _writer = Open(path);
-        }
-
-        private static StreamWriter Open(string filePath) => new(filePath, append: true) { AutoFlush = true };
     }
 }
