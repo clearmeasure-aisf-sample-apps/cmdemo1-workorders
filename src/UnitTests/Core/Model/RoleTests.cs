@@ -30,4 +30,12 @@ public class RoleTests
 
         role.ToString().ShouldBe("Fulfiller");
     }
+
+    [Test]
+    public void ToString_WhenNameIsNull_ReturnsEmptyString()
+    {
+        var role = new Role();
+
+        role.ToString().ShouldBe(string.Empty);
+    }
 }

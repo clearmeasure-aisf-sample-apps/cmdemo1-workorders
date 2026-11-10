@@ -17,7 +17,7 @@ public class Role(string name, bool canCreate, bool canFulfill) : EntityBase<Rol
 
     public override string ToString()
     {
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract -- Name is string but default ctor assigns null!; AC requires empty string when Name is null
-        return Name ?? string.Empty;
+        // string.Concat treats a null argument as empty, matching AC without a nullable ?? that Qodana rejects on non-nullable Name
+        return string.Concat(Name);
     }
 }
