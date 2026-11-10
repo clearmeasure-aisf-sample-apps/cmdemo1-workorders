@@ -14,4 +14,10 @@ public class Role(string name, bool canCreate, bool canFulfill) : EntityBase<Rol
 
     public bool CanFulfillWorkOrder { get; set; } = canFulfill;
     public override Guid Id { get; set; }
+
+    public override string ToString()
+    {
+        // string.Concat treats a null argument as empty, matching AC without a nullable ?? that Qodana rejects on non-nullable Name
+        return string.Concat(Name);
+    }
 }
