@@ -4,7 +4,7 @@ The demo board (project 679) has these seven columns, in order. Factory workers 
 
 | Column | Meaning | Exit condition | Who moves the item out |
 | --- | --- | --- | --- |
-| Todo | Backlog of work not yet started. | The item is selected for preparation and moves to In Progress. | The item owner. |
+| Todo | Backlog of work not yet started. New work items start here before Technical Design. | The item is selected for preparation and moves to In Progress. | The item owner. |
 | In Progress | The item owner is clarifying the concept, scope and acceptance criteria. | The item is ready for technical design and moves to Technical Design. | The item owner. |
 | Technical Design | The factory worker defines the implementation approach and fixes the scope. | The technical design is recorded and reviewed, then the item moves to Development. | The gateway, after the factory worker completes the design column. |
 | Development | The factory worker implements the change on a branch and opens a pull request. | The change is reviewed and required checks pass, then the item moves to Functional Testing. | The gateway, after the factory worker completes the development column. |
