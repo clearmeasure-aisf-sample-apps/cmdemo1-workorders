@@ -19,9 +19,10 @@ public sealed record RatchetComparison(
     public bool IsClean => Unexpected.Count == 0 && Stale.Count == 0 && Repeated.Count == 0;
 
     /// <summary>
-    /// Failure text naming the ratchet and at most twenty keys from each list.
+    /// Failure text naming the ratchet and at most twenty keys from each list. <paramref name="fixGuidance"/>, when
+    /// given, follows a list of new violations: how to fix them instead of baselining them.
     /// </summary>
-    public string Report(string ratchetName)
+    public string Report(string ratchetName, string? fixGuidance = null)
     {
         var builder = new StringBuilder();
         builder.AppendLine(
@@ -29,6 +30,11 @@ public sealed record RatchetComparison(
         AppendSample(builder, "Unexpected (new violations)", Unexpected);
         AppendSample(builder, "Stale (delete these baseline lines)", Stale);
         AppendSample(builder, "Repeated (keep one of each)", Repeated);
+        if (Unexpected.Count > 0 && fixGuidance is not null)
+        {
+            builder.AppendLine(fixGuidance);
+        }
+
         return builder.ToString();
     }
 

@@ -1,0 +1,4 @@
+# Ratchet baseline for PartialTypeRule: today's violations. Only delete lines (fix the code first); never add.
+# See docs/refactoring-oversized-code.md.
+src/UnitTests/Architecture/ArchitectureRules.cs :: ArchitectureRules
+src/UnitTests/Architecture/ArchitectureRules.Syntax.cs :: ArchitectureRules

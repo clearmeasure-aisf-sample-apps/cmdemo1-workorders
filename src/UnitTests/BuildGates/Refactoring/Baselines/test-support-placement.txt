@@ -1,0 +1,21 @@
+# Ratchet baseline for TestSupportPlacementRule: today's violations. Only delete lines (fix the code first); never add.
+# See docs/refactoring-oversized-code.md.
+src/IntegrationTests/BuildGates/BuildFactsInputsMother.cs :: BuildFactsInputsMother
+src/UnitTests/ObjectMother.cs :: ObjectMother
+src/UnitTests/UI.Shared/Pages/ClientDateFormatterTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageAttachmentsTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageCopyButtonTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageCreatedRelativeTimeTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageDescriptionCharCountTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageDictationTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageDueDateValidationTests.cs :: StubDueDateWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageEventBusNotifyTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageHeadingTooltipTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageHistoryTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageInstructionsFieldTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageRequiredFieldsNoteTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageRestyleTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageRoomFieldTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageSpeechTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs :: StubWorkOrderBuilder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageTitleCharCountTests.cs :: StubWorkOrderBuilder

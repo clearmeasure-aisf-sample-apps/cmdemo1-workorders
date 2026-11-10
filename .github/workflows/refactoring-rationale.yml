@@ -1,0 +1,40 @@
+name: Refactoring rationale
+# Deterministic checks from docs/refactoring-oversized-code.md: guardrail and oversized baselines only shrink; a pull
+# request that changes a size-baselined file has a "Refactoring plan" section (rationale table, Before/After mermaid
+# diagrams naming every new type, generated line-count table) and gives every extracted type a fixture. Runs on pull request events so editing the description re-runs the check.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refactoring-rationale-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  rationale:
+    name: Refactoring rationale
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # The pull request head, not the merge ref: a merge ref also carries base-branch commits newer than
+      # pull_request.base.sha, which would count as changes of this pull request.
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Check the pull request against the refactoring playbook
+        shell: pwsh
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          $bodyPath = Join-Path $env:RUNNER_TEMP 'pr-body.md'
+          Set-Content -LiteralPath $bodyPath -Value ($env:PR_BODY ?? '')
+          git fetch --no-tags origin "$($env:BASE_REF):refs/remotes/origin/$($env:BASE_REF)"
+          $base = (git merge-base "origin/$($env:BASE_REF)" HEAD).Trim()
+          ./scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef $base -PrBodyPath $bodyPath
