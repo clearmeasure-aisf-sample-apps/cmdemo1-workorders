@@ -24,5 +24,6 @@ public class WorkOrderPrintTests : AcceptanceTestBase
         var footer = popup.Locator("footer.print-copyright");
         await Expect(footer).ToContainTextAsync(yearText);
         await Expect(footer).ToContainTextAsync("ClearMeasure Labs");
+        await Expect(footer).ToContainTextAsync("· Facilities");
     }
 }
