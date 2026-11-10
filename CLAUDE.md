@@ -262,6 +262,9 @@ Format: `{username}/{branch-description}`. AI agents use the username of the acc
 | Before PR | `.\acceptancetests.ps1` |
 | Docs-only changes | Skip builds |
 
+The full list of CI gates behind the required `Build result` and `secret-scan` checks, with the local command for each
+(Code Analysis, size ratchet, Qodana, CRAP), is in `AGENTS.md`, section **Before you push**.
+
 **Oversized code:** on a size-gate failure, a structure-guardrail failure (`src/UnitTests/BuildGates/Refactoring/`) or a
 Refactoring rationale failure, read and follow `docs/refactoring-oversized-code.md` before editing: a real refactoring
 (smell → preferred move → named abstraction), never a mechanical split; tests as visible procedural steps; the pull

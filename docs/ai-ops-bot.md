@@ -1,5 +1,7 @@
 # AI ops bot board flow
 
+The bot's operating instructions are version-controlled in `cmdemo1-system`: [`factory/operating-instructions.md`](https://github.com/clearmeasure-aisf-sample-apps/cmdemo1-system/blob/main/factory/operating-instructions.md). That file wins where this summary differs.
+
 Issues assigned to `cm-ai-ops-bot` on repo `clearmeasure-aisf-sample-apps/cmdemo1-workorders` are worked end-to-end by the AI ops bot on the project board [Clear Measure work orders demo 1](https://github.com/orgs/clearmeasure-aisf-sample-apps/projects/679).
 
 ## Column-by-column flow
