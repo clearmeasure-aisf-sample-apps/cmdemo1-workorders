@@ -3,6 +3,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Net.Http.Headers;
 
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 
@@ -26,6 +27,7 @@ public class TimeController(TimeProvider timeProvider) : ControllerBase
         var text = timeProvider.GetUtcNow().ToString("O", CultureInfo.InvariantCulture);
         var etag = ConditionalGetEtag.CreateWeakEtagForPlainText(text);
         Response.Headers.ETag = etag.ToString();
+        Response.Headers[HeaderNames.CacheControl] = "no-store";
         if (ConditionalGetEtag.IfNoneMatchIncludesEtag(Request, etag))
             return StatusCode(StatusCodes.Status304NotModified);
         return new ContentResult
