@@ -1,0 +1,54 @@
+@using ClearMeasure.Bootcamp.UI.Shared.Pages
+@using Microsoft.JSInterop
+@inject IJSRuntime Js
+
+<button type="button" data-testid="@WorkOrderManage.Elements.CopyWorkOrderNumber" class="btn-app btn-app--secondary" aria-label="Copy work order number" @onclick="CopyAsync">
+    <i class="@(_showSuccess ? "bi bi-check2" : "bi bi-clipboard")" aria-hidden="true"></i>
+    Copy
+</button>
+<span role="status" aria-live="polite" aria-atomic="true" id="copy-status" class="copy-status">
+    @if (_showSuccess) { <text>Copied</text> }
+</span>
+
+@code {
+    private const string ClipboardModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/clipboard.js";
+
+    private IJSObjectReference? _clipboardModule;
+    private bool _showSuccess;
+
+    /// <summary>The work-order number to copy; nothing is copied when it is empty.</summary>
+    [Parameter] public string? Number { get; set; }
+
+    /// <summary>Copies the number and shows "Copied" for two seconds. A browser without clipboard access is ignored.</summary>
+    private async Task CopyAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(Number))
+            {
+                return;
+            }
+
+            _clipboardModule ??= await Js.InvokeAsync<IJSObjectReference>("import", ClipboardModulePath);
+            await _clipboardModule.InvokeAsync<object>("copyToClipboard", Number);
+            await ShowSuccessForTwoSecondsAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // Clipboard API not available or page disconnected; silently ignore
+        }
+        catch (JSException)
+        {
+            // Clipboard permission denied or other JS error; silently ignore
+        }
+    }
+
+    private async Task ShowSuccessForTwoSecondsAsync()
+    {
+        _showSuccess = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(2000);
+        _showSuccess = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}

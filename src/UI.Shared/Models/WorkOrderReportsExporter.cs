@@ -10,31 +10,27 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 /// </summary>
 public static class WorkOrderReportsExporter
 {
-    private static readonly string[] StatusOrder = ["Draft", "Assigned", "InProgress"];
-    private static readonly string[] PriorityOrder = ["High", "Medium", "Low"];
+    private static readonly CountSection StatusSection = new("Status", "Open by Status", ["Draft", "Assigned", "InProgress"]);
+    private static readonly CountSection PrioritySection = new("Priority", "Open by Priority", ["High", "Medium", "Low"]);
 
     /// <summary>The CSV text for the reports <paramref name="data"/>, lines separated by CRLF.</summary>
     public static string ToCsv(WorkOrderReportsData data)
     {
         var csv = new StringBuilder();
-        AppendOrderedCounts(csv, "Status", "Open by Status", StatusOrder, data.CountByStatus);
-        AppendOrderedCounts(csv, "Priority", "Open by Priority", PriorityOrder, data.CountByPriority);
+        AppendOrderedCounts(csv, StatusSection, data.CountByStatus);
+        AppendOrderedCounts(csv, PrioritySection, data.CountByPriority);
         AppendBuildings(csv, data.CountByBuilding);
         AppendWeeks(csv, data.CompletedPerWeek);
         AppendSummary(csv, data);
         return csv.ToString();
     }
 
-    private static void AppendOrderedCounts(StringBuilder csv, string heading, string category,
-        string[] order, Dictionary<string, int> counts)
+    private static void AppendOrderedCounts(StringBuilder csv, CountSection section, Dictionary<string, int> counts)
     {
-        AppendLine(csv, ["Category", heading, "Count"]);
-        foreach (var key in order)
+        AppendLine(csv, ["Category", section.Heading, "Count"]);
+        foreach (var (key, count) in section.Listed(counts))
         {
-            if (counts.TryGetValue(key, out var count))
-            {
-                AppendLine(csv, [category, key, count.ToString(CultureInfo.InvariantCulture)]);
-            }
+            AppendLine(csv, [section.Category, key, count.ToString(CultureInfo.InvariantCulture)]);
         }
 
         csv.Append("\r\n");

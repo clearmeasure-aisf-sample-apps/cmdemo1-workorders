@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Security.Claims;
-using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
@@ -73,8 +73,7 @@ public partial class MainLayout : IAsyncDisposable
     private bool _isNarrowViewport;
     private bool _viewportSynced;
     private bool _navVisible = true;
-    private string _gitSha = "unknown";
-    private string _environmentName = "unknown";
+    private DeploymentIdentity _deployment = DeploymentIdentity.Unreported;
     private bool _notificationsPanelOpen;
     private NotificationsPanel? _notificationsPanelData;
 
@@ -112,23 +111,7 @@ public partial class MainLayout : IAsyncDisposable
         Navigation.LocationChanged += OnLocationChanged;
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
 
-        try
-        {
-            var response = await Http.GetAsync("/api/status/environment");
-            if (response.IsSuccessStatusCode)
-            {
-                (_gitSha, _environmentName) = await ParseEnvironmentStatusAsync(response);
-            }
-        }
-        catch (HttpRequestException)
-        {
-            // graceful fallback — fields remain "unknown"
-        }
-        catch (JsonException)
-        {
-            // graceful fallback — malformed response, fields remain "unknown"
-        }
-
+        _deployment = await DeploymentIdentity.LoadAsync(Http);
         await LoadNotificationsAsync();
     }
 
@@ -143,23 +126,6 @@ public partial class MainLayout : IAsyncDisposable
         {
             // The shell still renders when the browser language cannot be read.
         }
-    }
-
-    /// <summary>
-    /// Extracted from <see cref="OnInitializedAsync"/> to keep that method's cyclomatic
-    /// complexity (and therefore its CRAP score) low; the property-presence branching lives
-    /// here instead, fully exercised by <c>MainLayoutTests</c>.
-    /// </summary>
-    private static async Task<(string GitSha, string EnvironmentName)> ParseEnvironmentStatusAsync(
-        HttpResponseMessage response)
-    {
-        await using var stream = await response.Content.ReadAsStreamAsync();
-        using var doc = await JsonDocument.ParseAsync(stream);
-        var gitSha = doc.RootElement.TryGetProperty("gitSha", out var sha) ? sha.GetString() ?? "unknown" : "unknown";
-        var environmentName = doc.RootElement.TryGetProperty("environmentName", out var env)
-            ? env.GetString() ?? "unknown"
-            : "unknown";
-        return (gitSha, environmentName);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

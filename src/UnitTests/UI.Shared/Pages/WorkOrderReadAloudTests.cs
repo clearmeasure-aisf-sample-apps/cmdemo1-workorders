@@ -7,12 +7,12 @@ using Toolbelt.Blazor.SpeechSynthesis;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
 [TestFixture]
-public class WorkOrderSpeechHelperTests
+public class WorkOrderReadAloudTests
 {
     [Test]
     public void CreateUtterance_ShouldSetTextAndLang()
     {
-        var utterance = WorkOrderSpeechHelper.CreateUtterance(
+        var utterance = WorkOrderReadAloud.CreateUtterance(
             "Hola mundo",
             "es-ES",
             []);
@@ -28,7 +28,7 @@ public class WorkOrderSpeechHelperTests
         var english = CreateVoice("en-US");
         var spanish = CreateVoice("ES-MX");
 
-        var utterance = WorkOrderSpeechHelper.CreateUtterance(
+        var utterance = WorkOrderReadAloud.CreateUtterance(
             "Buenos dias",
             "es-ES",
             [english, spanish]);
@@ -41,12 +41,23 @@ public class WorkOrderSpeechHelperTests
     {
         var english = CreateVoice("en-US");
 
-        var utterance = WorkOrderSpeechHelper.CreateUtterance(
+        var utterance = WorkOrderReadAloud.CreateUtterance(
             "Bonjour",
             "fr-FR",
             [english]);
 
         utterance.Voice.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task SpeakAsync_ShouldDoNothing_WhenNoSpeechSynthesisIsAvailable()
+    {
+        var readAloud = new WorkOrderReadAloud(translationService: null, speechSynthesis: null);
+
+        var speaking = readAloud.SpeakAsync("Fix the boiler", "es-ES");
+
+        await speaking;
+        speaking.IsCompletedSuccessfully.ShouldBeTrue();
     }
 
     private static SpeechSynthesisVoice CreateVoice(string lang)

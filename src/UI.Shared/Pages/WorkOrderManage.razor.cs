@@ -6,7 +6,6 @@ using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Palermo.BlazorMvc;
-using Microsoft.JSInterop;
 using Toolbelt.Blazor.SpeechRecognition;
 using Toolbelt.Blazor.SpeechSynthesis;
 
@@ -20,15 +19,11 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private WorkOrderAttachment[] _attachments = [];
     private WorkOrderStatusChange[] _statusHistory = [];
     private bool _canRemoveAttachments;
-    private Guid? _pendingRemoveId;
-    private string? _removeAttachmentError;
     private string? _shelveReasonError;
     private string _currentUserName = string.Empty;
     private string _preferredLanguage = "en-US";
-    private DictationTarget _dictationTarget = DictationTarget.None;
+    private WorkOrderDictation? _dictation;
     private bool _isSubmitting;
-    private bool _copyButtonShowSuccess;
-    private IJSObjectReference? _clipboardModule;
     [Inject] public IWorkOrderBuilder? WorkOrderBuilder { get; set; }
     [Inject] public IUserSession? UserSession { get; set; }
     [Inject] private NavigationManager? NavigationManager { get; set; }
@@ -36,7 +31,6 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     [Inject] public SpeechSynthesis? SpeechSynthesis { get; set; }
     [Inject] public SpeechRecognition? SpeechRecognition { get; set; }
     [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
-    [Inject] private IJSRuntime? Js { get; set; }
 
     private DueDateUrgency CurrentDueDateUrgency =>
         _workOrder == null
@@ -56,43 +50,9 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     public WorkOrderManageModel Model { get; set; } = new();
     private List<SelectListItem> UserOptions { get; set; } = new();
-    private IEnumerable<IStateCommand> ValidCommands { get; set; } = new List<IStateCommand>();
-
-    private bool ShowShelveReason =>
-        ValidCommands.Any(command => command.TransitionVerbPresentTense == InProgressToAssignedCommand.Name);
+    private WorkOrderCommandButtons CommandButtons { get; set; } = WorkOrderCommandButtons.None;
 
     private string? SelectedCommand { get; set; }
-    private List<string>? _validCommandNames;
-
-    private List<string> ValidCommandNames
-    {
-        get
-        {
-            _validCommandNames ??= ValidCommands.Select(c => c.TransitionVerbPresentTense).ToList();
-            return _validCommandNames;
-        }
-    }
-
-    private IEnumerable<IStateCommand> SortedValidCommands
-    {
-        get
-        {
-            return ValidCommands
-                .OrderBy(c =>
-                {
-                    var style = CommandButtonStyleHelper.GetButtonStyle(c.TransitionVerbPresentTense, ValidCommandNames);
-                    // Sort order: secondary first (0), danger (1), primary last (2)
-                    return style switch
-                    {
-                        "btn-outline-secondary" => 0,
-                        "btn-outline-danger" => 1,
-                        "btn-primary" => 2,
-                        _ => 0
-                    };
-                })
-                .ToList();
-        }
-    }
 
     [Parameter] public string? Id { get; set; }
 
@@ -101,15 +61,9 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        if (SpeechRecognition != null)
-        {
-            SpeechRecognition.Result += OnSpeechResult;
-            SpeechRecognition.End += OnSpeechEnd;
-        }
-
+        _dictation = new WorkOrderDictation(SpeechRecognition, AppendDictation, () => InvokeAsync(StateHasChanged));
         await LoadUserOptions();
         await LoadWorkOrder();
-
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
@@ -133,85 +87,46 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         var currentUser = (await UserSession!.GetCurrentUserAsync())!;
         _preferredLanguage = currentUser.PreferredLanguage;
         _currentUserName = currentUser.UserName;
-        WorkOrder workOrder;
+        var workOrder = await FindOrCreateWorkOrderAsync(CurrentMode, Id, currentUser);
 
-        if (CurrentMode == EditMode.New)
-        {
-            workOrder = WorkOrderBuilder!.CreateNewWorkOrder(currentUser);
-            if (!string.IsNullOrEmpty(Id))
-            {
-                workOrder.Number = Id;
-            }
-        }
-        else
-        {
-            workOrder = (await Bus.Send(new WorkOrderByNumberQuery(Id!)))!;
-        }
-
-        Model = CreateViewModel(CurrentMode, workOrder);
-        var commandList = new StateCommandList();
-        Model.IsReadOnly = !commandList.GetValidStateCommands(workOrder, currentUser).Any();
-        ValidCommands = commandList.GetValidStateCommands(workOrder, currentUser);
-        _validCommandNames = null;  // Reset cache when commands change
+        Model = WorkOrderManageModel.For(CurrentMode, workOrder, Clock);
+        CommandButtons = new WorkOrderCommandButtons(new StateCommandList().GetValidStateCommands(workOrder, currentUser));
+        Model.IsReadOnly = !CommandButtons.Any;
         _workOrder = workOrder;
+        await LoadAttachmentsAndHistoryAsync(workOrder, currentUser);
+    }
 
-        if (workOrder.Id != Guid.Empty)
+    /// <summary>A new draft by <paramref name="currentUser"/> (numbered <paramref name="number"/> when given), or the saved work order.</summary>
+    private async Task<WorkOrder> FindOrCreateWorkOrderAsync(EditMode mode, string? number, Employee currentUser)
+    {
+        if (mode != EditMode.New)
         {
-            _attachments = await Bus.Send(new WorkOrderAttachmentsQuery(workOrder.Id));
-            _statusHistory = await Bus.Send(new WorkOrderStatusHistoryQuery(workOrder.Id));
-            _canRemoveAttachments = RemoveAttachmentCommand.CanRemove(workOrder, currentUser);
+            return (await Bus.Send(new WorkOrderByNumberQuery(number!)))!;
         }
-    }
 
-    private void BeginRemoveAttachment(WorkOrderAttachment attachment)
-    {
-        _pendingRemoveId = attachment.Id;
-        _removeAttachmentError = null;
-    }
-
-    private void CancelRemoveAttachment() => _pendingRemoveId = null;
-
-    private async Task ConfirmRemoveAttachmentAsync(WorkOrderAttachment attachment)
-    {
-        var result = await Bus.Send(new RemoveAttachmentCommand(_workOrder!.Id, attachment.Id, _currentUserName));
-        _pendingRemoveId = null;
-        if (!result.Succeeded)
+        var workOrder = WorkOrderBuilder!.CreateNewWorkOrder(currentUser);
+        if (!string.IsNullOrEmpty(number))
         {
-            _removeAttachmentError = result.Error;
+            workOrder.Number = number;
+        }
+
+        return workOrder;
+    }
+
+    private async Task LoadAttachmentsAndHistoryAsync(WorkOrder workOrder, Employee currentUser)
+    {
+        if (workOrder.Id == Guid.Empty)
+        {
             return;
         }
 
-        _removeAttachmentError = null;
-        _attachments = await Bus.Send(new WorkOrderAttachmentsQuery(_workOrder.Id));
+        _attachments = await Bus.Send(new WorkOrderAttachmentsQuery(workOrder.Id));
+        _statusHistory = await Bus.Send(new WorkOrderStatusHistoryQuery(workOrder.Id));
+        _canRemoveAttachments = RemoveAttachmentCommand.CanRemove(workOrder, currentUser);
     }
 
-    private WorkOrderManageModel CreateViewModel(EditMode mode, WorkOrder workOrder)
-    {
-        return new WorkOrderManageModel
-        {
-            WorkOrder = workOrder,
-            Mode = mode,
-            WorkOrderNumber = workOrder.Number,
-            CreatorFullName = workOrder.Creator!.DisplayName,
-            AssignedToUserName = workOrder.Assignee?.UserName,
-            Title = workOrder.Title,
-            Description = workOrder.Description,
-            Instructions = workOrder.Instructions,
-            RoomNumber = workOrder.RoomNumber,
-            OriginalRoomNumber = workOrder.RoomNumber,
-            CreatedDate = ClientDateFormatter.Format(workOrder.CreatedDate),
-            CreatedRelativeTime = RelativeTimeFormatter.Format(workOrder.CreatedDate, Clock),
-            AssignedDate = ClientDateFormatter.Format(workOrder.AssignedDate),
-            CompletedDate = ClientDateFormatter.Format(workOrder.CompletedDate),
-            DueDateInput = workOrder.DueDate,
-            OriginalDueDate = workOrder.DueDate,
-            ChurchToday = ChurchTimeZone.Today(Clock),
-            Priority = workOrder.Priority,
-            Building = workOrder.Building,
-            Floor = workOrder.Floor,
-            DueDateDisplay = ClientDateFormatter.Format(workOrder.DueDate)
-        };
-    }
+    private async Task ReloadAttachmentsAsync() =>
+        _attachments = await Bus.Send(new WorkOrderAttachmentsQuery(_workOrder!.Id));
 
     private async Task LoadUserOptions()
     {
@@ -242,44 +157,21 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private async Task SubmitAsync()
     {
         var currentUser = (await UserSession!.GetCurrentUserAsync())!;
-        WorkOrder workOrder;
+        var workOrder = await FindOrCreateWorkOrderAsync(Model.Mode, Model.WorkOrderNumber, currentUser);
+        var assignee = Model.AssignedToUserName == null
+            ? null
+            : await Bus.Send(new EmployeeByUserNameQuery(Model.AssignedToUserName));
+        Model.ApplyTo(workOrder, assignee);
+        await SendIfReady(CommandFor(workOrder, currentUser));
+    }
 
-        if (Model.Mode == EditMode.New)
-        {
-            workOrder = WorkOrderBuilder!.CreateNewWorkOrder(currentUser);
-        }
-        else
-        {
-            workOrder = (await Bus.Send(new WorkOrderByNumberQuery(Model.WorkOrderNumber!)))!;
-        }
-
-        Employee? assignee = null;
-        if (Model.AssignedToUserName != null)
-        {
-            assignee = await Bus.Send(new EmployeeByUserNameQuery(Model.AssignedToUserName));
-        }
-
-        workOrder.Number = Model.WorkOrderNumber;
-        workOrder.Assignee = assignee;
-        workOrder.Title = Model.Title;
-        workOrder.Description = Model.Description;
-        workOrder.Instructions = Model.Instructions;
-        workOrder.RoomNumber = Model.RoomNumber;
-        var previousDueDate = Model.OriginalDueDate;
-        workOrder.DueDate = Model.DueDateInput;
-        workOrder.Priority = Model.Priority;
-        workOrder.Building = string.IsNullOrWhiteSpace(Model.Building) ? null : Model.Building.Trim();
-        workOrder.Floor = string.IsNullOrWhiteSpace(Model.Floor) ? null : Model.Floor.Trim();
-
-        var matchingCommand = CommandWithShelveReason(SaveDraftCommand.WithPreviousRoomNumber(
+    /// <summary>The selected command; a save records the room and due date it replaces, a shelve carries its reason.</summary>
+    private IStateCommand? CommandFor(WorkOrder workOrder, Employee currentUser)
+    {
+        var command = CommandWithShelveReason(SaveDraftCommand.WithPreviousRoomNumber(
             new StateCommandList().GetMatchingCommand(workOrder, currentUser, SelectedCommand!),
             Model.OriginalRoomNumber));
-        if (matchingCommand is SaveDraftCommand saveDraft)
-        {
-            matchingCommand = saveDraft with { PreviousDueDate = previousDueDate };
-        }
-
-        await SendIfReady(matchingCommand);
+        return command is SaveDraftCommand saveDraft ? saveDraft with { PreviousDueDate = Model.OriginalDueDate } : command;
     }
 
     private IStateCommand? CommandWithShelveReason(IStateCommand command)
@@ -325,121 +217,27 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         NavigationManager!.NavigateTo("/workorder/search");
     }
 
-    private async Task SpeakTitleAsync()
+    private WorkOrderReadAloud ReadAloud => new(TranslationService, SpeechSynthesis);
+
+    private Task SpeakTitleAsync() => ReadAloud.SpeakAsync(Model.Title, _preferredLanguage);
+
+    private Task SpeakDescriptionAsync() => ReadAloud.SpeakAsync(Model.Description, _preferredLanguage);
+
+    private Task DictateTitleAsync() => _dictation?.ToggleAsync(DictationTarget.Title, _preferredLanguage) ?? Task.CompletedTask;
+
+    private Task DictateDescriptionAsync() =>
+        _dictation?.ToggleAsync(DictationTarget.Description, _preferredLanguage) ?? Task.CompletedTask;
+
+    private void AppendDictation(DictationTarget target, string transcript)
     {
-        await SpeakTextAsync(Model.Title);
-    }
-
-    private async Task SpeakDescriptionAsync()
-    {
-        await SpeakTextAsync(Model.Description);
-    }
-
-    private async Task SpeakTextAsync(string? text)
-    {
-        if (!CanSpeak(text))
-        {
-            return;
-        }
-
-        var translatedText = await TranslationService!.TranslateAsync(text!, _preferredLanguage);
-        await SpeakTranslatedTextAsync(translatedText);
-    }
-
-    private bool CanSpeak(string? text) =>
-        !string.IsNullOrEmpty(text) && SpeechSynthesis != null && TranslationService != null;
-
-    private async Task SpeakTranslatedTextAsync(string translatedText)
-    {
-        try
-        {
-            var voices = await SpeechSynthesis!.GetVoicesAsync();
-            var utterance = WorkOrderSpeechHelper.CreateUtterance(translatedText, _preferredLanguage, voices);
-            await SpeechSynthesis.SpeakAsync(utterance);
-        }
-        catch
-        {
-            // Speech synthesis may not be available in all environments
-        }
-    }
-
-    private async Task DictateTitleAsync()
-    {
-        await ToggleDictationAsync(DictationTarget.Title);
-    }
-
-    private async Task DictateDescriptionAsync()
-    {
-        await ToggleDictationAsync(DictationTarget.Description);
-    }
-
-    private async Task ToggleDictationAsync(DictationTarget target)
-    {
-        if (SpeechRecognition == null)
-        {
-            return;
-        }
-
-        if (_dictationTarget == target)
-        {
-            _dictationTarget = DictationTarget.None;
-            try
-            {
-                await SpeechRecognition.StopAsync();
-            }
-            catch
-            {
-                // Speech recognition may not be available in all environments
-            }
-            return;
-        }
-
-        SpeechRecognition.Lang = _preferredLanguage;
-        SpeechRecognition.Continuous = false;
-        SpeechRecognition.InterimResults = false;
-        _dictationTarget = target;
-
-        try
-        {
-            await SpeechRecognition.StartAsync();
-        }
-        catch
-        {
-            // Speech recognition may not be available in all environments
-            _dictationTarget = DictationTarget.None;
-        }
-    }
-
-    private void OnSpeechResult(object? sender, SpeechRecognitionEventArgs args)
-    {
-        var transcripts = (args.Results ?? [])
-            .Skip(args.ResultIndex)
-            .Where(result => result.IsFinal)
-            .Select(result => result.Items?.FirstOrDefault()?.Transcript?.Trim())
-            .Where(transcript => !string.IsNullOrEmpty(transcript));
-        var transcript = string.Join(" ", transcripts);
-
-        if (string.IsNullOrEmpty(transcript))
-        {
-            return;
-        }
-
-        if (_dictationTarget == DictationTarget.Title)
+        if (target == DictationTarget.Title)
         {
             Model.Title = AppendTranscript(Model.Title, transcript);
         }
-        else if (_dictationTarget == DictationTarget.Description)
+        else if (target == DictationTarget.Description)
         {
             Model.Description = AppendTranscript(Model.Description, transcript);
         }
-
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void OnSpeechEnd(object? sender, EventArgs e)
-    {
-        _dictationTarget = DictationTarget.None;
-        InvokeAsync(StateHasChanged);
     }
 
     private static string AppendTranscript(string? existingText, string transcript)
@@ -449,83 +247,22 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     private string DictateButtonClass(DictationTarget target)
     {
-        return _dictationTarget == target
+        return _dictation?.IsListeningTo(target) == true
             ? "btn-app btn-app--danger btn-app--icon"
             : "btn-app btn-app--secondary btn-app--icon";
     }
 
-    private static string CommandAppButtonClass(string commandStyle) =>
-        commandStyle switch
-        {
-            "btn-primary" => "btn-app btn-app--primary",
-            "btn-outline-danger" => "btn-app btn-app--danger",
-            _ => "btn-app btn-app--secondary"
-        };
-
     private string DictateAriaPressed(DictationTarget target)
     {
-        return _dictationTarget == target ? "true" : "false";
-    }
-
-    private async Task CopyWorkOrderNumberAsync()
-    {
-        try
-        {
-            if (Js == null || string.IsNullOrEmpty(Model.WorkOrderNumber))
-            {
-                return;
-            }
-
-            _clipboardModule ??= await Js.InvokeAsync<IJSObjectReference>("import",
-                "./_content/ClearMeasure.Bootcamp.UI.Shared/js/clipboard.js");
-
-            await _clipboardModule.InvokeAsync<object>("copyToClipboard", Model.WorkOrderNumber);
-            _copyButtonShowSuccess = true;
-            await InvokeAsync(StateHasChanged);
-
-            await Task.Delay(2000);
-            _copyButtonShowSuccess = false;
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (JSDisconnectedException)
-        {
-            // Clipboard API not available or page disconnected; silently ignore
-        }
-        catch (JSException)
-        {
-            // Clipboard permission denied or other JS error; silently ignore
-        }
+        return _dictation?.IsListeningTo(target) == true ? "true" : "false";
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (SpeechRecognition == null)
+        if (_dictation != null)
         {
-            return;
+            await _dictation.DisposeAsync();
         }
-
-        SpeechRecognition.Result -= OnSpeechResult;
-        SpeechRecognition.End -= OnSpeechEnd;
-
-        try
-        {
-            if (_dictationTarget != DictationTarget.None)
-            {
-                await SpeechRecognition.StopAsync();
-            }
-
-            await SpeechRecognition.DisposeAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-        }
-    }
-
-    private enum DictationTarget
-    {
-        None,
-        Title,
-        Description
     }
 }
 

@@ -42,19 +42,18 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
     public async Task<BulkActionOutcome> AssignAsync(IEnumerable<string> numbers, string assigneeUserName, Employee currentUser)
     {
         var assignee = await bus.Send(new EmployeeByUserNameQuery(assigneeUserName));
-        return await ApplyAsync(numbers, DraftToAssignedCommand.Name, currentUser, order => order.Assignee = assignee);
+        return await ApplyAsync(numbers, new BulkStateChange(DraftToAssignedCommand.Name, currentUser, order => order.Assignee = assignee));
     }
 
     /// <summary>Sends the command named <paramref name="verb"/> (for example "Begin") to each work order.</summary>
     public Task<BulkActionOutcome> ChangeStatusAsync(IEnumerable<string> numbers, string verb, Employee currentUser) =>
-        ApplyAsync(numbers, verb, currentUser, _ => { });
+        ApplyAsync(numbers, new BulkStateChange(verb, currentUser, _ => { }));
 
-    private async Task<BulkActionOutcome> ApplyAsync(IEnumerable<string> numbers, string verb, Employee currentUser,
-        Action<WorkOrder> prepare)
+    private async Task<BulkActionOutcome> ApplyAsync(IEnumerable<string> numbers, BulkStateChange change)
     {
         var requested = numbers.ToArray();
         var byNumber = await LoadByNumberAsync(requested);
-        return await ApplyLoadedAsync(requested, byNumber, verb, currentUser, prepare);
+        return await ApplyLoadedAsync(requested, byNumber, change);
     }
 
     private async Task<Dictionary<string, WorkOrder>> LoadByNumberAsync(string[] requested)
@@ -71,7 +70,7 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
     }
 
     private async Task<BulkActionOutcome> ApplyLoadedAsync(string[] requested, Dictionary<string, WorkOrder> byNumber,
-        string verb, Employee currentUser, Action<WorkOrder> prepare)
+        BulkStateChange change)
     {
         var updated = 0;
         var skipped = 0;
@@ -85,7 +84,7 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
 
             // The read is one query. Each state command is still its own send.
 #pragma warning disable CM0001
-            var applied = await ApplyOneAsync(order, verb, currentUser, prepare);
+            var applied = await ApplyOneAsync(order, change);
 #pragma warning restore CM0001
             if (applied)
             {
@@ -110,11 +109,9 @@ public class WorkOrderBulkActionService(IBus bus, IUiBus uiBus)
         return byNumber.TryGetValue(number, out order!);
     }
 
-    private async Task<bool> ApplyOneAsync(WorkOrder order, string verb, Employee currentUser, Action<WorkOrder> prepare)
+    private async Task<bool> ApplyOneAsync(WorkOrder order, BulkStateChange change)
     {
-        prepare(order);
-        var command = new StateCommandList().GetValidStateCommands(order, currentUser)
-            .FirstOrDefault(candidate => candidate.Matches(verb));
+        var command = change.CommandFor(order);
         if (command == null)
         {
             return false;

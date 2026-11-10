@@ -145,13 +145,13 @@
                 <div class="footer-right">
                     <span class="site-footer-note" data-testid="@nameof(Elements.SoftwareVersion)">
                         @AppVersion
-                        @if (_gitSha != "unknown" && _gitSha.Length >= 7)
+                        @if (_deployment.ShortSha is { } shortSha)
                         {
                             <span> · </span>
                             <a data-testid="@nameof(Elements.GitSha)"
-                               href="https://github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/@_gitSha"
+                               href="https://github.com/clearmeasure-aisf-sample-apps/cmdemo1-workorders/commit/@_deployment.GitSha"
                                target="_blank"
-                               rel="noopener noreferrer">@_gitSha[..7]</a>
+                               rel="noopener noreferrer">@shortSha</a>
                         }
                         else
                         {
@@ -159,7 +159,7 @@
                             <span data-testid="@nameof(Elements.GitSha)">unknown</span>
                         }
                         <span> · </span>
-                        <span data-testid="@nameof(Elements.EnvironmentName)">@_environmentName</span>
+                        <span data-testid="@nameof(Elements.EnvironmentName)">@_deployment.EnvironmentName</span>
                     </span>
                 </div>
             </div>

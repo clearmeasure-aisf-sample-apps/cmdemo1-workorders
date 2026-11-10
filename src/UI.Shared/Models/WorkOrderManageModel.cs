@@ -3,17 +3,59 @@
 using System.ComponentModel.DataAnnotations;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
 public class WorkOrderManageModel : IValidatableObject
 {
-    public WorkOrder? WorkOrder { get; set; }
-    public EditMode Mode { get; set; }
+    /// <summary>The form for <paramref name="workOrder"/>, with its dates shown in the church time zone.</summary>
+    public static WorkOrderManageModel For(EditMode mode, WorkOrder workOrder, TimeProvider clock) => new()
+    {
+        WorkOrder = workOrder,
+        Mode = mode,
+        WorkOrderNumber = workOrder.Number,
+        CreatorFullName = workOrder.Creator!.DisplayName,
+        AssignedToUserName = workOrder.Assignee?.UserName,
+        Title = workOrder.Title,
+        Description = workOrder.Description,
+        Instructions = workOrder.Instructions,
+        RoomNumber = workOrder.RoomNumber,
+        OriginalRoomNumber = workOrder.RoomNumber,
+        CreatedDate = ClientDateFormatter.Format(workOrder.CreatedDate),
+        CreatedRelativeTime = RelativeTimeFormatter.Format(workOrder.CreatedDate, clock),
+        AssignedDate = ClientDateFormatter.Format(workOrder.AssignedDate),
+        CompletedDate = ClientDateFormatter.Format(workOrder.CompletedDate),
+        DueDateInput = workOrder.DueDate,
+        OriginalDueDate = workOrder.DueDate,
+        ChurchToday = ChurchTimeZone.Today(clock),
+        Priority = workOrder.Priority,
+        Building = workOrder.Building,
+        Floor = workOrder.Floor,
+        DueDateDisplay = ClientDateFormatter.Format(workOrder.DueDate)
+    };
 
-    public string? WorkOrderNumber { get; set; }
+    /// <summary>Copies the edited fields onto <paramref name="workOrder"/>; blank building and floor are cleared.</summary>
+    public void ApplyTo(WorkOrder workOrder, Employee? assignee)
+    {
+        workOrder.Number = WorkOrderNumber;
+        workOrder.Assignee = assignee;
+        workOrder.Title = Title;
+        workOrder.Description = Description;
+        workOrder.Instructions = Instructions;
+        workOrder.RoomNumber = RoomNumber;
+        workOrder.DueDate = DueDateInput;
+        workOrder.Priority = Priority;
+        workOrder.Building = string.IsNullOrWhiteSpace(Building) ? null : Building.Trim();
+        workOrder.Floor = string.IsNullOrWhiteSpace(Floor) ? null : Floor.Trim();
+    }
 
-    public string? CreatorFullName { get; set; }
+    public WorkOrder? WorkOrder { get; private set; }
+    public EditMode Mode { get; private set; }
+
+    public string? WorkOrderNumber { get; private init; }
+
+    public string? CreatorFullName { get; private set; }
 
     public string? AssignedToUserName { get; set; }
 
@@ -28,16 +70,16 @@ public class WorkOrderManageModel : IValidatableObject
 
     public bool IsReadOnly { get; set; }
 
-    public string? AssignedDate { get; set; }
+    public string? AssignedDate { get; private set; }
 
-    public string? CompletedDate { get; set; }
+    public string? CompletedDate { get; private set; }
 
-    public string? CreatedDate { get; set; }
+    public string? CreatedDate { get; private set; }
 
     /// <summary>
     /// How long ago the work order was created, such as "3 days ago". Null when there is no created date.
     /// </summary>
-    public string? CreatedRelativeTime { get; init; }
+    public string? CreatedRelativeTime { get; private init; }
 
     /// <summary>
     /// Optional due date bound to the native date picker. Null when unset.
@@ -47,17 +89,17 @@ public class WorkOrderManageModel : IValidatableObject
     /// <summary>
     /// Due date loaded with the work order. An unchanged value is allowed even when it is before today.
     /// </summary>
-    public DateOnly? OriginalDueDate { get; init; }
+    public DateOnly? OriginalDueDate { get; private init; }
 
     /// <summary>
     /// Church calendar day the form validates against. The system clock is used when unset.
     /// </summary>
-    public DateOnly? ChurchToday { get; init; }
+    private DateOnly? ChurchToday { get; init; }
 
     /// <summary>
     /// Display text for the due date in the client culture's short-date pattern, when set.
     /// </summary>
-    public string? DueDateDisplay { get; set; }
+    public string? DueDateDisplay { get; private set; }
 
     public string? RoomNumber { get; set; }
 
