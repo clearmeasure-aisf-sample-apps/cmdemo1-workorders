@@ -2,6 +2,35 @@
 
 See `CLAUDE.md` for full project overview, solution structure, architecture, coding standards, and build/test commands.
 
+## Before you push: the checks a pull request must pass
+
+Required on every pull request to `master`: **`Build result`** (workflow `build.yml`, summarizes every gated job) and
+**`secret-scan`** (gitleaks, `secret-scan.yml`). A docs-only diff (only `docs/**`, `arch/**`, `*.md`) skips the heavy
+jobs and goes green in a few minutes; skip local builds for it. For any code change, run these locally first; each is
+a job behind `Build result`:
+
+| Gate | Run locally | Passes when |
+|---|---|---|
+| Build, unit + integration tests | `pwsh -NoProfile -File ./PrivateBuild.ps1` (or `dotnet build src/ChurchBulletin.sln --configuration Release` then `dotnet test src/UnitTests --configuration Release`) | No errors; warnings are errors (`src/Directory.Build.props`) |
+| Code Analysis | `dotnet format style src/ChurchBulletin.sln --verify-no-changes --severity warn` and `dotnet format analyzers src/ChurchBulletin.sln --verify-no-changes`; `pwsh -NoProfile -File ./scripts/dead-code/Invoke-DeadCodeGates.ps1` | No changes needed, no new dead code or unused package |
+| Size and nesting ratchet | `dotnet test src/UnitTests --configuration Release --filter "FullyQualifiedName~BuildGates"` | No new line in `src/UnitTests/BuildGates/size-nesting-baseline.txt` is needed: production files <= 300 lines, test files <= 600, methods <= 30 lines, <= 4 parameters, nesting <= 3. A violation you fix must also be deleted from the baseline (a stale line fails too) |
+| Qodana (Community .NET) | `docker run --rm -v "$PWD":/data/project jetbrains/qodana-cdnet:latest --solution src/ChurchBulletin.sln --baseline qodana.sarif.json --fail-threshold 0` | Zero findings outside the baseline `qodana.sarif.json`. A baselined finding your change removes (ABSENT) also fails: delete its entry (see the Qodana sections below) |
+| CRAP | `pwsh scripts/crap/run-crap-audit.ps1 -SkipTests -FailOnViolations` | Under `scripts/crap/crap-gate-threshold.json` |
+| Acceptance tests | `pwsh ./AcceptanceTests.ps1` (Playwright, 6 shards in CI) | All pass |
+
+The usual first-push failures, so check them before pushing:
+
+- **Qodana**: unused members/types/parameters (`UnusedMember.*`, `UnusedType.*`, `UnusedParameter.*` gate the build),
+  redundant `using`, `$` on strings without interpolation, lambda parameters that shadow outer variables. Fix them,
+  or suppress by-design ones on one line: `// ReSharper disable once <InspectionId> -- <reason>`. Never add new
+  entries to `qodana.sarif.json` to get green.
+- **Size ratchet**: never add a line to the baseline for new code. Split by concept, not by line count: read
+  `docs/refactoring-oversized-code.md` and fill in the PR's **Refactoring plan** when a baselined file changes.
+
+Pull requests: branch `{username}/{short-description}`; the body says `Closes #N`; use the template in
+`.github/pull_request_template.md`; one concern per PR; squash merge. Do not add NuGet packages, change SDK versions or
+edit `.octopus/`, build scripts or workflows without approval (`CLAUDE.md`, Key Conventions).
+
 ## Cursor Cloud specific instructions
 
 ### System Dependencies
