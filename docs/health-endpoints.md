@@ -28,3 +28,9 @@ be `null` until there is a sample.
 
 Counts are for one process instance, not a fleet-wide total. The response contains aggregate numbers only: it does not include
 request paths, query strings, headers, usernames, SQL text, or connection details. Responses are not cached.
+
+## `GET /api/ping`
+
+Returns the plain-text body `pong` (`text/plain; charset=utf-8`) with HTTP 200. The same response is available at the
+versioned route `/api/v1.0/ping`. The endpoint is anonymous and rate-limited (sliding-window API policy). It is a
+reachability probe only: no database or MediatR work.
