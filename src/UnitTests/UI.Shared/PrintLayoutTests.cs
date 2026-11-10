@@ -19,6 +19,7 @@ public class PrintLayoutTests
         var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
         footer.TextContent.ShouldContain(yearText);
         footer.TextContent.ShouldContain("ClearMeasure Labs");
+        footer.TextContent.ShouldContain("· Facilities");
 
         var link = cut.Find("footer.print-copyright a.print-copyright-link");
         link.GetAttribute("href")!.TrimEnd('/').ShouldBe("https://clearmeasure.com");
@@ -28,5 +29,7 @@ public class PrintLayoutTests
         rel.ShouldContain("noopener");
         rel.ShouldContain("noreferrer");
         link.TextContent.Trim().ShouldBe("ClearMeasure Labs");
+        link.ClassList.ShouldContain("print-copyright-link");
+        footer.ClassList.ShouldContain("print-copyright");
     }
 }
