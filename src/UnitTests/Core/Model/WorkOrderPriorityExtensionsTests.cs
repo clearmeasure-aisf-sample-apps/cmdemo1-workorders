@@ -13,4 +13,12 @@ public class WorkOrderPriorityExtensionsTests
     {
         priority.ToLabel().ShouldBe(expectedLabel);
     }
+
+    [Test]
+    public void ToLabel_WhenPriorityIsUndefined_ShouldThrowArgumentOutOfRangeException()
+    {
+        var undefined = (WorkOrderPriority)99;
+
+        Should.Throw<ArgumentOutOfRangeException>(() => undefined.ToLabel());
+    }
 }
