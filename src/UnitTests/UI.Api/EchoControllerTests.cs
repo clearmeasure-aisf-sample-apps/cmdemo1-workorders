@@ -62,6 +62,7 @@ public class EchoControllerTests
         httpContext.Request.Headers["Authorization"] = "Bearer secret-token";
         httpContext.Request.Headers["X-Api-Key"] = "api-key-value";
         httpContext.Request.Headers["Cookie"] = "session=abc";
+        httpContext.Request.Headers["Set-Cookie"] = "session=abc; HttpOnly";
         httpContext.Request.Headers["Accept"] = "application/json";
 
         var controller = new EchoController
@@ -76,6 +77,34 @@ public class EchoControllerTests
         payload.Headers["Authorization"].ShouldBe(EchoController.RedactedValue);
         payload.Headers["X-Api-Key"].ShouldBe(EchoController.RedactedValue);
         payload.Headers["Cookie"].ShouldBe(EchoController.RedactedValue);
+        payload.Headers["Set-Cookie"].ShouldBe(EchoController.RedactedValue);
         payload.Headers["Accept"].ShouldBe("application/json");
+    }
+
+    [Test]
+    public void Get_Should_RedactSetCookieHeader()
+    {
+        var httpContext = new DefaultHttpContext
+        {
+            Request =
+            {
+                Method = "GET",
+                Path = "/api/echo"
+            }
+        };
+        httpContext.Request.Headers["Set-Cookie"] = "auth=super-secret; Path=/; HttpOnly";
+        httpContext.Request.Headers["User-Agent"] = "EchoControllerTests";
+
+        var controller = new EchoController
+        {
+            ControllerContext = new ControllerContext { HttpContext = httpContext }
+        };
+
+        var result = controller.Get();
+
+        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var payload = ok.Value.ShouldBeOfType<EchoResponse>();
+        payload.Headers["Set-Cookie"].ShouldBe(EchoController.RedactedValue);
+        payload.Headers["User-Agent"].ShouldBe("EchoControllerTests");
     }
 }
