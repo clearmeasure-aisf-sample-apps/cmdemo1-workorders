@@ -88,8 +88,8 @@
                             data-testid="@nameof(Elements.NotificationsButton)"
                             @ref="_bellButtonRef"
                             @onclick="OpenNotificationsPanelAsync"
-                            title="Notifications"
-                            aria-label="Notifications"
+                            title="@NotificationsButtonLabel"
+                            aria-label="@NotificationsButtonLabel"
                             aria-expanded="@(_notificationsPanelOpen ? "true" : "false")">
                         <i class="bi bi-bell" aria-hidden="true"></i>
                         @if (BadgeCount > 0)

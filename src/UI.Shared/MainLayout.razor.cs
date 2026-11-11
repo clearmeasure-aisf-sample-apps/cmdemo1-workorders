@@ -90,6 +90,9 @@ public partial class MainLayout : IAsyncDisposable
 
     private int BadgeCount => _notificationsPanelData?.OverdueAndDueToday.Length ?? 0;
 
+    private string NotificationsButtonLabel =>
+        BadgeCount > 0 ? $"Notifications ({BadgeCount} unread)" : "Notifications";
+
     [JSInvokable]
     public Task OnViewportChanged(bool isNarrow)
     {
