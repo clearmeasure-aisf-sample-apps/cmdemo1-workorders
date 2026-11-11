@@ -80,4 +80,29 @@ public class WorkOrderChatTests
         send.ClassList.ShouldContain("btn-app--primary");
         send.ClassList.ShouldNotContain("btn-secondary");
     }
+
+    [Test]
+    public async Task ShouldAssociateAiAssistantLabelWithChatInput()
+    {
+        await using var ctx = new BunitContext();
+
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var component = ctx.Render<WorkOrderChat>();
+
+        var workOrder = new WorkOrder
+        {
+            Number = "WO-004",
+            Assignee = new Employee("jpalermo", "Jeffrey", "Palermo", "jeffrey@example.com")
+        };
+        await component.InvokeAsync(() => component.Instance.Handle(new WorkOrderSelectedEvent(workOrder)));
+        component.Render();
+
+        var input = component.Find($"[data-testid='{nameof(WorkOrderChat.Elements.ChatInput)}']");
+        input.Id.ShouldBe("work-order-chat-input");
+        var label = component.Find("label.form-label");
+        label.GetAttribute("for").ShouldBe(input.Id);
+        label.TextContent.ShouldBe("AI Assistant");
+    }
 }
