@@ -14,7 +14,7 @@
 - **In Progress** — the board column where the item is actively being worked (option id `47fc9ee4`).
 - **Review** — the board column where a pull request is open (option id `e19122d0`).
 - **Merged** — the board column where the change is on master but not yet deployed (option id `8012c69b`).
-- **TDD** — the board column where the change is deployed to tdd (option id `eeb01ba5`; formerly named Release Queue).
+- **TDD** — the board column where the change is deployed to tdd (option id `eeb01ba5`).
 - **UAT** — the board column where the change is promoted to uat (option id `ebff1a13`).
 - **Done** — the board column where the change is in prod, or a docs-only merge has completed (option id `98236657`). A closed issue is not Done until it is in prod.
 - **Agent run** — one execution of a cloud coding agent for a single phase of a work item.

@@ -12,11 +12,9 @@ Status columns on project 679, in order:
 2. In Progress (`47fc9ee4`) — actively worked
 3. Review (`e19122d0`) — pull request open
 4. Merged (`8012c69b`) — merged to master, not yet deployed
-5. TDD (`eeb01ba5`) — deployed to tdd (former Release Queue option id, renamed)
+5. TDD (`eeb01ba5`) — deployed to tdd
 6. UAT (`ebff1a13`) — promoted to uat
 7. Done (`98236657`) — deployed to prod, or a merged docs-only change
-
-Removed columns (and their option ids): Technical Design (`e6ec2abc`), Development (`9fbceb9c`), Functional Testing (`41091342`). The name Release Queue is gone; `eeb01ba5` now means TDD.
 
 ## Automation that advances the card
 
