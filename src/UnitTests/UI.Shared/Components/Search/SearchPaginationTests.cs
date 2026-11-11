@@ -46,7 +46,7 @@ public class SearchPaginationTests
             .Add(p => p.Page, WorkOrderSearchPager.GetPage(ThreePagesOfRows, 2)));
 
         pagination.Find($"[data-testid='{WorkOrderSearch.Elements.PagePrevButton}']")
-            .GetAttribute("aria-label").ShouldBe("Previous page");
+            .GetAttribute("aria-label").ShouldBe("Prev page");
         pagination.Find($"[data-testid='{WorkOrderSearch.Elements.PageNextButton}']")
             .GetAttribute("aria-label").ShouldBe("Next page");
     }
