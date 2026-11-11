@@ -1,6 +1,7 @@
 @inherits Palermo.BlazorMvc.MvcLayoutComponentBase
 
 <div class="@AppContainerClass">
+    <a class="skip-link visually-hidden-focusable" href="#main-content">Skip to main content</a>
     <aside id="app-navigation-rail" class="@SidebarClass" aria-label="Application sidebar">
         <div class="sidebar-header">
             <div class="church-brand">
@@ -122,7 +123,7 @@
             </Authorized>
         </AuthorizeView>
 
-        <main class="modern-main">
+        <main class="modern-main" id="main-content" tabindex="-1">
             <div class="content-wrapper">
                 @Body
             </div>

@@ -73,6 +73,23 @@ public class MainLayoutTests
     }
 
     [Test]
+    public async Task ShouldRenderSkipToMainContentLinkAsFirstLink()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var firstLink = layout.Find("a");
+        firstLink.TextContent.Trim().ShouldBe("Skip to main content");
+        firstLink.GetAttribute("href").ShouldBe("#main-content");
+
+        var main = layout.Find("main.modern-main");
+        main.GetAttribute("id").ShouldBe("main-content");
+        main.GetAttribute("tabindex").ShouldBe("-1");
+    }
+
+    [Test]
     public async Task ShouldRenderNavigationRailAsideWithAccessibleName()
     {
         await using var ctx = CreateContext();
