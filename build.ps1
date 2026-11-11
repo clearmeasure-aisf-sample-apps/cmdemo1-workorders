@@ -371,10 +371,11 @@ Function AcceptanceTests {
 	$playwrightScript = Join-PathSegments "bin" "Release" $framework "playwright.ps1"
 
 	if (Test-Path $playwrightScript) {
-		& pwsh $playwrightScript install chromium --with-deps
-		if ($LASTEXITCODE -ne 0) {
-			throw "Failed to install Playwright chromium"
-		}
+		# Linux CI: apt retries + optional kernel.org mirror fallback before Playwright --with-deps (issue #1617).
+		$aptResilience = Join-PathSegments $base_dir "scripts" "ci" "AptResilience.ps1"
+		. $aptResilience
+		Initialize-AptForPlaywrightDeps -IsLinuxHost:(Test-IsLinux)
+		Invoke-PlaywrightInstallWithBackoff -PlaywrightScript $playwrightScript -IsLinuxHost:(Test-IsLinux)
 	}
 	else {
 		throw "Playwright script not found at $playwrightScript. Cannot run acceptance tests without the browsers."
