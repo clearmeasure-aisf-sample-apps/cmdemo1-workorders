@@ -674,6 +674,41 @@ public class MainLayoutTests
     }
 
     [Test]
+    public async Task NotificationsButton_AccessibleName_ShouldBeNotifications_WhenBadgeCountIsZero()
+    {
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson");
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        var button = layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']");
+        button.GetAttribute("aria-label").ShouldBe("Notifications");
+        button.GetAttribute("title").ShouldBe("Notifications");
+    }
+
+    [Test]
+    public async Task NotificationsButton_AccessibleName_ShouldIncludeUnreadCount_WhenBadgeCountIsPositive()
+    {
+        WorkOrder[] orders =
+        [
+            new() { Number = "WO-1", Title = "A", Status = WorkOrderStatus.Assigned },
+            new() { Number = "WO-2", Title = "B", Status = WorkOrderStatus.InProgress },
+            new() { Number = "WO-3", Title = "C", Status = WorkOrderStatus.Draft }
+        ];
+        var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(orders, [], []));
+        await using var ctx = CreateContext(authenticateAsUser: "hsimpson", bus: bus);
+
+        var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+
+        await layout.WaitForAssertionAsync(() =>
+        {
+            var button = layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsButton)}']");
+            button.GetAttribute("aria-label").ShouldBe("Notifications (3 unread)");
+            button.GetAttribute("title").ShouldBe("Notifications (3 unread)");
+        });
+    }
+
+    [Test]
     public async Task NotificationsBadge_ShouldNotRender_WhenCountIsZero()
     {
         await using var ctx = CreateContext(authenticateAsUser: "hsimpson");
