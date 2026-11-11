@@ -1,21 +1,32 @@
 # Board Columns (reviewed)
 
-The demo board (project 679) has these seven columns, in order. Factory workers complete their columns through the gateway; the gateway performs the board moves.
+The demo board (project 679) has these seven Status columns, in order. Option ids are on the project's Status field.
 
-| Column | Meaning | Exit condition | Who moves the item out |
-| --- | --- | --- | --- |
-| Todo | Backlog of work not yet started. New work items start here before Technical Design. | The item is selected for preparation and moves to In Progress. | The item owner. |
-| In Progress | The item owner is clarifying the concept, scope and acceptance criteria. | The item is ready for technical design and moves to Technical Design. | The item owner. |
-| Technical Design | The factory worker defines the implementation approach and fixes the scope. | The technical design is recorded and reviewed, then the item moves to Development. | The gateway, after the factory worker completes the design column. |
-| Development | The factory worker implements the change on a branch and opens a pull request. | The change is reviewed and required checks pass, then the item moves to Functional Testing. | The gateway, after the factory worker completes the development column. |
-| Functional Testing | The factory worker validates the pull request against the acceptance criteria before merge. | Validation passes and the applicable approvals and checks permit merge; the merged item proceeds to Release Queue, or directly to Done for docs-only changes. | The gateway, after validation and merge. |
-| Release Queue | The merged change waits for its release candidate to reach production. | The release containing the change is deployed successfully to production, then the item moves to Done. | The gateway's post-merge release settlement. |
-| Done | The item is complete: its change is deployed, or its docs-only pull request is merged. | Terminal column; no normal exit. | No one in the normal flow. |
+| Column | Option id | Meaning | Exit condition | Who moves the item out |
+| --- | --- | --- | --- | --- |
+| Todo | `f75ad846` | Not started yet. New work items start here. | The item is claimed for work and moves to In Progress. | The item owner or the AI ops bot. |
+| In Progress | `47fc9ee4` | Actively being worked on (design, implementation, or fixes). | A pull request for the item is opened, then the item moves to Review. | Automation when a PR opens (or the bot when it opens the PR). |
+| Review | `e19122d0` | A pull request is open. Required checks and review run here. | The pull request is merged to master, then the item moves to Merged — or straight to Done when every changed file is docs-only (`*.md` or under `docs/**`). | Automation on merge. |
+| Merged | `8012c69b` | Merged to master, not yet deployed. | An Octopus deploy that includes the item's commits reaches tdd, then the item moves to TDD. | Automation on Octopus deploy to tdd. |
+| TDD | `eeb01ba5` | Deployed to tdd. | The release is promoted to uat, then the item moves to UAT. | Automation on Octopus deploy to uat. |
+| UAT | `ebff1a13` | Promoted to uat. | The release is promoted to prod, then the item moves to Done. | Automation on Octopus deploy to prod. |
+| Done | `98236657` | Deployed to prod, or a docs-only change that was merged. | Terminal column; no normal exit. | No one in the normal flow. |
+
+## Automation
+
+| Event | Status move |
+| --- | --- |
+| Pull request opened for the item | → Review |
+| Pull request merged | → Merged |
+| Pull request merged and every changed file is docs-only (`*.md` or `docs/**`) | → Done |
+| Octopus deploy to tdd / uat / prod that includes the item's commits | → TDD / UAT / Done |
+
+Built-in project workflows such as "Item added to project", "Auto-close issue" and "Auto-add sub-issues" stay as they are. There is no "closed → Done" workflow: a closed issue is not Done until it is in prod (unless it was a docs-only merge that went straight to Done).
 
 ## Docs-only changes
 
-A merge that changes only documentation publishes no release candidate. The gateway moves such a card straight from Functional Testing to Done, bypassing Release Queue because there is nothing to deploy.
+A merge that changes only documentation (`*.md` or paths under `docs/**`) publishes no release candidate. Automation moves such a card straight from Review to Done on merge, bypassing Merged, TDD and UAT because there is nothing to deploy.
 
 ## Production incidents
 
-When the health check reports unhealthy, the factory files a Production Incident into Release Queue and works it immediately.
+When the health check reports unhealthy, the factory files a Production Incident into In Progress and works it immediately.

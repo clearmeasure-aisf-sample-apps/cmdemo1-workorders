@@ -8,11 +8,11 @@ Board-driven automated agents (for example IBM Bob) use:
 <tool>/<issue-number>-<column>
 ```
 
-Example: `ibmbob/1234-development`
+Example: `ibmbob/1234-in-progress`
 
 - `<tool>` — agent or tool name (e.g. `ibmbob`)
 - `<issue-number>` — work item / issue number
-- `<column>` — board column the work is in (e.g. `development`)
+- `<column>` — board column the work is in (e.g. `in-progress`, `review`)
 
 ## Other patterns still in use
 
@@ -20,10 +20,10 @@ This repo still documents and uses additional branch patterns. Do not assume a s
 
 | Pattern | Where it appears | Example |
 |---|---|---|
-| `<tool>/<issue-number>-<column>` | Canonical for board-driven agents (this page) | `ibmbob/1234-development` |
+| `<tool>/<issue-number>-<column>` | Canonical for board-driven agents (this page) | `ibmbob/1234-in-progress` |
 | `feature/issue-{number}-{slug}` | AI Factory executor (`.bob/skills/ai-factory-executor`) | `feature/issue-6936-demo-issue-4` |
 | `{username}/{branch-description}` | General Copilot / contributor guidance (`.github/copilot-instructions.md`) | `jeffreypalermo/fix-work-order-status` |
-| `factory-worker/<issue-number>-<column>` | Factory worker sessions (the gateway's owner sessions) | `factory-worker/201-development` |
+| `factory-worker/<issue-number>-<column>` | Factory worker sessions (the gateway's owner sessions) | `factory-worker/201-in-progress` |
 
 Prefer the pattern required by the factory or instructions that launched the session. When in doubt for a board-driven IBM Bob session, use `<tool>/<issue-number>-<column>`.
 

@@ -6,15 +6,26 @@ Issues assigned to `cm-ai-ops-bot` on repo `clearmeasure-aisf-sample-apps/cmdemo
 
 ## Column-by-column flow
 
-The bot advances each issue one column at a time and never skips columns. Before every board move it posts a journal comment on the issue. The columns, in order, are:
+Status columns on project 679, in order:
 
-1. Todo
-2. In Progress
-3. Technical Design
-4. Development
-5. Functional Testing
-6. Release Queue
-7. Done
+1. Todo (`f75ad846`) — not started
+2. In Progress (`47fc9ee4`) — actively worked
+3. Review (`e19122d0`) — pull request open
+4. Merged (`8012c69b`) — merged to master, not yet deployed
+5. TDD (`eeb01ba5`) — deployed to tdd
+6. UAT (`ebff1a13`) — promoted to uat
+7. Done (`98236657`) — deployed to prod, or a merged docs-only change
+
+## Automation that advances the card
+
+| Event | Move |
+| --- | --- |
+| Pull request opened | → Review |
+| Pull request merged | → Merged |
+| Docs-only merge (`*.md` / `docs/**` only) | → Done |
+| Octopus deploy to tdd / uat / prod | → TDD / UAT / Done |
+
+A closed issue is not Done until it is in prod (docs-only merges excepted).
 
 ## What the bot posts and opens
 
@@ -29,10 +40,10 @@ While working an item the bot:
 
 After required gates pass — the **Build result** check and the **secret-scan** check — the bot squash-merges the pull request.
 
-It then shepherds deploy verification through production:
+Deploy verification then follows the release path:
 
 - Confirms the `master` **Build** and the **Release** workflow
-- Drives Octopus project `cmdemo1-ui` through `tdd`, `uat`, and `prod`
+- Octopus project `cmdemo1-ui` promotes through `tdd`, `uat`, and `prod`; each successful deploy moves the card to **TDD**, **UAT**, or **Done**
 - Verifies `/_build` and `/_healthcheck/detailed` on each environment
 
-The issue moves to **Done** only when production verification has succeeded.
+The issue moves to **Done** when production verification has succeeded, or immediately on merge when the change is docs-only.
