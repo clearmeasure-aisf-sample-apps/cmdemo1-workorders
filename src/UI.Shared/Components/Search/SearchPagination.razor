@@ -3,7 +3,7 @@
 
 <nav aria-label="Pagination" class="pagination-nav">
     <button type="button" class="page-button" data-testid="@WorkOrderSearch.Elements.PagePrevButton" disabled="@(!Page.HasPrevious)"
-            @onclick="() => OnPageSelected.InvokeAsync(Page.Page - 1)">
+            aria-label="Previous page" @onclick="() => OnPageSelected.InvokeAsync(Page.Page - 1)">
         <i class="bi bi-chevron-left" aria-hidden="true"></i> Prev
     </button>
     @foreach (var pageNumber in Page.PageNumbers)
@@ -14,7 +14,7 @@
                 aria-label="@($"Page {pageNumber}")" @onclick="() => OnPageSelected.InvokeAsync(pageNumber)">@pageNumber</button>
     }
     <button type="button" class="page-button" data-testid="@WorkOrderSearch.Elements.PageNextButton" disabled="@(!Page.HasNext)"
-            @onclick="() => OnPageSelected.InvokeAsync(Page.Page + 1)">
+            aria-label="Next page" @onclick="() => OnPageSelected.InvokeAsync(Page.Page + 1)">
         Next <i class="bi bi-chevron-right" aria-hidden="true"></i>
     </button>
 </nav>

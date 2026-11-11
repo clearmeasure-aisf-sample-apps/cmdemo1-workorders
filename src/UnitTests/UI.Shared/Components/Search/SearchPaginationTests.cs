@@ -36,4 +36,18 @@ public class SearchPaginationTests
 
         chosen.ShouldBe(2);
     }
+
+    [Test]
+    public async Task ShouldExposeDescriptiveAccessibleNames_OnPrevAndNextButtons()
+    {
+        await using var ctx = new BunitContext();
+
+        var pagination = ctx.Render<SearchPagination>(parameters => parameters
+            .Add(p => p.Page, WorkOrderSearchPager.GetPage(ThreePagesOfRows, 2)));
+
+        pagination.Find($"[data-testid='{WorkOrderSearch.Elements.PagePrevButton}']")
+            .GetAttribute("aria-label").ShouldBe("Previous page");
+        pagination.Find($"[data-testid='{WorkOrderSearch.Elements.PageNextButton}']")
+            .GetAttribute("aria-label").ShouldBe("Next page");
+    }
 }
