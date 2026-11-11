@@ -42,7 +42,7 @@
 
             @if (_isLoading)
             {
-                <div data-testid="@Elements.LoadingIndicator" class="chat-loading">
+                <div data-testid="@Elements.LoadingIndicator" class="chat-loading" role="status">
                     <span>AI is thinking...</span>
                 </div>
             }
@@ -52,6 +52,7 @@
                            data-testid="@Elements.ChatInput"
                            class="form-control chat-input"
                            placeholder="Ask the AI agent a question..."
+                           aria-label="Ask the AI agent a question"
                            @onkeydown="HandleKeyDown"/>
                 <button type="button"
                         data-testid="@Elements.SendButton"

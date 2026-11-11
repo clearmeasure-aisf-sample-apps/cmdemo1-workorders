@@ -33,6 +33,17 @@ public class ApplicationChatTests
     }
 
     [Test]
+    public async Task ShouldNameChatInputWithAriaLabel()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<ApplicationChat>();
+
+        var chatInput = component.Find($"[data-testid='{ApplicationChat.Elements.ChatInput}']");
+        chatInput.GetAttribute("aria-label").ShouldBe("Ask the AI agent a question");
+    }
+
+    [Test]
     public async Task ShouldRenderUsageHintUnderHeading()
     {
         await using var ctx = CreateContext();
