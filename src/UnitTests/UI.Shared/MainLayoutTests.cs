@@ -73,6 +73,17 @@ public class MainLayoutTests
     }
 
     [Test]
+    public async Task ShouldRenderNavigationRailAsideWithAccessibleName()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
+        var layout = component.FindComponent<MainLayout>();
+
+        layout.Find("#app-navigation-rail").GetAttribute("aria-label").ShouldBe("Application sidebar");
+    }
+
+    [Test]
     public async Task ShouldRenderNavRailToggleWithExpandedStateByDefault()
     {
         await using var ctx = CreateContext();
