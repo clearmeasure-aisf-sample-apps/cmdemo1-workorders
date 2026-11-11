@@ -41,11 +41,6 @@
       "reason": "Same instrumentation package as UI.Server so the acceptance host restore matches production. Registration lives in ServiceDefaults, so this assembly is not referenced here."
     },
     {
-      "project": "src/ChurchBulletin.AppHost/ChurchBulletin.AppHost.csproj",
-      "package": "MessagePack",
-      "reason": "Direct pin above the vulnerable MessagePack version the Aspire SDK pulls in (NU1902/NU1903). AppHost code does not call MessagePack."
-    },
-    {
       "project": "src/ChurchBulletin.ServiceDefaults/ChurchBulletin.ServiceDefaults.csproj",
       "package": "OpenTelemetry.Exporter.Console",
       "reason": "Console exporter is part of the shared telemetry package set. No ServiceDefaults call site references that assembly."
