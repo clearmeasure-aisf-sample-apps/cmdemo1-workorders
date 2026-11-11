@@ -280,12 +280,12 @@ public class MainLayoutTests
         layout.FindAll("#app-navigation-rail footer").Count.ShouldBe(0);
 
         var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
-        footer.TextContent.ShouldContain(yearText);
-        footer.TextContent.ShouldContain("ClearMeasure Labs");
+        string.Join(' ', footer.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .ShouldContain($"© {yearText} Clear Measure");
 
         var link = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}'] .site-footer-link");
         link.GetAttribute("href")!.TrimEnd('/').ShouldBe("https://clearmeasure.com");
-        link.TextContent.Trim().ShouldBe("ClearMeasure Labs");
+        link.TextContent.Trim().ShouldBe("Clear Measure");
     }
 
     [Test]
@@ -298,8 +298,8 @@ public class MainLayoutTests
 
         var footer = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}']");
         var yearText = DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
-        footer.TextContent.ShouldContain(yearText);
-        footer.TextContent.ShouldContain("ClearMeasure Labs");
+        string.Join(' ', footer.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .ShouldContain($"© {yearText} Clear Measure");
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}'] .site-footer-link").GetAttribute("href")!.TrimEnd('/').ShouldBe("https://clearmeasure.com");
     }
 
