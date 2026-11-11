@@ -20,10 +20,16 @@ public class SlaHealthCardTests
     [Test]
     public void ShouldRenderLoadingState_WhenInitializing()
     {
-        var ctx = CreateContext();
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ctx = CreateContext(pending: gate.Task);
         var component = ctx.Render<SlaHealthCard>();
 
+        var loading = component.Find(".sla-health-loading");
+        loading.TextContent.ShouldBe("Loading...");
+        loading.GetAttribute("role").ShouldBe("status");
         component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']").ShouldNotBeNull();
+
+        gate.SetResult();
     }
 
     [Test]
@@ -280,15 +286,15 @@ public class SlaHealthCardTests
         css.ShouldNotContain("var(--font-size-small)");
     }
 
-    private static BunitContext CreateContext(SlaHealth? health = null)
+    private static BunitContext CreateContext(SlaHealth? health = null, Task? pending = null)
     {
         var ctx = new BunitContext();
-        ctx.Services.AddSingleton<IBus>(new StubSlaHealthBus(health));
+        ctx.Services.AddSingleton<IBus>(new StubSlaHealthBus(health, pending));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         return ctx;
     }
 
-    private class StubSlaHealthBus(SlaHealth? health = null) : Bus(null!)
+    private class StubSlaHealthBus(SlaHealth? health = null, Task? pending = null) : Bus(null!)
     {
         private readonly SlaHealth _health = health ?? new SlaHealth
         {
@@ -298,11 +304,16 @@ public class SlaHealthCardTests
             LastMonthOrderCount = 0
         };
 
-        public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        public override async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
+            if (pending is not null)
+            {
+                await pending;
+            }
+
             if (request is SlaHealthQuery)
             {
-                return Task.FromResult<TResponse>((TResponse)(object)_health);
+                return (TResponse)(object)_health;
             }
 
             throw new NotImplementedException();

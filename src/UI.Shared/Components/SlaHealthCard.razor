@@ -6,7 +6,7 @@
 <div class="sla-health-card @CardStateClass" data-testid="@Elements.SlaHealthCard">
     @if (_health == null)
     {
-        <div class="sla-health-loading">Loading...</div>
+        <div class="sla-health-loading" role="status">Loading...</div>
     }
     else if (_health.CurrentMonthPercentage is null)
     {
