@@ -19,6 +19,22 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 public class TeamsAndVendorsTests
 {
     [Test]
+    public async Task TeamsAndVendors_WhileLoading_AnnouncesStatusToScreenReaders()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var bus = new StubBusTeamsAndVendors { Pending = gate.Task };
+        await using var ctx = CreateContext(bus);
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<TeamsAndVendors>());
+
+        var loading = component.Find(".teams-loading");
+        loading.GetAttribute("role").ShouldBe("status");
+        loading.TextContent.ShouldContain("Loading...");
+
+        gate.SetResult();
+    }
+
+    [Test]
     public async Task TeamsAndVendors_OnInitialized_ShouldLoadAllAssignableEmployees()
     {
         var bus = new StubBusTeamsAndVendors();
@@ -581,12 +597,19 @@ public class StubBusTeamsAndVendors : StubBus
 
     public int VendorsQueriesSent { get; private set; }
 
-    public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+    public Task? Pending { get; init; }
+
+    public override async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
     {
+        if (Pending is not null)
+        {
+            await Pending;
+        }
+
         if (request is EmployeeGetAllQuery)
         {
             EmployeeGetAllQueriesSent++;
-            return Task.FromResult<TResponse>((TResponse)(object)EmployeesToReturn);
+            return (TResponse)(object)EmployeesToReturn;
         }
 
         if (request is EmployeeWorkLoadSummaryQuery)
@@ -605,27 +628,27 @@ public class StubBusTeamsAndVendors : StubBus
                     }
                 })
                 .ToArray();
-            return Task.FromResult<TResponse>((TResponse)(object)summaries);
+            return (TResponse)(object)summaries;
         }
 
         if (request is EmployeeWorkLoadQuery workLoadQuery)
         {
             EmployeeWorkLoadQueriesSent.Add(workLoadQuery);
             var load = new EmployeeWorkLoad { AssignedAndOpen = 5, InProgress = 2, Overdue = 1, CompletedLast30Days = 10 };
-            return Task.FromResult<TResponse>((TResponse)(object)load);
+            return (TResponse)(object)load;
         }
 
         if (request is TeamsQuery)
         {
-            return Task.FromResult<TResponse>((TResponse)(object)TeamsToReturn);
+            return (TResponse)(object)TeamsToReturn;
         }
 
         if (request is VendorsQuery)
         {
             VendorsQueriesSent++;
-            return Task.FromResult<TResponse>((TResponse)(object)VendorsToReturn);
+            return (TResponse)(object)VendorsToReturn;
         }
 
-        return base.Send(request);
+        return await base.Send(request);
     }
 }
