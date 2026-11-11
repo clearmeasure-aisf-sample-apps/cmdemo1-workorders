@@ -62,6 +62,35 @@ public class WorkOrderAttachmentListTests
         list.Find($"[data-testid='{nameof(WorkOrderManage.Elements.AttachmentRemoveError)}']").TextContent.ShouldBe("Not yours.");
     }
 
+    [Test]
+    public async Task ShouldNameTableAndScopeColumnHeaders_WhenAttachmentsExist()
+    {
+        await using var ctx = ComponentContextBuilder.WithStubBuses(new StubRemoveBus(RemoveAttachmentResult.Success));
+
+        var list = ctx.Render<WorkOrderAttachmentList>(parameters => Parameters(parameters, [Photo], canRemove: false, () => { }));
+
+        var title = list.Find("h2");
+        title.TextContent.ShouldBe("Attachments");
+        list.Find("table").GetAttribute("aria-labelledby").ShouldBe(title.Id);
+        list.FindAll("th").ShouldAllBe(th => th.GetAttribute("scope") == "col");
+        list.FindAll("th").Count.ShouldBe(5);
+    }
+
+    [Test]
+    public async Task ShouldHideActionsHeader_WhenTheUserMayRemove()
+    {
+        await using var ctx = ComponentContextBuilder.WithStubBuses(new StubRemoveBus(RemoveAttachmentResult.Success));
+
+        var list = ctx.Render<WorkOrderAttachmentList>(parameters => Parameters(parameters, [Photo], canRemove: true, () => { }));
+
+        list.FindAll("th").ShouldAllBe(th => th.GetAttribute("scope") == "col");
+        list.FindAll("th").Count.ShouldBe(6);
+        var actionHeader = list.FindAll("th").Last();
+        var hidden = actionHeader.QuerySelector(".visually-hidden");
+        hidden.ShouldNotBeNull();
+        hidden.TextContent.ShouldBe("Actions");
+    }
+
     private static void Parameters(
         ComponentParameterCollectionBuilder<WorkOrderAttachmentList> parameters,
         WorkOrderAttachment[] attachments,
