@@ -6,8 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>dotnet-Worker-b9b5c0f8-4249-469b-8bfb-c4cc9398b886</UserSecretsId>
-    <!-- Aspire 13.6.5 defaults AspireUseCliBundle to false and emits ASPIRE010; CI treats that as error. -->
-    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <!-- Aspire 13.6.5 warns ASPIRE010 when AspireUseCliBundle is false (the default). Keep the
+         NuGet dashboard/DCP path so CI can build without installing the Aspire CLI; enabling
+         AspireUseCliBundle=true fails CI with ASPIRE009 when the CLI bundle is missing. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
