@@ -10,15 +10,15 @@
 else
 {
     <div class="status-history-section token-card" data-testid="@WorkOrderManage.Elements.StatusHistory">
-        <h2 class="card-title">Status Change History</h2>
-        <table class="table table-sm">
+        <h2 id="status-history-title" class="card-title">Status Change History</h2>
+        <table class="table table-sm" aria-labelledby="status-history-title">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>From Status</th>
-                    <th>To Status</th>
-                    <th>Changed By</th>
-                    <th>Reason</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">From Status</th>
+                    <th scope="col">To Status</th>
+                    <th scope="col">Changed By</th>
+                    <th scope="col">Reason</th>
                 </tr>
             </thead>
             <tbody>
