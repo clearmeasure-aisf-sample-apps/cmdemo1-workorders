@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Net;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 using ClearMeasure.Bootcamp.Core;
 using Microsoft.EntityFrameworkCore;
 
@@ -535,6 +536,9 @@ public class ServerFixture
 
             new ZDataLoader().LoadData();
             TestContext.Out.WriteLine("ZDataLoader().LoadData(); - complete");
+
+            var deleted = AcceptanceTestEmployees.DeleteUnreferenced(context, AcceptanceTestEmployees.UserNamePrefix);
+            TestContext.Out.WriteLine($"Deleted {deleted} unreferenced employee(s) left by earlier acceptance runs");
 
             // Release all pooled connections so the server process opens the
             // database file with a clean view of the seeded data
