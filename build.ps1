@@ -65,9 +65,11 @@ Function Enable-Arm64VsTestDirectoryCheck {
 	}
 
 	# The SDK reads this (not VSTEST_ARTIFACTS_DIRECTORY, which it overwrites) and creates the
-	# artifacts directory under it with mode 0700.
+	# artifacts directory under it with mode 0700. The assembly is ReadyToRun, so the runtime
+	# would keep executing the unpatched native code; turning ReadyToRun off makes it run the IL.
 	$env:XDG_RUNTIME_DIR = $dir
 	$env:VSTEST_ARTIFACTS_BASE_DIRECTORY = $dir
+	$env:DOTNET_ReadyToRun = "0"
 
 	$dotnetPath = (Get-Command dotnet).Source
 	while ($true) {
