@@ -45,6 +45,21 @@ if ([string]::IsNullOrEmpty($projectConfig)) { $projectConfig = "Release" }
 
 # ── Main Functions ──────────────────────────────────────────────────────────────
 
+Function Disable-Arm64VsTestDirectoryVerification {
+	# TODO: remove once a .NET 10 SDK ships the fix for microsoft/vstest#16657.
+	# SDK 10.0.404 is the latest 10.0 patch (2026-11-10). Its vstest, like 9.0.321, opens the
+	# session directory with flags 196608 on every OS but macOS. On aarch64 those bits are
+	# O_DIRECT|O_LARGEFILE, so open() returns errno 22 and dotnet test exits 1 after every test
+	# has passed. A mode 0700 directory does not change that. No newer 10.0 SDK exists.
+	# https://github.com/microsoft/vstest/issues/16657
+	if (-not (Test-IsLinux) -or -not (Test-IsArmArchitecture)) {
+		return
+	}
+
+	$env:VSTEST_DISABLE_ARTIFACTS_DIRECTORY_VERIFICATION = "1"
+	Log-Message -Message "Skipping vstest's artifacts directory verification on linux-arm64 (microsoft/vstest#16657, SDK 10.0.404)." -Type "INFO"
+}
+
 Function Init {
 	$pwshPath = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
 	if (-not $pwshPath) {
@@ -93,6 +108,8 @@ Function Init {
 	exec {
 		& dotnet restore $solutionName -nologo --interactive -v $verbosity /p:SuppressNETCoreSdkPreviewMessage=true
 	}
+
+	Disable-Arm64VsTestDirectoryVerification
 }
 
 Function Compile {
