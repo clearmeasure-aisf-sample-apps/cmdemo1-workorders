@@ -2,7 +2,7 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime Js
 
-<button type="button" data-testid="@WorkOrderManage.Elements.CopyWorkOrderNumber" class="btn-app btn-app--secondary" aria-label="Copy work order number" @onclick="CopyAsync">
+<button type="button" data-testid="@WorkOrderManage.Elements.CopyWorkOrderNumber" class="btn-app btn-app--secondary" aria-label="@AccessibleName" @onclick="CopyAsync">
     <i class="@(_showSuccess ? "bi bi-check2" : "bi bi-clipboard")" aria-hidden="true"></i>
     Copy
 </button>
@@ -18,6 +18,9 @@
 
     /// <summary>The work-order number to copy; nothing is copied when it is empty.</summary>
     [Parameter] public string? Number { get; set; }
+
+    private string AccessibleName =>
+        string.IsNullOrEmpty(Number) ? "Copy work order number" : $"Copy work order number {Number}";
 
     /// <summary>Copies the number and shows "Copied" for two seconds. A browser without clipboard access is ignored.</summary>
     private async Task CopyAsync()

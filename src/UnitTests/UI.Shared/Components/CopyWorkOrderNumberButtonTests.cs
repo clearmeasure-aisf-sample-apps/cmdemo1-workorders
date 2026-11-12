@@ -35,4 +35,26 @@ public class CopyWorkOrderNumberButtonTests
 
         ctx.JSInterop.Invocations.ShouldBeEmpty();
     }
+
+    [Test]
+    public async Task ShouldIncludeTheNumberInTheAccessibleName_WhenNumberIsSet()
+    {
+        await using var ctx = ComponentContextBuilder.WithStubBuses();
+        var cut = ctx.Render<CopyWorkOrderNumberButton>(parameters => parameters.Add(p => p.Number, "WO-42"));
+
+        cut.Find($"[data-testid='{nameof(WorkOrderManage.Elements.CopyWorkOrderNumber)}']")
+            .GetAttribute("aria-label")
+            .ShouldBe("Copy work order number WO-42");
+    }
+
+    [Test]
+    public async Task ShouldUseTheDefaultAccessibleName_WhenNumberIsEmpty()
+    {
+        await using var ctx = ComponentContextBuilder.WithStubBuses();
+        var cut = ctx.Render<CopyWorkOrderNumberButton>();
+
+        cut.Find($"[data-testid='{nameof(WorkOrderManage.Elements.CopyWorkOrderNumber)}']")
+            .GetAttribute("aria-label")
+            .ShouldBe("Copy work order number");
+    }
 }

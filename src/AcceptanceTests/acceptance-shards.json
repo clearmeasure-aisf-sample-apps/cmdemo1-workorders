@@ -510,6 +510,15 @@
       "longestArmSeconds": 0.0
     },
     {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
+      "shard": 5,
+      "tests": 5,
+      "x64Seconds": 0.0,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCreatedRelativeTimeTests",
       "shard": 5,
       "tests": 1,
