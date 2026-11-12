@@ -45,91 +45,19 @@ if ([string]::IsNullOrEmpty($projectConfig)) { $projectConfig = "Release" }
 
 # ── Main Functions ──────────────────────────────────────────────────────────────
 
-Function Enable-Arm64VsTestDirectoryCheck {
-	# SDK 10.0.404's vstest opens its session directory with the flags 196608 on every OS but macOS
-	# (ldc.i4 in Microsoft.TestPlatform.CrossPlatEngine). On aarch64 those bits are O_DIRECT|O_LARGEFILE,
-	# and open() of a directory returns errno 22 whether the directory is mode 0700 or 0755, so the
-	# fchmod that would make it owner-only never runs. .NET's DllImport of open() binds libc directly,
-	# so LD_PRELOAD cannot intercept it. The one ldc.i4 is rewritten here to aarch64
-	# O_DIRECTORY|O_NOFOLLOW (0xC000); the check itself stays on and then passes.
+Function Disable-Arm64VsTestDirectoryVerification {
+	# TODO: remove once a .NET 10 SDK ships the fix for microsoft/vstest#16657.
+	# SDK 10.0.404 is the latest 10.0 patch (2026-11-10). Its vstest, like 9.0.321, opens the
+	# session directory with flags 196608 on every OS but macOS. On aarch64 those bits are
+	# O_DIRECT|O_LARGEFILE, so open() returns errno 22 and dotnet test exits 1 after every test
+	# has passed. A mode 0700 directory does not change that. No newer 10.0 SDK exists.
+	# https://github.com/microsoft/vstest/issues/16657
 	if (-not (Test-IsLinux) -or -not (Test-IsArmArchitecture)) {
 		return
 	}
 
-	$root = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [System.IO.Path]::GetTempPath() }
-	$dir = Join-Path $root "xdg"
-	New-Item -Path $dir -ItemType Directory -Force | Out-Null
-	& chmod 700 $dir
-	if ($LASTEXITCODE -ne 0) {
-		throw "chmod 700 failed for $dir"
-	}
-
-	# The SDK reads this (not VSTEST_ARTIFACTS_DIRECTORY, which it overwrites) and creates the
-	# artifacts directory under it with mode 0700. The assembly is ReadyToRun, so the runtime
-	# would keep executing the unpatched native code; turning ReadyToRun off makes it run the IL.
-	$env:XDG_RUNTIME_DIR = $dir
-	$env:VSTEST_ARTIFACTS_BASE_DIRECTORY = $dir
-	$env:DOTNET_ReadyToRun = "0"
-
-	$dotnetPath = (Get-Command dotnet).Source
-	while ($true) {
-		$dotnetItem = Get-Item $dotnetPath
-		if ($dotnetItem.LinkType -ne "SymbolicLink") { break }
-		$target = $dotnetItem.Target
-		if ($target -is [array]) { $target = $target[0] }
-		if (-not [System.IO.Path]::IsPathRooted($target)) {
-			$target = Join-Path $dotnetItem.DirectoryName $target
-		}
-		$dotnetPath = $target
-	}
-	$roots = @((Split-Path -Parent $dotnetPath))
-	foreach ($extra in @("/usr/share/dotnet", $env:DOTNET_ROOT, $env:NUGET_PACKAGES, (Join-Path $HOME ".nuget/packages"))) {
-		if (-not [string]::IsNullOrEmpty($extra) -and (Test-Path $extra)) { $roots += $extra }
-	}
-	Log-Message -Message "dotnet $($(& dotnet --version)) at $dotnetPath; searching $(@($roots | Select-Object -Unique) -join ', ')" -Type "INFO"
-	$dlls = @(
-		Get-ChildItem -Path $roots -Recurse -Filter "Microsoft.TestPlatform.CrossPlatEngine.dll" -ErrorAction SilentlyContinue |
-			Where-Object { $_.FullName -notmatch '[\\/]ref[\\/]' }
-	)
-	$patch = @'
-import sys
-from pathlib import Path
-path, staged = Path(sys.argv[1]), Path(sys.argv[2])
-old, new = bytes([0x20, 0x00, 0x00, 0x03, 0x00]), bytes([0x20, 0x00, 0xC0, 0x00, 0x00])
-data = path.read_bytes()
-if data.count(old) != 1:
-    print("skip")
-    raise SystemExit(0)
-updated = data.replace(old, new, 1)
-try:
-    path.write_bytes(updated)
-    print("patched")
-except PermissionError:
-    staged.write_bytes(updated)
-    print("needs-sudo")
-'@
-	Log-Message -Message "Found $($dlls.Count) Microsoft.TestPlatform.CrossPlatEngine.dll." -Type "INFO"
-	$patched = 0
-	foreach ($dll in $dlls) {
-		$staged = Join-Path $dir "vstest-crossplat.dll"
-		$result = ($patch | & python3 - $dll.FullName $staged).Trim()
-		if ($result -eq "needs-sudo") {
-			& sudo cp $staged $dll.FullName
-			if ($LASTEXITCODE -ne 0) { throw "sudo cp failed for $($dll.FullName)" }
-			$result = "patched"
-		}
-		if ($result -eq "patched") {
-			$patched++
-			Log-Message -Message "Rewrote vstest's directory open flags to aarch64 O_DIRECTORY|O_NOFOLLOW in $($dll.FullName)" -Type "INFO"
-		}
-		else {
-			Log-Message -Message "Left $($dll.FullName) unchanged ($result)." -Type "INFO"
-		}
-	}
-	if ($patched -eq 0) {
-		Log-Message -Message "No copy of Microsoft.TestPlatform.CrossPlatEngine.dll still has the x64 directory flags; leaving them unchanged." -Type "INFO"
-	}
-	Log-Message -Message "VSTest artifacts base directory $dir is mode 0700." -Type "INFO"
+	$env:VSTEST_DISABLE_ARTIFACTS_DIRECTORY_VERIFICATION = "1"
+	Log-Message -Message "Skipping vstest's artifacts directory verification on linux-arm64 (microsoft/vstest#16657, SDK 10.0.404)." -Type "INFO"
 }
 
 Function Init {
@@ -181,8 +109,7 @@ Function Init {
 		& dotnet restore $solutionName -nologo --interactive -v $verbosity /p:SuppressNETCoreSdkPreviewMessage=true
 	}
 
-	# After restore, so the vstest assembly NuGet just downloaded is patched too.
-	Enable-Arm64VsTestDirectoryCheck
+	Disable-Arm64VsTestDirectoryVerification
 }
 
 Function Compile {
