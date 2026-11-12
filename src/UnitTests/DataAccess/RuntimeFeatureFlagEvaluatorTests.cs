@@ -94,6 +94,20 @@ public class RuntimeFeatureFlagEvaluatorTests
     }
 
     [Test]
+    public async Task IsEnabledAsync_Should_MatchCompactOctopusSlug_When_ProviderOnlyKnowsThatSlug()
+    {
+        var evaluator = WithOpenFeature(
+            Configuration(
+                ("FeatureFlags:BuildingManagement", "false"),
+                ("FeatureFlags:VendorManagement", "false")),
+            ("buildingmanagement", true),
+            ("vendormanagement", false));
+
+        (await evaluator.IsEnabledAsync(FeatureFlagNames.BuildingManagement)).ShouldBeTrue();
+        (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
+    }
+
+    [Test]
     public async Task IsEnabledAsync_Should_FallBackToConfiguration_When_ProviderLacksTheFlag()
     {
         var evaluator = WithOpenFeature(
@@ -103,9 +117,10 @@ public class RuntimeFeatureFlagEvaluatorTests
         (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
     }
 
-    [TestCase("BuildingManagement", new[] { "building-management", "BuildingManagement" })]
-    [TestCase("ShowPriorityBadges", new[] { "show-priority-badges", "ShowPriorityBadges" })]
-    [TestCase("SampleFeatureA", new[] { "sample-feature-a", "SampleFeatureA" })]
+    [TestCase("BuildingManagement", new[] { "building-management", "buildingmanagement", "BuildingManagement" })]
+    [TestCase("VendorManagement", new[] { "vendor-management", "vendormanagement", "VendorManagement" })]
+    [TestCase("ShowPriorityBadges", new[] { "show-priority-badges", "showprioritybadges", "ShowPriorityBadges" })]
+    [TestCase("SampleFeatureA", new[] { "sample-feature-a", "samplefeaturea", "SampleFeatureA" })]
     [TestCase("lowercase", new[] { "lowercase" })]
     public void OpenFeatureKeys_Should_TryKebabSlugThenName_When_Evaluating(string name, string[] expected)
     {

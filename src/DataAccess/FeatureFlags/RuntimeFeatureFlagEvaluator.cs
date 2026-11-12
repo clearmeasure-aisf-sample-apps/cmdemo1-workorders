@@ -12,8 +12,9 @@ namespace ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 /// Evaluates feature flags at runtime, first match wins:
 /// <list type="number">
 /// <item>Octopus Feature Toggles through OpenFeature, when <see cref="ClientIdentifierKey"/> is configured
-/// (environment variable <c>Octopus__FeatureFlags__ClientIdentifier</c>). The toggle slug is the kebab-case flag
-/// name (<c>building-management</c>) or the flag name itself, ignoring case.</item>
+/// (environment variable <c>Octopus__FeatureFlags__ClientIdentifier</c>). The toggle slug is tried as the
+/// kebab-case flag name (<c>building-management</c>), then the compact lowercase Octopus slug
+/// (<c>buildingmanagement</c>), then the flag name itself (<c>BuildingManagement</c>).</item>
 /// <item>The <c>FeatureFlags</c> configuration section (<c>FeatureFlags:BuildingManagement</c>).</item>
 /// <item>false.</item>
 /// </list>
@@ -79,9 +80,17 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
     /// <summary>The OpenFeature keys tried for <paramref name="featureName"/>, in order.</summary>
     internal static IEnumerable<string> OpenFeatureKeys(string featureName)
     {
-        var slug = ToKebabCase(featureName);
-        yield return slug;
-        if (!string.Equals(slug, featureName, StringComparison.OrdinalIgnoreCase))
+        var kebab = ToKebabCase(featureName);
+        yield return kebab;
+
+        var compact = kebab.Replace("-", string.Empty, StringComparison.Ordinal);
+        if (!string.Equals(compact, kebab, StringComparison.Ordinal))
+        {
+            yield return compact;
+        }
+
+        if (!string.Equals(featureName, kebab, StringComparison.Ordinal)
+            && !string.Equals(featureName, compact, StringComparison.Ordinal))
         {
             yield return featureName;
         }
