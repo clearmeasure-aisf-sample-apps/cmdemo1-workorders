@@ -69,10 +69,22 @@ Function Enable-Arm64VsTestDirectoryCheck {
 	$env:XDG_RUNTIME_DIR = $dir
 	$env:VSTEST_ARTIFACTS_BASE_DIRECTORY = $dir
 
-	$roots = @((Split-Path -Parent (Get-Command dotnet).Source))
-	foreach ($packages in @($env:NUGET_PACKAGES, (Join-Path $HOME ".nuget/packages"))) {
-		if (-not [string]::IsNullOrEmpty($packages) -and (Test-Path $packages)) { $roots += $packages }
+	$dotnetPath = (Get-Command dotnet).Source
+	while ($true) {
+		$dotnetItem = Get-Item $dotnetPath
+		if ($dotnetItem.LinkType -ne "SymbolicLink") { break }
+		$target = $dotnetItem.Target
+		if ($target -is [array]) { $target = $target[0] }
+		if (-not [System.IO.Path]::IsPathRooted($target)) {
+			$target = Join-Path $dotnetItem.DirectoryName $target
+		}
+		$dotnetPath = $target
 	}
+	$roots = @((Split-Path -Parent $dotnetPath))
+	foreach ($extra in @("/usr/share/dotnet", $env:DOTNET_ROOT, $env:NUGET_PACKAGES, (Join-Path $HOME ".nuget/packages"))) {
+		if (-not [string]::IsNullOrEmpty($extra) -and (Test-Path $extra)) { $roots += $extra }
+	}
+	Log-Message -Message "dotnet $($(& dotnet --version)) at $dotnetPath; searching $(@($roots | Select-Object -Unique) -join ', ')" -Type "INFO"
 	$dlls = @(
 		Get-ChildItem -Path $roots -Recurse -Filter "Microsoft.TestPlatform.CrossPlatEngine.dll" -ErrorAction SilentlyContinue |
 			Where-Object { $_.FullName -notmatch '[\\/]ref[\\/]' }
@@ -94,6 +106,7 @@ except PermissionError:
     staged.write_bytes(updated)
     print("needs-sudo")
 '@
+	Log-Message -Message "Found $($dlls.Count) Microsoft.TestPlatform.CrossPlatEngine.dll." -Type "INFO"
 	$patched = 0
 	foreach ($dll in $dlls) {
 		$staged = Join-Path $dir "vstest-crossplat.dll"
@@ -106,6 +119,9 @@ except PermissionError:
 		if ($result -eq "patched") {
 			$patched++
 			Log-Message -Message "Rewrote vstest's directory open flags to aarch64 O_DIRECTORY|O_NOFOLLOW in $($dll.FullName)" -Type "INFO"
+		}
+		else {
+			Log-Message -Message "Left $($dll.FullName) unchanged ($result)." -Type "INFO"
 		}
 	}
 	if ($patched -eq 0) {
