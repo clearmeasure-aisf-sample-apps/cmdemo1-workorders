@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
@@ -82,7 +83,7 @@ public abstract class AcceptanceTestBase
         if (!RequiresBrowser) return;
 
         var testTag = Guid.NewGuid().ToString("N")[..8];
-        var currentUser = CreateTestUser(testTag);
+        var currentUser = AcceptanceTestEmployees.Add(testTag);
 
         var x = RandomPosition.Next(0, 1200);
         var y = RandomPosition.Next(0, 700);
@@ -213,20 +214,6 @@ public abstract class AcceptanceTestBase
     protected TK Faker<TK>()
     {
         return TestHost.Faker<TK>();
-    }
-
-    /// <summary>
-    /// Creates a unique test user for this test instance to enable parallel test execution.
-    /// </summary>
-    private static Employee CreateTestUser(string testTag)
-    {
-        using var context = TestHost.NewDbContext();
-        var employee = TestHost.Faker<Employee>();
-        employee.UserName = $"test_{testTag}_{employee.UserName}";
-        employee.AddRole(new Role("admin", true, true));
-        context.Add(employee);
-        context.SaveChanges();
-        return employee;
     }
 
     protected async Task LoginAsCurrentUser()
