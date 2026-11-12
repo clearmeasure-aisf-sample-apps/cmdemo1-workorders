@@ -46,11 +46,12 @@ if ([string]::IsNullOrEmpty($projectConfig)) { $projectConfig = "Release" }
 # ── Main Functions ──────────────────────────────────────────────────────────────
 
 Function Enable-Arm64VsTestDirectoryCheck {
-	# SDK 10.0.404's vstest opens its session directory with flags 196608 on every OS but macOS.
-	# On aarch64 those bits are O_DIRECT|O_LARGEFILE, so open() of a directory returns errno 22
-	# (EINVAL) even when the directory is mode 0700; the fchmod that would make it owner-only never
-	# runs, and the following check fails the run. scripts/ci/vstest-arm64-directory-open.c rewrites
-	# that one flag value to the aarch64 O_DIRECTORY|O_NOFOLLOW, so the check itself runs and passes.
+	# SDK 10.0.404's vstest opens its session directory with the flags 196608 on every OS but macOS
+	# (ldc.i4 in Microsoft.TestPlatform.CrossPlatEngine). On aarch64 those bits are O_DIRECT|O_LARGEFILE,
+	# and open() of a directory returns errno 22 whether the directory is mode 0700 or 0755, so the
+	# fchmod that would make it owner-only never runs. .NET's DllImport of open() binds libc directly,
+	# so LD_PRELOAD cannot intercept it. The one ldc.i4 is rewritten here to aarch64
+	# O_DIRECTORY|O_NOFOLLOW (0xC000); the check itself stays on and then passes.
 	if (-not (Test-IsLinux) -or -not (Test-IsArmArchitecture)) {
 		return
 	}
@@ -63,24 +64,54 @@ Function Enable-Arm64VsTestDirectoryCheck {
 		throw "chmod 700 failed for $dir"
 	}
 
+	# The SDK reads this (not VSTEST_ARTIFACTS_DIRECTORY, which it overwrites) and creates the
+	# artifacts directory under it with mode 0700.
 	$env:XDG_RUNTIME_DIR = $dir
-	$env:VSTEST_ARTIFACTS_DIRECTORY = $dir
+	$env:VSTEST_ARTIFACTS_BASE_DIRECTORY = $dir
 
-	$source = Join-Path $base_dir "scripts/ci/vstest-arm64-directory-open.c"
-	$shim = Join-Path $dir "vstest-arm64-directory-open.so"
-	& gcc -shared -fPIC -Wall -Werror -o $shim $source -ldl
-	if ($LASTEXITCODE -ne 0) {
-		throw "gcc could not build $shim from $source. An ARM build needs gcc so vstest can open its artifacts directory."
+	$roots = @((Split-Path -Parent (Get-Command dotnet).Source))
+	foreach ($packages in @($env:NUGET_PACKAGES, (Join-Path $HOME ".nuget/packages"))) {
+		if (-not [string]::IsNullOrEmpty($packages) -and (Test-Path $packages)) { $roots += $packages }
 	}
-
-	if ([string]::IsNullOrEmpty($env:LD_PRELOAD)) {
-		$env:LD_PRELOAD = $shim
+	$dlls = @(
+		Get-ChildItem -Path $roots -Recurse -Filter "Microsoft.TestPlatform.CrossPlatEngine.dll" -ErrorAction SilentlyContinue |
+			Where-Object { $_.FullName -notmatch '[\\/]ref[\\/]' }
+	)
+	$patch = @'
+import sys
+from pathlib import Path
+path, staged = Path(sys.argv[1]), Path(sys.argv[2])
+old, new = bytes([0x20, 0x00, 0x00, 0x03, 0x00]), bytes([0x20, 0x00, 0xC0, 0x00, 0x00])
+data = path.read_bytes()
+if data.count(old) != 1:
+    print("skip")
+    raise SystemExit(0)
+updated = data.replace(old, new, 1)
+try:
+    path.write_bytes(updated)
+    print("patched")
+except PermissionError:
+    staged.write_bytes(updated)
+    print("needs-sudo")
+'@
+	$patched = 0
+	foreach ($dll in $dlls) {
+		$staged = Join-Path $dir "vstest-crossplat.dll"
+		$result = ($patch | & python3 - $dll.FullName $staged).Trim()
+		if ($result -eq "needs-sudo") {
+			& sudo cp $staged $dll.FullName
+			if ($LASTEXITCODE -ne 0) { throw "sudo cp failed for $($dll.FullName)" }
+			$result = "patched"
+		}
+		if ($result -eq "patched") {
+			$patched++
+			Log-Message -Message "Rewrote vstest's directory open flags to aarch64 O_DIRECTORY|O_NOFOLLOW in $($dll.FullName)" -Type "INFO"
+		}
 	}
-	else {
-		$env:LD_PRELOAD = "$shim $($env:LD_PRELOAD)"
+	if ($patched -eq 0) {
+		Log-Message -Message "No copy of Microsoft.TestPlatform.CrossPlatEngine.dll still has the x64 directory flags; leaving them unchanged." -Type "INFO"
 	}
-
-	Log-Message -Message "VSTest artifacts directory $dir is mode 0700; loaded $shim so aarch64 open() accepts the directory flags SDK 10.0.404 sends." -Type "INFO"
+	Log-Message -Message "VSTest artifacts base directory $dir is mode 0700." -Type "INFO"
 }
 
 Function Init {
@@ -88,8 +119,6 @@ Function Init {
 	if (-not $pwshPath) {
 		throw "PowerShell 7 is required to run this build script."
 	}
-
-	Enable-Arm64VsTestDirectoryCheck
 
 	Initialize-SqlServerModule
 
@@ -133,6 +162,9 @@ Function Init {
 	exec {
 		& dotnet restore $solutionName -nologo --interactive -v $verbosity /p:SuppressNETCoreSdkPreviewMessage=true
 	}
+
+	# After restore, so the vstest assembly NuGet just downloaded is patched too.
+	Enable-Arm64VsTestDirectoryCheck
 }
 
 Function Compile {
