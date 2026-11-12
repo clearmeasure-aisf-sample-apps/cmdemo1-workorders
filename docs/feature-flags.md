@@ -18,7 +18,7 @@ To add a flag, add a constant to `FeatureFlagNames` and to `FeatureFlagNames.All
 
 `RuntimeFeatureFlagEvaluator` (`src/DataAccess/FeatureFlags/`) answers every evaluation. The first source that knows the flag wins:
 
-1. **Octopus Feature Toggles through OpenFeature.** Used only when the configuration key `Octopus:FeatureFlags:ClientIdentifier` has a value. In a container that is the environment variable `Octopus__FeatureFlags__ClientIdentifier`, injected at deploy time from the Octopus variable `Octopus.FeatureToggles.ClientIdentifier`. The evaluator looks up the toggle slug as the kebab-case flag name (`building-management`), then the flag name itself (`BuildingManagement`); slugs match ignoring case. The Octopus provider caches the toggle manifest and refreshes it in the background, so a toggle flip shows up without a new image.
+1. **Octopus Feature Toggles through OpenFeature.** Used only when the configuration key `Octopus:FeatureFlags:ClientIdentifier` has a value. In a container that is the environment variable `Octopus__FeatureFlags__ClientIdentifier`, injected at deploy time from the Octopus variable `Octopus.FeatureToggles.ClientIdentifier`. The evaluator tries the kebab-case flag name (`building-management`), then the compact lowercase Octopus slug (`buildingmanagement`), then the flag name itself (`BuildingManagement`); the first match wins. The Octopus provider caches the toggle manifest and refreshes it in the background, so a toggle flip shows up without a new image.
 2. **The `FeatureFlags` configuration section**, for example `FeatureFlags:BuildingManagement` (environment variable `FeatureFlags__BuildingManagement`). A value that is not `true` or `false` counts as false.
 3. **false.** A missing client identifier and an unknown flag both end here, so new flags fail closed.
 
@@ -36,7 +36,7 @@ With no Octopus client identifier, `RuntimeFeatureFlagEvaluator` uses configurat
 | Platform tdd | ON | ON |
 | Platform uat and prod | OFF | OFF until flipped |
 
-Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`, or turns the Octopus toggles `building-management` and `vendor-management` on. Platform uat and prod leave them off until an operator flips them. A flip does not require a new image.
+Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`, or turns the Octopus toggles `buildingmanagement` and `vendormanagement` on. Platform uat and prod leave them off until an operator flips them. A flip does not require a new image.
 
 The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads `appsettings.Development.json` and runs with both gates ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Existing Buildings and Vendors checks run against the ON state. `BuildingRoomSummaryQuery` and `WorkOrderBuildingsQuery` require `BuildingManagement`. `VendorsQuery` and `CreateVendorCommand` require `VendorManagement`. When a flag is off, the bus rejects those requests, the Buildings & Rooms nav link and page are hidden, and the Vendors section on Teams & Vendors is hidden. Teams and waiting-on-vendor stay available. `GET /api/diagnostics` reports the same map as `GET /api/features/flags`.
 

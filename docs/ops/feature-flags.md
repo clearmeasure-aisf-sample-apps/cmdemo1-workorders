@@ -14,7 +14,7 @@ Flag values are evaluated at runtime. The flag names are fixed in `FeatureFlagNa
 
 ## Turning a flag on or off
 
-- **With Octopus Feature Toggles:** the UI container needs `Octopus__FeatureFlags__ClientIdentifier` (from the Octopus variable `Octopus.FeatureToggles.ClientIdentifier`). Create a toggle whose slug is the kebab-case flag name (`building-management`) or the flag name, and set it per environment. The app picks up a flip within the provider's refresh interval; no redeploy.
+- **With Octopus Feature Toggles:** the UI container needs `Octopus__FeatureFlags__ClientIdentifier` (from the Octopus variable `Octopus.FeatureToggles.ClientIdentifier`). Create a toggle whose slug is the kebab-case flag name (`building-management`), the compact lowercase Octopus slug (`buildingmanagement`), or the flag name (`BuildingManagement`); the evaluator tries those in that order. Set the toggle per environment. The app picks up a flip within the provider's refresh interval; no redeploy.
 - **Without Octopus:** set the configuration value, for example environment variable `FeatureFlags__VendorManagement=true`, and restart the app.
 
 A missing client identifier or an unknown flag reads as false.
