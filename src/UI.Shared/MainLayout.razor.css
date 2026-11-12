@@ -71,6 +71,10 @@
     min-width: 0;
 }
 
+.brand-text {
+    min-width: 0;
+}
+
 .brand-text h4 {
     margin: 0;
     font-size: 15px;
@@ -78,6 +82,7 @@
     line-height: 1.25;
     font-family: var(--font-sans);
     color: var(--sidebar-text-strong);
+    overflow-wrap: anywhere;
 }
 
 .brand-subtitle {
@@ -449,6 +454,7 @@
         left: 0;
         height: 100vh;
         flex: none;
+        overflow-x: hidden;
     }
 
     .modern-sidebar.open {

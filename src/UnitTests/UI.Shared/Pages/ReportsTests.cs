@@ -18,6 +18,23 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 public class ReportsTests
 {
     [Test]
+    public async Task Reports_WhileLoading_AnnouncesStatusToScreenReaders()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var ctx = CreateContext();
+        ctx.Services.AddSingleton<IBus>(new StubBusPending(gate.Task));
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Reports>());
+
+        var loading = component.Find(".loading-placeholder");
+        loading.GetAttribute("role").ShouldBe("status");
+        loading.GetAttribute("aria-live").ShouldBe("polite");
+        loading.TextContent.ShouldBe("Loading...");
+
+        gate.SetResult();
+    }
+
+    [Test]
     public async Task Reports_OnInitialize_ShouldLoadDataViaQuery()
     {
         await using var ctx = CreateContext();
@@ -253,6 +270,23 @@ public class ReportsTests
             if (request is WorkOrderReportsQuery)
             {
                 return Task.FromResult((TResponse?)(object?)null)!;
+            }
+
+            throw new NotImplementedException();
+        }
+    }
+
+    private class StubBusPending(Task pending) : Bus(null!)
+    {
+        public override Task Publish(INotification notification) => Task.CompletedTask;
+
+        public override async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        {
+            await pending;
+
+            if (request is WorkOrderReportsQuery)
+            {
+                return (TResponse)(object)new WorkOrderReportsData();
             }
 
             throw new NotImplementedException();
