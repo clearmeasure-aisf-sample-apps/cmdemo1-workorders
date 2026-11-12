@@ -45,11 +45,51 @@ if ([string]::IsNullOrEmpty($projectConfig)) { $projectConfig = "Release" }
 
 # ── Main Functions ──────────────────────────────────────────────────────────────
 
+Function Enable-Arm64VsTestDirectoryCheck {
+	# SDK 10.0.404's vstest opens its session directory with flags 196608 on every OS but macOS.
+	# On aarch64 those bits are O_DIRECT|O_LARGEFILE, so open() of a directory returns errno 22
+	# (EINVAL) even when the directory is mode 0700; the fchmod that would make it owner-only never
+	# runs, and the following check fails the run. scripts/ci/vstest-arm64-directory-open.c rewrites
+	# that one flag value to the aarch64 O_DIRECTORY|O_NOFOLLOW, so the check itself runs and passes.
+	if (-not (Test-IsLinux) -or -not (Test-IsArmArchitecture)) {
+		return
+	}
+
+	$root = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [System.IO.Path]::GetTempPath() }
+	$dir = Join-Path $root "xdg"
+	New-Item -Path $dir -ItemType Directory -Force | Out-Null
+	& chmod 700 $dir
+	if ($LASTEXITCODE -ne 0) {
+		throw "chmod 700 failed for $dir"
+	}
+
+	$env:XDG_RUNTIME_DIR = $dir
+	$env:VSTEST_ARTIFACTS_DIRECTORY = $dir
+
+	$source = Join-Path $base_dir "scripts/ci/vstest-arm64-directory-open.c"
+	$shim = Join-Path $dir "vstest-arm64-directory-open.so"
+	& gcc -shared -fPIC -Wall -Werror -o $shim $source -ldl
+	if ($LASTEXITCODE -ne 0) {
+		throw "gcc could not build $shim from $source. An ARM build needs gcc so vstest can open its artifacts directory."
+	}
+
+	if ([string]::IsNullOrEmpty($env:LD_PRELOAD)) {
+		$env:LD_PRELOAD = $shim
+	}
+	else {
+		$env:LD_PRELOAD = "$shim $($env:LD_PRELOAD)"
+	}
+
+	Log-Message -Message "VSTest artifacts directory $dir is mode 0700; loaded $shim so aarch64 open() accepts the directory flags SDK 10.0.404 sends." -Type "INFO"
+}
+
 Function Init {
 	$pwshPath = (Get-Command pwsh -ErrorAction SilentlyContinue).Source
 	if (-not $pwshPath) {
 		throw "PowerShell 7 is required to run this build script."
 	}
+
+	Enable-Arm64VsTestDirectoryCheck
 
 	Initialize-SqlServerModule
 
