@@ -52,7 +52,7 @@ public class WorkOrderManageCopyButtonTests
         var copyButton = await component.WaitForElementAsync(
             $"[data-testid='{WorkOrderManage.Elements.CopyWorkOrderNumber}']");
         copyButton.ShouldNotBeNull();
-        copyButton.GetAttribute("aria-label").ShouldBe("Copy work order number");
+        copyButton.GetAttribute("aria-label").ShouldBe("Copy work order number WO-NEW");
         copyButton.TextContent.ShouldContain("Copy");
     }
 

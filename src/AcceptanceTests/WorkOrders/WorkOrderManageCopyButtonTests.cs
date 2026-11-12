@@ -19,7 +19,7 @@ public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
 
         var copyButton = Page.GetByTestId(nameof(WorkOrderManage.Elements.CopyWorkOrderNumber));
         await Expect(copyButton).ToBeVisibleAsync();
-        await Expect(copyButton).ToHaveAttributeAsync("aria-label", "Copy work order number");
+        await Expect(copyButton).ToHaveAttributeAsync("aria-label", $"Copy work order number {order.Number}");
     }
 
     [Test, Retry(2)]
