@@ -10,11 +10,11 @@ internal static class AcceptanceShardBalance
 {
     public const int Workers = 4;
 
-    public const double MaxDurationCeiling = 1.35;
+    private const double MaxDurationCeiling = 1.35;
 
-    public const double MaxCountCeiling = 1.5;
+    private const double MaxCountCeiling = 1.5;
 
-    public const double MinimumNewTestSeconds = 10;
+    private const double MinimumNewTestSeconds = 10;
 
     /// <summary>Problems in <paramref name="assignment"/> given the fixtures in <paramref name="discovered"/>.</summary>
     public static IReadOnlyList<string> Evaluate(
