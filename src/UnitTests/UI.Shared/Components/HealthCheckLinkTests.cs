@@ -24,4 +24,17 @@ public class HealthCheckLinkTests
         link.GetAttribute("title").ShouldBe("View the health of the work order application and its dependencies");
         link.GetAttribute("href").ShouldBe("/_clienthealthcheck");
     }
+
+    [Test]
+    public async Task Should_ExposeAccessibleName_StartingWithVisibleText()
+    {
+        await using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+
+        var component = ctx.Render<HealthCheckLink>();
+
+        var link = component.Find($"[data-testid='{nameof(HealthCheckLink.Elements.HealthCheckLink)}']");
+        link.GetAttribute("aria-label").ShouldBe("Health Check, view application health");
+    }
 }
