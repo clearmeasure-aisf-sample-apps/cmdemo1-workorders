@@ -5,6 +5,12 @@ workflow, jobs "Acceptance Tests" and "Acceptance Tests (ARM SQLite)"). Against 
 in remote mode (`StartLocalServer=false`, `StartWorker=false`): tests that need a local server, the Worker or a chat
 client skip themselves.
 
+Every browser test signs in as an employee of its own (`test_<tag>_...`, `AcceptanceTestEmployees.Add`) saved to the
+database under test. Before any test runs, the suite deletes the `test_` employees earlier runs left that no work
+order, status change, attachment or team refers to (`AcceptanceTestEmployees.DeleteUnreferenced`). A deployed
+environment keeps its database, and the login list shows only the first 1000 employees by last name
+(`EmployeeGetAllQuery.MaxTake`), so without this a new test's employee drops off the list.
+
 ## Smoke tests
 
 The tests marked `[Category("Smoke")]` are the smoke set: the few tests that together show that a deployment's
