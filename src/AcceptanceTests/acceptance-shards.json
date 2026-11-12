@@ -1,0 +1,658 @@
+{
+  "measuredFrom": "GitHub Actions run 43125446701 (master d689506c44, 2026-11-12). x64Seconds and armSeconds are summed passing-run TRX durations for that class. tests counts [Test] and [TestCase] attributes in source. AutoReformatAgentTests is Explicit and did not execute, so both durations are 0.",
+  "shardCount": 6,
+  "maxDurationRatio": 1.25,
+  "maxCountRatio": 1.45,
+  "defaultNewTestSeconds": 20,
+  "classes": [
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.ClientHealthCheckTests",
+      "shard": 1,
+      "tests": 4,
+      "x64Seconds": 57.7,
+      "armSeconds": 39.2,
+      "longestX64Seconds": 18.4,
+      "longestArmSeconds": 11.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests",
+      "shard": 1,
+      "tests": 1,
+      "x64Seconds": 27.1,
+      "armSeconds": 16.5,
+      "longestX64Seconds": 27.1,
+      "longestArmSeconds": 16.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LoginTests",
+      "shard": 1,
+      "tests": 25,
+      "x64Seconds": 323.1,
+      "armSeconds": 349.7,
+      "longestX64Seconds": 19.7,
+      "longestArmSeconds": 20.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpListWorkOrdersAcceptanceTests",
+      "shard": 1,
+      "tests": 1,
+      "x64Seconds": 12.4,
+      "armSeconds": 11.0,
+      "longestX64Seconds": 12.4,
+      "longestArmSeconds": 11.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests",
+      "shard": 1,
+      "tests": 5,
+      "x64Seconds": 118.9,
+      "armSeconds": 84.6,
+      "longestX64Seconds": 33.4,
+      "longestArmSeconds": 24.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderManageCopyButtonTests",
+      "shard": 1,
+      "tests": 4,
+      "x64Seconds": 64.4,
+      "armSeconds": 56.2,
+      "longestX64Seconds": 19.3,
+      "longestArmSeconds": 16.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests",
+      "shard": 1,
+      "tests": 6,
+      "x64Seconds": 89.7,
+      "armSeconds": 72.6,
+      "longestX64Seconds": 21.5,
+      "longestArmSeconds": 17.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchSavedViewsTests",
+      "shard": 1,
+      "tests": 1,
+      "x64Seconds": 21.6,
+      "armSeconds": 17.3,
+      "longestX64Seconds": 21.6,
+      "longestArmSeconds": 17.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderWaitingOnVendorTests",
+      "shard": 1,
+      "tests": 1,
+      "x64Seconds": 14.0,
+      "armSeconds": 19.7,
+      "longestX64Seconds": 14.0,
+      "longestArmSeconds": 19.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.DarkModeTests",
+      "shard": 2,
+      "tests": 5,
+      "x64Seconds": 64.0,
+      "armSeconds": 59.4,
+      "longestX64Seconds": 13.4,
+      "longestArmSeconds": 13.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NavRailToggleTests",
+      "shard": 2,
+      "tests": 7,
+      "x64Seconds": 76.7,
+      "armSeconds": 75.2,
+      "longestX64Seconds": 12.0,
+      "longestArmSeconds": 11.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.RemovedTemplatePageTests",
+      "shard": 2,
+      "tests": 1,
+      "x64Seconds": 18.7,
+      "armSeconds": 17.1,
+      "longestX64Seconds": 18.7,
+      "longestArmSeconds": 17.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsTests",
+      "shard": 2,
+      "tests": 5,
+      "x64Seconds": 102.7,
+      "armSeconds": 98.1,
+      "longestX64Seconds": 29.7,
+      "longestArmSeconds": 27.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAiChatTests",
+      "shard": 2,
+      "tests": 3,
+      "x64Seconds": 26.6,
+      "armSeconds": 24.9,
+      "longestX64Seconds": 13.3,
+      "longestArmSeconds": 14.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderBeginTests",
+      "shard": 2,
+      "tests": 1,
+      "x64Seconds": 38.3,
+      "armSeconds": 18.4,
+      "longestX64Seconds": 38.3,
+      "longestArmSeconds": 18.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderPrintTests",
+      "shard": 2,
+      "tests": 1,
+      "x64Seconds": 21.0,
+      "armSeconds": 18.5,
+      "longestX64Seconds": 21.0,
+      "longestArmSeconds": 18.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests",
+      "shard": 2,
+      "tests": 22,
+      "x64Seconds": 346.1,
+      "armSeconds": 235.7,
+      "longestX64Seconds": 23.6,
+      "longestArmSeconds": 17.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderTitleCharCountTests",
+      "shard": 2,
+      "tests": 4,
+      "x64Seconds": 42.3,
+      "armSeconds": 37.4,
+      "longestX64Seconds": 12.1,
+      "longestArmSeconds": 9.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.SaturdayMowSchedulingAgentTests",
+      "shard": 3,
+      "tests": 1,
+      "x64Seconds": 9.4,
+      "armSeconds": 13.4,
+      "longestX64Seconds": 9.4,
+      "longestArmSeconds": 13.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.PhoneWidthNoDocumentScrollTests",
+      "shard": 3,
+      "tests": 1,
+      "x64Seconds": 99.5,
+      "armSeconds": 79.1,
+      "longestX64Seconds": 99.5,
+      "longestArmSeconds": 79.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.ReportsPageTests",
+      "shard": 3,
+      "tests": 7,
+      "x64Seconds": 75.1,
+      "armSeconds": 69.9,
+      "longestX64Seconds": 11.9,
+      "longestArmSeconds": 10.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpGetWorkOrderInstructionsAcceptanceTests",
+      "shard": 3,
+      "tests": 2,
+      "x64Seconds": 61.1,
+      "armSeconds": 46.4,
+      "longestX64Seconds": 30.8,
+      "longestArmSeconds": 23.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCancelTests",
+      "shard": 3,
+      "tests": 1,
+      "x64Seconds": 26.6,
+      "armSeconds": 18.5,
+      "longestX64Seconds": 26.6,
+      "longestArmSeconds": 18.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveThenAssignPersistenceTests",
+      "shard": 3,
+      "tests": 1,
+      "x64Seconds": 19.9,
+      "armSeconds": 18.0,
+      "longestX64Seconds": 19.9,
+      "longestArmSeconds": 18.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchFilterTests",
+      "shard": 3,
+      "tests": 2,
+      "x64Seconds": 28.6,
+      "armSeconds": 24.5,
+      "longestX64Seconds": 15.1,
+      "longestArmSeconds": 13.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchRedesignTests",
+      "shard": 3,
+      "tests": 18,
+      "x64Seconds": 230.4,
+      "armSeconds": 208.5,
+      "longestX64Seconds": 17.4,
+      "longestArmSeconds": 15.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderShelvedTests",
+      "shard": 3,
+      "tests": 2,
+      "x64Seconds": 39.7,
+      "armSeconds": 33.4,
+      "longestX64Seconds": 22.3,
+      "longestArmSeconds": 19.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSpeechTests",
+      "shard": 3,
+      "tests": 5,
+      "x64Seconds": 137.5,
+      "armSeconds": 97.9,
+      "longestX64Seconds": 34.4,
+      "longestArmSeconds": 25.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AppShellTests",
+      "shard": 4,
+      "tests": 7,
+      "x64Seconds": 93.9,
+      "armSeconds": 96.1,
+      "longestX64Seconds": 19.1,
+      "longestArmSeconds": 20.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.DashboardTests",
+      "shard": 4,
+      "tests": 10,
+      "x64Seconds": 143.3,
+      "armSeconds": 128.8,
+      "longestX64Seconds": 16.7,
+      "longestArmSeconds": 16.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NotificationsPanelTests",
+      "shard": 4,
+      "tests": 5,
+      "x64Seconds": 76.4,
+      "armSeconds": 70.8,
+      "longestX64Seconds": 16.6,
+      "longestArmSeconds": 15.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.PageLoadBudgetTests",
+      "shard": 4,
+      "tests": 3,
+      "x64Seconds": 39.1,
+      "armSeconds": 33.8,
+      "longestX64Seconds": 14.4,
+      "longestArmSeconds": 13.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.SidebarSlaHealthCardTests",
+      "shard": 4,
+      "tests": 1,
+      "x64Seconds": 11.8,
+      "armSeconds": 11.0,
+      "longestX64Seconds": 11.8,
+      "longestArmSeconds": 11.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsAndVendorsTests",
+      "shard": 4,
+      "tests": 13,
+      "x64Seconds": 216.9,
+      "armSeconds": 187.2,
+      "longestX64Seconds": 32.0,
+      "longestArmSeconds": 30.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCompleteTests",
+      "shard": 4,
+      "tests": 2,
+      "x64Seconds": 58.7,
+      "armSeconds": 44.0,
+      "longestX64Seconds": 30.3,
+      "longestArmSeconds": 22.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderInProgressToCancelTests",
+      "shard": 4,
+      "tests": 1,
+      "x64Seconds": 28.5,
+      "armSeconds": 25.3,
+      "longestX64Seconds": 28.5,
+      "longestArmSeconds": 25.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchLongRoomTests",
+      "shard": 4,
+      "tests": 1,
+      "x64Seconds": 21.7,
+      "armSeconds": 17.9,
+      "longestX64Seconds": 21.7,
+      "longestArmSeconds": 17.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.ApplicationChatAgentTests",
+      "shard": 5,
+      "tests": 2,
+      "x64Seconds": 0.0,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.AutoReformatAgentTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 0,
+      "armSeconds": 0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.ApiRateLimitingAcceptanceTests",
+      "shard": 5,
+      "tests": 2,
+      "x64Seconds": 0.3,
+      "armSeconds": 0.5,
+      "longestX64Seconds": 0.3,
+      "longestArmSeconds": 0.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.DetailedHealthApiAcceptanceTests",
+      "shard": 5,
+      "tests": 2,
+      "x64Seconds": 0.1,
+      "armSeconds": 0.2,
+      "longestX64Seconds": 0.1,
+      "longestArmSeconds": 0.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.EchoApiAcceptanceTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 0.0,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.FeatureFlagsApiAcceptanceTests",
+      "shard": 5,
+      "tests": 3,
+      "x64Seconds": 0.1,
+      "armSeconds": 0.1,
+      "longestX64Seconds": 0.1,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.MetricsSummaryAcceptanceTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 0.0,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 191.8,
+      "armSeconds": 159.4,
+      "longestX64Seconds": 191.8,
+      "longestArmSeconds": 159.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 10.6,
+      "armSeconds": 10.1,
+      "longestX64Seconds": 10.6,
+      "longestArmSeconds": 10.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NeedsRebootHealthCheckTests",
+      "shard": 5,
+      "tests": 4,
+      "x64Seconds": 0.1,
+      "armSeconds": 0.2,
+      "longestX64Seconds": 0.1,
+      "longestArmSeconds": 0.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.WarmUpTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 10.7,
+      "armSeconds": 10.0,
+      "longestX64Seconds": 10.7,
+      "longestArmSeconds": 10.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Extensions.DateTimeTestExtensionsTests",
+      "shard": 5,
+      "tests": 5,
+      "x64Seconds": 0.8,
+      "armSeconds": 0.3,
+      "longestX64Seconds": 0.4,
+      "longestArmSeconds": 0.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpChatConversationTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 0.0,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpHttpServerAcceptanceTests",
+      "shard": 5,
+      "tests": 4,
+      "x64Seconds": 0.3,
+      "armSeconds": 2.6,
+      "longestX64Seconds": 0.2,
+      "longestArmSeconds": 1.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerAcceptanceTests",
+      "shard": 5,
+      "tests": 2,
+      "x64Seconds": 0.1,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerLlmAcceptanceTests",
+      "shard": 5,
+      "tests": 4,
+      "x64Seconds": 0.0,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleLlmTests",
+      "shard": 5,
+      "tests": 2,
+      "x64Seconds": 0.0,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 0.0,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 0.1,
+      "armSeconds": 0.1,
+      "longestX64Seconds": 0.1,
+      "longestArmSeconds": 0.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.TracerBulletTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 2.2,
+      "armSeconds": 0.0,
+      "longestX64Seconds": 2.2,
+      "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCreatedRelativeTimeTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 15.5,
+      "armSeconds": 15.5,
+      "longestX64Seconds": 15.5,
+      "longestArmSeconds": 15.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AiAgentPageTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 10.2,
+      "armSeconds": 9.9,
+      "longestX64Seconds": 10.2,
+      "longestArmSeconds": 9.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.CopyrightFooterTests",
+      "shard": 6,
+      "tests": 7,
+      "x64Seconds": 66.8,
+      "armSeconds": 67.2,
+      "longestX64Seconds": 12.5,
+      "longestArmSeconds": 13.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.InterFontTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 8.0,
+      "armSeconds": 7.0,
+      "longestX64Seconds": 8.0,
+      "longestArmSeconds": 7.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.SidebarHeightTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 11.4,
+      "armSeconds": 7.6,
+      "longestX64Seconds": 11.4,
+      "longestArmSeconds": 7.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LogoutTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 4.3,
+      "armSeconds": 14.8,
+      "longestX64Seconds": 4.3,
+      "longestArmSeconds": 14.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpCreateWorkOrderInstructionsAcceptanceTests",
+      "shard": 6,
+      "tests": 4,
+      "x64Seconds": 161.7,
+      "armSeconds": 97.2,
+      "longestX64Seconds": 47.4,
+      "longestArmSeconds": 27.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpSaveWorkOrderAcceptanceTests",
+      "shard": 6,
+      "tests": 5,
+      "x64Seconds": 120.1,
+      "armSeconds": 83.7,
+      "longestX64Seconds": 30.4,
+      "longestArmSeconds": 24.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAssignTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 21.8,
+      "armSeconds": 24.5,
+      "longestX64Seconds": 21.8,
+      "longestArmSeconds": 24.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAttachmentTests",
+      "shard": 6,
+      "tests": 3,
+      "x64Seconds": 85.5,
+      "armSeconds": 59.8,
+      "longestX64Seconds": 34.3,
+      "longestArmSeconds": 23.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDescriptionCharCountTests",
+      "shard": 6,
+      "tests": 3,
+      "x64Seconds": 39.1,
+      "armSeconds": 28.4,
+      "longestX64Seconds": 13.8,
+      "longestArmSeconds": 10.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests",
+      "shard": 6,
+      "tests": 7,
+      "x64Seconds": 149.8,
+      "armSeconds": 144.2,
+      "longestX64Seconds": 31.8,
+      "longestArmSeconds": 31.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderRoomNumberLengthTests",
+      "shard": 6,
+      "tests": 3,
+      "x64Seconds": 50.1,
+      "armSeconds": 37.5,
+      "longestX64Seconds": 19.0,
+      "longestArmSeconds": 13.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusDashboardTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 13.8,
+      "armSeconds": 10.7,
+      "longestX64Seconds": 13.8,
+      "longestArmSeconds": 10.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusHistoryTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 20.7,
+      "armSeconds": 19.7,
+      "longestX64Seconds": 20.7,
+      "longestArmSeconds": 19.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderWaitingOnVendorCancelTests",
+      "shard": 6,
+      "tests": 1,
+      "x64Seconds": 14.4,
+      "armSeconds": 17.4,
+      "longestX64Seconds": 14.4,
+      "longestArmSeconds": 17.4
+    }
+  ],
+  "workers": 4
+}

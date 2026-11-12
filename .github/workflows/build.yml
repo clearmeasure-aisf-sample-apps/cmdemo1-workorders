@@ -146,6 +146,7 @@ jobs:
       # The private build's word: which command built this (build.ps1 writes it). The Release adds it to the build facts.
       - name: Upload the private build's word
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: success()
         with:
           name: private-build
@@ -172,6 +173,7 @@ jobs:
       # Publish CRAP reports (method report, file rollups, summary, gate result) as a downloadable artifact
       - name: Upload CRAP metrics
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: crap-metrics-linux
@@ -207,6 +209,7 @@ jobs:
       # Upload test results as artifacts
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: test-results-linux
@@ -216,6 +219,7 @@ jobs:
       # Upload code coverage as artifacts
       - name: Upload Code Coverage
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: code-coverage-linux
@@ -238,6 +242,7 @@ jobs:
       - name: Upload NuGet Package artifacts
         if: (github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') && success()
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         with:
           name: churchbulletin-nuget-packages
           path: build/*.nupkg
@@ -246,6 +251,7 @@ jobs:
       - name: Upload build_version.txt artifact
         if: (github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch') && success()
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         with:
           name: build-version
           path: build_version.txt
@@ -306,6 +312,7 @@ jobs:
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: test-results-sqlite
@@ -367,6 +374,7 @@ jobs:
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: test-results-arm-sqlite
@@ -452,6 +460,7 @@ jobs:
       - name: Upload SARIF to code scanning
         if: always()
         uses: github/codeql-action/upload-sarif@v3
+        timeout-minutes: 3
         with:
           sarif_file: ${{ runner.temp }}/qodana/results/qodana.sarif.json
 
@@ -509,6 +518,7 @@ jobs:
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: test-results-windows
@@ -642,6 +652,7 @@ jobs:
 
       - name: Upload security reports
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: security-reports
@@ -717,6 +728,7 @@ jobs:
 
       - name: Upload Test Results (Shard ${{ matrix.shard }}/6)
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: test-results-acceptance-linux-shard-${{ matrix.shard }}
@@ -792,6 +804,7 @@ jobs:
 
       - name: Upload Test Results (Shard ${{ matrix.shard }}/6)
         uses: actions/upload-artifact@v4
+        timeout-minutes: 3
         if: always()
         with:
           name: test-results-acceptance-arm-shard-${{ matrix.shard }}
@@ -890,6 +903,8 @@ jobs:
             exit 1
           }
           Write-Host "✓ No missing tests"
+
+          Assert-AcceptanceShardBalance -ListedTests $shards
 
           Write-Host ""
           Write-Host "Coverage validation PASSED"

@@ -1,17 +1,15 @@
 # Running Acceptance Test Shards Locally
 
-Acceptance tests run in shards to speed up CI. The CI pipeline splits tests across **3 shards** (matrix `[1, 2, 3]`), with 2 job variants for a total of 6 job runs: `acceptance-tests` on ubuntu with SQL Server container, and `acceptance-tests-arm` on ubuntu-24.04-arm with SQLite. This document shows how to run shards locally.
+Acceptance tests run in shards to speed up CI. The CI pipeline splits tests across **6 shards** on each of two runners: `acceptance-tests` on ubuntu with SQL Server, and `acceptance-tests-arm` on ubuntu-24.04-arm with SQLite. This document shows how to run shards locally.
 
 ## How CI Shards Tests
 
-Each shard receives a filter from `Get-ShardTestFilter` in `build.ps1`:
+Each shard receives a filter from `Get-ShardTestFilter` in `build.ps1`. The assignment is the explicit class list in `src/AcceptanceTests/acceptance-shards.json`:
 
 - **Shard 0:** All tests (no filter) — for full-suite runs
-- **Shard 1:** `WorkOrderSearchTests`, `WorkOrderSpeechTests` (~27 tests)
-- **Shard 2:** `WorkOrderSearchRedesignTests`, `WorkOrderDueDateTests`, `WorkOrderDictationTests`, `WorkOrderSaveDraftTests`, `AIAgents` (~34 tests)
-- **Shard 3:** `Api`, `Extensions`, `NServiceBus`, and small WorkOrder classes (~31 tests), by exclusion of shards 1–2
+- **Shards 1–6:** Each acceptance test class is named on exactly one shard. There is no catch-all. Durations in the file are measured seconds from a green Build (x64 SQL Server and ARM SQLite). A class added under `src/AcceptanceTests` has to be added to that file.
 
-The CI workflow verifies full coverage with the `acceptance-tests-coverage-check` job.
+`AcceptanceShardBalanceTests` fails the build when a class is unassigned, or when one shard's test count or estimated runtime exceeds the ratio in the file. Estimated runtime is the longer of the slowest single test and the shard's total duration divided by four workers. The `acceptance-tests-coverage-check` job checks the same bounds against the tests vstest actually lists.
 
 ## Prerequisites
 
@@ -77,9 +75,7 @@ Invoke-AcceptanceTests -ShardNumber 1
 
 ```powershell
 . ./build.ps1
-Invoke-AcceptanceTests -ShardNumber 1
-Invoke-AcceptanceTests -ShardNumber 2
-Invoke-AcceptanceTests -ShardNumber 3
+1..6 | ForEach-Object { Invoke-AcceptanceTests -ShardNumber $_ }
 ```
 
 ### Run a Single Test by Name
@@ -128,8 +124,8 @@ Parse or view in Visual Studio Test Explorer or with the dotnet-trx test reporte
 
 CI publishes results under these artifact names (2-day retention):
 
-- `test-results-acceptance-linux-shard-1`, `-shard-2`, `-shard-3` (ubuntu, SQL Server)
-- `test-results-acceptance-arm-shard-1`, `-shard-2`, `-shard-3` (ubuntu-24.04-arm, SQLite)
+- `test-results-acceptance-linux-shard-1` through `-shard-6` (ubuntu, SQL Server)
+- `test-results-acceptance-arm-shard-1` through `-shard-6` (ubuntu-24.04-arm, SQLite)
 
 ### Screenshots
 
@@ -215,8 +211,8 @@ Work orders created in the test are filtered by `testTag` so only this test sees
 
 ```powershell
 AcceptanceTests.ps1 `
-    -ShardNumber <int>          # Shard 0–3 (0 = all tests)
-    -ShardCount <int>           # Total shard count (default 6)
+    -ShardNumber <int>          # Shard 0–6 (0 = all tests)
+    -ShardCount <int>           # Must match acceptance-shards.json (6)
     -databaseServer <string>    # Override database server
     -databaseName <string>      # Override database name
     -Headful                    # Run with visible browser windows (default headless)

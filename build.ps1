@@ -432,6 +432,15 @@ Function AcceptanceTests {
 	}
 }
 
+Function Get-AcceptanceShardDocument {
+	$path = Join-Path $acceptanceTestProjectPath "acceptance-shards.json"
+	if (-not (Test-Path -LiteralPath $path)) {
+		throw "Acceptance shard assignment was not found at $path."
+	}
+
+	return Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+}
+
 Function Get-ShardTestFilter {
 	param (
 		[Parameter(Mandatory = $true)]
@@ -441,45 +450,158 @@ Function Get-ShardTestFilter {
 		[int]$ShardCount = 6
 	)
 
+	# Shard 0 runs the whole suite. Shards 1..N are an explicit class list in
+	# src/AcceptanceTests/acceptance-shards.json. There is no catch-all shard.
 	if ($ShardNumber -eq 0) {
-		# Shard 0 means all tests (no filter)
 		return ""
 	}
 
-	# SIX-WAY SHARDING (189 tests total; split by test class, NonParallelizable fixtures stay whole in one shard).
-	# Estimated test time uses measured x64 cost per test (App/AIAgents/Extensions/NServiceBus/Api/DueDate/Dictation/SaveDraft
-	# ~4.6 s, Authentication+McpServer ~6.6 s, other WorkOrders ~7 s) plus about 30-60 s fixed overhead per shard; the
-	# six shards are balanced to about 180-190 s of test time each (about 4 min wall time with overhead).
-	# Shard 1: WorkOrderSearchTests (22), WorkOrderSpeechTests (5) = 27 tests (~189 s)
-	$shard1Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSpeechTests"
+	$doc = Get-AcceptanceShardDocument
+	$expected = [int]$doc.shardCount
+	if ($ShardCount -ne $expected) {
+		throw "ShardCount $ShardCount does not match acceptance-shards.json shardCount $expected."
+	}
 
-	# Shard 2: WorkOrderSearchRedesignTests (13), DueDate (6), Dictation (5), SaveDraft (6), AIAgents (4) = 34 tests (~188 s)
-	$shard2Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchRedesignTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents."
+	if ($ShardNumber -gt $expected) {
+		throw "Invalid shard number: $ShardNumber"
+	}
 
-	# Shard 3: Api (8), Extensions (5), NServiceBus (1), and the small WorkOrders classes (17: AiChat, Assign, Attachment, Begin, Cancel,
-	# Complete, DescriptionCharCount, RoomNumberLength, SaveThenAssignPersistence [NonParallelizable], Shelved, StatusDashboard) = 31 tests (~183 s)
-	$shard3Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Api.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAiChatTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAssignTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAttachmentTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderBeginTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCancelTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCompleteTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDescriptionCharCountTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderRoomNumberLengthTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveThenAssignPersistenceTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderShelvedTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusDashboardTests"
+	$names = @(
+		$doc.classes |
+			Where-Object { [int]$_.shard -eq $ShardNumber } |
+			ForEach-Object { [string]$_.name } |
+			Sort-Object
+	)
+	if ($names.Count -eq 0) {
+		throw "Shard $ShardNumber has no acceptance tests in acceptance-shards.json."
+	}
 
-	# Shard 4: Authentication (25) + App AiAgentPage, WarmUp, LandingPage (4) = 29 tests (~183 s)
-	$shard4Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.AiAgentPageTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.WarmUpTests|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests"
+	return (($names | ForEach-Object { "FullyQualifiedName~$_" }) -join "|")
+}
 
-	# Shard 5: whole McpServer namespace (26; ListWorkOrders and Lifecycle are NonParallelizable and stay together) + App NavMenuTests (3) = 29 tests (~185 s)
-	$shard5Filter = "FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.|FullyQualifiedName~ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests"
+Function Assert-AcceptanceShardBalance {
+	param (
+		[Parameter(Mandatory = $true)]
+		[hashtable]$ListedTests
+	)
 
-	# Shard 6: EXPLICIT EXCLUSION CHAIN - everything not in Shards 1-5 = 39 tests (~179 s):
-	# the remaining App classes (includes NonParallelizable NeedsRebootHealthCheckTests), plus any newly added test class
-	$shard6Filter = "FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSpeechTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchRedesignTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Api.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Extensions.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAiChatTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAssignTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAttachmentTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderBeginTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCancelTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCompleteTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDescriptionCharCountTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderRoomNumberLengthTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveThenAssignPersistenceTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderShelvedTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusDashboardTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.Authentication.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.AiAgentPageTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.WarmUpTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.McpServer.&FullyQualifiedName!~ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests"
+	$doc = Get-AcceptanceShardDocument
+	$shardCount = [int]$doc.shardCount
+	$workers = [int]$doc.workers
+	$classes = @($doc.classes)
+	$problems = [System.Collections.Generic.List[string]]::new()
+	$counts = @(0) * $shardCount
+	$x64 = @(0.0) * $shardCount
+	$arm = @(0.0) * $shardCount
 
-	switch ($ShardNumber) {
-		1 { return $shard1Filter }
-		2 { return $shard2Filter }
-		3 { return $shard3Filter }
-		4 { return $shard4Filter }
-		5 { return $shard5Filter }
-		6 { return $shard6Filter }
-		default {
-			throw "Invalid shard number: $ShardNumber"
+	foreach ($n in 1..$shardCount) {
+		foreach ($test in @($ListedTests[$n])) {
+			if ([string]::IsNullOrWhiteSpace($test)) {
+				continue
+			}
+
+			$owners = @($classes | Where-Object { $test.StartsWith("$($_.name).") })
+			if ($owners.Count -ne 1) {
+				$problems.Add("Listed test '$test' on shard $n matches $($owners.Count) assigned classes.")
+				continue
+			}
+
+			$ownerShard = [int]$owners[0].shard
+			if ($ownerShard -ne $n) {
+				$problems.Add("Listed test '$test' is on shard $n but $($owners[0].name) is assigned to shard $ownerShard.")
+				continue
+			}
+
+			$counts[$n - 1]++
 		}
+	}
+
+	for ($index = 0; $index -lt $shardCount; $index++) {
+		$shard = $index + 1
+		$group = @($classes | Where-Object { [int]$_.shard -eq $shard })
+		$x64[$index] = Get-AcceptanceShardSpan -Classes $group -SecondsName "x64Seconds" -LongestName "longestX64Seconds" -Workers $workers
+		$arm[$index] = Get-AcceptanceShardSpan -Classes $group -SecondsName "armSeconds" -LongestName "longestArmSeconds" -Workers $workers
+	}
+
+	Write-Host "Acceptance shard balance (listed tests / estimated seconds):"
+	foreach ($n in 1..$shardCount) {
+		Write-Host ("  Shard {0}: tests={1} x64={2:n0}s arm={3:n0}s" -f $n, $counts[$n - 1], $x64[$n - 1], $arm[$n - 1])
+	}
+
+	Add-AcceptanceShardRatio -Problems $problems -Label "listed tests" -Values $counts -Limit ([double]$doc.maxCountRatio)
+	Add-AcceptanceShardRatio -Problems $problems -Label "x64 duration" -Values $x64 -Limit ([double]$doc.maxDurationRatio)
+	Add-AcceptanceShardRatio -Problems $problems -Label "arm duration" -Values $arm -Limit ([double]$doc.maxDurationRatio)
+	if ($problems.Count -gt 0) {
+		throw ($problems -join [Environment]::NewLine)
+	}
+}
+
+Function Get-AcceptanceShardSpan {
+	param (
+		$Classes,
+		[string]$SecondsName,
+		[string]$LongestName,
+		[int]$Workers
+	)
+
+	$sum = 0.0
+	$longest = 0.0
+	foreach ($class in @($Classes)) {
+		$sum += [double]$class.$SecondsName
+		$value = [double]$class.$LongestName
+		if ($value -gt $longest) {
+			$longest = $value
+		}
+	}
+
+	$parallel = 0.0
+	if ($Workers -gt 0) {
+		$parallel = $sum / $Workers
+	}
+
+	if ($longest -gt $parallel) {
+		return $longest
+	}
+
+	return $parallel
+}
+
+Function Add-AcceptanceShardRatio {
+	param (
+		$Problems,
+		[string]$Label,
+		$Values,
+		[double]$Limit
+	)
+
+	$items = @($Values)
+	$sum = 0.0
+	foreach ($value in $items) {
+		$sum += [double]$value
+	}
+
+	$mean = 0.0
+	if ($items.Count -gt 0) {
+		$mean = $sum / $items.Count
+	}
+
+	$max = 0.0
+	$shard = 1
+	for ($i = 0; $i -lt $items.Count; $i++) {
+		if ([double]$items[$i] -gt $max) {
+			$max = [double]$items[$i]
+			$shard = $i + 1
+		}
+	}
+
+	$ratio = 0.0
+	if ($mean -gt 0) {
+		$ratio = $max / $mean
+	}
+
+	Write-Host ("  {0}: max shard {1} is {2:n2}x the mean {3:n1} (limit {4})" -f $Label, $shard, $ratio, $mean, $Limit)
+	if ($mean -le 0 -or $ratio -gt $Limit) {
+		$Problems.Add("$Label shard $shard is $([math]::Round($ratio, 2))x the mean $([math]::Round($mean, 1)); limit is $Limit.")
 	}
 }
 
