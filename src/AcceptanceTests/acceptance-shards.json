@@ -1,5 +1,5 @@
 {
-  "measuredFrom": "GitHub Actions run 43125446701 (master d689506c44, 2026-11-12). x64Seconds and armSeconds are summed passing-run TRX durations for that class. tests counts [Test] and [TestCase] attributes in source. AutoReformatAgentTests is Explicit and did not execute, so both durations are 0.",
+  "measuredFrom": "GitHub Actions run 43125446701 (master d689506c44, 2026-11-12). x64Seconds and armSeconds are summed passing-run TRX durations for that class. tests counts [Test] and [TestCase] attributes in source. AutoReformatAgentTests is Explicit and did not execute, so both durations are 0. AcceptanceTestEmployeesTests (#1638) was not in that run; its seconds are an estimate for four non-parallel browser fixtures, placed on shard 5.",
   "shardCount": 6,
   "maxDurationRatio": 1.25,
   "maxCountRatio": 1.45,
@@ -508,6 +508,15 @@
       "armSeconds": 0.0,
       "longestX64Seconds": 2.2,
       "longestArmSeconds": 0.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
+      "shard": 5,
+      "tests": 4,
+      "x64Seconds": 80.0,
+      "armSeconds": 80.0,
+      "longestX64Seconds": 25.0,
+      "longestArmSeconds": 25.0
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCreatedRelativeTimeTests",
