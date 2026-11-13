@@ -1,0 +1,6 @@
+# NuGet package IDs approved for addition (scripts/nuget/Test-NewNuGetPackages.ps1, docs/architecture-guardrails.md).
+# A pull request that adds a package ID to src/Directory.Packages.props or any project file fails the
+# "NuGet package gate" check unless the same pull request adds a line here:
+#     <PackageId> | <issue link or reason>
+# This file is owned in .github/CODEOWNERS, so the line is the code owners' approval. A line approves only the
+# pull request that adds it; keep old lines as the history of approvals.

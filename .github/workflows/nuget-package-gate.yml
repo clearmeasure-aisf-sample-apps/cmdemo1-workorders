@@ -1,0 +1,42 @@
+name: NuGet package gate
+# Fails a pull request that adds a NuGet package ID (src/Directory.Packages.props, any project file,
+# Directory.Build.*, or a versioned MSBuild SDK) that its merge base does not have, unless the same pull request
+# approves it in scripts/nuget/approved-new-packages.txt (owned in .github/CODEOWNERS).
+# No paths filter: the check reports on every pull request, so it can be a required status check.
+# See docs/architecture-guardrails.md.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nuget-package-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  nuget-package-gate:
+    name: NuGet package gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The pull request head, not the merge ref, compared with its merge base: only this pull request's changes count.
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Self-test the gate
+        shell: pwsh
+        run: ./scripts/nuget/Test-NewNuGetPackages.ps1 -SelfTest
+
+      - name: Check for new NuGet packages
+        shell: pwsh
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch --no-tags origin "$($env:BASE_REF):refs/remotes/origin/$($env:BASE_REF)"
+          $base = (git merge-base "origin/$($env:BASE_REF)" HEAD).Trim()
+          ./scripts/nuget/Test-NewNuGetPackages.ps1 -BaseRef $base
