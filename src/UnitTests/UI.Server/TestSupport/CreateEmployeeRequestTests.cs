@@ -15,20 +15,27 @@ public class CreateEmployeeRequestTests
         request.FirstName.ShouldBeNull();
         request.LastName.ShouldBeNull();
         request.MiddleName.ShouldBeNull();
+        request.AdditionalCreateRoleNames.ShouldBeNull();
     }
 
     [Test]
-    public void ShouldHoldNames_WhenProvided()
+    public void ShouldHoldNamesAndRoles_WhenProvided()
     {
         var request = new CreateEmployeeRequest
         {
             TestTag = "x",
+            CanCreateWorkOrder = false,
+            CanFulfillWorkOrder = false,
             FirstName = "Ned",
             LastName = "!x",
-            MiddleName = "F"
+            MiddleName = "F",
+            AdditionalCreateRoleNames = ["Pastor"]
         };
+        request.CanCreateWorkOrder.ShouldBeFalse();
+        request.CanFulfillWorkOrder.ShouldBeFalse();
         request.FirstName.ShouldBe("Ned");
         request.LastName.ShouldBe("!x");
         request.MiddleName.ShouldBe("F");
+        request.AdditionalCreateRoleNames.ShouldBe(["Pastor"]);
     }
 }

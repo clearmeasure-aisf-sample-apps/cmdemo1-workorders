@@ -22,6 +22,7 @@ public abstract class AuthAcceptanceTestBase : AcceptanceApiTestBase
         {
             FirstName = firstName ?? "Pat",
             LastName = lastName ?? DirectoryFirstLastName,
-            MiddleName = middleName
+            MiddleName = middleName,
+            AdditionalCreateRoleNames = []
         });
 }
