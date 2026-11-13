@@ -9,7 +9,11 @@ public class PlaywrightStorageStateTests
     [Test]
     public void ShouldExposeCookiesAndOrigins_WhenConstructed()
     {
-        var state = new PlaywrightStorageState([], [new PlaywrightOrigin("https://x", [])]);
+        var state = new PlaywrightStorageState
+        {
+            Cookies = [],
+            Origins = [new PlaywrightOrigin { Origin = "https://x", LocalStorage = [] }]
+        };
         state.Cookies.ShouldBeEmpty();
         state.Origins.Count.ShouldBe(1);
     }

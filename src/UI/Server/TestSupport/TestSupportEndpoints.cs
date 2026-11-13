@@ -35,7 +35,7 @@ public static class TestSupportEndpoints
                 CanFulfillWorkOrder = request.CanFulfillWorkOrder
             },
             cancellationToken);
-        return Results.Ok(employee);
+        return Results.Json(employee.ToApiShape());
     }
 
     private static async Task<IResult> CreateWorkOrderAsync(
@@ -60,7 +60,7 @@ public static class TestSupportEndpoints
                 RoomNumber = request.RoomNumber
             },
             cancellationToken);
-        return Results.Ok(workOrder);
+        return Results.Json(workOrder.ToApiShape());
     }
 
     private static IResult BuildSignInStorageState(
@@ -76,6 +76,7 @@ public static class TestSupportEndpoints
         var resolvedOrigin = string.IsNullOrWhiteSpace(origin)
             ? $"{request.Scheme}://{request.Host}"
             : origin.Trim().TrimEnd('/');
-        return Results.Json(PlaywrightStorageStateFactory.ForUser(userName.Trim(), resolvedOrigin));
+        var state = PlaywrightStorageStateFactory.ForUser(userName.Trim(), resolvedOrigin);
+        return Results.Json(PlaywrightStorageStateFactory.ToSerializable(state));
     }
 }

@@ -1,7 +1,6 @@
 namespace ClearMeasure.Bootcamp.DataAccess.TestSupport;
 
 /// <summary>Work order created for an acceptance test.</summary>
-// ReSharper disable UnusedAutoPropertyAccessor.Global -- JSON response DTO returned to HTTP clients
 public sealed class TestSupportWorkOrderDto
 {
     /// <summary>Persisted id.</summary>
@@ -21,4 +20,15 @@ public sealed class TestSupportWorkOrderDto
 
     /// <summary>Creator user name.</summary>
     public required string CreatorUserName { get; init; }
+
+    /// <summary>JSON-stable shape that reads every property.</summary>
+    public object ToApiShape() => new
+    {
+        id = Id,
+        number = Number,
+        title = Title,
+        description = Description,
+        roomNumber = RoomNumber,
+        creatorUserName = CreatorUserName
+    };
 }

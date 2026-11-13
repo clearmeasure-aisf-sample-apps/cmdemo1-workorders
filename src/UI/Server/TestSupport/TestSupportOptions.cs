@@ -3,16 +3,30 @@ namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 /// <summary>
 /// Pool-slot-only settings for the test-support HTTP surface. Off by default so tdd, uat and prod return 404.
 /// </summary>
-// ReSharper disable UnusedAutoPropertyAccessor.Global -- IOptions binding sets Enabled/Secret from configuration
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global -- required for IOptions<T> configuration binding
 public sealed class TestSupportOptions
 {
     /// <summary>Configuration section name: <c>TestSupport</c> (<c>TestSupport__Enabled</c>).</summary>
     public const string SectionName = "TestSupport";
 
     /// <summary>When false, every <c>/api/test-support</c> request answers 404.</summary>
-    public bool Enabled { get; set; }
+    public bool Enabled { get; }
 
     /// <summary>Shared secret compared to the <see cref="TestSupportConstants.SecretHeaderName"/> header.</summary>
-    public string Secret { get; set; } = string.Empty;
+    public string Secret { get; }
+
+    /// <summary>Builds options from explicit values (tests and configuration binding).</summary>
+    public TestSupportOptions(bool enabled, string secret)
+    {
+        Enabled = enabled;
+        Secret = secret ?? string.Empty;
+    }
+
+    /// <summary>Reads <see cref="SectionName"/> from configuration.</summary>
+    public static TestSupportOptions FromConfiguration(IConfiguration configuration)
+    {
+        var section = configuration.GetSection(SectionName);
+        return new TestSupportOptions(
+            section.GetValue("Enabled", false),
+            section["Secret"] ?? string.Empty);
+    }
 }

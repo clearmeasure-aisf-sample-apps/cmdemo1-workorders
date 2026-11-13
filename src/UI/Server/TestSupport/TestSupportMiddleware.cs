@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Options;
 
 namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 
@@ -10,7 +9,7 @@ namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 public sealed class TestSupportMiddleware(RequestDelegate next)
 {
     /// <summary>Runs the gate for test-support paths, then continues the pipeline.</summary>
-    public async Task InvokeAsync(HttpContext context, IOptions<TestSupportOptions> optionsAccessor)
+    public async Task InvokeAsync(HttpContext context, TestSupportOptions options)
     {
         if (!IsTestSupportPath(context.Request.Path.Value))
         {
@@ -18,7 +17,6 @@ public sealed class TestSupportMiddleware(RequestDelegate next)
             return;
         }
 
-        var options = optionsAccessor.Value;
         if (!options.Enabled)
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;

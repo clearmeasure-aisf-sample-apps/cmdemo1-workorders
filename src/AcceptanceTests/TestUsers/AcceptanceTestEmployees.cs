@@ -10,24 +10,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 /// </summary>
 public static class AcceptanceTestEmployees
 {
-    /// <summary>Starts the user name of every employee <see cref="Add"/> creates.</summary>
+    /// <summary>Starts the user name of employees created for browser acceptance tests.</summary>
     public const string UserNamePrefix = "test_";
-
-    /// <summary>
-    /// Adds an employee with the admin role whose user name carries <paramref name="testTag"/>.
-    /// Prefer <see cref="TestSupport.TestSupportClient.CreateEmployeeAsync"/> for new fixtures.
-    /// </summary>
-    // ReSharper disable once UnusedMember.Global -- kept for #1638 leftover-employee fixtures until SQL leaves the runner
-    public static Employee Add(string testTag)
-    {
-        using var context = TestHost.NewDbContext();
-        var employee = TestHost.Faker<Employee>();
-        employee.UserName = $"{UserNamePrefix}{testTag}_{employee.UserName}";
-        employee.AddRole(new Role("admin", true, true));
-        context.Add(employee);
-        context.SaveChanges();
-        return employee;
-    }
 
     /// <summary>
     /// Deletes, with their role links and saved searches, the employees whose user name starts with

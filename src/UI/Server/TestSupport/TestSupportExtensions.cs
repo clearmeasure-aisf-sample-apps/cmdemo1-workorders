@@ -5,25 +5,19 @@ namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 /// <summary>Registers test-support options, data service and middleware.</summary>
 public static class TestSupportExtensions
 {
-    /// <summary>Binds <see cref="TestSupportOptions"/> and registers <see cref="TestSupportDataService"/>.</summary>
-    // ReSharper disable once UnusedMethodReturnValue.Global -- fluent DI registration chain
-    public static IServiceCollection AddTestSupport(this IServiceCollection services, IConfiguration configuration)
+    /// <summary>Registers <see cref="TestSupportOptions"/> from DI configuration and <see cref="TestSupportDataService"/>.</summary>
+    public static void AddTestSupport(this IServiceCollection services)
     {
-        services.Configure<TestSupportOptions>(configuration.GetSection(TestSupportOptions.SectionName));
+        // Resolve from IConfiguration at request time so WebApplicationFactory config overrides apply.
+        services.AddSingleton(sp => TestSupportOptions.FromConfiguration(sp.GetRequiredService<IConfiguration>()));
         services.AddScoped<TestSupportDataService>();
-        return services;
     }
 
     /// <summary>Inserts <see cref="TestSupportMiddleware"/> ahead of API controllers.</summary>
-    // ReSharper disable once UnusedMethodReturnValue.Global -- fluent middleware registration chain
-    public static IApplicationBuilder UseTestSupport(this IApplicationBuilder app) =>
+    public static void UseTestSupport(this IApplicationBuilder app) =>
         app.UseMiddleware<TestSupportMiddleware>();
 
     /// <summary>Maps the test-support minimal APIs.</summary>
-    // ReSharper disable once UnusedMethodReturnValue.Global -- fluent endpoint registration chain
-    public static WebApplication MapTestSupport(this WebApplication app)
-    {
+    public static void MapTestSupport(this WebApplication app) =>
         app.MapTestSupportEndpoints();
-        return app;
-    }
 }

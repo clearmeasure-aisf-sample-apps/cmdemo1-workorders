@@ -55,7 +55,7 @@ public sealed class TestSupportClient
     {
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}{PathPrefix}/work-orders");
         AddSecret(httpRequest);
-        httpRequest.Content = JsonContent.Create(request);
+        httpRequest.Content = JsonContent.Create(request.ToJsonBody());
 
         using var response = await _http.SendAsync(httpRequest);
         await EnsureSuccess(response, "create work order");

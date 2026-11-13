@@ -1,22 +1,20 @@
 namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 
 /// <summary>Body for <c>POST /api/test-support/work-orders</c>.</summary>
-// ReSharper disable UnusedAutoPropertyAccessor.Global -- JSON request body; binders set and handlers read
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global -- model binding requires public setters
 public sealed class CreateWorkOrderRequest
 {
     /// <summary>Unique tag for the calling acceptance test.</summary>
-    public string TestTag { get; set; } = string.Empty;
+    public string TestTag { get; init; } = string.Empty;
 
     /// <summary>User name of the creator employee.</summary>
-    public string CreatorUserName { get; set; } = string.Empty;
+    public string CreatorUserName { get; init; } = string.Empty;
 
     /// <summary>Optional title.</summary>
-    public string? Title { get; set; }
+    public string? Title { get; init; }
 
     /// <summary>Optional description.</summary>
-    public string? Description { get; set; }
+    public string? Description { get; init; }
 
     /// <summary>Optional room number.</summary>
-    public string? RoomNumber { get; set; }
+    public string? RoomNumber { get; init; }
 }

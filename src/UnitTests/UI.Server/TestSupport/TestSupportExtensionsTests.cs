@@ -12,11 +12,12 @@ public class TestSupportExtensionsTests
     public void ShouldRegisterDataService_WhenAddTestSupportCalled()
     {
         var services = new ServiceCollection();
-        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["TestSupport:Enabled"] = "false"
-        }).Build();
-        services.AddTestSupport(config);
+        }).Build());
+        services.AddTestSupport();
         services.Any(d => d.ServiceType.Name == "TestSupportDataService").ShouldBeTrue();
+        services.Any(d => d.ServiceType == typeof(TestSupportOptions)).ShouldBeTrue();
     }
 }

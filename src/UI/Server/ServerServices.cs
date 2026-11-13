@@ -67,7 +67,7 @@ public static class ServerServices
         services.Configure<ApiKeyAuthenticationOptions>(configuration.GetSection(ApiKeyAuthenticationOptions.SectionName));
         services.PostConfigure<ApiKeyAuthenticationOptions>(o =>
             o.ValidationKey = string.IsNullOrWhiteSpace(o.ValidationKey) ? null : o.ValidationKey.Trim());
-        services.AddTestSupport(configuration);
+        services.AddTestSupport();
         services.AddRequestDecompression();
         services.Configure<RequestBodyBufferingOptions>(configuration.GetSection(RequestBodyBufferingOptions.SectionName));
         services.AddServerCors(configuration);

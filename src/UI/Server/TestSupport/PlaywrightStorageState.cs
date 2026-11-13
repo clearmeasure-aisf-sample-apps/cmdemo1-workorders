@@ -3,7 +3,13 @@ using System.Text.Json.Serialization;
 namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 
 /// <summary>Playwright <c>storageState</c> JSON shape.</summary>
-// ReSharper disable NotAccessedPositionalProperty.Global -- serialized to Playwright storageState JSON
-public sealed record PlaywrightStorageState(
-    [property: JsonPropertyName("cookies")] IReadOnlyList<object> Cookies,
-    [property: JsonPropertyName("origins")] IReadOnlyList<PlaywrightOrigin> Origins);
+public sealed class PlaywrightStorageState
+{
+    /// <summary>Cookie list (empty for localStorage-only sign-in).</summary>
+    [JsonPropertyName("cookies")]
+    public required IReadOnlyList<object> Cookies { get; init; }
+
+    /// <summary>Per-origin storage.</summary>
+    [JsonPropertyName("origins")]
+    public required IReadOnlyList<PlaywrightOrigin> Origins { get; init; }
+}

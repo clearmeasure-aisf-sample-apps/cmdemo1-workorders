@@ -1,7 +1,6 @@
 namespace ClearMeasure.Bootcamp.DataAccess.TestSupport;
 
 /// <summary>Employee created for an acceptance test.</summary>
-// ReSharper disable UnusedAutoPropertyAccessor.Global -- JSON response DTO returned to HTTP clients
 public sealed class TestSupportEmployeeDto
 {
     /// <summary>Persisted id.</summary>
@@ -18,4 +17,14 @@ public sealed class TestSupportEmployeeDto
 
     /// <summary>Email.</summary>
     public required string EmailAddress { get; init; }
+
+    /// <summary>JSON-stable shape that reads every property.</summary>
+    public object ToApiShape() => new
+    {
+        id = Id,
+        userName = UserName,
+        firstName = FirstName,
+        lastName = LastName,
+        emailAddress = EmailAddress
+    };
 }

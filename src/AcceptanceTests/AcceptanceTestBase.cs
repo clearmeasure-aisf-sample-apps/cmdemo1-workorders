@@ -1,7 +1,6 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared;
@@ -38,11 +37,6 @@ public abstract class AcceptanceTestBase
 
     private bool SkipScreenshotsForSpeed { get; } = ServerFixture.SkipScreenshotsForSpeed;
     protected IBus Bus => TestHost.GetRequiredService<IBus>();
-
-    /// <summary>Bogus/API builders keyed by <see cref="TestTag"/> for this test.</summary>
-    // ReSharper disable once UnusedMember.Global -- public builder surface for fixture independence (#1661/#1665+)
-    protected AcceptanceObjectMother ObjectMother =>
-        new(AcceptanceTestSupportSettings.CreateClient(), TestTag);
 
     protected static async Task SkipIfNoChatClient()
     {

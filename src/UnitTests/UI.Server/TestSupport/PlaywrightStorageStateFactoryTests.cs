@@ -12,5 +12,8 @@ public class PlaywrightStorageStateFactoryTests
         var state = PlaywrightStorageStateFactory.ForUser("alice", "https://localhost:7174");
         state.Origins.Single().LocalStorage.Single().Value.ShouldBe("alice");
         state.Origins.Single().LocalStorage.Single().Name.ShouldBe(TestSupportConstants.UserSessionStorageKey);
+
+        var payload = PlaywrightStorageStateFactory.ToSerializable(state);
+        payload.ShouldNotBeNull();
     }
 }
