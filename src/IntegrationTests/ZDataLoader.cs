@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
-using ClearMeasure.Bootcamp.DemoData;
+using ClearMeasure.Bootcamp.IntegrationTests.DemoData;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests;
