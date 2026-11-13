@@ -14,12 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorMvc" Version="2.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
-    <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="Toolbelt.Blazor.SpeechRecognition" Version="1.0.0" />
-    <PackageReference Include="Toolbelt.Blazor.SpeechSynthesis" Version="11.0.0" />
+    <PackageReference Include="BlazorMvc" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Toolbelt.Blazor.SpeechRecognition" />
+    <PackageReference Include="Toolbelt.Blazor.SpeechSynthesis" />
 
   </ItemGroup>
 

@@ -102,10 +102,11 @@ public class DataAccessNPlusOneCanaryTests
         RequireErrorSeverity(editorConfig, "LC007");
 
         var project = XDocument.Load(dataAccessProject);
+        var centralVersions = ReadCentralVersions(XDocument.Load(checkout.PathOf("src/Directory.Packages.props")));
         using var canary = new ScratchTree("dataaccess-nplusone-canary")
             .Write(".editorconfig", await File.ReadAllTextAsync(editorConfig))
             .Write("OrderByCustomerQueryHandler.cs", source);
-        WriteProject(canary.PathOf("Canary.csproj"), ReadTargetFramework(project), ReadCanaryPackages(project));
+        WriteProject(canary.PathOf("Canary.csproj"), ReadTargetFramework(project), ReadCanaryPackages(project, centralVersions));
         return await ExternalCommand.Dotnet("build", "Canary.csproj", "--nologo", "--no-incremental")
             .In(canary.Root)
             .RunAsync();
@@ -151,12 +152,25 @@ public class DataAccessNPlusOneCanaryTests
         return severity;
     }
 
-    private static IReadOnlyList<PackageReference> ReadCanaryPackages(XDocument project)
+    private static IReadOnlyDictionary<string, string> ReadCentralVersions(XDocument packagesProps)
+    {
+        return packagesProps
+            .Descendants()
+            .Where(element => element.Name.LocalName == "PackageVersion" && element.Attribute("Condition") is null)
+            .ToDictionary(
+                element => element.Attribute("Include")?.Value.Trim() ?? "",
+                element => element.Attribute("Version")?.Value.Trim() ?? "",
+                StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<PackageReference> ReadCanaryPackages(
+        XDocument project,
+        IReadOnlyDictionary<string, string> centralVersions)
     {
         var packages = project
             .Descendants()
             .Where(element => element.Name.LocalName == "PackageReference")
-            .Select(ReadPackageReference)
+            .Select(element => ReadPackageReference(element, centralVersions))
             .Where(reference => reference.Include.Length > 0)
             .GroupBy(reference => reference.Include, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
@@ -177,20 +191,19 @@ public class DataAccessNPlusOneCanaryTests
             $"DataAccess.csproj is missing PackageReference {name}.");
         var reference = packages[name];
         reference.Version.ShouldNotBeNullOrWhiteSpace(
-            $"DataAccess.csproj PackageReference {name} has no Version.");
+            $"PackageReference {name} has no Version in DataAccess.csproj or src/Directory.Packages.props.");
         return reference;
     }
 
-    private static PackageReference ReadPackageReference(XElement element)
+    private static PackageReference ReadPackageReference(
+        XElement element,
+        IReadOnlyDictionary<string, string> centralVersions)
     {
         var include = element.Attribute("Include")?.Value.Trim() ?? "";
         var version = element.Attribute("Version")?.Value.Trim();
         if (string.IsNullOrEmpty(version))
         {
-            version = element.Elements()
-                .FirstOrDefault(child => child.Name.LocalName == "Version")
-                ?.Value
-                .Trim() ?? "";
+            version = centralVersions.GetValueOrDefault(include, "");
         }
 
         return new PackageReference(
