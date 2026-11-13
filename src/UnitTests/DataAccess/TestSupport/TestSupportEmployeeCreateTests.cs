@@ -9,9 +9,17 @@ public class TestSupportEmployeeCreateTests
     [Test]
     public void ShouldRoundTrip_WhenInitialized()
     {
-        var request = new TestSupportEmployeeCreate { TestTag = "tag", CanCreateWorkOrder = true, CanFulfillWorkOrder = false };
+        var roles = new[] { "Pastor", "Requester" };
+        var request = new TestSupportEmployeeCreate
+        {
+            TestTag = "tag",
+            CanCreateWorkOrder = true,
+            CanFulfillWorkOrder = false,
+            AdditionalCreateRoleNames = roles
+        };
         request.TestTag.ShouldBe("tag");
         request.CanCreateWorkOrder.ShouldBeTrue();
         request.CanFulfillWorkOrder.ShouldBeFalse();
+        request.AdditionalCreateRoleNames.ShouldBe(roles);
     }
 }

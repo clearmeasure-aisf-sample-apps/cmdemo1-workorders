@@ -12,5 +12,14 @@ public class CreateEmployeeRequestTests
         var request = new CreateEmployeeRequest(TestTag: "x");
         request.CanCreateWorkOrder.ShouldBeTrue();
         request.CanFulfillWorkOrder.ShouldBeTrue();
+        request.AdditionalCreateRoleNames.ShouldBeNull();
+    }
+
+    [Test]
+    public void ShouldHoldAdditionalCreateRoleNames_WhenSet()
+    {
+        var roles = new[] { "Pastor", "Requester" };
+        var request = new CreateEmployeeRequest(TestTag: "x", AdditionalCreateRoleNames: roles);
+        request.AdditionalCreateRoleNames.ShouldBe(roles);
     }
 }

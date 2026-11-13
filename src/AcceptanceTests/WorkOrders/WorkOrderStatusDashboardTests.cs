@@ -3,6 +3,7 @@ using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [TestFixture]
+[Parallelizable(ParallelScope.All)]
 public class WorkOrderStatusDashboardTests : AcceptanceTestBase
 {
     [Test, Retry(2)]

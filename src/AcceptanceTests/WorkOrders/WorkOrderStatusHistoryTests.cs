@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [TestFixture]
+[Parallelizable(ParallelScope.All)]
 public class WorkOrderStatusHistoryTests : AcceptanceTestBase
 {
 	[Test, Retry(2)]

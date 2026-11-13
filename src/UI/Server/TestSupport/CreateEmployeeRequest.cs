@@ -4,4 +4,5 @@ namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 public sealed record CreateEmployeeRequest(
     string TestTag,
     bool CanCreateWorkOrder = true,
-    bool CanFulfillWorkOrder = true);
+    bool CanFulfillWorkOrder = true,
+    string[]? AdditionalCreateRoleNames = null);

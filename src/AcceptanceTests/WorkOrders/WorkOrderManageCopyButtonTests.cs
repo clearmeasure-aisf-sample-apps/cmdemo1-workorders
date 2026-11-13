@@ -6,6 +6,7 @@ using Microsoft.Playwright;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
+[Parallelizable(ParallelScope.All)]
 public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
 {
     [Test, Retry(2)]

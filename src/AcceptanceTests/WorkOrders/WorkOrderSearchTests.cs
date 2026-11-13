@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
+[Parallelizable(ParallelScope.All)]
 public class WorkOrderSearchTests : AcceptanceTestBase
 {
     [SetUp]
@@ -48,11 +49,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldLoadDropDownsInitiallyOnLoad()
     {
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await TakeScreenshotAsync(1, "PageLoaded");
 
-        // Assert
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
@@ -61,24 +60,19 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Expect(assigneeSelect).ToBeVisibleAsync();
         await Expect(statusSelect).ToBeVisibleAsync();
 
-        // Employee count varies due to parallel test execution creating users dynamically.
-        // Assert minimum count (base data has ~18 employees) plus "All" option.
         const int minimumBaseEmployees = 18;
         var creatorOptions = creatorSelect.Locator("option");
         await Expect(creatorOptions.First).ToHaveTextAsync("Anyone");
-        // Wait for employee data to finish loading via auto-retrying assertion
-        await Expect(creatorOptions.Filter(new(){ HasText = "Timothy Lovejoy"})).ToHaveCountAsync(1);
+        await Expect(creatorOptions.Filter(new() { HasText = "Timothy Lovejoy" })).ToHaveCountAsync(1);
         var creatorOptionCount = await creatorOptions.CountAsync();
         creatorOptionCount.ShouldBeGreaterThanOrEqualTo(minimumBaseEmployees + 1);
 
         var assigneeOptions = assigneeSelect.Locator("option");
         await Expect(assigneeOptions.First).ToHaveTextAsync("Anyone");
-        // Wait for employee data to finish loading via auto-retrying assertion
-        await Expect(assigneeOptions.Filter(new(){ HasText = "Timothy Lovejoy"})).ToHaveCountAsync(1);
+        await Expect(assigneeOptions.Filter(new() { HasText = "Timothy Lovejoy" })).ToHaveCountAsync(1);
         var assigneeOptionCount = await assigneeOptions.CountAsync();
         assigneeOptionCount.ShouldBeGreaterThanOrEqualTo(minimumBaseEmployees + 1);
 
-        // Verify status options are loaded (5 statuses + "All" option = 6 options)
         var statusOptions = statusSelect.Locator("option");
         await Expect(statusOptions).ToHaveCountAsync(WorkOrderStatus.GetAllItems().Length + 1);
         await Expect(statusOptions.First).ToHaveTextAsync("All statuses");
@@ -87,29 +81,15 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldLoadWorkOrderTableWithAllFiltersSetToAllOnInitialLoad()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var assignee = Faker<Employee>();
-        var order1 = Faker<WorkOrder>();
-        var order2 = Faker<WorkOrder>();
-        order1.Creator = creator;
-        order1.Assignee = assignee;
-        order2.Creator = creator;
-        order2.Assignee = assignee;
+        var creator = await SeedEmployeeAsync();
+        var assignee = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Assignee = assignee, Title = $"[{TestTag}] initial load 1" });
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Assignee = assignee, Title = $"[{TestTag}] initial load 2" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(assignee);
-        context.Add(order1);
-        context.Add(order2);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "InitialLoad");
 
-        // Assert
         var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable).ToBeVisibleAsync();
 
@@ -121,21 +101,12 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldLoadWorkOrderTableWithCreatorFilterFromQueryString()
     {
-        // Arrange
         var creator = CurrentUser;
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Title = $"[{TestTag}] search test";
-        await using var context = TestHost.NewDbContext();
-        context.Attach(creator);
-        context.Add(order);
-        await context.SaveChangesAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = $"[{TestTag}] search test" });
 
-        // Act
         await Click(nameof(NavMenu.Elements.MyWorkOrders));
         await TakeScreenshotAsync(1, "CreatorFiltered");
 
-        // Assert
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await Expect(creatorSelect).ToHaveValueAsync(creator.UserName);
 
@@ -151,26 +122,14 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldLoadWorkOrderTableWithAssigneeFilterFromQueryString()
     {
-        // Arrange
-        var creator = Faker<Employee>();
+        var creator = await SeedEmployeeAsync();
         var assignee = CurrentUser;
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Assignee = assignee;
-        order.Title = $"[{TestTag}] assignee test";
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = WorkOrderStatus.Assigned, Assignee = assignee, Title = $"[{TestTag}] assignee test" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Attach(assignee);
-        context.Add(order);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.WorkOrdersAssignedToMe));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "AssigneeFiltered");
 
-        // Assert
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         await Expect(assigneeSelect).ToHaveValueAsync(assignee.UserName);
 
@@ -186,26 +145,17 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldLoadWorkOrderTableWithStatusFilterFromQueryString()
     {
-        // Arrange
-        var creator = Faker<Employee>();
+        var creator = await SeedEmployeeAsync();
         var status = WorkOrderStatus.Assigned;
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Status = status;
+        var assignee = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = status, Assignee = assignee, Title = $"[{TestTag}] status filter" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(order);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Status={status.Key}");
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "StatusFiltered");
 
-        // Assert
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
         await Expect(statusSelect).ToHaveValueAsync(status.Key);
 
@@ -220,22 +170,11 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldSearchWithAllThreeFiltersSelected()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var assignee = Faker<Employee>();
-        var status = Faker<WorkOrderStatus>();
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Assignee = assignee;
-        order.Status = status;
+        var creator = await SeedEmployeeAsync();
+        var assignee = await SeedEmployeeAsync();
+        var status = WorkOrderStatus.Assigned;
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = status, Assignee = assignee, Title = $"[{TestTag}] three filters" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(assignee);
-        context.Add(order);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await TakeScreenshotAsync(1, "BeforeFiltering");
 
@@ -250,13 +189,11 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(3, "SearchCompleted");
 
-        // Assert
         var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable).ToBeVisibleAsync();
 
-        // Wait for the table body to update with filtered results
         await workOrderTable.Locator("tbody").WaitForAsync();
-        
+
         var workOrderRows = workOrderTable.Locator("tbody tr");
         await Expect(workOrderRows).ToHaveCountAsync(1);
     }
@@ -264,18 +201,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldNavigateToWorkOrderDetailsWhenClickingWorkOrderNumber()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var workOrder = Faker<WorkOrder>();
-        workOrder.Creator = creator;
-        workOrder.Title = $"[{TestTag}] details";
+        var creator = await SeedEmployeeAsync();
+        var workOrder = await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = $"[{TestTag}] details" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(workOrder);
-        await context.SaveChangesAsync();
-
-        // Act: search scoped to this test's own row, then open it
         await Click(nameof(NavMenu.Elements.Search));
         await Page.WaitForURLAsync("**/workorder/search");
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
@@ -288,39 +216,27 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Page.WaitForURLAsync(new Regex($"/workorder/manage/{Regex.Escape(workOrder.Number!)}"));
         await TakeScreenshotAsync(2, "WorkOrderDetailsPage");
 
-        // Assert
         await Expect(Page).ToHaveURLAsync(new Regex($"/workorder/manage/{Regex.Escape(workOrder.Number!)}"));
     }
 
     [Test, Retry(2)]
     public async Task ShouldClearFiltersWhenSelectingAllOption()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
+        var creator = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = $"[{TestTag}] clear all option" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(order);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
 
-        // First set a filter
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "FilterSet");
 
-        // Then clear it by selecting "All"
         await creatorSelect.SelectOptionAsync("");
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "FilterCleared");
 
-        // Assert
         await Expect(creatorSelect).ToHaveValueAsync("");
 
         var workOrderTable = Page.Locator(".grid-data");
@@ -330,22 +246,11 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldMaintainSelectedFiltersAfterSearch()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var assignee = Faker<Employee>();
-        var status = Faker<WorkOrderStatus>();
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Assignee = assignee;
-        order.Status = status;
+        var creator = await SeedEmployeeAsync();
+        var assignee = await SeedEmployeeAsync();
+        var status = WorkOrderStatus.Assigned;
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = status, Assignee = assignee, Title = $"[{TestTag}] maintain filters" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(assignee);
-        context.Add(order);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
 
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
@@ -358,7 +263,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "AfterSearch");
 
-        // Assert
         await Expect(creatorSelect).ToHaveValueAsync(creator.UserName);
         await Expect(assigneeSelect).ToHaveValueAsync(assignee.UserName);
         await Expect(statusSelect).ToHaveValueAsync(status.Key);
@@ -367,18 +271,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldClearAllFilters_WhenClearFiltersButtonClicked()
     {
-        // Arrange
         var creator = CurrentUser;
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Title = $"[{TestTag}] clear filters test";
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = $"[{TestTag}] clear filters test" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Attach(creator);
-        context.Add(order);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
@@ -387,36 +282,29 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
         var clearButton = Page.Locator($"#{WorkOrderSearch.Elements.ClearFiltersButton}");
 
-        // Set a filter
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await TakeScreenshotAsync(1, "FilterSet");
 
-        // Assert button is enabled
         await Expect(clearButton).ToBeEnabledAsync();
 
-        // Click clear
         await clearButton.ClickAsync();
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "FiltersCleared");
 
-        // Assert all selects reset
         await Expect(creatorSelect).ToHaveValueAsync("");
         await Expect(assigneeSelect).ToHaveValueAsync("");
         await Expect(statusSelect).ToHaveValueAsync("");
 
-        // Assert results table still visible
         await Expect(Page.Locator(".grid-data")).ToBeVisibleAsync();
     }
 
     [Test, Retry(2)]
     public async Task ClearFiltersButton_ShouldBeDisabled_WhenNoFiltersAreActive()
     {
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "PageLoaded");
 
-        // Assert
         var clearButton = Page.Locator($"#{WorkOrderSearch.Elements.ClearFiltersButton}");
         await Expect(clearButton).ToBeDisabledAsync();
     }
@@ -424,26 +312,12 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldReloadParamsFromQueryStringWithNavigation()
     {
-        // Arrange
-        var order1 = Faker<WorkOrder>();
-        order1.Status = WorkOrderStatus.InProgress;
-        var order2 = Faker<WorkOrder>();
-        order1.Creator = CurrentUser;
-        order1.Assignee = CurrentUser;
-        order2.Creator = CurrentUser;
-        order2.Assignee = CurrentUser;
+        await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Status = WorkOrderStatus.InProgress, Assignee = CurrentUser, Title = $"[{TestTag}] reload params 1" });
+        await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Assignee = CurrentUser, Title = $"[{TestTag}] reload params 2" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Attach(CurrentUser);
-        context.Add(order1);
-        context.Add(order2);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
-        // Assert
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         var statusSelect = Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}");
@@ -460,31 +334,21 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Expect(assigneeSelect).ToHaveValueAsync(CurrentUser.UserName, new() { Timeout = 30_000 });
 
         await Click(nameof(NavMenu.Elements.AllWorkOrdersInProgress));
-        await Expect(statusSelect).ToHaveValueAsync(order1.Status.Key, new() { Timeout = 30_000 });
+        await Expect(statusSelect).ToHaveValueAsync(WorkOrderStatus.InProgress.Key, new() { Timeout = 30_000 });
     }
+
     [Test, Retry(2)]
     public async Task SortByStatusHeader_SortsResultsAscending_ThenDescendingOnSecondClick()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var order1 = Faker<WorkOrder>();
-        var order2 = Faker<WorkOrder>();
-        order1.Creator = creator;
-        order2.Creator = creator;
-        order1.Status = WorkOrderStatus.InProgress;
-        order2.Status = WorkOrderStatus.Assigned;
-
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(order1);
-        context.Add(order2);
-        await context.SaveChangesAsync();
+        var creator = await SeedEmployeeAsync();
+        var assignee = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = WorkOrderStatus.InProgress, Assignee = assignee, Title = $"[{TestTag}] sort status in progress" });
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = WorkOrderStatus.Assigned, Assignee = assignee, Title = $"[{TestTag}] sort status assigned" });
 
         await Click(nameof(NavMenu.Elements.Search));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "Loaded");
 
-        // Filter by creator so only these two work orders are in the result set
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
@@ -508,20 +372,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task SortByTitleHeader_SortsResultsAscending_ThenDescendingOnSecondClick()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var order1 = Faker<WorkOrder>();
-        var order2 = Faker<WorkOrder>();
-        order1.Creator = creator;
-        order2.Creator = creator;
-        order1.Title = "Alpha";
-        order2.Title = "Zebra";
-
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(order1);
-        context.Add(order2);
-        await context.SaveChangesAsync();
+        var creator = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = "Alpha" });
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = "Zebra" });
 
         await Click(nameof(NavMenu.Elements.Search));
 
@@ -547,20 +400,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task SortByRoomHeader_SortsResultsAscending_ThenDescendingOnSecondClick()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var order1 = Faker<WorkOrder>();
-        var order2 = Faker<WorkOrder>();
-        order1.Creator = creator;
-        order2.Creator = creator;
-        order1.RoomNumber = "Atrium";
-        order2.RoomNumber = "Zeppelin";
-
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(order1);
-        context.Add(order2);
-        await context.SaveChangesAsync();
+        var creator = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = $"[{TestTag}] room atrium", RoomNumber = "Atrium" });
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = $"[{TestTag}] room zeppelin", RoomNumber = "Zeppelin" });
 
         await Click(nameof(NavMenu.Elements.Search));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
@@ -587,25 +429,10 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task AssignedToMe_WhenChecked_ShowsOnlyCurrentUsersWorkOrders()
     {
-        // Arrange: create two employees each with a distinct assigned work order
-        var otherEmployee = Faker<Employee>();
-        var myOrder = Faker<WorkOrder>();
-        var otherOrder = Faker<WorkOrder>();
-        myOrder.Creator = CurrentUser;
-        myOrder.Assignee = CurrentUser;
-        myOrder.Title = $"[{TestTag}] my order";
-        otherOrder.Creator = otherEmployee;
-        otherOrder.Assignee = otherEmployee;
-        otherOrder.Title = $"[{TestTag}] other order";
+        var otherEmployee = await SeedEmployeeAsync();
+        var myOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Status = WorkOrderStatus.Assigned, Assignee = CurrentUser, Title = $"[{TestTag}] my order" });
+        var otherOrder = await SeedWorkOrderAsync(otherEmployee, new WorkOrderSeedSpec { Status = WorkOrderStatus.Assigned, Assignee = otherEmployee, Title = $"[{TestTag}] other order" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Attach(CurrentUser);
-        context.Add(otherEmployee);
-        context.Add(myOrder);
-        context.Add(otherOrder);
-        await context.SaveChangesAsync();
-
-        // Act: search scoped to this test's own rows, and wait until the unfiltered result has rendered
         await OpenSearchScopedToTestTag();
         var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
@@ -617,13 +444,11 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "AfterToggle");
 
-        // Assert: only my order appears
         await Expect(workOrderTable).ToBeVisibleAsync();
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(0);
         await Expect(workOrderTable.Locator("tbody tr")).ToHaveCountAsync(1);
 
-        // Assert: Assignee dropdown is disabled
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         await Expect(assigneeSelect).ToBeDisabledAsync();
     }
@@ -631,23 +456,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task AssignedToMe_WhenUnchecked_RestoresFullList()
     {
-        // Arrange
-        var otherEmployee = Faker<Employee>();
-        var myOrder = Faker<WorkOrder>();
-        var otherOrder = Faker<WorkOrder>();
-        myOrder.Creator = CurrentUser;
-        myOrder.Assignee = CurrentUser;
-        myOrder.Title = $"[{TestTag}] my order";
-        otherOrder.Creator = otherEmployee;
-        otherOrder.Assignee = otherEmployee;
-        otherOrder.Title = $"[{TestTag}] other order";
-
-        await using var context = TestHost.NewDbContext();
-        context.Attach(CurrentUser);
-        context.Add(otherEmployee);
-        context.Add(myOrder);
-        context.Add(otherOrder);
-        await context.SaveChangesAsync();
+        var otherEmployee = await SeedEmployeeAsync();
+        var myOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Status = WorkOrderStatus.Assigned, Assignee = CurrentUser, Title = $"[{TestTag}] my order" });
+        var otherOrder = await SeedWorkOrderAsync(otherEmployee, new WorkOrderSeedSpec { Status = WorkOrderStatus.Assigned, Assignee = otherEmployee, Title = $"[{TestTag}] other order" });
 
         await OpenSearchScopedToTestTag();
         var workOrderTable = Page.Locator(".grid-data");
@@ -659,15 +470,12 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(0);
         await TakeScreenshotAsync(1, "ToggleOn");
 
-        // Uncheck
         await checkbox.UncheckAsync();
         await TakeScreenshotAsync(2, "ToggleOff");
 
-        // Assert both orders reappear
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = otherOrder.Title })).ToHaveCountAsync(1);
 
-        // Assert Assignee dropdown is re-enabled
         var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
         await Expect(assigneeSelect).ToBeEnabledAsync();
     }
@@ -675,18 +483,8 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task AssignedToMe_ToggleStatePersistedWithinSession()
     {
-        // Arrange: seed a work order assigned to current user
-        var myOrder = Faker<WorkOrder>();
-        myOrder.Creator = CurrentUser;
-        myOrder.Assignee = CurrentUser;
-        myOrder.Title = $"[{TestTag}] persisted order";
+        var myOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Status = WorkOrderStatus.Assigned, Assignee = CurrentUser, Title = $"[{TestTag}] persisted order" });
 
-        await using var context = TestHost.NewDbContext();
-        context.Attach(CurrentUser);
-        context.Add(myOrder);
-        await context.SaveChangesAsync();
-
-        // Navigate to search scoped to this test's rows and check the toggle
         await OpenSearchScopedToTestTag();
         await Expect(Page.Locator(".grid-data tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
 
@@ -694,7 +492,6 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await checkbox.CheckAsync();
         await TakeScreenshotAsync(1, "ToggleChecked");
 
-        // Navigate away to the work order detail and back
         var workOrderLink = Page.Locator(".grid-data tbody tr").Filter(new() { HasText = myOrder.Title })
             .Locator($"[data-testid^='{WorkOrderSearch.Elements.WorkOrderLink}']").First;
         await workOrderLink.ClickAsync();
@@ -703,11 +500,9 @@ public class WorkOrderSearchTests : AcceptanceTestBase
         await Click(nameof(NavMenu.Elements.Search));
         await TakeScreenshotAsync(3, "BackOnSearch");
 
-        // Assert: checkbox is still checked (state persisted via WorkOrderSearchState)
         var checkboxAfterNav = Page.Locator($"#{WorkOrderSearch.Elements.AssignedToMeCheckbox}");
         await Expect(checkboxAfterNav).ToBeCheckedAsync();
 
-        // Assert: results still scoped to current user
         var workOrderTable = Page.Locator(".grid-data");
         await Expect(workOrderTable.Locator("tbody tr").Filter(new() { HasText = myOrder.Title })).ToHaveCountAsync(1);
     }
@@ -728,25 +523,13 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task SortByDueDateHeader_SortsResultsAscending_ThenDescendingOnSecondClick()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var order1 = Faker<WorkOrder>();
-        var order2 = Faker<WorkOrder>();
-        order1.Creator = creator;
-        order2.Creator = creator;
-        order1.DueDate = new DateOnly(2099, 1, 1);
-        order2.DueDate = new DateOnly(2099, 12, 31);
-
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(order1);
-        context.Add(order2);
-        await context.SaveChangesAsync();
+        var creator = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { DueDate = new DateOnly(2099, 1, 1), Title = $"[{TestTag}] due early" });
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { DueDate = new DateOnly(2099, 12, 31), Title = $"[{TestTag}] due late" });
 
         await Click(nameof(NavMenu.Elements.Search));
         await TakeScreenshotAsync(1, "Loaded");
 
-        // Filter by creator so only these two work orders are in the result set
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
@@ -770,45 +553,27 @@ public class WorkOrderSearchTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Should_ShowOverdueOnly_WhenToggleIsChecked()
     {
-        // Arrange
-        var creator = Faker<Employee>();
-        var overdueOrder = Faker<WorkOrder>();
-        overdueOrder.Creator = creator;
-        overdueOrder.Status = WorkOrderStatus.InProgress;
-        overdueOrder.DueDate = new DateOnly(2000, 1, 1);
+        var creator = await SeedEmployeeAsync();
+        var assignee = await SeedEmployeeAsync();
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = WorkOrderStatus.InProgress, Assignee = assignee, DueDate = new DateOnly(2000, 1, 1), Title = $"[{TestTag}] overdue" });
+        await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = WorkOrderStatus.InProgress, Assignee = assignee, DueDate = new DateOnly(2099, 12, 31), Title = $"[{TestTag}] future" });
 
-        var futureOrder = Faker<WorkOrder>();
-        futureOrder.Creator = creator;
-        futureOrder.Status = WorkOrderStatus.InProgress;
-        futureOrder.DueDate = new DateOnly(2099, 12, 31);
-
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        context.Add(overdueOrder);
-        context.Add(futureOrder);
-        await context.SaveChangesAsync();
-
-        // Act
         await Click(nameof(NavMenu.Elements.Search));
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
 
-        // Filter to this creator so only our two orders appear
         var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
         await creatorSelect.SelectOptionAsync(creator.UserName);
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(1, "BothOrders");
 
-        // Check both rows visible
         var tableRows = Page.Locator(".grid-data tbody tr");
         await Expect(tableRows).ToHaveCountAsync(2);
 
-        // Toggle "Show overdue only"
         var toggle = Page.Locator($"#{WorkOrderSearch.Elements.OverdueOnlyToggle}");
         await toggle.CheckAsync();
         await Page.Locator(".grid-data tbody").WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
         await TakeScreenshotAsync(2, "OverdueOnly");
 
-        // Assert only the overdue row is visible
         await Expect(tableRows).ToHaveCountAsync(1);
         var onlyRow = tableRows.First;
         await Expect(onlyRow).ToHaveClassAsync(new Regex("overdue-row"));

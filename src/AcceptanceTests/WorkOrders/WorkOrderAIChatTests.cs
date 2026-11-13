@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Components;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
+[Parallelizable(ParallelScope.All)]
 public class WorkOrderAiChatTests : AcceptanceTestBase
 {
     [SetUp]
