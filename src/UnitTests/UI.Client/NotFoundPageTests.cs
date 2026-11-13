@@ -60,4 +60,19 @@ public class NotFoundPageTests
         var home = component.Find($"section.not-found-card [data-testid='{nameof(NotFound.Elements.NotFoundHomeLink)}']");
         home.GetAttribute("href").ShouldBe("/");
     }
+
+    [Test]
+    public void Should_RenderSuggestedPagesNav_WithThreeLinksInsideLabeledLandmark()
+    {
+        using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var component = ctx.Render<NotFound>();
+
+        var nav = component.Find("nav.not-found-links[aria-label='Suggested pages']");
+        nav.QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundDashboardLink)}']").ShouldNotBeNull();
+        nav.QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundWorkOrdersLink)}']").ShouldNotBeNull();
+        nav.QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundHomeLink)}']").ShouldNotBeNull();
+    }
 }
