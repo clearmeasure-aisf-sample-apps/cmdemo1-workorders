@@ -10,24 +10,24 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-    <PackageReference Include="ClearMeasureLabs.HostedEndpoint.SqlServerTransport" Version="1.0.30" />
-    <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
-    <PackageReference Include="NServiceBus.Persistence.Sql.TransactionalSession" Version="8.3.0" />
-    <PackageReference Include="Octopus.OpenFeature" Version="4.0.0" />
-    <PackageReference Include="OpenFeature" Version="2.14.1" />
+    <PackageReference Include="ClearMeasureLabs.HostedEndpoint.SqlServerTransport" />
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="NServiceBus.Persistence.Sql.TransactionalSession" />
+    <PackageReference Include="Octopus.OpenFeature" />
+    <PackageReference Include="OpenFeature" />
     <!-- Pin transitive SQLitePCLRaw above 2.1.11 to resolve NU1903 (GHSA-2m69-gcr7-jv3q). -->
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.11" />
-    <PackageReference Include="LinqContraband" Version="5.18.0">
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
+    <PackageReference Include="LinqContraband">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NPlusOne.Analyzers" Version="1.1.0">
+    <PackageReference Include="NPlusOne.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

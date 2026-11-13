@@ -1,0 +1,24 @@
+# Code owners (docs/architecture-guardrails.md). A pull request that touches a path below requests review from its
+# owner; with "Require review from Code Owners" on in the branch ruleset, it cannot merge without that approval.
+# Later lines win over earlier ones for the same path.
+
+# Dependencies and build configuration: package versions, project references, NuGet sources, MSBuild defaults.
+*.csproj                                   @jeffreypalermo
+*.props                                    @jeffreypalermo
+*.targets                                  @jeffreypalermo
+Directory.Packages.props                   @jeffreypalermo
+Directory.Build.props                      @jeffreypalermo
+Directory.Build.targets                    @jeffreypalermo
+NuGet.Config                               @jeffreypalermo
+nuget.config                               @jeffreypalermo
+NuGet.config                               @jeffreypalermo
+global.json                                @jeffreypalermo
+
+# The architecture guardrails themselves: weakening a gate needs the same review as the change it would let through.
+.editorconfig                              @jeffreypalermo
+/src/Core/BannedSymbols.txt                @jeffreypalermo
+/src/UnitTests/Architecture/               @jeffreypalermo
+/scripts/nuget/                            @jeffreypalermo
+/.github/workflows/nuget-package-gate.yml  @jeffreypalermo
+/.github/CODEOWNERS                        @jeffreypalermo
+/docs/architecture-guardrails.md           @jeffreypalermo

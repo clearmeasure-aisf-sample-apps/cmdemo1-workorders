@@ -11,6 +11,13 @@
     <WarningsNotAsErrors Condition="'$(Configuration)' == 'Debug'">CS0168;CS0219;CS1998;IDE0051;IDE0052</WarningsNotAsErrors>
   </PropertyGroup>
 
+  <!-- IDE0130 (namespace matches folder, an error in src/.editorconfig) reads these two properties.
+       Without them the rule is silent in command-line builds and CI. -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="RootNamespace" />
+    <CompilerVisibleProperty Include="ProjectDir" />
+  </ItemGroup>
+
   <!-- Ratchet (#1535): these advisories already fire on restore. Suppressing them keeps
        TreatWarningsAsErrors from failing the build on today's set. A new advisory is not
        in this list, so restore fails until the package is upgraded or the list is reviewed.

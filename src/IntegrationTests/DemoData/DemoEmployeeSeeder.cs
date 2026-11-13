@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 // ReSharper disable once CheckNamespace -- outside ClearMeasure.Bootcamp.IntegrationTests on purpose: that namespace's
 // SetUpFixture starts the test host (an NServiceBus endpoint that installs its queues), which must never run against
 // the database of a deployed environment.
-namespace ClearMeasure.Bootcamp.DemoData;
+namespace ClearMeasure.Bootcamp.IntegrationTests.DemoData;
 
 /// <summary>
 /// The demo employees and their roles, kept in one list: <see cref="ZDataLoader"/> adds the missing ones to the shared test

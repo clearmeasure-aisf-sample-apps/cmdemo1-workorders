@@ -15,4 +15,5 @@ layers.
   independent of the application layers.
 
 This dependency rule keeps domain logic in Core independent of infrastructure
-and presentation details.
+and presentation details. The build and pull request checks enforce it: see
+[architecture-guardrails.md](architecture-guardrails.md).

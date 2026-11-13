@@ -1,0 +1,24 @@
+<Project>
+  <!-- Onion layer guard (docs/architecture-guardrails.md). Core is the innermost layer and references no other
+       project; DataAccess references Core only. A forbidden ProjectReference fails every build, restore excluded,
+       before any compilation. The analyzer-only reference that Directory.Build.props adds to every project
+       (OutputItemType=Analyzer, ReferenceOutputAssembly=false) is a build tool, not a layer dependency. -->
+  <PropertyGroup>
+    <_OnionAllowedProjectReferences Condition="'$(MSBuildProjectName)' == 'Core'">;</_OnionAllowedProjectReferences>
+    <_OnionAllowedProjectReferences Condition="'$(MSBuildProjectName)' == 'DataAccess'">;Core;</_OnionAllowedProjectReferences>
+  </PropertyGroup>
+
+  <Target Name="GuardOnionProjectReferences"
+          BeforeTargets="ResolveProjectReferences;ResolveAssemblyReferences"
+          Condition="'$(_OnionAllowedProjectReferences)' != ''">
+    <ItemGroup>
+      <_OnionLayerReference Include="@(ProjectReference)"
+                            Condition="'%(ProjectReference.OutputItemType)' != 'Analyzer' or '%(ProjectReference.ReferenceOutputAssembly)' != 'false'" />
+      <_OnionForbiddenReference Include="@(_OnionLayerReference)"
+                                Condition="!$(_OnionAllowedProjectReferences.Contains(';%(_OnionLayerReference.Filename);'))" />
+    </ItemGroup>
+    <Error Condition="'@(_OnionForbiddenReference)' != ''"
+           Code="ONION001"
+           Text="Onion Architecture: $(MSBuildProjectName) must not reference project(s) %(_OnionForbiddenReference.Filename) (%(_OnionForbiddenReference.Identity)). Core references no other project and DataAccess references Core only; dependencies point inward. See docs/architecture-guardrails.md." />
+  </Target>
+</Project>
