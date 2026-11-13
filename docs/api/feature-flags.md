@@ -11,8 +11,6 @@ With the checked-in `appsettings.json` and no Octopus client identifier, the bod
 
 ```json
 {
-  "SampleFeatureA": false,
-  "SampleFeatureB": false,
   "ShowPriorityBadges": true,
   "BuildingManagement": false,
   "VendorManagement": false

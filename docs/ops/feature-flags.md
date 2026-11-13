@@ -9,8 +9,6 @@ Flag values are evaluated at runtime. The flag names are fixed in `FeatureFlagNa
 | `ShowPriorityBadges` | true (Octopus slug `showprioritybadges`; on in tdd, uat and prod) | When enabled, a High-priority work order shows a colored High badge on the search list and on the board. Appsettings stays true as the fallback when Octopus is unset or cannot resolve the flag. |
 | `BuildingManagement` | false | When off, the Buildings & Rooms nav link and page are hidden, and `BuildingRoomSummaryQuery` and `WorkOrderBuildingsQuery` are denied. The work-order building text stays. |
 | `VendorManagement` | false | When off, the Vendors section, `VendorsQuery`, `CreateVendorCommand`, and MCP `list-vendors` / `create-vendor` are denied. Teams and waiting-on-vendor stay available. |
-| `SampleFeatureA` | false (true in Development) | The flags endpoint returns it. It changes no screen. |
-| `SampleFeatureB` | false | The flags endpoint returns it. It changes no screen. |
 
 ## Turning a flag on or off
 

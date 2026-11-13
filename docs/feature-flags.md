@@ -9,8 +9,6 @@ Feature flags are evaluated at runtime on the server and enforced in one place: 
 | `ShowPriorityBadges` | true | Octopus slug `showprioritybadges`. When enabled, the work order search page shows a High badge on a work order whose priority is High. Stays on in tdd, uat and prod; appsettings is the fallback when Octopus is unset or cannot resolve the flag. |
 | `BuildingManagement` | false | Gates Buildings & Rooms: the nav link, `/admin/buildings`, `BuildingRoomSummaryQuery`, and `WorkOrderBuildingsQuery`. The work-order building text stays. |
 | `VendorManagement` | false | Gates `VendorsQuery` and `CreateVendorCommand`: the Vendors section on Teams & Vendors, and MCP `list-vendors` / `create-vendor`. Teams and the waiting-on-vendor work-order flow stay available. |
-| `SampleFeatureA` | false (true in Development) | Returned by the endpoints. No screen reads it. |
-| `SampleFeatureB` | false | Returned by the endpoints. No screen reads it. |
 
 To add a flag, add a constant to `FeatureFlagNames` and to `FeatureFlagNames.All`, and give it a default in the `FeatureFlags` section of `src/UI/Server/appsettings.json` (and `src/McpServer/appsettings.json` if MCP uses it).
 
@@ -63,8 +61,6 @@ Only requests sent through `Send` are gated; `Publish` (events) is not.
 
 ```json
 {
-  "SampleFeatureA": false,
-  "SampleFeatureB": false,
   "ShowPriorityBadges": true,
   "BuildingManagement": false,
   "VendorManagement": false

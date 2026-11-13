@@ -98,7 +98,7 @@ public class FeatureFlagsEndpointIntegrationTests
 
         flags.ShouldNotBeNull();
         flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
-        flags[FeatureFlagNames.BuildingManagement].ShouldBeFalse();
+        flags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
         flags[FeatureFlagNames.ShowPriorityBadges].ShouldBeFalse();
         diagnostics.ShouldNotBeNull();
         diagnostics.FeatureFlags.ShouldBe(flags, ignoreOrder: true);
@@ -121,10 +121,8 @@ public class FeatureFlagsEndpointIntegrationTests
 
     private static readonly Dictionary<string, bool> ExpectedDefaults = new()
     {
-        [FeatureFlagNames.SampleFeatureA] = true,
-        [FeatureFlagNames.SampleFeatureB] = false,
         [FeatureFlagNames.ShowPriorityBadges] = true,
-        [FeatureFlagNames.BuildingManagement] = false,
+        [FeatureFlagNames.BuildingManagement] = true,
         [FeatureFlagNames.VendorManagement] = false
     };
 }

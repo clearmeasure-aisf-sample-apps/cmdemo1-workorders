@@ -132,7 +132,6 @@ public class RuntimeFeatureFlagEvaluatorTests
     [TestCase("BuildingManagement", new[] { "building-management", "buildingmanagement", "BuildingManagement" })]
     [TestCase("VendorManagement", new[] { "vendor-management", "vendormanagement", "VendorManagement" })]
     [TestCase("ShowPriorityBadges", new[] { "show-priority-badges", "showprioritybadges", "ShowPriorityBadges" })]
-    [TestCase("SampleFeatureA", new[] { "sample-feature-a", "samplefeaturea", "SampleFeatureA" })]
     [TestCase("lowercase", new[] { "lowercase" })]
     public void OpenFeatureKeys_Should_TryKebabSlugThenName_When_Evaluating(string name, string[] expected)
     {
