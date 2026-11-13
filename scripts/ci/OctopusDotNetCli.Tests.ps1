@@ -176,6 +176,35 @@ function Test-HelperDoesNotSwallowStderr {
     Write-Output 'helper does not swallow stderr ok'
 }
 
+function Test-RollForwardLatestMajorForNet6Tool {
+    $original = $env:DOTNET_ROLL_FORWARD
+    try {
+        $env:DOTNET_ROLL_FORWARD = 'LatestMinor'
+        $set = Set-OctopusDotNetCliRollForward
+        Assert-True ($set -eq 'LatestMajor') 'Roll-forward helper must return LatestMajor.'
+        Assert-True ($env:DOTNET_ROLL_FORWARD -eq 'LatestMajor') 'Ambient DOTNET_ROLL_FORWARD must become LatestMajor.'
+
+        $env:DOTNET_ROLL_FORWARD = 'LatestMinor'
+        Initialize-OctopusDotNetCli `
+            -DelaySeconds @(1) `
+            -Sleep { } `
+            -IsInstalled { $true } `
+            -InstallAttempt { throw 'should not install when listed' } `
+            -ResolveCommand { [pscustomobject]@{ Name = 'dotnet-octo' } } `
+            -ToolsPath (Join-Path ([System.IO.Path]::GetTempPath()) 'octo-cli-rollforward-tools')
+        Assert-True ($env:DOTNET_ROLL_FORWARD -eq 'LatestMajor') 'Initialize must set LatestMajor even when install is skipped.'
+        Write-Output 'roll forward latest major for net6 tool ok'
+    }
+    finally {
+        if ($null -eq $original) {
+            Remove-Item Env:DOTNET_ROLL_FORWARD -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:DOTNET_ROLL_FORWARD = $original
+        }
+    }
+}
+
 $TestDrive = Join-Path ([System.IO.Path]::GetTempPath()) ("octo-cli-tests-" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $TestDrive | Out-Null
 try {
@@ -190,6 +219,7 @@ try {
     Test-AssertResolvesOrFailsClearly
     Test-InitializeInstallsThenVerifies
     Test-HelperDoesNotSwallowStderr
+    Test-RollForwardLatestMajorForNet6Tool
 
     Write-Output 'octopus dotnet cli self-test passed.'
     exit 0

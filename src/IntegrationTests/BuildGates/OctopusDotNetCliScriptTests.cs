@@ -26,4 +26,13 @@ public class OctopusDotNetCliScriptTests
         buildScript.ShouldContain("Initialize-OctopusDotNetCli");
         buildScript.ShouldNotContain("dotnet tool install --global Octopus.DotNet.Cli 2>$null");
     }
+
+    [Test]
+    public void Helper_WhenRead_ForcesLatestMajorRollForwardForNet6Tool()
+    {
+        var helper = RepositoryCheckout.Current.ReadText("scripts/ci/OctopusDotNetCli.ps1");
+
+        helper.ShouldContain("Set-OctopusDotNetCliRollForward");
+        helper.ShouldContain("LatestMajor");
+    }
 }

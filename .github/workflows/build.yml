@@ -226,6 +226,18 @@ jobs:
           path: '**/build/test/**/In/**/coverage.cobertura.xml'
           retention-days: 2
 
+      - name: Install Octopus.DotNet.Cli
+        if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        env:
+          # LatestMajor: Octopus.DotNet.Cli targets net6; job-level LatestMinor (#1653 / dotnet-script)
+          # makes tool install fail with TransactionalAction. Match publish-image.yml — scope only here.
+          DOTNET_ROLL_FORWARD: LatestMajor
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/OctopusDotNetCli.ps1
+          Initialize-OctopusDotNetCli
+
       # Package Everything as NuGet Packages
       - name: Create NuGet Packages
         if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
@@ -234,6 +246,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           BUILD_BUILDNUMBER: ${{ env.VERSION }}
+          # Same LatestMajor scope as Install Octopus.DotNet.Cli (octo itself targets net6).
+          DOTNET_ROLL_FORWARD: LatestMajor
         run: |
           . ./build.ps1
           Package-Everything
