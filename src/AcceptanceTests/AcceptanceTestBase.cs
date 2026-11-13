@@ -23,7 +23,6 @@ public class TestState
 {
     public required IPage Page { get; init; }
     public required IBrowserContext BrowserContext { get; init; }
-    public required IBrowser Browser { get; init; }
     public Employee CurrentUser { get; init; } = null!;
     public required string TestTag { get; init; }
 }
@@ -41,6 +40,7 @@ public abstract class AcceptanceTestBase
     protected IBus Bus => TestHost.GetRequiredService<IBus>();
 
     /// <summary>Bogus/API builders keyed by <see cref="TestTag"/> for this test.</summary>
+    // ReSharper disable once UnusedMember.Global -- public builder surface for fixture independence (#1661/#1665+)
     protected AcceptanceObjectMother ObjectMother =>
         new(AcceptanceTestSupportSettings.CreateClient(), TestTag);
 
@@ -171,10 +171,12 @@ public abstract class AcceptanceTestBase
 
     protected async Task LoginAsCurrentUser()
     {
-        var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
-        if (await welcomeTextLocator.IsVisibleAsync())
+        // WelcomeText is visually hidden inside the user menu; use the toggle to detect an existing session.
+        var userMenu = Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle));
+        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        if (await userMenu.CountAsync() > 0 && await userMenu.IsVisibleAsync())
         {
-            await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
+            await Expect(welcomeText).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
             return;
         }
 
@@ -189,9 +191,9 @@ public abstract class AcceptanceTestBase
         await TakeScreenshotAsync();
         await Click(nameof(Login.Elements.LoginButton));
 
-        await Expect(welcomeTextLocator).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle))).ToBeVisibleAsync();
+        await Expect(welcomeText).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
         await TakeScreenshotAsync();
-        await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
         // WelcomeText is visually hidden inside the user menu trigger (#251): first click opens, second closes.
         await Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle)).DblClickAsync();
     }

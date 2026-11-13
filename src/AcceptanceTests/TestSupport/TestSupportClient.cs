@@ -9,11 +9,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 /// </summary>
 public sealed class TestSupportClient
 {
-    /// <summary>Must match <c>TestSupportConstants.PathPrefix</c> on the server.</summary>
-    public const string PathPrefix = "/api/test-support";
-
-    /// <summary>Must match <c>TestSupportConstants.SecretHeaderName</c> on the server.</summary>
-    public const string SecretHeaderName = "X-Test-Support-Secret";
+    private const string PathPrefix = "/api/test-support";
+    private const string SecretHeaderName = "X-Test-Support-Secret";
 
     /// <summary>Must match the Blazor localStorage session key.</summary>
     public const string UserSessionStorageKey = "bootcamp.userSession.username";

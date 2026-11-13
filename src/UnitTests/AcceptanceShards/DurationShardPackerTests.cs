@@ -10,13 +10,14 @@ public class DurationShardPackerTests
     {
         var classes = new[]
         {
-            new DurationClass("A", 100),
+            new DurationClass("A", 100, Tests: 2),
             new DurationClass("B", 90),
             new DurationClass("C", 80),
             new DurationClass("D", 10),
             new DurationClass("E", 10),
             new DurationClass("F", 10)
         };
+        classes[0].Tests.ShouldBe(2);
 
         var buckets = DurationShardPacker.Pack(classes, shardCount: 3);
 

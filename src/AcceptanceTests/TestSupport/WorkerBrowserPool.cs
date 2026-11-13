@@ -38,6 +38,7 @@ public static class WorkerBrowserPool
             }
             catch (Exception ex)
             {
+                // ReSharper disable once MethodHasAsyncOverload -- NUnit TextWriter has no useful WriteLineAsync for teardown logging
                 TestContext.Out.WriteLine(
                     $"WorkerBrowserPool: ignoring close failure for worker {pair.Key}: {ex.GetType().Name}: {ex.Message}");
             }

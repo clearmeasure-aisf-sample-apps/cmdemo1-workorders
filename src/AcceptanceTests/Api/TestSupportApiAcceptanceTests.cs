@@ -1,4 +1,5 @@
 using System.Net;
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
@@ -17,11 +18,13 @@ public class TestSupportApiAcceptanceTests : AcceptanceTestBase
     {
         LocalAcceptanceHost.Require();
 
-        var client = AcceptanceTestSupportSettings.CreateClient();
         var tag = Guid.NewGuid().ToString("N")[..8];
-        var employee = await client.CreateEmployeeAsync(tag);
+        var mother = new AcceptanceObjectMother(AcceptanceTestSupportSettings.CreateClient(), tag);
+        var employee = await mother.EmployeeAsync();
+        var workOrder = await mother.DraftWorkOrderAsync(employee.UserName);
 
         employee.UserName.ShouldStartWith($"test_{tag}_");
+        workOrder.CreatorUserName.ShouldBe(employee.UserName);
     }
 
     [Test]

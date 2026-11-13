@@ -1,6 +1,7 @@
 namespace ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 
 /// <summary>Body for creating a work order through test-support.</summary>
+// ReSharper disable UnusedAutoPropertyAccessor.Global -- JSON request body serialized by TestSupportClient
 public sealed class TestSupportWorkOrderRequest
 {
     /// <summary>Unique tag for the calling acceptance test.</summary>

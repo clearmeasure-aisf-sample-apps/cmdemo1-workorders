@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -33,7 +34,6 @@ public static class BrowserFixtureSetup
         {
             Page = page,
             BrowserContext = browserContext,
-            Browser = browser,
             CurrentUser = currentUser,
             TestTag = testTag
         };
@@ -41,7 +41,9 @@ public static class BrowserFixtureSetup
 
     private static async Task<Employee> CreateEmployeeAsync(string testTag)
     {
-        var created = await AcceptanceTestSupportSettings.CreateClient().CreateEmployeeAsync(testTag);
+        var created = await new AcceptanceObjectMother(
+            AcceptanceTestSupportSettings.CreateClient(),
+            testTag).EmployeeAsync();
         var employee = new Employee(created.UserName, created.FirstName, created.LastName, created.EmailAddress)
         {
             Id = created.Id
@@ -84,7 +86,7 @@ public static class BrowserFixtureSetup
     private static Task WaitForShellAsync(IPage page, bool useStorageStateSignIn)
     {
         var testId = useStorageStateSignIn
-            ? nameof(Logout.Elements.WelcomeText)
+            ? nameof(Logout.Elements.UserMenuToggle)
             : nameof(LoginLink.Elements.LoginLink);
         return page.GetByTestId(testId).WaitForAsync(new LocatorWaitForOptions
         {

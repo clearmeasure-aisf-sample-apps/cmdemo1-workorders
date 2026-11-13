@@ -9,6 +9,9 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 [TestFixture]
 public class AccessibilityAxeTests : AcceptanceTestBase
 {
+    /// <summary>Scans /login while anonymous, then signs in for authenticated routes.</summary>
+    protected override bool UseStorageStateSignIn => false;
+
     private static readonly string[] Themes = ["light", "dark"];
 
     [Test]

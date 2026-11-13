@@ -45,7 +45,7 @@ public sealed class TestSupportMiddleware(RequestDelegate next)
                || pathValue.StartsWith(TestSupportConstants.PathPrefix + "/", StringComparison.OrdinalIgnoreCase);
     }
 
-    internal static bool SecretMatches(HttpRequest request, string expectedSecret)
+    private static bool SecretMatches(HttpRequest request, string expectedSecret)
     {
         if (string.IsNullOrEmpty(expectedSecret))
         {

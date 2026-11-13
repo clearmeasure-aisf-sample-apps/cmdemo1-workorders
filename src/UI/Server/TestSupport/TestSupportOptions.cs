@@ -3,6 +3,8 @@ namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 /// <summary>
 /// Pool-slot-only settings for the test-support HTTP surface. Off by default so tdd, uat and prod return 404.
 /// </summary>
+// ReSharper disable UnusedAutoPropertyAccessor.Global -- IOptions binding sets Enabled/Secret from configuration
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global -- required for IOptions<T> configuration binding
 public sealed class TestSupportOptions
 {
     /// <summary>Configuration section name: <c>TestSupport</c> (<c>TestSupport__Enabled</c>).</summary>
