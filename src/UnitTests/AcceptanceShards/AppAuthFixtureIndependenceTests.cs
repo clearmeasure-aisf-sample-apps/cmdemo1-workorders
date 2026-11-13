@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using Shouldly;
 
-namespace ClearMeasure.Bootcamp.UnitTests.AcceptanceTests;
+namespace ClearMeasure.Bootcamp.UnitTests.AcceptanceShards;
 
 /// <summary>Source-level checks that App and Authentication fixtures stay API-seeded and ParallelScope.All.</summary>
 [TestFixture]
