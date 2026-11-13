@@ -34,7 +34,8 @@ jobs:
       should_publish: ${{ steps.gate.outputs.should_publish }}
     env:
       BUILD_CONFIGURATION: Release
-      DOTNET_ROLL_FORWARD: LatestMinor
+      # LatestMajor: Octopus.DotNet.Cli targets net6; LatestMinor (build-linux) flakes tool install here.
+      DOTNET_ROLL_FORWARD: LatestMajor
       # Pack path does not run tests or migrate; SQLite avoids a SQL container in Init.
       DATABASE_ENGINE: SQLite
       ConnectionStrings__SqlConnectionString: "Data Source=ChurchBulletin.db"
@@ -98,6 +99,14 @@ jobs:
           echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
           echo "started_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
 
+      - name: Install Octopus.DotNet.Cli
+        if: steps.gate.outputs.should_publish == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/ci/OctopusDotNetCli.ps1
+          Initialize-OctopusDotNetCli
+
       - name: Compile and package (no tests)
         if: steps.gate.outputs.should_publish == 'true'
         shell: pwsh
@@ -115,9 +124,7 @@ jobs:
           # Reuse PackageUI from build.ps1. Skip AcceptanceTests (~0.5GB) and PackageDatabase's
           # Debug republish (rebuilds the graph); octo-pack Database from the project tree like
           # PackageDatabase's second step. Skip PackageScript (release does not ship it).
-          $env:DOTNET_ROLL_FORWARD = 'LatestMajor'
-          $octopusDotNetCli = Join-PathSegments $base_dir 'scripts' 'ci' 'OctopusDotNetCli.ps1'
-          . $octopusDotNetCli
+          . (Join-PathSegments $base_dir 'scripts' 'ci' 'OctopusDotNetCli.ps1')
           Initialize-OctopusDotNetCli
           PackageUI
           exec {
