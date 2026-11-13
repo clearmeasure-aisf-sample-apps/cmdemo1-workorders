@@ -4,3 +4,5 @@
 #     <PackageId> | <issue link or reason>
 # This file is owned in .github/CODEOWNERS, so the line is the code owners' approval. A line approves only the
 # pull request that adds it; keep old lines as the history of approvals.
+
+TngTech.ArchUnitNET | Architecture tests for the Onion layer rules (src/UnitTests/Architecture), requested with the architecture guardrails

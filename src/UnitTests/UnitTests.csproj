@@ -49,6 +49,7 @@
 		</PackageReference>
 		<PackageReference Include="Serilog.Formatting.Compact" />
 		<PackageReference Include="Shouldly" />
+		<PackageReference Include="TngTech.ArchUnitNET" />
 		<PackageReference Include="bunit" />
 		<PackageReference Include="MediatR" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
