@@ -20,17 +20,8 @@ public sealed class WorkOrderSeedSpec
     /// <summary>Optional title.</summary>
     public string? Title { get; init; }
 
-    /// <summary>Optional description.</summary>
-    public string? Description { get; init; }
-
     /// <summary>Optional room number.</summary>
     public string? RoomNumber { get; init; }
-
-    /// <summary>Optional instructions.</summary>
-    public string? Instructions { get; init; }
-
-    /// <summary>Optional explicit work-order number.</summary>
-    public string? Number { get; init; }
 
     /// <summary>Maps this spec onto mother seed fields.</summary>
     public WorkOrderSeedFields ToFields() => new()
@@ -39,9 +30,6 @@ public sealed class WorkOrderSeedSpec
         DueDate = DueDate,
         AssigneeUserName = Assignee?.UserName,
         Title = Title,
-        Description = Description,
-        RoomNumber = RoomNumber,
-        Instructions = Instructions,
-        Number = Number
+        RoomNumber = RoomNumber
     };
 }
