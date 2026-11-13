@@ -8,6 +8,9 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 [TestFixture]
 public class AppShellTests : AcceptanceTestBase
 {
+    /// <summary>Layout measurements assume the signed-in shell from an explicit login.</summary>
+    protected override bool UseStorageStateSignIn => false;
+
     [SetUp]
     public async Task Setup()
     {

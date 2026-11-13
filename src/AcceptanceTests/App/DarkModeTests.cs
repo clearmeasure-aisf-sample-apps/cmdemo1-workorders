@@ -6,6 +6,9 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 [TestFixture]
 public class DarkModeTests : AcceptanceTestBase
 {
+    /// <summary>Includes anonymous auth-gate coverage; sign in explicitly in tests that need it.</summary>
+    protected override bool UseStorageStateSignIn => false;
+
     [Test, Retry(2)]
     [Category("Smoke")]
     public async Task DarkMode_ShouldToggleHtmlDataTheme_WhenSwitchChangedOnSettings()

@@ -10,6 +10,9 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 [TestFixture]
 public class DashboardTests : AcceptanceTestBase
 {
+    /// <summary>Includes signed-out layout coverage; signed-in tests call LoginAsCurrentUser.</summary>
+    protected override bool UseStorageStateSignIn => false;
+
     [Test, Retry(2)]
     public async Task ShouldShowHeaderAndCards_WithoutHero()
     {

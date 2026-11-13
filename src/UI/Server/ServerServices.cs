@@ -11,6 +11,7 @@ using ClearMeasure.Bootcamp.UI.Server.BuildFacts;
 using ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
 using ClearMeasure.Bootcamp.UI.Server.Testing;
+using ClearMeasure.Bootcamp.UI.Server.TestSupport;
 using ChurchBulletin.ServiceDefaults;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -66,6 +67,7 @@ public static class ServerServices
         services.Configure<ApiKeyAuthenticationOptions>(configuration.GetSection(ApiKeyAuthenticationOptions.SectionName));
         services.PostConfigure<ApiKeyAuthenticationOptions>(o =>
             o.ValidationKey = string.IsNullOrWhiteSpace(o.ValidationKey) ? null : o.ValidationKey.Trim());
+        services.AddTestSupport();
         services.AddRequestDecompression();
         services.Configure<RequestBodyBufferingOptions>(configuration.GetSection(RequestBodyBufferingOptions.SectionName));
         services.AddServerCors(configuration);

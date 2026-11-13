@@ -4,6 +4,7 @@ using System.Text.Json;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 
 [TestFixture]
+[Parallelizable(ParallelScope.All)]
 public class EchoApiAcceptanceTests : AcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;

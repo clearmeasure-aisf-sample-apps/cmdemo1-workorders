@@ -3,6 +3,7 @@ using System.Globalization;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Extensions;
 
 [TestFixture]
+[Parallelizable(ParallelScope.All)]
 public class DateTimeTestExtensionsTests
 {
     [Test]

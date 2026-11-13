@@ -661,6 +661,15 @@
       "armSeconds": 17.4,
       "longestX64Seconds": 14.4,
       "longestArmSeconds": 17.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.TestSupportApiAcceptanceTests",
+      "shard": 5,
+      "tests": 2,
+      "x64Seconds": 2.0,
+      "armSeconds": 2.0,
+      "longestX64Seconds": 1.0,
+      "longestArmSeconds": 1.0
     }
   ],
   "workers": 4

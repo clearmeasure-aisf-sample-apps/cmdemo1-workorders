@@ -5,6 +5,9 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 [TestFixture]
 public class LandingPageTests : AcceptanceTestBase
 {
+    /// <summary>Signed-out landing assertions need an anonymous context.</summary>
+    protected override bool UseStorageStateSignIn => false;
+
     [Test, Retry(2)]
     public async Task Should_ShowDashboardHeader_WithoutHero_WhenSignedOut()
     {

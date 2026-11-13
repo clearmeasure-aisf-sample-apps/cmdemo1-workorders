@@ -7,6 +7,7 @@ using ClearMeasure.Bootcamp.UI.Server.Middleware;
 using ClearMeasure.Bootcamp.UI.Server.Notifications;
 using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
 using ClearMeasure.Bootcamp.UI.Server.Testing;
+using ClearMeasure.Bootcamp.UI.Server.TestSupport;
 using ChurchBulletin.ServiceDefaults;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
@@ -78,6 +79,7 @@ public static class ServerPipeline
             context => ApiRateLimitingExtensions.ShouldApplyToPath(context.Request.Path),
             branch => branch.UseRequestTimeouts());
         app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
+        app.UseTestSupport();
         app.UseMachineClientStatusCodeProblemDetails();
         if (app.Services.IsServerCorsActive())
         {
@@ -103,6 +105,7 @@ public static class ServerPipeline
         var apiControllers = app.MapControllers();
         ApiControllerMapping.ApplyRequestTimeout(app, apiControllers);
         ApiControllerMapping.ApplyCorsWhenActive(app, apiControllers);
+        app.MapTestSupport();
         app.MapGrpcService<WorkOrdersGrpcService>();
         app.MapMcp("/mcp");
         app.MapFallback(FallbackToIndexHtml);
