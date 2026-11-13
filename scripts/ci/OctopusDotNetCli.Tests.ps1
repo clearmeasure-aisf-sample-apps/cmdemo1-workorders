@@ -204,24 +204,32 @@ function Test-HelperDoesNotSwallowStderr {
     Write-Output 'helper does not swallow stderr ok'
 }
 
-function Test-RollForwardLatestMajorForNet6Tool {
+function Test-RollForwardInstallUsesLatestPatchThenRuntimeLatestMajor {
     $original = $env:DOTNET_ROLL_FORWARD
     try {
-        $env:DOTNET_ROLL_FORWARD = 'LatestMinor'
-        $set = Set-OctopusDotNetCliRollForward
-        Assert-True ($set -eq 'LatestMajor') 'Roll-forward helper must return LatestMajor.'
-        Assert-True ($env:DOTNET_ROLL_FORWARD -eq 'LatestMajor') 'Ambient DOTNET_ROLL_FORWARD must become LatestMajor.'
+        $env:DOTNET_ROLL_FORWARD = 'LatestMajor'
+        $install = Set-OctopusDotNetCliInstallRollForward
+        Assert-True ($install -eq 'LatestPatch') 'Install roll-forward must be LatestPatch (#1681).'
+        Assert-True ($env:DOTNET_ROLL_FORWARD -eq 'LatestPatch') 'Ambient env must become LatestPatch for install.'
 
-        $env:DOTNET_ROLL_FORWARD = 'LatestMinor'
+        $runtime = Set-OctopusDotNetCliRuntimeRollForward
+        Assert-True ($runtime -eq 'LatestMajor') 'Runtime roll-forward must be LatestMajor for net6 octo.'
+        Assert-True ($env:DOTNET_ROLL_FORWARD -eq 'LatestMajor') 'Ambient env must become LatestMajor for runtime.'
+
+        $env:DOTNET_ROLL_FORWARD = 'LatestMajor'
+        $script:installSaw = $null
         Initialize-OctopusDotNetCli `
             -DelaySeconds @(1) `
             -Sleep { } `
-            -IsInstalled { $true } `
-            -InstallAttempt { throw 'should not install when listed' } `
+            -IsInstalled { $false } `
+            -InstallAttempt {
+                $script:installSaw = $env:DOTNET_ROLL_FORWARD
+            } `
             -ResolveCommand { [pscustomobject]@{ Name = 'dotnet-octo' } } `
             -ToolsPath (Join-Path ([System.IO.Path]::GetTempPath()) 'octo-cli-rollforward-tools')
-        Assert-True ($env:DOTNET_ROLL_FORWARD -eq 'LatestMajor') 'Initialize must set LatestMajor even when install is skipped.'
-        Write-Output 'roll forward latest major for net6 tool ok'
+        Assert-True ($script:installSaw -eq 'LatestPatch') 'Install attempt must see LatestPatch even when ambient was LatestMajor.'
+        Assert-True ($env:DOTNET_ROLL_FORWARD -eq 'LatestMajor') 'Initialize must restore LatestMajor after install for octo.'
+        Write-Output 'roll forward install latest patch then runtime latest major ok'
     }
     finally {
         if ($null -eq $original) {
@@ -248,7 +256,7 @@ try {
     Test-AssertResolvesOrFailsClearly
     Test-InitializeInstallsThenVerifies
     Test-HelperDoesNotSwallowStderr
-    Test-RollForwardLatestMajorForNet6Tool
+    Test-RollForwardInstallUsesLatestPatchThenRuntimeLatestMajor
 
     Write-Output 'octopus dotnet cli self-test passed.'
     exit 0

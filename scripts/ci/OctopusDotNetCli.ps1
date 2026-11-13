@@ -76,18 +76,39 @@ function Test-IsAlreadyInstalledToolMessage {
     return $Message -match '(?i)already\s+installed'
 }
 
-function Set-OctopusDotNetCliRollForward {
+function Set-OctopusDotNetCliInstallRollForward {
     <#
     .SYNOPSIS
-      Sets DOTNET_ROLL_FORWARD=LatestMajor for Octopus.DotNet.Cli (targets net6).
+      Sets DOTNET_ROLL_FORWARD=LatestPatch for `dotnet tool install` of Octopus.DotNet.Cli.
     .DESCRIPTION
-      Job-level LatestMinor (build-linux, for dotnet-script) makes `dotnet tool install`
-      fail with TransactionalAction on GitHub-hosted runners. publish-image.yml and the
-      build-linux pack steps use LatestMajor for the same reason; this keeps callers safe
-      even when the ambient env is still LatestMinor.
+      The host SDK's TransactionalAction static ctor uses reflection
+      (SetTransactionManagerField) on TransactionManager private fields
+      s_cachedMaxTimeout / s_maximumTimeout. DOTNET_ROLL_FORWARD=LatestMajor can load a
+      newer runtime whose System.Transactions no longer has those fields, so GetField
+      returns null and install fails with:
+        TypeInitializationException → NullReferenceException in SetTransactionManagerField
+      (captured on CI for #1681). LatestPatch keeps the install host on a matching runtime.
+      Use Set-OctopusDotNetCliRuntimeRollForward when later invoking the net6-targeted tool.
+    #>
+    $env:DOTNET_ROLL_FORWARD = 'LatestPatch'
+    return $env:DOTNET_ROLL_FORWARD
+}
+
+function Set-OctopusDotNetCliRuntimeRollForward {
+    <#
+    .SYNOPSIS
+      Sets DOTNET_ROLL_FORWARD=LatestMajor so net6-targeted dotnet-octo runs on newer runtimes.
     #>
     $env:DOTNET_ROLL_FORWARD = 'LatestMajor'
     return $env:DOTNET_ROLL_FORWARD
+}
+
+function Set-OctopusDotNetCliRollForward {
+    <#
+    .SYNOPSIS
+      Obsolete alias: install-time roll-forward is LatestPatch (#1681). Prefer the Install/Runtime helpers.
+    #>
+    return Set-OctopusDotNetCliInstallRollForward
 }
 
 function Get-OctopusDotNetCliInstallEnvironmentSnapshot {
@@ -160,7 +181,7 @@ function Invoke-DotNetToolInstallGlobal {
     $previousCliVerbose = $env:DOTNET_CLI_CONTEXT_VERBOSE
     $ErrorActionPreference = 'Continue'
     try {
-        Set-OctopusDotNetCliRollForward | Out-Null
+        Set-OctopusDotNetCliInstallRollForward | Out-Null
         # CommandLoggingContext.IsVerbose reads DOTNET_CLI_CONTEXT_VERBOSE (not --verbosity).
         # Without it, TypeInitializationException prints only Message (no InnerException).
         if ($CliContextVerbose) {
@@ -215,9 +236,17 @@ if (!Directory.Exists(sdkRoot))
     sdkRoot = "/usr/share/dotnet/sdk";
 }
 
+static Version? TryParseSdkDirVersion(string dir)
+{
+    return Version.TryParse(Path.GetFileName(dir), out var v) ? v : null;
+}
+
 var dll = Directory.Exists(sdkRoot)
-    ? Directory.GetDirectories(sdkRoot).OrderByDescending(static d => d)
-        .Select(static d => Path.Combine(d, "dotnet.dll"))
+    ? Directory.GetDirectories(sdkRoot)
+        .Select(static d => (Dir: d, Ver: TryParseSdkDirVersion(d)))
+        .Where(static x => x.Ver is not null)
+        .OrderByDescending(static x => x.Ver)
+        .Select(static x => Path.Combine(x.Dir, "dotnet.dll"))
         .FirstOrDefault(File.Exists)
     : null;
 
@@ -404,7 +433,7 @@ function Initialize-OctopusDotNetCli {
         [string]$ToolsPath = (Get-DotNetGlobalToolsPath)
     )
 
-    Set-OctopusDotNetCliRollForward | Out-Null
+    Set-OctopusDotNetCliInstallRollForward | Out-Null
     Add-DotNetToolsDirectoryToPath -ToolsPath $ToolsPath | Out-Null
     Install-OctopusDotNetCliWithRetry `
         -DelaySeconds $DelaySeconds `
@@ -412,4 +441,6 @@ function Initialize-OctopusDotNetCli {
         -IsInstalled $IsInstalled `
         -InstallAttempt $InstallAttempt
     Assert-DotNetOctoCommandAvailable -ToolsPath $ToolsPath -ResolveCommand $ResolveCommand
+    # After a successful install, allow the net6-targeted shim to run on newer runtimes.
+    Set-OctopusDotNetCliRuntimeRollForward | Out-Null
 }

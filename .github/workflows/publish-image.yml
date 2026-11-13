@@ -34,8 +34,9 @@ jobs:
       should_publish: ${{ steps.gate.outputs.should_publish }}
     env:
       BUILD_CONFIGURATION: Release
-      # LatestMajor: Octopus.DotNet.Cli targets net6; LatestMinor (build-linux) flakes tool install here.
-      DOTNET_ROLL_FORWARD: LatestMajor
+      # Install uses LatestPatch inside OctopusDotNetCli.ps1 (#1681: LatestMajor host roll-forward
+      # NREs TransactionalAction). Pack/octo steps set LatestMajor when invoking the net6 tool.
+      DOTNET_ROLL_FORWARD: LatestPatch
       # Pack path does not run tests or migrate; SQLite avoids a SQL container in Init.
       DATABASE_ENGINE: SQLite
       ConnectionStrings__SqlConnectionString: "Data Source=ChurchBulletin.db"
