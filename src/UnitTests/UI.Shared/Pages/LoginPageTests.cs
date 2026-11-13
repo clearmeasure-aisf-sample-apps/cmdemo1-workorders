@@ -847,6 +847,24 @@ public class LoginPageTests
     }
 
     [Test]
+    public async Task Should_AnnounceErrorMessage_WithRoleAlert()
+    {
+        await using var ctx = new BunitContext();
+
+        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        ctx.Services.AddSingleton(provider);
+        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton<IBus>(new FailingEmployeeStubBus());
+        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+
+        var component = ctx.Render<Login>();
+
+        var alert = component.Find("div.alert.alert-danger");
+        alert.GetAttribute("role").ShouldBe("alert");
+    }
+
+    [Test]
     public async Task Should_ShowVersionLabel_WithEnvironmentSegment()
     {
         await using var ctx = new BunitContext();
@@ -924,6 +942,19 @@ public class LoginPageTests
             }
 
             return await base.Send(request);
+        }
+    }
+
+    private sealed class FailingEmployeeStubBus : StubBus
+    {
+        public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        {
+            if (request is EmployeeGetAllQuery)
+            {
+                throw new InvalidOperationException("employee load failed");
+            }
+
+            return base.Send(request);
         }
     }
 }
