@@ -50,7 +50,6 @@ public sealed class AcceptanceObjectMother(TestSupportClient client, string test
         });
     }
 
-    /// <summary>Creates a work order from a fully populated request.</summary>
-    public Task<TestSupportWorkOrder> WorkOrderAsync(TestSupportWorkOrderRequest request) =>
+    private Task<TestSupportWorkOrder> WorkOrderAsync(TestSupportWorkOrderRequest request) =>
         client.CreateWorkOrderAsync(request);
 }
