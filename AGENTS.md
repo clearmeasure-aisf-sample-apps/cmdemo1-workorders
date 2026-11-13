@@ -17,6 +17,7 @@ a job behind `Build result`:
 | Qodana (Community .NET) | `docker run --rm -v "$PWD":/data/project jetbrains/qodana-cdnet:latest --solution src/ChurchBulletin.sln --baseline qodana.sarif.json --fail-threshold 0` | Zero findings outside the baseline `qodana.sarif.json`. A baselined finding your change removes (ABSENT) also fails: delete its entry (see the Qodana sections below) |
 | CRAP | `pwsh scripts/crap/run-crap-audit.ps1 -SkipTests -FailOnViolations` | Under `scripts/crap/crap-gate-threshold.json` |
 | Acceptance tests | `pwsh ./AcceptanceTests.ps1` (Playwright, 6 shards in CI) | All pass |
+| NuGet package gate (own check, `nuget-package-gate.yml`) | `pwsh scripts/nuget/Test-NewNuGetPackages.ps1 -BaseRef $(git merge-base origin/master HEAD)` | No new package ID in `src/Directory.Packages.props` or a project file, unless approved in `scripts/nuget/approved-new-packages.txt` |
 
 The usual first-push failures, so check them before pushing:
 
@@ -26,6 +27,11 @@ The usual first-push failures, so check them before pushing:
   entries to `qodana.sarif.json` to get green.
 - **Size ratchet**: never add a line to the baseline for new code. Split by concept, not by line count: read
   `docs/refactoring-oversized-code.md` and fill in the PR's **Refactoring plan** when a baselined file changes.
+
+Architecture rules are build errors and tests, not review comments: Onion project references (`ONION001`), the
+ArchUnitNET layer tests in `src/UnitTests/Architecture`, namespace matches folder (`IDE0130`), no system clock in
+Core (`RS0030`), and Central Package Management (versions only in `src/Directory.Packages.props`). See
+`docs/architecture-guardrails.md`.
 
 Pull requests: branch `{username}/{short-description}`; the body says `Closes #N`; use the template in
 `.github/pull_request_template.md`; one concern per PR; squash merge. Do not add NuGet packages, change SDK versions or

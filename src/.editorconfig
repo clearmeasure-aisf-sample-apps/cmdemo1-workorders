@@ -22,6 +22,11 @@ csharp_style_implicit_object_creation_when_type_is_apparent = true:silent
 # pushes the size and duplication ratchets (#1550, #1540) over their ceilings.
 csharp_prefer_braces = true:silent
 csharp_style_namespace_declarations = file_scoped:warning
+# A namespace is the project's RootNamespace plus the folder path (IDE0130), an error in every build.
+# Directory.Build.props makes RootNamespace and ProjectDir visible to the analyzer so the rule runs in CI.
+# A file that cannot follow it gets its own section at the end of this file (docs/architecture-guardrails.md).
+dotnet_style_namespace_match_folder = true:error
+dotnet_diagnostic.IDE0130.severity = error
 # Using placement and order are the house style. Warning severity reorders imports
 # across the tree and pushes the duplication ratchet (#1540) over its ceiling.
 csharp_using_directive_placement = outside_namespace:silent
@@ -112,3 +117,8 @@ dotnet_diagnostic.CM0004.severity = none
 # Checked-in generator output. Style rules must not rewrite it.
 [**/Generated/**.cs]
 generated_code = true
+
+# IDE0130 exception: this file keeps the UI.Shared root namespace in App_Code. Moving it is a new file to the
+# size-baseline rationale check; renaming the namespace touches its consumers. Delete this section when it moves.
+[UI.Shared/App_Code/WorkOrderSelectedEvent.cs]
+dotnet_diagnostic.IDE0130.severity = none

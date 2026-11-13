@@ -23,32 +23,32 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="coverlet.collector" Version="6.0.4">
+		<PackageReference Include="coverlet.collector">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="coverlet.msbuild" Version="6.0.4">
+		<PackageReference Include="coverlet.msbuild">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
-		<PackageReference Include="microsoft.playwright.nunit" Version="1.61.0" />
-		<PackageReference Include="Deque.AxeCore.Playwright" Version="4.14.0" />
-		<PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
-		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.7.1-preview.1.25365.4" />
-		<PackageReference Include="ModelContextProtocol" Version="1.0.0" />
-		<PackageReference Include="Microsoft.Extensions.AI" Version="9.7.0" />
-		<PackageReference Include="NUnit" Version="4.3.2" />
-		<PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
-		<PackageReference Include="NUnit.Analyzers" Version="4.9.2">
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
+		<PackageReference Include="microsoft.playwright.nunit" />
+		<PackageReference Include="Deque.AxeCore.Playwright" />
+		<PackageReference Include="Azure.AI.OpenAI" />
+		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+		<PackageReference Include="ModelContextProtocol" />
+		<PackageReference Include="Microsoft.Extensions.AI" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="NUnit.Analyzers">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtrans_transitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.2" />
-		<PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.15.1" />
-		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.1" />
-		<PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.15.2" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+		<PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" />
 	</ItemGroup>
 
 	<ItemGroup>

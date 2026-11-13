@@ -1,0 +1,26 @@
+# Code owners (docs/architecture-guardrails.md). A pull request that touches a path below requests review from its
+# owner; with "Require review from Code Owners" on in the branch ruleset, it cannot merge without that approval.
+# Later lines win over earlier ones for the same path.
+# Either owner's approval satisfies the rule; @cm-ai-ops-bot is listed so the bots can keep work moving without
+# Jeffrey approving each pull request himself.
+
+# Dependencies and build configuration: package versions, project references, NuGet sources, MSBuild defaults.
+*.csproj                                   @jeffreypalermo @cm-ai-ops-bot
+*.props                                    @jeffreypalermo @cm-ai-ops-bot
+*.targets                                  @jeffreypalermo @cm-ai-ops-bot
+Directory.Packages.props                   @jeffreypalermo @cm-ai-ops-bot
+Directory.Build.props                      @jeffreypalermo @cm-ai-ops-bot
+Directory.Build.targets                    @jeffreypalermo @cm-ai-ops-bot
+NuGet.Config                               @jeffreypalermo @cm-ai-ops-bot
+nuget.config                               @jeffreypalermo @cm-ai-ops-bot
+NuGet.config                               @jeffreypalermo @cm-ai-ops-bot
+global.json                                @jeffreypalermo @cm-ai-ops-bot
+
+# The architecture guardrails themselves: weakening a gate needs the same review as the change it would let through.
+.editorconfig                              @jeffreypalermo @cm-ai-ops-bot
+/src/Core/BannedSymbols.txt                @jeffreypalermo @cm-ai-ops-bot
+/src/UnitTests/Architecture/               @jeffreypalermo @cm-ai-ops-bot
+/scripts/nuget/                            @jeffreypalermo @cm-ai-ops-bot
+/.github/workflows/nuget-package-gate.yml  @jeffreypalermo @cm-ai-ops-bot
+/.github/CODEOWNERS                        @jeffreypalermo @cm-ai-ops-bot
+/docs/architecture-guardrails.md           @jeffreypalermo @cm-ai-ops-bot

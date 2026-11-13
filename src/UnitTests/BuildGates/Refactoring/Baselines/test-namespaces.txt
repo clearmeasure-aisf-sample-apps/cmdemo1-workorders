@@ -1,3 +1,2 @@
 # Ratchet baseline for TestNamespaceRule: today's violations. Only delete lines (fix the code first); never add.
 # See docs/refactoring-oversized-code.md.
-src/IntegrationTests/DemoData/DemoEmployeeSeeder.cs :: ClearMeasure.Bootcamp.DemoData
