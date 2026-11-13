@@ -107,6 +107,18 @@ public class RuntimeFeatureFlagEvaluatorTests
         (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task IsEnabledAsync_Should_ReturnProviderValue_When_ProviderOnlyKnowsShowPriorityBadgesSlug(
+        bool providerValue)
+    {
+        var evaluator = WithOpenFeature(
+            Configuration(("FeatureFlags:ShowPriorityBadges", "true")),
+            ("showprioritybadges", providerValue));
+
+        (await evaluator.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges)).ShouldBe(providerValue);
+    }
+
     [Test]
     public async Task IsEnabledAsync_Should_FallBackToConfiguration_When_ProviderLacksTheFlag()
     {
