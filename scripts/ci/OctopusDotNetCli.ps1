@@ -76,12 +76,27 @@ function Test-IsAlreadyInstalledToolMessage {
     return $Message -match '(?i)already\s+installed'
 }
 
+function Set-OctopusDotNetCliRollForward {
+    <#
+    .SYNOPSIS
+      Sets DOTNET_ROLL_FORWARD=LatestMajor for Octopus.DotNet.Cli (targets net6).
+    .DESCRIPTION
+      Job-level LatestMinor (build-linux, for dotnet-script) makes `dotnet tool install`
+      fail with TransactionalAction on GitHub-hosted runners. publish-image.yml and the
+      build-linux pack steps use LatestMajor for the same reason; this keeps callers safe
+      even when the ambient env is still LatestMinor.
+    #>
+    $env:DOTNET_ROLL_FORWARD = 'LatestMajor'
+    return $env:DOTNET_ROLL_FORWARD
+}
+
 function Invoke-OctopusDotNetCliInstallAttempt {
     param(
         [scriptblock]$InstallTool = {
             $previous = $ErrorActionPreference
             $ErrorActionPreference = 'Continue'
             try {
+                Set-OctopusDotNetCliRollForward | Out-Null
                 $lines = & dotnet tool install --global $script:OctopusDotNetCliPackageId 2>&1
                 return [pscustomobject]@{
                     ExitCode = $LASTEXITCODE
@@ -174,6 +189,7 @@ function Initialize-OctopusDotNetCli {
         [string]$ToolsPath = (Get-DotNetGlobalToolsPath)
     )
 
+    Set-OctopusDotNetCliRollForward | Out-Null
     Add-DotNetToolsDirectoryToPath -ToolsPath $ToolsPath | Out-Null
     Install-OctopusDotNetCliWithRetry `
         -DelaySeconds $DelaySeconds `
