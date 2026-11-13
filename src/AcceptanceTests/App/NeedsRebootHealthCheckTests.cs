@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 /// Serializes this fixture: tests toggle the process-wide <c>NeedsRebootHealthCheck.NeedsReboot</c> static.
 /// Parallel execution of methods in this class interleaves set true/false and flakes <c>/_healthcheck</c>.
 /// </summary>
-[TestFixture, NonParallelizable, Category(AcceptanceTestCategories.SerialLane)]
+[TestFixture, NonParallelizable, Category("SerialLane")]
 public class NeedsRebootHealthCheckTests : AcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;

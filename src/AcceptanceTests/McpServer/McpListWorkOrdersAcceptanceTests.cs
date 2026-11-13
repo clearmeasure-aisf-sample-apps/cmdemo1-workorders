@@ -8,7 +8,7 @@ using Login = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
-[TestFixture, NonParallelizable, Category(AcceptanceTestCategories.SerialLane)]
+[TestFixture, NonParallelizable, Category("SerialLane")]
 public class McpListWorkOrdersAcceptanceTests : AcceptanceTestBase
 {
     private static McpTestHelper? _helper;

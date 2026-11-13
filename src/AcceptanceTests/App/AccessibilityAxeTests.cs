@@ -83,13 +83,13 @@ public class AccessibilityAxeTests : AcceptanceTestBase
     }
 
     private Func<Task> ReadyFor(AccessibilityAxeRoute route) =>
-        route.ReadyKind switch
+        route.WaitKind switch
         {
-            AccessibilityAxeReadyKind.TestId => WaitForTestId(route.ReadyToken),
-            AccessibilityAxeReadyKind.PresentAbsent => WaitUntil(
+            AccessibilityAxeRoute.ReadyKind.TestId => WaitForTestId(route.ReadyToken),
+            AccessibilityAxeRoute.ReadyKind.PresentAbsent => WaitUntil(
                 route.ReadyToken.Split('|')[0],
                 route.ReadyToken.Split('|')[1]),
-            _ => throw new ArgumentOutOfRangeException(nameof(route), route.ReadyKind, "Unknown ready kind.")
+            _ => throw new ArgumentOutOfRangeException(nameof(route), route.WaitKind, "Unknown ready kind.")
         };
 
     private Func<Task> WaitForTestId(string testId) =>

@@ -10,13 +10,13 @@ public class AccessibilityAxeRoutesTests
     public void AxeTests_WhenRead_SplitOneCasePerRoute()
     {
         var tests = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/App/AccessibilityAxeTests.cs");
-        var routes = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/App/AccessibilityAxeRoute.cs");
+        var routes = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/App/AccessibilityAxeRoutes.cs");
 
         tests.ShouldContain("[Parallelizable(ParallelScope.Children)]");
         tests.ShouldContain("Should_HaveNoSeriousOrCriticalAxeViolations_OnRoute");
         tests.ShouldContain("[TestCaseSource(nameof(RouteKeys))]");
         tests.ShouldNotContain("OnEveryRouteInBothThemes");
-        System.Text.RegularExpressions.Regex.Matches(tests, @"yield return ").Count.ShouldBeGreaterThanOrEqualTo(12);
+        System.Text.RegularExpressions.Regex.Matches(tests, "yield return ").Count.ShouldBeGreaterThanOrEqualTo(12);
         routes.ShouldContain("AccessibilityAxeRoutes");
     }
 
@@ -30,7 +30,7 @@ public class AccessibilityAxeRoutesTests
         tests.ShouldContain("ShouldMatchDocumentWidthToViewport_At390_OnRoute");
         tests.ShouldContain("[TestCaseSource(nameof(RouteKeys))]");
         tests.ShouldNotContain("OnEveryRoute()");
-        System.Text.RegularExpressions.Regex.Matches(tests, @"yield return ").Count.ShouldBeGreaterThanOrEqualTo(12);
+        System.Text.RegularExpressions.Regex.Matches(tests, "yield return ").Count.ShouldBeGreaterThanOrEqualTo(12);
     }
 
     [Test]

@@ -113,19 +113,19 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
 
     private async Task WaitReadyAsync(PhoneWidthRoute route)
     {
-        switch (route.ReadyKind)
+        switch (route.WaitKind)
         {
-            case PhoneWidthReadyKind.TestId:
+            case PhoneWidthRoute.ReadyKind.TestId:
                 await Expect(Page.GetByTestId(route.ReadyToken)).ToBeVisibleAsync();
                 break;
-            case PhoneWidthReadyKind.Css:
+            case PhoneWidthRoute.ReadyKind.Css:
                 await Expect(Page.Locator(route.ReadyToken)).ToBeVisibleAsync();
                 break;
-            case PhoneWidthReadyKind.Heading:
+            case PhoneWidthRoute.ReadyKind.Heading:
                 await WaitForHeadingRouteAsync(route);
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(route), route.ReadyKind, "Unknown ready kind.");
+                throw new ArgumentOutOfRangeException(nameof(route), route.WaitKind, "Unknown ready kind.");
         }
     }
 
