@@ -1,0 +1,210 @@
+# Publish-only image and packages for pull-request environments (issue #1660).
+# Starts on push; does not wait for Build (no needs on Build); does not change build.yml gates.
+# Produces ACR image tag pr-<n>-<sha> and NuGet packages versioned 2.4.N-pr.<n>
+# (N = this workflow's run_number; <n> = open PR for the pushed branch).
+# VERSION-MARKER: the "2.4." prefix in run-name matches MAJOR_VERSION/MINOR_VERSION below
+# (and build.yml). run-name cannot read env.*, so keep the literal in sync when those change.
+name: Publish image
+run-name: "2.4.${{ github.run_number }}-pr • Publish image • ${{ github.head_ref || github.ref_name }}"
+on:
+  push:
+  workflow_dispatch:
+
+env:
+  MAJOR_VERSION: 2
+  MINOR_VERSION: 4
+
+jobs:
+  publish:
+    name: Publish PR image and packages
+    if: github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: publish-image-${{ github.ref }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: read
+      id-token: write
+    # Same Azure OIDC / ACR push identity as release.yml (no branch deployment policy).
+    environment: release
+    env:
+      BUILD_CONFIGURATION: Release
+      DOTNET_ROLL_FORWARD: LatestMinor
+      # Pack path does not run tests or migrate; SQLite avoids a SQL container in Init.
+      DATABASE_ENGINE: SQLite
+      ConnectionStrings__SqlConnectionString: "Data Source=ChurchBulletin.db"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Run publish-helper script tests
+        run: |
+          set -euo pipefail
+          bash .github/scripts/resolve-open-pr.tests.sh
+          bash .github/scripts/pr-publish-ids.tests.sh
+
+      - name: Resolve open pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash .github/scripts/resolve-open-pr.sh \
+            --repo "${{ github.repository }}" \
+            --head "${{ github.ref_name }}"
+
+      - name: Skip when no open pull request
+        id: gate
+        run: |
+          set -euo pipefail
+          if [ -z "${{ steps.pr.outputs.pr_number }}" ]; then
+            echo "No open pull request for branch ${{ github.ref_name }}; skipping publish."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set version and image tag
+        id: ids
+        if: steps.gate.outputs.should_publish == 'true'
+        run: |
+          set -euo pipefail
+          bash .github/scripts/pr-publish-ids.sh \
+            --major "${{ env.MAJOR_VERSION }}" \
+            --minor "${{ env.MINOR_VERSION }}" \
+            --run "${{ github.run_number }}" \
+            --pr "${{ steps.pr.outputs.pr_number }}" \
+            --sha "${{ github.sha }}"
+
+      - name: Cache NuGet packages
+        if: steps.gate.outputs.should_publish == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Record publish start
+        if: steps.gate.outputs.should_publish == 'true'
+        id: timing
+        run: |
+          set -euo pipefail
+          echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          echo "started_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+      - name: Compile and package (no tests)
+        if: steps.gate.outputs.should_publish == 'true'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          BUILD_BUILDNUMBER: ${{ steps.ids.outputs.version }}
+          VERSION: ${{ steps.ids.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Write-Host "Publish-only pack version $($env:BUILD_BUILDNUMBER)"
+          . ./build.ps1
+          Init
+          Compile
+          # Reuse Package-* from build.ps1 (same as Package-Everything) but skip
+          # AcceptanceTests: that nupkg is ~0.5GB and blows the 3-minute PR publish budget.
+          # PR environments need the UI image and Database/Script packages.
+          $env:DOTNET_ROLL_FORWARD = 'LatestMajor'
+          $octopusDotNetCli = Join-PathSegments $base_dir 'scripts' 'ci' 'OctopusDotNetCli.ps1'
+          . $octopusDotNetCli
+          Initialize-OctopusDotNetCli
+          PackageUI
+          PackageDatabase
+          PackageScript
+
+      - name: Extract the UI for the image
+        if: steps.gate.outputs.should_publish == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $package = Get-ChildItem -Path ./build -Filter 'ChurchBulletin.UI.*.nupkg' | Select-Object -First 1
+          if (-not $package) { throw 'ChurchBulletin.UI package not found in ./build' }
+          Expand-Archive -LiteralPath $package.FullName -DestinationPath ./package-extract -Force
+          $dll = Get-ChildItem -Path ./package-extract -Filter 'ClearMeasure.Bootcamp.UI.Server.dll' -Recurse | Select-Object -First 1
+          if (-not $dll) { throw 'ClearMeasure.Bootcamp.UI.Server.dll not found in the UI package' }
+          New-Item -ItemType Directory -Path ./built -Force | Out-Null
+          Copy-Item -Path (Join-Path $dll.DirectoryName '*') -Destination ./built -Recurse -Force
+          Get-ChildItem -Path ./built -Include '*.nuspec', '[Content_Types].xml', '*.psmdcp' -Recurse | Remove-Item -Force
+          Remove-Item -Path ./built/_rels, ./built/package -Recurse -Force -ErrorAction SilentlyContinue
+
+      - uses: azure/login@v3
+        if: steps.gate.outputs.should_publish == 'true'
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push the PR image
+        if: steps.gate.outputs.should_publish == 'true'
+        env:
+          IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}:${{ steps.ids.outputs.image_tag }}
+        run: |
+          set -euo pipefail
+          az acr login --name "${{ vars.ACR_NAME }}"
+          docker build --file Dockerfile --tag "$IMAGE" .
+          docker push "$IMAGE"
+          # PR tags stay writable so a later push to the same PR can replace a tag only when the sha matches;
+          # each commit uses a distinct sha, so tags are unique. Do not lock (unlike release.yml).
+          echo "Pushed image tag ${{ steps.ids.outputs.image_tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Package version ${{ steps.ids.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload NuGet Package artifacts
+        if: steps.gate.outputs.should_publish == 'true' && success()
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 3
+        with:
+          name: churchbulletin-nuget-packages-pr
+          path: build/*.nupkg
+          retention-days: 5
+
+      - name: Publish nupkgs to GitHub Packages
+        if: steps.gate.outputs.should_publish == 'true' && success()
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          OWNER="${{ github.repository_owner }}"
+          FEED_URL="https://nuget.pkg.github.com/$OWNER/index.json"
+          echo "Publishing packages to GitHub Packages (versions not echoed with tokens)..."
+          for package in build/*.nupkg; do
+            if [ -f "$package" ]; then
+              echo "Publishing $(basename "$package")..."
+              dotnet nuget push "$package" \
+                --source "$FEED_URL" \
+                --api-key "$NUGET_AUTH_TOKEN" \
+                --timeout 600 \
+                --skip-duplicate
+            fi
+          done
+
+      - name: Report publish duration
+        if: always() && steps.gate.outputs.should_publish == 'true' && steps.timing.outputs.started_epoch != ''
+        run: |
+          set -euo pipefail
+          end_epoch=$(date +%s)
+          started_epoch="${{ steps.timing.outputs.started_epoch }}"
+          duration=$((end_epoch - started_epoch))
+          minutes=$((duration / 60))
+          seconds=$((duration % 60))
+          {
+            echo "## Publish-only duration"
+            echo ""
+            echo "- Started: ${{ steps.timing.outputs.started_at }}"
+            echo "- Duration: ${duration}s (${minutes}m ${seconds}s)"
+            echo "- Image tag: \`${{ steps.ids.outputs.image_tag }}\`"
+            echo "- Package version: \`${{ steps.ids.outputs.version }}\`"
+            echo "- Target: image and packages available in 180s or less"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "duration_seconds=$duration" >> "$GITHUB_OUTPUT"
+          if [ "$duration" -gt 180 ]; then
+            echo "::warning::Publish-only duration ${duration}s exceeds the 180s goal"
+          fi
