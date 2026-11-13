@@ -40,7 +40,18 @@ public class ServerFixture
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
-        InitializeDatabaseOnce();
+        ReadHostSettings();
+        MaybeInitializeSharedData();
+        Assertions.SetDefaultExpectTimeout(30_000);
+        Playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+        await StartLocalProcessesIfNeeded();
+        await WarmUpContainerApp();
+        await VerifyApplicationHealthy();
+        await new BlazorWasmWarmUp(Playwright, ApplicationBaseUrl).ExecuteAsync();
+    }
+
+    private static void ReadHostSettings()
+    {
         var configuration = TestHost.GetRequiredService<IConfiguration>();
         ApplicationBaseUrl = configuration["ApplicationBaseUrl"] ?? throw new InvalidOperationException();
         StartLocalServer = configuration.GetValue<bool>("StartLocalServer");
@@ -48,26 +59,30 @@ public class ServerFixture
         SkipScreenshotsForSpeed = configuration.GetValue<bool>("SkipScreenshotsForSpeed");
         SlowMo = configuration.GetValue<int>("SlowMo");
         HeadlessTestBrowser = configuration.GetValue<bool>("HeadlessTestBrowser");
+    }
 
-        // Playwright's Expect(...) assertions do NOT inherit the browser context's
-        // default timeout (set to 60s in AcceptanceTestBase) — they default to 5s.
-        // Under LevelOfParallelism(4) a cold Blazor WASM render can exceed 5s, so an
-        // assertion that is merely waiting for the first render fails with
-        // "<element(s) not found>". Align the assertion budget with the action budget.
-        Assertions.SetDefaultExpectTimeout(30_000);
-
-        Playwright = await Microsoft.Playwright.Playwright.CreateAsync();
-
-        if (StartLocalServer)
+    private static void MaybeInitializeSharedData()
+    {
+        if (!AcceptanceSharedDataPolicy.ShouldLoadSharedData(StartLocalServer))
         {
-            await StartAndWaitForServer();
-            await ResetServerDbConnections();
-            await StartAndWaitForWorker();
+            TestContext.Out.WriteLine(
+                "PR-environment / remote host: skipping ZDataLoader and leftover-employee sweep.");
+            return;
         }
 
-        await WarmUpContainerApp();
-        await VerifyApplicationHealthy();
-        await new BlazorWasmWarmUp(Playwright, ApplicationBaseUrl).ExecuteAsync();
+        InitializeDatabaseOnce();
+    }
+
+    private async Task StartLocalProcessesIfNeeded()
+    {
+        if (!StartLocalServer)
+        {
+            return;
+        }
+
+        await StartAndWaitForServer();
+        await ResetServerDbConnections();
+        await StartAndWaitForWorker();
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 global using NUnit.Framework;
 global using Microsoft.Extensions.Configuration;
+global using ClearMeasure.Bootcamp.AcceptanceTests;
 global using ClearMeasure.Bootcamp.IntegrationTests;
 global using Shouldly;
 global using ClearMeasure.Bootcamp.Core.Model;

@@ -1,75 +1,147 @@
-using ClearMeasure.Bootcamp.UI.Client.Pages;
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared;
-using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using HomePage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
+using System.Collections;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
-/// <summary>At 390px the document matches the viewport on every route, and wide regions scroll inside themselves.</summary>
+/// <summary>
+/// At 390px the document matches the viewport on every route, split per route for parallel workers.
+/// </summary>
 [TestFixture]
+[Parallelizable(ParallelScope.Children)]
 public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
 {
-    [Test, Retry(2)]
-    public async Task ShouldMatchDocumentWidthToViewport_At390_OnEveryRoute()
+    /// <summary>/login stays anonymous; other routes sign in in the case.</summary>
+    protected override bool UseStorageStateSignIn => false;
+
+    /// <summary>One case per 390px route key (including dark re-checks).</summary>
+    public static IEnumerable RouteKeys()
     {
+        yield return "login";
+        yield return "home";
+        yield return "search";
+        yield return "search-board";
+        yield return "manage-new";
+        yield return "print";
+        yield return "reports";
+        yield return "buildings";
+        yield return "teams";
+        yield return "ai-agent";
+        yield return "settings";
+        yield return "counter";
+        yield return "fetchdata";
+        yield return "not-found";
+        yield return "client-health";
+        yield return "client-health-detailed";
+        yield return "search-dark";
+        yield return "search-board-dark";
+        yield return "reports-dark";
+    }
+
+    [TestCaseSource(nameof(RouteKeys))]
+    [Retry(2)]
+    public async Task ShouldMatchDocumentWidthToViewport_At390_OnRoute(string routeKey)
+    {
+        var route = PhoneWidthRoutes.ByKey(routeKey);
         await Page.SetViewportSizeAsync(390, 844);
+        await SignInIfNeededAsync(route);
+        var url = await ResolveUrlAsync(route);
+        await ApplyDarkThemeIfNeededAsync(route);
+        await Page.GotoAsync(url);
+        await WaitReadyAsync(route);
+        await AssertDocumentFitsAsync(url);
+        await AssertRouteExtrasAsync(route);
+    }
 
-        await Page.GotoAsync("/login");
-        await Expect(Page.GetByTestId(nameof(Login.Elements.LoginHint))).ToBeVisibleAsync();
-        await AssertDocumentFitsAsync("/login");
+    private async Task SignInIfNeededAsync(PhoneWidthRoute route)
+    {
+        if (!route.RequiresSignIn)
+        {
+            return;
+        }
 
+        await Page.GotoAsync("/");
         await LoginAsCurrentUser();
-        var number = await SeedWorkOrderAsync();
+    }
 
-        await OpenAndAssertFitsAsync("/", Page.GetByTestId(nameof(HomePage.Elements.HomeTagline)));
-        await OpenAndAssertFitsAsync("/workorder/search", Page.Locator(".table-scroll"));
-        await AssertScrollsInsideAsync(".table-scroll");
-        await AssertTopBarWrapsAsync();
+    private async Task ApplyDarkThemeIfNeededAsync(PhoneWidthRoute route)
+    {
+        if (route.UseDarkTheme)
+        {
+            await EnableDarkThemeAsync();
+        }
+    }
 
-        await OpenAndAssertFitsAsync("/workorder/search?View=Board", Page.Locator(".board-scroll"));
-        await AssertScrollsInsideAsync(".board-scroll");
+    private async Task AssertRouteExtrasAsync(PhoneWidthRoute route)
+    {
+        if (route.InnerScrollSelector is not null)
+        {
+            await AssertScrollsInsideAsync(route.InnerScrollSelector);
+        }
 
-        await OpenAndAssertFitsAsync(
-            "/workorder/manage?mode=New",
-            Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)));
-        await OpenAndAssertFitsAsync(
-            $"/workorder/print/{number}",
-            Page.GetByTestId(nameof(WorkOrderPrint.Elements.Number)));
-        await OpenAndAssertFitsAsync("/reports", Page.GetByTestId(nameof(Reports.Elements.ChartCompletedPerWeek)));
-        await AssertScrollsInsideAsync(".chart-container");
-        await OpenAndAssertFitsAsync("/admin/buildings", Page.GetByRole(AriaRole.Heading, new() { Name = "Buildings & Rooms" }));
-        await Expect(Page.Locator(".buildings-loading")).ToHaveCountAsync(0);
-        await AssertDocumentFitsAsync("/admin/buildings");
-        await OpenAndAssertFitsAsync("/admin/teams", Page.GetByRole(AriaRole.Heading, new() { Name = "Teams & Vendors" }));
-        await Expect(Page.Locator(".teams-loading")).ToHaveCountAsync(0);
-        await Expect(Page.Locator(".teams-table")).ToBeVisibleAsync();
-        await AssertDocumentFitsAsync("/admin/teams");
-        await AssertScrollsInsideAsync(".teams-page .table-scroll");
-        await OpenAndAssertFitsAsync("/ai-agent", Page.GetByTestId(nameof(ApplicationChat.Elements.ChatShell)));
-        await OpenAndAssertFitsAsync("/settings", Page.GetByTestId(nameof(Settings.Elements.SettingsSubtitle)));
-        await OpenAndAssertFitsAsync("/counter", Page.GetByTestId(nameof(NotFound.Elements.NotFoundHomeLink)));
-        await OpenAndAssertFitsAsync("/fetchdata", Page.GetByTestId(nameof(NotFound.Elements.NotFoundHomeLink)));
-        await OpenAndAssertFitsAsync("/not-found", Page.GetByTestId(nameof(NotFound.Elements.NotFoundHomeLink)));
-        await OpenAndAssertFitsAsync("/_clienthealthcheck", Page.GetByTestId(nameof(ClientHealthCheck.Elements.Status)));
-        await OpenAndAssertFitsAsync(
-            "/_clienthealthcheck/detailed",
-            Page.GetByTestId(nameof(DetailedClientHealthCheck.Elements.Status)));
+        if (route.AssertTopBarWraps)
+        {
+            await AssertTopBarWrapsAsync();
+        }
+    }
 
+    private async Task<string> ResolveUrlAsync(PhoneWidthRoute route)
+    {
+        if (!route.NeedsWorkOrderNumber)
+        {
+            return route.UrlTemplate;
+        }
+
+        var workOrder = await new AcceptanceObjectMother(
+            AcceptanceTestSupportSettings.CreateClient(),
+            TestTag).DraftWorkOrderAsync(
+            CurrentUser.UserName,
+            title: $"[{TestTag}] Replace hallway light fixtures near the fellowship hall entrance",
+            roomNumber: "Fellowship Hall 2");
+        workOrder.Number.ShouldNotBeNullOrWhiteSpace();
+        return route.UrlTemplate.Replace("{number}", Uri.EscapeDataString(workOrder.Number), StringComparison.Ordinal);
+    }
+
+    private async Task EnableDarkThemeAsync()
+    {
         await Page.GotoAsync("/workorder/search");
         await Expect(Page.Locator(".table-scroll")).ToBeVisibleAsync();
         await Page.GetByTestId(nameof(MainLayout.Elements.DarkModeToggle)).ClickAsync();
         await Page.WaitForFunctionAsync("() => document.documentElement.getAttribute('data-theme') === 'dark'");
-
-        await OpenAndAssertFitsAsync("/workorder/search", Page.Locator(".table-scroll"));
-        await OpenAndAssertFitsAsync("/workorder/search?View=Board", Page.Locator(".board-scroll"));
-        await OpenAndAssertFitsAsync("/reports", Page.GetByTestId(nameof(Reports.Elements.ChartCompletedPerWeek)));
     }
 
-    private async Task OpenAndAssertFitsAsync(string url, ILocator ready)
+    private async Task WaitReadyAsync(PhoneWidthRoute route)
     {
-        await Page.GotoAsync(url);
-        await Expect(ready).ToBeVisibleAsync();
-        await AssertDocumentFitsAsync(url);
+        switch (route.ReadyKind)
+        {
+            case PhoneWidthReadyKind.TestId:
+                await Expect(Page.GetByTestId(route.ReadyToken)).ToBeVisibleAsync();
+                break;
+            case PhoneWidthReadyKind.Css:
+                await Expect(Page.Locator(route.ReadyToken)).ToBeVisibleAsync();
+                break;
+            case PhoneWidthReadyKind.Heading:
+                await WaitForHeadingRouteAsync(route);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(route), route.ReadyKind, "Unknown ready kind.");
+        }
+    }
+
+    private async Task WaitForHeadingRouteAsync(PhoneWidthRoute route)
+    {
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = route.ReadyToken })).ToBeVisibleAsync();
+        if (route.Key == "buildings")
+        {
+            await Expect(Page.Locator(".buildings-loading")).ToHaveCountAsync(0);
+        }
+
+        if (route.Key == "teams")
+        {
+            await Expect(Page.Locator(".teams-loading")).ToHaveCountAsync(0);
+            await Expect(Page.Locator(".teams-table")).ToBeVisibleAsync();
+        }
     }
 
     private async Task AssertDocumentFitsAsync(string url)
@@ -106,7 +178,6 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
         var wraps = await Page.Locator(".header-content").EvaluateAsync<bool>(
             "element => getComputedStyle(element).flexWrap === 'wrap'");
         wraps.ShouldBeTrue();
-
         var inside = await Page.EvaluateAsync<bool>(
             """
             () => {
@@ -116,26 +187,5 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
             }
             """);
         inside.ShouldBeTrue();
-    }
-
-    private async Task<string> SeedWorkOrderAsync()
-    {
-        var number = TestData.Number("P");
-        await using var context = TestHost.NewDbContext();
-        context.Attach(CurrentUser);
-        context.Add(new WorkOrder
-        {
-            Number = number,
-            Creator = CurrentUser,
-            Assignee = CurrentUser,
-            Status = WorkOrderStatus.Draft,
-            Title = $"[{TestTag}] Replace hallway light fixtures near the fellowship hall entrance",
-            Building = "Sanctuary",
-            RoomNumber = "Fellowship Hall 2",
-            DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
-            CreatedDate = DateTime.UtcNow
-        });
-        await context.SaveChangesAsync();
-        return number;
     }
 }

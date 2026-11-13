@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 
 // Non-parallelizable: the tests share _prefix, and two sweeps scanning Employee at once can deadlock on SQL Server.
-[TestFixture, NonParallelizable]
+[TestFixture, NonParallelizable, Category(AcceptanceTestCategories.SerialLane)]
 public class AcceptanceTestEmployeesTests
 {
     // A prefix of its own per test, so the sweep never touches the test_ employees of the browser tests.

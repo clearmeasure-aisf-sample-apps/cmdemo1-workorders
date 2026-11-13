@@ -9,7 +9,12 @@ internal static class AcceptanceTestCatalog
 {
     private static readonly Regex TestAttribute = new(@"^\s*\[Test\b", RegexOptions.Multiline);
 
-    private static readonly Regex TestCaseAttribute = new(@"^\s*\[TestCase\b", RegexOptions.Multiline);
+    /// <summary>Bare <c>[TestCase(...)]</c> only — not <c>[TestCaseSource]</c>.</summary>
+    private static readonly Regex TestCaseAttribute = new(@"^\s*\[TestCase\b(?!Source)", RegexOptions.Multiline);
+
+    private static readonly Regex TestCaseSourceAttribute = new(@"^\s*\[TestCaseSource\b", RegexOptions.Multiline);
+
+    private static readonly Regex YieldReturn = new(@"^\s*yield return\b", RegexOptions.Multiline);
 
     private static readonly Regex NamespaceLine = new(
         @"^namespace\s+(?<name>[\w.]+)\s*;",
@@ -44,7 +49,7 @@ internal static class AcceptanceTestCatalog
 
     private static DiscoveredAcceptanceClass? ReadFile(string relativePath, string text)
     {
-        var tests = TestAttribute.Matches(text).Count + TestCaseAttribute.Matches(text).Count;
+        var tests = CountTests(text);
         if (tests == 0)
         {
             return null;
@@ -52,6 +57,17 @@ internal static class AcceptanceTestCatalog
 
         var typeName = TypeName(relativePath, text);
         return new DiscoveredAcceptanceClass(typeName, tests);
+    }
+
+    private static int CountTests(string text)
+    {
+        var yielded = TestCaseSourceAttribute.IsMatch(text) ? YieldReturn.Matches(text).Count : 0;
+        if (yielded > 0)
+        {
+            return yielded;
+        }
+
+        return TestAttribute.Matches(text).Count + TestCaseAttribute.Matches(text).Count;
     }
 
     private static string TypeName(string relativePath, string text)

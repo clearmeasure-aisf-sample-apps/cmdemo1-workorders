@@ -1,0 +1,11 @@
+{
+  "category": "SerialLane",
+  "notes": "Fixtures (or methods) tagged Category(SerialLane) must run after the parallel lane on the same pool slot, never beside it. Entirely-serial fixtures are excluded from duration-based parallel packing. DashboardTests stays in parallel packing; only ShouldListJustCompletedWorkOrder_InRecentActivity is SerialLane. Items 10–12 and 14 may move more fixtures here until independence lands. Do not block on #1663.",
+  "classes": [
+    "ClearMeasure.Bootcamp.AcceptanceTests.App.NeedsRebootHealthCheckTests",
+    "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpListWorkOrdersAcceptanceTests",
+    "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleTests",
+    "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
+    "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveThenAssignPersistenceTests"
+  ]
+}

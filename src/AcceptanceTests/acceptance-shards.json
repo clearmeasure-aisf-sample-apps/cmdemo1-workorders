@@ -179,11 +179,11 @@
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.PhoneWidthNoDocumentScrollTests",
       "shard": 3,
-      "tests": 1,
+      "tests": 19,
       "x64Seconds": 99.5,
       "armSeconds": 79.1,
-      "longestX64Seconds": 99.5,
-      "longestArmSeconds": 79.1
+      "longestX64Seconds": 5.2,
+      "longestArmSeconds": 4.2
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.ReportsPageTests",
@@ -404,11 +404,11 @@
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests",
       "shard": 5,
-      "tests": 1,
+      "tests": 14,
       "x64Seconds": 191.8,
       "armSeconds": 159.4,
-      "longestX64Seconds": 191.8,
-      "longestArmSeconds": 159.4
+      "longestX64Seconds": 13.7,
+      "longestArmSeconds": 11.4
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests",
