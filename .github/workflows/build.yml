@@ -226,13 +226,15 @@ jobs:
           path: '**/build/test/**/In/**/coverage.cobertura.xml'
           retention-days: 2
 
+      # Runs on every code build (including PRs) so install regressions surface before master pack.
+      # Packaging below stays master/workflow_dispatch-only.
       - name: Install Octopus.DotNet.Cli
-        if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
-          # LatestMajor: Octopus.DotNet.Cli targets net6; job-level LatestMinor (#1653 / dotnet-script)
-          # makes tool install fail with TransactionalAction. Match publish-image.yml — scope only here.
-          DOTNET_ROLL_FORWARD: LatestMajor
+          # LatestPatch during install: LatestMajor lets the host CLI roll onto a newer runtime
+          # whose System.Transactions lacks s_maximumTimeout, and SDK TransactionalAction then
+          # NREs in SetTransactionManagerField (#1681). Initialize also forces LatestPatch.
+          DOTNET_ROLL_FORWARD: LatestPatch
         run: |
           $ErrorActionPreference = 'Stop'
           . ./scripts/ci/OctopusDotNetCli.ps1
@@ -246,7 +248,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           BUILD_BUILDNUMBER: ${{ env.VERSION }}
-          # Same LatestMajor scope as Install Octopus.DotNet.Cli (octo itself targets net6).
+          # LatestMajor only when running net6-targeted dotnet-octo (not during tool install).
           DOTNET_ROLL_FORWARD: LatestMajor
         run: |
           . ./build.ps1

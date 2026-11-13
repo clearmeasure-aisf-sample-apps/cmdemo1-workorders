@@ -28,11 +28,27 @@ public class OctopusDotNetCliScriptTests
     }
 
     [Test]
-    public void Helper_WhenRead_ForcesLatestMajorRollForwardForNet6Tool()
+    public void Helper_WhenRead_UsesLatestPatchForInstallAndLatestMajorForRuntime()
     {
         var helper = RepositoryCheckout.Current.ReadText("scripts/ci/OctopusDotNetCli.ps1");
 
-        helper.ShouldContain("Set-OctopusDotNetCliRollForward");
+        helper.ShouldContain("Set-OctopusDotNetCliInstallRollForward");
+        helper.ShouldContain("Set-OctopusDotNetCliRuntimeRollForward");
+        helper.ShouldContain("LatestPatch");
         helper.ShouldContain("LatestMajor");
+        helper.ShouldContain("SetTransactionManagerField");
+    }
+
+    [Test]
+    public void Helper_WhenInstallFails_CapturesDiagAndEnvironmentSnapshot()
+    {
+        var helper = RepositoryCheckout.Current.ReadText("scripts/ci/OctopusDotNetCli.ps1");
+
+        helper.ShouldContain("Format-OctopusDotNetCliInstallFailure");
+        helper.ShouldContain("Get-OctopusDotNetCliInstallEnvironmentSnapshot");
+        helper.ShouldContain("Get-TransactionalActionTypeInitializerProbe");
+        helper.ShouldContain("DOTNET_CLI_CONTEXT_VERBOSE");
+        helper.ShouldContain("--verbosity");
+        helper.ShouldContain("diag");
     }
 }
