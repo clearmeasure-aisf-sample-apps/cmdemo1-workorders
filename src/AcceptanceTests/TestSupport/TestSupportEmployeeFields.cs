@@ -1,3 +1,4 @@
+// ReSharper disable UnusedAutoPropertyAccessor.Global -- object initializer and test-support JSON payload fields
 namespace ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 
 /// <summary>Optional fields when creating an employee through test-support.</summary>

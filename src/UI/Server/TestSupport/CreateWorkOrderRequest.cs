@@ -1,3 +1,4 @@
+// ReSharper disable UnusedAutoPropertyAccessor.Global -- System.Text.Json body binding for POST /api/test-support/work-orders
 namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 
 /// <summary>Body for <c>POST /api/test-support/work-orders</c>.</summary>
