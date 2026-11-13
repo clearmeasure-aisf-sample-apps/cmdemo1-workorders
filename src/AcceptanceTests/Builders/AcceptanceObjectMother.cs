@@ -54,31 +54,3 @@ public sealed class AcceptanceObjectMother(TestSupportClient client, string test
     public Task<TestSupportWorkOrder> WorkOrderAsync(TestSupportWorkOrderRequest request) =>
         client.CreateWorkOrderAsync(request);
 }
-
-/// <summary>Optional fields for <see cref="AcceptanceObjectMother.WorkOrderAsync"/>.</summary>
-public sealed class WorkOrderSeedFields
-{
-    /// <summary>Priority; defaults to Medium.</summary>
-    public WorkOrderPriority Priority { get; init; } = WorkOrderPriority.Medium;
-
-    /// <summary>Optional due date.</summary>
-    public DateOnly? DueDate { get; init; }
-
-    /// <summary>Optional assignee user name.</summary>
-    public string? AssigneeUserName { get; init; }
-
-    /// <summary>Optional title.</summary>
-    public string? Title { get; init; }
-
-    /// <summary>Optional description.</summary>
-    public string? Description { get; init; }
-
-    /// <summary>Optional room number.</summary>
-    public string? RoomNumber { get; init; }
-
-    /// <summary>Optional instructions.</summary>
-    public string? Instructions { get; init; }
-
-    /// <summary>Optional explicit work-order number.</summary>
-    public string? Number { get; init; }
-}
