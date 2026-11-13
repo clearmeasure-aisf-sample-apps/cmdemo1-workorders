@@ -90,22 +90,125 @@ function Set-OctopusDotNetCliRollForward {
     return $env:DOTNET_ROLL_FORWARD
 }
 
+function Get-OctopusDotNetCliInstallEnvironmentSnapshot {
+    <#
+    .SYNOPSIS
+      Captures temp/home/dotnet env and disk state for TransactionalAction failures.
+    #>
+    $dotnetVars = Get-ChildItem Env:DOTNET_* -ErrorAction SilentlyContinue |
+        Sort-Object Name |
+        ForEach-Object { "$($_.Name)=$($_.Value)" }
+
+    $toolsRoot = Get-DotNetGlobalToolsPath
+    $storePath = [System.IO.Path]::Combine($toolsRoot, '.store')
+    $stagePath = [System.IO.Path]::Combine($storePath, '.stage')
+    $tmpPath = [System.IO.Path]::GetTempPath()
+
+    $lines = @(
+        "HOME=$env:HOME"
+        "USERPROFILE=$env:USERPROFILE"
+        "TMPDIR=$env:TMPDIR"
+        "TMP=$env:TMP"
+        "TEMP=$env:TEMP"
+        "DOTNET_CLI_HOME=$env:DOTNET_CLI_HOME"
+        "GetTempPath=$tmpPath"
+        "ToolsPath=$toolsRoot"
+        "StorePathExists=$([System.IO.Directory]::Exists($storePath))"
+        "StagePathExists=$([System.IO.Directory]::Exists($stagePath))"
+    )
+
+    if ($dotnetVars) {
+        $lines += $dotnetVars
+    }
+
+    foreach ($path in @($tmpPath, $toolsRoot, $env:HOME)) {
+        if ([string]::IsNullOrWhiteSpace($path) -or -not [System.IO.Directory]::Exists($path)) {
+            continue
+        }
+
+        try {
+            $drive = Get-PSDrive -PSProvider FileSystem |
+                Where-Object { $path.StartsWith($_.Root, [System.StringComparison]::OrdinalIgnoreCase) } |
+                Select-Object -First 1
+            if ($null -ne $drive) {
+                $lines += "Disk[$($drive.Name)] Used=$([math]::Round(($drive.Used / 1MB), 1))MB Free=$([math]::Round(($drive.Free / 1MB), 1))MB Path=$path"
+            }
+        }
+        catch {
+            $lines += "DiskProbeFailed Path=$path Error=$($_.Exception.Message)"
+        }
+    }
+
+    if ([System.IO.Directory]::Exists($stagePath)) {
+        $stageEntries = @(Get-ChildItem -LiteralPath $stagePath -Force -ErrorAction SilentlyContinue |
+            Select-Object -First 20 |
+            ForEach-Object { $_.Name })
+        $lines += "StageEntries=$($stageEntries -join ',')"
+    }
+
+    return ($lines -join [Environment]::NewLine)
+}
+
+function Invoke-DotNetToolInstallGlobal {
+    param(
+        [string]$PackageId = $script:OctopusDotNetCliPackageId,
+        [string]$Verbosity = 'minimal'
+    )
+
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        Set-OctopusDotNetCliRollForward | Out-Null
+        $lines = & dotnet tool install --global $PackageId --verbosity $Verbosity 2>&1
+        return [pscustomobject]@{
+            ExitCode = $LASTEXITCODE
+            Output   = ($lines | Out-String)
+        }
+    }
+    finally {
+        $ErrorActionPreference = $previous
+    }
+}
+
+function Format-OctopusDotNetCliInstallFailure {
+    <#
+    .SYNOPSIS
+      Builds the install-failure message, including env snapshot and a diag re-run.
+    .DESCRIPTION
+      TypeInitializationException.Message omits InnerException unless the CLI is verbose
+      (dotnet Program.cs uses e.ToString() only when CommandLoggingContext.IsVerbose).
+    #>
+    param(
+        [Parameter(Mandatory = $true)][int]$ExitCode,
+        [Parameter(Mandatory = $true)][string]$Output,
+        [scriptblock]$DiagInstall = { Invoke-DotNetToolInstallGlobal -Verbosity 'diag' },
+        [scriptblock]$EnvironmentSnapshot = { Get-OctopusDotNetCliInstallEnvironmentSnapshot }
+    )
+
+    $diag = & $DiagInstall
+    $envSnapshot = [string](& $EnvironmentSnapshot)
+    Write-Host "[ERROR] $($script:OctopusDotNetCliPackageId) install failed. Environment snapshot:"
+    Write-Host $envSnapshot
+    Write-Host "[ERROR] $($script:OctopusDotNetCliPackageId) install diag re-run (exit $($diag.ExitCode)):"
+    Write-Host ([string]$diag.Output)
+
+    return ("Failed to install $($script:OctopusDotNetCliPackageId) (exit $ExitCode): $Output" +
+        [Environment]::NewLine +
+        "--- environment ---" +
+        [Environment]::NewLine +
+        $envSnapshot +
+        [Environment]::NewLine +
+        "--- diag re-run (exit $($diag.ExitCode)) ---" +
+        [Environment]::NewLine +
+        ([string]$diag.Output)).Trim()
+}
+
 function Invoke-OctopusDotNetCliInstallAttempt {
     param(
-        [scriptblock]$InstallTool = {
-            $previous = $ErrorActionPreference
-            $ErrorActionPreference = 'Continue'
-            try {
-                Set-OctopusDotNetCliRollForward | Out-Null
-                $lines = & dotnet tool install --global $script:OctopusDotNetCliPackageId 2>&1
-                return [pscustomobject]@{
-                    ExitCode = $LASTEXITCODE
-                    Output   = ($lines | Out-String)
-                }
-            }
-            finally {
-                $ErrorActionPreference = $previous
-            }
+        [scriptblock]$InstallTool = { Invoke-DotNetToolInstallGlobal },
+        [scriptblock]$FormatFailure = {
+            param([int]$ExitCode, [string]$Output)
+            Format-OctopusDotNetCliInstallFailure -ExitCode $ExitCode -Output $Output
         }
     )
 
@@ -119,7 +222,7 @@ function Invoke-OctopusDotNetCliInstallAttempt {
         return
     }
 
-    throw "Failed to install $($script:OctopusDotNetCliPackageId) (exit $($result.ExitCode)): $output".Trim()
+    throw (& $FormatFailure $result.ExitCode $output)
 }
 
 function Install-OctopusDotNetCliWithRetry {

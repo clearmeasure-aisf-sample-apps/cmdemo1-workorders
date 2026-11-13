@@ -35,4 +35,15 @@ public class OctopusDotNetCliScriptTests
         helper.ShouldContain("Set-OctopusDotNetCliRollForward");
         helper.ShouldContain("LatestMajor");
     }
+
+    [Test]
+    public void Helper_WhenInstallFails_CapturesDiagAndEnvironmentSnapshot()
+    {
+        var helper = RepositoryCheckout.Current.ReadText("scripts/ci/OctopusDotNetCli.ps1");
+
+        helper.ShouldContain("Format-OctopusDotNetCliInstallFailure");
+        helper.ShouldContain("Get-OctopusDotNetCliInstallEnvironmentSnapshot");
+        helper.ShouldContain("--verbosity");
+        helper.ShouldContain("diag");
+    }
 }

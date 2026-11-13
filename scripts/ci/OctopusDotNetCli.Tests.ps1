@@ -111,8 +111,10 @@ function Test-InstallAttemptToleratesAlreadyInstalledExit {
         [pscustomobject]@{
             ExitCode = 1
             Output   = "Tool 'Octopus.DotNet.Cli' is already installed."
+        } } -FormatFailure {
+            param([int]$ExitCode, [string]$Output)
+            throw "should not format failure for already-installed: $Output"
         }
-    }
     Write-Output 'install attempt tolerates already installed exit ok'
 }
 
@@ -124,6 +126,9 @@ function Test-InstallAttemptSurfacesFailure {
                 ExitCode = 1
                 Output   = 'NU1101: Unable to find package Octopus.DotNet.Cli'
             }
+        } -FormatFailure {
+            param([int]$ExitCode, [string]$Output)
+            "Failed to install Octopus.DotNet.Cli (exit $ExitCode): $Output"
         }
     }
     catch {
@@ -134,6 +139,26 @@ function Test-InstallAttemptSurfacesFailure {
 
     Assert-True $threw 'Non-zero install without already-installed must throw.'
     Write-Output 'install attempt surfaces failure ok'
+}
+
+function Test-FormatFailureIncludesEnvironmentAndDiag {
+    $formatted = Format-OctopusDotNetCliInstallFailure `
+        -ExitCode 1 `
+        -Output 'Unhandled exception: The type initializer for ''Microsoft.DotNet.Cli.TransactionalAction'' threw an exception.' `
+        -DiagInstall {
+            [pscustomobject]@{
+                ExitCode = 1
+                Output   = "System.TypeInitializationException: The type initializer for 'Microsoft.DotNet.Cli.TransactionalAction' threw an exception.`n ---> System.IO.IOException: No space left on device"
+            }
+        } `
+        -EnvironmentSnapshot { "HOME=/home/runner`nTMPDIR=`nDOTNET_ROLL_FORWARD=LatestMajor" }
+
+    Assert-True ($formatted -match 'TransactionalAction') 'Outer failure must remain.'
+    Assert-True ($formatted -match 'No space left on device') 'Diag inner exception must be included.'
+    Assert-True ($formatted -match 'DOTNET_ROLL_FORWARD=LatestMajor') 'Environment snapshot must be included.'
+    Assert-True ($formatted -match '--- environment ---') 'Environment section marker must be present.'
+    Assert-True ($formatted -match '--- diag re-run') 'Diag section marker must be present.'
+    Write-Output 'format failure includes environment and diag ok'
 }
 
 function Test-AssertResolvesOrFailsClearly {
@@ -216,6 +241,7 @@ try {
     Test-InstallExhaustionSurfacesRealError
     Test-InstallAttemptToleratesAlreadyInstalledExit
     Test-InstallAttemptSurfacesFailure
+    Test-FormatFailureIncludesEnvironmentAndDiag
     Test-AssertResolvesOrFailsClearly
     Test-InitializeInstallsThenVerifies
     Test-HelperDoesNotSwallowStderr

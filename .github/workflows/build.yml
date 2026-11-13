@@ -226,8 +226,9 @@ jobs:
           path: '**/build/test/**/In/**/coverage.cobertura.xml'
           retention-days: 2
 
+      # Runs on every code build (including PRs) so install regressions surface before master pack.
+      # Packaging below stays master/workflow_dispatch-only.
       - name: Install Octopus.DotNet.Cli
-        if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
           # LatestMajor: Octopus.DotNet.Cli targets net6; job-level LatestMinor (#1653 / dotnet-script)

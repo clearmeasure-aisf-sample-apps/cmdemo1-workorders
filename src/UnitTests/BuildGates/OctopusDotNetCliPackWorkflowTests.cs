@@ -19,10 +19,14 @@ public class OctopusDotNetCliPackWorkflowTests
         install.ShouldContain("DOTNET_ROLL_FORWARD: LatestMajor");
         install.ShouldContain("Initialize-OctopusDotNetCli");
         install.ShouldContain("OctopusDotNetCli.ps1");
+        // Install must run on PRs (no master-only gate) so TransactionalAction regressions are caught
+        // before pack; packaging remains master/workflow_dispatch-only.
+        install.ShouldNotContain("refs/heads/master");
 
         var pack = linuxJob.Step(PackStep);
         pack.ShouldContain("DOTNET_ROLL_FORWARD: LatestMajor");
         pack.ShouldContain("Package-Everything");
+        pack.ShouldContain("refs/heads/master");
 
         var steps = linuxJob.StepNames().ToList();
         steps.IndexOf(InstallStep).ShouldBeLessThan(steps.IndexOf(PackStep));
