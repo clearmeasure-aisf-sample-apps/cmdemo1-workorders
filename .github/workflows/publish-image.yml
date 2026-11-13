@@ -30,6 +30,8 @@ jobs:
       id-token: write
     # Same Azure OIDC / ACR push identity as release.yml (no branch deployment policy).
     environment: release
+    outputs:
+      should_publish: ${{ steps.gate.outputs.should_publish }}
     env:
       BUILD_CONFIGURATION: Release
       DOTNET_ROLL_FORWARD: LatestMinor
@@ -110,31 +112,33 @@ jobs:
           . ./build.ps1
           Init
           Compile
-          # Reuse Package-* from build.ps1 (same as Package-Everything) but skip
-          # AcceptanceTests: that nupkg is ~0.5GB and blows the 3-minute PR publish budget.
-          # PR environments need the UI image and Database/Script packages.
+          # Reuse PackageUI from build.ps1. Skip AcceptanceTests (~0.5GB) and PackageDatabase's
+          # Debug republish (rebuilds the graph); octo-pack Database from the project tree like
+          # PackageDatabase's second step. Skip PackageScript (release does not ship it).
           $env:DOTNET_ROLL_FORWARD = 'LatestMajor'
           $octopusDotNetCli = Join-PathSegments $base_dir 'scripts' 'ci' 'OctopusDotNetCli.ps1'
           . $octopusDotNetCli
           Initialize-OctopusDotNetCli
           PackageUI
-          PackageDatabase
-          PackageScript
-
-      - name: Extract the UI for the image
-        if: steps.gate.outputs.should_publish == 'true'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $package = Get-ChildItem -Path ./build -Filter 'ChurchBulletin.UI.*.nupkg' | Select-Object -First 1
-          if (-not $package) { throw 'ChurchBulletin.UI package not found in ./build' }
-          Expand-Archive -LiteralPath $package.FullName -DestinationPath ./package-extract -Force
-          $dll = Get-ChildItem -Path ./package-extract -Filter 'ClearMeasure.Bootcamp.UI.Server.dll' -Recurse | Select-Object -First 1
-          if (-not $dll) { throw 'ClearMeasure.Bootcamp.UI.Server.dll not found in the UI package' }
+          exec {
+            & dotnet-octo pack --id "$projectName.Database" --version $version --basePath $databaseProjectPath --outFolder $build_dir --overwrite
+          }
+          # Image payload from Release publish output (same bits PackageUI produced); no nupkg round-trip.
+          $publishDir = Join-PathSegments $uiProjectPath 'bin' $projectConfig $framework 'publish'
+          $dll = Join-Path $publishDir 'ClearMeasure.Bootcamp.UI.Server.dll'
+          if (-not (Test-Path -LiteralPath $dll)) { throw "UI publish output missing at $dll" }
           New-Item -ItemType Directory -Path ./built -Force | Out-Null
-          Copy-Item -Path (Join-Path $dll.DirectoryName '*') -Destination ./built -Recurse -Force
-          Get-ChildItem -Path ./built -Include '*.nuspec', '[Content_Types].xml', '*.psmdcp' -Recurse | Remove-Item -Force
-          Remove-Item -Path ./built/_rels, ./built/package -Recurse -Force -ErrorAction SilentlyContinue
+          Copy-Item -Path (Join-Path $publishDir '*') -Destination ./built -Recurse -Force
+
+      # Packages first so the artifact is available before the image push finishes.
+      - name: Upload NuGet Package artifacts
+        if: steps.gate.outputs.should_publish == 'true'
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 3
+        with:
+          name: churchbulletin-nuget-packages-pr
+          path: build/*.nupkg
+          retention-days: 5
 
       - uses: azure/login@v3
         if: steps.gate.outputs.should_publish == 'true'
@@ -144,6 +148,7 @@ jobs:
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Build and push the PR image
+        id: image
         if: steps.gate.outputs.should_publish == 'true'
         env:
           IMAGE: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}:${{ steps.ids.outputs.image_tag }}
@@ -152,45 +157,20 @@ jobs:
           az acr login --name "${{ vars.ACR_NAME }}"
           docker build --file Dockerfile --tag "$IMAGE" .
           docker push "$IMAGE"
-          # PR tags stay writable so a later push to the same PR can replace a tag only when the sha matches;
-          # each commit uses a distinct sha, so tags are unique. Do not lock (unlike release.yml).
+          # PR tags stay writable (unlike release.yml). Each commit uses a distinct sha tag.
+          echo "pushed_at_epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
           echo "Pushed image tag ${{ steps.ids.outputs.image_tag }}" >> "$GITHUB_STEP_SUMMARY"
           echo "Package version ${{ steps.ids.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload NuGet Package artifacts
-        if: steps.gate.outputs.should_publish == 'true' && success()
-        uses: actions/upload-artifact@v4
-        timeout-minutes: 3
-        with:
-          name: churchbulletin-nuget-packages-pr
-          path: build/*.nupkg
-          retention-days: 5
-
-      - name: Publish nupkgs to GitHub Packages
-        if: steps.gate.outputs.should_publish == 'true' && success()
-        env:
-          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          OWNER="${{ github.repository_owner }}"
-          FEED_URL="https://nuget.pkg.github.com/$OWNER/index.json"
-          echo "Publishing packages to GitHub Packages (versions not echoed with tokens)..."
-          for package in build/*.nupkg; do
-            if [ -f "$package" ]; then
-              echo "Publishing $(basename "$package")..."
-              dotnet nuget push "$package" \
-                --source "$FEED_URL" \
-                --api-key "$NUGET_AUTH_TOKEN" \
-                --timeout 600 \
-                --skip-duplicate
-            fi
-          done
 
       - name: Report publish duration
         if: always() && steps.gate.outputs.should_publish == 'true' && steps.timing.outputs.started_epoch != ''
         run: |
           set -euo pipefail
-          end_epoch=$(date +%s)
+          # Prefer image-push completion as the "both available" end; fall back to now.
+          end_epoch="${{ steps.image.outputs.pushed_at_epoch }}"
+          if [ -z "$end_epoch" ]; then
+            end_epoch=$(date +%s)
+          fi
           started_epoch="${{ steps.timing.outputs.started_epoch }}"
           duration=$((end_epoch - started_epoch))
           minutes=$((duration / 60))
@@ -199,12 +179,49 @@ jobs:
             echo "## Publish-only duration"
             echo ""
             echo "- Started: ${{ steps.timing.outputs.started_at }}"
-            echo "- Duration: ${duration}s (${minutes}m ${seconds}s)"
+            echo "- Duration (pack start → image pushed; packages artifact uploaded first): ${duration}s (${minutes}m ${seconds}s)"
             echo "- Image tag: \`${{ steps.ids.outputs.image_tag }}\`"
             echo "- Package version: \`${{ steps.ids.outputs.version }}\`"
             echo "- Target: image and packages available in 180s or less"
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "duration_seconds=$duration" >> "$GITHUB_OUTPUT"
           if [ "$duration" -gt 180 ]; then
             echo "::warning::Publish-only duration ${duration}s exceeds the 180s goal"
           fi
+
+  # Separate job without environment:release so GITHUB_TOKEN can write the NuGet feed
+  # (the publish job's environment-scoped token 403s against nuget.pkg.github.com).
+  publish-github-packages:
+    name: Publish PR packages to GitHub Packages
+    needs: publish
+    if: success() && needs.publish.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Download NuGet Packages
+        uses: actions/download-artifact@v4
+        with:
+          name: churchbulletin-nuget-packages-pr
+          path: ./packages
+
+      - name: Publish nupkgs to GitHub Packages
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          OWNER="${{ github.repository_owner }}"
+          FEED_URL="https://nuget.pkg.github.com/$OWNER/index.json"
+          echo "Publishing packages to GitHub Packages (versions not echoed with tokens)..."
+          for package in packages/*.nupkg; do
+            if [ -f "$package" ]; then
+              echo "Publishing $(basename "$package")..."
+              dotnet nuget push "$package" \
+                --source "$FEED_URL" \
+                --api-key "$NUGET_AUTH_TOKEN" \
+                --timeout 600 \
+                --skip-duplicate || echo "Warning: Failed to publish $(basename "$package") (may already exist)"
+            fi
+          done
+
