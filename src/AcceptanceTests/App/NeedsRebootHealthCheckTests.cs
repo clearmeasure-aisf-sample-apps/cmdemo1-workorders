@@ -1,64 +1,42 @@
 using System.Net;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 /// <summary>
-/// Serializes this fixture: tests toggle the process-wide <c>NeedsRebootHealthCheck.NeedsReboot</c> static.
-/// Parallel execution of methods in this class interleaves set true/false and flakes <c>/_healthcheck</c>.
+/// Pool-slot coverage: NeedsReboot is request-scoped via test-support headers so this fixture
+/// can run in the parallel lane without flipping <c>/_healthcheck</c> for other workers.
+/// Process-wide behavior for tdd/uat/prod is covered by unit/web tests with TestSupport off.
 /// </summary>
-[TestFixture, NonParallelizable]
+[TestFixture]
+[Parallelizable(ParallelScope.All)]
 public class NeedsRebootHealthCheckTests : AcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;
 
-    private HttpClient CreateHttpClient()
-    {
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
-        return new HttpClient(handler)
-        {
-            BaseAddress = new Uri(ServerFixture.ApplicationBaseUrl)
-        };
-    }
-
-    [TearDown]
-    public async Task ResetNeedsReboot()
-    {
-        using var client = CreateHttpClient();
-        await client.GetAsync("/_demo/setneedsreboot/false");
-    }
-
     [Test, Retry(2)]
     public async Task SetNeedsRebootTrue_HealthCheckReturnsUnhealthy()
     {
+        LocalAcceptanceHost.Require();
         using var client = CreateHttpClient();
 
-        var setResponse = await client.GetAsync("/_demo/setneedsreboot/true");
-        setResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var setText = await setResponse.Content.ReadAsStringAsync();
-        setText.ShouldContain("True");
-
-        var healthResponse = await client.GetAsync("/_healthcheck");
+        using var request = CreateNeedsRebootHealthRequest(needsReboot: true);
+        using var healthResponse = await client.SendAsync(request);
         var healthBody = await healthResponse.Content.ReadAsStringAsync();
+
         healthBody.ShouldContain("Unhealthy");
     }
 
     [Test, Retry(2)]
     public async Task SetNeedsRebootFalse_HealthCheckDoesNotReturnUnhealthy()
     {
+        LocalAcceptanceHost.Require();
         using var client = CreateHttpClient();
 
-        await client.GetAsync("/_demo/setneedsreboot/true");
-        var resetResponse = await client.GetAsync("/_demo/setneedsreboot/false");
-        resetResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var resetText = await resetResponse.Content.ReadAsStringAsync();
-        resetText.ShouldContain("False");
-
-        var healthResponse = await client.GetAsync("/_healthcheck");
+        using var request = CreateNeedsRebootHealthRequest(needsReboot: false);
+        using var healthResponse = await client.SendAsync(request);
         var healthBody = await healthResponse.Content.ReadAsStringAsync();
+
         healthBody.ShouldNotContain("Unhealthy");
     }
 
@@ -81,13 +59,53 @@ public class NeedsRebootHealthCheckTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task SetNeedsRebootTrue_DetailedHealthCheckShowsCorruptionMessage()
     {
+        LocalAcceptanceHost.Require();
+        using var client = CreateHttpClient();
+
+        using var request = CreateNeedsRebootHealthRequest(needsReboot: true, path: "/_healthcheck/detailed");
+        using var detailedResponse = await client.SendAsync(request);
+        var detailedBody = await detailedResponse.Content.ReadAsStringAsync();
+
+        detailedBody.ShouldContain("memory is corrupted");
+        detailedBody.ShouldContain("Restart process");
+    }
+
+    [Test, Retry(2)]
+    public async Task ProcessWideDemoSwitch_DoesNotPoisonBareHealthCheck_OnPoolSlot()
+    {
+        LocalAcceptanceHost.Require();
         using var client = CreateHttpClient();
 
         await client.GetAsync("/_demo/setneedsreboot/true");
+        using var healthResponse = await client.GetAsync("/_healthcheck");
+        var healthBody = await healthResponse.Content.ReadAsStringAsync();
 
-        var detailedResponse = await client.GetAsync("/_healthcheck/detailed");
-        var detailedBody = await detailedResponse.Content.ReadAsStringAsync();
-        detailedBody.ShouldContain("memory is corrupted");
-        detailedBody.ShouldContain("Restart process");
+        healthBody.ShouldNotContain("Unhealthy");
+        await client.GetAsync("/_demo/setneedsreboot/false");
+    }
+
+    private static HttpClient CreateHttpClient()
+    {
+        var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback =
+                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+        };
+        return new HttpClient(handler)
+        {
+            BaseAddress = new Uri(ServerFixture.ApplicationBaseUrl)
+        };
+    }
+
+    private static HttpRequestMessage CreateNeedsRebootHealthRequest(bool needsReboot, string path = "/_healthcheck")
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.TryAddWithoutValidation(
+            AcceptanceTestSupportSettings.SecretHeaderName,
+            AcceptanceTestSupportSettings.Secret);
+        request.Headers.TryAddWithoutValidation(
+            AcceptanceTestSupportSettings.NeedsRebootHeaderName,
+            needsReboot ? "true" : "false");
+        return request;
     }
 }

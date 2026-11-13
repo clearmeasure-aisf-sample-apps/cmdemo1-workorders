@@ -8,6 +8,7 @@ public static class TestSupportExtensions
     /// <summary>Registers <see cref="TestSupportOptions"/> from DI configuration and <see cref="TestSupportDataService"/>.</summary>
     public static void AddTestSupport(this IServiceCollection services)
     {
+        services.AddHttpContextAccessor();
         // Resolve from IConfiguration at request time so WebApplicationFactory config overrides apply.
         services.AddSingleton(sp => TestSupportOptions.FromConfiguration(sp.GetRequiredService<IConfiguration>()));
         services.AddScoped<TestSupportDataService>();

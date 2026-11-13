@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 
 /// <summary>
@@ -23,7 +20,7 @@ public sealed class TestSupportMiddleware(RequestDelegate next)
             return;
         }
 
-        if (!SecretMatches(context.Request, options.Secret))
+        if (!TestSupportSecret.Matches(context.Request, options.Secret))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
@@ -41,29 +38,5 @@ public sealed class TestSupportMiddleware(RequestDelegate next)
 
         return pathValue.Equals(TestSupportConstants.PathPrefix, StringComparison.OrdinalIgnoreCase)
                || pathValue.StartsWith(TestSupportConstants.PathPrefix + "/", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool SecretMatches(HttpRequest request, string expectedSecret)
-    {
-        if (string.IsNullOrEmpty(expectedSecret))
-        {
-            return false;
-        }
-
-        if (!request.Headers.TryGetValue(TestSupportConstants.SecretHeaderName, out var values))
-        {
-            return false;
-        }
-
-        var provided = values.FirstOrDefault();
-        if (string.IsNullOrEmpty(provided))
-        {
-            return false;
-        }
-
-        var expectedBytes = Encoding.UTF8.GetBytes(expectedSecret);
-        var providedBytes = Encoding.UTF8.GetBytes(provided);
-        return expectedBytes.Length == providedBytes.Length
-               && CryptographicOperations.FixedTimeEquals(expectedBytes, providedBytes);
     }
 }
