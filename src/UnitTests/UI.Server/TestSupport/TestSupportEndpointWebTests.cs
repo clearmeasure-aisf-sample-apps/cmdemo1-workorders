@@ -76,6 +76,11 @@ public class TestSupportEndpointWebTests
         });
         body.ShouldNotBeNull();
         body.UserName.ShouldStartWith("test_abc12345_");
+        body.FirstName.ShouldBe("Pat");
+        body.LastName.ShouldBe("Tester");
+        // Display names must stay short: long unbroken First/Last tokens widen the
+        // search table past the AppShell 1280px tableFits assertion.
+        (body.FirstName.Length + 1 + body.LastName.Length).ShouldBeLessThanOrEqualTo(12);
     }
 
     [Test]
@@ -97,5 +102,5 @@ public class TestSupportEndpointWebTests
         json.ShouldContain("https://localhost:7174");
     }
 
-    private sealed record CreatedEmployee(string UserName);
+    private sealed record CreatedEmployee(string UserName, string FirstName, string LastName);
 }

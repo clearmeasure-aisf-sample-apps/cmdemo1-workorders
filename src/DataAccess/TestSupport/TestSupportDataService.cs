@@ -21,10 +21,13 @@ public sealed class TestSupportDataService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(request.TestTag);
 
+        // Keep First/Last short and breakable: concatenating the test tag produced
+        // single tokens like Firsta1b2c3d4 that inflate the search assignee column
+        // past the 1280px AppShell tableFits budget. Uniqueness stays in UserName.
         var employee = new Employee(
             BuildUserName(request.TestTag),
-            $"First{request.TestTag}",
-            $"Last{request.TestTag}",
+            "Pat",
+            "Tester",
             $"{request.TestTag}@acceptance.test");
         employee.AddRole(new Role("admin", request.CanCreateWorkOrder, request.CanFulfillWorkOrder));
         context.Add(employee);
