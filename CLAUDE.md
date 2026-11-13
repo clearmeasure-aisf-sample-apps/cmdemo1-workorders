@@ -124,7 +124,9 @@ DbUp scripts in `src/Database/scripts/Update/`, numbered sequentially (`###_Desc
 
 **.NET SDK:** 10.0.100 (see `global.json`)
 
-**Core** — FluentValidation 11.11.0, MediatR.Contracts 2.0.1, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0
+Versions are centrally managed in `src/Directory.Packages.props` (no `Version` on a `PackageReference`, `VersionOverride` disabled); a new package ID needs approval (`docs/architecture-guardrails.md`).
+
+**Core** — FluentValidation 11.11.0, MediatR.Contracts 2.0.1, Microsoft.CodeAnalysis.BannedApiAnalyzers 4.14.0 (build only), Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0
 
 **DataAccess** — MediatR 12.4.1, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, NServiceBus.Persistence.Sql.TransactionalSession 8.3.0, ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30, OpenFeature 2.14.1, Octopus.OpenFeature 4.0.0, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0, SQLitePCLRaw.bundle_e_sqlite3 2.1.12, System.Security.Cryptography.Xml 10.0.11
 
@@ -148,7 +150,7 @@ DbUp scripts in `src/Database/scripts/Update/`, numbered sequentially (`###_Desc
 
 **ChurchBulletin.ServiceDefaults** — Azure.Monitor.OpenTelemetry.AspNetCore 1.6.0, OpenTelemetry.Api 1.15.3, OpenTelemetry.Exporter.Console 1.15.3, OpenTelemetry.Exporter.OpenTelemetryProtocol 1.15.3, OpenTelemetry.Extensions.Hosting 1.15.3, OpenTelemetry.Instrumentation.AspNetCore 1.15.2, OpenTelemetry.Instrumentation.EntityFrameworkCore 1.0.0-beta.12, OpenTelemetry.Instrumentation.Http 1.15.1, OpenTelemetry.Instrumentation.Runtime 1.15.1, OpenTelemetry.Instrumentation.SqlClient 1.15.2, Microsoft.Extensions.Http.Resilience 9.9.0, Microsoft.Extensions.ServiceDiscovery 9.5.0, Serilog.AspNetCore 9.0.0, Serilog.Formatting.Compact 3.0.0
 
-**UnitTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, Shouldly 4.3.0, bunit 2.9.0, AutoBogus.Conventions 2.13.1, MediatR 12.4.1, coverlet.msbuild 6.0.4, coverlet.collector 6.0.4, AngleSharp 1.7.2, Microsoft.AspNetCore.Components.Authorization 10.0.11, Microsoft.AspNetCore.Mvc.Testing 10.0.0, Microsoft.NET.Test.Sdk 17.14.1, Serilog.Formatting.Compact 3.0.0, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
+**UnitTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, Shouldly 4.3.0, TngTech.ArchUnitNET 0.13.5, bunit 2.9.0, AutoBogus.Conventions 2.13.1, MediatR 12.4.1, coverlet.msbuild 6.0.4, coverlet.collector 6.0.4, AngleSharp 1.7.2, Microsoft.AspNetCore.Components.Authorization 10.0.11, Microsoft.AspNetCore.Mvc.Testing 10.0.0, Microsoft.NET.Test.Sdk 17.14.1, Serilog.Formatting.Compact 3.0.0, Toolbelt.Blazor.SpeechRecognition 1.0.0, Toolbelt.Blazor.SpeechSynthesis 11.0.0
 
 **IntegrationTests** — NUnit 4.3.2, NUnit3TestAdapter 5.0.0, NUnit.Analyzers 4.9.2, Shouldly 4.3.0, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.Extensions.Hosting 10.0.2, coverlet.msbuild 6.0.4, coverlet.collector 6.0.4, Grpc.Net.Client 2.70.0, Microsoft.AspNetCore.Mvc.Testing 10.0.0, Microsoft.NET.Test.Sdk 17.14.1
 
