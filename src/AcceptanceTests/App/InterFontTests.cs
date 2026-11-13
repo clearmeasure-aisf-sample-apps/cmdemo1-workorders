@@ -1,7 +1,7 @@
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class InterFontTests : AcceptanceTestBase
+public class InterFontTests : AppAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task Should_ReportInterAvailable_WhenAppShellLoads()

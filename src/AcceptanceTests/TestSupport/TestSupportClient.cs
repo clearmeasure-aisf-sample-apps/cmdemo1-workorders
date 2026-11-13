@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
+using ClearMeasure.Bootcamp.Core.Model;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 
@@ -33,15 +35,22 @@ public sealed class TestSupportClient
     }
 
     /// <summary>Creates an admin employee keyed by <paramref name="testTag"/>.</summary>
-    public async Task<TestSupportEmployee> CreateEmployeeAsync(string testTag)
+    public async Task<TestSupportEmployee> CreateEmployeeAsync(
+        string testTag,
+        TestSupportEmployeeFields? fields = null)
     {
+        fields ??= new TestSupportEmployeeFields();
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}{PathPrefix}/employees");
         AddSecret(request);
         request.Content = JsonContent.Create(new
         {
             testTag,
             canCreateWorkOrder = true,
-            canFulfillWorkOrder = true
+            canFulfillWorkOrder = true,
+            firstName = fields.FirstName,
+            lastName = fields.LastName,
+            middleName = fields.MiddleName,
+            additionalCreateRoleNames = fields.AdditionalCreateRoleNames
         });
 
         using var response = await _http.SendAsync(request);
@@ -50,18 +59,41 @@ public sealed class TestSupportClient
         return employee ?? throw new InvalidOperationException("Test-support employee response was empty.");
     }
 
-    /// <summary>Creates a draft work order from <paramref name="request"/>.</summary>
-    public async Task<TestSupportWorkOrder> CreateWorkOrderAsync(TestSupportWorkOrderRequest request)
+    /// <summary>Creates a work order from seed fields.</summary>
+    public async Task<TestSupportWorkOrder> CreateWorkOrderAsync(
+        string testTag,
+        string creatorUserName,
+        WorkOrderStatus status,
+        WorkOrderSeedFields fields)
     {
         using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}{PathPrefix}/work-orders");
         AddSecret(httpRequest);
-        httpRequest.Content = JsonContent.Create(request.ToJsonBody());
-
+        httpRequest.Content = JsonContent.Create(WorkOrderJsonBody(testTag, creatorUserName, status, fields));
         using var response = await _http.SendAsync(httpRequest);
         await EnsureSuccess(response, "create work order");
         var workOrder = await response.Content.ReadFromJsonAsync<TestSupportWorkOrder>(JsonOptions);
         return workOrder ?? throw new InvalidOperationException("Test-support work-order response was empty.");
     }
+
+    private static object WorkOrderJsonBody(
+        string testTag, string creatorUserName, WorkOrderStatus status, WorkOrderSeedFields fields) =>
+        new
+        {
+            testTag,
+            creatorUserName,
+            title = fields.Title,
+            description = fields.Description,
+            roomNumber = fields.RoomNumber,
+            instructions = fields.Instructions,
+            number = fields.Number,
+            statusKey = status.Key,
+            priority = fields.Priority.ToString(),
+            dueDate = fields.DueDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            assigneeUserName = fields.AssigneeUserName,
+            building = fields.Building,
+            createdDate = fields.CreatedDate?.ToString("o", System.Globalization.CultureInfo.InvariantCulture),
+            completedDate = fields.CompletedDate?.ToString("o", System.Globalization.CultureInfo.InvariantCulture)
+        };
 
     /// <summary>Probes whether the host exposes test-support (pool) or answers 404 (tdd/uat/prod).</summary>
     public async Task<HttpStatusCode> ProbeStatusAsync()

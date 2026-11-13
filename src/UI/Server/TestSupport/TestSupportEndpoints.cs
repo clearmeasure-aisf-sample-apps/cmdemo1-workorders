@@ -27,14 +27,7 @@ public static class TestSupportEndpoints
             return Results.Problem(detail: "TestTag is required.", statusCode: StatusCodes.Status400BadRequest);
         }
 
-        var employee = await data.CreateEmployeeAsync(
-            new TestSupportEmployeeCreate
-            {
-                TestTag = request.TestTag.Trim(),
-                CanCreateWorkOrder = request.CanCreateWorkOrder,
-                CanFulfillWorkOrder = request.CanFulfillWorkOrder
-            },
-            cancellationToken);
+        var employee = await data.CreateEmployeeAsync(ToEmployeeCreate(request), cancellationToken);
         return Results.Json(employee.ToApiShape());
     }
 
@@ -50,16 +43,38 @@ public static class TestSupportEndpoints
                 statusCode: StatusCodes.Status400BadRequest);
         }
 
-        var workOrder = await data.CreateWorkOrderAsync(
-            new TestSupportWorkOrderCreate
-            {
-                TestTag = request.TestTag.Trim(),
-                CreatorUserName = request.CreatorUserName.Trim(),
-                Title = request.Title
-            },
-            cancellationToken);
+        var workOrder = await data.CreateWorkOrderAsync(ToWorkOrderCreate(request), cancellationToken);
         return Results.Json(workOrder.ToApiShape());
     }
+
+    private static TestSupportEmployeeCreate ToEmployeeCreate(CreateEmployeeRequest request) => new()
+    {
+        TestTag = request.TestTag.Trim(),
+        CanCreateWorkOrder = request.CanCreateWorkOrder,
+        CanFulfillWorkOrder = request.CanFulfillWorkOrder,
+        FirstName = request.FirstName,
+        LastName = request.LastName,
+        MiddleName = request.MiddleName,
+        AdditionalCreateRoleNames = request.AdditionalCreateRoleNames
+    };
+
+    private static TestSupportWorkOrderCreate ToWorkOrderCreate(CreateWorkOrderRequest request) => new()
+    {
+        TestTag = request.TestTag.Trim(),
+        CreatorUserName = request.CreatorUserName.Trim(),
+        Title = request.Title,
+        Description = request.Description,
+        RoomNumber = request.RoomNumber,
+        Instructions = request.Instructions,
+        Number = request.Number,
+        StatusKey = request.StatusKey,
+        Priority = request.Priority,
+        DueDate = request.DueDate,
+        AssigneeUserName = request.AssigneeUserName,
+        Building = request.Building,
+        CreatedDate = request.CreatedDate,
+        CompletedDate = request.CompletedDate
+    };
 
     private static IResult BuildSignInStorageState(
         [FromQuery] string userName,

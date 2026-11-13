@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class AiAgentPageTests : AcceptanceTestBase
+public class AiAgentPageTests : AppAcceptanceTestBase
 {
     [SetUp]
     public async Task EnsureLlmAvailable()

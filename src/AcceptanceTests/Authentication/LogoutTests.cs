@@ -3,7 +3,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Components;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Authentication;
 
-public class LogoutTests : AcceptanceTestBase
+[TestFixture]
+public class LogoutTests : AuthAcceptanceTestBase
 {
     [SetUp]
     public async Task Setup()
@@ -19,10 +20,10 @@ public class LogoutTests : AcceptanceTestBase
         await Expect(newLink).ToBeVisibleAsync();
 
         await LogoutViaUserMenu();
-        
+
         var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
         await Expect(loginLink).ToBeVisibleAsync();
-        
+
         var newWorkOrderLink = Page.GetByTestId(nameof(NavMenu.Elements.NewWorkOrder));
         await Expect(newWorkOrderLink).ToBeHiddenAsync();
     }

@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 /// via <see cref="BlazorWasmWarmUp"/> before any test fixture runs.
 /// </summary>
 [TestFixture]
-public class WarmUpTests : AcceptanceTestBase
+public class WarmUpTests : AppAcceptanceTestBase
 {
     /// <summary>Warm-up asserts the anonymous LoginLink; do not pre-authenticate.</summary>
     protected override bool UseStorageStateSignIn => false;

@@ -13,10 +13,16 @@ public class CreateWorkOrderRequestTests
         {
             TestTag = "t",
             CreatorUserName = "c",
-            Title = "ti"
+            Title = "ti",
+            Building = "Hall",
+            StatusKey = "Assigned",
+            AssigneeUserName = "u"
         };
         request.Title.ShouldBe("ti");
         request.CreatorUserName.ShouldBe("c");
         request.TestTag.ShouldBe("t");
+        request.Building.ShouldBe("Hall");
+        request.StatusKey.ShouldBe("Assigned");
+        request.AssigneeUserName.ShouldBe("u");
     }
 }

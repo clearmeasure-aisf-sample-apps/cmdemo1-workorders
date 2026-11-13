@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 /// </summary>
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
-public class NeedsRebootHealthCheckTests : AcceptanceTestBase
+public class NeedsRebootHealthCheckTests : AppAcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;
 

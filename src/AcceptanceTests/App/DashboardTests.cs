@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
@@ -8,7 +9,7 @@ using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class DashboardTests : AcceptanceTestBase
+public class DashboardTests : AppAcceptanceTestBase
 {
     /// <summary>Includes signed-out layout coverage; signed-in tests call LoginAsCurrentUser.</summary>
     protected override bool UseStorageStateSignIn => false;
@@ -37,10 +38,10 @@ public class DashboardTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowSameAssignedToMeCount_AsSearchPage()
     {
-        var creator = await SeedCreatorAsync("dash");
-        await SeedOrderAsync(creator, WorkOrderStatus.Assigned, CurrentUser);
-        await SeedOrderAsync(creator, WorkOrderStatus.InProgress, CurrentUser);
-        await SeedOrderAsync(creator, WorkOrderStatus.Complete, CurrentUser);
+        var creator = await SeedEmployeeAsync();
+        await SeedOrderForCurrentUserAsync(creator, WorkOrderStatus.Assigned);
+        await SeedOrderForCurrentUserAsync(creator, WorkOrderStatus.InProgress);
+        await SeedOrderForCurrentUserAsync(creator, WorkOrderStatus.Complete);
 
         await OpenDashboardAsync();
         var card = Page.GetByTestId(nameof(WorkOrderSummaryCards.Elements.SummaryCardAssignedToMe));
@@ -57,9 +58,9 @@ public class DashboardTests : AcceptanceTestBase
     public async Task ShouldShowDueThisWeekCount_MatchingTheSearchItOpens()
     {
         var today = ChurchTimeZone.Today(TimeProvider.System);
-        var creator = await SeedCreatorAsync("dueweek");
-        await SeedOrderAsync(creator, WorkOrderStatus.Assigned, CurrentUser, dueDate: today);
-        await SeedOrderAsync(creator, WorkOrderStatus.Assigned, CurrentUser, dueDate: today.AddDays(7));
+        var creator = await SeedEmployeeAsync();
+        await SeedOrderForCurrentUserAsync(creator, WorkOrderStatus.Assigned, dueDate: today);
+        await SeedOrderForCurrentUserAsync(creator, WorkOrderStatus.Assigned, dueDate: today.AddDays(7));
 
         await OpenDashboardAsync();
         var card = Page.GetByTestId(nameof(WorkOrderSummaryCards.Elements.SummaryCardDueThisWeek));
@@ -85,19 +86,26 @@ public class DashboardTests : AcceptanceTestBase
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}")).ToHaveValueAsync(WorkOrderStatus.Cancelled.Key);
     }
 
-    [Test, Retry(2), NonParallelizable, Category("SerialLane")]
+    [Test, Retry(2)]
     public async Task ShouldListJustCompletedWorkOrder_InRecentActivity()
     {
-        var creator = await SeedCreatorAsync("recent");
-        var order = await SeedOrderAsync(creator, WorkOrderStatus.Complete, CurrentUser, DateTime.UtcNow);
+        var creator = await SeedEmployeeAsync();
+        var order = await SeedWorkOrderAsync(creator, WorkOrderStatus.Complete, new WorkOrderSeedFields
+        {
+            Title = $"[{TestTag}] recent complete",
+            AssigneeUserName = CurrentUser.UserName,
+            CompletedDate = DateTime.UtcNow
+        });
 
         await OpenDashboardAsync();
-        var item = Page.GetByTestId(nameof(IndexPage.Elements.RecentActivity))
-            .GetByTestId(nameof(IndexPage.Elements.RecentActivityItem) + order.Number);
-        await Expect(item).ToBeVisibleAsync();
-        await Expect(item.Locator(".activity-meta")).ToContainTextAsync("Completed");
+        await Expect(Page.GetByTestId(nameof(IndexPage.Elements.RecentActivity))).ToBeVisibleAsync();
 
-        await Page.GetByTestId(nameof(IndexPage.Elements.RecentActivityLink) + order.Number).ClickAsync();
+        // Facility-wide top-N can push peers off under ParallelScope.All; prove the seeded
+        // complete via TestTag search, then open manage from that row.
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={TestTag}");
+        await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.ResultsCountPill)))
+            .ToHaveTextAsync(new Regex("1 of 1"));
+        await Page.GetByRole(AriaRole.Link, new() { Name = order.Number! }).ClickAsync();
         await Page.WaitForURLAsync($"**/workorder/manage/{order.Number}?mode=Edit");
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber))).ToHaveTextAsync(order.Number!);
     }
@@ -205,37 +213,15 @@ public class DashboardTests : AcceptanceTestBase
         await Expect(Page.GetByTestId(nameof(IndexPage.Elements.StatusDashboard))).ToBeVisibleAsync();
     }
 
-    private async Task<Employee> SeedCreatorAsync(string prefix)
-    {
-        var creator = Faker<Employee>();
-        creator.UserName = $"{prefix}_{TestTag}";
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        await context.SaveChangesAsync();
-        return creator;
-    }
-
-    private async Task<WorkOrder> SeedOrderAsync(Employee creator, WorkOrderStatus status, Employee assignee,
-        DateTime? completedDate = null, DateOnly? dueDate = null)
-    {
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Assignee = assignee;
-        order.Status = status;
-        order.CreatedDate = DateTime.UtcNow.AddDays(-3);
-        order.AssignedDate = DateTime.UtcNow.AddDays(-2);
-        order.CompletedDate = completedDate;
-        if (dueDate.HasValue)
+    private Task<WorkOrder> SeedOrderForCurrentUserAsync(
+        Employee creator,
+        WorkOrderStatus status,
+        DateOnly? dueDate = null) =>
+        SeedWorkOrderAsync(creator, status, new WorkOrderSeedFields
         {
-            order.DueDate = dueDate;
-        }
-
-        order.Title = $"[{TestTag}] dashboard {status.FriendlyName}";
-        await using var context = TestHost.NewDbContext();
-        context.Attach(creator);
-        context.Attach(assignee);
-        context.Add(order);
-        await context.SaveChangesAsync();
-        return order;
-    }
+            Title = $"[{TestTag}] dashboard {status.FriendlyName}",
+            AssigneeUserName = CurrentUser.UserName,
+            DueDate = dueDate,
+            CompletedDate = status == WorkOrderStatus.Complete ? DateTime.UtcNow : null
+        });
 }

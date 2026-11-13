@@ -1,6 +1,6 @@
 {
   "category": "SerialLane",
-  "notes": "Fixtures (or methods) tagged Category(SerialLane) must run after the parallel lane on the same pool slot, never beside it. Entirely-serial fixtures are excluded from duration-based parallel packing. DashboardTests stays in parallel packing; only ShouldListJustCompletedWorkOrder_InRecentActivity is SerialLane. NeedsRebootHealthCheckTests returned to the parallel lane after #1679 (request-scoped on pool slots). Items 10\u201312 and 14 may move more fixtures here until independence lands.",
+  "notes": "Fixtures (or methods) tagged Category(SerialLane) must run after the parallel lane on the same pool slot, never beside it. Entirely-serial fixtures are excluded from duration-based parallel packing. App and Authentication fixtures are ParallelScope.All after #1666. NeedsRebootHealthCheckTests returned to the parallel lane after #1679 (request-scoped on pool slots). Items 10\u201312 and 14 may move more fixtures here until independence lands.",
   "classes": [
     "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpListWorkOrdersAcceptanceTests",
     "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleTests",

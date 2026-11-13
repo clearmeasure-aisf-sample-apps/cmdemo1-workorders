@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Components;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class SidebarSlaHealthCardTests : AcceptanceTestBase
+public class SidebarSlaHealthCardTests : AppAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldRenderSlaHealthCard_InSidebar_AfterLogin()

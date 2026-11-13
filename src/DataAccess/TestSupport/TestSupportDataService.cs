@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
@@ -20,30 +21,13 @@ public sealed class TestSupportDataService(
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(request.TestTag);
-
-        // Keep First/Last short and breakable: concatenating the test tag produced
-        // single tokens like Firsta1b2c3d4 that inflate the search assignee column
-        // past the 1280px AppShell tableFits budget. Uniqueness stays in UserName.
-        var employee = new Employee(
-            BuildUserName(request.TestTag),
-            "Pat",
-            "Tester",
-            $"{request.TestTag}@acceptance.test");
-        employee.AddRole(new Role("admin", request.CanCreateWorkOrder, request.CanFulfillWorkOrder));
+        var employee = BuildEmployee(request);
         context.Add(employee);
         await context.SaveChangesAsync(cancellationToken);
-
-        return new TestSupportEmployeeDto
-        {
-            Id = employee.Id,
-            UserName = employee.UserName,
-            FirstName = employee.FirstName,
-            LastName = employee.LastName,
-            EmailAddress = employee.EmailAddress
-        };
+        return ToEmployeeDto(employee);
     }
 
-    /// <summary>Creates a draft work order for the request creator, titled with the test tag.</summary>
+    /// <summary>Creates a work order for the request creator, titled with the test tag.</summary>
     public async Task<TestSupportWorkOrderDto> CreateWorkOrderAsync(
         TestSupportWorkOrderCreate request,
         CancellationToken cancellationToken)
@@ -53,19 +37,59 @@ public sealed class TestSupportDataService(
 
         var creator = await context.Set<Employee>()
             .SingleAsync(employee => employee.UserName == request.CreatorUserName, cancellationToken);
-        var workOrder = BuildDraft(request, creator);
+        var assignee = await ResolveAssigneeAsync(request.AssigneeUserName, cancellationToken);
+        var workOrder = BuildWorkOrder(request, creator, assignee);
         context.Add(workOrder);
         await context.SaveChangesAsync(cancellationToken);
+        return ToWorkOrderDto(workOrder, creator.UserName);
+    }
 
-        return new TestSupportWorkOrderDto
+    private async Task<Employee?> ResolveAssigneeAsync(string? userName, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
         {
-            Id = workOrder.Id,
-            Number = workOrder.Number!,
-            Title = workOrder.Title!,
-            Description = workOrder.Description,
-            RoomNumber = workOrder.RoomNumber,
-            CreatorUserName = creator.UserName
-        };
+            return null;
+        }
+
+        return await context.Set<Employee>()
+            .SingleAsync(employee => employee.UserName == userName, cancellationToken);
+    }
+
+    private static Employee BuildEmployee(TestSupportEmployeeCreate request)
+    {
+        // Keep First/Last short and breakable by default: uniqueness stays in UserName.
+        // Login fixtures may pass an early-sorting LastName so the row stays in the first page.
+        var employee = new Employee(
+            BuildUserName(request.TestTag),
+            string.IsNullOrWhiteSpace(request.FirstName) ? "Pat" : request.FirstName.Trim(),
+            string.IsNullOrWhiteSpace(request.LastName) ? "Tester" : request.LastName.Trim(),
+            $"{request.TestTag}@acceptance.test");
+        if (!string.IsNullOrWhiteSpace(request.MiddleName))
+        {
+            employee.MiddleName = request.MiddleName.Trim();
+        }
+
+        employee.AddRole(new Role("admin", request.CanCreateWorkOrder, request.CanFulfillWorkOrder));
+        AddCreateOnlyRoles(employee, request.AdditionalCreateRoleNames);
+        return employee;
+    }
+
+    private static void AddCreateOnlyRoles(Employee employee, string[]? roleNames)
+    {
+        if (roleNames is not { Length: > 0 })
+        {
+            return;
+        }
+
+        foreach (var roleName in roleNames)
+        {
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                continue;
+            }
+
+            employee.AddRole(new Role(roleName.Trim(), canCreate: true, canFulfill: false));
+        }
     }
 
     private static string BuildUserName(string testTag)
@@ -75,17 +99,121 @@ public sealed class TestSupportDataService(
         return userName.Length > 100 ? userName[..100] : userName;
     }
 
-    private WorkOrder BuildDraft(TestSupportWorkOrderCreate request, Employee creator) =>
-        new()
+    private WorkOrder BuildWorkOrder(
+        TestSupportWorkOrderCreate request,
+        Employee creator,
+        Employee? assignee)
+    {
+        var status = ResolveStatus(request.StatusKey);
+        var now = DateTime.UtcNow;
+        var createdDate = ResolveDateTime(request.CreatedDate) ?? now;
+        var workOrder = new WorkOrder
         {
-            Number = numberGenerator.GenerateNumber(),
+            Number = ResolveNumber(request.Number),
             Creator = creator,
-            Status = WorkOrderStatus.Draft,
-            Title = string.IsNullOrWhiteSpace(request.Title)
-                ? $"[{request.TestTag}] from test-support"
-                : request.Title,
+            Assignee = assignee,
+            Status = status,
+            Priority = ResolvePriority(request.Priority),
+            DueDate = ResolveDueDate(request.DueDate),
+            Title = ResolveTitle(request),
             Description = request.Description ?? $"[{request.TestTag}] description",
+            Instructions = request.Instructions ?? string.Empty,
             RoomNumber = request.RoomNumber ?? "1",
-            CreatedDate = DateTime.UtcNow
+            Building = request.Building,
+            CreatedDate = createdDate
         };
+        ApplyStatusDates(workOrder, status, now, ResolveDateTime(request.CompletedDate));
+        return workOrder;
+    }
+
+    private string ResolveNumber(string? number) =>
+        string.IsNullOrWhiteSpace(number) ? numberGenerator.GenerateNumber() : number.Trim();
+
+    private static string ResolveTitle(TestSupportWorkOrderCreate request) =>
+        string.IsNullOrWhiteSpace(request.Title)
+            ? $"[{request.TestTag}] from test-support"
+            : request.Title;
+
+    private static TestSupportEmployeeDto ToEmployeeDto(Employee employee) => new()
+    {
+        Id = employee.Id,
+        UserName = employee.UserName,
+        FirstName = employee.FirstName,
+        LastName = employee.LastName,
+        EmailAddress = employee.EmailAddress
+    };
+
+    private static TestSupportWorkOrderDto ToWorkOrderDto(WorkOrder workOrder, string creatorUserName) => new()
+    {
+        Id = workOrder.Id,
+        Number = workOrder.Number!,
+        Title = workOrder.Title!,
+        Description = workOrder.Description,
+        RoomNumber = workOrder.RoomNumber,
+        CreatorUserName = creatorUserName
+    };
+
+    private static void ApplyStatusDates(
+        WorkOrder workOrder,
+        WorkOrderStatus status,
+        DateTime now,
+        DateTime? completedDate)
+    {
+        if (status == WorkOrderStatus.Draft)
+        {
+            if (completedDate.HasValue)
+            {
+                workOrder.CompletedDate = completedDate;
+            }
+
+            return;
+        }
+
+        workOrder.AssignedDate ??= now.AddDays(-1);
+        if (status == WorkOrderStatus.Complete)
+        {
+            workOrder.CompletedDate = completedDate ?? now;
+        }
+    }
+
+    private static WorkOrderStatus ResolveStatus(string? statusKey)
+    {
+        if (string.IsNullOrWhiteSpace(statusKey))
+        {
+            return WorkOrderStatus.Draft;
+        }
+
+        return WorkOrderStatus.FromKey(statusKey.Trim());
+    }
+
+    private static WorkOrderPriority ResolvePriority(string? priority)
+    {
+        if (string.IsNullOrWhiteSpace(priority))
+        {
+            return WorkOrderPriority.Medium;
+        }
+
+        return Enum.Parse<WorkOrderPriority>(priority.Trim(), ignoreCase: true);
+    }
+
+    private static DateOnly? ResolveDueDate(string? dueDate)
+    {
+        if (string.IsNullOrWhiteSpace(dueDate))
+        {
+            return null;
+        }
+
+        return DateOnly.Parse(dueDate.Trim(), CultureInfo.InvariantCulture);
+    }
+
+    private static DateTime? ResolveDateTime(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return DateTime.Parse(value.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
+            .ToUniversalTime();
+    }
 }

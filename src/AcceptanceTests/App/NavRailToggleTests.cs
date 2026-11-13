@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class NavRailToggleTests : AcceptanceTestBase
+public class NavRailToggleTests : AppAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldHideAndShowNavigationRail_OnWideViewport_AfterLogin()

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class ClientHealthCheckTests : AcceptanceTestBase
+public class ClientHealthCheckTests : AppAcceptanceTestBase
 {
     private static readonly string[] AcceptableHealthStatuses =
     [
