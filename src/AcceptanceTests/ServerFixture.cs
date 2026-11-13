@@ -310,6 +310,9 @@ public class ServerFixture
         process.StartInfo.Environment["ApiKeyAuthentication__ValidationKey"] = "";
         process.StartInfo.Environment["FeatureFlags__BuildingManagement"] = "true";
         process.StartInfo.Environment["FeatureFlags__VendorManagement"] = "true";
+        // Pool-slot test-support surface: create data via HTTP instead of SQL from the suite.
+        process.StartInfo.Environment["TestSupport__Enabled"] = "true";
+        process.StartInfo.Environment["TestSupport__Secret"] = TestSupport.AcceptanceTestSupportSettings.Secret;
         if (useSqlite)
         {
             ApplySqliteServerEnvironment(process, connectionString);
@@ -559,6 +562,7 @@ public class ServerFixture
         await ProcessCleanupHelper.StopServerProcessAsync(_serverProcess, ApplicationBaseUrl);
         try { _serverProcess?.Dispose(); } catch (ObjectDisposedException) { }
         _serverProcess = null;
+        await TestSupport.WorkerBrowserPool.DisposeAllAsync();
         Playwright.Dispose();
     }
 }

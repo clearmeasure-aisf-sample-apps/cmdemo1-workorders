@@ -1,0 +1,377 @@
+{
+  "measuredFrom": "GitHub Actions run 43125446701 (master d689506c44, 2026-11-12). x64Seconds and armSeconds are summed passing-run TRX durations for that class. tests counts [Test] and [TestCase] attributes in source. AutoReformatAgentTests is Explicit and did not execute, so both durations are 0. AcceptanceTestEmployeesTests (#1638) was not in that run; its seconds are an estimate for four non-parallel browser fixtures, placed on shard 5.",
+  "defaultNewTestSeconds": 20,
+  "notes": "Durations for scripts/acceptance/Get-DurationShardAssignment.ps1 (default 12 shards). CI still uses acceptance-shards.json (6). Workflow wiring for 12 shards needs Jeffrey's approval.",
+  "classes": [
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.ClientHealthCheckTests",
+      "tests": 4,
+      "seconds": 57.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests",
+      "tests": 1,
+      "seconds": 27.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LoginTests",
+      "tests": 25,
+      "seconds": 349.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpListWorkOrdersAcceptanceTests",
+      "tests": 1,
+      "seconds": 12.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests",
+      "tests": 5,
+      "seconds": 118.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderManageCopyButtonTests",
+      "tests": 4,
+      "seconds": 64.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests",
+      "tests": 6,
+      "seconds": 89.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchSavedViewsTests",
+      "tests": 1,
+      "seconds": 21.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderWaitingOnVendorTests",
+      "tests": 1,
+      "seconds": 19.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.DarkModeTests",
+      "tests": 5,
+      "seconds": 64.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NavRailToggleTests",
+      "tests": 7,
+      "seconds": 76.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.RemovedTemplatePageTests",
+      "tests": 1,
+      "seconds": 18.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsTests",
+      "tests": 5,
+      "seconds": 102.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAiChatTests",
+      "tests": 3,
+      "seconds": 26.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderBeginTests",
+      "tests": 1,
+      "seconds": 38.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderPrintTests",
+      "tests": 1,
+      "seconds": 21.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests",
+      "tests": 22,
+      "seconds": 346.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderTitleCharCountTests",
+      "tests": 4,
+      "seconds": 42.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.SaturdayMowSchedulingAgentTests",
+      "tests": 1,
+      "seconds": 13.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.PhoneWidthNoDocumentScrollTests",
+      "tests": 1,
+      "seconds": 99.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.ReportsPageTests",
+      "tests": 7,
+      "seconds": 75.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpGetWorkOrderInstructionsAcceptanceTests",
+      "tests": 2,
+      "seconds": 61.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCancelTests",
+      "tests": 1,
+      "seconds": 26.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveThenAssignPersistenceTests",
+      "tests": 1,
+      "seconds": 19.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchFilterTests",
+      "tests": 2,
+      "seconds": 28.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchRedesignTests",
+      "tests": 18,
+      "seconds": 230.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderShelvedTests",
+      "tests": 2,
+      "seconds": 39.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSpeechTests",
+      "tests": 5,
+      "seconds": 137.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AppShellTests",
+      "tests": 7,
+      "seconds": 96.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.DashboardTests",
+      "tests": 10,
+      "seconds": 143.3
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NotificationsPanelTests",
+      "tests": 5,
+      "seconds": 76.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.PageLoadBudgetTests",
+      "tests": 3,
+      "seconds": 39.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.SidebarSlaHealthCardTests",
+      "tests": 1,
+      "seconds": 11.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsAndVendorsTests",
+      "tests": 13,
+      "seconds": 216.9
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCompleteTests",
+      "tests": 2,
+      "seconds": 58.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderInProgressToCancelTests",
+      "tests": 1,
+      "seconds": 28.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchLongRoomTests",
+      "tests": 1,
+      "seconds": 21.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.ApplicationChatAgentTests",
+      "tests": 2,
+      "seconds": 20.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.AutoReformatAgentTests",
+      "tests": 1,
+      "seconds": 20.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.ApiRateLimitingAcceptanceTests",
+      "tests": 2,
+      "seconds": 0.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.DetailedHealthApiAcceptanceTests",
+      "tests": 2,
+      "seconds": 0.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.EchoApiAcceptanceTests",
+      "tests": 1,
+      "seconds": 20.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.FeatureFlagsApiAcceptanceTests",
+      "tests": 3,
+      "seconds": 0.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.MetricsSummaryAcceptanceTests",
+      "tests": 1,
+      "seconds": 20.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests",
+      "tests": 1,
+      "seconds": 191.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests",
+      "tests": 1,
+      "seconds": 10.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NeedsRebootHealthCheckTests",
+      "tests": 4,
+      "seconds": 0.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.WarmUpTests",
+      "tests": 1,
+      "seconds": 10.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Extensions.DateTimeTestExtensionsTests",
+      "tests": 5,
+      "seconds": 0.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpChatConversationTests",
+      "tests": 1,
+      "seconds": 20.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpHttpServerAcceptanceTests",
+      "tests": 4,
+      "seconds": 2.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerAcceptanceTests",
+      "tests": 2,
+      "seconds": 0.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpServerLlmAcceptanceTests",
+      "tests": 4,
+      "seconds": 20.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleLlmTests",
+      "tests": 2,
+      "seconds": 20.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpWorkOrderLifecycleTests",
+      "tests": 1,
+      "seconds": 0.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.TracerBulletTests",
+      "tests": 1,
+      "seconds": 2.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
+      "tests": 4,
+      "seconds": 80.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCreatedRelativeTimeTests",
+      "tests": 1,
+      "seconds": 15.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AiAgentPageTests",
+      "tests": 1,
+      "seconds": 10.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.CopyrightFooterTests",
+      "tests": 7,
+      "seconds": 67.2
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.InterFontTests",
+      "tests": 1,
+      "seconds": 8.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.SidebarHeightTests",
+      "tests": 1,
+      "seconds": 11.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LogoutTests",
+      "tests": 1,
+      "seconds": 14.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpCreateWorkOrderInstructionsAcceptanceTests",
+      "tests": 4,
+      "seconds": 161.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpSaveWorkOrderAcceptanceTests",
+      "tests": 5,
+      "seconds": 120.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAssignTests",
+      "tests": 1,
+      "seconds": 24.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAttachmentTests",
+      "tests": 3,
+      "seconds": 85.5
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDescriptionCharCountTests",
+      "tests": 3,
+      "seconds": 39.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests",
+      "tests": 7,
+      "seconds": 149.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderRoomNumberLengthTests",
+      "tests": 3,
+      "seconds": 50.1
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusDashboardTests",
+      "tests": 1,
+      "seconds": 13.8
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusHistoryTests",
+      "tests": 1,
+      "seconds": 20.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderWaitingOnVendorCancelTests",
+      "tests": 1,
+      "seconds": 17.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.TestSupportApiAcceptanceTests",
+      "tests": 2,
+      "seconds": 2.0
+    }
+  ]
+}

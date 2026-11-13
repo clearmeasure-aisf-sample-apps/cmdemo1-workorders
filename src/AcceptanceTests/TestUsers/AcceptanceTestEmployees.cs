@@ -4,10 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 
 /// <summary>
-/// The employees an acceptance run adds to the database it tests: one per browser test, user name
-/// <c>test_&lt;tag&gt;_...</c>. A deployed environment keeps its database between runs, and the login list shows only
-/// the first <see cref="EmployeeGetAllQuery.MaxTake"/> employees by last name, so the ones earlier runs left behind
-/// must not pile up past that page or a new test's employee is not listed.
+/// Legacy SQL helpers for the #1638 leftover-employee sweep tests.
+/// Browser fixtures create employees through the test-support HTTP API instead
+/// (<see cref="TestSupport.TestSupportClient"/>), so they do not depend on SQL from the runner.
 /// </summary>
 public static class AcceptanceTestEmployees
 {
@@ -16,6 +15,7 @@ public static class AcceptanceTestEmployees
 
     /// <summary>
     /// Adds an employee with the admin role whose user name carries <paramref name="testTag"/>.
+    /// Prefer <see cref="TestSupport.TestSupportClient.CreateEmployeeAsync"/> for new fixtures.
     /// </summary>
     public static Employee Add(string testTag)
     {

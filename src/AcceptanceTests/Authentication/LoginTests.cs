@@ -8,6 +8,9 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.Authentication;
 [TestFixture]
 public class LoginTests : AcceptanceTestBase
 {
+    /// <summary>Login fixtures exercise the employee dropdown; do not pre-authenticate via storage state.</summary>
+    protected override bool UseStorageStateSignIn => false;
+
     /// <summary>
     /// The employee &lt;option&gt; elements are rendered only after the Blazor WASM app
     /// boots interactively and the employee list loads. a network-idle wait

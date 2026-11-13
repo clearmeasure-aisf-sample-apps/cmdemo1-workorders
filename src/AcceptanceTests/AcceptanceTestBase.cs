@@ -1,7 +1,8 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
@@ -28,17 +29,20 @@ public class TestState
 }
 
 /// <summary>
-/// Base class for acceptance tests supporting parallel execution with ParallelScope.Children.
-/// Each test gets its own browser, page, user, and test tag for complete isolation.
+/// Base class for acceptance tests with one browser per NUnit worker and a new context per test.
+/// Parallelism defaults to <see cref="ParallelScope.Fixtures"/>; fixtures proven safe may use <see cref="ParallelScope.All"/>.
 /// Does not inherit from PageTest to avoid thread-safety issues with Playwright's internal collections.
 /// </summary>
 public abstract class AcceptanceTestBase
 {
     private static readonly ConcurrentDictionary<string, TestState> TestStates = new();
-    
-    private bool? Headless { get; } = ServerFixture.HeadlessTestBrowser;
+
     private bool SkipScreenshotsForSpeed { get; } = ServerFixture.SkipScreenshotsForSpeed;
     protected IBus Bus => TestHost.GetRequiredService<IBus>();
+
+    /// <summary>Bogus/API builders keyed by <see cref="TestTag"/> for this test.</summary>
+    protected AcceptanceObjectMother ObjectMother =>
+        new(AcceptanceTestSupportSettings.CreateClient(), TestTag);
 
     protected static async Task SkipIfNoChatClient()
     {
@@ -52,99 +56,48 @@ public abstract class AcceptanceTestBase
     }
 
     private string TestId => TestContext.CurrentContext.Test.ID;
-    
+
     /// <summary>
     /// Gets the current test's state container.
     /// </summary>
     private TestState State => TestStates[TestId];
-    
+
     /// <summary>
     /// Gets the browser page for the current test.
     /// </summary>
     protected IPage Page => State.Page;
-    
+
     /// <summary>
     /// Gets the current user for the current test.
     /// </summary>
     protected Employee CurrentUser => State.CurrentUser;
-    
+
     /// <summary>
     /// Unique tag for this test instance to isolate test data in parallel execution.
     /// </summary>
     protected string TestTag => State.TestTag;
 
-    private static readonly Random RandomPosition = new();
-
     protected virtual bool RequiresBrowser => true;
+
+    /// <summary>
+    /// When true, signs in via Playwright storage state (no 1,000-row employee list).
+    /// Login-page fixtures override to false so they can exercise the dropdown.
+    /// </summary>
+    protected virtual bool UseStorageStateSignIn => true;
 
     [SetUp]
     public async Task SetUpAsync()
     {
         if (!RequiresBrowser) return;
 
-        var testTag = Guid.NewGuid().ToString("N")[..8];
-        var currentUser = AcceptanceTestEmployees.Add(testTag);
-
-        var x = RandomPosition.Next(0, 1200);
-        var y = RandomPosition.Next(0, 700);
-        var browser = await ServerFixture.Playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        TestStates[TestId] = await BrowserFixtureSetup.CreateAsync(new BrowserSetupRequest
         {
-            Headless = Headless,
+            Playwright = ServerFixture.Playwright,
+            Headless = ServerFixture.HeadlessTestBrowser,
             SlowMo = ServerFixture.SlowMo,
-            Args = [$"--window-position={x},{y}", "--window-size=800,600"]
+            ApplicationBaseUrl = ServerFixture.ApplicationBaseUrl,
+            UseStorageStateSignIn = UseStorageStateSignIn
         });
-
-        var browserContext = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            BaseURL = ServerFixture.ApplicationBaseUrl,
-            Locale = "en-US",
-            IgnoreHTTPSErrors = true,
-            Permissions = ["clipboard-read", "clipboard-write"],
-            ViewportSize = new ViewportSize { Width = 800, Height = 600 }
-        });
-        browserContext.SetDefaultTimeout(60_000);
-        
-        await browserContext.Tracing.StartAsync(new TracingStartOptions
-        {
-            Title = $"{TestContext.CurrentContext.Test.ClassName}.{TestContext.CurrentContext.Test.Name}",
-            Screenshots = true,
-            Snapshots = true,
-            Sources = true
-        });
-
-        var page = await browserContext.NewPageAsync().ConfigureAwait(false);
-        
-        var state = new TestState
-        {
-            Page = page,
-            BrowserContext = browserContext,
-            Browser = browser,
-            CurrentUser = currentUser,
-            TestTag = testTag
-        };
-        
-        TestStates[TestId] = state;
-
-        const int maxRetries = 3;
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
-        {
-            try
-            {
-                await page.GotoAsync("/");
-                await page.WaitForURLAsync("/");
-                var loginLink = page.GetByTestId("LoginLink");
-                await loginLink.WaitForAsync(new LocatorWaitForOptions
-                {
-                    State = WaitForSelectorState.Visible,
-                    Timeout = 30_000
-                });
-                break;
-            }
-            catch (PlaywrightException) when (attempt < maxRetries)
-            {
-                await Task.Delay(2000);
-            }
-        }
     }
 
     [TearDown]
@@ -156,7 +109,7 @@ public abstract class AcceptanceTestBase
         await SafeStopTracingAsync(state);
         await SafeCloseAsync(() => state.Page.CloseAsync(), "Page");
         await SafeCloseAsync(() => state.BrowserContext.CloseAsync(), "BrowserContext");
-        await SafeCloseAsync(() => state.Browser.CloseAsync(), "Browser");
+        // Browser stays open for the worker until ServerFixture.OneTimeTearDown.
     }
 
     private async Task SafeStopTracingAsync(TestState state)
@@ -218,26 +171,28 @@ public abstract class AcceptanceTestBase
 
     protected async Task LoginAsCurrentUser()
     {
+        var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        if (await welcomeTextLocator.IsVisibleAsync())
+        {
+            await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
+            return;
+        }
+
         var username = CurrentUser.UserName;
         await TakeScreenshotAsync();
         await Click(nameof(LoginLink.Elements.LoginLink));
         await Page.WaitForURLAsync("**/login");
         await Expect(Page.GetByTestId(nameof(Login.Elements.User))).ToBeVisibleAsync();
 
-        // Fill in username only
         await Select(nameof(Login.Elements.User), username);
 
-        // Submit form
         await TakeScreenshotAsync();
         await Click(nameof(Login.Elements.LoginButton));
 
-        var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToBeVisibleAsync();
         await TakeScreenshotAsync();
-        // Assert: Should be redirected to home and see welcome message
         await Expect(welcomeTextLocator).ToContainTextAsync($"Welcome {CurrentUser.UserName}");
-        // A double click finishes DOM loading. WelcomeText is visually hidden inside the user menu
-        // trigger (#251), so the trigger takes the clicks: the first opens the menu, the second closes it.
+        // WelcomeText is visually hidden inside the user menu trigger (#251): first click opens, second closes.
         await Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle)).DblClickAsync();
     }
 
