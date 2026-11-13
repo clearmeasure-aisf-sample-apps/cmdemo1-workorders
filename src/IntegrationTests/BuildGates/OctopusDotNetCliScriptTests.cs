@@ -43,6 +43,8 @@ public class OctopusDotNetCliScriptTests
 
         helper.ShouldContain("Format-OctopusDotNetCliInstallFailure");
         helper.ShouldContain("Get-OctopusDotNetCliInstallEnvironmentSnapshot");
+        helper.ShouldContain("Get-TransactionalActionTypeInitializerProbe");
+        helper.ShouldContain("DOTNET_CLI_CONTEXT_VERBOSE");
         helper.ShouldContain("--verbosity");
         helper.ShouldContain("diag");
     }

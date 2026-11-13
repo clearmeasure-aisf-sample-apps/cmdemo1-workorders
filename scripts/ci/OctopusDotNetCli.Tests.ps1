@@ -151,12 +151,15 @@ function Test-FormatFailureIncludesEnvironmentAndDiag {
                 Output   = "System.TypeInitializationException: The type initializer for 'Microsoft.DotNet.Cli.TransactionalAction' threw an exception.`n ---> System.IO.IOException: No space left on device"
             }
         } `
-        -EnvironmentSnapshot { "HOME=/home/runner`nTMPDIR=`nDOTNET_ROLL_FORWARD=LatestMajor" }
+        -EnvironmentSnapshot { "HOME=/home/runner`nTMPDIR=`nDOTNET_ROLL_FORWARD=LatestMajor" } `
+        -TypeInitializerProbe { "PROBE_FAIL:`nSystem.InvalidOperationException: boom" }
 
     Assert-True ($formatted -match 'TransactionalAction') 'Outer failure must remain.'
     Assert-True ($formatted -match 'No space left on device') 'Diag inner exception must be included.'
     Assert-True ($formatted -match 'DOTNET_ROLL_FORWARD=LatestMajor') 'Environment snapshot must be included.'
     Assert-True ($formatted -match '--- environment ---') 'Environment section marker must be present.'
+    Assert-True ($formatted -match '--- type-initializer probe ---') 'Probe section marker must be present.'
+    Assert-True ($formatted -match 'InvalidOperationException: boom') 'Probe output must be included.'
     Assert-True ($formatted -match '--- diag re-run') 'Diag section marker must be present.'
     Write-Output 'format failure includes environment and diag ok'
 }

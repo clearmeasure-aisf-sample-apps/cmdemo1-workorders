@@ -152,13 +152,20 @@ function Get-OctopusDotNetCliInstallEnvironmentSnapshot {
 function Invoke-DotNetToolInstallGlobal {
     param(
         [string]$PackageId = $script:OctopusDotNetCliPackageId,
-        [string]$Verbosity = 'minimal'
+        [string]$Verbosity = 'minimal',
+        [bool]$CliContextVerbose = $false
     )
 
     $previous = $ErrorActionPreference
+    $previousCliVerbose = $env:DOTNET_CLI_CONTEXT_VERBOSE
     $ErrorActionPreference = 'Continue'
     try {
         Set-OctopusDotNetCliRollForward | Out-Null
+        # CommandLoggingContext.IsVerbose reads DOTNET_CLI_CONTEXT_VERBOSE (not --verbosity).
+        # Without it, TypeInitializationException prints only Message (no InnerException).
+        if ($CliContextVerbose) {
+            $env:DOTNET_CLI_CONTEXT_VERBOSE = '1'
+        }
         $lines = & dotnet tool install --global $PackageId --verbosity $Verbosity 2>&1
         return [pscustomobject]@{
             ExitCode = $LASTEXITCODE
@@ -167,6 +174,103 @@ function Invoke-DotNetToolInstallGlobal {
     }
     finally {
         $ErrorActionPreference = $previous
+        if ($null -eq $previousCliVerbose) {
+            Remove-Item Env:DOTNET_CLI_CONTEXT_VERBOSE -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:DOTNET_CLI_CONTEXT_VERBOSE = $previousCliVerbose
+        }
+    }
+}
+
+function Get-TransactionalActionTypeInitializerProbe {
+    <#
+    .SYNOPSIS
+      Runs TransactionalAction's type initializer via reflection and returns the full exception.
+    #>
+    $probeDir = Join-Path ([System.IO.Path]::GetTempPath()) ("ta-probe-" + [Guid]::NewGuid().ToString('N'))
+    $projectFile = Join-Path $probeDir 'Probe.csproj'
+    $programFile = Join-Path $probeDir 'Program.cs'
+    try {
+        New-Item -ItemType Directory -Path $probeDir | Out-Null
+        Set-Content -LiteralPath $projectFile -Value @'
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>
+'@
+        Set-Content -LiteralPath $programFile -Value @'
+using System.Reflection;
+using System.Runtime.CompilerServices;
+
+var sdkRoot = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+    ".dotnet", "sdk");
+if (!Directory.Exists(sdkRoot))
+{
+    sdkRoot = "/usr/share/dotnet/sdk";
+}
+
+var dll = Directory.Exists(sdkRoot)
+    ? Directory.GetDirectories(sdkRoot).OrderByDescending(static d => d)
+        .Select(static d => Path.Combine(d, "dotnet.dll"))
+        .FirstOrDefault(File.Exists)
+    : null;
+
+Console.WriteLine("ProbeSdkDll=" + (dll ?? "(none)"));
+if (dll is null)
+{
+    Console.WriteLine("PROBE_FAIL: dotnet.dll not found");
+    return;
+}
+
+var asm = Assembly.LoadFrom(dll);
+var type = asm.GetType("Microsoft.DotNet.Cli.TransactionalAction")
+    ?? asm.GetTypes().FirstOrDefault(static t => t.Name == "TransactionalAction");
+Console.WriteLine("ProbeType=" + (type?.FullName ?? "(none)"));
+if (type is null)
+{
+    Console.WriteLine("PROBE_FAIL: TransactionalAction type not found");
+    return;
+}
+
+try
+{
+    RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+    Console.WriteLine("PROBE_OK: TransactionalAction type initializer succeeded");
+}
+catch (Exception ex)
+{
+    Console.WriteLine("PROBE_FAIL:");
+    for (Exception? current = ex; current is not null; current = current.InnerException)
+    {
+        Console.WriteLine("---");
+        Console.WriteLine(current.GetType().FullName + ": " + current.Message);
+        Console.WriteLine(current.StackTrace);
+    }
+    Console.WriteLine("FULL:");
+    Console.WriteLine(ex.ToString());
+}
+'@
+        $previous = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try {
+            $lines = & dotnet run --project $projectFile --verbosity quiet 2>&1
+            return ($lines | Out-String).Trim()
+        }
+        finally {
+            $ErrorActionPreference = $previous
+        }
+    }
+    catch {
+        return "PROBE_FAIL: $($_.Exception.ToString())"
+    }
+    finally {
+        Remove-Item -LiteralPath $probeDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -176,19 +280,23 @@ function Format-OctopusDotNetCliInstallFailure {
       Builds the install-failure message, including env snapshot and a diag re-run.
     .DESCRIPTION
       TypeInitializationException.Message omits InnerException unless the CLI is verbose
-      (dotnet Program.cs uses e.ToString() only when CommandLoggingContext.IsVerbose).
+      (dotnet Program.cs uses e.ToString() only when DOTNET_CLI_CONTEXT_VERBOSE is set).
     #>
     param(
         [Parameter(Mandatory = $true)][int]$ExitCode,
         [Parameter(Mandatory = $true)][string]$Output,
-        [scriptblock]$DiagInstall = { Invoke-DotNetToolInstallGlobal -Verbosity 'diag' },
-        [scriptblock]$EnvironmentSnapshot = { Get-OctopusDotNetCliInstallEnvironmentSnapshot }
+        [scriptblock]$DiagInstall = { Invoke-DotNetToolInstallGlobal -Verbosity 'diag' -CliContextVerbose $true },
+        [scriptblock]$EnvironmentSnapshot = { Get-OctopusDotNetCliInstallEnvironmentSnapshot },
+        [scriptblock]$TypeInitializerProbe = { Get-TransactionalActionTypeInitializerProbe }
     )
 
     $diag = & $DiagInstall
+    $probe = [string](& $TypeInitializerProbe)
     $envSnapshot = [string](& $EnvironmentSnapshot)
     Write-Host "[ERROR] $($script:OctopusDotNetCliPackageId) install failed. Environment snapshot:"
     Write-Host $envSnapshot
+    Write-Host "[ERROR] $($script:OctopusDotNetCliPackageId) TransactionalAction type-initializer probe:"
+    Write-Host $probe
     Write-Host "[ERROR] $($script:OctopusDotNetCliPackageId) install diag re-run (exit $($diag.ExitCode)):"
     Write-Host ([string]$diag.Output)
 
@@ -197,6 +305,10 @@ function Format-OctopusDotNetCliInstallFailure {
         "--- environment ---" +
         [Environment]::NewLine +
         $envSnapshot +
+        [Environment]::NewLine +
+        "--- type-initializer probe ---" +
+        [Environment]::NewLine +
+        $probe +
         [Environment]::NewLine +
         "--- diag re-run (exit $($diag.ExitCode)) ---" +
         [Environment]::NewLine +
