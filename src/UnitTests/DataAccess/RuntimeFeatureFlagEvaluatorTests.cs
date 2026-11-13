@@ -107,6 +107,18 @@ public class RuntimeFeatureFlagEvaluatorTests
         (await evaluator.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task IsEnabledAsync_Should_ReturnProviderValue_When_ProviderOnlyKnowsShowPriorityBadgesSlug(
+        bool providerValue)
+    {
+        var evaluator = WithOpenFeature(
+            Configuration(("FeatureFlags:ShowPriorityBadges", "true")),
+            ("showprioritybadges", providerValue));
+
+        (await evaluator.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges)).ShouldBe(providerValue);
+    }
+
     [Test]
     public async Task IsEnabledAsync_Should_FallBackToConfiguration_When_ProviderLacksTheFlag()
     {
@@ -120,7 +132,6 @@ public class RuntimeFeatureFlagEvaluatorTests
     [TestCase("BuildingManagement", new[] { "building-management", "buildingmanagement", "BuildingManagement" })]
     [TestCase("VendorManagement", new[] { "vendor-management", "vendormanagement", "VendorManagement" })]
     [TestCase("ShowPriorityBadges", new[] { "show-priority-badges", "showprioritybadges", "ShowPriorityBadges" })]
-    [TestCase("SampleFeatureA", new[] { "sample-feature-a", "samplefeaturea", "SampleFeatureA" })]
     [TestCase("lowercase", new[] { "lowercase" })]
     public void OpenFeatureKeys_Should_TryKebabSlugThenName_When_Evaluating(string name, string[] expected)
     {

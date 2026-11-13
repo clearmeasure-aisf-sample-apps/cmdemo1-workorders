@@ -194,15 +194,10 @@ Function Package-Everything{
 	# Allow Octopus.DotNet.Cli (targets net6.0) to run on the current .NET SDK
 	$env:DOTNET_ROLL_FORWARD = "LatestMajor"
 
-	dotnet tool install --global Octopus.DotNet.Cli 2>$null # prevents red 'already installed' message
-
-	# Ensure dotnet tools are in PATH
-	$dotnetToolsPath = [System.IO.Path]::Combine([System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile), ".dotnet", "tools")
-	$pathEntries = $env:PATH -split [System.IO.Path]::PathSeparator
-	$dotnetToolsPathPresent = $pathEntries | Where-Object { $_.Trim().ToLowerInvariant() -eq $dotnetToolsPath.Trim().ToLowerInvariant() }
-	if (-not $dotnetToolsPathPresent) {
-		$env:PATH = "$dotnetToolsPath$([System.IO.Path]::PathSeparator)$env:PATH"
-	}
+	# Install/verify dotnet-octo with visible errors and retries (issue #1658).
+	$octopusDotNetCli = Join-PathSegments $base_dir "scripts" "ci" "OctopusDotNetCli.ps1"
+	. $octopusDotNetCli
+	Initialize-OctopusDotNetCli
 
 	PackageUI
 	PackageDatabase

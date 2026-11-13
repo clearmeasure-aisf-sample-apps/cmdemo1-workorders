@@ -20,7 +20,6 @@ public class FeatureFlagsQueryHandlerTests
         result.Flags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
         result.Flags[FeatureFlagNames.VendorManagement].ShouldBeFalse();
         result.Flags[FeatureFlagNames.ShowPriorityBadges].ShouldBeTrue();
-        result.Flags[FeatureFlagNames.SampleFeatureA].ShouldBeFalse();
     }
 
     private sealed class StubFeatureFlagEvaluator(params string[] enabled) : IFeatureFlagEvaluator

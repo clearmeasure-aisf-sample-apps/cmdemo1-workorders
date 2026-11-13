@@ -103,10 +103,9 @@ public class DiagnosticsEndpointIntegrationTests
         var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         payload.ShouldNotBeNull();
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeTrue();
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeFalse();
-        payload.FeatureFlags[FeatureFlagNames.BuildingManagement].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
         payload.FeatureFlags[FeatureFlagNames.VendorManagement].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.ShowPriorityBadges].ShouldBeTrue();
     }
 
     [Test]
@@ -156,8 +155,8 @@ public class DiagnosticsEndpointIntegrationTests
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["FeatureFlags:SampleFeatureA"] = "false",
-                    ["FeatureFlags:SampleFeatureB"] = "true"
+                    ["FeatureFlags:BuildingManagement"] = "false",
+                    ["FeatureFlags:VendorManagement"] = "true"
                 });
             });
         });
@@ -169,8 +168,8 @@ public class DiagnosticsEndpointIntegrationTests
         var payload = await response.Content.ReadFromJsonAsync<DiagnosticsResponse>(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         payload.ShouldNotBeNull();
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeFalse();
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeTrue();
+        payload.FeatureFlags[FeatureFlagNames.BuildingManagement].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
     }
 
     private static async Task<Dictionary<string, bool>> ReadFlagMapAsync(HttpClient client, string path)

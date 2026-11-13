@@ -15,17 +15,9 @@ public static class FeatureFlagNames
     /// <summary>When enabled, the vendor directory (list and create, UI and MCP) is available.</summary>
     public const string VendorManagement = "VendorManagement";
 
-    /// <summary>Sample flag kept for diagnostics contract stability.</summary>
-    public const string SampleFeatureA = "SampleFeatureA";
-
-    /// <summary>Sample flag kept for diagnostics contract stability.</summary>
-    public const string SampleFeatureB = "SampleFeatureB";
-
     /// <summary>Every catalog name, in the order the flags endpoint reports them.</summary>
     public static IReadOnlyList<string> All { get; } =
     [
-        SampleFeatureA,
-        SampleFeatureB,
         ShowPriorityBadges,
         BuildingManagement,
         VendorManagement

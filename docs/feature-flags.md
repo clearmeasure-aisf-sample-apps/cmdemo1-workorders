@@ -6,11 +6,9 @@ Feature flags are evaluated at runtime on the server and enforced in one place: 
 
 | Flag | Default in `appsettings.json` | Effect |
 | --- | --- | --- |
-| `ShowPriorityBadges` | true | When enabled, the work order search page shows a High badge on a work order whose priority is High. |
+| `ShowPriorityBadges` | true | Octopus slug `showprioritybadges`. When enabled, the work order search page shows a High badge on a work order whose priority is High. Stays on in tdd, uat and prod; appsettings is the fallback when Octopus is unset or cannot resolve the flag. |
 | `BuildingManagement` | false | Gates Buildings & Rooms: the nav link, `/admin/buildings`, `BuildingRoomSummaryQuery`, and `WorkOrderBuildingsQuery`. The work-order building text stays. |
 | `VendorManagement` | false | Gates `VendorsQuery` and `CreateVendorCommand`: the Vendors section on Teams & Vendors, and MCP `list-vendors` / `create-vendor`. Teams and the waiting-on-vendor work-order flow stay available. |
-| `SampleFeatureA` | false (true in Development) | Returned by the endpoints. No screen reads it. |
-| `SampleFeatureB` | false | Returned by the endpoints. No screen reads it. |
 
 To add a flag, add a constant to `FeatureFlagNames` and to `FeatureFlagNames.All`, and give it a default in the `FeatureFlags` section of `src/UI/Server/appsettings.json` (and `src/McpServer/appsettings.json` if MCP uses it).
 
@@ -18,9 +16,9 @@ To add a flag, add a constant to `FeatureFlagNames` and to `FeatureFlagNames.All
 
 `RuntimeFeatureFlagEvaluator` (`src/DataAccess/FeatureFlags/`) answers every evaluation. The first source that knows the flag wins:
 
-1. **Octopus Feature Toggles through OpenFeature.** Used only when the configuration key `Octopus:FeatureFlags:ClientIdentifier` has a value. In a container that is the environment variable `Octopus__FeatureFlags__ClientIdentifier`, injected at deploy time from the Octopus variable `Octopus.FeatureToggles.ClientIdentifier`. The evaluator tries the kebab-case flag name (`building-management`), then the compact lowercase Octopus slug (`buildingmanagement`), then the flag name itself (`BuildingManagement`); the first match wins. The Octopus provider caches the toggle manifest and refreshes it in the background, so a toggle flip shows up without a new image.
-2. **The `FeatureFlags` configuration section**, for example `FeatureFlags:BuildingManagement` (environment variable `FeatureFlags__BuildingManagement`). A value that is not `true` or `false` counts as false.
-3. **false.** A missing client identifier and an unknown flag both end here, so new flags fail closed.
+1. **Octopus Feature Toggles through OpenFeature.** Used only when the configuration key `Octopus:FeatureFlags:ClientIdentifier` has a value. In a container that is the environment variable `Octopus__FeatureFlags__ClientIdentifier`, injected at deploy time from the Octopus variable `Octopus.FeatureToggles.ClientIdentifier`. The evaluator tries the kebab-case flag name (`show-priority-badges`, `building-management`), then the compact lowercase Octopus slug (`showprioritybadges`, `buildingmanagement`), then the flag name itself (`ShowPriorityBadges`, `BuildingManagement`); the first match wins. The Octopus provider caches the toggle manifest and refreshes it in the background, so a toggle flip shows up without a new image.
+2. **The `FeatureFlags` configuration section**, for example `FeatureFlags:ShowPriorityBadges` or `FeatureFlags:BuildingManagement` (environment variables `FeatureFlags__ShowPriorityBadges`, `FeatureFlags__BuildingManagement`). A value that is not `true` or `false` counts as false.
+3. **false.** A missing client identifier and an unknown flag both end here, so new flags fail closed. `ShowPriorityBadges` stays on via appsettings when Octopus is unset or the provider cannot resolve it.
 
 The client identifier is not a secret, but it is environment-specific: never commit one.
 
@@ -28,15 +26,15 @@ The client identifier is not a secret, but it is environment-specific: never com
 
 With no Octopus client identifier, `RuntimeFeatureFlagEvaluator` uses configuration and then false. There is no separate in-code true/false catalog.
 
-| Place | `BuildingManagement` | `VendorManagement` |
-| --- | --- | --- |
-| No Octopus client and no configuration value | false | false |
-| `appsettings.json` (image; platform uat and prod until flipped) | false | false |
-| `appsettings.Development.json` (local process and the acceptance host) | true | true |
-| Platform tdd | ON | ON |
-| Platform uat and prod | OFF | OFF until flipped |
+| Place | `ShowPriorityBadges` | `BuildingManagement` | `VendorManagement` |
+| --- | --- | --- | --- |
+| No Octopus client and no configuration value | false | false | false |
+| `appsettings.json` (image; fallback when Octopus is unset) | true | false | false |
+| `appsettings.Development.json` (local process and the acceptance host) | true | true | true |
+| Platform tdd | ON (`showprioritybadges`) | ON | ON |
+| Platform uat and prod | ON (`showprioritybadges`) | OFF | OFF until flipped |
 
-Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`, or turns the Octopus toggles `buildingmanagement` and `vendormanagement` on. Platform uat and prod leave them off until an operator flips them. A flip does not require a new image.
+`ShowPriorityBadges` is an Octopus Feature Toggle with slug `showprioritybadges`. It stays on in tdd, uat and prod; `FeatureFlags:ShowPriorityBadges` in appsettings remains true as the fallback when Octopus is unset or the provider cannot resolve the flag. Platform tdd sets `FeatureFlags__BuildingManagement` and `FeatureFlags__VendorManagement` to `true`, or turns the Octopus toggles `buildingmanagement` and `vendormanagement` on. Platform uat and prod leave Building and Vendor off until an operator flips them. A flip does not require a new image.
 
 The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads `appsettings.Development.json` and runs with both gates ON. That matches platform tdd. The host does not stub `IFeatureFlags`. Existing Buildings and Vendors checks run against the ON state. `BuildingRoomSummaryQuery` and `WorkOrderBuildingsQuery` require `BuildingManagement`. `VendorsQuery` and `CreateVendorCommand` require `VendorManagement`. When a flag is off, the bus rejects those requests, the Buildings & Rooms nav link and page are hidden, and the Vendors section on Teams & Vendors is hidden. Teams and waiting-on-vendor stay available. `GET /api/diagnostics` reports the same map as `GET /api/features/flags`.
 
@@ -63,8 +61,6 @@ Only requests sent through `Send` are gated; `Publish` (events) is not.
 
 ```json
 {
-  "SampleFeatureA": false,
-  "SampleFeatureB": false,
   "ShowPriorityBadges": true,
   "BuildingManagement": false,
   "VendorManagement": false

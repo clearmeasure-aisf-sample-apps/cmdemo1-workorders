@@ -47,21 +47,39 @@ public class DiagnosticsControllerTests
     [Test]
     public async Task Get_Should_ReturnJson_WithEnvironmentUptimeAndRuntimeFeatureFlags_When_Called()
     {
-        var clock = new FixedUtcTimeProvider(new DateTimeOffset(2026, 4, 10, 15, 0, 0, TimeSpan.Zero));
-        var stubEnv = new StubHostEnvironment("UnitTestEnv");
-        var bus = new StubBus(new Dictionary<string, bool>
-        {
-            [FeatureFlagNames.SampleFeatureA] = true,
-            [FeatureFlagNames.SampleFeatureB] = false,
-            [FeatureFlagNames.VendorManagement] = true
-        });
-        var controller = new DiagnosticsController(stubEnv, clock, bus)
+        var clock = FixedClock();
+        var bus = new StubBus(RuntimeFeatureFlags());
+        var controller = DiagnosticsControllerUnderTest(clock, bus);
+
+        var result = await controller.Get();
+
+        var payload = ReadDiagnosticsPayload(result);
+        payload.Environment.ShouldBe("UnitTestEnv");
+        payload.Uptime.ShouldBe(SimpleHealthResponseBuilder.Build(clock).Uptime);
+        payload.FeatureFlags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
+        payload.FeatureFlags[FeatureFlagNames.ShowPriorityBadges].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
+        bus.Requests.Single().ShouldBeOfType<FeatureFlagsQuery>();
+    }
+
+    private static FixedUtcTimeProvider FixedClock() =>
+        new(new DateTimeOffset(2026, 4, 10, 15, 0, 0, TimeSpan.Zero));
+
+    private static Dictionary<string, bool> RuntimeFeatureFlags() => new()
+    {
+        [FeatureFlagNames.BuildingManagement] = true,
+        [FeatureFlagNames.ShowPriorityBadges] = false,
+        [FeatureFlagNames.VendorManagement] = true
+    };
+
+    private static DiagnosticsController DiagnosticsControllerUnderTest(TimeProvider clock, StubBus bus) =>
+        new(new StubHostEnvironment("UnitTestEnv"), clock, bus)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
 
-        var result = await controller.Get();
-
+    private static DiagnosticsResponse ReadDiagnosticsPayload(IActionResult result)
+    {
         var content = result.ShouldBeOfType<ContentResult>();
         content.ContentType.ShouldNotBeNull();
         content.ContentType!.ShouldContain("application/json");
@@ -69,11 +87,6 @@ public class DiagnosticsControllerTests
             content.Content!,
             ConditionalGetEtag.JsonSerializerOptions);
         payload.ShouldNotBeNull();
-        payload.Environment.ShouldBe("UnitTestEnv");
-        payload.Uptime.ShouldBe(SimpleHealthResponseBuilder.Build(clock).Uptime);
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeTrue();
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeFalse();
-        payload.FeatureFlags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
-        bus.Requests.Single().ShouldBeOfType<FeatureFlagsQuery>();
+        return payload;
     }
 }
