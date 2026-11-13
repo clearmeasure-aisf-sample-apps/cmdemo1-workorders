@@ -8,7 +8,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderSaveDraftTests : AcceptanceTestBase
+public class WorkOrderSaveDraftTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldLoadScreenForNewWorkOrder()

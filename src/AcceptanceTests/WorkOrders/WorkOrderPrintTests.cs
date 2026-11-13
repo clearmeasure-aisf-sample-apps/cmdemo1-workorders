@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderPrintTests : AcceptanceTestBase
+public class WorkOrderPrintTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldOpenPrintViewFromManagePage()

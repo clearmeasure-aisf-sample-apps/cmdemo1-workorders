@@ -5,7 +5,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderSearchTests : AcceptanceTestBase
+public class WorkOrderSearchTests : WorkOrderAcceptanceTestBase
 {
     [SetUp]
     public async Task Setup()

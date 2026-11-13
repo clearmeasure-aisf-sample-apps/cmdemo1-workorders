@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderStatusHistoryTests : AcceptanceTestBase
+public class WorkOrderStatusHistoryTests : WorkOrderAcceptanceTestBase
 {
 	[Test, Retry(2)]
 	public async Task WorkOrderStatusHistory_ShouldRecordTransitionsAndDisplayInHistory()

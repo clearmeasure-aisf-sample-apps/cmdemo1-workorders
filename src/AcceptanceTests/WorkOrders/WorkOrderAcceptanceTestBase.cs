@@ -1,15 +1,14 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
-using ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-namespace ClearMeasure.Bootcamp.AcceptanceTests;
+namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 /// <summary>
-/// API-backed seeding helpers so WorkOrders fixtures stay free of DataContext.
+/// WorkOrders acceptance base: API-backed seeding keyed by <see cref="AcceptanceTestBase.TestTag"/>.
 /// </summary>
-public abstract partial class AcceptanceTestBase
+public abstract class WorkOrderAcceptanceTestBase : AcceptanceTestBase
 {
-    /// <summary>Object mother keyed by this test's <see cref="TestTag"/>.</summary>
+    /// <summary>Object mother keyed by this test's tag.</summary>
     protected AcceptanceObjectMother Mother =>
         new(AcceptanceTestSupportSettings.CreateClient(), TestTag);
 

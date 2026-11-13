@@ -16,7 +16,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 /// get-work-order (Assign Update already persisted ASD; Cancel must not leave a Willie+CNL shape).
 /// </summary>
 [NonParallelizable, Category("SerialLane")]
-public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
+public class WorkOrderSaveThenAssignPersistenceTests : WorkOrderAcceptanceTestBase
 {
     private static McpTestHelper? _helper;
     private McpTestHelper Helper =>

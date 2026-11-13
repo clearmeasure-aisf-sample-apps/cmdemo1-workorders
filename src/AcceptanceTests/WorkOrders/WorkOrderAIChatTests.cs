@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Components;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderAiChatTests : AcceptanceTestBase
+public class WorkOrderAiChatTests : WorkOrderAcceptanceTestBase
 {
     [SetUp]
     public async Task EnsureLlmAvailable()

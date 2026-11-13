@@ -5,7 +5,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderSearchLongRoomTests : AcceptanceTestBase
+public class WorkOrderSearchLongRoomTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldNotWidenResultsTableWithLongRoom()

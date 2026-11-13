@@ -9,7 +9,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderDueDateTests : AcceptanceTestBase
+public class WorkOrderDueDateTests : WorkOrderAcceptanceTestBase
 {
     private const string DueTodayBackground = "rgb(254, 240, 138)";
     private const string OverdueBackground = "rgb(254, 202, 202)";

@@ -31,7 +31,7 @@ public class TestState
 /// Parallelism defaults to <see cref="ParallelScope.Fixtures"/>; fixtures proven safe may use <see cref="ParallelScope.All"/>.
 /// Does not inherit from PageTest to avoid thread-safety issues with Playwright's internal collections.
 /// </summary>
-public abstract partial class AcceptanceTestBase
+public abstract class AcceptanceTestBase
 {
     private static readonly ConcurrentDictionary<string, TestState> TestStates = new();
 

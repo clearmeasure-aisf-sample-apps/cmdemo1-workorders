@@ -7,7 +7,7 @@ using Microsoft.Playwright;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderManageCopyButtonTests : AcceptanceTestBase
+public class WorkOrderManageCopyButtonTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldRenderCopyButton_WhenViewingExistingWorkOrder()

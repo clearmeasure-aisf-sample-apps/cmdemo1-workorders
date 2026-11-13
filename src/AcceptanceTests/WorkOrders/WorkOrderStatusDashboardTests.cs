@@ -4,7 +4,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
-public class WorkOrderStatusDashboardTests : AcceptanceTestBase
+public class WorkOrderStatusDashboardTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     [Category("Smoke")]
