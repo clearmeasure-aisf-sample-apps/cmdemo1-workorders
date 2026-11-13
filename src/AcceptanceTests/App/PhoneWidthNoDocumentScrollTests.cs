@@ -146,6 +146,9 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
 
     private async Task AssertDocumentFitsAsync(string url)
     {
+        // Theme/CSS paint can briefly expand scrollWidth; wait for a stable fit before measuring.
+        await Page.WaitForFunctionAsync(
+            "() => document.documentElement.scrollWidth === window.innerWidth");
         var measured = await Page.EvaluateAsync<string>(
             """
             () => {
