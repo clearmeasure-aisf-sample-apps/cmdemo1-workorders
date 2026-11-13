@@ -6,3 +6,4 @@
 # pull request that adds it; keep old lines as the history of approvals.
 
 TngTech.ArchUnitNET | Architecture tests for the Onion layer rules (src/UnitTests/Architecture), requested with the architecture guardrails
+Microsoft.CodeAnalysis.BannedApiAnalyzers | Bans the system clock in Core (src/Core/BannedSymbols.txt), requested with the architecture guardrails
