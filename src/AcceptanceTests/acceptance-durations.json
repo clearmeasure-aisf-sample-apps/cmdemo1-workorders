@@ -100,7 +100,7 @@
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.PhoneWidthNoDocumentScrollTests",
-      "tests": 1,
+      "tests": 19,
       "seconds": 99.5
     },
     {
@@ -225,7 +225,7 @@
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests",
-      "tests": 1,
+      "tests": 14,
       "seconds": 191.8
     },
     {
@@ -235,7 +235,7 @@
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NeedsRebootHealthCheckTests",
-      "tests": 4,
+      "tests": 5,
       "seconds": 0.2
     },
     {

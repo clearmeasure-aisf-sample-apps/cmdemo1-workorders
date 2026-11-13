@@ -85,7 +85,7 @@ public class DashboardTests : AcceptanceTestBase
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.StatusSelect}")).ToHaveValueAsync(WorkOrderStatus.Cancelled.Key);
     }
 
-    [Test, Retry(2), NonParallelizable]
+    [Test, Retry(2), NonParallelizable, Category("SerialLane")]
     public async Task ShouldListJustCompletedWorkOrder_InRecentActivity()
     {
         var creator = await SeedCreatorAsync("recent");

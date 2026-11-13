@@ -21,6 +21,13 @@ public class SidebarHeightTests : AcceptanceTestBase
         await AssertRailReachesPage(2500);
 
         await Page.EvaluateAsync("() => document.documentElement.setAttribute('data-theme', 'dark')");
+        await Page.WaitForFunctionAsync(
+            """
+            () => {
+              const rail = document.getElementById('app-navigation-rail');
+              return !!rail && getComputedStyle(rail).backgroundImage.includes('rgb(7, 12, 22)');
+            }
+            """);
         await AssertRailReachesPage(2500);
 
         var background = await Page.Locator("#app-navigation-rail")

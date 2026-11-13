@@ -8,27 +8,46 @@
   first, lightest shard wins). Prints a FullyQualifiedName filter for -ShardNumber,
   or the full assignment JSON when -ShardNumber is 0.
 
+  With -ExcludeSerialLane (default for PR-environment parallel packs), classes listed
+  in acceptance-serial-lane.json are omitted so the serial lane can run after every
+  parallel shard on the same slot — never beside it.
+
   Does not edit .github/workflows/. Wire this into CI only after Jeffrey approves a
-  workflow change (see issue #1661 / PR environments plan item 9).
+  workflow change (see issue #1661 / #1662 / PR environments plan).
 
 .PARAMETER ShardNumber
   1..ShardCount for a filter; 0 to emit the full assignment.
 
 .PARAMETER ShardCount
   Number of runners (default 12 for the PR-environment plan).
+
+.PARAMETER ExcludeSerialLane
+  When set, drop entirely-serial fixtures from the pack (default: $true).
 #>
 [CmdletBinding()]
 param(
     [int]$ShardNumber = 0,
     [int]$ShardCount = 12,
-    [string]$DurationsPath = ""
+    [string]$DurationsPath = "",
+    [string]$SerialLanePath = "",
+    [switch]$ExcludeSerialLane
 )
 
 $ErrorActionPreference = "Stop"
 
+# Default: exclude serial fixtures from parallel packs unless the caller passes -ExcludeSerialLane:$false
+if (-not $PSBoundParameters.ContainsKey('ExcludeSerialLane')) {
+    $ExcludeSerialLane = $true
+}
+
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
+
 if ([string]::IsNullOrWhiteSpace($DurationsPath)) {
-    $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
     $DurationsPath = Join-Path $repoRoot "src/AcceptanceTests/acceptance-durations.json"
+}
+
+if ([string]::IsNullOrWhiteSpace($SerialLanePath)) {
+    $SerialLanePath = Join-Path $repoRoot "src/AcceptanceTests/acceptance-serial-lane.json"
 }
 
 if (-not (Test-Path -LiteralPath $DurationsPath)) {
@@ -39,6 +58,23 @@ $doc = Get-Content -LiteralPath $DurationsPath -Raw | ConvertFrom-Json
 $classes = @($doc.classes)
 if ($classes.Count -eq 0) {
     throw "No classes in $DurationsPath"
+}
+
+$serialNames = @{}
+if ($ExcludeSerialLane) {
+    if (-not (Test-Path -LiteralPath $SerialLanePath)) {
+        throw "Serial lane file not found: $SerialLanePath"
+    }
+
+    $serialDoc = Get-Content -LiteralPath $SerialLanePath -Raw | ConvertFrom-Json
+    foreach ($name in @($serialDoc.classes)) {
+        $serialNames[$name] = $true
+    }
+
+    $classes = @($classes | Where-Object { -not $serialNames.ContainsKey($_.name) })
+    if ($classes.Count -eq 0) {
+        throw "No classes remain after excluding the serial lane."
+    }
 }
 
 $buckets = 1..$ShardCount | ForEach-Object {

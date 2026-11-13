@@ -2,7 +2,7 @@
 
 Acceptance tests run in shards to speed up CI. The CI pipeline splits tests across **6 shards** on each of two runners: `acceptance-tests` on ubuntu with SQL Server, and `acceptance-tests-arm` on ubuntu-24.04-arm with SQLite. This document shows how to run shards locally.
 
-For the PR-environment plan (12 runners), use measured class durations in `src/AcceptanceTests/acceptance-durations.json` with `scripts/acceptance/Get-DurationShardAssignment.ps1 -ShardCount 12 -ShardNumber N`. That script does not change CI; wiring it into a workflow needs Jeffrey's approval.
+For the PR-environment plan (12 runners), use measured class durations in `src/AcceptanceTests/acceptance-durations.json` with `scripts/acceptance/Get-DurationShardAssignment.ps1 -ShardCount 12 -ShardNumber N` (serial fixtures excluded by default). Run the parallel lane on every shard first, then one serial lane on the same slot with `scripts/acceptance/Invoke-PrEnvironmentAcceptanceLane.ps1 -Lane Serial` (workers = 1, `TestCategory==SerialLane`). Never run the serial lane beside the parallel lane on the same slot. Those scripts do not change CI; wiring them into a workflow needs Jeffrey's approval (`pr-environment.yml` is issue #1664).
 
 ## How CI Shards Tests
 
