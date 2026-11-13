@@ -48,9 +48,16 @@ else
 
     private string CountText => Count?.ToString(CultureInfo.InvariantCulture) ?? "–";
 
-    private string AriaLabel => Note == null
-        ? $"{Label}: {CountText}. Show these work orders"
-        : $"{Label}: {CountText}. {Note}. Show these work orders";
+    private string AriaLabel
+    {
+        get
+        {
+            var countForAria = Count is null ? "loading" : CountText;
+            return Note == null
+                ? $"{Label}: {countForAria}. Show these work orders"
+                : $"{Label}: {countForAria}. {Note}. Show these work orders";
+        }
+    }
 
     private RenderFragment Body =>
         @<text>
