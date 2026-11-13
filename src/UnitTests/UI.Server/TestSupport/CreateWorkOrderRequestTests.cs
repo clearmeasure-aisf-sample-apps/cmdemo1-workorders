@@ -9,15 +9,14 @@ public class CreateWorkOrderRequestTests
     [Test]
     public void ShouldHoldOptionalFields_WhenSet()
     {
-        var request = new CreateWorkOrderRequest(
-            TestTag: "t",
-            CreatorUserName: "c",
-            Title: "ti",
-            Description: "d",
-            RoomNumber: "3");
+        var request = new CreateWorkOrderRequest
+        {
+            TestTag = "t",
+            CreatorUserName = "c",
+            Title = "ti"
+        };
         request.Title.ShouldBe("ti");
         request.CreatorUserName.ShouldBe("c");
-        request.Description.ShouldBe("d");
-        request.RoomNumber.ShouldBe("3");
+        request.TestTag.ShouldBe("t");
     }
 }

@@ -55,9 +55,7 @@ public static class TestSupportEndpoints
             {
                 TestTag = request.TestTag.Trim(),
                 CreatorUserName = request.CreatorUserName.Trim(),
-                Title = request.Title,
-                Description = request.Description,
-                RoomNumber = request.RoomNumber
+                Title = request.Title
             },
             cancellationToken);
         return Results.Json(workOrder.ToApiShape());
