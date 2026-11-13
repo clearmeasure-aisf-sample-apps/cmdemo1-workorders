@@ -235,7 +235,7 @@
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NeedsRebootHealthCheckTests",
-      "tests": 4,
+      "tests": 5,
       "seconds": 0.2
     },
     {

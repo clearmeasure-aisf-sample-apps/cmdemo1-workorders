@@ -422,7 +422,7 @@
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.NeedsRebootHealthCheckTests",
       "shard": 5,
-      "tests": 4,
+      "tests": 5,
       "x64Seconds": 0.1,
       "armSeconds": 0.2,
       "longestX64Seconds": 0.1,
