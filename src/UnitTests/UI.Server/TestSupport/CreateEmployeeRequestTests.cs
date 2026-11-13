@@ -9,7 +9,7 @@ public class CreateEmployeeRequestTests
     [Test]
     public void ShouldDefaultPermissions_WhenConstructed()
     {
-        var request = new CreateEmployeeRequest { TestTag = "x" };
+        var request = new CreateEmployeeRequest(TestTag: "x");
         request.CanCreateWorkOrder.ShouldBeTrue();
         request.CanFulfillWorkOrder.ShouldBeTrue();
     }

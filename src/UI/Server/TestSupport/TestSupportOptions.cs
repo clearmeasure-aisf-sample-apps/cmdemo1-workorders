@@ -18,7 +18,7 @@ public sealed class TestSupportOptions
     public TestSupportOptions(bool enabled, string secret)
     {
         Enabled = enabled;
-        Secret = secret ?? string.Empty;
+        Secret = secret;
     }
 
     /// <summary>Reads <see cref="SectionName"/> from configuration.</summary>
