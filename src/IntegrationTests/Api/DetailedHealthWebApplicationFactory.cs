@@ -33,9 +33,7 @@ public sealed class DetailedHealthWebApplicationFactory : WebApplicationFactory<
                 ["ApiRateLimiting:PermitLimit"] = "100",
                 ["ApiRateLimiting:WindowSeconds"] = "60",
                 ["ApiRateLimiting:SegmentsPerWindow"] = "4",
-                ["ApiRateLimiting:QueueLimit"] = "0",
-                ["FeatureFlags:SampleFeatureA"] = "false",
-                ["FeatureFlags:SampleFeatureB"] = "false"
+                ["ApiRateLimiting:QueueLimit"] = "0"
             });
         });
     }

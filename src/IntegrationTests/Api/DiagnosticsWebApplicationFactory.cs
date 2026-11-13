@@ -24,8 +24,8 @@ public sealed class DiagnosticsWebApplicationFactory : WebApplicationFactory<UiS
                 ["AI_OpenAI_Model"] = "",
                 ["ApiKeyAuthentication:Enabled"] = "false",
                 ["ApiKeyAuthentication:ValidationKey"] = "",
-                ["FeatureFlags:SampleFeatureA"] = "true",
-                ["FeatureFlags:SampleFeatureB"] = "false"
+                ["FeatureFlags:BuildingManagement"] = "true",
+                ["FeatureFlags:VendorManagement"] = "false"
             });
         });
     }

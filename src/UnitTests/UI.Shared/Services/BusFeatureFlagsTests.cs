@@ -37,7 +37,7 @@ public class BusFeatureFlagsTests
     [Test]
     public async Task IsEnabledAsync_Should_ReturnFalse_When_KeyIsMissing()
     {
-        var flags = new BusFeatureFlags(new StubBus(() => Flags((FeatureFlagNames.SampleFeatureA, true))));
+        var flags = new BusFeatureFlags(new StubBus(() => Flags((FeatureFlagNames.VendorManagement, true))));
 
         (await flags.IsEnabledAsync(FeatureFlagNames.ShowPriorityBadges)).ShouldBeFalse();
         (await flags.IsEnabledAsync(FeatureFlagNames.BuildingManagement)).ShouldBeFalse();

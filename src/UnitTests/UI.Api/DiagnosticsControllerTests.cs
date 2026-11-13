@@ -51,8 +51,8 @@ public class DiagnosticsControllerTests
         var stubEnv = new StubHostEnvironment("UnitTestEnv");
         var bus = new StubBus(new Dictionary<string, bool>
         {
-            [FeatureFlagNames.SampleFeatureA] = true,
-            [FeatureFlagNames.SampleFeatureB] = false,
+            [FeatureFlagNames.BuildingManagement] = true,
+            [FeatureFlagNames.ShowPriorityBadges] = false,
             [FeatureFlagNames.VendorManagement] = true
         });
         var controller = new DiagnosticsController(stubEnv, clock, bus)
@@ -71,8 +71,8 @@ public class DiagnosticsControllerTests
         payload.ShouldNotBeNull();
         payload.Environment.ShouldBe("UnitTestEnv");
         payload.Uptime.ShouldBe(SimpleHealthResponseBuilder.Build(clock).Uptime);
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureA].ShouldBeTrue();
-        payload.FeatureFlags[FeatureFlagNames.SampleFeatureB].ShouldBeFalse();
+        payload.FeatureFlags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
+        payload.FeatureFlags[FeatureFlagNames.ShowPriorityBadges].ShouldBeFalse();
         payload.FeatureFlags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
         bus.Requests.Single().ShouldBeOfType<FeatureFlagsQuery>();
     }

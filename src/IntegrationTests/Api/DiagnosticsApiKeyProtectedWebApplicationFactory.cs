@@ -25,8 +25,8 @@ public sealed class DiagnosticsApiKeyProtectedWebApplicationFactory : WebApplica
                 ["AI_OpenAI_Model"] = "",
                 ["ApiKeyAuthentication:Enabled"] = "true",
                 ["ApiKeyAuthentication:ValidationKey"] = ApiKeyProtectedWebApplicationFactory.TestApiKey,
-                ["FeatureFlags:SampleFeatureA"] = "true",
-                ["FeatureFlags:SampleFeatureB"] = "false"
+                ["FeatureFlags:BuildingManagement"] = "true",
+                ["FeatureFlags:VendorManagement"] = "false"
             });
         });
     }
