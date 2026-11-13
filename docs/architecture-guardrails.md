@@ -65,6 +65,10 @@ runtime packs) would make the lock files differ between runners.
 `EnforceCodeStyleInBuild` is on, and `src/Directory.Build.props` makes `RootNamespace` and `ProjectDir` visible to the
 analyzer so the rule runs in command-line builds and CI. Generated code (`**/Generated/**`) is exempt.
 
+Known exception: `src/UI.Shared/App_Code/WorkOrderSelectedEvent.cs` keeps the `ClearMeasure.Bootcamp.UI.Shared`
+namespace. Its own section at the end of `src/.editorconfig` turns IDE0130 off for that one file, and it stays on the
+older `namespace-folder-mismatches.txt` baseline.
+
 ## Requesting an exception
 
 - **A new NuGet package:** add `<PackageId> | <issue link or reason>` to `scripts/nuget/approved-new-packages.txt`

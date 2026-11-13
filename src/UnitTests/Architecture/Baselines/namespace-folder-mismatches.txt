@@ -2,3 +2,4 @@
 # Generated code (src/**/Generated/**, *.g.cs, *.Designer.cs) is out of scope.
 # This list is today's set. Delete a line when the file is fixed. Do not add lines.
 
+src/UI.Shared/App_Code/WorkOrderSelectedEvent.cs

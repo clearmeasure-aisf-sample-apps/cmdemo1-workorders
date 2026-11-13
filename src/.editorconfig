@@ -117,3 +117,8 @@ dotnet_diagnostic.CM0004.severity = none
 # Checked-in generator output. Style rules must not rewrite it.
 [**/Generated/**.cs]
 generated_code = true
+
+# IDE0130 exception: this file keeps the UI.Shared root namespace in App_Code. Moving it is a new file to the
+# size-baseline rationale check; renaming the namespace touches its consumers. Delete this section when it moves.
+[UI.Shared/App_Code/WorkOrderSelectedEvent.cs]
+dotnet_diagnostic.IDE0130.severity = none
