@@ -15,9 +15,22 @@ public class AccessibilityAxeRoutesTests
         tests.ShouldContain("[Parallelizable(ParallelScope.All)]");
         tests.ShouldContain("Should_HaveNoSeriousOrCriticalAxeViolations_OnRoute");
         tests.ShouldContain("[TestCaseSource(nameof(RouteKeys))]");
+        tests.ShouldContain("AcceptanceTeams.ClearAll");
         tests.ShouldNotContain("OnEveryRouteInBothThemes");
         System.Text.RegularExpressions.Regex.Matches(tests, "yield return ").Count.ShouldBeGreaterThanOrEqualTo(12);
         routes.ShouldContain("AccessibilityAxeRoutes");
+    }
+
+    [Test]
+    public void AxeTeamsIsolation_WhenRead_ClearsPeerTeamMembersBeforeScan()
+    {
+        var tests = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/App/AccessibilityAxeTests.cs");
+        var clear = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/TestUsers/AcceptanceTeams.cs");
+
+        tests.ShouldContain("route.Key == \"teams\"");
+        tests.ShouldContain("AcceptanceTeams.ClearAll");
+        clear.ShouldContain("ExecuteDelete");
+        clear.ShouldContain("Set<Team>");
     }
 
     [Test]
