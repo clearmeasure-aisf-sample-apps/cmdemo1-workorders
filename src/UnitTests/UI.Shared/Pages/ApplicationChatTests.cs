@@ -83,6 +83,23 @@ public class ApplicationChatTests
     }
 
     [Test]
+    public async Task ShouldAnnounceChatHistoryViewportAsLiveLogToScreenReaders()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<ApplicationChat>();
+        await component.Find($"[data-testid='{ApplicationChat.Elements.ChatInput}']").ChangeAsync(new() { Value = "hello agent" });
+        await component.Find($"[data-testid='{ApplicationChat.Elements.SendButton}']").ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var viewport = component.Find($"[data-testid='{ApplicationChat.Elements.ChatHistoryViewport}']");
+            viewport.GetAttribute("role").ShouldBe("log");
+            viewport.GetAttribute("aria-label").ShouldBe("Conversation with the AI agent");
+        });
+    }
+
+    [Test]
     public async Task ShouldKeepPromptInputAvailableAfterManyMessages()
     {
         await using var ctx = CreateContext();

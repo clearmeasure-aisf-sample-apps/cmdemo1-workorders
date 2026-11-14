@@ -21,7 +21,7 @@
             @if (_chatMessages.Any())
             {
                 <div data-testid="@Elements.ChatHistory" class="chat-history-wrapper">
-                    <div @ref="_chatHistoryRef" data-testid="@Elements.ChatHistoryViewport" class="chat-history">
+                    <div @ref="_chatHistoryRef" data-testid="@Elements.ChatHistoryViewport" class="chat-history" role="log" aria-label="Conversation with the AI agent">
                         @for (int i = 0; i < _chatMessages.Count; i++)
                         {
                             var message = _chatMessages[i];
