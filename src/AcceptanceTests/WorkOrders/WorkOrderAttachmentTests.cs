@@ -4,7 +4,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderAttachmentTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderAttachmentTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldAddAttachmentMetadataAndDisplayOnManagePage()

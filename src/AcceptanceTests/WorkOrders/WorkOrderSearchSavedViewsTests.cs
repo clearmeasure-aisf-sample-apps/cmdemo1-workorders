@@ -4,7 +4,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderSearchSavedViewsTests : WorkOrderAcceptanceTestBase
 {
     [SetUp]
     public async Task Setup()
@@ -15,7 +16,7 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldApplySameFilters_WhenSavedViewChosenAfterReload()
     {
-        var creator = await SeedCreatorAsync("saved");
+        var creator = await SeedEmployeeAsync();
         var overdueHigh = await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.InProgress, new DateOnly(2000, 1, 1));
         await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.InProgress, new DateOnly(2099, 1, 1));
         await SeedOrderAsync(creator, WorkOrderPriority.Low, WorkOrderStatus.InProgress, new DateOnly(2000, 1, 1));
@@ -70,30 +71,10 @@ public class WorkOrderSearchSavedViewsTests : AcceptanceTestBase
         await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }
 
-    private async Task<Employee> SeedCreatorAsync(string prefix)
-    {
-        var creator = Faker<Employee>();
-        creator.UserName = $"{prefix}_{TestTag}";
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        await context.SaveChangesAsync();
-        return creator;
-    }
-
-    private async Task<WorkOrder> SeedOrderAsync(Employee creator, WorkOrderPriority priority, WorkOrderStatus status, DateOnly? dueDate)
-    {
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Assignee = null;
-        order.Priority = priority;
-        order.Status = status;
-        order.DueDate = dueDate;
-        order.CompletedDate = null;
-        order.Title = $"[{TestTag}] {priority} {status.FriendlyName}";
-        await using var context = TestHost.NewDbContext();
-        context.Attach(creator);
-        context.Add(order);
-        await context.SaveChangesAsync();
-        return order;
-    }
+    private Task<WorkOrder> SeedOrderAsync(
+        Employee creator,
+        WorkOrderPriority priority,
+        WorkOrderStatus status,
+        DateOnly? dueDate) =>
+        SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Status = status, Priority = priority, DueDate = dueDate, Assignee = creator, Title = $"[{TestTag}] {priority} {status.FriendlyName}" });
 }

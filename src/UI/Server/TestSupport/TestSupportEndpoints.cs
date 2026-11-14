@@ -32,7 +32,8 @@ public static class TestSupportEndpoints
             {
                 TestTag = request.TestTag.Trim(),
                 CanCreateWorkOrder = request.CanCreateWorkOrder,
-                CanFulfillWorkOrder = request.CanFulfillWorkOrder
+                CanFulfillWorkOrder = request.CanFulfillWorkOrder,
+                AdditionalCreateRoleNames = request.AdditionalCreateRoleNames
             },
             cancellationToken);
         return Results.Json(employee.ToApiShape());
@@ -55,7 +56,15 @@ public static class TestSupportEndpoints
             {
                 TestTag = request.TestTag.Trim(),
                 CreatorUserName = request.CreatorUserName.Trim(),
-                Title = request.Title
+                Title = request.Title,
+                Description = request.Description,
+                RoomNumber = request.RoomNumber,
+                Instructions = request.Instructions,
+                Number = request.Number,
+                StatusKey = request.StatusKey,
+                Priority = request.Priority,
+                DueDate = request.DueDate,
+                AssigneeUserName = request.AssigneeUserName
             },
             cancellationToken);
         return Results.Json(workOrder.ToApiShape());

@@ -3,7 +3,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderDescriptionCharCountTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderDescriptionCharCountTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task DescriptionCharCount_InitialCaption_ShowsFullLimit()

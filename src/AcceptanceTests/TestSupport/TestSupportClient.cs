@@ -33,7 +33,9 @@ public sealed class TestSupportClient
     }
 
     /// <summary>Creates an admin employee keyed by <paramref name="testTag"/>.</summary>
-    public async Task<TestSupportEmployee> CreateEmployeeAsync(string testTag)
+    public async Task<TestSupportEmployee> CreateEmployeeAsync(
+        string testTag,
+        string[]? additionalCreateRoleNames = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}{PathPrefix}/employees");
         AddSecret(request);
@@ -41,7 +43,8 @@ public sealed class TestSupportClient
         {
             testTag,
             canCreateWorkOrder = true,
-            canFulfillWorkOrder = true
+            canFulfillWorkOrder = true,
+            additionalCreateRoleNames
         });
 
         using var response = await _http.SendAsync(request);

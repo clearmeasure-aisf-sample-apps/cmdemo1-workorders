@@ -3,7 +3,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderBeginTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderBeginTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldAssignEmployeeAndAssign()

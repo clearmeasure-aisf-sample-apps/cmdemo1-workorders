@@ -1,11 +1,12 @@
 using System.Text.Json;
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using Microsoft.EntityFrameworkCore;
 using Login = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
@@ -15,7 +16,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 /// get-work-order (Assign Update already persisted ASD; Cancel must not leave a Willie+CNL shape).
 /// </summary>
 [NonParallelizable, Category("SerialLane")]
-public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
+public class WorkOrderSaveThenAssignPersistenceTests : WorkOrderAcceptanceTestBase
 {
     private static McpTestHelper? _helper;
     private McpTestHelper Helper =>
@@ -143,33 +144,27 @@ public class WorkOrderSaveThenAssignPersistenceTests : AcceptanceTestBase
         detail.GetProperty("AssignedDate").ValueKind.ShouldNotBe(JsonValueKind.Null);
         detail.GetProperty("AssigneeUsername").GetString().ShouldBe("gwillie");
 
-        await using var db = TestHost.NewDbContext();
-        var frozen = await db.Set<WorkOrder>().AsNoTracking()
-            .SingleAsync(w => w.Number == inProgressNumber);
+        var frozen = await Bus.Send(new WorkOrderByNumberQuery(inProgressNumber));
+        frozen.ShouldNotBeNull();
         frozen.Status.ShouldBe(WorkOrderStatus.InProgress);
     }
 
     private async Task<string> SeedNearbyInProgressAsync()
     {
-        await using var context = TestHost.NewDbContext();
-        var lovejoy = await context.Set<Employee>().SingleAsync(e => e.UserName == "tlovejoy");
-        var willie = await context.Set<Employee>().SingleAsync(e => e.UserName == "gwillie");
         var number = $"IP{TestTag[..4]}";
-        var inProgress = new WorkOrder
-        {
-            Number = number,
-            Title = $"[{TestTag}] nearby in progress",
-            Description = "freeze check",
-            Instructions = "leave alone",
-            RoomNumber = "yard",
-            Status = WorkOrderStatus.InProgress,
-            Creator = lovejoy,
-            Assignee = willie,
-            AssignedDate = DateTime.UtcNow
-        };
-        context.Add(inProgress);
-        await context.SaveChangesAsync();
-        return number;
+        var created = await Mother.WorkOrderAsync(
+            "tlovejoy",
+            WorkOrderStatus.InProgress,
+            new WorkOrderSeedFields
+            {
+                AssigneeUserName = "gwillie",
+                Title = $"[{TestTag}] nearby in progress",
+                Description = "freeze check",
+                RoomNumber = "yard",
+                Instructions = "leave alone",
+                Number = number
+            });
+        return created.Number;
     }
 
     private async Task LoginAsTlovejoyAsync()
