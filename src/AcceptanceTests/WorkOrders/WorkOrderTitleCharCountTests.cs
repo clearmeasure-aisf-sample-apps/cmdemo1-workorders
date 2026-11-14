@@ -13,7 +13,7 @@ public class WorkOrderTitleCharCountTests : WorkOrderAcceptanceTestBase
 
         var caption = Page.GetByTestId(nameof(WorkOrderManage.Elements.TitleCharCount));
         await Expect(caption).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 15_000 });
-        await Expect(caption).ToHaveTextAsync("300 characters remaining");
+        await Expect(caption).ToHaveTextAsync("600 characters remaining");
     }
 
     [Test, Retry(2)]
