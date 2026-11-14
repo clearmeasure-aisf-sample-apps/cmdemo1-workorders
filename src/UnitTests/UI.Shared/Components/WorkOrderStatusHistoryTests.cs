@@ -1,5 +1,7 @@
+using System.Globalization;
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Shouldly;
@@ -23,13 +25,7 @@ public class WorkOrderStatusHistoryTests
     public async Task ShouldListEachChangeWithItsReason_WhenChangesExist()
     {
         await using var ctx = ComponentContextBuilder.WithStubBuses();
-        var change = new WorkOrderStatusChange
-        {
-            FromStatus = WorkOrderStatus.InProgress,
-            ToStatus = WorkOrderStatus.Assigned,
-            ChangedDate = new DateTime(2026, 11, 9, 15, 0, 0, DateTimeKind.Utc),
-            Reason = "Waiting on parts"
-        };
+        var change = SampleChange(WorkOrderStatus.InProgress, WorkOrderStatus.Assigned, "Waiting on parts");
 
         var history = ctx.Render<WorkOrderStatusHistory>(parameters => parameters.Add(p => p.Changes, [change]));
 
@@ -41,13 +37,7 @@ public class WorkOrderStatusHistoryTests
     public async Task ShouldNameTableAndScopeColumnHeaders_WhenChangesExist()
     {
         await using var ctx = ComponentContextBuilder.WithStubBuses();
-        var change = new WorkOrderStatusChange
-        {
-            FromStatus = WorkOrderStatus.Draft,
-            ToStatus = WorkOrderStatus.Assigned,
-            ChangedDate = new DateTime(2026, 11, 9, 15, 0, 0, DateTimeKind.Utc),
-            Reason = "Assigned to tech"
-        };
+        var change = SampleChange(WorkOrderStatus.Draft, WorkOrderStatus.Assigned, "Assigned to tech");
 
         var history = ctx.Render<WorkOrderStatusHistory>(parameters => parameters.Add(p => p.Changes, [change]));
 
@@ -57,4 +47,32 @@ public class WorkOrderStatusHistoryTests
         history.FindAll("th").ShouldAllBe(th => th.GetAttribute("scope") == "col");
         history.FindAll("th").Count.ShouldBe(5);
     }
+
+    [Test]
+    public async Task ShouldMarkChangeDateWithMachineReadableTime_WhenChangesExist()
+    {
+        await using var ctx = ComponentContextBuilder.WithStubBuses();
+        var change = SampleChange(WorkOrderStatus.Draft, WorkOrderStatus.Assigned, "Assigned to tech");
+        var expectedText = ClientDateFormatter.Format(
+            TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago));
+
+        var history = ctx.Render<WorkOrderStatusHistory>(parameters => parameters.Add(p => p.Changes, [change]));
+
+        var time = history.Find($"[data-testid='{nameof(WorkOrderManage.Elements.StatusHistoryDate)}'] time");
+        DateTime.Parse(time.GetAttribute("datetime")!, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
+            .ShouldBe(change.ChangedDate);
+        time.TextContent.ShouldBe(expectedText);
+    }
+
+    private static WorkOrderStatusChange SampleChange(
+        WorkOrderStatus fromStatus,
+        WorkOrderStatus toStatus,
+        string reason) =>
+        new()
+        {
+            FromStatus = fromStatus,
+            ToStatus = toStatus,
+            ChangedDate = new DateTime(2026, 11, 9, 15, 0, 0, DateTimeKind.Utc),
+            Reason = reason
+        };
 }

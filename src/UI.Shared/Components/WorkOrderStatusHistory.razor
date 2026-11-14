@@ -25,7 +25,7 @@ else
                 @foreach (var change in Changes)
                 {
                     <tr data-testid="@WorkOrderManage.Elements.StatusHistoryRow">
-                        <td data-testid="@WorkOrderManage.Elements.StatusHistoryDate">@ClientDateFormatter.Format(TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago))</td>
+                        <td data-testid="@WorkOrderManage.Elements.StatusHistoryDate"><time datetime="@change.ChangedDate.ToString("o")">@ClientDateFormatter.Format(TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago))</time></td>
                         <td data-testid="@WorkOrderManage.Elements.StatusHistoryFromStatus">@change.FromStatus</td>
                         <td data-testid="@WorkOrderManage.Elements.StatusHistoryToStatus">@change.ToStatus</td>
                         <td data-testid="@WorkOrderManage.Elements.StatusHistoryChangedBy">@change.ChangedBy?.GetFullName()</td>
