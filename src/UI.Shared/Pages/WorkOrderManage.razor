@@ -25,8 +25,8 @@
             }
             @if (Model.Mode != EditMode.New)
             {
-                <a data-testid="@Elements.PrintLink" class="btn-app btn-app--secondary" href="/workorder/print/@Model.WorkOrderNumber" target="_blank">
-                    <i class="bi bi-printer" aria-hidden="true"></i> Print
+                <a data-testid="@Elements.PrintLink" class="btn-app btn-app--secondary" href="/workorder/print/@Model.WorkOrderNumber" target="_blank" rel="noopener">
+                    <i class="bi bi-printer" aria-hidden="true"></i> Print <span class="visually-hidden">(opens in a new tab)</span>
                 </a>
             }
         </Actions>
