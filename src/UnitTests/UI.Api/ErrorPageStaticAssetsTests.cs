@@ -18,4 +18,16 @@ public class ErrorPageStaticAssetsTests
         markup.ShouldContain("<style>");
         markup.ShouldContain("text-danger");
     }
+
+    [Test]
+    public void ErrorCshtml_ShouldNameTheAppInTheTitle()
+    {
+        var errorPage = Path.GetFullPath(Path.Combine(
+            TestContext.CurrentContext.TestDirectory,
+            "..", "..", "..", "..", "UI", "Api", "Pages", "Error.cshtml"));
+
+        File.Exists(errorPage).ShouldBeTrue();
+        var markup = File.ReadAllText(errorPage);
+        markup.ShouldContain("<title>Error - .NET Conf Work Orders</title>");
+    }
 }
