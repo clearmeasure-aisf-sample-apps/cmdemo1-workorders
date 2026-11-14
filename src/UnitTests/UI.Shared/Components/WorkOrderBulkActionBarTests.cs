@@ -34,6 +34,18 @@ public class WorkOrderBulkActionBarTests
     }
 
     [Test]
+    public void AssignButton_HasDescriptiveAriaLabelAndVisibleTextAssign()
+    {
+        using var ctx = new BunitContext();
+        var component = ctx.Render<WorkOrderBulkActionBar>(p => p
+            .Add(c => c.SelectedCount, 1));
+
+        var assign = component.Find("[data-testid='BulkAssignButton']");
+        assign.GetAttribute("aria-label").ShouldBe("Assign selected work orders");
+        assign.TextContent.ShouldBe("Assign");
+    }
+
+    [Test]
     public async Task ShouldRaiseAssignAndChangeStatusWithChosenValues()
     {
         await using var ctx = new BunitContext();
