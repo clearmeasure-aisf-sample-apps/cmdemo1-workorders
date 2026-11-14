@@ -7,7 +7,9 @@
   class names whose pages include any of the given Razor paths (PR environments
   plan item 23 / #1670). A .razor.cs code-behind path matches its .razor page.
   Shared components and shell Razor files expand to their host pages via the map's
-  components[] entries. Paths in ignoredRazor (_Imports) select nothing.
+  components[] entries (hosts are the pages/layouts that render the tag,
+  transitively; BuildGates RazorComponentHostScanner fails on drift). Paths in
+  ignoredRazor (_Imports) select nothing.
 
   Accepts paths via -RazorPaths, pipeline (ValueFromPipeline), or stdin when
   invoked with pwsh -File (reads redirected Console.In). Prefer:
@@ -36,6 +38,8 @@
 
 .PARAMETER SelfTest
   Runs Get-TestsForChangedRazor.Tests.ps1 via pwsh -NoProfile -File (CI style).
+  BuildGates TestToPageMapTests.Script_WhenSelfTestRuns_ExitsZero invokes this
+  switch and asserts exit 0.
 
 .EXAMPLE
   pwsh -NoProfile -File scripts/acceptance/Get-TestsForChangedRazor.ps1 -RazorPaths src/UI.Shared/Pages/Login.razor
