@@ -1,7 +1,8 @@
 @using ClearMeasure.Bootcamp.UI.Shared.Pages
 @inherits ComponentBase
 
-<span data-testid="@(WorkOrderSearch.Elements.DueDateCell + Row.Number)" class="@(HasDueDate ? Row.DueDateCssClass : "muted-cell")">@(HasDueDate ? Row.DueDateDisplay : "–")@if (!string.IsNullOrEmpty(Row.DueDateUrgencyText))
+<span data-testid="@(WorkOrderSearch.Elements.DueDateCell + Row.Number)" class="@(HasDueDate ? Row.DueDateCssClass : "muted-cell")">@if (HasDueDate)
+{@Row.DueDateDisplay}else{<span aria-hidden="true">–</span>}@if (!string.IsNullOrEmpty(Row.DueDateUrgencyText))
     {
         <span class="visually-hidden">@Row.DueDateUrgencyText</span>
     }</span>@if (!HasDueDate)

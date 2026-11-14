@@ -15,7 +15,9 @@ public class WorkOrderDueDateTests
 
         var dueDate = ctx.Render<WorkOrderDueDate>(parameters => parameters.Add(p => p.Row, SearchResultRowMother.Unassigned("301")));
 
-        dueDate.Find($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}301']").TextContent.ShouldBe("–");
+        var cell = dueDate.Find($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}301']");
+        cell.TextContent.ShouldBe("–");
+        cell.QuerySelector("[aria-hidden='true']")!.TextContent.ShouldBe("–");
         dueDate.Markup.ShouldContain("No due date");
     }
 
@@ -27,7 +29,9 @@ public class WorkOrderDueDateTests
 
         var dueDate = ctx.Render<WorkOrderDueDate>(parameters => parameters.Add(p => p.Row, row));
 
-        dueDate.Find($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}302']").TextContent.ShouldStartWith("Jan 5, 2026");
+        var cell = dueDate.Find($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}302']");
+        cell.TextContent.ShouldStartWith("Jan 5, 2026");
+        cell.QuerySelector("[aria-hidden='true']").ShouldBeNull();
         dueDate.Find($"[data-testid='{WorkOrderSearch.Elements.UrgencyBadge}302']").ClassList.ShouldContain("overdue");
     }
 }
