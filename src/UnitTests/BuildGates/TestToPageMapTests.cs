@@ -156,32 +156,31 @@ public class TestToPageMapTests
     {
         return new TestToPageMap
         {
-            Tests =
-            [
-                new TestToPageMapEntry
-                {
-                    Class = "ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LoginTests",
-                    Pages = ["src/UI.Shared/Pages/Login.razor", "src/UI.Shared/Pages/Index.razor"],
-                },
-                new TestToPageMapEntry
-                {
-                    Class = "ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests",
-                    Pages = ["src/UI.Shared/Pages/Index.razor"],
-                },
-                new TestToPageMapEntry
-                {
-                    Class = "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsPageTests",
-                    Pages = ["src/UI.Shared/Pages/TeamsAndVendors.razor"],
-                },
-            ],
-            Components =
-            [
-                new TestToPageComponentEntry
-                {
-                    Path = "src/UI.Shared/Components/Teams/TeamCards.razor",
-                    Pages = ["src/UI.Shared/Pages/TeamsAndVendors.razor"],
-                },
-            ],
+            Tests = [LoginEntry(), LandingEntry(), TeamsEntry()],
+            Components = [TeamCardsComponent()],
         };
     }
+
+    private static TestToPageMapEntry LoginEntry() =>
+        MapEntry("Authentication.LoginTests", "Pages/Login.razor", "Pages/Index.razor");
+
+    private static TestToPageMapEntry LandingEntry() =>
+        MapEntry("App.LandingPageTests", "Pages/Index.razor");
+
+    private static TestToPageMapEntry TeamsEntry() =>
+        MapEntry("TeamsAndVendors.TeamsPageTests", "Pages/TeamsAndVendors.razor");
+
+    private static TestToPageMapEntry MapEntry(string relativeClass, params string[] sharedPaths) =>
+        new()
+        {
+            Class = $"ClearMeasure.Bootcamp.AcceptanceTests.{relativeClass}",
+            Pages = sharedPaths.Select(static path => $"src/UI.Shared/{path}").ToList(),
+        };
+
+    private static TestToPageComponentEntry TeamCardsComponent() =>
+        new()
+        {
+            Path = "src/UI.Shared/Components/Teams/TeamCards.razor",
+            Pages = ["src/UI.Shared/Pages/TeamsAndVendors.razor"],
+        };
 }
