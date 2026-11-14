@@ -49,6 +49,11 @@
     gap: 8px;
 }
 
+.cards-container > [role="listitem"] {
+    display: block;
+    min-width: 0;
+}
+
 .notification-card {
     display: block;
     padding: 12px;
