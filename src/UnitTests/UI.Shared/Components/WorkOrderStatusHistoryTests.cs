@@ -48,31 +48,42 @@ public class WorkOrderStatusHistoryTests
         history.FindAll("th").Count.ShouldBe(5);
     }
 
-    [Test]
-    public async Task ShouldMarkChangeDateWithMachineReadableTime_WhenChangesExist()
+    [TestCase(DateTimeKind.Unspecified)]
+    [TestCase(DateTimeKind.Utc)]
+    public async Task ShouldMarkChangeDateWithMachineReadableTime_WhenChangesExist(DateTimeKind kind)
     {
         await using var ctx = ComponentContextBuilder.WithStubBuses();
-        var change = SampleChange(WorkOrderStatus.Draft, WorkOrderStatus.Assigned, "Assigned to tech");
-        var expectedText = ClientDateFormatter.Format(
-            TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago));
+        var change = SampleChange(WorkOrderStatus.Draft, WorkOrderStatus.Assigned, "Assigned to tech", kind);
+        var utc = DateTime.SpecifyKind(change.ChangedDate, DateTimeKind.Utc);
+        var chicago = TimeZoneInfo.ConvertTime(utc, ChurchTimeZone.Chicago);
+        var expectedText = ClientDateFormatter.Format(chicago);
 
         var history = ctx.Render<WorkOrderStatusHistory>(parameters => parameters.Add(p => p.Changes, [change]));
 
         var time = history.Find($"[data-testid='{nameof(WorkOrderManage.Elements.StatusHistoryDate)}'] time");
-        DateTime.Parse(time.GetAttribute("datetime")!, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
-            .ShouldBe(change.ChangedDate);
+        var parsed = DateTimeOffset.Parse(
+            time.GetAttribute("datetime")!,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.RoundtripKind);
+        parsed.Offset.ShouldBe(TimeSpan.Zero);
+        parsed.UtcDateTime.ShouldBe(utc);
+        parsed.UtcDateTime.ShouldBe(
+            TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(chicago, DateTimeKind.Unspecified),
+                ChurchTimeZone.Chicago));
         time.TextContent.ShouldBe(expectedText);
     }
 
     private static WorkOrderStatusChange SampleChange(
         WorkOrderStatus fromStatus,
         WorkOrderStatus toStatus,
-        string reason) =>
+        string reason,
+        DateTimeKind kind = DateTimeKind.Unspecified) =>
         new()
         {
             FromStatus = fromStatus,
             ToStatus = toStatus,
-            ChangedDate = new DateTime(2026, 11, 9, 15, 0, 0, DateTimeKind.Utc),
+            ChangedDate = new DateTime(2026, 11, 9, 15, 0, 0, kind),
             Reason = reason
         };
 }

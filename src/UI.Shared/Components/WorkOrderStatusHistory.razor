@@ -25,7 +25,7 @@ else
                 @foreach (var change in Changes)
                 {
                     <tr data-testid="@WorkOrderManage.Elements.StatusHistoryRow">
-                        <td data-testid="@WorkOrderManage.Elements.StatusHistoryDate"><time datetime="@change.ChangedDate.ToString("o")">@ClientDateFormatter.Format(TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago))</time></td>
+                        <td data-testid="@WorkOrderManage.Elements.StatusHistoryDate"><time datetime="@ToUtcIso8601(change.ChangedDate)">@ClientDateFormatter.Format(TimeZoneInfo.ConvertTime(AsUtc(change.ChangedDate), ChurchTimeZone.Chicago))</time></td>
                         <td data-testid="@WorkOrderManage.Elements.StatusHistoryFromStatus">@change.FromStatus</td>
                         <td data-testid="@WorkOrderManage.Elements.StatusHistoryToStatus">@change.ToStatus</td>
                         <td data-testid="@WorkOrderManage.Elements.StatusHistoryChangedBy">@change.ChangedBy?.GetFullName()</td>
@@ -40,4 +40,12 @@ else
 @code {
     /// <summary>The work order's status changes, newest first.</summary>
     [Parameter, EditorRequired] public WorkOrderStatusChange[] Changes { get; set; } = [];
+
+    /// <summary>
+    /// Persisted change times are UTC instants stored as DATETIME2 and read back as
+    /// <see cref="DateTimeKind.Unspecified"/>; label them Utc before ISO or Chicago conversion.
+    /// </summary>
+    private static DateTime AsUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
+
+    private static string ToUtcIso8601(DateTime value) => AsUtc(value).ToString("o");
 }
