@@ -107,9 +107,11 @@ public class SlaHealthCardTests
 
         var progressBar = component.Find("[role='progressbar']");
         progressBar.ShouldNotBeNull();
+        progressBar.GetAttribute("aria-label")!.ShouldBe("Work orders meeting SLA this month");
         progressBar.GetAttribute("aria-valuenow")!.ShouldBe("75");
         progressBar.GetAttribute("aria-valuemin")!.ShouldBe("0");
         progressBar.GetAttribute("aria-valuemax")!.ShouldBe("100");
+        progressBar.GetAttribute("aria-valuetext")!.ShouldBe("75%");
     }
 
     [Test]

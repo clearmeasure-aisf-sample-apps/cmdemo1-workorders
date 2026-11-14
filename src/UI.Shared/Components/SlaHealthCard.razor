@@ -24,7 +24,10 @@
             </div>
             <div class="sla-health-value">@_health.CurrentMonthPercentage?.ToString("F0")%</div>
             <div class="sla-health-progress">
-                <div class="sla-health-bar" role="progressbar" aria-valuenow="@((int?)_health.CurrentMonthPercentage)" aria-valuemin="0" aria-valuemax="100"
+                <div class="sla-health-bar" role="progressbar"
+                     aria-label="Work orders meeting SLA this month"
+                     aria-valuenow="@((int?)_health.CurrentMonthPercentage)" aria-valuemin="0" aria-valuemax="100"
+                     aria-valuetext="@($"{_health.CurrentMonthPercentage:F0}%")"
                      style="width: @($"{_health.CurrentMonthPercentage:F0}%")">
                 </div>
             </div>
