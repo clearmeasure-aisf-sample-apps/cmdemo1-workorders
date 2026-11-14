@@ -2,7 +2,7 @@
 @inherits ComponentBase
 
 <div class="bulk-bar" role="toolbar" aria-label="Bulk actions" data-testid="@Elements.BulkActionBar" @onkeydown="HandleKeyDown">
-    <span class="bulk-count" data-testid="@Elements.BulkSelectedCount">@SelectedCount selected</span>
+    <span class="bulk-count" role="status" data-testid="@Elements.BulkSelectedCount">@SelectedCount selected</span>
 
     <span class="bulk-group">
         <label for="@Elements.BulkAssignSelect" class="visually-hidden">Assign selected to</label>

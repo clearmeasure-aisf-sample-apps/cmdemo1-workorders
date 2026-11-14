@@ -10,6 +10,18 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 public class WorkOrderBulkActionBarTests
 {
     [Test]
+    public void SelectedCount_HasStatusRoleAndExactText()
+    {
+        using var ctx = new BunitContext();
+        var component = ctx.Render<WorkOrderBulkActionBar>(p => p
+            .Add(c => c.SelectedCount, 3));
+
+        var count = component.Find("[data-testid='BulkSelectedCount']");
+        count.GetAttribute("role").ShouldBe("status");
+        count.TextContent.ShouldBe("3 selected");
+    }
+
+    [Test]
     public async Task ShouldRaiseAssignAndChangeStatusWithChosenValues()
     {
         await using var ctx = new BunitContext();
