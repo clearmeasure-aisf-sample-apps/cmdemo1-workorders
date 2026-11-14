@@ -7,7 +7,8 @@ internal static class TestToPageMapCoverage
 {
     /// <summary>
     /// Missing mappings, empty pages, unknown fixtures, duplicate classes, missing Razor files,
-    /// and Components/*.razor files without a host-page entry.
+    /// Components/*.razor files without a host-page entry, and component hosts that do not match
+    /// scanned markup usage (<see cref="RazorComponentHostScanner"/>).
     /// </summary>
     public static IReadOnlyList<string> Evaluate(
         TestToPageMap map,
