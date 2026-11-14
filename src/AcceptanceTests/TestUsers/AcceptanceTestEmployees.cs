@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,16 +18,56 @@ public static class AcceptanceTestEmployees
     /// <summary>
     /// Adds an employee with the admin role whose user name carries <paramref name="testTag"/>.
     /// Used when <c>POST /api/test-support/employees</c> is not available (probe 404).
+    /// Last name defaults to <c>!{testTag}</c> so the employee sorts into the first
+    /// <see cref="EmployeeGetAllQuery.MaxTake"/> page of the login dropdown.
     /// </summary>
-    public static Employee Add(string testTag)
+    public static Employee Add(string testTag, TestSupportEmployeeFields? fields = null)
     {
         using var context = TestHost.NewDbContext();
-        var employee = TestHost.Faker<Employee>();
-        employee.UserName = $"{UserNamePrefix}{testTag}_{employee.UserName}";
-        employee.AddRole(new Role("admin", true, true));
+        var employee = BuildEmployee(testTag, fields);
         context.Add(employee);
         context.SaveChanges();
         return employee;
+    }
+
+    private static Employee BuildEmployee(string testTag, TestSupportEmployeeFields? fields)
+    {
+        var employee = TestHost.Faker<Employee>();
+        employee.UserName = $"{UserNamePrefix}{testTag}_{employee.UserName}";
+        ApplyOptionalNames(employee, testTag, fields);
+        employee.AddRole(new Role("admin", true, true));
+        ApplyAdditionalCreateRoles(employee, fields?.AdditionalCreateRoleNames);
+        return employee;
+    }
+
+    private static void ApplyOptionalNames(
+        Employee employee,
+        string testTag,
+        TestSupportEmployeeFields? fields)
+    {
+        if (fields?.FirstName is not null)
+        {
+            employee.FirstName = fields.FirstName;
+        }
+
+        employee.LastName = fields?.LastName ?? $"!{testTag}";
+        if (fields?.MiddleName is not null)
+        {
+            employee.MiddleName = fields.MiddleName;
+        }
+    }
+
+    private static void ApplyAdditionalCreateRoles(Employee employee, string[]? roleNames)
+    {
+        if (roleNames is not { Length: > 0 })
+        {
+            return;
+        }
+
+        foreach (var roleName in roleNames)
+        {
+            employee.AddRole(new Role(roleName, true, false));
+        }
     }
 
     /// <summary>

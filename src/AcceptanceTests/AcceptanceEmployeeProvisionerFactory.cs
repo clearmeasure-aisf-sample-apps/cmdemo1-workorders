@@ -17,7 +17,7 @@ public static class AcceptanceEmployeeProvisionerFactory
         return new AcceptanceEmployeeProvisioner(
             client.ProbeStatusAsync,
             testTag => CreateViaTestSupportAsync(client, testTag),
-            AcceptanceTestEmployees.Add);
+            testTag => AcceptanceTestEmployees.Add(testTag));
     }
 
     private static async Task<Employee> CreateViaTestSupportAsync(TestSupportClient client, string testTag)

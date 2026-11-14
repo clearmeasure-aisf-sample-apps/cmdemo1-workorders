@@ -5,6 +5,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
 /// <summary>
 /// WorkOrders acceptance base: API-backed seeding keyed by <see cref="AcceptanceTestBase.TestTag"/>.
+/// Falls back to SQL when test-support returns 404 (tdd/uat/prod).
 /// </summary>
 public abstract class WorkOrderAcceptanceTestBase : AcceptanceTestBase
 {
@@ -12,19 +13,13 @@ public abstract class WorkOrderAcceptanceTestBase : AcceptanceTestBase
     protected AcceptanceObjectMother Mother =>
         new(AcceptanceTestSupportSettings.CreateClient(), TestTag);
 
-    /// <summary>Creates an admin employee for this test via test-support.</summary>
-    protected async Task<Employee> SeedEmployeeAsync(string[]? additionalCreateRoleNames = null)
+    /// <summary>Creates an admin employee for this test via test-support or SQL fallback.</summary>
+    protected Task<Employee> SeedEmployeeAsync(string[]? additionalCreateRoleNames = null)
     {
         TestSupportEmployeeFields? fields = additionalCreateRoleNames is null
             ? null
             : new TestSupportEmployeeFields { AdditionalCreateRoleNames = additionalCreateRoleNames };
-        var created = await Mother.EmployeeAsync(fields);
-        var employee = new Employee(created.UserName, created.FirstName, created.LastName, created.EmailAddress)
-        {
-            Id = created.Id
-        };
-        employee.AddRole(new Role("admin", true, true));
-        return employee;
+        return AcceptanceEmployeeSeed.CreateAsync(TestTag, fields);
     }
 
     /// <summary>Creates a work order for <paramref name="creator"/> via test-support.</summary>
