@@ -36,7 +36,9 @@ else
                         }
                         @if (!string.IsNullOrWhiteSpace(vendor.PhoneNumber))
                         {
-                            <p class="vendor-phone" data-testid="@($"{TeamsAndVendors.Elements.VendorPhone}{vendor.Id}")">@vendor.PhoneNumber</p>
+                            <p class="vendor-phone" data-testid="@($"{TeamsAndVendors.Elements.VendorPhone}{vendor.Id}")">
+                                <a href="@ToTelHref(vendor.PhoneNumber)">@vendor.PhoneNumber</a>
+                            </p>
                         }
                     </div>
                 </div>
@@ -48,4 +50,10 @@ else
 @code {
 
     [Parameter, EditorRequired] public IReadOnlyList<Vendor> Vendors { get; set; } = [];
+
+    private static string ToTelHref(string phoneNumber)
+    {
+        var digits = string.Concat(phoneNumber.Where(char.IsDigit));
+        return phoneNumber.StartsWith('+') ? $"tel:+{digits}" : $"tel:{digits}";
+    }
 }
