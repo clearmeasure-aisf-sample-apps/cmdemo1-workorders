@@ -72,6 +72,7 @@ if ($SelfTest) {
 }
 
 . (Join-Path $PSScriptRoot 'SecretHeaders.ps1')
+. (Join-Path $PSScriptRoot 'PlaywrightTraceScrub.ps1')
 
 function Assert-NoSecretMaterialInEnvDump {
     # Refuse to print secret values; callers must never echo headers.
@@ -140,25 +141,11 @@ function Invoke-Upload {
         if ($item.TracePath -and (Test-Path -LiteralPath $item.TracePath)) {
             $scrubbed = Join-Path ([System.IO.Path]::GetTempPath()) ("scrubbed-$safeName.zip")
             & pwsh -NoProfile -File $scrubScript -Path $item.TracePath -Destination $scrubbed
-            # Verify scrub: secret header value must not remain.
-            $verifyRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("verify-" + [guid]::NewGuid().ToString('N'))
-            New-Item -ItemType Directory -Force -Path $verifyRoot | Out-Null
-            try {
-                Expand-Archive -LiteralPath $scrubbed -DestinationPath $verifyRoot -Force
-                $joined = Get-ChildItem -LiteralPath $verifyRoot -Recurse -File |
-                    Where-Object { $_.Extension -in '.trace', '.network', '.json', '.txt' } |
-                    ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw } |
-                    Out-String
-                foreach ($headerName in (Get-PrAcceptanceSecretHeaderNames)) {
-                    # Allow the header *name* but not a non-redacted value pattern for test-support secret constant.
-                }
-                if ($joined -match 'acceptance-test-support-secret') {
-                    throw "Scrub failed: plaintext test-support secret still present in $scrubbed"
-                }
+            if ($LASTEXITCODE -ne 0) {
+                throw "Scrub failed for $($item.TracePath) (exit $LASTEXITCODE)"
             }
-            finally {
-                Remove-Item -LiteralPath $verifyRoot -Recurse -Force -ErrorAction SilentlyContinue
-            }
+            # Upload verifier: parse headers/cookies in the scrubbed zip; fail if any denylist value survives.
+            Assert-TraceZipScrubbed -ZipPath $scrubbed
 
             $traceBlob = "traces/$RunId/$safeName.zip"
             if (-not $DryRun) {

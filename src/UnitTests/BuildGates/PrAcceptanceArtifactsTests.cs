@@ -54,6 +54,30 @@ public class PrAcceptanceArtifactsTests
     }
 
     [Test]
+    public async Task WorkflowSecurity_WhenSelfTestRuns_ExitsZero()
+    {
+        var checkout = RepositoryCheckout.Current;
+        var script = checkout.PathOf("scripts/acceptance/Test-PrEnvironmentArtifactsWorkflow.ps1");
+
+        var result = await ExternalCommand.Pwsh(script, "-SelfTest").In(checkout.Root).RunAsync();
+
+        result.ExitCode.ShouldBe(0, result.Output);
+        result.Output.ShouldContain("Test-PrEnvironmentArtifactsWorkflow.ps1 self-test passed");
+    }
+
+    [Test]
+    public async Task WorkflowSecurity_WhenRepositoryWorkflowChecked_ExitsZero()
+    {
+        var checkout = RepositoryCheckout.Current;
+        var script = checkout.PathOf("scripts/acceptance/Test-PrEnvironmentArtifactsWorkflow.ps1");
+
+        var result = await ExternalCommand.Pwsh(script).In(checkout.Root).RunAsync();
+
+        result.ExitCode.ShouldBe(0, result.Output);
+        result.Output.ShouldContain("Test-PrEnvironmentArtifactsWorkflow.ps1 passed");
+    }
+
+    [Test]
     public void Workflow_WhenPresent_RunsAfterPrEnvironmentAndUsesOidcOnly()
     {
         var checkout = RepositoryCheckout.Current;
@@ -67,7 +91,9 @@ public class PrAcceptanceArtifactsTests
         yaml.ShouldContain("Publish-PrAcceptanceArtifacts.ps1");
         yaml.ShouldContain("-Mode Comment");
         yaml.ShouldContain("id-token: write");
-        yaml.ShouldContain("azure/login@v3");
+        yaml.ShouldContain("persist-credentials: false");
+        yaml.ShouldContain("ref: ${{ github.sha }}");
+        yaml.ShouldNotContain("ref: ${{ github.event.workflow_run.head_sha");
         yaml.ShouldNotContain("actions/upload-artifact");
         yaml.ShouldNotContain("generate-sas");
         yaml.ShouldNotContain("--account-key");
@@ -80,6 +106,7 @@ public class PrAcceptanceArtifactsTests
         var script = RepositoryCheckout.Current.ReadText("scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1");
         script.ShouldContain("--auth-mode login");
         script.ShouldContain("Blocker");
+        script.ShouldContain("Assert-TraceZipScrubbed");
         script.ShouldNotContain("--account-key");
         script.ShouldNotContain("generate-sas");
     }

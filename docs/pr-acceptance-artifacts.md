@@ -12,7 +12,11 @@ Set Actions variable `POOL_ARTIFACTS_STORAGE_ACCOUNT` to the applied account nam
 
 ## Scrubbing
 
-[Scrub-PlaywrightTraceSecrets.ps1](../scripts/acceptance/Scrub-PlaywrightTraceSecrets.ps1) redacts `X-Test-Support-Secret`, `Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, and `Proxy-Authorization` values (and the known test-support secret substring) before upload.
+[Scrub-PlaywrightTraceSecrets.ps1](../scripts/acceptance/Scrub-PlaywrightTraceSecrets.ps1) parses Playwright trace zip JSON (`trace.trace` / `trace.network` / resources) and redacts denylisted header values in every shape (name/value arrays, header maps, `[name,value]` pairs, cookies, split-line JSON). Built-in denylist: `X-Test-Support-Secret`, `Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key`, `Proxy-Authorization`. Extend with `PR_ACCEPTANCE_SECRET_HEADERS`. Live secret values from `TestSupport__Secret` / `ACCEPTANCE_TEST_SUPPORT_SECRET` / `PR_ACCEPTANCE_SECRET_VALUES` are redacted without logging. Upload calls `Assert-TraceZipScrubbed` and fails if any denylist value survives.
+
+## Trusted checkout
+
+[pr-environment-artifacts.yml](../.github/workflows/pr-environment-artifacts.yml) is a `workflow_run` job with `id-token: write`. It checks out `github.sha` only (`persist-credentials: false`). `workflow_run.head_sha` / `run_id` are data for PR lookup and blob prefixes — never a checkout ref or script source. Gate: [Test-PrEnvironmentArtifactsWorkflow.ps1](../scripts/acceptance/Test-PrEnvironmentArtifactsWorkflow.ps1).
 
 ## Timing
 

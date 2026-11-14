@@ -7,6 +7,11 @@
 # Storage: item 4 pool stack (cmdemo1-system infra/pool/modules/artifacts.bicep) —
 # containers videos/traces, 14-day lifecycle, allowBlobPublicAccess=false, allowSharedKeyAccess=false.
 #
+# Security: this workflow_run job has id-token: write and pull-requests: write. It MUST check out
+# only the trusted default-branch commit (github.sha / github.workflow_sha) with
+# persist-credentials: false. workflow_run.head_sha and run_id are data only (PR lookup, blob
+# prefix, run URL). Never check out or execute PR head code while OIDC credentials are present.
+#
 # Requires GitHub Actions variable POOL_ARTIFACTS_STORAGE_ACCOUNT (account name, not a secret)
 # after the pool stack is applied. Until then this workflow skips with a clear message.
 name: PR environment artifacts
@@ -26,11 +31,8 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: read
-  actions: read
-  pull-requests: write
-  id-token: write
+# Least privilege at workflow level; the job opts into write scopes it needs.
+permissions: {}
 
 concurrency:
   group: pr-environment-artifacts-${{ github.event.workflow_run.head_branch || github.ref }}
@@ -40,15 +42,22 @@ jobs:
   sticky-comment:
     name: Sticky PR artifact comment
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+      id-token: write
     # Upload/comment must not block or extend the "PR environment" check.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.event == 'pull_request' ||
       github.event.workflow_run.event == 'push'
     steps:
+      # Trusted checkout only — never head_sha / head_ref (pwn-request).
       - uses: actions/checkout@v6.0.1
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Resolve PR number and run metadata
         id: meta
@@ -58,6 +67,7 @@ jobs:
           INPUT_PR: ${{ inputs.pull_request_number }}
           INPUT_RUN: ${{ inputs.run_id }}
           WR_ID: ${{ github.event.workflow_run.id }}
+          # head_sha is data only (find the PR); never used as a checkout ref.
           WR_SHA: ${{ github.event.workflow_run.head_sha }}
           WR_REPO: ${{ github.repository }}
           WR_URL: ${{ github.event.workflow_run.html_url }}
@@ -120,6 +130,7 @@ jobs:
             echo "Blocker: account key or shared-access signature present; #1671 forbids them."
             exit 1
           fi
+          # Scripts come only from the trusted checkout above (github.sha).
           pwsh -NoProfile -File scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1 \
             -Mode Comment \
             -StorageAccountName "$POOL_ARTIFACTS_STORAGE_ACCOUNT" \
