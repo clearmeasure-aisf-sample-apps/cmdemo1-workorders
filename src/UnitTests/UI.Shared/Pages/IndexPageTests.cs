@@ -158,12 +158,15 @@ public class IndexPageTests
         component.FindAll(TestId(IndexPage.Elements.RecentActivityEmpty)).Count.ShouldBe(0);
     }
 
-    [Test]
-    public async Task ShouldExposeRecentActivityLinkAccessibleNameWithTitle()
+    [TestCase("Fix the organ", "WO-ABC1234: Fix the organ")]
+    [TestCase(null, "WO-ABC1234")]
+    [TestCase("", "WO-ABC1234")]
+    [TestCase("   ", "WO-ABC1234")]
+    public async Task ShouldExposeRecentActivityLinkAccessibleName(string? title, string expectedAriaLabel)
     {
         var order = new WorkOrder
         {
-            Number = "ABC1234", Title = "Fix the organ", Status = WorkOrderStatus.Complete,
+            Number = "ABC1234", Title = title, Status = WorkOrderStatus.Complete,
             CreatedDate = new DateTime(2026, 10, 1, 12, 0, 0), CompletedDate = new DateTime(2026, 10, 14, 3, 0, 0)
         };
         var bus = new StubBus { RecentWorkOrders = [order] };
@@ -174,29 +177,9 @@ public class IndexPageTests
         var link = component.Find(TestId(IndexPage.Elements.RecentActivityLink, "ABC1234"));
         var linkAriaLabel = link.GetAttribute("aria-label");
         linkAriaLabel.ShouldNotBeNull();
-        linkAriaLabel.ShouldStartWith("WO-ABC1234");
-        linkAriaLabel.ShouldContain("Fix the organ");
-        linkAriaLabel.ShouldBe("WO-ABC1234: Fix the organ");
-    }
-
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase("   ")]
-    public async Task ShouldOmitTitleSuffix_WhenRecentActivityTitleMissing(string? title)
-    {
-        var order = new WorkOrder
-        {
-            Number = "ABC1234", Title = title!, Status = WorkOrderStatus.Draft,
-            CreatedDate = new DateTime(2026, 10, 2, 18, 0, 0)
-        };
-        var bus = new StubBus { RecentWorkOrders = [order] };
-        await using var ctx = CreateContext(bus, User(true));
-
-        var component = ctx.Render<IndexPage>();
-
-        var linkAriaLabel = component.Find(TestId(IndexPage.Elements.RecentActivityLink, "ABC1234"))
-            .GetAttribute("aria-label");
-        linkAriaLabel.ShouldBe("WO-ABC1234");
+        linkAriaLabel.ShouldStartWith(link.TextContent);
+        linkAriaLabel.ShouldNotEndWith(": ");
+        linkAriaLabel.ShouldBe(expectedAriaLabel);
     }
 
     [Test]
