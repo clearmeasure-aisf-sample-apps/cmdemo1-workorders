@@ -76,6 +76,20 @@ public class WorkOrderSearchTableTests
         table.FindAll($"[data-testid='{WorkOrderSearch.Elements.RowMenuOpen}505']").ShouldBeEmpty();
     }
 
+    [Test]
+    public void ShouldShowADashAndSayThereIsNoRoom_WhenTheRowHasNone()
+    {
+        var table = RenderTable(SearchResultRowMother.Numbered("506"), new WorkOrderRowSelection());
+
+        var cell = table.Find($"[data-testid='{WorkOrderSearch.Elements.RoomCell}506']");
+        var dash = cell.QuerySelector(".muted-cell");
+        dash.ShouldNotBeNull();
+        dash.GetAttribute("aria-hidden").ShouldBe("true");
+        dash.HasAttribute("aria-label").ShouldBeFalse();
+        dash.TextContent.ShouldBe("–");
+        cell.QuerySelector(".visually-hidden")!.TextContent.ShouldBe("No room");
+    }
+
     private IRenderedComponent<WorkOrderSearchTable> RenderTable(WorkOrderSearchResultRow[] rows, WorkOrderRowSelection selection,
         string? sortColumn = null, Action? onSelectionChanged = null) =>
         _ctx.Render<WorkOrderSearchTable>(parameters => parameters
