@@ -22,7 +22,7 @@ public abstract class WorkOrderAcceptanceTestBase : AcceptanceTestBase
         return AcceptanceEmployeeSeed.CreateAsync(TestTag, fields);
     }
 
-    /// <summary>Creates a work order for <paramref name="creator"/> via test-support.</summary>
+    /// <summary>Creates a work order for <paramref name="creator"/> via test-support or SQL fallback.</summary>
     protected async Task<WorkOrder> SeedWorkOrderAsync(Employee creator, WorkOrderSeedSpec? spec = null)
     {
         spec ??= new WorkOrderSeedSpec();
