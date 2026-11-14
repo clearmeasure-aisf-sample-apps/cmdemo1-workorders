@@ -26,7 +26,7 @@ public class WorkOrderManageTitleCharCountTests
 
         var caption = await component.WaitForElementAsync(
             $"[data-testid='{WorkOrderManage.Elements.TitleCharCount}']");
-        caption.TextContent.Trim().ShouldBe("300 characters remaining");
+        caption.TextContent.Trim().ShouldBe("600 characters remaining");
         caption.ClassList.ShouldContain("char-count");
     }
 
@@ -39,7 +39,7 @@ public class WorkOrderManageTitleCharCountTests
 
         var caption = await component.WaitForElementAsync(
             $"[data-testid='{WorkOrderManage.Elements.TitleCharCount}']");
-        caption.TextContent.Trim().ShouldBe("290 characters remaining");
+        caption.TextContent.Trim().ShouldBe($"{WorkOrder.TitleMaxLength - 10} characters remaining");
     }
 
     [Test]

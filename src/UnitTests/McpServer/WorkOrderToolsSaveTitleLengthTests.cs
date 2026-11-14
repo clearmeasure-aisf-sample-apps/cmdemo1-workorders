@@ -12,19 +12,19 @@ namespace ClearMeasure.Bootcamp.UnitTests.McpServer;
 public class WorkOrderToolsSaveTitleLengthTests
 {
     [Test]
-    public async Task SaveWorkOrder_TitleOver300_ReturnsLengthMessageWithoutSaving()
+    public async Task SaveWorkOrder_TitleOver600_ReturnsLengthMessageWithoutSaving()
     {
         var bus = new StubWorkOrderToolsBus();
 
         var result = await WorkOrderTools.SaveWorkOrder(bus, "WO-001", "creator1",
             title: new string('T', WorkOrder.TitleMaxLength + 1));
 
-        result.ShouldBe("Title cannot exceed 300 characters.");
+        result.ShouldBe("Title cannot exceed 600 characters.");
         bus.SavedCommands.ShouldBeEmpty();
     }
 
     [Test]
-    public async Task SaveWorkOrder_TitleAt300_SendsSaveDraft()
+    public async Task SaveWorkOrder_TitleAt600_SendsSaveDraft()
     {
         var bus = new StubWorkOrderToolsBus();
 

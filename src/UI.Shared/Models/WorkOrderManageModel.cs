@@ -59,7 +59,7 @@ public class WorkOrderManageModel : IValidatableObject
 
     public string? AssignedToUserName { get; set; }
 
-    [Required, StringLength(WorkOrder.TitleMaxLength, ErrorMessage = "Title cannot exceed 300 characters.")]
+    [Required, StringLength(WorkOrder.TitleMaxLength, ErrorMessage = "Title cannot exceed 600 characters.")]
     public string? Title { get; set; }
 
     [Required, StringLength(WorkOrder.DescriptionMaxLength, ErrorMessage = "Description cannot exceed 4000 characters.")]

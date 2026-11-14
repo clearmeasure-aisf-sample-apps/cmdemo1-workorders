@@ -78,7 +78,7 @@ public class BusTests
 
         ex.Errors.ShouldContain(failure =>
             failure.PropertyName == "WorkOrder.Title" &&
-            failure.ErrorMessage == "Title cannot exceed 300 characters.");
+            failure.ErrorMessage == "Title cannot exceed 600 characters.");
         stubMediator.LastRequest.ShouldBeNull();
     }
 

@@ -49,7 +49,7 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// <summary>
     /// Maximum length of <see cref="Title"/> accepted by persistence and the work-order form.
     /// </summary>
-    public const int TitleMaxLength = 300;
+    public const int TitleMaxLength = 600;
 
     /// <summary>
     /// Title of the work order. Leading and trailing whitespace is removed when the value is set,
