@@ -19,12 +19,16 @@ public class BrowserFixtureSetupFallbackTests
 
         setup.ShouldContain("CreateEmployeeAsync");
         setup.ShouldContain("AcceptanceEmployeeProvisionerFactory");
-        setup.ShouldContain("TestSupportAvailable");
         setup.ShouldContain("useStorageStateSignIn");
+        setup.ShouldContain("request.UseStorageStateSignIn;");
+        setup.ShouldNotContain("provision.TestSupportAvailable");
         factory.ShouldContain("ProbeStatusAsync");
         factory.ShouldContain("AcceptanceTestEmployees.Add");
         provisioner.ShouldContain("HttpStatusCode.NotFound");
-        employees.ShouldContain("public static Employee Add(string testTag)");
         employees.ShouldContain("TestHost.NewDbContext()");
+        employees.ShouldContain("!{testTag}");
+        employees.ShouldContain("TestSupportEmployeeFields");
+        employees.ShouldContain("ApplyOptionalNames");
+        employees.ShouldContain("ApplyAdditionalCreateRoles");
     }
 }

@@ -18,7 +18,10 @@ public static class BrowserFixtureSetup
     {
         var testTag = Guid.NewGuid().ToString("N")[..8];
         var provision = await CreateEmployeeAsync(testTag);
-        var useStorageStateSignIn = request.UseStorageStateSignIn && provision.TestSupportAvailable;
+        // PlaywrightSignInState writes localStorage locally; it does not need the test-support HTTP API.
+        // Keep storage-state sign-in on the SQL fallback path (tdd/uat/prod) so LoginAsCurrentUser
+        // does not depend on the 1,000-row employee dropdown.
+        var useStorageStateSignIn = request.UseStorageStateSignIn;
         var browser = await LaunchWorkerBrowserAsync(request.Playwright, request.Headless, request.SlowMo);
         var storageStatePath = await BrowserContextFactory.WriteSignInStateAsync(
             useStorageStateSignIn,
