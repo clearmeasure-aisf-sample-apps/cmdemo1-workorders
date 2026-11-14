@@ -40,11 +40,33 @@ public class ClientHealthCheckPageTests
         component.Markup.ShouldNotContain("Loading detailed health report");
     }
 
-    private static BunitContext CreateContextWithHealthChecks()
+    [Test]
+    public async Task DetailedClientHealthCheck_ShouldNameDiagnosticTableAndScopeHeaders_WhenEntryHasData()
+    {
+        const string entryKey = "sample-check";
+        await using var ctx = CreateContextWithHealthChecks(builder =>
+            builder.AddCheck(entryKey, () => HealthCheckResult.Healthy(
+                data: new Dictionary<string, object> { ["probe"] = "ok" })));
+
+        var component = ctx.Render<DetailedClientHealthCheck>();
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Find("table.data-table").ShouldNotBeNull();
+        });
+        var table = component.Find("table.data-table");
+        table.GetAttribute("aria-label").ShouldBe($"Diagnostic data for {entryKey}");
+        component.FindAll("table.data-table th").ShouldAllBe(th => th.GetAttribute("scope") == "col");
+        component.FindAll("table.data-table th").Count.ShouldBe(2);
+    }
+
+    private static BunitContext CreateContextWithHealthChecks(
+        Action<IHealthChecksBuilder>? configure = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddHealthChecks();
+        var builder = services.AddHealthChecks();
+        configure?.Invoke(builder);
         var provider = services.BuildServiceProvider();
 
         var ctx = new BunitContext();
