@@ -1,0 +1,38 @@
+# After Build completes on an open cm-ai-ops-bot pull request, re-assign the bot
+# on each linked issue so the factory's issue-assigned listener wakes. Event-driven
+# only: no schedule. Uses GITHUB_TOKEN with issues:write and pull-requests:read.
+# The workflow that produces the required "Build result" check is named "Build"
+# (.github/workflows/build.yml). Build itself runs on push; this wake treats
+# push and pull_request completions the same once an open bot PR is found.
+name: Factory wake
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  wake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - name: Factory wake self-test
+        run: bash .github/scripts/factory-wake.tests.sh
+
+      - name: Wake cm-ai-ops-bot on linked issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          WR_EVENT: ${{ github.event.workflow_run.event }}
+          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WR_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WR_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: bash .github/scripts/factory-wake.sh
