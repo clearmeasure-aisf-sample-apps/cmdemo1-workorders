@@ -205,6 +205,67 @@ public class BuildingsTests
         });
     }
 
+    [Test]
+    public async Task Buildings_CountLinks_AriaLabelsIncludeBuildingAndRoom()
+    {
+        var bus = BusFor(new BuildingSummary
+        {
+            Building = "A",
+            Rooms =
+            [
+                new RoomSummary
+                {
+                    Room = "101", OpenCount = 3, OverdueCount = 1,
+                    CompletedLast30Days = 2, TotalCount = 6
+                }
+            ]
+        });
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Buildings>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            AriaLabel(component, "room-open-link-A-101").ShouldBe("3 Open in A, 101");
+            AriaLabel(component, "room-overdue-link-A-101").ShouldBe("1 Overdue in A, 101");
+            AriaLabel(component, "room-completed-link-A-101").ShouldBe("2 Completed 30d in A, 101");
+        });
+    }
+
+    [Test]
+    public async Task Buildings_CountLinks_EmptyBuildingAndRoom_AriaLabelsUseFallbackNames()
+    {
+        var bus = BusFor(new BuildingSummary
+        {
+            Building = "",
+            Rooms =
+            [
+                new RoomSummary
+                {
+                    Room = "", OpenCount = 5, OverdueCount = 2,
+                    CompletedLast30Days = 8, TotalCount = 15
+                }
+            ]
+        });
+        await using var ctx = CreateContext(bus);
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Buildings>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            AriaLabel(component, "room-open-link-No building-No room")
+                .ShouldBe("5 Open in No building, No room");
+            AriaLabel(component, "room-overdue-link-No building-No room")
+                .ShouldBe("2 Overdue in No building, No room");
+            AriaLabel(component, "room-completed-link-No building-No room")
+                .ShouldBe("8 Completed 30d in No building, No room");
+        });
+    }
+
+    private static StubBusBuildings BusFor(BuildingSummary building) =>
+        new() { BuildingsToReturn = [building] };
+
+    private static string? AriaLabel(IRenderedComponent<CascadingAuthenticationState> component, string testId) =>
+        component.Find($"[data-testid='{testId}']").GetAttribute("aria-label");
+
     private static BunitContext CreateContext(StubBusBuildings? bus = null, StubFeatureFlags? featureFlags = null)
     {
         var ctx = new BunitContext();
