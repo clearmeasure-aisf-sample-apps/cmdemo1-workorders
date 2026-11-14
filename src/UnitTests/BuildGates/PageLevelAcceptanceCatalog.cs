@@ -72,7 +72,7 @@ internal static class PageLevelAcceptanceCatalog
     }
 
     /// <summary>True when the fixture source is a browser UI (page-level) acceptance test.</summary>
-    public static bool IsPageLevel(string text)
+    private static bool IsPageLevel(string text)
     {
         if (text.Contains("RequiresBrowser => false", StringComparison.Ordinal))
         {
