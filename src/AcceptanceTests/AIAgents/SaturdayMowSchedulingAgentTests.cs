@@ -14,7 +14,7 @@ public class SaturdayMowSchedulingAgentTests : AiAgentsAcceptanceTestBase
     [SetUp]
     public async Task EnsureLlmAvailable()
     {
-        await SkipIfNoChatClient();
+        await SkipUnlessAiAgentChatReadyAsync();
     }
 
     [Test]

@@ -19,29 +19,42 @@ public class ChatClientFactory(IBus bus)
     }
 
     /// <summary>
-    /// Builds a tracing-wrapped chat client from configured Azure OpenAI settings.
+    /// Builds a tracing-wrapped chat client: stub when configured for pool slots, otherwise Azure OpenAI.
     /// Virtual for unit-test stubs of dependent health checks.
     /// </summary>
     public virtual async Task<IChatClient> GetChatClient()
     {
         var config = await bus.Send(new ChatClientConfigQuery());
-        var apiKey = config.AiOpenAiApiKey
-            ?? throw new InvalidOperationException("AI_OpenAI_ApiKey is not configured.");
+        var availability = ChatClientConfigValidator.Validate(config);
+        if (!availability.IsAvailable)
+        {
+            throw new InvalidOperationException(availability.Message);
+        }
 
-        IChatClient innerClient = BuildAzureOpenAiChatClient(config, apiKey);
+        IChatClient innerClient = config.UseStubChatClient
+            ? BuildStubChatClient()
+            : BuildAzureOpenAiChatClient(config);
 
         return new TracingChatClient(innerClient);
     }
 
-    private static IChatClient BuildAzureOpenAiChatClient(ChatClientConfig config, string apiKey)
+    private static IChatClient BuildStubChatClient() =>
+        new StubChatClient()
+            .AsBuilder()
+            .UseFunctionInvocation()
+            .Build();
+
+    private static IChatClient BuildAzureOpenAiChatClient(ChatClientConfig config)
     {
-        var openAiUrl = config.AiOpenAiUrl;
-        var openAiModel = config.AiOpenAiModel;
+        var apiKey = config.AiOpenAiApiKey
+            ?? throw new InvalidOperationException("AI_OpenAI_ApiKey is not configured.");
+        var openAiUrl = config.AiOpenAiUrl
+            ?? throw new InvalidOperationException("AI_OpenAI_Url is not configured.");
+        var openAiModel = config.AiOpenAiModel
+            ?? throw new InvalidOperationException("AI_OpenAI_Model is not configured.");
 
-        var credential = new AzureKeyCredential(apiKey ?? throw new InvalidOperationException());
-        var uri = new Uri(openAiUrl ?? throw new InvalidOperationException());
-        var openAiClient = new AzureOpenAIClient(uri, credential);
-
+        var credential = new AzureKeyCredential(apiKey);
+        var openAiClient = new AzureOpenAIClient(new Uri(openAiUrl), credential);
         ChatClient chatClient = openAiClient.GetChatClient(openAiModel);
         return chatClient.AsIChatClient()
             .AsBuilder()

@@ -4,6 +4,11 @@ internal static class ChatClientConfigValidator
 {
     public static ChatClientAvailabilityResult Validate(ChatClientConfig config)
     {
+        if (config.UseStubChatClient)
+        {
+            return new ChatClientAvailabilityResult(true, "Stub chat client is configured");
+        }
+
         var missing = new List<string>();
 
         if (string.IsNullOrEmpty(config.AiOpenAiApiKey)) missing.Add("AI_OpenAI_ApiKey");

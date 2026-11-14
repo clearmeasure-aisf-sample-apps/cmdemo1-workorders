@@ -36,6 +36,21 @@ public class ChatClientConfigValidatorTests
 
         result.IsAvailable.ShouldBeTrue();
     }
+
+    [Test]
+    public void ShouldReturnAvailable_WhenStubChatClientEnabled_WithoutAzureKeys()
+    {
+        var result = ChatClientConfigValidator.Validate(new ChatClientConfig
+        {
+            AiOpenAiApiKey = "",
+            AiOpenAiUrl = "",
+            AiOpenAiModel = "",
+            UseStubChatClient = true
+        });
+
+        result.IsAvailable.ShouldBeTrue();
+        result.Message.ShouldContain("Stub");
+    }
 }
 
 [TestFixture]
@@ -62,7 +77,30 @@ public class ChatClientFactoryAvailabilityTests
         result.IsAvailable.ShouldBeTrue();
     }
 
-    private sealed class StubBus(bool available) : Bus(null!)
+    [Test]
+    public async Task ShouldReportConfigured_WhenStubChatClientEnabled()
+    {
+        var factory = new ChatClientFactory(new StubBus(available: false, useStub: true));
+
+        var result = await factory.IsChatClientAvailable();
+
+        result.IsAvailable.ShouldBeTrue();
+        result.Message.ShouldContain("Stub");
+    }
+
+    [Test]
+    public async Task GetChatClient_WhenStubEnabled_ReturnsTracingWrappedStub()
+    {
+        var factory = new ChatClientFactory(new StubBus(available: false, useStub: true));
+
+        var client = await factory.GetChatClient();
+
+        client.ShouldBeOfType<TracingChatClient>();
+        var response = await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Reply with OK")]);
+        response.Text.ShouldBe("OK");
+    }
+
+    private sealed class StubBus(bool available, bool useStub = false) : Bus(null!)
     {
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
@@ -72,7 +110,8 @@ public class ChatClientFactoryAvailabilityTests
                 {
                     AiOpenAiApiKey = available ? "test-key" : "",
                     AiOpenAiUrl = available ? "https://test.openai.azure.com" : "",
-                    AiOpenAiModel = available ? "gpt-4" : ""
+                    AiOpenAiModel = available ? "gpt-4" : "",
+                    UseStubChatClient = useStub
                 };
                 return Task.FromResult((TResponse)(object)config);
             }
