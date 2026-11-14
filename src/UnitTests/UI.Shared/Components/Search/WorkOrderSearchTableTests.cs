@@ -22,6 +22,14 @@ public class WorkOrderSearchTableTests
     public void DisposeContext() => _ctx.Dispose();
 
     [Test]
+    public void ShouldExposeWorkOrdersAsTheAccessibleName_OnTheResultsTable()
+    {
+        var table = RenderTable(SearchResultRowMother.Numbered("500"), new WorkOrderRowSelection());
+
+        table.Find("table.grid-data").GetAttribute("aria-label").ShouldBe("Work orders");
+    }
+
+    [Test]
     public void ShouldMarkTheSortedColumnDescending_WhenSortedDescending()
     {
         var table = RenderTable(SearchResultRowMother.Numbered("501"), new WorkOrderRowSelection(), SortColumns.Title);
