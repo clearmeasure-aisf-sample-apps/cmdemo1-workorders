@@ -22,6 +22,18 @@ public class WorkOrderBulkActionBarTests
     }
 
     [Test]
+    public void ApplyButton_HasDescriptiveAriaLabelAndVisibleTextApply()
+    {
+        using var ctx = new BunitContext();
+        var component = ctx.Render<WorkOrderBulkActionBar>(p => p
+            .Add(c => c.SelectedCount, 1));
+
+        var apply = component.Find("[data-testid='BulkChangeStatusButton']");
+        apply.GetAttribute("aria-label").ShouldBe("Apply status change to selected");
+        apply.TextContent.ShouldBe("Apply");
+    }
+
+    [Test]
     public async Task ShouldRaiseAssignAndChangeStatusWithChosenValues()
     {
         await using var ctx = new BunitContext();

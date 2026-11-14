@@ -27,6 +27,7 @@
             }
         </select>
         <button type="button" class="bulk-button" data-testid="@Elements.BulkChangeStatusButton"
+                aria-label="Apply status change to selected"
                 disabled="@string.IsNullOrEmpty(_verb)" @onclick="ChangeStatusAsync">Apply</button>
     </span>
 
