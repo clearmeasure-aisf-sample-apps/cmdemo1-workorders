@@ -47,6 +47,50 @@ public class TestToPageMapTests
     }
 
     [Test]
+    public void TestsForRazorPaths_WhenPageHeaderChanges_SelectsPagesThatRenderIt()
+    {
+        var map = TestToPageMap.Load(RepositoryCheckout.Current);
+
+        var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/PageHeader.razor"]);
+
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.App.ReportsPageTests");
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests");
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests");
+    }
+
+    [Test]
+    public void TestsForRazorPaths_WhenLastWorkOrderChanges_SelectsNavMenuFixtures()
+    {
+        var map = TestToPageMap.Load(RepositoryCheckout.Current);
+
+        var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/LastWorkOrder.razor"]);
+
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests");
+    }
+
+    [Test]
+    public void TestsForRazorPaths_WhenAssigneeAvatarChanges_RecursesThroughSearchChildren()
+    {
+        var map = TestToPageMap.Load(RepositoryCheckout.Current);
+
+        var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/Search/AssigneeAvatar.razor"]);
+
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests");
+    }
+
+    [Test]
+    public async Task Script_WhenSelfTestRuns_ExitsZero()
+    {
+        var checkout = RepositoryCheckout.Current;
+        var script = checkout.PathOf("scripts/acceptance/Get-TestsForChangedRazor.ps1");
+
+        var result = await ExternalCommand.Pwsh(script, "-SelfTest").In(checkout.Root).RunAsync();
+
+        result.ExitCode.ShouldBe(0, result.Output);
+        result.Output.ShouldContain("Get-TestsForChangedRazor.Tests.ps1 passed");
+    }
+
+    [Test]
     public void TestsForRazorPaths_WhenUnmappedRazorChanges_ReturnsEmpty()
     {
         TestToPageMapMother.LoginLandingAndTeams()

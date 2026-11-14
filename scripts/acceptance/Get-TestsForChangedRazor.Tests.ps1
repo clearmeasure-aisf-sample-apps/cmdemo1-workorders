@@ -168,6 +168,43 @@ function Test-SharedComponentTeamCards {
     Write-Output 'shared component TeamCards ok'
 }
 
+function Test-PageHeaderHostsArePagesThatRenderIt {
+    $result = Invoke-HelperFile -ArgumentList @(
+        '-RazorPaths', 'src/UI.Shared/Components/PageHeader.razor'
+    )
+    Assert-True ($result.ExitCode -eq 0) "PageHeader exit $($result.ExitCode): $($result.StdErr)"
+    $lines = Get-OutputLines $result.StdOut
+    Assert-True ($lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.App.ReportsPageTests') `
+        'PageHeader must select ReportsPageTests (Reports renders PageHeader).'
+    Assert-True ($lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests') `
+        'PageHeader must select LandingPageTests (Index renders PageHeader).'
+    Assert-True ($lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests') `
+        'PageHeader must select WorkOrderSearchTests (Search renders PageHeader).'
+    Write-Output 'PageHeader host pages ok'
+}
+
+function Test-LastWorkOrderHostsNavMenu {
+    $result = Invoke-HelperFile -ArgumentList @(
+        '-RazorPaths', 'src/UI.Shared/Components/LastWorkOrder.razor'
+    )
+    Assert-True ($result.ExitCode -eq 0) "LastWorkOrder exit $($result.ExitCode): $($result.StdErr)"
+    $lines = Get-OutputLines $result.StdOut
+    Assert-True ($lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests') `
+        'LastWorkOrder must select NavMenuTests (NavMenu renders LastWorkOrder).'
+    Write-Output 'LastWorkOrder NavMenu host ok'
+}
+
+function Test-AssigneeAvatarRecursesToSearch {
+    $result = Invoke-HelperFile -ArgumentList @(
+        '-RazorPaths', 'src/UI.Shared/Components/Search/AssigneeAvatar.razor'
+    )
+    Assert-True ($result.ExitCode -eq 0) "AssigneeAvatar exit $($result.ExitCode): $($result.StdErr)"
+    $lines = Get-OutputLines $result.StdOut
+    Assert-True ($lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests') `
+        'AssigneeAvatar must recurse Board/Table hosts to WorkOrderSearch fixtures.'
+    Write-Output 'AssigneeAvatar recursive hosts ok'
+}
+
 function Test-UnmappedUiRazorFailsLoudly {
     $result = Invoke-HelperFile -ArgumentList @(
         '-RazorPaths', 'src/UI.Shared/Pages/DoesNotExist.razor'
@@ -193,6 +230,9 @@ Test-StdinViaCommandSelectsLogin
 Test-PathsFileDashFailsLoudly
 Test-BackslashPathSeparator
 Test-SharedComponentTeamCards
+Test-PageHeaderHostsArePagesThatRenderIt
+Test-LastWorkOrderHostsNavMenu
+Test-AssigneeAvatarRecursesToSearch
 Test-UnmappedUiRazorFailsLoudly
 Test-EmptyStdinExitsZeroWithNoNames
 Write-Output 'Get-TestsForChangedRazor.Tests.ps1 passed'

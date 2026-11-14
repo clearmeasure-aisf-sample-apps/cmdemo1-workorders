@@ -72,7 +72,8 @@ internal sealed class TestToPageMap
 
     /// <summary>
     /// Checkout-relative page paths selected by <paramref name="razorPaths"/> after
-    /// component expansion. Empty when every path is ignored or blank.
+    /// component expansion (hosts recurse through other <see cref="Components"/> entries).
+    /// Empty when every path is ignored or blank.
     /// </summary>
     public HashSet<string> ExpandToPagePaths(IEnumerable<string> razorPaths)
     {
@@ -86,20 +87,33 @@ internal sealed class TestToPageMap
                 continue;
             }
 
-            if (hosts.TryGetValue(raw, out var pages))
-            {
-                foreach (var page in pages)
-                {
-                    wanted.Add(page);
-                }
-            }
-            else
-            {
-                wanted.Add(raw);
-            }
+            CollectHosts(raw, hosts, wanted, []);
         }
 
         return wanted;
+    }
+
+    private static void CollectHosts(
+        string path,
+        IReadOnlyDictionary<string, string[]> hosts,
+        HashSet<string> wanted,
+        HashSet<string> visiting)
+    {
+        if (!visiting.Add(path))
+        {
+            return;
+        }
+
+        if (!hosts.TryGetValue(path, out var next))
+        {
+            wanted.Add(path);
+            return;
+        }
+
+        foreach (var host in next)
+        {
+            CollectHosts(host, hosts, wanted, visiting);
+        }
     }
 
     /// <summary>Checkout-relative <c>.razor</c> path; strips a trailing <c>.cs</c> from code-behind.</summary>

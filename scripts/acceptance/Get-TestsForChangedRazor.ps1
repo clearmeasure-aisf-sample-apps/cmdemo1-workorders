@@ -90,6 +90,25 @@ begin {
         $n = Get-CanonicalRazorPath -Path $Path
         return ($n -like 'src/UI.Shared/*' -or $n -like 'src/UI/Client/*') -and ($n -like '*.razor')
     }
+
+    function Add-ExpandedHosts {
+        param(
+            [string]$Path,
+            [hashtable]$Hosts,
+            [System.Collections.Generic.HashSet[string]]$Wanted,
+            [System.Collections.Generic.HashSet[string]]$Visiting
+        )
+        if (-not $Visiting.Add($Path)) {
+            return
+        }
+        if (-not $Hosts.ContainsKey($Path)) {
+            [void]$Wanted.Add($Path)
+            return
+        }
+        foreach ($hostPath in $Hosts[$Path]) {
+            Add-ExpandedHosts -Path $hostPath -Hosts $Hosts -Wanted $Wanted -Visiting $Visiting
+        }
+    }
 }
 
 process {
@@ -159,14 +178,8 @@ end {
         if ($ignored.Contains($canonical)) {
             continue
         }
-        if ($hosts.ContainsKey($canonical)) {
-            foreach ($page in $hosts[$canonical]) {
-                [void]$wanted.Add($page)
-            }
-        }
-        else {
-            [void]$wanted.Add($canonical)
-        }
+        $visiting = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        Add-ExpandedHosts -Path $canonical -Hosts $hosts -Wanted $wanted -Visiting $visiting
     }
 
     $selected = [System.Collections.Generic.List[string]]::new()
