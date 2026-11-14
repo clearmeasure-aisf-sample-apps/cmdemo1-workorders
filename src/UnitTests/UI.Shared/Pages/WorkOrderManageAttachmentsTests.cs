@@ -21,47 +21,13 @@ public class WorkOrderManageAttachmentsTests
     [Test]
     public async Task WorkOrderManage_ShouldRenderAttachmentsSection()
     {
-        await using var ctx = new BunitContext();
-
-        var uploader = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
         var workOrderId = Guid.NewGuid();
+        var bus = new StubWorkOrderManageBus([NewAttachment(workOrderId, "damage-photo.jpg")]);
+        await using var ctx = CreateContext(bus, Creator, new StubWorkOrderBuilder(workOrderId));
 
-        var attachments = new[]
-        {
-            new WorkOrderAttachment
-            {
-                Id = Guid.NewGuid(),
-                WorkOrderId = workOrderId,
-                FileName = "damage-photo.jpg",
-                ContentType = "image/jpeg",
-                FileSize = 2048,
-                UploadedById = uploader.Id,
-                UploadedBy = uploader,
-                UploadedDate = new DateTime(2025, 3, 1, 10, 0, 0)
-            }
-        };
+        var component = await RenderWithAttachmentsAsync(ctx);
 
-        ctx.Services.AddSingleton<IBus>(new StubWorkOrderManageBus(attachments));
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton(TimeProvider.System);
-        ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(workOrderId));
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(uploader));
-        ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
-        ctx.Services.AddSpeechSynthesis();
-        ctx.Services.AddSpeechRecognition();
-
-        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
-        navigationManager.NavigateTo(navigationManager.GetUriWithQueryParameter("Mode", "New"));
-
-        var component = ctx.Render<WorkOrderManage>();
-
-        await component.WaitForAssertionAsync(() =>
-        {
-            var section = component.Find($"[data-testid='{WorkOrderManage.Elements.AttachmentsSection}']");
-            section.ShouldNotBeNull();
-        });
-
-        var fileNameCell = component.Find($"[data-testid='{WorkOrderManage.Elements.AttachmentFileName}']");
+        var fileNameCell = component.Find(TestId(WorkOrderManage.Elements.AttachmentFileName));
         fileNameCell.TextContent.ShouldBe("damage-photo.jpg");
     }
 
@@ -137,6 +103,26 @@ public class WorkOrderManageAttachmentsTests
         component.Find(TestId(WorkOrderManage.Elements.AttachmentRow)).TextContent
             .ShouldContain("Remove damage-photo.jpg?");
         bus.LastRemoveCommand.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task WorkOrderManage_ShouldNameConfirmAndCancel_WithAttachmentFileName()
+    {
+        const string fileName = "damage-photo.jpg";
+        var workOrderId = Guid.NewGuid();
+        var bus = new StubWorkOrderManageBus([NewAttachment(workOrderId, fileName)]);
+        await using var ctx = CreateContext(bus, Creator, new StubWorkOrderBuilder(workOrderId));
+        var component = await RenderWithAttachmentsAsync(ctx);
+
+        await component.Find(TestId(WorkOrderManage.Elements.AttachmentRemove)).ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Find(TestId(WorkOrderManage.Elements.AttachmentRemoveConfirm))
+                .GetAttribute("aria-label").ShouldBe($"Confirm remove attachment {fileName}");
+            component.Find(TestId(WorkOrderManage.Elements.AttachmentRemoveCancel))
+                .GetAttribute("aria-label").ShouldBe($"Cancel remove attachment {fileName}");
+        });
     }
 
     [Test]
