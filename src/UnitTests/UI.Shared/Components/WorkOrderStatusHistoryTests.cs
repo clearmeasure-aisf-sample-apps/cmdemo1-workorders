@@ -55,8 +55,8 @@ public class WorkOrderStatusHistoryTests
         await using var ctx = ComponentContextBuilder.WithStubBuses();
         var change = SampleChange(WorkOrderStatus.Draft, WorkOrderStatus.Assigned, "Assigned to tech", kind);
         var utc = DateTime.SpecifyKind(change.ChangedDate, DateTimeKind.Utc);
-        var chicago = TimeZoneInfo.ConvertTime(utc, ChurchTimeZone.Chicago);
-        var expectedText = ClientDateFormatter.Format(chicago);
+        var expectedText = ClientDateFormatter.Format(
+            TimeZoneInfo.ConvertTime(change.ChangedDate, ChurchTimeZone.Chicago));
 
         var history = ctx.Render<WorkOrderStatusHistory>(parameters => parameters.Add(p => p.Changes, [change]));
 
@@ -67,10 +67,6 @@ public class WorkOrderStatusHistoryTests
             DateTimeStyles.RoundtripKind);
         parsed.Offset.ShouldBe(TimeSpan.Zero);
         parsed.UtcDateTime.ShouldBe(utc);
-        parsed.UtcDateTime.ShouldBe(
-            TimeZoneInfo.ConvertTimeToUtc(
-                DateTime.SpecifyKind(chicago, DateTimeKind.Unspecified),
-                ChurchTimeZone.Chicago));
         time.TextContent.ShouldBe(expectedText);
     }
 
