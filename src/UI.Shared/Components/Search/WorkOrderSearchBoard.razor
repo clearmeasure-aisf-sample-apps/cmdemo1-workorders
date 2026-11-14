@@ -34,7 +34,10 @@
                                         <span class="board-card-assignee"><AssigneeAvatar Row="card"/><span class="visually-hidden">@AssigneeText(card)</span></span>
                                         @if (string.IsNullOrWhiteSpace(card.WorkOrder.RoomNumber))
                                         {
-                                            <span class="board-card-room muted-cell" aria-label="No room">–</span>
+                                            <span class="board-card-room">
+                                                <span class="muted-cell" aria-hidden="true">–</span>
+                                                <span class="visually-hidden">No room</span>
+                                            </span>
                                         }
                                         else
                                         {
