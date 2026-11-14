@@ -313,7 +313,8 @@ public class MainLayoutTests
 
         var link = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}'] .site-footer-link");
         link.GetAttribute("href")!.TrimEnd('/').ShouldBe("https://clearmeasure.com");
-        link.TextContent.Trim().ShouldBe("Clear Measure");
+        var linkText = string.Join(' ', link.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        linkText.ShouldContain("Clear Measure (opens in a new tab)");
     }
 
     [Test]
@@ -391,6 +392,12 @@ public class MainLayoutTests
         rel.ShouldContain("noopener");
         rel.ShouldContain("noreferrer");
         link.TextContent.Trim().ShouldNotContain("://");
+        var hidden = link.QuerySelector(".visually-hidden");
+        hidden.ShouldNotBeNull();
+        hidden.TextContent.ShouldBe("(opens in a new tab)");
+        hidden.ClassList.ShouldContain("visually-hidden");
+        var linkText = string.Join(' ', link.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        linkText.ShouldContain("Clear Measure (opens in a new tab)");
     }
 
     [Test]
