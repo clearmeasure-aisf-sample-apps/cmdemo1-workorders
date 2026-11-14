@@ -80,6 +80,19 @@ public class ClientHealthCheckPageTests
     }
 
     [Test]
+    public void DetailedClientHealthCheck_ShouldSetPageTitle()
+    {
+        using var ctx = CreateContextWithHealthChecks();
+
+        var component = ctx.Render<DetailedClientHealthCheck>();
+
+        var pageTitle = component.FindComponent<PageTitle>();
+        pageTitle.Instance.ChildContent.ShouldNotBeNull();
+        using var title = ctx.Render(pageTitle.Instance.ChildContent!);
+        title.Markup.Trim().ShouldBe("Detailed Application Health Status - .NET Conf Work Orders");
+    }
+
+    [Test]
     public async Task DetailedClientHealthCheck_ShouldNameDiagnosticTableAndScopeHeaders_WhenEntryHasData()
     {
         const string entryKey = "sample-check";
