@@ -53,7 +53,7 @@ public class AppShellTests : AppAcceptanceTestBase
         var labelWidth = await Page.Locator("#app-navigation-rail .nav-text").First
             .EvaluateAsync<double>("e => e.getBoundingClientRect().width");
         labelWidth.ShouldBeLessThanOrEqualTo(1);
-        var workOrders = Page.GetByRole(AriaRole.Link, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Work Orders") });
+        var workOrders = rail.GetByRole(AriaRole.Link, new() { NameRegex = new System.Text.RegularExpressions.Regex("^Work Orders") });
         await Expect(workOrders).ToBeVisibleAsync();
         await workOrders.ClickAsync();
         await Page.WaitForURLAsync("**/workorder/search");
