@@ -1,4 +1,6 @@
+using System.Net;
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
@@ -6,10 +8,41 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
 
 /// <summary>
 /// AI Agents acceptance base: API-backed seeding keyed by <see cref="AcceptanceTestBase.TestTag"/>.
-/// Pool slots use the stub model (item 22); do not point slots at the real model.
+/// Pool slots use the stub model (item 22); tdd keeps the real model. Do not point slots at the real model.
 /// </summary>
 public abstract class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase
 {
+    /// <summary>
+    /// On pool slots the server runs <c>StubChatClient</c>; skip only when a non-pool host has no real model.
+    /// </summary>
+    protected static async Task SkipUnlessAiAgentChatReadyAsync()
+    {
+        if (await IsPoolSlotHostAsync())
+        {
+            return;
+        }
+
+        await SkipIfNoChatClient();
+    }
+
+    /// <summary>True when the host exposes test-support (local acceptance host or remote pool slot).</summary>
+    protected static async Task<bool> IsPoolSlotHostAsync()
+    {
+        var status = await AcceptanceTestSupportSettings.CreateClient().ProbeStatusAsync();
+        return status != HttpStatusCode.NotFound;
+    }
+
+    /// <summary>Ignores when the host is tdd/uat/prod (no test-support); stub-only scenarios need a pool slot.</summary>
+    protected static async Task RequirePoolSlotHostAsync()
+    {
+        if (await IsPoolSlotHostAsync())
+        {
+            return;
+        }
+
+        Assert.Ignore("Requires a pool-slot host with StubChatClient (TestSupport on).");
+    }
+
     /// <summary>Opens the AI Agent page after sign-in.</summary>
     protected async Task OpenAiAgentPageAsync()
     {

@@ -328,6 +328,11 @@ public class ServerFixture
         // Pool-slot test-support surface: create data via HTTP instead of SQL from the suite.
         process.StartInfo.Environment["TestSupport__Enabled"] = "true";
         process.StartInfo.Environment["TestSupport__Secret"] = TestSupport.AcceptanceTestSupportSettings.Secret;
+        // Pool slots use the stub chat model only; never point slots at the real Azure OpenAI model.
+        process.StartInfo.Environment["AI_UseStubChatClient"] = "true";
+        process.StartInfo.Environment["AI_OpenAI_ApiKey"] = "";
+        process.StartInfo.Environment["AI_OpenAI_Url"] = "";
+        process.StartInfo.Environment["AI_OpenAI_Model"] = "";
         if (useSqlite)
         {
             ApplySqliteServerEnvironment(process, connectionString);
@@ -444,6 +449,7 @@ public class ServerFixture
             $"{ApplicationBaseUrl}/api/blazor-wasm-single-api";
         process.StartInfo.Environment["DOTNET_ENVIRONMENT"] = "Development";
         process.StartInfo.Environment["DISABLE_AUTO_CANCEL_AGENT"] = "true";
+        process.StartInfo.Environment["AI_UseStubChatClient"] = "true";
         process.StartInfo.Environment["AI_OpenAI_ApiKey"] = "";
         process.StartInfo.Environment["AI_OpenAI_Url"] = "";
         process.StartInfo.Environment["AI_OpenAI_Model"] = "";

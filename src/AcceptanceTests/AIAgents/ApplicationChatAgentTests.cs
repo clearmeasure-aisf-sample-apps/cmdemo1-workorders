@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
@@ -14,7 +15,7 @@ public class ApplicationChatAgentTests : AiAgentsAcceptanceTestBase
     [SetUp]
     public async Task EnsureLlmAvailable()
     {
-        await SkipIfNoChatClient();
+        await SkipUnlessAiAgentChatReadyAsync();
     }
 
     [Test, Ignore("Flaky on CI: MCP loopback ToolProvider produces JSON deserialization error on GitHub Actions runners")]
@@ -40,12 +41,13 @@ public class ApplicationChatAgentTests : AiAgentsAcceptanceTestBase
         await AssertCreatedAssignedOrderAsync(assignee, before);
     }
 
-    [Test, Ignore("Requires server-side LLM stub that throws ClientResultException via DI override in a separate server process; infrastructure not yet wired")]
+    [Test]
     public async Task ShouldShowFriendlyMessageWhenProviderRefuses()
     {
+        await RequirePoolSlotHostAsync();
         await LoginAsCurrentUser();
         await OpenAiAgentPageAsync();
-        await SendChatPromptAsync("Test prompt that triggers a provider refusal", 60_000);
+        await SendChatPromptAsync($"Test prompt that {StubChatClient.RefusalPromptMarker}", 60_000);
 
         var messageText = await Page.GetByTestId(nameof(ApplicationChat.Elements.AiMessage) + "1").InnerTextAsync();
         messageText.ShouldContain("couldn't process that request");

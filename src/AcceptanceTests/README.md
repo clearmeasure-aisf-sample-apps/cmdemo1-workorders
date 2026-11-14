@@ -45,7 +45,7 @@ Not covered after a deployment:
   indirectly: UI.Server starts its endpoint on the transport, so a broken one stops the app and fails the health gate.
 - **REST API** (`/api/...` controllers): the `Api/` tests skip themselves against a deployed app.
 - **gRPC** (`WorkOrdersGrpcService`) and the WebSocket notifications (`/ws/notifications`): no acceptance tests.
-- **Chat client** (AI Agent and work order chat, the MCP tests with an LLM): they skip without `AI_OpenAI_ApiKey`.
+- **Chat client** (AI Agent and work order chat, the MCP tests with an LLM): on the local acceptance host (pool-slot shape) the server sets `AI_UseStubChatClient=true` and AI Agents tests run against `StubChatClient`. On tdd the real Azure OpenAI model is used (`AI_OpenAI_*`). Do not enable the stub on uat or prod, and do not point pool slots at the real model. Non-pool hosts still skip LLM tests without `AI_OpenAI_ApiKey`.
 - **Telemetry export**: not visible to a browser.
 - Pages with no link in the app: `/_clienthealthcheck/detailed` (no test opens it). `/counter` and
   `/fetchdata` are removed; `RemovedTemplatePageTests` opens both and expects the Not Found page.

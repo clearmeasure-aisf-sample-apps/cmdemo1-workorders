@@ -14,12 +14,15 @@ public class ChatClientConfigQueryHandler(IConfiguration configuration, ILogger<
         logger.LogDebug("AI_OpenAI_Url found as {Url}", openAiUrl);
         var openAiModel = configuration.GetValue<string>("AI_OpenAI_Model");
         logger.LogDebug("AI_OpenAI_Model found as {Model}", openAiModel);
+        var useStub = configuration.GetValue("AI_UseStubChatClient", false);
+        logger.LogDebug("AI_UseStubChatClient configured: {UseStub}", useStub);
 
         return Task.FromResult(new ChatClientConfig
         {
-            AiOpenAiApiKey = apiKey, 
-            AiOpenAiUrl = openAiUrl, 
-            AiOpenAiModel = openAiModel
+            AiOpenAiApiKey = apiKey,
+            AiOpenAiUrl = openAiUrl,
+            AiOpenAiModel = openAiModel,
+            UseStubChatClient = useStub
         });
     }
 }

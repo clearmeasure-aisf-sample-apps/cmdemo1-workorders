@@ -29,5 +29,24 @@ public class ChatClientConfigQueryHandlerTests
         result.AiOpenAiApiKey.ShouldBe("test-key");
         result.AiOpenAiUrl.ShouldBe("https://example.test");
         result.AiOpenAiModel.ShouldBe("test-model");
+        result.UseStubChatClient.ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task Handle_ShouldReturnUseStubChatClient_WhenConfiguredForPoolSlots()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AI_UseStubChatClient"] = "true"
+            })
+            .Build();
+        var handler = new ChatClientConfigQueryHandler(
+            configuration,
+            NullLogger<ChatClientConfigQueryHandler>.Instance);
+
+        var result = await handler.Handle(new ChatClientConfigQuery(), CancellationToken.None);
+
+        result.UseStubChatClient.ShouldBeTrue();
     }
 }
