@@ -18,7 +18,7 @@ public abstract class AcceptanceApiTestBase : AcceptanceTestBase
     protected Task<Employee> SeedEmployeeAsync(TestSupportEmployeeFields? fields = null) =>
         AcceptanceEmployeeSeed.CreateAsync(TestTag, fields);
 
-    /// <summary>Creates a work order for <paramref name="creator"/> via test-support.</summary>
+    /// <summary>Creates a work order for <paramref name="creator"/> via test-support or SQL fallback.</summary>
     protected async Task<WorkOrder> SeedWorkOrderAsync(
         Employee creator,
         WorkOrderStatus? status = null,

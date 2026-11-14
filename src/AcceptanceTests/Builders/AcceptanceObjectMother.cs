@@ -4,7 +4,8 @@ using ClearMeasure.Bootcamp.Core.Model;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 
 /// <summary>
-/// Bogus-backed builders that create acceptance data through the app's test-support API, keyed by TestTag.
+/// Bogus-backed builders that create acceptance data keyed by TestTag.
+/// Work orders fall back to SQL when test-support returns 404 (tdd/uat/prod).
 /// </summary>
 public sealed class AcceptanceObjectMother(TestSupportClient client, string testTag)
 {
@@ -25,27 +26,13 @@ public sealed class AcceptanceObjectMother(TestSupportClient client, string test
             RoomNumber = roomNumber
         });
 
-    /// <summary>Creates a work order with the given status and optional fields.</summary>
+    /// <summary>
+    /// Creates a work order with the given status and optional fields.
+    /// Falls back to SQL when test-support returns 404 (tdd/uat/prod).
+    /// </summary>
     public Task<TestSupportWorkOrder> WorkOrderAsync(
         string creatorUserName,
         WorkOrderStatus status,
-        WorkOrderSeedFields? fields = null)
-    {
-        fields ??= new WorkOrderSeedFields();
-        var resolved = new WorkOrderSeedFields
-        {
-            Title = fields.Title ?? $"[{testTag}] {fields.Priority} {status.FriendlyName}",
-            Description = fields.Description,
-            RoomNumber = fields.RoomNumber,
-            Instructions = fields.Instructions,
-            Number = fields.Number,
-            Priority = fields.Priority,
-            DueDate = fields.DueDate,
-            AssigneeUserName = fields.AssigneeUserName,
-            Building = fields.Building,
-            CreatedDate = fields.CreatedDate,
-            CompletedDate = fields.CompletedDate
-        };
-        return client.CreateWorkOrderAsync(testTag, creatorUserName, status, resolved);
-    }
+        WorkOrderSeedFields? fields = null) =>
+        AcceptanceWorkOrderSeed.CreateAsync(testTag, creatorUserName, status, fields);
 }
