@@ -1,12 +1,13 @@
-using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UnitTests.Acceptance;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests;
 
 /// <summary>
-/// Launches a worker-scoped browser, creates per-test data via test-support, and opens a fresh context.
+/// Launches a worker-scoped browser, creates per-test data via test-support (or SQL fallback),
+/// and opens a fresh context.
 /// </summary>
 public static class BrowserFixtureSetup
 {
@@ -16,11 +17,12 @@ public static class BrowserFixtureSetup
     public static async Task<TestState> CreateAsync(BrowserSetupRequest request)
     {
         var testTag = Guid.NewGuid().ToString("N")[..8];
-        var currentUser = await CreateEmployeeAsync(testTag);
+        var provision = await CreateEmployeeAsync(testTag);
+        var useStorageStateSignIn = request.UseStorageStateSignIn && provision.TestSupportAvailable;
         var browser = await LaunchWorkerBrowserAsync(request.Playwright, request.Headless, request.SlowMo);
         var storageStatePath = await BrowserContextFactory.WriteSignInStateAsync(
-            request.UseStorageStateSignIn,
-            currentUser.UserName,
+            useStorageStateSignIn,
+            provision.Employee.UserName,
             request.ApplicationBaseUrl);
         var browserContext = await BrowserContextFactory.OpenAsync(
             browser,
@@ -28,29 +30,22 @@ public static class BrowserFixtureSetup
             storageStatePath);
         TryDelete(storageStatePath);
         var page = await browserContext.NewPageAsync();
-        await NavigateReadyAsync(page, request.UseStorageStateSignIn);
+        await NavigateReadyAsync(page, useStorageStateSignIn);
 
         return new TestState
         {
             Page = page,
             BrowserContext = browserContext,
-            CurrentUser = currentUser,
+            CurrentUser = provision.Employee,
             TestTag = testTag
         };
     }
 
-    private static async Task<Employee> CreateEmployeeAsync(string testTag)
-    {
-        var created = await new AcceptanceObjectMother(
-            AcceptanceTestSupportSettings.CreateClient(),
-            testTag).EmployeeAsync();
-        var employee = new Employee(created.UserName, created.FirstName, created.LastName, created.EmailAddress)
-        {
-            Id = created.Id
-        };
-        employee.AddRole(new Role("admin", true, true));
-        return employee;
-    }
+    /// <summary>
+    /// Probes test-support, then creates via API or <see cref="TestUsers.AcceptanceTestEmployees.Add"/>.
+    /// </summary>
+    private static Task<AcceptanceEmployeeProvision> CreateEmployeeAsync(string testTag) =>
+        AcceptanceEmployeeProvisionerFactory.CreateDefault().CreateAsync(testTag);
 
     private static Task<IBrowser> LaunchWorkerBrowserAsync(IPlaywright playwright, bool headless, int slowMo) =>
         WorkerBrowserPool.GetBrowserAsync(playwright, new BrowserTypeLaunchOptions
