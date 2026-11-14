@@ -28,6 +28,31 @@ public class ClientHealthCheckPageTests
     }
 
     [Test]
+    public async Task ClientHealthCheck_WhileLoading_AnnouncesStatusToScreenReaders()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var ctx = CreateContextWithHealthChecks(builder =>
+            builder.AddAsyncCheck("pending", async _ =>
+            {
+                await gate.Task;
+                return HealthCheckResult.Healthy();
+            }));
+
+        var component = ctx.Render<ClientHealthCheck>();
+
+        var loading = component.Find("p[role='status']");
+        loading.GetAttribute("role").ShouldBe("status");
+        loading.GetAttribute("aria-live").ShouldBe("polite");
+        loading.TextContent.ShouldBe("Loading health report...");
+
+        gate.SetResult();
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Find($"[data-testid='{ClientHealthCheck.Elements.Status}']").ShouldNotBeNull();
+        });
+    }
+
+    [Test]
     public async Task ClientHealthCheck_ShouldRenderPageTitle()
     {
         await using var ctx = CreateContextWithHealthChecks();
