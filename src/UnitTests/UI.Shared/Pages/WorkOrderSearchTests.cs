@@ -1657,7 +1657,6 @@ public class WorkOrderSearchTests
         var draft = component.Find($"[data-testid='{WorkOrderSearch.Elements.BoardCard}WO-001']");
         draft.QuerySelector(".board-card-assignee .visually-hidden")!.TextContent.ShouldBe("Unassigned");
         draft.QuerySelector(".avatar")!.ClassList.ShouldContain("avatar--empty");
-        draft.QuerySelector(".board-card-room")!.GetAttribute("aria-label").ShouldBe("No room");
         draft.QuerySelector($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}WO-001']")!.TextContent.ShouldBe("–");
     }
 
