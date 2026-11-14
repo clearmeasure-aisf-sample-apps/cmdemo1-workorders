@@ -7,10 +7,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 /// Full-system acceptance for issue #9158: <c>GET /api/metrics/summary</c> runtime metrics JSON.
 /// </summary>
 [TestFixture]
-public class MetricsSummaryAcceptanceTests : AcceptanceTestBase
+public class MetricsSummaryAcceptanceTests : ApiAcceptanceTestBase
 {
-    protected override bool RequiresBrowser => false;
-
     [Test]
     [Description("Issue #9158: GET /api/metrics/summary returns 200 with required metrics JSON fields")]
     public async Task Api_MetricsSummary_Returns200AndRequiredJsonFields()

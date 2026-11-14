@@ -1,109 +1,101 @@
 using System.Text.Json;
-using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.LlmGateway;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
-[TestFixture, NonParallelizable, Category("SerialLane")]
-public class McpWorkOrderLifecycleTests : AcceptanceTestBase
+[TestFixture]
+public class McpWorkOrderLifecycleTests : McpAcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;
-
-    private static McpTestHelper? _helper;
-
-    [OneTimeSetUp]
-    public async Task McpSetUp()
-    {
-        _helper = new McpTestHelper(TestHost.GetRequiredService<ChatClientFactory>());
-        await _helper.ConnectAsync();
-    }
-
-    [OneTimeTearDown]
-    public async Task McpTearDown()
-    {
-        if (_helper != null) await _helper.DisposeAsync();
-    }
-
-    [SetUp]
-    public void EnsureAvailability()
-    {
-        if (!_helper!.Connected)
-            Assert.Inconclusive("MCP server is not available");
-    }
 
     [Test]
     public async Task ShouldCompleteFullLifecycleViaDirectToolCalls()
     {
-        var bus = TestHost.GetRequiredService<IBus>();
-        var employees = await bus.Send(new EmployeeGetAllQuery());
-        var creator = employees.Single(e => e.UserName == "tlovejoy");
-        var assignee = employees.Single(e => e.UserName == "gwillie");
+        var creator = await SeedEmployeeAsync();
+        var assignee = await SeedEmployeeAsync();
 
-        // Step 1: Create a draft work order
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
+        var createResult = await Helper.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
-                ["title"] = "Lifecycle test work order",
+                ["title"] = $"[{TestTag}] Lifecycle test work order",
                 ["description"] = "Testing full lifecycle via direct MCP tool calls",
                 ["creatorUsername"] = creator.UserName
             });
 
-        createResult.ShouldContain("Lifecycle test work order");
+        createResult.ShouldContain($"[{TestTag}] Lifecycle test work order");
         createResult.ShouldContain("Draft");
         var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrEmpty("Work order number should be returned");
 
-        // Step 2: Assign the work order (Draft -> Assigned)
-        var assignResult = await _helper.CallToolDirectly("execute-work-order-command",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["commandName"] = "DraftToAssignedCommand",
-                ["executingUsername"] = creator.UserName,
-                ["assigneeUsername"] = assignee.UserName
-            });
+        await AssignBeginAndCompleteAsync(workOrderNumber, creator.UserName, assignee.UserName);
+        await AssertCompletedDetailAsync(workOrderNumber, creator, assignee);
+    }
 
-        assignResult.ShouldContain("Assigned");
-        using (var assignDocument = JsonDocument.Parse(assignResult))
+    private async Task AssignBeginAndCompleteAsync(
+        string workOrderNumber,
+        string creatorUserName,
+        string assigneeUserName)
+    {
+        await ExecuteLifecycleCommandAsync(workOrderNumber, new LifecycleCommandSpec
         {
-            var assigned = assignDocument.RootElement;
-            assigned.GetProperty("Assignee").GetString().ShouldBe(assignee.GetFullName());
-            assigned.GetProperty("AssigneeUsername").GetString().ShouldBe(assignee.UserName);
+            CommandName = "DraftToAssignedCommand",
+            ExecutingUserName = creatorUserName,
+            AssigneeUserName = assigneeUserName,
+            ExpectedStatusFragment = "Assigned"
+        });
+        await ExecuteLifecycleCommandAsync(workOrderNumber, new LifecycleCommandSpec
+        {
+            CommandName = "AssignedToInProgressCommand",
+            ExecutingUserName = assigneeUserName,
+            ExpectedStatusFragment = "In Progress"
+        });
+        var completeResult = await ExecuteLifecycleCommandAsync(workOrderNumber, new LifecycleCommandSpec
+        {
+            CommandName = "InProgressToCompleteCommand",
+            ExecutingUserName = assigneeUserName,
+            ExpectedStatusFragment = "Complete"
+        });
+        completeResult.ShouldContain("CompletedDate");
+    }
+
+    private async Task<string> ExecuteLifecycleCommandAsync(string workOrderNumber, LifecycleCommandSpec spec)
+    {
+        var arguments = new Dictionary<string, object?>
+        {
+            ["workOrderNumber"] = workOrderNumber,
+            ["commandName"] = spec.CommandName,
+            ["executingUsername"] = spec.ExecutingUserName
+        };
+        if (spec.AssigneeUserName is not null)
+        {
+            arguments["assigneeUsername"] = spec.AssigneeUserName;
         }
 
-        // Step 3: Begin work (Assigned -> InProgress)
-        var beginResult = await _helper.CallToolDirectly("execute-work-order-command",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["commandName"] = "AssignedToInProgressCommand",
-                ["executingUsername"] = assignee.UserName
-            });
+        var result = await Helper.CallToolDirectly("execute-work-order-command", arguments);
+        result.ShouldContain(spec.ExpectedStatusFragment);
+        return result;
+    }
 
-        beginResult.ShouldContain("In Progress");
+    private sealed class LifecycleCommandSpec
+    {
+        public required string CommandName { get; init; }
+        public required string ExecutingUserName { get; init; }
+        public string? AssigneeUserName { get; init; }
+        public required string ExpectedStatusFragment { get; init; }
+    }
 
-        // Step 4: Complete work (InProgress -> Complete)
-        var completeResult = await _helper.CallToolDirectly("execute-work-order-command",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["commandName"] = "InProgressToCompleteCommand",
-                ["executingUsername"] = assignee.UserName
-            });
-
-        completeResult.ShouldContain("Complete");
-        completeResult.ShouldContain("CompletedDate");
-
-        // Step 5: Verify final state via get-work-order
-        var getResult = await _helper.CallToolDirectly("get-work-order",
+    private async Task AssertCompletedDetailAsync(
+        string workOrderNumber,
+        Employee creator,
+        Employee assignee)
+    {
+        var getResult = await Helper.CallToolDirectly("get-work-order",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber
             });
 
         getResult.ShouldContain("Complete");
-        getResult.ShouldContain("Lifecycle test work order");
+        getResult.ShouldContain($"[{TestTag}] Lifecycle test work order");
         using var getDocument = JsonDocument.Parse(getResult);
         var detail = getDocument.RootElement;
         detail.GetProperty("Creator").GetString().ShouldBe(creator.GetFullName());

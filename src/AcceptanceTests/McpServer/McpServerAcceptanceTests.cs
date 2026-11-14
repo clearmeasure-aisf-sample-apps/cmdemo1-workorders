@@ -1,42 +1,16 @@
-using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.LlmGateway;
-
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
 [TestFixture]
-public class McpServerAcceptanceTests : AcceptanceTestBase
+public class McpServerAcceptanceTests : McpAcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;
-
-    private static McpTestHelper? _helper;
-
-    [OneTimeSetUp]
-    public async Task McpSetUp()
-    {
-        _helper = new McpTestHelper(TestHost.GetRequiredService<ChatClientFactory>());
-        await _helper.ConnectAsync();
-    }
-
-    [OneTimeTearDown]
-    public async Task McpTearDown()
-    {
-        if (_helper != null) await _helper.DisposeAsync();
-    }
-
-    [SetUp]
-    public void EnsureAvailability()
-    {
-        if (!_helper!.Connected)
-            Assert.Inconclusive("MCP server is not available");
-    }
 
     [Test]
     public void ShouldDiscoverAllMcpTools()
     {
-        _helper!.Tools.Count.ShouldBeGreaterThanOrEqualTo(6);
+        Helper.Tools.Count.ShouldBeGreaterThanOrEqualTo(6);
 
-        var toolNames = _helper.Tools.Select(t => t.Name).ToList();
+        var toolNames = Helper.Tools.Select(t => t.Name).ToList();
         toolNames.ShouldContain("list-work-orders");
         toolNames.ShouldContain("get-work-order");
         toolNames.ShouldContain("create-work-order");
@@ -48,19 +22,17 @@ public class McpServerAcceptanceTests : AcceptanceTestBase
     [Test]
     public async Task ShouldCreateWorkOrderViaDirectToolCall()
     {
-        var bus = TestHost.GetRequiredService<IBus>();
-        var employees = await bus.Send(new EmployeeGetAllQuery());
-        var creator = employees.First(e => e.Roles.Any(r => r.CanCreateWorkOrder));
+        var creator = await SeedEmployeeAsync();
 
-        var result = await _helper!.CallToolDirectly("create-work-order",
+        var result = await Helper.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
-                ["title"] = "Direct MCP tool test",
+                ["title"] = $"[{TestTag}] Direct MCP tool test",
                 ["description"] = "Created via direct tool call",
                 ["creatorUsername"] = creator.UserName
             });
 
-        result.ShouldContain("Direct MCP tool test");
+        result.ShouldContain($"[{TestTag}] Direct MCP tool test");
         result.ShouldContain("Draft");
     }
 }

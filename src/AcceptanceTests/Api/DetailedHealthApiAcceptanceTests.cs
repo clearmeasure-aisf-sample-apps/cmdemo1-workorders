@@ -7,10 +7,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 /// Full-system coverage for <c>GET /api/health/detailed</c> against the running UI.Server.
 /// </summary>
 [TestFixture]
-public class DetailedHealthApiAcceptanceTests : AcceptanceTestBase
+public class DetailedHealthApiAcceptanceTests : ApiAcceptanceTestBase
 {
-    protected override bool RequiresBrowser => false;
-
     [Test]
     public async Task GetDetailedHealth_Returns200JsonWithOverallStatusAndComponents()
     {
