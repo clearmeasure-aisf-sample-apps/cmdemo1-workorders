@@ -182,7 +182,10 @@ public class IndexPageTests
             .ShouldBe(canCreate ? 1 : 0);
         var workOrders = component.Find(TestId(IndexPage.Elements.QuickLinkWorkOrders));
         workOrders.GetAttribute("href").ShouldBe("workorder/search");
-        workOrders.GetAttribute("aria-label").ShouldBe("All Work Orders");
+        var workOrdersAriaLabel = workOrders.GetAttribute("aria-label");
+        workOrdersAriaLabel.ShouldNotBeNull();
+        workOrdersAriaLabel.ShouldStartWith("Work Orders");
+        workOrdersAriaLabel.ShouldBe("Work Orders (all)");
         component.Find(TestId(IndexPage.Elements.QuickLinkMyQueue)).GetAttribute("href")
             .ShouldBe(WorkOrderSearchUrlState.ForCard(SummaryCard.AssignedToMe).ToRelativeUri());
     }
