@@ -34,4 +34,17 @@ public class WorkOrderDueDateTests
         cell.QuerySelector("[aria-hidden='true']").ShouldBeNull();
         dueDate.Find($"[data-testid='{WorkOrderSearch.Elements.UrgencyBadge}302']").ClassList.ShouldContain("overdue");
     }
+
+    [Test]
+    public async Task ShouldExposeUrgencyBadgeTextWithoutAriaLabel_WhenTheRowHasABadge()
+    {
+        await using var ctx = new BunitContext();
+        var row = SearchResultRowMother.OverdueSince(new DateOnly(2026, 1, 5), "303");
+
+        var dueDate = ctx.Render<WorkOrderDueDate>(parameters => parameters.Add(p => p.Row, row));
+
+        var badge = dueDate.Find($"[data-testid='{WorkOrderSearch.Elements.UrgencyBadge}303']");
+        badge.HasAttribute("aria-label").ShouldBeFalse();
+        badge.TextContent.ShouldBe("Overdue");
+    }
 }
