@@ -30,7 +30,7 @@ public class TeamsBuildingsAgentsFixtureIndependenceTests
 
     [TestCase("src/AcceptanceTests/TeamsAndVendors/TeamsAndVendorsAcceptanceTestBase.cs")]
     [TestCase("src/AcceptanceTests/Buildings/BuildingsAcceptanceTestBase.cs")]
-    [TestCase("src/AcceptanceTests/AIAgents/AIAgentsAcceptanceTestBase.cs")]
+    [TestCase("src/AcceptanceTests/AIAgents/AiAgentsAcceptanceTestBase.cs")]
     public void DomainAcceptanceBase_WhenRead_ExtendsApiBaseWithoutDataContext(string path)
     {
         var source = RepositoryCheckout.Current.ReadText(path);
@@ -54,7 +54,7 @@ public class TeamsBuildingsAgentsFixtureIndependenceTests
         var inheritsApiBase = text.Contains("AcceptanceApiTestBase", StringComparison.Ordinal)
             || text.Contains("TeamsAndVendorsAcceptanceTestBase", StringComparison.Ordinal)
             || text.Contains("BuildingsAcceptanceTestBase", StringComparison.Ordinal)
-            || text.Contains("AIAgentsAcceptanceTestBase", StringComparison.Ordinal);
+            || text.Contains("AiAgentsAcceptanceTestBase", StringComparison.Ordinal);
         var declaresAll = text.Contains("ParallelScope.All", StringComparison.Ordinal);
         (inheritsApiBase || declaresAll).ShouldBeTrue(path);
         text.ShouldNotContain("NonParallelizable");

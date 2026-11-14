@@ -9,7 +9,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
 /// Pool slots use the stub model; do not point slots at the real model. Skips when no chat client.
 /// </summary>
 [TestFixture]
-public class SaturdayMowSchedulingAgentTests : AIAgentsAcceptanceTestBase
+public class SaturdayMowSchedulingAgentTests : AiAgentsAcceptanceTestBase
 {
     [SetUp]
     public async Task EnsureLlmAvailable()

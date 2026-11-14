@@ -4,15 +4,15 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.AcceptanceTests;
 
 [TestFixture]
-public class AIAgentsAcceptanceTestBaseTests
+public class AiAgentsAcceptanceTestBaseTests
 {
     [Test]
-    public void AIAgentsAcceptanceTestBase_WhenRead_SeedsThroughApiBase()
+    public void AiAgentsAcceptanceTestBase_WhenRead_SeedsThroughApiBase()
     {
         var source = RepositoryCheckout.Current.ReadText(
-            "src/AcceptanceTests/AIAgents/AIAgentsAcceptanceTestBase.cs");
+            "src/AcceptanceTests/AIAgents/AiAgentsAcceptanceTestBase.cs");
 
-        source.ShouldContain("class AIAgentsAcceptanceTestBase : AcceptanceApiTestBase");
+        source.ShouldContain("class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase");
         source.ShouldContain("OpenAiAgentPageAsync");
         source.ShouldContain("SnapshotAssigneeOrderIdsAsync");
         source.ShouldContain("LoadTaggedAssigneeOrdersAsync");

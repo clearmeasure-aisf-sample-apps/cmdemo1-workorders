@@ -8,7 +8,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
 /// AI Agents acceptance base: API-backed seeding keyed by <see cref="AcceptanceTestBase.TestTag"/>.
 /// Pool slots use the stub model (item 22); do not point slots at the real model.
 /// </summary>
-public abstract class AIAgentsAcceptanceTestBase : AcceptanceApiTestBase
+public abstract class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase
 {
     /// <summary>Opens the AI Agent page after sign-in.</summary>
     protected async Task OpenAiAgentPageAsync()

@@ -9,7 +9,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
 /// Pool slots use the stub model; do not point slots at the real model.
 /// </summary>
 [TestFixture]
-public class ApplicationChatAgentTests : AIAgentsAcceptanceTestBase
+public class ApplicationChatAgentTests : AiAgentsAcceptanceTestBase
 {
     [SetUp]
     public async Task EnsureLlmAvailable()
@@ -62,11 +62,8 @@ public class ApplicationChatAgentTests : AIAgentsAcceptanceTestBase
         var workOrderNumber = match.Groups[1].Value.Trim('`', '*', ' ');
 
         var createdWo = await Bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
-        if (createdWo is null)
-        {
-            createdWo = (await LoadTaggedAssigneeOrdersAsync(assignee))
-                .FirstOrDefault(wo => !before.Contains(wo.Id));
-        }
+        createdWo ??= (await LoadTaggedAssigneeOrdersAsync(assignee))
+            .FirstOrDefault(wo => !before.Contains(wo.Id));
 
         createdWo.ShouldNotBeNull($"Expected work order '{workOrderNumber}'");
         createdWo.Creator!.UserName.ShouldBe(CurrentUser.UserName);

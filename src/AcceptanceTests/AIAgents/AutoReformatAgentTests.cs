@@ -8,7 +8,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
 /// Pool slots use the stub model; do not point slots at the real model.
 /// </summary>
 [TestFixture]
-public class AutoReformatAgentTests : AIAgentsAcceptanceTestBase
+public class AutoReformatAgentTests : AiAgentsAcceptanceTestBase
 {
     [Test, LlmTest, Explicit]
     public async Task ShouldReformatWorkOrderTitleAndDescription()
