@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.LlmGateway;
-using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
@@ -43,14 +42,6 @@ public abstract class McpAcceptanceTestBase : AcceptanceApiTestBase
         }
 
         await helper.DisposeAsync();
-    }
-
-    /// <summary>Opens work-order search and waits for the creator filter.</summary>
-    protected async Task OpenWorkOrderSearchAsync()
-    {
-        await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForURLAsync("**/workorder/search");
-        await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}")).ToBeVisibleAsync();
     }
 
     /// <summary>Navigates to manage edit for <paramref name="workOrderNumber"/>.</summary>

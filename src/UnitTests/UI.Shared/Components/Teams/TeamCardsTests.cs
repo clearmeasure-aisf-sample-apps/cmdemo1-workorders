@@ -1,6 +1,7 @@
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.UI.Shared.Components.Teams;
+using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Shouldly;
 
@@ -42,6 +43,6 @@ public class TeamCardsTests
         var cards = ctx.Render<TeamCards>(parameters => parameters.Add(p => p.Teams, [team]));
 
         cards.Find($"[data-testid='{TeamsAndVendors.Elements.TeamMemberLink}ada']").GetAttribute("aria-label")
-            .ShouldBe($"Open work orders for {member.GetFullName()}");
+            .ShouldBe($"{UserDisplay.Initials(member)}: Open work orders for {member.GetFullName()}");
     }
 }
