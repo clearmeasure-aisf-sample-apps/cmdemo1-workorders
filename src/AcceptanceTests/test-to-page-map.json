@@ -1,0 +1,452 @@
+{
+  "notes": "Maps page-level acceptance fixtures to the Razor files they exercise (PR environments plan item 23 / #1670). Item 16 selects changed-UI videos via scripts/acceptance/Get-TestsForChangedRazor.ps1. A new page-level fixture (browser UI test: App/Auth/WorkOrder/Buildings/TeamsAndVendors/AiAgents bases, or McpAcceptanceTestBase without RequiresBrowser => false) must add an entry here; TestToPageMapTests fails otherwise. Non-page fixtures (Api, NServiceBus, MCP without browser, Extensions, TestUsers, NeedsRebootHealthCheckTests) stay out.",
+  "tests": [
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.ApplicationChatAgentTests",
+      "pages": [
+        "src/UI.Shared/Pages/ApplicationChat.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.AutoReformatAgentTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.SaturdayMowSchedulingAgentTests",
+      "pages": [
+        "src/UI.Shared/Pages/ApplicationChat.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTeamsTests",
+      "pages": [
+        "src/UI.Shared/Pages/TeamsAndVendors.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests",
+      "pages": [
+        "src/UI.Shared/Pages/Login.razor",
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI/Client/Pages/NotFound.razor",
+        "src/UI/Client/Pages/ClientHealthCheck.razor",
+        "src/UI/Client/Pages/DetailedClientHealthCheck.razor",
+        "src/UI.Shared/Pages/Settings.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderPrint.razor",
+        "src/UI.Shared/Pages/Buildings.razor",
+        "src/UI.Shared/Pages/Reports.razor",
+        "src/UI.Shared/Pages/ApplicationChat.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.AiAgentPageTests",
+      "pages": [
+        "src/UI.Shared/Pages/ApplicationChat.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.AppShellTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.ClientHealthCheckTests",
+      "pages": [
+        "src/UI/Client/Pages/ClientHealthCheck.razor",
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.CopyrightFooterTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI/Client/Pages/NotFound.razor",
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.DarkModeTests",
+      "pages": [
+        "src/UI.Shared/Pages/Settings.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/Login.razor",
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.DashboardTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.InterFontTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests",
+      "pages": [
+        "src/UI.Shared/Pages/ApplicationChat.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.NavRailToggleTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/NavMenu.razor",
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.NotificationsPanelTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.PageLoadBudgetTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/TeamsAndVendors.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.PhoneWidthNoDocumentScrollTests",
+      "pages": [
+        "src/UI.Shared/Pages/Login.razor",
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderPrint.razor",
+        "src/UI.Shared/Pages/Reports.razor",
+        "src/UI.Shared/Pages/Buildings.razor",
+        "src/UI.Shared/Pages/TeamsAndVendors.razor",
+        "src/UI.Shared/Pages/ApplicationChat.razor",
+        "src/UI.Shared/Pages/Settings.razor",
+        "src/UI/Client/Pages/NotFound.razor",
+        "src/UI/Client/Pages/ClientHealthCheck.razor",
+        "src/UI/Client/Pages/DetailedClientHealthCheck.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.RemovedTemplatePageTests",
+      "pages": [
+        "src/UI/Client/Pages/NotFound.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.ReportsPageTests",
+      "pages": [
+        "src/UI.Shared/Pages/Reports.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.SidebarHeightTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.SidebarSlaHealthCardTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.App.WarmUpTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LoginTests",
+      "pages": [
+        "src/UI.Shared/Pages/Login.razor",
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LogoutTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/NavMenu.razor",
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsCountLinkTests",
+      "pages": [
+        "src/UI.Shared/Pages/Buildings.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsNavigationTests",
+      "pages": [
+        "src/UI.Shared/Pages/Buildings.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpCreateWorkOrderInstructionsAcceptanceTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/Login.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpGetWorkOrderInstructionsAcceptanceTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/Login.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpListWorkOrdersAcceptanceTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/Login.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.McpServer.McpSaveWorkOrderAcceptanceTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/Login.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsPageTests",
+      "pages": [
+        "src/UI.Shared/Pages/TeamsAndVendors.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.VendorsPageTests",
+      "pages": [
+        "src/UI.Shared/Pages/TeamsAndVendors.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAiChatTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAssignTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAttachmentTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderBeginTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCancelTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCompleteTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCreatedRelativeTimeTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDescriptionCharCountTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDictationTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderDueDateTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderInProgressToCancelTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderManageCopyButtonTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderPrintTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderPrint.razor",
+        "src/UI.Shared/PrintLayout.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderRoomNumberLengthTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveDraftTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveThenAssignPersistenceTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
+        "src/UI.Shared/Pages/Login.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchFilterTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchLongRoomTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchRedesignTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchSavedViewsTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderShelvedTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSpeechTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusDashboardTests",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderStatusHistoryTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderTitleCharCountTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderWaitingOnVendorCancelTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "class": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderWaitingOnVendorTests",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    }
+  ]
+}
