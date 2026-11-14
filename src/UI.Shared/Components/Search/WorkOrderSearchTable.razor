@@ -58,7 +58,8 @@
                 <td class="col-room" data-testid="@($"{WorkOrderSearch.Elements.RoomCell}{number}")">
                     @if (string.IsNullOrWhiteSpace(order.WorkOrder.RoomNumber))
                     {
-                        <span class="muted-cell" aria-label="No room">–</span>
+                        <span class="muted-cell" aria-hidden="true">–</span>
+                        <span class="visually-hidden">No room</span>
                     }
                     else
                     {
