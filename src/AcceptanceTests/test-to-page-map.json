@@ -1,5 +1,5 @@
 {
-  "notes": "Maps page-level acceptance fixtures to the Razor files they exercise (PR environments plan item 23 / #1670). Item 16 selects changed-UI videos via scripts/acceptance/Get-TestsForChangedRazor.ps1. A new page-level fixture (browser UI test: App/Auth/WorkOrder/Buildings/TeamsAndVendors/AiAgents bases, or McpAcceptanceTestBase without RequiresBrowser => false) must add an entry here; TestToPageMapTests fails otherwise. Non-page fixtures (Api, NServiceBus, MCP without browser, Extensions, TestUsers, NeedsRebootHealthCheckTests) stay out.",
+  "notes": "Maps page-level acceptance fixtures to Razor pages and shared components (PR environments plan item 23 / #1670). Item 16 selects changed-UI videos via scripts/acceptance/Get-TestsForChangedRazor.ps1. Pipe changed paths into the script (ValueFromPipeline on -RazorPaths); use -PathsFile for a real file. components[] maps shared/shell Razor files to host pages so a component change selects the same fixtures as those pages. ignoredRazor paths (_Imports) are non-UI and never select tests. A new page-level fixture must add a tests[] entry; a new Components/*.razor must add a components[] entry \u2014 TestToPageMapTests fails otherwise. Non-page fixtures (Api, NServiceBus, MCP without browser, Extensions, TestUsers, NeedsRebootHealthCheckTests) stay out of tests[].",
   "tests": [
     {
       "class": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.ApplicationChatAgentTests",
@@ -448,5 +448,205 @@
         "src/UI.Shared/Pages/WorkOrderSearch.razor"
       ]
     }
+  ],
+  "components": [
+    {
+      "path": "src/UI.Shared/Components/Breadcrumbs.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/BuildInfoLink.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/CopyWorkOrderNumberButton.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/GlobalSearchBox.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/HealthCheckLink.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI/Client/Pages/ClientHealthCheck.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/KpiCard.razor",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/LastWorkOrder.razor",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/LoginLink.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/Pages/Login.razor",
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Logout.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/MyWorkOrders.razor",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/NotificationsPanel.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/PageHeader.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/AssigneeAvatar.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/SearchPagination.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/SearchSavedViewsMenu.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/WorkOrderDueDate.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/WorkOrderPriorityLabel.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/WorkOrderSearchBoard.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/WorkOrderSearchFilters.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Search/WorkOrderSearchTable.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/SlaHealthCard.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Teams/TeamCards.razor",
+      "pages": [
+        "src/UI.Shared/Pages/TeamsAndVendors.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Teams/TeamWorkLoadTable.razor",
+      "pages": [
+        "src/UI.Shared/Pages/TeamsAndVendors.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/Teams/VendorCards.razor",
+      "pages": [
+        "src/UI.Shared/Pages/TeamsAndVendors.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/WorkOrderAttachmentList.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/WorkOrderBulkActionBar.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/WorkOrderChat.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/WorkOrderStatusHistory.razor",
+      "pages": [
+        "src/UI.Shared/Pages/WorkOrderManage.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/WorkOrderSummaryCards.razor",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor"
+      ]
+    },
+    {
+      "path": "src/UI/Client/App.razor",
+      "pages": [
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Authentication/RedirectToLogin.razor",
+      "pages": [
+        "src/UI.Shared/Pages/Login.razor"
+      ]
+    }
+  ],
+  "ignoredRazor": [
+    "src/UI.Shared/_Imports.razor",
+    "src/UI/Client/_Imports.razor"
   ]
 }

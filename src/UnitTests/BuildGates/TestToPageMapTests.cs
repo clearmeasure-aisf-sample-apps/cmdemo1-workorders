@@ -40,6 +40,16 @@ public class TestToPageMapTests
     }
 
     [Test]
+    public void TestsForRazorPaths_WhenAComponentChanges_ExpandsToHostPageFixtures()
+    {
+        var map = SampleMap();
+
+        var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/Teams/TeamCards.razor"]);
+
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsPageTests");
+    }
+
+    [Test]
     public void TestsForRazorPaths_WhenUnmappedRazorChanges_ReturnsEmpty()
     {
         var map = SampleMap();
@@ -82,13 +92,64 @@ public class TestToPageMapTests
     }
 
     [Test]
-    public void GetTestsForChangedRazorScript_WhenRead_LoadsTheCommittedMap()
+    public void GetTestsForChangedRazorScript_WhenRead_AcceptsPipelineAndRejectsPathsFileDash()
     {
         var script = RepositoryCheckout.Current.ReadText("scripts/acceptance/Get-TestsForChangedRazor.ps1");
 
         script.ShouldContain("test-to-page-map.json");
-        script.ShouldContain("Get-CanonicalRazorPath");
-        script.ShouldContain("FullyQualifiedName~");
+        script.ShouldContain("ValueFromPipeline");
+        script.ShouldContain("Console]::IsInputRedirected");
+        script.ShouldContain("PathsFile '-' is not supported");
+        script.ShouldContain("components");
+        script.ShouldContain("AllowEmpty");
+    }
+
+    [Test]
+    public void GetTestsForChangedRazorScript_WhenTeamCardsPipedToFile_SelectsTeamsFixtures()
+    {
+        var root = RepositoryCheckout.Current.Root;
+        var script = Path.Combine(root, "scripts/acceptance/Get-TestsForChangedRazor.ps1");
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "pwsh",
+            ArgumentList = { "-NoProfile", "-File", script },
+            WorkingDirectory = root,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        using var process = System.Diagnostics.Process.Start(psi)!;
+        process.StandardInput.WriteLine("src/UI.Shared/Components/Teams/TeamCards.razor");
+        process.StandardInput.Close();
+        var output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit(60_000).ShouldBeTrue();
+        process.ExitCode.ShouldBe(0);
+        output.ShouldContain("TeamsPageTests");
+    }
+
+    [Test]
+    public void GetTestsForChangedRazorScript_WhenLoginPipedToFile_SelectsLoginFixtures()
+    {
+        var root = RepositoryCheckout.Current.Root;
+        var script = Path.Combine(root, "scripts/acceptance/Get-TestsForChangedRazor.ps1");
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "pwsh",
+            ArgumentList = { "-NoProfile", "-File", script },
+            WorkingDirectory = root,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        using var process = System.Diagnostics.Process.Start(psi)!;
+        process.StandardInput.WriteLine("src/UI.Shared/Pages/Login.razor");
+        process.StandardInput.Close();
+        var output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit(60_000).ShouldBeTrue();
+        process.ExitCode.ShouldBe(0);
+        output.ShouldContain("LoginTests");
     }
 
     private static TestToPageMap SampleMap()
@@ -106,6 +167,19 @@ public class TestToPageMapTests
                 {
                     Class = "ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests",
                     Pages = ["src/UI.Shared/Pages/Index.razor"],
+                },
+                new TestToPageMapEntry
+                {
+                    Class = "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsPageTests",
+                    Pages = ["src/UI.Shared/Pages/TeamsAndVendors.razor"],
+                },
+            ],
+            Components =
+            [
+                new TestToPageComponentEntry
+                {
+                    Path = "src/UI.Shared/Components/Teams/TeamCards.razor",
+                    Pages = ["src/UI.Shared/Pages/TeamsAndVendors.razor"],
                 },
             ],
         };

@@ -13,15 +13,28 @@ internal sealed class TestToPageMapEntry
     public List<string> Pages { get; init; } = [];
 }
 
+/// <summary>Shared or shell Razor file and the host pages whose tests cover it.</summary>
+internal sealed class TestToPageComponentEntry
+{
+    public string Path { get; init; } = "";
+
+    public List<string> Pages { get; init; } = [];
+}
+
 /// <summary>
 /// Checked-in map from page-level acceptance tests to Razor pages. A changed Razor
 /// file selects its mapped fixtures for changed-UI videos (issue #1670 / item 16).
+/// Shared components expand to host pages via <see cref="Components"/>.
 /// </summary>
 internal sealed class TestToPageMap
 {
     public const string RelativePath = "src/AcceptanceTests/test-to-page-map.json";
 
     public List<TestToPageMapEntry> Tests { get; init; } = [];
+
+    public List<TestToPageComponentEntry> Components { get; init; } = [];
+
+    public List<string> IgnoredRazor { get; init; } = [];
 
     /// <summary>Reads <see cref="RelativePath"/> from <paramref name="checkout"/>.</summary>
     public static TestToPageMap Load(RepositoryCheckout checkout)
@@ -38,14 +51,12 @@ internal sealed class TestToPageMap
     }
 
     /// <summary>
-    /// Fixture class names whose <c>pages</c> include any of <paramref name="razorPaths"/>
-    /// (checkout-relative). A <c>.razor.cs</c> path matches its <c>.razor</c> page.
+    /// Fixture class names for <paramref name="razorPaths"/>. Components expand to host
+    /// pages; <c>.razor.cs</c> matches its <c>.razor</c>; ignored paths select nothing.
     /// </summary>
     public IReadOnlyList<string> TestsForRazorPaths(IEnumerable<string> razorPaths)
     {
-        var wanted = new HashSet<string>(
-            razorPaths.Select(CanonicalRazorPath).Where(static path => path.Length > 0),
-            StringComparer.OrdinalIgnoreCase);
+        var wanted = ExpandToPagePaths(razorPaths);
         if (wanted.Count == 0)
         {
             return [];
@@ -59,6 +70,38 @@ internal sealed class TestToPageMap
             .ToArray();
     }
 
+    /// <summary>
+    /// Checkout-relative page paths selected by <paramref name="razorPaths"/> after
+    /// component expansion. Empty when every path is ignored or blank.
+    /// </summary>
+    public HashSet<string> ExpandToPagePaths(IEnumerable<string> razorPaths)
+    {
+        var ignored = IgnoredRazor.Select(CanonicalRazorPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var hosts = ComponentHosts();
+        var wanted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var raw in razorPaths.Select(CanonicalRazorPath).Where(static path => path.Length > 0))
+        {
+            if (ignored.Contains(raw))
+            {
+                continue;
+            }
+
+            if (hosts.TryGetValue(raw, out var pages))
+            {
+                foreach (var page in pages)
+                {
+                    wanted.Add(page);
+                }
+            }
+            else
+            {
+                wanted.Add(raw);
+            }
+        }
+
+        return wanted;
+    }
+
     /// <summary>Checkout-relative <c>.razor</c> path; strips a trailing <c>.cs</c> from code-behind.</summary>
     public static string CanonicalRazorPath(string path)
     {
@@ -69,6 +112,14 @@ internal sealed class TestToPageMap
         }
 
         return normalized;
+    }
+
+    private Dictionary<string, string[]> ComponentHosts()
+    {
+        return Components.ToDictionary(
+            entry => CanonicalRazorPath(entry.Path),
+            entry => entry.Pages.Select(CanonicalRazorPath).ToArray(),
+            StringComparer.OrdinalIgnoreCase);
     }
 
     private static JsonSerializerOptions SerializerOptions()

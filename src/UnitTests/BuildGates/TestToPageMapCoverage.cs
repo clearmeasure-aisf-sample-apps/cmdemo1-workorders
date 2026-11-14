@@ -6,7 +6,8 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 internal static class TestToPageMapCoverage
 {
     /// <summary>
-    /// Missing mappings, empty pages, unknown fixtures, duplicate classes, and missing Razor files.
+    /// Missing mappings, empty pages, unknown fixtures, duplicate classes, missing Razor files,
+    /// and Components/*.razor files without a host-page entry.
     /// </summary>
     public static IReadOnlyList<string> Evaluate(
         TestToPageMap map,
@@ -19,6 +20,8 @@ internal static class TestToPageMapCoverage
         problems.AddRange(DuplicateClasses(map));
         problems.AddRange(EmptyOrBlankEntries(map));
         problems.AddRange(MissingRazorFiles(map, checkout));
+        problems.AddRange(ComponentEntryProblems(map));
+        problems.AddRange(UnmappedUiRazor(map, checkout));
         return problems;
     }
 
@@ -80,7 +83,12 @@ internal static class TestToPageMapCoverage
 
     private static IEnumerable<string> MissingRazorFiles(TestToPageMap map, RepositoryCheckout checkout)
     {
-        foreach (var path in map.Tests.SelectMany(entry => entry.Pages).Distinct(StringComparer.Ordinal))
+        var listed = map.Tests.SelectMany(entry => entry.Pages)
+            .Concat(map.Components.Select(entry => entry.Path))
+            .Concat(map.Components.SelectMany(entry => entry.Pages))
+            .Concat(map.IgnoredRazor)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in listed)
         {
             var canonical = TestToPageMap.CanonicalRazorPath(path);
             if (!File.Exists(checkout.PathOf(canonical)))
@@ -89,5 +97,50 @@ internal static class TestToPageMapCoverage
                     $"{canonical} is listed in {TestToPageMap.RelativePath} but was not found in the checkout.";
             }
         }
+    }
+
+    private static IEnumerable<string> ComponentEntryProblems(TestToPageMap map)
+    {
+        foreach (var group in map.Components.GroupBy(entry => TestToPageMap.CanonicalRazorPath(entry.Path),
+                     StringComparer.OrdinalIgnoreCase).Where(group => group.Count() > 1))
+        {
+            yield return $"{group.Key} appears more than once under components in {TestToPageMap.RelativePath}.";
+        }
+
+        foreach (var entry in map.Components)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Path) || entry.Pages.Count == 0 ||
+                entry.Pages.Any(string.IsNullOrWhiteSpace))
+            {
+                yield return
+                    $"A components entry in {TestToPageMap.RelativePath} needs a path and at least one host page.";
+            }
+        }
+    }
+
+    private static IEnumerable<string> UnmappedUiRazor(TestToPageMap map, RepositoryCheckout checkout)
+    {
+        var covered = map.Tests.SelectMany(entry => entry.Pages)
+            .Concat(map.Components.Select(entry => entry.Path))
+            .Concat(map.IgnoredRazor)
+            .Select(TestToPageMap.CanonicalRazorPath)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in checkout.SourceFiles(".razor"))
+        {
+            var relative = checkout.Relative(path);
+            if (!IsUiRazor(relative) || covered.Contains(relative))
+            {
+                continue;
+            }
+
+            yield return
+                $"{relative} is a UI Razor file but is not listed under tests, components, or ignoredRazor in {TestToPageMap.RelativePath}.";
+        }
+    }
+
+    private static bool IsUiRazor(string relative)
+    {
+        return relative.StartsWith("src/UI.Shared/", StringComparison.Ordinal)
+               || relative.StartsWith("src/UI/Client/", StringComparison.Ordinal);
     }
 }
