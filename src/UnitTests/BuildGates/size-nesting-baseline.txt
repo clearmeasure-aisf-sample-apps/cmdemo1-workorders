@@ -14,18 +14,12 @@ file src/UnitTests/UI.Shared/MainLayoutTests.cs
 file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs
 file src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs
 file src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs
-method src/AcceptanceTests/AIAgents/ApplicationChatAgentTests.cs ApplicationChatAgentTests.ShouldCreateWorkOrderViaAiAgentChat()
-method src/AcceptanceTests/AIAgents/AutoReformatAgentTests.cs AutoReformatAgentTests.ShouldReformatWorkOrderTitleAndDescription()
-method src/AcceptanceTests/AIAgents/SaturdayMowSchedulingAgentTests.cs SaturdayMowSchedulingAgentTests.ShouldCreateTenSaturdayMowsForWillieViaAiAgent()
 method src/AcceptanceTests/AcceptanceTestBase.cs AcceptanceTestBase.CreateAndSaveNewWorkOrder()
 method src/AcceptanceTests/App/AiAgentPageTests.cs AiAgentPageTests.ShouldKeepPromptVisibleWhenResizingWithLongConversation()
 method src/AcceptanceTests/App/AppShellTests.cs AppShellTests.ShouldFitWithoutHorizontalScroll_At1280()
 method src/AcceptanceTests/App/DarkModeTests.cs DarkModeTests.DarkMode_ShouldToggleHtmlDataTheme_WhenSwitchChangedOnSettings()
 method src/AcceptanceTests/App/NavRailToggleTests.cs NavRailToggleTests.ShouldDismissNavByTappingBackdrop_OnMobile()
 method src/AcceptanceTests/BlazorWasmWarmUp.cs BlazorWasmWarmUp.ExecuteAsync()
-method src/AcceptanceTests/Buildings/BuildingsTests.cs BuildingsTests.ShouldSeedBuildingAndFollowCompletedCountLinks()
-method src/AcceptanceTests/Buildings/BuildingsTests.cs BuildingsTests.ShouldSeedBuildingAndFollowCountLinks()
-method src/AcceptanceTests/Buildings/BuildingsTests.cs BuildingsTests.ShouldSeedBuildingAndFollowOverdueCountLinks()
 method src/AcceptanceTests/McpServer/McpChatConversationTests.cs McpChatConversationTests.ShouldCreateAndAssignWorkOrderFromConversationalPrompt()
 method src/AcceptanceTests/McpServer/McpGetWorkOrderInstructionsAcceptanceTests.cs McpGetWorkOrderInstructionsAcceptanceTests.ShouldMatchGetWorkOrderDetailWithManageWhenInstructionsSet()
 method src/AcceptanceTests/McpServer/McpListWorkOrdersAcceptanceTests.cs McpListWorkOrdersAcceptanceTests.AssertSearchMatches(IReadOnlyCollection<string>,string?,string?,string?)
@@ -40,9 +34,6 @@ method src/AcceptanceTests/McpServer/McpWorkOrderLifecycleTests.cs McpWorkOrderL
 method src/AcceptanceTests/PageLoadBudget.cs PageLoadBudget.ApiCallProbe.TryReadTypeName(string?)
 method src/AcceptanceTests/PageLoadBudget.cs PageLoadBudget.WaitUntilQuietAsync(ApiCallProbe,string,int)
 method src/AcceptanceTests/ServerFixture.cs ServerFixture.TryGetHealthBody(HttpClient,int,int)
-method src/AcceptanceTests/TeamsAndVendors/TeamsAndVendorsTests.cs TeamsAndVendorsTests.ShouldDisplayTeamMembersAsAvatars()
-method src/AcceptanceTests/TeamsAndVendors/TeamsAndVendorsTests.cs TeamsAndVendorsTests.ShouldDisplayVendorDetailsCorrectly()
-method src/AcceptanceTests/TeamsAndVendors/TeamsAndVendorsTests.cs TeamsAndVendorsTests.ShouldMatchOpenCountBetweenTeamsPageAndSearchPage()
 method src/AcceptanceTests/WorkOrders/WorkOrderAIChatTests.cs WorkOrderAiChatTests.ShouldRespondToChat()
 method src/AcceptanceTests/WorkOrders/WorkOrderAssignTests.cs WorkOrderAssignTests.ShouldAssignEmployeeAndAssign()
 method src/AcceptanceTests/WorkOrders/WorkOrderAttachmentTests.cs WorkOrderAttachmentTests.ShouldAddAttachmentMetadataAndDisplayOnManagePage()

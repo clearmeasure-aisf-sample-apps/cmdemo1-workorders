@@ -64,11 +64,6 @@
       "seconds": 18.7
     },
     {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsTests",
-      "tests": 5,
-      "seconds": 102.7
-    },
-    {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAiChatTests",
       "tests": 3,
       "seconds": 26.6
@@ -167,11 +162,6 @@
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.SidebarSlaHealthCardTests",
       "tests": 1,
       "seconds": 11.8
-    },
-    {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsAndVendorsTests",
-      "tests": 13,
-      "seconds": 216.9
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCompleteTests",
@@ -372,6 +362,26 @@
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.TestSupportApiAcceptanceTests",
       "tests": 2,
       "seconds": 2.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsNavigationTests",
+      "tests": 2,
+      "seconds": 40.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsCountLinkTests",
+      "tests": 3,
+      "seconds": 62.7
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsPageTests",
+      "tests": 9,
+      "seconds": 150.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.VendorsPageTests",
+      "tests": 4,
+      "seconds": 66.9
     }
   ]
 }

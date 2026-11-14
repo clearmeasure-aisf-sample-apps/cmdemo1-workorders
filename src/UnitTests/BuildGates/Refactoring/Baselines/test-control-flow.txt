@@ -1,8 +1,5 @@
 # Ratchet baseline for TestControlFlowRule: today's violations. Only delete lines (fix the code first); never add.
 # See docs/refactoring-oversized-code.md.
-src/AcceptanceTests/AIAgents/ApplicationChatAgentTests.cs :: ApplicationChatAgentTests.ShouldCreateWorkOrderViaAiAgentChat
-src/AcceptanceTests/AIAgents/AutoReformatAgentTests.cs :: AutoReformatAgentTests.ShouldReformatWorkOrderTitleAndDescription
-src/AcceptanceTests/AIAgents/SaturdayMowSchedulingAgentTests.cs :: SaturdayMowSchedulingAgentTests.ShouldCreateTenSaturdayMowsForWillieViaAiAgent
 src/AcceptanceTests/Api/ApiRateLimitingAcceptanceTests.cs :: ApiRateLimitingAcceptanceTests.Api_RapidRequests_EventuallyReturns429
 src/AcceptanceTests/Api/ApiRateLimitingAcceptanceTests.cs :: ApiRateLimitingAcceptanceTests.Api_RateLimitHeaders_PresentOnEveryResponse
 src/AcceptanceTests/Api/DetailedHealthApiAcceptanceTests.cs :: DetailedHealthApiAcceptanceTests.GetDetailedHealth_Returns200JsonWithOverallStatusAndComponents
@@ -20,12 +17,7 @@ src/AcceptanceTests/App/CopyrightFooterTests.cs :: CopyrightFooterTests.ShouldSh
 src/AcceptanceTests/App/DarkModeTests.cs :: DarkModeTests.DarkMode_ShouldPersistAcrossReload
 src/AcceptanceTests/App/DashboardTests.cs :: DashboardTests.ShouldShowHeaderAndCards_WithoutHero
 src/AcceptanceTests/Authentication/LoginTests.cs :: LoginTests.Should_PulseLoginLinkColorAtFullOpacity_WhenAnonymous
-src/AcceptanceTests/Buildings/BuildingsTests.cs :: BuildingsTests.ShouldRenderDarkModeWithoutBreakage
-src/AcceptanceTests/Buildings/BuildingsTests.cs :: BuildingsTests.ShouldSeedBuildingAndFollowCompletedCountLinks
-src/AcceptanceTests/Buildings/BuildingsTests.cs :: BuildingsTests.ShouldSeedBuildingAndFollowOverdueCountLinks
 src/AcceptanceTests/NServiceBus/TracerBulletTests.cs :: TracerBulletTests.TracerBullet_WorkerReceivesCommandAndReplies
-src/AcceptanceTests/TeamsAndVendors/TeamsAndVendorsTests.cs :: TeamsAndVendorsTests.ShouldDisplayTableWithAllColumns
-src/AcceptanceTests/TeamsAndVendors/TeamsAndVendorsTests.cs :: TeamsAndVendorsTests.ShouldDisplayTeamMembersAsAvatars
 src/AcceptanceTests/WorkOrders/WorkOrderSearchRedesignTests.cs :: WorkOrderSearchRedesignTests.ShouldBulkAssignSelectedDrafts
 src/AcceptanceTests/WorkOrders/WorkOrderSearchRedesignTests.cs :: WorkOrderSearchRedesignTests.ShouldCollapseSearchToOneRow_AtPhoneWidth_InLightAndDark
 src/AcceptanceTests/WorkOrders/WorkOrderSearchRedesignTests.cs :: WorkOrderSearchRedesignTests.ShouldPageThroughResults
