@@ -16,9 +16,9 @@ else
             <table class="teams-table">
                 <thead>
                 <tr>
-                    <th class="col-name" scope="col">@SortHeader(SortColumn.Name, "Name")</th>
+                    <th class="col-name" scope="col" aria-sort="@AriaSort(SortColumn.Name)">@SortHeader(SortColumn.Name, "Name")</th>
                     <th class="col-role" scope="col">Role</th>
-                    <th class="col-assigned-open" scope="col">@SortHeader(SortColumn.OpenLoad, "Assigned Open")</th>
+                    <th class="col-assigned-open" scope="col" aria-sort="@AriaSort(SortColumn.OpenLoad)">@SortHeader(SortColumn.OpenLoad, "Assigned Open")</th>
                     <th class="col-in-progress" scope="col">In Progress</th>
                     <th class="col-overdue" scope="col">Overdue</th>
                     <th class="col-completed" scope="col">Completed 30d</th>
@@ -95,6 +95,9 @@ else
         (SortColumn.OpenLoad, true) => rows.OrderBy(r => r.Load.AssignedAndOpen).ToList(),
         _ => rows.OrderByDescending(r => r.Load.AssignedAndOpen).ToList()
     };
+
+    private string AriaSort(SortColumn column) =>
+        _sortColumn != column ? "none" : _sortAscending ? "ascending" : "descending";
 
     private RenderFragment SortHeader(SortColumn column, string label) =>
         @<button type="button" class="@(_sortColumn == column ? "sort-header active-sort" : "sort-header")"

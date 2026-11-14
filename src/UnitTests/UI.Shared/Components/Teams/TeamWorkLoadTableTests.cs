@@ -53,6 +53,45 @@ public class TeamWorkLoadTableTests
         TeamWorkLoadTable.OpenWorkSearch("ada lovelace").ShouldBe("workorder/search?Assignee=ada%20lovelace&OpenOnly=true");
     }
 
+    [Test]
+    public async Task ShouldExposeAscendingNameSort_WhenFirstRendered()
+    {
+        await using var ctx = new BunitContext();
+        var table = ctx.Render<TeamWorkLoadTable>(parameters => parameters.Add(p => p.Summaries, TwoEmployees));
+
+        table.Find("th.col-name").GetAttribute("aria-sort").ShouldBe("ascending");
+        table.Find("th.col-assigned-open").GetAttribute("aria-sort").ShouldBe("none");
+    }
+
+    [Test]
+    public async Task ShouldFlipAssignedOpenAriaSort_WhenItsHeaderIsClickedTwice()
+    {
+        await using var ctx = new BunitContext();
+        var table = ctx.Render<TeamWorkLoadTable>(parameters => parameters.Add(p => p.Summaries, TwoEmployees));
+
+        await table.Find(".col-assigned-open .sort-header").ClickAsync(new());
+
+        table.Find("th.col-assigned-open").GetAttribute("aria-sort").ShouldBe("descending");
+        table.Find("th.col-name").GetAttribute("aria-sort").ShouldBe("none");
+
+        await table.Find(".col-assigned-open .sort-header").ClickAsync(new());
+
+        table.Find("th.col-assigned-open").GetAttribute("aria-sort").ShouldBe("ascending");
+        table.Find("th.col-name").GetAttribute("aria-sort").ShouldBe("none");
+    }
+
+    [Test]
+    public async Task ShouldOmitAriaSort_WhenHeaderIsNotSortable()
+    {
+        await using var ctx = new BunitContext();
+        var table = ctx.Render<TeamWorkLoadTable>(parameters => parameters.Add(p => p.Summaries, TwoEmployees));
+
+        table.Find("th.col-role").HasAttribute("aria-sort").ShouldBeFalse();
+        table.Find("th.col-in-progress").HasAttribute("aria-sort").ShouldBeFalse();
+        table.Find("th.col-overdue").HasAttribute("aria-sort").ShouldBeFalse();
+        table.Find("th.col-completed").HasAttribute("aria-sort").ShouldBeFalse();
+    }
+
     private static string?[] RowNames(IRenderedComponent<TeamWorkLoadTable> table) =>
         table.FindAll(".teams-table-row .col-name").Select(cell => cell.GetAttribute("data-testid")).ToArray();
 }
