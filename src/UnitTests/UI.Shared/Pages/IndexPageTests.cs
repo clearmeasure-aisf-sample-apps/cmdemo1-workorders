@@ -179,6 +179,26 @@ public class IndexPageTests
         linkAriaLabel.ShouldBe("WO-ABC1234: Fix the organ");
     }
 
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    public async Task ShouldOmitTitleSuffix_WhenRecentActivityTitleMissing(string? title)
+    {
+        var order = new WorkOrder
+        {
+            Number = "ABC1234", Title = title!, Status = WorkOrderStatus.Draft,
+            CreatedDate = new DateTime(2026, 10, 2, 18, 0, 0)
+        };
+        var bus = new StubBus { RecentWorkOrders = [order] };
+        await using var ctx = CreateContext(bus, User(true));
+
+        var component = ctx.Render<IndexPage>();
+
+        var linkAriaLabel = component.Find(TestId(IndexPage.Elements.RecentActivityLink, "ABC1234"))
+            .GetAttribute("aria-label");
+        linkAriaLabel.ShouldBe("WO-ABC1234");
+    }
+
     [Test]
     public async Task ShouldShowEmptyRecentActivity()
     {
