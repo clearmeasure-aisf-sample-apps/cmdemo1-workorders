@@ -19,9 +19,6 @@ src/AcceptanceTests/App/AppShellTests.cs :: AppShellTests.ShouldFitWithoutHorizo
 src/AcceptanceTests/App/CopyrightFooterTests.cs :: CopyrightFooterTests.ShouldShowGitSha_InFooter_OnLandingPage
 src/AcceptanceTests/App/DarkModeTests.cs :: DarkModeTests.DarkMode_ShouldPersistAcrossReload
 src/AcceptanceTests/App/DashboardTests.cs :: DashboardTests.ShouldShowHeaderAndCards_WithoutHero
-src/AcceptanceTests/App/ReportsPageTests.cs :: ReportsPageTests.Reports_AverageDaysToClose_ShouldMatchSearchPage
-src/AcceptanceTests/Authentication/LoginTests.cs :: LoginTests.LoginWithUsernameOnlyForwardsToHomePage
-src/AcceptanceTests/Authentication/LoginTests.cs :: LoginTests.Should_LoginAsTlovejoy_WhenLovejoyClickedBeforeEmployeesLoaded
 src/AcceptanceTests/Authentication/LoginTests.cs :: LoginTests.Should_PulseLoginLinkColorAtFullOpacity_WhenAnonymous
 src/AcceptanceTests/Buildings/BuildingsTests.cs :: BuildingsTests.ShouldRenderDarkModeWithoutBreakage
 src/AcceptanceTests/Buildings/BuildingsTests.cs :: BuildingsTests.ShouldSeedBuildingAndFollowCompletedCountLinks

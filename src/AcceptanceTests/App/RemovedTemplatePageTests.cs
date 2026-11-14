@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.UI.Client.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class RemovedTemplatePageTests : AcceptanceTestBase
+public class RemovedTemplatePageTests : AppAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldShowNotFound_WhenOpeningRemovedTemplateRoutes()

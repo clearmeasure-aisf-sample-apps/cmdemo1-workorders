@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.UI.Shared;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class CopyrightFooterTests : AcceptanceTestBase
+public class CopyrightFooterTests : AppAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldShowCopyrightFooter_OnLandingPage_WhenAnonymous()

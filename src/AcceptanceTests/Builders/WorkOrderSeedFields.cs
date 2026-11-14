@@ -28,4 +28,13 @@ public sealed class WorkOrderSeedFields
 
     /// <summary>Optional explicit work-order number.</summary>
     public string? Number { get; init; }
+
+    /// <summary>Optional building name.</summary>
+    public string? Building { get; init; }
+
+    /// <summary>Optional created date.</summary>
+    public DateTime? CreatedDate { get; init; }
+
+    /// <summary>Optional completed date.</summary>
+    public DateTime? CompletedDate { get; init; }
 }

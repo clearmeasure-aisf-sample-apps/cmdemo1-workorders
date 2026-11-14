@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
-using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared;
 using System.Collections;
 
@@ -9,8 +8,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 /// At 390px the document matches the viewport on every route, split per route for parallel workers.
 /// </summary>
 [TestFixture]
-[Parallelizable(ParallelScope.Children)]
-public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class PhoneWidthNoDocumentScrollTests : AppAcceptanceTestBase
 {
     /// <summary>/login stays anonymous; other routes sign in in the case.</summary>
     protected override bool UseStorageStateSignIn => false;
@@ -88,14 +87,26 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
 
     private async Task<string> ResolveUrlAsync(PhoneWidthRoute route)
     {
+        if (route.Key.StartsWith("search", StringComparison.Ordinal))
+        {
+            // Own Medium row only — peer High-priority / long titles must not appear in this view.
+            await Mother.WorkOrderAsync(CurrentUser.UserName, WorkOrderStatus.Draft, new WorkOrderSeedFields
+            {
+                Title = $"[{TestTag}] phone width",
+                RoomNumber = "1",
+                Priority = WorkOrderPriority.Medium
+            });
+            return route.UrlTemplate.Contains('?', StringComparison.Ordinal)
+                ? $"{route.UrlTemplate}&Q={TestTag}"
+                : $"{route.UrlTemplate}?Q={TestTag}";
+        }
+
         if (!route.NeedsWorkOrderNumber)
         {
             return route.UrlTemplate;
         }
 
-        var workOrder = await new AcceptanceObjectMother(
-            AcceptanceTestSupportSettings.CreateClient(),
-            TestTag).DraftWorkOrderAsync(
+        var workOrder = await Mother.DraftWorkOrderAsync(
             CurrentUser.UserName,
             title: $"[{TestTag}] Replace hallway light fixtures near the fellowship hall entrance",
             roomNumber: "Fellowship Hall 2");
@@ -105,7 +116,12 @@ public class PhoneWidthNoDocumentScrollTests : AcceptanceTestBase
 
     private async Task EnableDarkThemeAsync()
     {
-        await Page.GotoAsync("/workorder/search");
+        await Mother.WorkOrderAsync(CurrentUser.UserName, WorkOrderStatus.Draft, new WorkOrderSeedFields
+        {
+            Title = $"[{TestTag}] phone dark",
+            Priority = WorkOrderPriority.Medium
+        });
+        await Page.GotoAsync($"/workorder/search?Q={TestTag}");
         await Expect(Page.Locator(".table-scroll")).ToBeVisibleAsync();
         await Page.GetByTestId(nameof(MainLayout.Elements.DarkModeToggle)).ClickAsync();
         await Page.WaitForFunctionAsync("() => document.documentElement.getAttribute('data-theme') === 'dark'");

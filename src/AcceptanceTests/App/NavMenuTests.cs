@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class NavMenuTests : AcceptanceTestBase
+public class NavMenuTests : AppAcceptanceTestBase
 {
     // Opening the page needs no chat client, unlike the chat tests in AiAgentPageTests, which skip
     // without one: this is the test that opens the AI Agent screen in every environment.

@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class DarkModeTests : AcceptanceTestBase
+public class DarkModeTests : AppAcceptanceTestBase
 {
     /// <summary>Includes anonymous auth-gate coverage; sign in explicitly in tests that need it.</summary>
     protected override bool UseStorageStateSignIn => false;

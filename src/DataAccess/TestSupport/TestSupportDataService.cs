@@ -57,14 +57,18 @@ public sealed class TestSupportDataService(
 
     private static Employee BuildEmployee(TestSupportEmployeeCreate request)
     {
-        // Keep First/Last short and breakable: concatenating the test tag produced
-        // single tokens like Firsta1b2c3d4 that inflate the search assignee column
-        // past the 1280px AppShell tableFits budget. Uniqueness stays in UserName.
+        // Keep First/Last short and breakable by default: uniqueness stays in UserName.
+        // Login fixtures may pass an early-sorting LastName so the row stays in the first page.
         var employee = new Employee(
             BuildUserName(request.TestTag),
-            "Pat",
-            "Tester",
+            string.IsNullOrWhiteSpace(request.FirstName) ? "Pat" : request.FirstName.Trim(),
+            string.IsNullOrWhiteSpace(request.LastName) ? "Tester" : request.LastName.Trim(),
             $"{request.TestTag}@acceptance.test");
+        if (!string.IsNullOrWhiteSpace(request.MiddleName))
+        {
+            employee.MiddleName = request.MiddleName.Trim();
+        }
+
         employee.AddRole(new Role("admin", request.CanCreateWorkOrder, request.CanFulfillWorkOrder));
         AddCreateOnlyRoles(employee, request.AdditionalCreateRoleNames);
         return employee;
@@ -102,6 +106,7 @@ public sealed class TestSupportDataService(
     {
         var status = ResolveStatus(request.StatusKey);
         var now = DateTime.UtcNow;
+        var createdDate = ResolveDateTime(request.CreatedDate) ?? now;
         var workOrder = new WorkOrder
         {
             Number = ResolveNumber(request.Number),
@@ -114,9 +119,10 @@ public sealed class TestSupportDataService(
             Description = request.Description ?? $"[{request.TestTag}] description",
             Instructions = request.Instructions ?? string.Empty,
             RoomNumber = request.RoomNumber ?? "1",
-            CreatedDate = now
+            Building = request.Building,
+            CreatedDate = createdDate
         };
-        ApplyStatusDates(workOrder, status, now);
+        ApplyStatusDates(workOrder, status, now, ResolveDateTime(request.CompletedDate));
         return workOrder;
     }
 
@@ -147,17 +153,26 @@ public sealed class TestSupportDataService(
         CreatorUserName = creatorUserName
     };
 
-    private static void ApplyStatusDates(WorkOrder workOrder, WorkOrderStatus status, DateTime now)
+    private static void ApplyStatusDates(
+        WorkOrder workOrder,
+        WorkOrderStatus status,
+        DateTime now,
+        DateTime? completedDate)
     {
         if (status == WorkOrderStatus.Draft)
         {
+            if (completedDate.HasValue)
+            {
+                workOrder.CompletedDate = completedDate;
+            }
+
             return;
         }
 
         workOrder.AssignedDate ??= now.AddDays(-1);
         if (status == WorkOrderStatus.Complete)
         {
-            workOrder.CompletedDate ??= now;
+            workOrder.CompletedDate = completedDate ?? now;
         }
     }
 
@@ -189,5 +204,16 @@ public sealed class TestSupportDataService(
         }
 
         return DateOnly.Parse(dueDate.Trim(), CultureInfo.InvariantCulture);
+    }
+
+    private static DateTime? ResolveDateTime(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return DateTime.Parse(value.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind)
+            .ToUniversalTime();
     }
 }

@@ -12,7 +12,7 @@ public class AccessibilityAxeRoutesTests
         var tests = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/App/AccessibilityAxeTests.cs");
         var routes = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/App/AccessibilityAxeRoutes.cs");
 
-        tests.ShouldContain("[Parallelizable(ParallelScope.Children)]");
+        tests.ShouldContain("[Parallelizable(ParallelScope.All)]");
         tests.ShouldContain("Should_HaveNoSeriousOrCriticalAxeViolations_OnRoute");
         tests.ShouldContain("[TestCaseSource(nameof(RouteKeys))]");
         tests.ShouldNotContain("OnEveryRouteInBothThemes");
@@ -26,7 +26,7 @@ public class AccessibilityAxeRoutesTests
         var tests = RepositoryCheckout.Current.ReadText(
             "src/AcceptanceTests/App/PhoneWidthNoDocumentScrollTests.cs");
 
-        tests.ShouldContain("[Parallelizable(ParallelScope.Children)]");
+        tests.ShouldContain("[Parallelizable(ParallelScope.All)]");
         tests.ShouldContain("ShouldMatchDocumentWidthToViewport_At390_OnRoute");
         tests.ShouldContain("[TestCaseSource(nameof(RouteKeys))]");
         tests.ShouldNotContain("OnEveryRoute()");

@@ -9,8 +9,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 public sealed class AcceptanceObjectMother(TestSupportClient client, string testTag)
 {
     /// <summary>Creates an admin employee for this test tag.</summary>
-    public Task<TestSupportEmployee> EmployeeAsync(string[]? additionalCreateRoleNames = null) =>
-        client.CreateEmployeeAsync(testTag, additionalCreateRoleNames);
+    public Task<TestSupportEmployee> EmployeeAsync(TestSupportEmployeeFields? fields = null) =>
+        client.CreateEmployeeAsync(testTag, fields);
 
     /// <summary>Creates a draft work order for <paramref name="creatorUserName"/> titled with the test tag.</summary>
     public Task<TestSupportWorkOrder> DraftWorkOrderAsync(
@@ -18,10 +18,8 @@ public sealed class AcceptanceObjectMother(TestSupportClient client, string test
         string? title = null,
         string? description = null,
         string? roomNumber = null) =>
-        WorkOrderAsync(new TestSupportWorkOrderRequest
+        WorkOrderAsync(creatorUserName, WorkOrderStatus.Draft, new WorkOrderSeedFields
         {
-            TestTag = testTag,
-            CreatorUserName = creatorUserName,
             Title = title,
             Description = description,
             RoomNumber = roomNumber
@@ -34,22 +32,20 @@ public sealed class AcceptanceObjectMother(TestSupportClient client, string test
         WorkOrderSeedFields? fields = null)
     {
         fields ??= new WorkOrderSeedFields();
-        return WorkOrderAsync(new TestSupportWorkOrderRequest
+        var resolved = new WorkOrderSeedFields
         {
-            TestTag = testTag,
-            CreatorUserName = creatorUserName,
             Title = fields.Title ?? $"[{testTag}] {fields.Priority} {status.FriendlyName}",
             Description = fields.Description,
             RoomNumber = fields.RoomNumber,
             Instructions = fields.Instructions,
             Number = fields.Number,
-            StatusKey = status.Key,
-            Priority = fields.Priority.ToString(),
-            DueDate = fields.DueDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
-            AssigneeUserName = fields.AssigneeUserName
-        });
+            Priority = fields.Priority,
+            DueDate = fields.DueDate,
+            AssigneeUserName = fields.AssigneeUserName,
+            Building = fields.Building,
+            CreatedDate = fields.CreatedDate,
+            CompletedDate = fields.CompletedDate
+        };
+        return client.CreateWorkOrderAsync(testTag, creatorUserName, status, resolved);
     }
-
-    private Task<TestSupportWorkOrder> WorkOrderAsync(TestSupportWorkOrderRequest request) =>
-        client.CreateWorkOrderAsync(request);
 }

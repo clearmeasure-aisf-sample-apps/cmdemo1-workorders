@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -6,7 +7,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Authentication;
 
 [TestFixture]
-public class LoginTests : AcceptanceTestBase
+public class LoginTests : AuthAcceptanceTestBase
 {
     /// <summary>Login fixtures exercise the employee dropdown; do not pre-authenticate via storage state.</summary>
     protected override bool UseStorageStateSignIn => false;
@@ -26,40 +27,40 @@ public class LoginTests : AcceptanceTestBase
         });
 
     [Test, Retry(2)]
-    public void VerifySetup()
+    public async Task VerifySetup()
     {
-        var homer = TestHost.NewDbContext().Set<Employee>().Single(employee =>
-            employee.UserName == "hsimpson");
-
-        homer.ShouldNotBeNull();
+        var employee = await SeedDirectoryEmployeeAsync();
+        employee.UserName.ShouldStartWith($"test_{TestTag}_");
+        employee.LastName.ShouldBe(DirectoryFirstLastName);
     }
 
     [Test, Retry(2)]
     public async Task Should_DisplayUppercaseNames_InLoginDropdown()
     {
-        await Page.GotoAsync("/login");
+        var first = await SeedDirectoryEmployeeAsync("Homer", $"!{TestTag}a");
+        var second = await SeedDirectoryEmployeeAsync("Ned", $"!{TestTag}b");
 
+        await Page.GotoAsync("/login");
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        var homerOption = userSelect.Locator("option[value='hsimpson']");
-        await WaitForEmployeeOptionsRenderedAsync(homerOption);
+        var firstOption = userSelect.Locator($"option[value='{first.UserName}']");
+        await WaitForEmployeeOptionsRenderedAsync(firstOption);
 
         var placeholderOption = userSelect.Locator("option[value='']");
         await Expect(placeholderOption).ToHaveTextAsync("-- Select a parishioner or staff member --");
-        await Expect(homerOption).ToHaveTextAsync("HOMER SIMPSON");
-
-        // Seeded mixed-case FirstName/LastName must display ALL CAPS (login select only).
-        var flandersOption = userSelect.Locator("option[value='nflanders']");
-        await Expect(flandersOption).ToHaveTextAsync("NED FLANDERS");
+        await Expect(firstOption).ToHaveTextAsync(
+            LoginDisplayNameFormatter.FormatForLoginDropdown($"{first.FirstName} {first.LastName}"));
+        await Expect(userSelect.Locator($"option[value='{second.UserName}']")).ToHaveTextAsync(
+            LoginDisplayNameFormatter.FormatForLoginDropdown($"{second.FirstName} {second.LastName}"));
     }
 
     [Test, Retry(2)]
     public async Task Should_ExposeUserSelectIdMatchingLabelFor()
     {
+        var employee = await SeedDirectoryEmployeeAsync();
         await Page.GotoAsync("/login");
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        var homerOption = userSelect.Locator("option[value='hsimpson']");
-        await WaitForEmployeeOptionsRenderedAsync(homerOption);
+        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
 
         await Expect(userSelect).ToHaveAttributeAsync("id", nameof(Login.Elements.User));
         await Expect(Page.Locator($"label[for='{Login.Elements.User}']")).ToBeAttachedAsync();
@@ -68,11 +69,11 @@ public class LoginTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Should_DescribeUserSelectWithHint_AndAnnounceHelpLinkOpensNewTab()
     {
+        var employee = await SeedDirectoryEmployeeAsync();
         await Page.GotoAsync("/login");
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        var homerOption = userSelect.Locator("option[value='hsimpson']");
-        await WaitForEmployeeOptionsRenderedAsync(homerOption);
+        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
 
         await Expect(userSelect).ToHaveAttributeAsync("aria-describedby", "login-user-hint");
         await Expect(Page.Locator("#login-user-hint")).ToHaveTextAsync("Not listed? Ask the church office to add you.");
@@ -91,48 +92,39 @@ public class LoginTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Should_LoginSuccessfully_UsingUsernameValue_NotDisplayLabel()
     {
+        var employee = await SeedDirectoryEmployeeAsync("Homer", DirectoryFirstLastName);
         await Page.GotoAsync("/login");
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        var homerOption = userSelect.Locator("option[value='hsimpson']");
-        await WaitForEmployeeOptionsRenderedAsync(homerOption);
-        await Expect(homerOption).ToHaveTextAsync("HOMER SIMPSON");
+        var option = userSelect.Locator($"option[value='{employee.UserName}']");
+        await WaitForEmployeeOptionsRenderedAsync(option);
+        await Expect(option).ToHaveTextAsync(
+            LoginDisplayNameFormatter.FormatForLoginDropdown($"{employee.FirstName} {employee.LastName}"));
 
-        await Select(nameof(Login.Elements.User), "hsimpson");
+        await Select(nameof(Login.Elements.User), employee.UserName);
         await Click(nameof(Login.Elements.LoginButton));
 
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToBeVisibleAsync();
-        await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome hsimpson!");
+        await Expect(welcomeTextLocator).ToHaveTextAsync($"Welcome {employee.UserName}!");
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
     }
 
     [Test, Retry(2)]
     public async Task Should_ShowFullNameWithMiddleName_WhenEmployeeHasMiddleName()
     {
-        var userName = $"middle_{Guid.NewGuid():N}";
-        await using (var context = TestHost.NewDbContext())
-        {
-            var employee = new Employee(userName, "First", "Last", $"{userName}@example.com")
-            {
-                MiddleName = "Middle"
-            };
-            employee.AddRole(new Role("admin", true, true));
-            context.Add(employee);
-            await context.SaveChangesAsync();
-        }
-
+        var employee = await SeedDirectoryEmployeeAsync("First", DirectoryFirstLastName, "Middle");
         await Page.GotoAsync("/login");
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{userName}']"));
+        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
 
-        await Select(nameof(Login.Elements.User), userName);
+        await Select(nameof(Login.Elements.User), employee.UserName);
         await Click(nameof(Login.Elements.LoginButton));
 
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToBeVisibleAsync();
-        await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome First Middle Last!");
+        await Expect(welcomeTextLocator).ToHaveTextAsync($"Welcome First Middle {DirectoryFirstLastName}!");
     }
 
     [Test, Retry(2)]
@@ -238,36 +230,19 @@ public class LoginTests : AcceptanceTestBase
     [Category("Smoke")]
     public async Task LoginWithUsernameOnlyForwardsToHomePage()
     {
-        await Page.GotoAsync("/");
-        var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
-        await loginLink.WaitForAsync(new LocatorWaitForOptions
-        {
-            State = WaitForSelectorState.Visible,
-            Timeout = 30_000
-        });
+        var employee = await SeedDirectoryEmployeeAsync();
+        await EnsureAnonymousHomeAsync();
         await TakeScreenshotAsync(1);
-
-        var logoutLink = Page.GetByTestId(nameof(Logout.Elements.LogoutLink));
-        if (await logoutLink.CountAsync() > 0)
-        {
-            await OpenUserMenu();
-            await logoutLink.ClickAsync();
-            await Page.WaitForURLAsync("**/");
-        }
-
         await Click(nameof(LoginLink.Elements.LoginLink));
         await Page.WaitForURLAsync("**/login");
         await TakeScreenshotAsync(2);
-
-        await Select(nameof(Login.Elements.User), "hsimpson");
+        await SelectDirectoryEmployeeAsync(employee.UserName);
         await TakeScreenshotAsync(3);
-
         await Click(nameof(Login.Elements.LoginButton));
-
         var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
         await Expect(welcomeTextLocator).ToBeVisibleAsync();
         await TakeScreenshotAsync(4);
-        await Expect(welcomeTextLocator).ToHaveTextAsync("Welcome hsimpson!");
+        await Expect(welcomeTextLocator).ToHaveTextAsync($"Welcome {employee.UserName}!");
         await Expect(Page.GetByTestId(nameof(LoginLink.Elements.LoginLink))).ToHaveCountAsync(0);
     }
 
@@ -412,51 +387,35 @@ public class LoginTests : AcceptanceTestBase
     }
 
     [Test, Retry(2)]
-    public async Task Should_PersistGwillie_NotTlovejoy_WhenSwitchingUserAfterLogout()
+    public async Task Should_PersistSecondUser_NotTlovejoy_WhenSwitchingUserAfterLogout()
     {
+        var other = await SeedDirectoryEmployeeAsync("Grounds", DirectoryFirstLastName);
         await LoginAsLovejoyViaShortcutAsync();
         await LogoutViaUserMenu();
         await Page.WaitForURLAsync("**/login");
         (await GetPersistedUsernameAsync()).ShouldBeNull();
-
-        await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
-        await Expect(loginLink).ToBeVisibleAsync();
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToHaveCountAsync(0);
-
+        await EnsureAnonymousHomeAsync();
         await Click(nameof(LoginLink.Elements.LoginLink));
         await Page.WaitForURLAsync("**/login");
-
-        var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        var willieOption = userSelect.Locator("option[value='gwillie']");
-        await WaitForEmployeeOptionsRenderedAsync(willieOption);
-        await Select(nameof(Login.Elements.User), "gwillie");
+        await SelectDirectoryEmployeeAsync(other.UserName);
         await Click(nameof(Login.Elements.LoginButton));
-
-        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
-        await Expect(welcomeText).ToBeVisibleAsync();
-        await Expect(welcomeText)
-            .ToHaveTextAsync("Welcome gwillie!");
-        (await GetPersistedUsernameAsync()).ShouldBe("gwillie");
-
+        await ExpectWelcomeAsync(other.UserName);
+        (await GetPersistedUsernameAsync()).ShouldBe(other.UserName);
         await Page.GotoAsync(ServerFixture.ApplicationBaseUrl + "/");
-        await Expect(welcomeText).ToBeVisibleAsync();
-
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
-            .ToHaveTextAsync("Welcome gwillie!");
+        await ExpectWelcomeAsync(other.UserName);
         await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
             .Not.ToHaveTextAsync("Welcome tlovejoy!");
-        (await GetPersistedUsernameAsync()).ShouldBe("gwillie");
+        (await GetPersistedUsernameAsync()).ShouldBe(other.UserName);
     }
 
     [Test, Retry(2)]
     public async Task Should_ShowHelperTextBelowMemberDropdown()
     {
+        var employee = await SeedDirectoryEmployeeAsync();
         await Page.GotoAsync("/login");
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        var homerOption = userSelect.Locator("option[value='hsimpson']");
-        await WaitForEmployeeOptionsRenderedAsync(homerOption);
+        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
 
         var helperText = Page.Locator("small.form-text.text-muted");
         await Expect(helperText).ToBeVisibleAsync();
@@ -485,7 +444,6 @@ public class LoginTests : AcceptanceTestBase
     private async Task EnsureAnonymousHomeAsync()
     {
         await Page.GotoAsync("/");
-        // Wait for the page shell to load - check for either login link or user menu
         var userMenuToggle = Page.GetByTestId(nameof(Logout.Elements.UserMenuToggle));
         var loginLink = Page.GetByTestId(nameof(LoginLink.Elements.LoginLink));
         try
@@ -519,25 +477,7 @@ public class LoginTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task Should_LoginAsTlovejoy_WhenLovejoyClickedBeforeEmployeesLoaded()
     {
-        const int employeeQueryDelayMs = 1_000;
-
-        await Page.RouteAsync("**/*blazor-wasm-single-api*", async route =>
-        {
-            if (!string.Equals(route.Request.Method, "POST", StringComparison.OrdinalIgnoreCase))
-            {
-                await route.ContinueAsync();
-                return;
-            }
-
-            var postData = route.Request.PostData ?? string.Empty;
-            if (postData.Contains("EmployeeGetAllQuery", StringComparison.Ordinal))
-            {
-                await Task.Delay(employeeQueryDelayMs);
-            }
-
-            await route.ContinueAsync();
-        });
-
+        await DelayEmployeeGetAllAsync(1_000);
         await Page.GotoAsync("/login");
         var shortcut = Page.GetByTestId(nameof(Login.Elements.LovejoyShortcut));
         await shortcut.WaitForAsync(new LocatorWaitForOptions
@@ -545,16 +485,40 @@ public class LoginTests : AcceptanceTestBase
             State = WaitForSelectorState.Visible,
             Timeout = 90_000
         });
-
         var employeeOptions = Page.GetByTestId(nameof(Login.Elements.User))
             .Locator("option[value]:not([value=''])");
         await Expect(employeeOptions).ToHaveCountAsync(0);
-
         await Click(nameof(Login.Elements.LovejoyShortcut));
-
-        var welcomeTextLocator = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
-        await Expect(welcomeTextLocator).ToHaveTextAsync(
+        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText))).ToHaveTextAsync(
             "Welcome tlovejoy!",
             new LocatorAssertionsToHaveTextOptions { Timeout = 60_000 });
+    }
+
+    private async Task SelectDirectoryEmployeeAsync(string userName)
+    {
+        var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
+        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{userName}']"));
+        await Select(nameof(Login.Elements.User), userName);
+    }
+
+    private async Task ExpectWelcomeAsync(string userName)
+    {
+        var welcomeText = Page.GetByTestId(nameof(Logout.Elements.WelcomeText));
+        await Expect(welcomeText).ToBeVisibleAsync();
+        await Expect(welcomeText).ToHaveTextAsync($"Welcome {userName}!");
+    }
+
+    private async Task DelayEmployeeGetAllAsync(int delayMs)
+    {
+        await Page.RouteAsync("**/*blazor-wasm-single-api*", async route =>
+        {
+            if (string.Equals(route.Request.Method, "POST", StringComparison.OrdinalIgnoreCase)
+                && (route.Request.PostData ?? string.Empty).Contains("EmployeeGetAllQuery", StringComparison.Ordinal))
+            {
+                await Task.Delay(delayMs);
+            }
+
+            await route.ContinueAsync();
+        });
     }
 }

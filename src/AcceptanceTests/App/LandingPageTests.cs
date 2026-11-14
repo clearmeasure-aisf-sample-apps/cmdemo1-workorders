@@ -3,7 +3,7 @@ using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 [TestFixture]
-public class LandingPageTests : AcceptanceTestBase
+public class LandingPageTests : AppAcceptanceTestBase
 {
     /// <summary>Signed-out landing assertions need an anonymous context.</summary>
     protected override bool UseStorageStateSignIn => false;

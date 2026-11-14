@@ -2,7 +2,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 /// <summary>The navy sidebar stretches to the bottom of a tall page in both themes.</summary>
 [TestFixture]
-public class SidebarHeightTests : AcceptanceTestBase
+public class SidebarHeightTests : AppAcceptanceTestBase
 {
     [SetUp]
     public async Task Setup()

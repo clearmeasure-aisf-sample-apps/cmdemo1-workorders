@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
-using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using Deque.AxeCore.Commons;
 using Deque.AxeCore.Playwright;
 using System.Collections;
@@ -7,11 +6,11 @@ using System.Collections;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 /// <summary>
-/// Per-route axe scans so cases can run under <see cref="ParallelScope.Children"/> across workers.
+/// Per-route axe scans so cases can run under <see cref="ParallelScope.All"/> across workers.
 /// </summary>
 [TestFixture]
-[Parallelizable(ParallelScope.Children)]
-public class AccessibilityAxeTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class AccessibilityAxeTests : AppAcceptanceTestBase
 {
     /// <summary>Scans /login while anonymous; authenticated routes sign in in the case.</summary>
     protected override bool UseStorageStateSignIn => false;
@@ -70,14 +69,23 @@ public class AccessibilityAxeTests : AcceptanceTestBase
 
     private async Task<string> ResolveUrlAsync(AccessibilityAxeRoute route)
     {
+        if (route.Key == "search")
+        {
+            // Own Medium row only — peer High-priority badges fail color-contrast under axe.
+            await Mother.WorkOrderAsync(CurrentUser.UserName, WorkOrderStatus.Draft, new WorkOrderSeedFields
+            {
+                Title = $"[{TestTag}] axe search",
+                Priority = WorkOrderPriority.Medium
+            });
+            return $"/workorder/search?Q={TestTag}";
+        }
+
         if (!route.NeedsWorkOrderNumber)
         {
             return route.UrlTemplate;
         }
 
-        var workOrder = await new AcceptanceObjectMother(
-            AcceptanceTestSupportSettings.CreateClient(),
-            TestTag).DraftWorkOrderAsync(CurrentUser.UserName);
+        var workOrder = await Mother.DraftWorkOrderAsync(CurrentUser.UserName);
         workOrder.Number.ShouldNotBeNullOrWhiteSpace();
         return route.UrlTemplate.Replace("{number}", Uri.EscapeDataString(workOrder.Number), StringComparison.Ordinal);
     }

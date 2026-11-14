@@ -35,4 +35,13 @@ public sealed class TestSupportWorkOrderCreate
 
     /// <summary>Optional assignee user name (required for Assigned/InProgress seeds).</summary>
     public string? AssigneeUserName { get; init; }
+
+    /// <summary>Optional building name.</summary>
+    public string? Building { get; init; }
+
+    /// <summary>Optional created date (ISO-8601); defaults to UTC now.</summary>
+    public string? CreatedDate { get; init; }
+
+    /// <summary>Optional completed date (ISO-8601); used when status is Complete.</summary>
+    public string? CompletedDate { get; init; }
 }

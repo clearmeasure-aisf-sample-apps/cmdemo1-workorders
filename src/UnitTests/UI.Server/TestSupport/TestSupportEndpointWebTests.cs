@@ -23,7 +23,7 @@ public class TestSupportEndpointWebTests
 
         var response = await client.PostAsJsonAsync(
             "/api/test-support/employees",
-            new CreateEmployeeRequest(TestTag: "tag1"));
+            new CreateEmployeeRequest { TestTag = "tag1" });
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -47,7 +47,7 @@ public class TestSupportEndpointWebTests
 
         var response = await client.PostAsJsonAsync(
             "/api/test-support/employees",
-            new CreateEmployeeRequest(TestTag: "tag2"));
+            new CreateEmployeeRequest { TestTag = "tag2" });
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -66,7 +66,7 @@ public class TestSupportEndpointWebTests
 
         var response = await client.PostAsJsonAsync(
             "/api/test-support/employees",
-            new CreateEmployeeRequest(TestTag: "abc12345"));
+            new CreateEmployeeRequest { TestTag = "abc12345" });
 
         var raw = await response.Content.ReadAsStringAsync();
         response.StatusCode.ShouldBe(HttpStatusCode.OK, raw);

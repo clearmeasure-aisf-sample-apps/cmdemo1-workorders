@@ -15,7 +15,10 @@ public abstract class WorkOrderAcceptanceTestBase : AcceptanceTestBase
     /// <summary>Creates an admin employee for this test via test-support.</summary>
     protected async Task<Employee> SeedEmployeeAsync(string[]? additionalCreateRoleNames = null)
     {
-        var created = await Mother.EmployeeAsync(additionalCreateRoleNames);
+        TestSupportEmployeeFields? fields = additionalCreateRoleNames is null
+            ? null
+            : new TestSupportEmployeeFields { AdditionalCreateRoleNames = additionalCreateRoleNames };
+        var created = await Mother.EmployeeAsync(fields);
         var employee = new Employee(created.UserName, created.FirstName, created.LastName, created.EmailAddress)
         {
             Id = created.Id

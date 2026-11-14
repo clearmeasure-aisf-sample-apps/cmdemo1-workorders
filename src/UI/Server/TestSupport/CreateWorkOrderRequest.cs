@@ -35,4 +35,13 @@ public sealed class CreateWorkOrderRequest
 
     /// <summary>Optional assignee user name.</summary>
     public string? AssigneeUserName { get; init; }
+
+    /// <summary>Optional building name.</summary>
+    public string? Building { get; init; }
+
+    /// <summary>Optional created date (ISO-8601).</summary>
+    public string? CreatedDate { get; init; }
+
+    /// <summary>Optional completed date (ISO-8601).</summary>
+    public string? CompletedDate { get; init; }
 }

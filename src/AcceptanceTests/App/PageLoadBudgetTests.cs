@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UnitTests.Acceptance;
@@ -13,7 +14,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 /// &amp; Vendors (the N+1 removed in #1491) exceeds <see cref="TeamsMaxApiCalls"/>.
 /// </summary>
 [TestFixture]
-public class PageLoadBudgetTests : AcceptanceTestBase
+public class PageLoadBudgetTests : AppAcceptanceTestBase
 {
     /// <summary>
     /// Fulfillers inserted before the Teams measurement. The fixed page sends one
@@ -65,7 +66,7 @@ public class PageLoadBudgetTests : AcceptanceTestBase
     [Test]
     public async Task ShouldStayWithinBudget_WhenTeamsAndVendorsLoads()
     {
-        SeedFulfillers(ExtraFulfillers);
+        await SeedFulfillersAsync(ExtraFulfillers);
         await LoginAsCurrentUser();
         await PageLoadBudget.WaitForQuietAsync(Page, ServerFixture.ApplicationBaseUrl);
 
@@ -139,17 +140,15 @@ public class PageLoadBudgetTests : AcceptanceTestBase
         measurement.Elapsed.ShouldBeLessThan(LoadCeiling, detail);
     }
 
-    private void SeedFulfillers(int count)
+    private async Task SeedFulfillersAsync(int count)
     {
-        using var context = TestHost.NewDbContext();
         for (var index = 0; index < count; index++)
         {
-            var userName = $"fulfiller_{TestTag}_{index}";
-            var employee = new Employee(userName, "Fulfill", index.ToString(), $"{userName}@example.com");
-            employee.AddRole(new Role($"worker_{TestTag}_{index}", false, true));
-            context.Add(employee);
+            await Mother.EmployeeAsync(new TestSupportEmployeeFields
+            {
+                FirstName = "Fulfill",
+                LastName = index.ToString()
+            });
         }
-
-        context.SaveChanges();
     }
 }

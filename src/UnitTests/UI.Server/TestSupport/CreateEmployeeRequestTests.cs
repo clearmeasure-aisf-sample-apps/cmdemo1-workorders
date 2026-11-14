@@ -9,17 +9,33 @@ public class CreateEmployeeRequestTests
     [Test]
     public void ShouldDefaultPermissions_WhenConstructed()
     {
-        var request = new CreateEmployeeRequest(TestTag: "x");
+        var request = new CreateEmployeeRequest { TestTag = "x" };
         request.CanCreateWorkOrder.ShouldBeTrue();
         request.CanFulfillWorkOrder.ShouldBeTrue();
+        request.FirstName.ShouldBeNull();
+        request.LastName.ShouldBeNull();
+        request.MiddleName.ShouldBeNull();
         request.AdditionalCreateRoleNames.ShouldBeNull();
     }
 
     [Test]
-    public void ShouldHoldAdditionalCreateRoleNames_WhenSet()
+    public void ShouldHoldNamesAndRoles_WhenProvided()
     {
-        var roles = new[] { "Pastor", "Requester" };
-        var request = new CreateEmployeeRequest(TestTag: "x", AdditionalCreateRoleNames: roles);
-        request.AdditionalCreateRoleNames.ShouldBe(roles);
+        var request = new CreateEmployeeRequest
+        {
+            TestTag = "x",
+            CanCreateWorkOrder = false,
+            CanFulfillWorkOrder = false,
+            FirstName = "Ned",
+            LastName = "!x",
+            MiddleName = "F",
+            AdditionalCreateRoleNames = ["Pastor"]
+        };
+        request.CanCreateWorkOrder.ShouldBeFalse();
+        request.CanFulfillWorkOrder.ShouldBeFalse();
+        request.FirstName.ShouldBe("Ned");
+        request.LastName.ShouldBe("!x");
+        request.MiddleName.ShouldBe("F");
+        request.AdditionalCreateRoleNames.ShouldBe(["Pastor"]);
     }
 }

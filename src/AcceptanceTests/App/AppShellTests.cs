@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -6,7 +7,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 /// <summary>App shell of the #251 redesign: navy sidebar, Inter, responsive rail, user menu, dark tokens.</summary>
 [TestFixture]
-public class AppShellTests : AcceptanceTestBase
+public class AppShellTests : AppAcceptanceTestBase
 {
     /// <summary>Layout measurements assume the signed-in shell from an explicit login.</summary>
     protected override bool UseStorageStateSignIn => false;
@@ -61,27 +62,16 @@ public class AppShellTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldFitWithoutHorizontalScroll_At1280()
     {
-        // Measure the layout with this test's own realistic rows, not whatever other tests left in the database.
-        await using (var context = TestHost.NewDbContext())
+        foreach (var status in new[] { WorkOrderStatus.Draft, WorkOrderStatus.Assigned, WorkOrderStatus.InProgress })
         {
-            context.Attach(CurrentUser);
-            foreach (var status in new[] { WorkOrderStatus.Draft, WorkOrderStatus.Assigned, WorkOrderStatus.InProgress })
+            await SeedWorkOrderAsync(CurrentUser, status, new WorkOrderSeedFields
             {
-                context.Add(new WorkOrder
-                {
-                    Number = TestData.Number("A"),
-                    Creator = CurrentUser,
-                    Assignee = CurrentUser,
-                    Status = status,
-                    Title = $"[{TestTag}] Replace hallway light fixtures near the fellowship hall entrance",
-                    Building = "Sanctuary",
-                    RoomNumber = "Fellowship Hall 2",
-                    DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
-                    CreatedDate = DateTime.UtcNow
-                });
-            }
-
-            await context.SaveChangesAsync();
+                Title = $"[{TestTag}] Replace hallway light fixtures near the fellowship hall entrance",
+                Building = "Sanctuary",
+                RoomNumber = "Fellowship Hall 2",
+                DueDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+                AssigneeUserName = status == WorkOrderStatus.Draft ? null : CurrentUser.UserName
+            });
         }
 
         await Page.SetViewportSizeAsync(1280, 800);
