@@ -34,14 +34,14 @@ public abstract class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase
     }
 
     /// <summary>True when the host exposes test-support (local acceptance host or remote pool slot).</summary>
-    protected static async Task<bool> IsPoolSlotHostAsync()
+    private static async Task<bool> IsPoolSlotHostAsync()
     {
         var status = await AcceptanceTestSupportSettings.CreateClient().ProbeStatusAsync();
         return status != HttpStatusCode.NotFound;
     }
 
     /// <summary>True when test-support reports <c>UseStubChatClient</c>.</summary>
-    protected static async Task<bool> IsStubChatClientActiveAsync()
+    private static async Task<bool> IsStubChatClientActiveAsync()
     {
         var status = await AcceptanceTestSupportSettings.CreateClient().GetChatClientStatusAsync();
         return status is { UseStubChatClient: true };
