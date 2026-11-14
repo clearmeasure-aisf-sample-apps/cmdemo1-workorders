@@ -18,8 +18,8 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
         await LoginAsCurrentUser();
         await OpenTaggedWorkOrderSearchAsync();
 
-        await AssertCreatorFilterContainsAsync(seed.CreatorDraft, seed.CreatorUserName);
-        await AssertAssigneeFilterContainsAsync(seed);
+        await AssertCreatorFilterAsync(seed);
+        await AssertAssigneeFilterAsync(seed);
         await AssertAssigneeInProgressFilterAsync(seed);
         await AssertCreatorDraftFilterAsync(seed);
         await AssertSeededOrdersVisibleWhenUnfilteredAsync(seed);
@@ -35,7 +35,7 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
         var otherAssignee = await SeedEmployeeAsync();
         var numbers = BuildSeedNumbers(creator, assignee);
         await SeedOwnedOrdersAsync(numbers, creator, assignee, otherAssignee);
-        await SeedPeerOrdersAsync(otherCreator, assignee, otherAssignee);
+        await SeedPeerOrdersAsync(numbers, otherCreator, assignee, otherAssignee);
         return numbers;
     }
 
@@ -52,10 +52,12 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
             CreatorUserName = creator.UserName,
             AssigneeUserName = assignee.UserName,
             CreatorFullName = creator.GetFullName(),
-            CreatorDraft = Number("LJD"),
-            AssigneeAssigned = Number("WA"),
-            AssigneeInProgress = Number("WI"),
-            CreatorComplete = Number("LJC")
+            CreatorDraft = NewNumber(),
+            AssigneeAssigned = NewNumber(),
+            AssigneeInProgress = NewNumber(),
+            CreatorComplete = NewNumber(),
+            PeerDraft = NewNumber(),
+            PeerAssigneeInProgress = NewNumber()
         };
 
     private async Task SeedOwnedOrdersAsync(
@@ -71,12 +73,13 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
     }
 
     private async Task SeedPeerOrdersAsync(
+        McpListWorkOrderSeed numbers,
         Employee otherCreator,
         Employee assignee,
         Employee otherAssignee)
     {
-        await SeedRoleAsync(otherCreator, otherAssignee, Number("OD"), WorkOrderStatus.Draft);
-        await SeedRoleAsync(otherCreator, assignee, Number("OWI"), WorkOrderStatus.InProgress);
+        await SeedRoleAsync(otherCreator, otherAssignee, numbers.PeerDraft, WorkOrderStatus.Draft);
+        await SeedRoleAsync(otherCreator, assignee, numbers.PeerAssigneeInProgress, WorkOrderStatus.InProgress);
     }
 
     private Task SeedRoleAsync(
@@ -92,34 +95,44 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
             AssigneeUserName = assignee.UserName
         });
 
-    private string Number(string role)
+    private static string NewNumber()
     {
-        var number = $"{TestTag[..4]}{role}";
-        number.Length.ShouldBeLessThanOrEqualTo(7);
+        var number = Guid.NewGuid().ToString("N")[..7];
+        number.Length.ShouldBe(7);
         return number;
     }
 
-    private async Task AssertCreatorFilterContainsAsync(string requiredNumber, string creatorUserName)
+    private async Task AssertCreatorFilterAsync(McpListWorkOrderSeed seed)
     {
         var mcpNumbers = await CallListWorkOrders(
-            new Dictionary<string, object?> { ["creatorUsername"] = creatorUserName });
-        mcpNumbers.ShouldContain(requiredNumber);
-        await AssertPortalAndMcpMatchAsync([requiredNumber], creatorUsername: creatorUserName);
+            new Dictionary<string, object?> { ["creatorUsername"] = seed.CreatorUserName });
+        mcpNumbers.ShouldContain(seed.CreatorDraft);
+        mcpNumbers.ShouldNotContain(seed.PeerDraft);
+        mcpNumbers.ShouldNotContain(seed.PeerAssigneeInProgress);
+        await AssertPortalAndMcpMatchAsync(seed, new McpListFilterExpectation
+        {
+            ExpectedNumbers = seed.CreatorOwned,
+            CreatorUsername = seed.CreatorUserName
+        });
     }
 
-    private async Task AssertAssigneeFilterContainsAsync(McpListWorkOrderSeed seed)
+    private async Task AssertAssigneeFilterAsync(McpListWorkOrderSeed seed)
     {
         var mcpNumbers = await CallListWorkOrders(
             new Dictionary<string, object?> { ["assigneeUsername"] = seed.AssigneeUserName });
         mcpNumbers.ShouldContain(seed.AssigneeAssigned);
         mcpNumbers.ShouldContain(seed.AssigneeInProgress);
-        await AssertPortalAndMcpMatchAsync(
-            [seed.AssigneeAssigned, seed.AssigneeInProgress],
-            assigneeUsername: seed.AssigneeUserName);
+        mcpNumbers.ShouldContain(seed.PeerAssigneeInProgress);
+        await AssertPortalAndMcpMatchAsync(seed, new McpListFilterExpectation
+        {
+            ExpectedNumbers = seed.AssigneeOwned,
+            AssigneeUsername = seed.AssigneeUserName
+        });
     }
 
     private async Task AssertAssigneeInProgressFilterAsync(McpListWorkOrderSeed seed)
     {
+        var expected = new[] { seed.AssigneeInProgress, seed.PeerAssigneeInProgress };
         var mcpNumbers = await CallListWorkOrders(
             new Dictionary<string, object?>
             {
@@ -127,11 +140,14 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
                 ["assigneeUsername"] = seed.AssigneeUserName
             });
         mcpNumbers.ShouldContain(seed.AssigneeInProgress);
+        mcpNumbers.ShouldContain(seed.PeerAssigneeInProgress);
         mcpNumbers.ShouldNotContain(seed.AssigneeAssigned);
-        await AssertPortalAndMcpMatchAsync(
-            [seed.AssigneeInProgress],
-            assigneeUsername: seed.AssigneeUserName,
-            status: "InProgress");
+        await AssertPortalAndMcpMatchAsync(seed, new McpListFilterExpectation
+        {
+            ExpectedNumbers = expected,
+            AssigneeUsername = seed.AssigneeUserName,
+            Status = "InProgress"
+        });
     }
 
     private async Task AssertCreatorDraftFilterAsync(McpListWorkOrderSeed seed)
@@ -145,26 +161,28 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
         mcpNumbers.ShouldContain(seed.CreatorDraft);
         mcpNumbers.ShouldNotContain(seed.AssigneeAssigned);
         mcpNumbers.ShouldNotContain(seed.CreatorComplete);
-        await AssertPortalAndMcpMatchAsync(
-            [seed.CreatorDraft],
-            creatorUsername: seed.CreatorUserName,
-            status: "Draft");
+        await AssertPortalAndMcpMatchAsync(seed, new McpListFilterExpectation
+        {
+            ExpectedNumbers = [seed.CreatorDraft],
+            CreatorUsername = seed.CreatorUserName,
+            Status = "Draft"
+        });
     }
 
     private async Task AssertSeededOrdersVisibleWhenUnfilteredAsync(McpListWorkOrderSeed seed)
     {
         var mcpNumbers = await CallListWorkOrders([]);
-        mcpNumbers.ShouldContain(seed.CreatorDraft);
-        mcpNumbers.ShouldContain(seed.AssigneeAssigned);
-        mcpNumbers.ShouldContain(seed.AssigneeInProgress);
-        mcpNumbers.ShouldContain(seed.CreatorComplete);
+        foreach (var number in seed.AllSeeded)
+        {
+            mcpNumbers.ShouldContain(number);
+        }
 
         await OpenTaggedWorkOrderSearchAsync();
         var portalNumbers = await VisibleSearchNumbers();
-        portalNumbers.ShouldContain(seed.CreatorDraft);
-        portalNumbers.ShouldContain(seed.AssigneeAssigned);
-        portalNumbers.ShouldContain(seed.AssigneeInProgress);
-        portalNumbers.ShouldContain(seed.CreatorComplete);
+        foreach (var number in seed.AllSeeded)
+        {
+            portalNumbers.ShouldContain(number);
+        }
     }
 
     private async Task OpenTaggedWorkOrderSearchAsync()
@@ -195,23 +213,18 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
         await Expect(creator).ToHaveTextAsync(seed.CreatorFullName);
     }
 
-    private async Task AssertPortalAndMcpMatchAsync(
-        IReadOnlyCollection<string> requiredNumbers,
-        string? creatorUsername = null,
-        string? assigneeUsername = null,
-        string? status = null)
+    private async Task AssertPortalAndMcpMatchAsync(McpListWorkOrderSeed seed, McpListFilterExpectation filter)
     {
-        var filterArguments = BuildListWorkOrdersArguments(creatorUsername, assigneeUsername, status);
-        await OpenFilteredTaggedSearchAsync(creatorUsername, assigneeUsername, status);
-        await WaitForRequiredPortalRowsAsync(requiredNumbers);
+        var filterArguments = BuildListWorkOrdersArguments(
+            filter.CreatorUsername, filter.AssigneeUsername, filter.Status);
+        await OpenFilteredTaggedSearchAsync(filter.CreatorUsername, filter.AssigneeUsername, filter.Status);
+        await WaitForSeededPortalFilterAsync(seed, filter.ExpectedNumbers);
 
-        var portalNumbers = await VisibleSearchNumbers();
-        var mcpNumbers = await CallListWorkOrders(filterArguments);
-        requiredNumbers.All(portalNumbers.Contains).ShouldBeTrue(
-            $"Portal missing required numbers. Required={FormatSet(requiredNumbers)}; Portal={FormatSet(portalNumbers)}");
-        requiredNumbers.All(mcpNumbers.Contains).ShouldBeTrue(
-            $"MCP missing required numbers. Required={FormatSet(requiredNumbers)}; MCP={FormatSet(mcpNumbers)}");
-        portalNumbers.ShouldBeSet(mcpNumbers);
+        var seeded = seed.AllSeeded.ToHashSet();
+        var portalSeeded = (await VisibleSearchNumbers()).Where(seeded.Contains).ToHashSet();
+        var mcpSeeded = (await CallListWorkOrders(filterArguments)).Where(seeded.Contains).ToHashSet();
+        portalSeeded.ShouldBeSet(filter.ExpectedNumbers);
+        mcpSeeded.ShouldBeSet(filter.ExpectedNumbers);
     }
 
     private async Task OpenFilteredTaggedSearchAsync(
@@ -237,19 +250,41 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
 
         await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?{string.Join("&", query)}");
         await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}")).ToBeVisibleAsync();
+        await ExpectFilterSelectsAsync(creatorUsername, assigneeUsername);
+    }
+
+    private async Task ExpectFilterSelectsAsync(string? creatorUsername, string? assigneeUsername)
+    {
         if (!string.IsNullOrEmpty(creatorUsername))
         {
-            await Expect(Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}"))
-                .ToHaveValueAsync(creatorUsername);
+            var creatorSelect = Page.Locator($"#{WorkOrderSearch.Elements.CreatorSelect}");
+            await Expect(creatorSelect.Locator($"option[value='{creatorUsername}']")).ToHaveCountAsync(1);
+            await Expect(creatorSelect).ToHaveValueAsync(creatorUsername);
+        }
+
+        if (!string.IsNullOrEmpty(assigneeUsername))
+        {
+            var assigneeSelect = Page.Locator($"#{WorkOrderSearch.Elements.AssigneeSelect}");
+            await Expect(assigneeSelect.Locator($"option[value='{assigneeUsername}']")).ToHaveCountAsync(1);
+            await Expect(assigneeSelect).ToHaveValueAsync(assigneeUsername);
         }
     }
 
-    private async Task WaitForRequiredPortalRowsAsync(IReadOnlyCollection<string> requiredNumbers)
+    private async Task WaitForSeededPortalFilterAsync(
+        McpListWorkOrderSeed seed,
+        IReadOnlyCollection<string> expectedNumbers)
     {
-        foreach (var number in requiredNumbers)
+        var expected = expectedNumbers.ToHashSet();
+        foreach (var number in expected)
         {
             await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + number))
                 .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
+        }
+
+        foreach (var number in seed.AllSeeded.Where(number => !expected.Contains(number)))
+        {
+            await Expect(Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + number))
+                .ToHaveCountAsync(0);
         }
     }
 
@@ -285,9 +320,6 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
 
         return arguments;
     }
-
-    private static string FormatSet(IEnumerable<string> numbers) =>
-        string.Join(", ", numbers.OrderBy(number => number));
 
     private async Task<HashSet<string>> VisibleSearchNumbers()
     {
