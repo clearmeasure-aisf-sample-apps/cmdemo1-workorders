@@ -33,7 +33,7 @@ else
                                 <a href="@TeamWorkLoadTable.OpenWorkSearch(member.UserName)" class="member-avatar-link"
                                    data-testid="@($"{TeamsAndVendors.Elements.TeamMemberLink}{member.UserName}")"
                                    title="@member.GetFullName()"
-                                   aria-label="@($"{UserDisplay.Initials(member)}: Open work orders for {member.GetFullName()}")">
+                                   aria-label="Open work orders for @member.GetFullName()">
                                     <span class="avatar @UserDisplay.AvatarCssClass(member.UserName)" aria-hidden="true">
                                         @UserDisplay.Initials(member)
                                     </span>
