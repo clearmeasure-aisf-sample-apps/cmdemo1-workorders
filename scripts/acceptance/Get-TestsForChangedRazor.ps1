@@ -34,6 +34,9 @@
 .PARAMETER AllowEmpty
   Exit 0 even when UI Razor paths select no fixtures (default: exit 1).
 
+.PARAMETER SelfTest
+  Runs Get-TestsForChangedRazor.Tests.ps1 via pwsh -NoProfile -File (CI style).
+
 .EXAMPLE
   pwsh -NoProfile -File scripts/acceptance/Get-TestsForChangedRazor.ps1 -RazorPaths src/UI.Shared/Pages/Login.razor
 
@@ -43,6 +46,9 @@
 
 .EXAMPLE
   pwsh -NoProfile -File scripts/acceptance/Get-TestsForChangedRazor.ps1 -PathsFile changed-razor.txt
+
+.EXAMPLE
+  pwsh -NoProfile -File scripts/acceptance/Get-TestsForChangedRazor.ps1 -SelfTest
 #>
 [CmdletBinding()]
 param(
@@ -53,11 +59,19 @@ param(
 
     [switch]$AsFilter,
 
-    [switch]$AllowEmpty
+    [switch]$AllowEmpty,
+
+    [switch]$SelfTest
 )
 
 begin {
     $ErrorActionPreference = "Stop"
+    if ($SelfTest) {
+        $testScript = Join-Path $PSScriptRoot 'Get-TestsForChangedRazor.Tests.ps1'
+        & pwsh -NoProfile -File $testScript
+        exit $LASTEXITCODE
+    }
+
     $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
     $mapPath = Join-Path $repoRoot "src/AcceptanceTests/test-to-page-map.json"
     $paths = [System.Collections.Generic.List[string]]::new()

@@ -19,9 +19,8 @@ public class TestToPageMapTests
     [Test]
     public void TestsForRazorPaths_WhenAPageChanges_ReturnsMappedFixtures()
     {
-        var map = SampleMap();
-
-        var selected = map.TestsForRazorPaths(["src/UI.Shared/Pages/Login.razor"]);
+        var selected = TestToPageMapMother.LoginLandingAndTeams()
+            .TestsForRazorPaths(["src/UI.Shared/Pages/Login.razor"]);
 
         selected.ShouldBe(
         [
@@ -32,9 +31,8 @@ public class TestToPageMapTests
     [Test]
     public void TestsForRazorPaths_WhenCodeBehindChanges_MatchesTheRazorPage()
     {
-        var map = SampleMap();
-
-        var selected = map.TestsForRazorPaths(["src/UI.Shared/Pages/Login.razor.cs"]);
+        var selected = TestToPageMapMother.LoginLandingAndTeams()
+            .TestsForRazorPaths(["src/UI.Shared/Pages/Login.razor.cs"]);
 
         selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.Authentication.LoginTests");
     }
@@ -42,9 +40,8 @@ public class TestToPageMapTests
     [Test]
     public void TestsForRazorPaths_WhenAComponentChanges_ExpandsToHostPageFixtures()
     {
-        var map = SampleMap();
-
-        var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/Teams/TeamCards.razor"]);
+        var selected = TestToPageMapMother.LoginLandingAndTeams()
+            .TestsForRazorPaths(["src/UI.Shared/Components/Teams/TeamCards.razor"]);
 
         selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsPageTests");
     }
@@ -52,9 +49,9 @@ public class TestToPageMapTests
     [Test]
     public void TestsForRazorPaths_WhenUnmappedRazorChanges_ReturnsEmpty()
     {
-        var map = SampleMap();
-
-        map.TestsForRazorPaths(["src/UI.Shared/Pages/Reports.razor"]).ShouldBeEmpty();
+        TestToPageMapMother.LoginLandingAndTeams()
+            .TestsForRazorPaths(["src/UI.Shared/Pages/Reports.razor"])
+            .ShouldBeEmpty();
     }
 
     [Test]
@@ -102,6 +99,8 @@ public class TestToPageMapTests
         script.ShouldContain("PathsFile '-' is not supported");
         script.ShouldContain("components");
         script.ShouldContain("AllowEmpty");
+        script.ShouldContain("SelfTest");
+        script.ShouldContain("Get-TestsForChangedRazor.Tests.ps1");
     }
 
     [Test]
@@ -152,35 +151,4 @@ public class TestToPageMapTests
         output.ShouldContain("LoginTests");
     }
 
-    private static TestToPageMap SampleMap()
-    {
-        return new TestToPageMap
-        {
-            Tests = [LoginEntry(), LandingEntry(), TeamsEntry()],
-            Components = [TeamCardsComponent()],
-        };
-    }
-
-    private static TestToPageMapEntry LoginEntry() =>
-        MapEntry("Authentication.LoginTests", "Pages/Login.razor", "Pages/Index.razor");
-
-    private static TestToPageMapEntry LandingEntry() =>
-        MapEntry("App.LandingPageTests", "Pages/Index.razor");
-
-    private static TestToPageMapEntry TeamsEntry() =>
-        MapEntry("TeamsAndVendors.TeamsPageTests", "Pages/TeamsAndVendors.razor");
-
-    private static TestToPageMapEntry MapEntry(string relativeClass, params string[] sharedPaths) =>
-        new()
-        {
-            Class = $"ClearMeasure.Bootcamp.AcceptanceTests.{relativeClass}",
-            Pages = sharedPaths.Select(static path => $"src/UI.Shared/{path}").ToList(),
-        };
-
-    private static TestToPageComponentEntry TeamCardsComponent() =>
-        new()
-        {
-            Path = "src/UI.Shared/Components/Teams/TeamCards.razor",
-            Pages = ["src/UI.Shared/Pages/TeamsAndVendors.razor"],
-        };
 }
