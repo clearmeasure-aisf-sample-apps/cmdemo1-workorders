@@ -6,7 +6,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderSearchRedesignTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderSearchRedesignTests : WorkOrderAcceptanceTestBase
 {
     [SetUp]
     public async Task Setup()
@@ -17,24 +18,11 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowEachWorkOrderOnce_WhenFilteredByCreator()
     {
-        var creator = Faker<Employee>();
-        creator.UserName = $"dup_{TestTag}";
-        creator.AddRole(new Role($"Pastor_{TestTag}", true, false));
-        creator.AddRole(new Role($"Requester_{TestTag}", true, false));
-        var orders = Enumerable.Range(0, 3).Select(_ =>
+        var creator = await SeedEmployeeAsync([$"Pastor_{TestTag}", $"Requester_{TestTag}"]);
+        var orders = new WorkOrder[3];
+        for (var i = 0; i < orders.Length; i++)
         {
-            var order = Faker<WorkOrder>();
-            order.Creator = creator;
-            order.Assignee = null;
-            order.Title = $"[{TestTag}] duplicate check";
-            return order;
-        }).ToArray();
-
-        await using (var context = TestHost.NewDbContext())
-        {
-            context.Add(creator);
-            context.AddRange(orders.Cast<object>());
-            await context.SaveChangesAsync();
+            orders[i] = await SeedWorkOrderAsync(creator, new WorkOrderSeedSpec { Title = $"[{TestTag}] duplicate check" });
         }
 
         await Click(nameof(NavMenu.Elements.Search));
@@ -53,7 +41,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldKeepFiltersChipsAndRows_WhenPageReloaded()
     {
-        var creator = await SeedCreatorAsync("reload");
+        var creator = await SeedEmployeeAsync();
         var overdueHigh = await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.InProgress, new DateOnly(2000, 1, 1));
         await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.InProgress, new DateOnly(2099, 1, 1));
         await SeedOrderAsync(creator, WorkOrderPriority.Low, WorkOrderStatus.InProgress, new DateOnly(2000, 1, 1));
@@ -81,7 +69,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldFilterTable_WhenSummaryCardClicked_AndShowMatchingCount()
     {
-        var creator = await SeedCreatorAsync("cards");
+        var creator = await SeedEmployeeAsync();
         await SeedOrderAsync(creator, WorkOrderPriority.Medium, WorkOrderStatus.Assigned, null, CurrentUser);
         await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.InProgress, null, CurrentUser);
         await SeedOrderAsync(creator, WorkOrderPriority.Low, WorkOrderStatus.Complete, null, CurrentUser);
@@ -101,7 +89,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldRemoveFilter_WhenChipClicked()
     {
-        var creator = await SeedCreatorAsync("chips");
+        var creator = await SeedEmployeeAsync();
         await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
         await SeedOrderAsync(creator, WorkOrderPriority.Low, WorkOrderStatus.Draft, null);
 
@@ -121,7 +109,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldNavigateToSearchWithQ_FromGlobalSearch()
     {
-        var creator = await SeedCreatorAsync("global");
+        var creator = await SeedEmployeeAsync();
         var order = await SeedOrderAsync(creator, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
 
         var search = Page.GetByTestId(nameof(GlobalSearchBox.Elements.GlobalSearchInput));
@@ -136,7 +124,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldBulkAssignSelectedDrafts()
     {
-        var fixer = await SeedCreatorAsync("fixer");
+        var fixer = await SeedEmployeeAsync();
         var first = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
         var second = await SeedOrderAsync(CurrentUser, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
 
@@ -169,7 +157,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldBulkChangeStatus_AndReportSkipped()
     {
-        var assignee = await SeedCreatorAsync("worker");
+        var assignee = await SeedEmployeeAsync();
         var assignedOne = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Medium, WorkOrderStatus.Assigned, null, assignee);
         var assignedTwo = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Medium, WorkOrderStatus.Assigned, null, assignee);
         var draft = await SeedOrderAsync(CurrentUser, WorkOrderPriority.Low, WorkOrderStatus.Draft, null);
@@ -192,7 +180,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldPageThroughResults()
     {
-        var creator = await SeedCreatorAsync("pages");
+        var creator = await SeedEmployeeAsync();
         for (var i = 0; i < 30; i++)
         {
             await SeedOrderAsync(creator, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
@@ -219,7 +207,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldSortByPriority_WhenHeaderClicked()
     {
-        var creator = await SeedCreatorAsync("prio");
+        var creator = await SeedEmployeeAsync();
         await SeedOrderAsync(creator, WorkOrderPriority.Medium, WorkOrderStatus.Draft, null);
         await SeedOrderAsync(creator, WorkOrderPriority.Low, WorkOrderStatus.Draft, null);
         await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
@@ -243,7 +231,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowStatusPillColours()
     {
-        var creator = await SeedCreatorAsync("pills");
+        var creator = await SeedEmployeeAsync();
         var expected = new Dictionary<WorkOrderStatus, (string Color, string Background)>
         {
             [WorkOrderStatus.Assigned] = ("rgb(29, 78, 216)", "rgb(219, 234, 254)"),
@@ -272,7 +260,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldReachFiltersChipsRowsAndBulkBarByKeyboard()
     {
-        var creator = await SeedCreatorAsync("keys");
+        var creator = await SeedEmployeeAsync();
         var order = await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
 
         await OpenSearchAsync();
@@ -347,7 +335,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldShowTableResultsAsBoardCards_WhenMoreThan25Match()
     {
-        var creator = await SeedCreatorAsync("board");
+        var creator = await SeedEmployeeAsync();
         var seeded = new Dictionary<WorkOrderStatus, List<string>>();
         foreach (var status in WorkOrderStatus.GetAllItems())
         {
@@ -397,7 +385,7 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
     [Test, Retry(2)]
     public async Task ShouldReachSwitchAndOpenBoardCardByKeyboard()
     {
-        var creator = await SeedCreatorAsync("board_keys");
+        var creator = await SeedEmployeeAsync();
         var order = await SeedOrderAsync(creator, WorkOrderPriority.High, WorkOrderStatus.Draft, null);
 
         await OpenSearchAsync();
@@ -576,36 +564,23 @@ public class WorkOrderSearchRedesignTests : AcceptanceTestBase
         await Expect(locator).ToHaveValueAsync(value);
     }
 
-    private async Task<Employee> SeedCreatorAsync(string prefix)
+    private Task<WorkOrder> SeedOrderAsync(
+        Employee creator,
+        WorkOrderPriority priority,
+        WorkOrderStatus status,
+        DateOnly? dueDate,
+        Employee? assignee = null)
     {
-        var creator = Faker<Employee>();
-        creator.UserName = $"{prefix}_{TestTag}";
-        await using var context = TestHost.NewDbContext();
-        context.Add(creator);
-        await context.SaveChangesAsync();
-        return creator;
-    }
-
-    private async Task<WorkOrder> SeedOrderAsync(Employee creator, WorkOrderPriority priority, WorkOrderStatus status,
-        DateOnly? dueDate, Employee? assignee = null)
-    {
-        var order = Faker<WorkOrder>();
-        order.Creator = creator;
-        order.Assignee = assignee;
-        order.Priority = priority;
-        order.Status = status;
-        order.DueDate = dueDate;
-        order.CompletedDate = null;
-        order.Title = $"[{TestTag}] {priority} {status.FriendlyName}";
-        await using var context = TestHost.NewDbContext();
-        context.Attach(creator);
-        if (assignee != null && assignee != creator)
+        var needsAssignee = status == WorkOrderStatus.Assigned
+            || status == WorkOrderStatus.InProgress
+            || status == WorkOrderStatus.Complete;
+        return SeedWorkOrderAsync(creator, new WorkOrderSeedSpec
         {
-            context.Attach(assignee);
-        }
-
-        context.Add(order);
-        await context.SaveChangesAsync();
-        return order;
+            Status = status,
+            Priority = priority,
+            DueDate = dueDate,
+            Assignee = assignee ?? (needsAssignee ? creator : null),
+            Title = $"[{TestTag}] {priority} {status.FriendlyName}"
+        });
     }
 }

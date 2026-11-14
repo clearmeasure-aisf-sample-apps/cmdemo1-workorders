@@ -3,7 +3,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderDictationTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderDictationTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldRenderDictateTitleButtonOnWorkOrderManagePage()

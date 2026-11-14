@@ -3,7 +3,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderSpeechTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderSpeechTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldRenderSpeakTitleButtonOnWorkOrderManagePage()

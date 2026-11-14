@@ -5,11 +5,11 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderDueDateTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderDueDateTests : WorkOrderAcceptanceTestBase
 {
     private const string DueTodayBackground = "rgb(254, 240, 138)";
     private const string OverdueBackground = "rgb(254, 202, 202)";
@@ -43,7 +43,6 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Click(saveButtonTestId);
         await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
 
-        // Empty due date renders a muted en dash placeholder.
         var dueDateCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + order.Number);
         await Expect(dueDateCell).ToBeAttachedAsync();
         await Expect(dueDateCell).ToHaveTextAsync("–");
@@ -136,10 +135,10 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var today = ChurchTimeZone.Today(TimeProvider.System);
         var overdue = today.AddDays(-2);
 
-        var todayOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] due today", today);
-        var overdueOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] overdue", overdue);
+        var todayOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { DueDate = today, Title = $"[{TestTag}] due today" });
+        var overdueOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { DueDate = overdue, Title = $"[{TestTag}] overdue" });
 
-        await Page.WaitForURLAsync("**/workorder/search");
+        await OpenSearchAsync();
 
         var todayCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + todayOrder.Number);
         var overdueCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + overdueOrder.Number);
@@ -148,17 +147,14 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         await Expect(todayCell).ToHaveClassAsync(new Regex("due-date-today"));
         await Expect(overdueCell).ToHaveClassAsync(new Regex("due-date-overdue"));
 
-        await CompleteWorkOrderViaBusAsync(todayOrder.Number!);
-        await CancelWorkOrderViaBusAsync(overdueOrder.Number!);
+        var completedOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Status = WorkOrderStatus.Complete, DueDate = today, Assignee = CurrentUser, Title = $"[{TestTag}] due today complete" });
+        var cancelledOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Status = WorkOrderStatus.Cancelled, DueDate = overdue, Title = $"[{TestTag}] overdue cancelled" });
 
-        // Full Page.ReloadAsync drops in-memory Blazor auth and lands on /login.
-        // Soft-navigate within the SPA so search re-queries without losing the session.
         await Page.GotoAsync("/counter");
-        await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForURLAsync("**/workorder/search");
+        await OpenSearchAsync();
 
-        todayCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + todayOrder.Number);
-        overdueCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + overdueOrder.Number);
+        todayCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + completedOrder.Number);
+        overdueCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + cancelledOrder.Number);
 
         await Expect(todayCell).ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
         await Expect(overdueCell).ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
@@ -176,11 +172,11 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var future = today.AddDays(7);
         var overdue = today.AddDays(-2);
 
-        var overdueOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] badge overdue", overdue);
-        var todayOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] badge due today", today);
-        var futureOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] badge on track", future);
+        var overdueOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { DueDate = overdue, Title = $"[{TestTag}] badge overdue" });
+        var todayOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { DueDate = today, Title = $"[{TestTag}] badge due today" });
+        var futureOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { DueDate = future, Title = $"[{TestTag}] badge on track" });
 
-        await Page.WaitForURLAsync("**/workorder/search");
+        await OpenSearchAsync();
 
         var overdueLocator = Page.GetByTestId(nameof(WorkOrderSearch.Elements.UrgencyBadge) + overdueOrder.Number);
         var todayLocator = Page.GetByTestId(nameof(WorkOrderSearch.Elements.UrgencyBadge) + todayOrder.Number);
@@ -200,9 +196,9 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
     {
         await LoginAsCurrentUser();
 
-        var order = await CreateDraftNoDueDateAsync($"[{TestTag}] badge no due date");
+        var order = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { Title = $"[{TestTag}] badge no due date" });
 
-        await Page.WaitForURLAsync("**/workorder/search");
+        await OpenSearchAsync();
 
         var badgeLocator = Page.GetByTestId(nameof(WorkOrderSearch.Elements.UrgencyBadge) + order.Number);
         await Expect(badgeLocator).Not.ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
@@ -215,8 +211,10 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
         var today = ChurchTimeZone.Today(TimeProvider.System);
         var overdue = today.AddDays(-3);
 
-        var todayOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] painted due today", today);
-        var overdueOrder = await CreateDraftWithDueDateAsync($"[{TestTag}] painted overdue", overdue);
+        var todayOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { DueDate = today, Title = $"[{TestTag}] painted due today" });
+        var overdueOrder = await SeedWorkOrderAsync(CurrentUser, new WorkOrderSeedSpec { DueDate = overdue, Title = $"[{TestTag}] painted overdue" });
+
+        await OpenSearchAsync();
 
         var todayCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + todayOrder.Number);
         var overdueCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + overdueOrder.Number);
@@ -227,6 +225,14 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
 
         await AssertManageDueDateBackgroundAsync(todayOrder, DueTodayBackground);
         await AssertManageDueDateBackgroundAsync(overdueOrder, OverdueBackground);
+    }
+
+    private async Task OpenSearchAsync()
+    {
+        await Click(nameof(NavMenu.Elements.Search));
+        await Page.WaitForURLAsync("**/workorder/search");
+        var searchTable = Page.Locator(".grid-data tbody");
+        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
     }
 
     private async Task AssertManageDueDateBackgroundAsync(WorkOrder order, string expectedBackground)
@@ -247,101 +253,5 @@ public class WorkOrderDueDateTests : AcceptanceTestBase
     {
         return await locator.EvaluateAsync<string>(
             "element => window.getComputedStyle(element).backgroundColor");
-    }
-
-    private async Task<WorkOrder> CreateDraftWithDueDateAsync(string title, DateOnly dueDate)
-    {
-        var order = Faker<WorkOrder>();
-        order.Title = title;
-        order.Number = null;
-
-        var newWorkOrder = Page.GetByTestId(nameof(NavMenu.Elements.NewWorkOrder));
-        await Expect(newWorkOrder).ToBeVisibleAsync(
-            new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        await Click(nameof(NavMenu.Elements.NewWorkOrder));
-        await Page.WaitForURLAsync("**/workorder/manage?mode=New");
-
-        var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        order.Number = await woNumberLocator.InnerTextAsync();
-
-        await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
-        await Input(nameof(WorkOrderManage.Elements.Description), order.Description ?? "desc");
-
-        var today = ChurchTimeZone.Today(TimeProvider.System);
-        if (dueDate >= today)
-        {
-            var dueDateInput = Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate));
-            await dueDateInput.FillAsync(dueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-            var expectedUrgency = DueDateUrgencyCalculator.Calculate(
-                dueDate,
-                WorkOrderStatus.Draft,
-                TimeProvider.System);
-            var expectedCssClass = DueDateUrgencyCalculator.CssClass(expectedUrgency);
-            if (!string.IsNullOrEmpty(expectedCssClass))
-            {
-                await Expect(dueDateInput).ToHaveClassAsync(new Regex(expectedCssClass));
-            }
-        }
-
-        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
-        await Click(saveButtonTestId);
-        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
-
-        if (dueDate < today)
-        {
-            await using var context = TestHost.NewDbContext();
-            var stored = await context.Set<WorkOrder>().SingleAsync(w => w.Number == order.Number);
-            stored.DueDate = dueDate;
-            await context.SaveChangesAsync();
-
-            await Page.GotoAsync("/counter");
-            await Click(nameof(NavMenu.Elements.Search));
-            await Page.WaitForURLAsync("**/workorder/search");
-        }
-
-        return order;
-    }
-
-    private async Task<WorkOrder> CreateDraftNoDueDateAsync(string title)
-    {
-        var order = Faker<WorkOrder>();
-        order.Title = title;
-        order.Number = null;
-
-        var newWorkOrder = Page.GetByTestId(nameof(NavMenu.Elements.NewWorkOrder));
-        await Expect(newWorkOrder).ToBeVisibleAsync(
-            new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        await Click(nameof(NavMenu.Elements.NewWorkOrder));
-        await Page.WaitForURLAsync("**/workorder/manage?mode=New");
-
-        var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        order.Number = await woNumberLocator.InnerTextAsync();
-
-        await Input(nameof(WorkOrderManage.Elements.Title), order.Title);
-        await Input(nameof(WorkOrderManage.Elements.Description), order.Description ?? "desc");
-
-        var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
-        await Click(saveButtonTestId);
-        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
-        return order;
-    }
-
-    private async Task CompleteWorkOrderViaBusAsync(string number)
-    {
-        await using var context = TestHost.NewDbContext();
-        var workOrder = await context.Set<WorkOrder>().SingleAsync(w => w.Number == number);
-        workOrder.Status = WorkOrderStatus.Complete;
-        workOrder.CompletedDate = DateTime.UtcNow;
-        await context.SaveChangesAsync();
-    }
-
-    private async Task CancelWorkOrderViaBusAsync(string number)
-    {
-        await using var context = TestHost.NewDbContext();
-        var workOrder = await context.Set<WorkOrder>().SingleAsync(w => w.Number == number);
-        workOrder.Status = WorkOrderStatus.Cancelled;
-        await context.SaveChangesAsync();
     }
 }

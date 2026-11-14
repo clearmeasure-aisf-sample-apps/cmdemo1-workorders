@@ -2,7 +2,8 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
-public class WorkOrderCreatedRelativeTimeTests : AcceptanceTestBase
+[Parallelizable(ParallelScope.All)]
+public class WorkOrderCreatedRelativeTimeTests : WorkOrderAcceptanceTestBase
 {
     [Test, Retry(2)]
     public async Task ShouldShowRelativeCreatedTime_WithFullDateTooltip()

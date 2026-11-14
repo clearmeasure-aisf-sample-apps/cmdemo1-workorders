@@ -22,7 +22,7 @@ public sealed class TestSupportEmployeeCreate
     public string? MiddleName { get; init; }
 
     /// <summary>
-    /// Extra create-only role names (for multi-role dropdown coverage).
+    /// Extra create-only role names (for multi-role dropdown/duplicate-row coverage).
     /// Each role gets <c>CanCreateWorkOrder=true</c> and <c>CanFulfillWorkOrder=false</c>.
     /// </summary>
     public string[]? AdditionalCreateRoleNames { get; init; }

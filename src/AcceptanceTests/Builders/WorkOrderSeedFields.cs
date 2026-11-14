@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 
-/// <summary>Optional fields for API work-order seeding.</summary>
+/// <summary>Optional fields for <see cref="AcceptanceObjectMother.WorkOrderAsync(string, WorkOrderStatus, WorkOrderSeedFields)"/>.</summary>
 public sealed class WorkOrderSeedFields
 {
     /// <summary>Priority; defaults to Medium.</summary>
