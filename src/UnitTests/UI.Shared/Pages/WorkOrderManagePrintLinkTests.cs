@@ -23,7 +23,7 @@ public class WorkOrderManagePrintLinkTests
     };
 
     [Test]
-    public async Task Should_RenderPrintLink_WithRelNoopener()
+    public async Task Should_RenderPrintLink_WithRelNoopenerNoreferrer()
     {
         await using var ctx = CreateEditContext(CreatePrintWorkOrder());
         var component = ctx.Render<WorkOrderManage>();
@@ -32,9 +32,7 @@ public class WorkOrderManagePrintLinkTests
 
         link.GetAttribute("href").ShouldBe("/workorder/print/WO-PRINT");
         link.GetAttribute("target").ShouldBe("_blank");
-        var rel = link.GetAttribute("rel");
-        rel.ShouldNotBeNull();
-        rel.ShouldContain("noopener");
+        link.GetAttribute("rel").ShouldBe("noopener noreferrer");
     }
 
     [Test]
