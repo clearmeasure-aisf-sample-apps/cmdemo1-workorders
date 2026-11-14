@@ -13,7 +13,7 @@ public class WorkOrderTitleCharCountTests : WorkOrderAcceptanceTestBase
 
         var caption = Page.GetByTestId(nameof(WorkOrderManage.Elements.TitleCharCount));
         await Expect(caption).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 15_000 });
-        await Expect(caption).ToHaveTextAsync("600 characters remaining");
+        await Expect(caption).ToHaveTextAsync($"{WorkOrder.TitleMaxLength} characters remaining");
     }
 
     [Test, Retry(2)]
@@ -26,7 +26,7 @@ public class WorkOrderTitleCharCountTests : WorkOrderAcceptanceTestBase
         await titleField.BlurAsync();
 
         var caption = Page.GetByTestId(nameof(WorkOrderManage.Elements.TitleCharCount));
-        await Expect(caption).ToHaveTextAsync("290 characters remaining");
+        await Expect(caption).ToHaveTextAsync($"{WorkOrder.TitleMaxLength - 10} characters remaining");
         await Expect(caption).Not.ToHaveClassAsync(new System.Text.RegularExpressions.Regex("text-danger"));
     }
 
