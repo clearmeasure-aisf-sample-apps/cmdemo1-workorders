@@ -45,6 +45,16 @@ public class GlobalSearchBoxTests
     }
 
     [Test]
+    public async Task ShouldExposeEnterKeyHintSearch_OnGlobalSearchInput()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<GlobalSearchBox>();
+        var input = component.Find($"[data-testid='{GlobalSearchBox.Elements.GlobalSearchInput}']");
+
+        input.GetAttribute("enterkeyhint").ShouldBe("search");
+    }
+
+    [Test]
     public async Task ShouldShowSlashHint_WhenRendered_AnnouncesPressSlashToSearch()
     {
         await using var ctx = CreateContext();
