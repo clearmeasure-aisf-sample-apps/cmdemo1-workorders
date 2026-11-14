@@ -8,7 +8,9 @@ internal static class TestToPageMapCoverage
     /// <summary>
     /// Missing mappings, empty pages, unknown fixtures, duplicate classes, missing Razor files,
     /// Components/*.razor files without a host-page entry, and component hosts that do not match
-    /// scanned markup usage (<see cref="RazorComponentHostScanner"/>).
+    /// scanned markup usage (<see cref="RazorComponentHostScanner"/>). Layout/shell
+    /// expansion to routable pages is enforced by BuildGates selection tests that load
+    /// the map through <see cref="TestToPageMap.Load"/> (<see cref="RazorLayoutPageScanner"/>).
     /// </summary>
     public static IReadOnlyList<string> Evaluate(
         TestToPageMap map,

@@ -59,13 +59,44 @@ public class TestToPageMapTests
     }
 
     [Test]
-    public void TestsForRazorPaths_WhenLastWorkOrderChanges_SelectsNavMenuFixtures()
+    public void TestsForRazorPaths_WhenLastWorkOrderChanges_SelectsNavMenuAndLayoutPages()
     {
         var map = TestToPageMap.Load(RepositoryCheckout.Current);
 
         var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/LastWorkOrder.razor"]);
 
         selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests");
+        AssertSelectsMainLayoutPageFixtures(selected);
+    }
+
+    [Test]
+    public void TestsForRazorPaths_WhenMainLayoutChanges_SelectsPagesUsingTheLayout()
+    {
+        var map = TestToPageMap.Load(RepositoryCheckout.Current);
+
+        var selected = map.TestsForRazorPaths(["src/UI.Shared/MainLayout.razor"]);
+
+        AssertSelectsMainLayoutPageFixtures(selected);
+    }
+
+    [Test]
+    public void TestsForRazorPaths_WhenGlobalSearchBoxChanges_SelectsPagesUsingMainLayout()
+    {
+        var map = TestToPageMap.Load(RepositoryCheckout.Current);
+
+        var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/GlobalSearchBox.razor"]);
+
+        AssertSelectsMainLayoutPageFixtures(selected);
+    }
+
+    [Test]
+    public void TestsForRazorPaths_WhenNavMenuChanges_SelectsPagesUsingMainLayout()
+    {
+        var map = TestToPageMap.Load(RepositoryCheckout.Current);
+
+        var selected = map.TestsForRazorPaths(["src/UI.Shared/NavMenu.razor"]);
+
+        AssertSelectsMainLayoutPageFixtures(selected);
     }
 
     [Test]
@@ -76,6 +107,14 @@ public class TestToPageMapTests
         var selected = map.TestsForRazorPaths(["src/UI.Shared/Components/Search/AssigneeAvatar.razor"]);
 
         selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests");
+    }
+
+    private static void AssertSelectsMainLayoutPageFixtures(IReadOnlyList<string> selected)
+    {
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests");
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests");
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests");
+        selected.ShouldContain("ClearMeasure.Bootcamp.AcceptanceTests.App.PhoneWidthNoDocumentScrollTests");
     }
 
     [Test]

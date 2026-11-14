@@ -24,7 +24,8 @@ internal sealed class TestToPageComponentEntry
 /// <summary>
 /// Checked-in map from page-level acceptance tests to Razor pages. A changed Razor
 /// file selects its mapped fixtures for changed-UI videos (issue #1670 / item 16).
-/// Shared components expand to host pages via <see cref="Components"/>.
+/// Shared components expand to host pages via <see cref="Components"/>; layout and
+/// shell hosts then expand to routable pages via <see cref="RazorLayoutPageScanner"/>.
 /// </summary>
 internal sealed class TestToPageMap
 {
@@ -35,6 +36,8 @@ internal sealed class TestToPageMap
     public List<TestToPageComponentEntry> Components { get; init; } = [];
 
     public List<string> IgnoredRazor { get; init; } = [];
+
+    private IReadOnlyDictionary<string, IReadOnlyList<string>>? _shellPageExpansion;
 
     /// <summary>Reads <see cref="RelativePath"/> from <paramref name="checkout"/>.</summary>
     public static TestToPageMap Load(RepositoryCheckout checkout)
@@ -47,12 +50,14 @@ internal sealed class TestToPageMap
             throw new InvalidOperationException($"{RelativePath} has no tests.");
         }
 
+        map._shellPageExpansion = RazorLayoutPageScanner.ShellPageExpansion(checkout);
         return map;
     }
 
     /// <summary>
     /// Fixture class names for <paramref name="razorPaths"/>. Components expand to host
-    /// pages; <c>.razor.cs</c> matches its <c>.razor</c>; ignored paths select nothing.
+    /// pages; layout/shell hosts expand to pages that use them; <c>.razor.cs</c> matches
+    /// its <c>.razor</c>; ignored paths select nothing.
     /// </summary>
     public IReadOnlyList<string> TestsForRazorPaths(IEnumerable<string> razorPaths)
     {
@@ -72,7 +77,8 @@ internal sealed class TestToPageMap
 
     /// <summary>
     /// Checkout-relative page paths selected by <paramref name="razorPaths"/> after
-    /// component expansion (hosts recurse through other <see cref="Components"/> entries).
+    /// component expansion (hosts recurse through other <see cref="Components"/> entries)
+    /// and layout/shell expansion to routable pages.
     /// Empty when every path is ignored or blank.
     /// </summary>
     public HashSet<string> ExpandToPagePaths(IEnumerable<string> razorPaths)
@@ -90,7 +96,29 @@ internal sealed class TestToPageMap
             CollectHosts(raw, hosts, wanted, []);
         }
 
+        ExpandShellPages(wanted);
         return wanted;
+    }
+
+    private void ExpandShellPages(HashSet<string> wanted)
+    {
+        if (_shellPageExpansion is null || wanted.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var path in wanted.ToArray())
+        {
+            if (!_shellPageExpansion.TryGetValue(path, out var pages))
+            {
+                continue;
+            }
+
+            foreach (var page in pages)
+            {
+                wanted.Add(page);
+            }
+        }
     }
 
     private static void CollectHosts(

@@ -183,7 +183,19 @@ function Test-PageHeaderHostsArePagesThatRenderIt {
     Write-Output 'PageHeader host pages ok'
 }
 
-function Test-LastWorkOrderHostsNavMenu {
+function Assert-SelectsMainLayoutPageFixtures {
+    param([string[]]$Lines, [string]$Context)
+    Assert-True ($Lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.App.LandingPageTests') `
+        "$Context must select LandingPageTests (Index uses MainLayout)."
+    Assert-True ($Lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSearchTests') `
+        "$Context must select WorkOrderSearchTests (Search uses MainLayout)."
+    Assert-True ($Lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests') `
+        "$Context must select AccessibilityAxeTests (pages use MainLayout)."
+    Assert-True ($Lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.App.PhoneWidthNoDocumentScrollTests') `
+        "$Context must select PhoneWidthNoDocumentScrollTests (pages use MainLayout)."
+}
+
+function Test-LastWorkOrderHostsNavMenuAndLayoutPages {
     $result = Invoke-HelperFile -ArgumentList @(
         '-RazorPaths', 'src/UI.Shared/Components/LastWorkOrder.razor'
     )
@@ -191,7 +203,35 @@ function Test-LastWorkOrderHostsNavMenu {
     $lines = Get-OutputLines $result.StdOut
     Assert-True ($lines -contains 'ClearMeasure.Bootcamp.AcceptanceTests.App.NavMenuTests') `
         'LastWorkOrder must select NavMenuTests (NavMenu renders LastWorkOrder).'
-    Write-Output 'LastWorkOrder NavMenu host ok'
+    Assert-SelectsMainLayoutPageFixtures -Lines $lines -Context 'LastWorkOrder'
+    Write-Output 'LastWorkOrder NavMenu + layout pages ok'
+}
+
+function Test-MainLayoutSelectsLayoutPages {
+    $result = Invoke-HelperFile -ArgumentList @(
+        '-RazorPaths', 'src/UI.Shared/MainLayout.razor'
+    )
+    Assert-True ($result.ExitCode -eq 0) "MainLayout exit $($result.ExitCode): $($result.StdErr)"
+    Assert-SelectsMainLayoutPageFixtures -Lines (Get-OutputLines $result.StdOut) -Context 'MainLayout'
+    Write-Output 'MainLayout layout pages ok'
+}
+
+function Test-GlobalSearchBoxSelectsLayoutPages {
+    $result = Invoke-HelperFile -ArgumentList @(
+        '-RazorPaths', 'src/UI.Shared/Components/GlobalSearchBox.razor'
+    )
+    Assert-True ($result.ExitCode -eq 0) "GlobalSearchBox exit $($result.ExitCode): $($result.StdErr)"
+    Assert-SelectsMainLayoutPageFixtures -Lines (Get-OutputLines $result.StdOut) -Context 'GlobalSearchBox'
+    Write-Output 'GlobalSearchBox layout pages ok'
+}
+
+function Test-NavMenuSelectsLayoutPages {
+    $result = Invoke-HelperFile -ArgumentList @(
+        '-RazorPaths', 'src/UI.Shared/NavMenu.razor'
+    )
+    Assert-True ($result.ExitCode -eq 0) "NavMenu exit $($result.ExitCode): $($result.StdErr)"
+    Assert-SelectsMainLayoutPageFixtures -Lines (Get-OutputLines $result.StdOut) -Context 'NavMenu'
+    Write-Output 'NavMenu layout pages ok'
 }
 
 function Test-AssigneeAvatarRecursesToSearch {
@@ -231,7 +271,10 @@ Test-PathsFileDashFailsLoudly
 Test-BackslashPathSeparator
 Test-SharedComponentTeamCards
 Test-PageHeaderHostsArePagesThatRenderIt
-Test-LastWorkOrderHostsNavMenu
+Test-LastWorkOrderHostsNavMenuAndLayoutPages
+Test-MainLayoutSelectsLayoutPages
+Test-GlobalSearchBoxSelectsLayoutPages
+Test-NavMenuSelectsLayoutPages
 Test-AssigneeAvatarRecursesToSearch
 Test-UnmappedUiRazorFailsLoudly
 Test-EmptyStdinExitsZeroWithNoNames

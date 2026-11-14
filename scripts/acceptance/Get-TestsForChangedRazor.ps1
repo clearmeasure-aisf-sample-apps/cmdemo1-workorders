@@ -6,10 +6,12 @@
   Reads src/AcceptanceTests/test-to-page-map.json and returns the distinct test
   class names whose pages include any of the given Razor paths (PR environments
   plan item 23 / #1670). A .razor.cs code-behind path matches its .razor page.
-  Shared components and shell Razor files expand to their host pages via the map's
-  components[] entries (hosts are the pages/layouts that render the tag,
-  transitively; BuildGates RazorComponentHostScanner fails on drift). Paths in
-  ignoredRazor (_Imports) select nothing.
+  Shared components expand to host pages via the map's components[] entries
+  (hosts are the pages/layouts that render the tag, transitively; BuildGates
+  RazorComponentHostScanner fails on drift). Layout and shell terminals
+  (MainLayout, PrintLayout, NavMenu, App) then expand to routable pages that
+  use them via DefaultLayout / @layout (and NavMenu via layout markup), scanned
+  at runtime — not hand-listed. Paths in ignoredRazor (_Imports) select nothing.
 
   Accepts paths via -RazorPaths, pipeline (ValueFromPipeline), or stdin when
   invoked with pwsh -File (reads redirected Console.In). Prefer:
@@ -76,9 +78,10 @@ begin {
         exit $LASTEXITCODE
     }
 
-    $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
+    $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
     $mapPath = Join-Path $repoRoot "src/AcceptanceTests/test-to-page-map.json"
     $paths = [System.Collections.Generic.List[string]]::new()
+    . (Join-Path $PSScriptRoot 'Expand-RazorShellPages.ps1')
 
     function Get-CanonicalRazorPath {
         param([string]$Path)
@@ -185,6 +188,9 @@ end {
         $visiting = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
         Add-ExpandedHosts -Path $canonical -Hosts $hosts -Wanted $wanted -Visiting $visiting
     }
+
+    $shellExpansion = Get-RazorShellPageExpansion -RepoRoot $repoRoot
+    Add-ShellPageExpansion -Wanted $wanted -Expansion $shellExpansion
 
     $selected = [System.Collections.Generic.List[string]]::new()
     foreach ($entry in $map.tests) {
