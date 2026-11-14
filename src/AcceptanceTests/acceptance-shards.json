@@ -386,9 +386,18 @@
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTests",
       "shard": 5,
-      "tests": 14,
-      "x64Seconds": 191.8,
-      "armSeconds": 159.4,
+      "tests": 13,
+      "x64Seconds": 178.1,
+      "armSeconds": 148.0,
+      "longestX64Seconds": 13.7,
+      "longestArmSeconds": 11.4
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTeamsTests",
+      "shard": 5,
+      "tests": 1,
+      "x64Seconds": 13.7,
+      "armSeconds": 11.4,
       "longestX64Seconds": 13.7,
       "longestArmSeconds": 11.4
     },

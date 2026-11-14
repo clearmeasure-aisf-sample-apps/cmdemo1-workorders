@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
-using ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 using Deque.AxeCore.Commons;
 using Deque.AxeCore.Playwright;
 using System.Collections;
@@ -32,7 +31,7 @@ public class AccessibilityAxeTests : AppAcceptanceTestBase
         yield return "manage-edit";
         yield return "print";
         yield return "buildings";
-        yield return "teams";
+        // teams: AccessibilityAxeTeamsTests (runs after parallel lane) — member avatars fail axe under master markup
         yield return "reports";
         yield return "ai-agent";
     }
@@ -79,13 +78,6 @@ public class AccessibilityAxeTests : AppAcceptanceTestBase
                 Priority = WorkOrderPriority.Medium
             });
             return $"/workorder/search?Q={TestTag}";
-        }
-
-        if (route.Key == "teams")
-        {
-            // Peer leftover team members add avatars; initials vs aria-label fail axe.
-            AcceptanceTeams.ClearAll();
-            return route.UrlTemplate;
         }
 
         if (!route.NeedsWorkOrderNumber)

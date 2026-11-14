@@ -108,7 +108,7 @@ public static class AcceptanceTestEmployees
 
         using var transaction = context.Database.BeginTransaction();
         DeleteWorkOrderGraph(context, employeeIds);
-        DeleteTeamsWithMembers(context, employeeIds);
+        DeleteTeamsCreatedUnderPrefix(context, userNamePrefix);
         DeleteEmployeeOwnedRows(context, employeeIds);
         transaction.Commit();
     }
@@ -134,12 +134,21 @@ public static class AcceptanceTestEmployees
         context.Set<WorkOrder>().Where(order => workOrderIds.Contains(order.Id)).ExecuteDelete();
     }
 
-    private static void DeleteTeamsWithMembers(DbContext context, List<Guid> employeeIds)
+    /// <summary>
+    /// Deletes only teams this sweep created (<c>Team {prefix}…</c>), never a peer team
+    /// that merely lists a prefix employee among other members.
+    /// </summary>
+    private static void DeleteTeamsCreatedUnderPrefix(DbContext context, string userNamePrefix)
     {
         var teams = context.Set<Team>()
             .Include(team => team.Members)
-            .Where(team => team.Members.Any(member => employeeIds.Contains(member.Id)))
+            .Where(team => team.Name.Contains(userNamePrefix))
             .ToList();
+        if (teams.Count == 0)
+        {
+            return;
+        }
+
         context.RemoveRange(teams);
         context.SaveChanges();
     }

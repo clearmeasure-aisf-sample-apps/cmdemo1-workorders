@@ -3,15 +3,33 @@ using Microsoft.EntityFrameworkCore;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 
 /// <summary>
-/// Clears persisted teams so parallel page scans do not see leftover team members
-/// (member avatars fail axe <c>label-content-name-mismatch</c> with master markup).
+/// Deletes only teams whose names carry a fixture-owned tag or prefix —
+/// never a global wipe under <see cref="NUnit.Framework.ParallelScope.All"/>.
 /// </summary>
 public static class AcceptanceTeams
 {
-    /// <summary>Deletes every team (join rows cascade).</summary>
-    public static void ClearAll()
+    /// <summary>
+    /// Removes teams created with <paramref name="tag"/> in the name
+    /// (see <c>CreateTaggedTeamAsync</c> / leftover <c>Team {prefix}…</c> names).
+    /// </summary>
+    public static void DeleteCreatedWithTag(string tag)
     {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            throw new ArgumentException("Tag is required for scoped team cleanup.", nameof(tag));
+        }
+
         using var context = TestHost.NewDbContext();
-        context.Set<Team>().ExecuteDelete();
+        var teams = context.Set<Team>()
+            .Include(team => team.Members)
+            .Where(team => team.Name.Contains(tag))
+            .ToList();
+        if (teams.Count == 0)
+        {
+            return;
+        }
+
+        context.RemoveRange(teams);
+        context.SaveChanges();
     }
 }

@@ -1,7 +1,8 @@
 {
   "category": "SerialLane",
-  "notes": "Fixtures (or methods) tagged Category(SerialLane) must run after the parallel lane on the same pool slot, never beside it. Entirely-serial fixtures are excluded from duration-based parallel packing. App, Authentication, McpServer and Api fixtures are ParallelScope.All after #1666/#1667. NeedsRebootHealthCheckTests returned to the parallel lane after #1679 (request-scoped on pool slots). Items 14 may move more fixtures here until independence lands.",
+  "notes": "Fixtures (or methods) tagged Category(SerialLane) must run after the parallel lane on the same pool slot, never beside it. Entirely-serial fixtures are excluded from duration-based parallel packing. App (except AccessibilityAxeTeamsTests), Authentication, McpServer and Api fixtures are ParallelScope.All after #1666/#1667. NeedsRebootHealthCheckTests returned to the parallel lane after #1679 (request-scoped on pool slots). Items 14 may move more fixtures here until independence lands.",
   "classes": [
+    "ClearMeasure.Bootcamp.AcceptanceTests.App.AccessibilityAxeTeamsTests",
     "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
     "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderSaveThenAssignPersistenceTests"
   ]
