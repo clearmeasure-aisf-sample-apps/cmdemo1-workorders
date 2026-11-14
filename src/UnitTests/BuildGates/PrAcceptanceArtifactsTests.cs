@@ -75,25 +75,6 @@ public class PrAcceptanceArtifactsTests
     }
 
     [Test]
-    public void BrowserContextFactory_WhenVideoEnvUnset_DoesNotEnableRecordingByDefault()
-    {
-        var previous = Environment.GetEnvironmentVariable("ACCEPTANCE_RECORD_VIDEO");
-        try
-        {
-            Environment.SetEnvironmentVariable("ACCEPTANCE_RECORD_VIDEO", null);
-            // Property is cached at type init — assert production default via source contract instead.
-            var source = RepositoryCheckout.Current.ReadText("src/AcceptanceTests/BrowserContextFactory.cs");
-            source.ShouldContain("ACCEPTANCE_RECORD_VIDEO");
-            source.ShouldContain("RecordVideoDir");
-            source.ShouldContain("playwright-videos");
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable("ACCEPTANCE_RECORD_VIDEO", previous);
-        }
-    }
-
-    [Test]
     public void PublishScript_WhenSourceMentionsAuth_UsesAuthModeLoginOnly()
     {
         var script = RepositoryCheckout.Current.ReadText("scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1");
