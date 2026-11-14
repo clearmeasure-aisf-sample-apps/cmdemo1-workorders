@@ -6,7 +6,7 @@
 </span>
 @if (ShowHighBadge && Row.WorkOrder.Priority == WorkOrderPriority.High)
 {
-    <span class="priority-badge priority-badge--high" data-testid="@($"PriorityBadge{Row.Number}")">High</span>
+    <span class="priority-badge priority-badge--high" data-testid="@($"PriorityBadge{Row.Number}")" aria-hidden="true">High</span>
 }
 
 @code {
