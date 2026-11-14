@@ -136,6 +136,33 @@ public class SettingsTests
     }
 
     [Test]
+    public async Task Settings_DarkModeSwitch_ShouldOmitAriaCheckedAndFollowThemeCheckedState()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule(ThemePreferenceService.ThemeJsModulePath);
+        module.Setup<string>("getTheme").SetResult("light");
+        module.SetupVoid("syncDomFromTheme", _ => true).SetVoidResult();
+        module.SetupVoid("setTheme", _ => true).SetVoidResult();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Settings>());
+        var theme = ctx.Services.GetRequiredService<ThemePreferenceService>();
+
+        var sw = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeSwitch)}']");
+        sw.HasAttribute("aria-checked").ShouldBeFalse();
+        sw.HasAttribute("checked").ShouldBe(theme.IsDarkMode);
+
+        await sw.ChangeAsync(new() { Value = true });
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var updated = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeSwitch)}']");
+            updated.HasAttribute("aria-checked").ShouldBeFalse();
+            updated.HasAttribute("checked").ShouldBeTrue();
+            theme.IsDarkMode.ShouldBeTrue();
+        });
+    }
+
+    [Test]
     public void Settings_Stylesheet_ShouldUseDesignTokensWithoutDarkOverrides()
     {
         var path = Path.GetFullPath(Path.Combine(
