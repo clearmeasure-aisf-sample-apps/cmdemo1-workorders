@@ -224,6 +224,29 @@ public class ReportsTests
     }
 
     [Test]
+    public async Task Reports_WithData_HidesDecorativeBarTracksFromScreenReaders()
+    {
+        await using var ctx = CreateContext();
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Reports>());
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            var summaryCards = component.Find(".summary-cards");
+            var containers = summaryCards.QuerySelectorAll(".bar-container");
+            containers.Length.ShouldBe(8);
+            containers.ShouldAllBe(c => c.GetAttribute("aria-hidden") == "true");
+
+            var labels = summaryCards.QuerySelectorAll(".bar-label");
+            labels.Length.ShouldBe(8);
+            labels.ShouldAllBe(l => l.GetAttribute("aria-hidden") == null);
+
+            var values = summaryCards.QuerySelectorAll(".bar-value");
+            values.Length.ShouldBe(8);
+            values.ShouldAllBe(v => v.GetAttribute("aria-hidden") == null);
+        });
+    }
+
+    [Test]
     public async Task Reports_AverageDaysToClose_ShouldDisplayCorrectValue()
     {
         await using var ctx = CreateContext();
