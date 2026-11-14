@@ -1,0 +1,618 @@
+# PR environment check (issue #1664 / plan item 8).
+# Leases a warm pool slot, deploys the publish-only image through Octopus to pool-N,
+# runs 12 parallel shards × 4 workers (48) then the serial lane, reports, and releases.
+# Tests the branch-head SHA on push (same as Build), not the pull_request merge ref.
+# Docs-only PRs succeed without leasing or running the suite.
+# Not required: do not change the default-branch ruleset.
+# Video/trace upload (issue #1671) must not sit on this check's clock — omitted here.
+# VERSION-MARKER: the "2.4." prefix in run-name matches MAJOR_VERSION/MINOR_VERSION below.
+name: PR environment
+run-name: "2.4.${{ github.run_number }}-pr • PR environment • ${{ github.head_ref || github.ref_name }}"
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: pr-environment-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAJOR_VERSION: 2
+  MINOR_VERSION: 4
+  OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
+  PR_ENVIRONMENT_SHARD_COUNT: 12
+  PR_ENVIRONMENT_WORKERS: 4
+
+jobs:
+  changes:
+    name: Detect code changes
+    if: github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.detect.outputs.code }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Run path-classifier tests
+        run: bash .github/scripts/detect-code-changes.tests.sh
+
+      - name: Detect code changes
+        id: detect
+        env:
+          EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          ZERO_SHA='0000000000000000000000000000000000000000'
+          changed_list="${RUNNER_TEMP:-/tmp}/changed-paths.txt"
+
+          fail_open() {
+            echo "$1"
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            echo "code=true"
+            exit 0
+          }
+
+          git fetch --no-tags origin master:refs/remotes/origin/master || git fetch --no-tags origin main:refs/remotes/origin/main || true
+          if git rev-parse --verify origin/master >/dev/null 2>&1; then
+            default_base=origin/master
+          elif git rev-parse --verify origin/main >/dev/null 2>&1; then
+            default_base=origin/main
+          else
+            fail_open "Neither origin/master nor origin/main is available; fail-open code=true."
+          fi
+          if ! BASE="$(git merge-base "${default_base}" HEAD)"; then
+            fail_open "git merge-base ${default_base} HEAD failed; fail-open code=true."
+          fi
+
+          echo "Diff base: ${BASE}"
+          echo "HEAD: $(git rev-parse HEAD)"
+          if ! git diff --name-only "${BASE}" HEAD > "${changed_list}"; then
+            fail_open "git diff failed; fail-open code=true."
+          fi
+          bash .github/scripts/detect-code-changes.sh --from-list "${changed_list}"
+
+  prepare:
+    name: Resolve pull request
+    needs: changes
+    if: needs.changes.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+      should_run: ${{ steps.gate.outputs.should_run }}
+      image_tag: ${{ steps.ids.outputs.image_tag }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Run helper script tests
+        run: |
+          set -euo pipefail
+          bash .github/scripts/resolve-open-pr.tests.sh
+          bash .github/scripts/pr-publish-ids.tests.sh
+          bash .github/scripts/wait-for-workflow-run.tests.sh
+          bash .github/scripts/parse-pr-package-version.tests.sh
+          bash .github/scripts/post-pr-slot-wait-comment.tests.sh
+
+      - name: Resolve open pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash .github/scripts/resolve-open-pr.sh \
+            --repo "${{ github.repository }}" \
+            --head "${{ github.ref_name }}"
+
+      - name: Gate
+        id: gate
+        run: |
+          set -euo pipefail
+          if [ -z "${{ steps.pr.outputs.pr_number }}" ]; then
+            echo "No open pull request for ${{ github.ref_name }}; skip PR environment."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ needs.changes.outputs.code }}" != "true" ]; then
+            echo "Docs-only change set; succeed without leasing or running the suite."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Image tag for this SHA
+        id: ids
+        if: steps.gate.outputs.should_run == 'true'
+        run: |
+          set -euo pipefail
+          bash .github/scripts/pr-publish-ids.sh \
+            --major "${{ env.MAJOR_VERSION }}" \
+            --minor "${{ env.MINOR_VERSION }}" \
+            --run "${{ github.run_number }}" \
+            --pr "${{ steps.pr.outputs.pr_number }}" \
+            --sha "${{ github.sha }}"
+
+  docs-only:
+    name: Docs-only success
+    needs: [changes, prepare]
+    if: |
+      always()
+      && needs.prepare.result == 'success'
+      && needs.prepare.outputs.should_run == 'false'
+      && needs.changes.outputs.code == 'false'
+      && needs.prepare.outputs.pr_number != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report docs-only success
+        run: |
+          set -euo pipefail
+          echo "Docs-only PR #${{ needs.prepare.outputs.pr_number }}: PR environment succeeds without leasing a slot or running the suite." >> "$GITHUB_STEP_SUMMARY"
+
+  lease-and-deploy:
+    name: Lease slot and deploy
+    needs: [changes, prepare]
+    if: needs.prepare.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: release
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+      id-token: write
+    outputs:
+      slot: ${{ steps.lease.outputs.slot }}
+      slot_number: ${{ steps.lease.outputs.slot_number }}
+      lease_id: ${{ steps.lease.outputs.lease_id }}
+      dry_run: ${{ steps.lease.outputs.dry_run }}
+      version: ${{ steps.version.outputs.version }}
+      application_base_url: ${{ steps.url.outputs.application_base_url }}
+      server_task_id: ${{ steps.task.outputs.server_task_id }}
+    env:
+      POOL_LEASE_STORAGE_ACCOUNT: ${{ vars.POOL_LEASE_STORAGE_ACCOUNT }}
+      POOL_RESOURCE_GROUP: ${{ vars.POOL_RESOURCE_GROUP }}
+    steps:
+      - name: Checkout workorders
+        uses: actions/checkout@v6.0.1
+
+      - name: Checkout pool manager (cmdemo1-system)
+        uses: actions/checkout@v6.0.1
+        with:
+          repository: clearmeasure-aisf-sample-apps/cmdemo1-system
+          path: _system
+
+      - name: Sign in to Octopus
+        uses: OctopusDeploy/login@v2
+        with:
+          server: ${{ vars.OCTOPUS_URL }}
+          service_account_id: ${{ vars.OCTOPUS_SERVICE_ACCOUNT_ID }}
+
+      - name: Cancel superseded Octopus tasks for this PR
+        env:
+          OCTOPUS_URL: ${{ vars.OCTOPUS_URL }}
+          OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
+        run: |
+          set -euo pipefail
+          bash .github/scripts/cancel-superseded-octopus-tasks.sh \
+            --project "${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}" \
+            --pr "${{ needs.prepare.outputs.pr_number }}"
+
+      - name: Lease a warm pool slot
+        id: lease
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dry = [string]::IsNullOrWhiteSpace($env:POOL_LEASE_STORAGE_ACCOUNT)
+          ./scripts/pool/Acquire-PrEnvironmentLease.ps1 `
+            -SystemRoot (Join-Path $PWD '_system') `
+            -PrNumber ${{ needs.prepare.outputs.pr_number }} `
+            -CommitSha '${{ github.sha }}' `
+            -RunId '${{ github.run_id }}' `
+            -Repository '${{ github.repository }}' `
+            -StorageAccount $env:POOL_LEASE_STORAGE_ACCOUNT `
+            -PreferWarmCount 2 `
+            -DryRun:$dry
+
+      - name: Post PR comment when slot wait exceeds 5 minutes
+        if: steps.lease.outputs.wait_notify == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash .github/scripts/post-pr-slot-wait-comment.sh \
+            --repo "${{ github.repository }}" \
+            --pr "${{ needs.prepare.outputs.pr_number }}"
+
+      - name: Wait for Publish image on this SHA
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bash .github/scripts/wait-for-workflow-run.sh \
+            --repo "${{ github.repository }}" \
+            --workflow publish-image.yml \
+            --sha "${{ github.sha }}" \
+            --timeout-seconds 900
+
+      - name: Download publish-only packages
+        uses: actions/download-artifact@v4
+        with:
+          name: churchbulletin-nuget-packages-pr
+          path: ./packages
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.publish.outputs.run_id }}
+
+      - name: Parse package version
+        id: version
+        run: |
+          set -euo pipefail
+          bash .github/scripts/parse-pr-package-version.sh --packages-dir ./packages
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Retag publish image as the Octopus release number
+        env:
+          SRC: ${{ vars.ACR_LOGIN_SERVER }}/${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}:${{ needs.prepare.outputs.image_tag }}
+          DST_REPO: ${{ vars.SYSTEM_SLUG }}/${{ vars.DEPLOYABLE_NAME }}
+          DST_TAG: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # update-deployable.ps1 points the container app at <registry>/<slug>/<deployable>:<release>.
+          # Publish image uses pr-<n>-<sha>; also tag as 2.4.N-pr.<n> so the release number matches the image.
+          az acr import \
+            --name "${{ vars.ACR_NAME }}" \
+            --source "$SRC" \
+            --image "${DST_REPO}:${DST_TAG}" \
+            --force
+          echo "Image available as ${DST_REPO}:${DST_TAG} (from ${{ needs.prepare.outputs.image_tag }})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Push Database package to Octopus
+        uses: OctopusDeploy/push-package-action@v4
+        with:
+          packages: |
+            packages/ChurchBulletin.Database.${{ steps.version.outputs.version }}.nupkg
+          overwrite_mode: IgnoreIfExists
+
+      - name: Create Pull requests channel release
+        uses: OctopusDeploy/create-release-action@v4
+        with:
+          project: ${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}
+          channel: Pull requests
+          release_number: ${{ steps.version.outputs.version }}
+          package_version: ${{ steps.version.outputs.version }}
+          ignore_existing: true
+          custom_fields: |
+            Slot:${{ steps.lease.outputs.slot_number }}
+          release_notes: "PR environment ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} of ${{ github.sha }} on ${{ steps.lease.outputs.slot }}"
+
+      - name: Deploy release to pool slot
+        id: deploy
+        uses: OctopusDeploy/deploy-release-action@v4
+        with:
+          project: ${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}
+          release_number: ${{ steps.version.outputs.version }}
+          environments: |
+            ${{ steps.lease.outputs.slot }}
+
+      - name: Record Octopus server task id
+        id: task
+        env:
+          SERVER_TASKS: ${{ steps.deploy.outputs.server_tasks }}
+        run: |
+          set -euo pipefail
+          task_id="$(printf '%s' "${SERVER_TASKS:-}" | jq -r '.[0].serverTaskId // empty' 2>/dev/null || true)"
+          echo "server_task_id=${task_id}" >> "$GITHUB_OUTPUT"
+          echo "Octopus server task: ${task_id:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Resolve slot application URL
+        id: url
+        shell: pwsh
+        env:
+          POOL_RG: ${{ vars.POOL_RESOURCE_GROUP }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $rg = $env:POOL_RG
+          if ([string]::IsNullOrWhiteSpace($rg)) { $rg = 'rg-cmdemo1-nonprod' }
+          ./scripts/pool/Resolve-PrEnvironmentSlotUrl.ps1 `
+            -Slot '${{ steps.lease.outputs.slot }}' `
+            -Slug '${{ vars.SYSTEM_SLUG }}' `
+            -ResourceGroup $rg
+
+  parallel-shards:
+    name: Parallel shard ${{ matrix.shard }}/12
+    needs: [prepare, lease-and-deploy]
+    if: needs.lease-and-deploy.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    permissions:
+      contents: read
+      packages: read
+      checks: write
+    env:
+      BUILD_CONFIGURATION: Release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/**/*.csproj', 'src/Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/AcceptanceTests/AcceptanceTests.csproj', 'src/Directory.Packages.props') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Restore and build AcceptanceTests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet restore src/AcceptanceTests/AcceptanceTests.csproj
+          dotnet build src/AcceptanceTests/AcceptanceTests.csproj --configuration Release --no-restore
+
+      - name: Install Playwright Chromium
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $playwright = Get-ChildItem -Path src/AcceptanceTests/bin/Release -Filter playwright.ps1 -Recurse | Select-Object -First 1
+          if (-not $playwright) { throw 'playwright.ps1 not found after build' }
+          if ('${{ steps.playwright-cache.outputs.cache-hit }}' -ne 'true') {
+            & $playwright.FullName install chromium --with-deps
+          } else {
+            & $playwright.FullName install chromium
+          }
+
+      - name: Run parallel lane shard ${{ matrix.shard }}
+        shell: pwsh
+        env:
+          ApplicationBaseUrl: ${{ needs.lease-and-deploy.outputs.application_base_url }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/acceptance/Write-AcceptanceRunSettings.ps1 -Workers ${{ env.PR_ENVIRONMENT_WORKERS }}
+          ./scripts/acceptance/Invoke-PrEnvironmentAcceptanceLane.ps1 `
+            -Lane Parallel `
+            -ShardNumber ${{ matrix.shard }} `
+            -ShardCount ${{ env.PR_ENVIRONMENT_SHARD_COUNT }} `
+            -ApplicationBaseUrl $env:ApplicationBaseUrl `
+            -ResultsDirectory "build/test/AcceptanceTests-Parallel-${{ matrix.shard }}"
+
+      - name: Upload parallel shard results
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 3
+        if: always()
+        with:
+          name: pr-environment-parallel-shard-${{ matrix.shard }}
+          path: build/test/AcceptanceTests-Parallel-${{ matrix.shard }}/**/*.trx
+          retention-days: 2
+          if-no-files-found: ignore
+
+  serial-lane:
+    name: Serial lane
+    needs: [prepare, lease-and-deploy, parallel-shards]
+    if: needs.lease-and-deploy.result == 'success' && needs.parallel-shards.result != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    env:
+      BUILD_CONFIGURATION: Release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6.0.1
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/**/*.csproj', 'src/Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/AcceptanceTests/AcceptanceTests.csproj', 'src/Directory.Packages.props') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Restore and build AcceptanceTests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          dotnet restore src/AcceptanceTests/AcceptanceTests.csproj
+          dotnet build src/AcceptanceTests/AcceptanceTests.csproj --configuration Release --no-restore
+
+      - name: Install Playwright Chromium
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $playwright = Get-ChildItem -Path src/AcceptanceTests/bin/Release -Filter playwright.ps1 -Recurse | Select-Object -First 1
+          if (-not $playwright) { throw 'playwright.ps1 not found after build' }
+          if ('${{ steps.playwright-cache.outputs.cache-hit }}' -ne 'true') {
+            & $playwright.FullName install chromium --with-deps
+          } else {
+            & $playwright.FullName install chromium
+          }
+
+      - name: Run serial lane (after all parallel shards)
+        shell: pwsh
+        env:
+          ApplicationBaseUrl: ${{ needs.lease-and-deploy.outputs.application_base_url }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/acceptance/Invoke-PrEnvironmentAcceptanceLane.ps1 `
+            -Lane Serial `
+            -ApplicationBaseUrl $env:ApplicationBaseUrl `
+            -ResultsDirectory build/test/AcceptanceTests-Serial
+
+      - name: Upload serial lane results
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 3
+        if: always()
+        with:
+          name: pr-environment-serial-lane
+          path: build/test/AcceptanceTests-Serial/**/*.trx
+          retention-days: 2
+          if-no-files-found: ignore
+
+  report:
+    name: Report results
+    needs: [prepare, lease-and-deploy, parallel-shards, serial-lane]
+    if: always() && needs.prepare.outputs.should_run == 'true' && needs.lease-and-deploy.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    outputs:
+      suite_ok: ${{ steps.verdict.outputs.suite_ok }}
+    steps:
+      - name: Download shard results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: pr-environment-*
+          path: ./results
+          merge-multiple: true
+
+      - name: Summarize
+        id: verdict
+        run: |
+          set -euo pipefail
+          {
+            echo "## PR environment results"
+            echo ""
+            echo "- Slot: \`${{ needs.lease-and-deploy.outputs.slot }}\`"
+            echo "- Version: \`${{ needs.lease-and-deploy.outputs.version }}\`"
+            echo "- URL: ${{ needs.lease-and-deploy.outputs.application_base_url }}"
+            echo "- Parallel shards: ${{ needs.parallel-shards.result }}"
+            echo "- Serial lane: ${{ needs.serial-lane.result }}"
+            echo ""
+            echo "Video and trace upload (issue #1671) runs off this check's clock."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          parallel="${{ needs.parallel-shards.result }}"
+          serial="${{ needs.serial-lane.result }}"
+          deploy="${{ needs.lease-and-deploy.result }}"
+          if [ "$deploy" = "success" ] && [ "$parallel" = "success" ] && [ "$serial" = "success" ]; then
+            echo "suite_ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "suite_ok=false" >> "$GITHUB_OUTPUT"
+            echo "Suite not green (deploy=$deploy parallel=$parallel serial=$serial)" >&2
+            exit 1
+          fi
+
+  release-slot:
+    name: Release slot and cancel Octopus on cancel
+    needs: [prepare, lease-and-deploy, parallel-shards, serial-lane, report]
+    if: always() && needs.prepare.outputs.should_run == 'true' && needs.lease-and-deploy.result != 'skipped'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      POOL_LEASE_STORAGE_ACCOUNT: ${{ vars.POOL_LEASE_STORAGE_ACCOUNT }}
+    steps:
+      - name: Checkout workorders
+        uses: actions/checkout@v6.0.1
+
+      - name: Checkout pool manager (cmdemo1-system)
+        uses: actions/checkout@v6.0.1
+        with:
+          repository: clearmeasure-aisf-sample-apps/cmdemo1-system
+          path: _system
+
+      - name: Sign in to Octopus
+        if: needs.lease-and-deploy.outputs.server_task_id != '' && (cancelled() || needs.report.result != 'success')
+        continue-on-error: true
+        uses: OctopusDeploy/login@v2
+        with:
+          server: ${{ vars.OCTOPUS_URL }}
+          service_account_id: ${{ vars.OCTOPUS_SERVICE_ACCOUNT_ID }}
+
+      - name: Cancel this run's Octopus task when superseded or failed mid-flight
+        if: needs.lease-and-deploy.outputs.server_task_id != '' && (cancelled() || failure())
+        continue-on-error: true
+        env:
+          OCTOPUS_URL: ${{ vars.OCTOPUS_URL }}
+          OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
+        run: |
+          set -euo pipefail
+          bash .github/scripts/cancel-octopus-server-task.sh \
+            --task-id "${{ needs.lease-and-deploy.outputs.server_task_id }}"
+
+      - name: Release pool lease
+        if: needs.lease-and-deploy.outputs.slot != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dry = [string]::IsNullOrWhiteSpace($env:POOL_LEASE_STORAGE_ACCOUNT) -or '${{ needs.lease-and-deploy.outputs.dry_run }}' -eq 'true'
+          ./scripts/pool/Release-PrEnvironmentLease.ps1 `
+            -SystemRoot (Join-Path $PWD '_system') `
+            -Slot '${{ needs.lease-and-deploy.outputs.slot }}' `
+            -LeaseId '${{ needs.lease-and-deploy.outputs.lease_id }}' `
+            -StorageAccount $env:POOL_LEASE_STORAGE_ACCOUNT `
+            -DryRun:$dry
+
+  pr-environment:
+    name: PR environment
+    needs: [changes, prepare, docs-only, lease-and-deploy, parallel-shards, serial-lane, report, release-slot]
+    if: always() && !cancelled() && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate PR environment check
+        run: |
+          set -euo pipefail
+          code="${{ needs.changes.outputs.code }}"
+          should="${{ needs.prepare.outputs.should_run }}"
+          pr="${{ needs.prepare.outputs.pr_number }}"
+
+          if [ -z "$pr" ]; then
+            echo "No open PR for this branch; nothing to check."
+            exit 0
+          fi
+
+          if [ "$code" = "false" ]; then
+            if [ "${{ needs.docs-only.result }}" = "success" ] || [ "$should" = "false" ]; then
+              echo "Docs-only PR: PR environment success."
+              exit 0
+            fi
+          fi
+
+          if [ "$should" != "true" ]; then
+            echo "Skipped (should_run=false)."
+            exit 0
+          fi
+
+          report="${{ needs.report.result }}"
+          if [ "$report" = "success" ]; then
+            echo "PR environment suite green."
+            exit 0
+          fi
+
+          echo "PR environment failed (report=$report)." >&2
+          exit 1
