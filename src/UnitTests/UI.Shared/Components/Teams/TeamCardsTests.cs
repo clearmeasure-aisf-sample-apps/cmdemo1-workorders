@@ -31,4 +31,17 @@ public class TeamCardsTests
             .ShouldBe(TeamWorkLoadTable.OpenWorkSearch("ned"));
         cards.Find($"[data-testid='{TeamsAndVendors.Elements.TeamMemberCount}{team.Id}']").TextContent.Trim().ShouldBe("1 member");
     }
+
+    [Test]
+    public async Task ShouldNameMemberAvatarLinkByTheWorkItOpens_WhenATeamHasAMember()
+    {
+        await using var ctx = new BunitContext();
+        var member = new Employee("ada", "Ada", "Lovelace", "ada@example.com");
+        var team = TeamsMother.MaintenanceTeamWith(member);
+
+        var cards = ctx.Render<TeamCards>(parameters => parameters.Add(p => p.Teams, [team]));
+
+        cards.Find($"[data-testid='{TeamsAndVendors.Elements.TeamMemberLink}ada']").GetAttribute("aria-label")
+            .ShouldBe($"Open work orders for {member.GetFullName()}");
+    }
 }
