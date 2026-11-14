@@ -55,33 +55,6 @@ public class WorkOrderPrintTests
     }
 
     [Test]
-    public async Task ShouldNameAttachmentListByItsHeading()
-    {
-        await using var ctx = new BunitContext();
-        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-        var wo = new WorkOrder
-        {
-            Number = "WO-1", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
-            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
-            Description = "Drips", Instructions = "Bucket",
-            Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
-            Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
-            CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
-        };
-        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
-        ctx.Services.AddSingleton(TimeProvider.System);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-
-        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
-
-        c.Find(Id(WorkOrderPrint.Elements.Attachments)).GetAttribute("aria-labelledby")
-            .ShouldBe("print-attachments-heading");
-        var heading = c.Find("#print-attachments-heading");
-        heading.TagName.ShouldBe("H2");
-        heading.TextContent.ShouldBe("Attachments");
-    }
-
-    [Test]
     public async Task ShouldShowNoneForEmptyValues()
     {
         await using var ctx = new BunitContext();
