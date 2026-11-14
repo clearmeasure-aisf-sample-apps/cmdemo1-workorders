@@ -3,7 +3,9 @@
 #   - the UI image <registry>/<slug>/<deployable>:<version> in the system's registry (Azure OIDC, id-<slug>-acr-push),
 #     its tag write-locked
 #   - the database package and the acceptance-test package (Linux x64 only) in the Octopus built-in feed
-#   - a release <version> of the Octopus project <slug>-<deployable>; its lifecycle deploys it to the first environment
+#   - a Default channel release <version> of the Octopus project <slug>-<deployable>; its lifecycle deploys it to the
+#     first environment. Pull requests channel releases (2.4.<run>-pr.<n>) are never created here and never used as the
+#     previous release for the downgrade check (cmdemo1-system#655).
 # The version is the Build run's MAJOR.MINOR.run_number, the same number build.yml stamps into the packages.
 # Credentials: GitHub OIDC only (environment "release"). Deployments, approvals and the GitOps pin are Octopus's.
 name: Release
@@ -87,21 +89,47 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
+          # Only Default channel releases count as the line's last release (cmdemo1-system#655).
+          # Pull requests channel versions (2.4.<run>-pr.<n>) must not drive the downgrade check.
+          bash .github/scripts/select-default-channel-release.tests.sh
+          CHANNELS_JSON=$(curl -fsS \
+            --header "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+            "$OCTOPUS_URL/api/$SPACE_ID/projects/$PROJECT/channels?take=100" \
+            2>&1) || {
+            echo "Warning: Could not list Octopus channels; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          channels_file=$(mktemp)
+          releases_file=$(mktemp)
+          printf '%s\n' '[]' >"$releases_file"
+          printf '%s' "$CHANNELS_JSON" >"$channels_file"
+          DEFAULT_CHANNEL_ID=$(bash .github/scripts/select-default-channel-release.sh \
+            --channels-json "$channels_file" --releases-json "$releases_file" \
+            | sed -n 's/^channel_id=//p' | head -1) || DEFAULT_CHANNEL_ID=""
+          if [ -z "$DEFAULT_CHANNEL_ID" ]; then
+            echo "Warning: project $PROJECT has no Default channel; proceeding with release"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            rm -f "$channels_file" "$releases_file"
+            exit 0
+          fi
           RELEASES_JSON=$(curl -fsS \
             --header "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
-            "$OCTOPUS_URL/api/$SPACE_ID/projects/$PROJECT/releases?take=1" \
+            "$OCTOPUS_URL/api/$SPACE_ID/projects/$PROJECT/releases?channel=$DEFAULT_CHANNEL_ID&take=30" \
             2>&1) || {
             echo "Warning: Could not reach Octopus API; proceeding with release"
             echo "skip=false" >> "$GITHUB_OUTPUT"
+            rm -f "$channels_file" "$releases_file"
             exit 0
           }
+          printf '%s' "$RELEASES_JSON" >"$releases_file"
+          SELECTED=$(bash .github/scripts/select-default-channel-release.sh \
+            --channels-json "$channels_file" --releases-json "$releases_file")
+          rm -f "$channels_file" "$releases_file"
+          RELEASE=$(printf '%s\n' "$SELECTED" | sed -n 's/^release_json=//p' | head -1)
 
-          # Extract the first release (newest by assembled date)
-          RELEASE=$(echo "$RELEASES_JSON" | jq -r '.Items[0]' 2>/dev/null) || {
-            echo "Warning: Could not parse Octopus API response; proceeding with release"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          }
+          # Newest Default channel release (Pull requests channel ignored)
 
           # Check if release exists
           if [ "$RELEASE" = "null" ] || [ -z "$RELEASE" ]; then
@@ -329,6 +357,8 @@ jobs:
         uses: OctopusDeploy/create-release-action@v4
         with:
           project: ${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}
+          # Always Default: Pull requests channel is for 2.4.<run>-pr.<n> only (cmdemo1-system#655).
+          channel: Default
           release_number: ${{ steps.version.outputs.version }}
           package_version: ${{ steps.version.outputs.version }}
           ignore_existing: true
