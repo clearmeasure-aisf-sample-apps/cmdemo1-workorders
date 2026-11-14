@@ -34,7 +34,7 @@ public class LastWorkOrderTests
     }
 
     [Test]
-    public async Task ShouldRenderAriaLabelOpenWorkOrderNumberOnLastWorkOrderLink()
+    public async Task ShouldRenderAriaLabelOpenMostRecentlyViewedWorkOrderNumberOnLastWorkOrderLink()
     {
         await using var ctx = new BunitContext();
 
@@ -43,14 +43,14 @@ public class LastWorkOrderTests
 
         var component = ctx.Render<LastWorkOrder>();
 
-        var sampleWorkOrder = new WorkOrder { Number = "WO-001" };
+        var sampleWorkOrder = new WorkOrder { Number = "ABC123" };
         component.Instance.Handle(new WorkOrderChangedEvent(new StateCommandResult(sampleWorkOrder)));
         component.Render();
 
         var link = component.Find($"[data-testid='{nameof(LastWorkOrder.Elements.LastWorkOrderTooltip)}']");
-        link.GetAttribute("aria-label").ShouldBe("Open work order WO-001");
+        link.GetAttribute("aria-label").ShouldBe("Open most recently viewed work order ABC123");
         link.GetAttribute("title").ShouldBe("Most recently viewed work order");
-        component.Find(".nav-text").TextContent.ShouldBe("WO-001");
+        component.Find(".nav-text").TextContent.ShouldBe("ABC123");
     }
 
     [Test]
