@@ -30,7 +30,11 @@ public class WorkOrderPriorityLabelTests
             .Add(p => p.Row, row)
             .Add(p => p.ShowHighBadge, true));
 
-        label.Find("[data-testid='PriorityBadge201']").TextContent.ShouldBe("High");
+        var badge = label.Find("[data-testid='PriorityBadge201']");
+        badge.TextContent.ShouldBe("High");
+        badge.HasAttribute("aria-hidden").ShouldBeTrue();
+        badge.GetAttribute("aria-hidden").ShouldBe("true");
+        label.Find(".priority").TextContent.Trim().ShouldContain("High");
     }
 
     [Test]
