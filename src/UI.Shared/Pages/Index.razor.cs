@@ -70,4 +70,10 @@ public partial class Index : AppComponentBase, IListener<WorkOrderChangedEvent>
             : $"{activity.Verb} {activity.ChurchDate.ToString("MMM d, yyyy", CultureInfo.InvariantCulture)} · ";
         return when + order.Status.FriendlyName;
     }
+
+    private static string RecentActivityLinkLabel(WorkOrder order)
+    {
+        var number = $"WO-{order.Number}";
+        return string.IsNullOrWhiteSpace(order.Title) ? number : $"{number}: {order.Title}";
+    }
 }
