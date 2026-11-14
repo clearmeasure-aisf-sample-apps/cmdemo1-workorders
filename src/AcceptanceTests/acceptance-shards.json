@@ -114,15 +114,6 @@
       "longestArmSeconds": 17.1
     },
     {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsTests",
-      "shard": 2,
-      "tests": 5,
-      "x64Seconds": 102.7,
-      "armSeconds": 98.1,
-      "longestX64Seconds": 29.7,
-      "longestArmSeconds": 27.6
-    },
-    {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderAiChatTests",
       "shard": 2,
       "tests": 3,
@@ -301,15 +292,6 @@
       "armSeconds": 11.0,
       "longestX64Seconds": 11.8,
       "longestArmSeconds": 11.0
-    },
-    {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsAndVendorsTests",
-      "shard": 4,
-      "tests": 13,
-      "x64Seconds": 216.9,
-      "armSeconds": 187.2,
-      "longestX64Seconds": 32.0,
-      "longestArmSeconds": 30.0
     },
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders.WorkOrderCompleteTests",
@@ -670,6 +652,42 @@
       "armSeconds": 2.0,
       "longestX64Seconds": 1.0,
       "longestArmSeconds": 1.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsNavigationTests",
+      "shard": 2,
+      "tests": 2,
+      "x64Seconds": 40.0,
+      "armSeconds": 38.0,
+      "longestX64Seconds": 20.0,
+      "longestArmSeconds": 19.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Buildings.BuildingsCountLinkTests",
+      "shard": 2,
+      "tests": 3,
+      "x64Seconds": 62.7,
+      "armSeconds": 60.1,
+      "longestX64Seconds": 29.7,
+      "longestArmSeconds": 27.6
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.TeamsPageTests",
+      "shard": 4,
+      "tests": 9,
+      "x64Seconds": 150.0,
+      "armSeconds": 145.0,
+      "longestX64Seconds": 32.0,
+      "longestArmSeconds": 30.0
+    },
+    {
+      "name": "ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors.VendorsPageTests",
+      "shard": 4,
+      "tests": 4,
+      "x64Seconds": 66.9,
+      "armSeconds": 64.0,
+      "longestX64Seconds": 25.0,
+      "longestArmSeconds": 24.0
     }
   ],
   "workers": 4
