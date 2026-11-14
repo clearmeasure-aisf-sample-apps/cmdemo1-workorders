@@ -1,6 +1,9 @@
 #Requires -Version 7.0
 # Scans App DefaultLayout, @layout, and layout markup (NavMenu) to map shell/layout
 # Razor paths to routable pages. Dot-sourced by Get-TestsForChangedRazor.ps1.
+# Mirrors BuildGates RazorLayoutPageScanner; SelfTest asserts MainLayout /
+# GlobalSearchBox / NavMenu select LandingPageTests, WorkOrderSearchTests,
+# AccessibilityAxeTests, and PhoneWidthNoDocumentScrollTests.
 function Get-RazorShellPageExpansion {
     param(
         [Parameter(Mandatory = $true)]
@@ -143,4 +146,3 @@ function Add-ShellPageExpansion {
         }
     }
 }
-
