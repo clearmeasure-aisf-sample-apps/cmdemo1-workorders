@@ -92,6 +92,17 @@ public class TeamWorkLoadTableTests
         table.Find("th.col-completed").HasAttribute("aria-sort").ShouldBeFalse();
     }
 
+    [Test]
+    public async Task ShouldNameTheTableFromTheSectionHeading_WhenRendered()
+    {
+        await using var ctx = new BunitContext();
+        var table = ctx.Render<TeamWorkLoadTable>(parameters => parameters.Add(p => p.Summaries, TwoEmployees));
+
+        var heading = table.Find("#teams-table-heading");
+        heading.TextContent.ShouldBe("Teams and vendors list");
+        table.Find("table.teams-table").GetAttribute("aria-labelledby").ShouldBe(heading.Id);
+    }
+
     private static string?[] RowNames(IRenderedComponent<TeamWorkLoadTable> table) =>
         table.FindAll(".teams-table-row .col-name").Select(cell => cell.GetAttribute("data-testid")).ToArray();
 }
