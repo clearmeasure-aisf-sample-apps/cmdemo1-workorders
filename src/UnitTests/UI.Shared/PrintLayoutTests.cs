@@ -28,8 +28,27 @@ public class PrintLayoutTests
         rel.ShouldNotBeNull();
         rel.ShouldContain("noopener");
         rel.ShouldContain("noreferrer");
-        link.TextContent.Trim().ShouldBe("ClearMeasure Labs");
+        var linkText = string.Join(' ', link.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        linkText.ShouldContain("ClearMeasure Labs (opens in a new tab)");
         link.ClassList.ShouldContain("print-copyright-link");
         footer.ClassList.ShouldContain("print-copyright");
+    }
+
+    [Test]
+    public async Task ShouldRenderCompanyLink_WithVisuallyHiddenNewTabText()
+    {
+        await using var ctx = new BunitContext();
+
+        var cut = ctx.Render<PrintLayout>();
+
+        var link = cut.Find("footer.print-copyright a.print-copyright-link");
+        var linkText = string.Join(' ', link.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        var labsIndex = linkText.IndexOf("ClearMeasure Labs", StringComparison.Ordinal);
+        var hintIndex = linkText.IndexOf("(opens in a new tab)", StringComparison.Ordinal);
+        hintIndex.ShouldBeGreaterThan(labsIndex);
+        var hidden = link.QuerySelector(".visually-hidden");
+        hidden.ShouldNotBeNull();
+        hidden.TextContent.ShouldBe("(opens in a new tab)");
+        hidden.ClassList.ShouldContain("visually-hidden");
     }
 }
