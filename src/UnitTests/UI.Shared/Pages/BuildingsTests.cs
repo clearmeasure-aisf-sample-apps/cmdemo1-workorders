@@ -172,29 +172,19 @@ public class BuildingsTests
     [Test]
     public async Task Buildings_NoBuildingLabel_UsesSpecialParameter()
     {
-        var bus = new StubBusBuildings
+        var bus = BusFor(new BuildingSummary
         {
-            BuildingsToReturn =
+            Building = "",
+            Rooms =
             [
-                new BuildingSummary
+                new RoomSummary
                 {
-                    Building = "",
-                    Rooms =
-                    [
-                        new RoomSummary
-                        {
-                            Room = "",
-                            OpenCount = 5,
-                            OverdueCount = 2,
-                            CompletedLast30Days = 8,
-                            TotalCount = 15
-                        }
-                    ]
+                    Room = "", OpenCount = 5, OverdueCount = 2,
+                    CompletedLast30Days = 8, TotalCount = 15
                 }
             ]
-        };
+        });
         await using var ctx = CreateContext(bus);
-
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Buildings>());
 
         await component.WaitForAssertionAsync(() =>
