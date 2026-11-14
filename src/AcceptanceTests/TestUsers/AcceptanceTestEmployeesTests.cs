@@ -15,6 +15,13 @@ public class AcceptanceTestEmployeesTests
         _prefix = $"sweep{Guid.NewGuid():N}"[..17] + "_";
     }
 
+    [TearDown]
+    public void TearDown()
+    {
+        using var context = TestHost.NewDbContext();
+        AcceptanceTestEmployees.DeleteAllLeftovers(context, _prefix);
+    }
+
     [Test]
     public void ShouldDeleteUnreferencedEmployees_WithTheirRoleLinksAndSavedSearches()
     {
@@ -73,6 +80,20 @@ public class AcceptanceTestEmployeesTests
         EmployeeExists(outside).ShouldBeTrue();
     }
 
+    [Test]
+    public void ShouldClearTeamMemberships_WhenDeleteAllLeftoversRuns()
+    {
+        var member = LeftoverEmployeeMother.TeamMember(_prefix + "clear");
+
+        using (var context = TestHost.NewDbContext())
+        {
+            AcceptanceTestEmployees.DeleteAllLeftovers(context, _prefix);
+        }
+
+        TeamMembershipExists(member).ShouldBeFalse();
+        EmployeeExists(member).ShouldBeFalse();
+    }
+
     private int DeleteUnreferenced()
     {
         using var context = TestHost.NewDbContext();
@@ -96,5 +117,11 @@ public class AcceptanceTestEmployeesTests
     {
         using var context = TestHost.NewDbContext();
         return context.Set<SavedSearchView>().Count(view => view.EmployeeId == employee.Id);
+    }
+
+    private static bool TeamMembershipExists(Employee employee)
+    {
+        using var context = TestHost.NewDbContext();
+        return context.Set<Team>().Any(team => team.Members.Any(member => member.Id == employee.Id));
     }
 }

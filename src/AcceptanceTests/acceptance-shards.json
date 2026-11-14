@@ -512,7 +512,7 @@
     {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
       "shard": 5,
-      "tests": 4,
+      "tests": 5,
       "x64Seconds": 80.0,
       "armSeconds": 80.0,
       "longestX64Seconds": 25.0,

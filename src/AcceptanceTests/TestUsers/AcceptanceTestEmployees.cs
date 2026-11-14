@@ -90,6 +90,71 @@ public static class AcceptanceTestEmployees
         return deleted;
     }
 
+    /// <summary>
+    /// Removes every leftover row this fixture may leave under <paramref name="userNamePrefix"/> —
+    /// teams, work orders, attachments, status history, saved searches, role links, and employees —
+    /// so SerialLane order cannot leak shared team members into parallel axe or portal scans.
+    /// </summary>
+    public static void DeleteAllLeftovers(DbContext context, string userNamePrefix)
+    {
+        var employeeIds = context.Set<Employee>()
+            .Where(employee => employee.UserName.StartsWith(userNamePrefix))
+            .Select(employee => employee.Id)
+            .ToList();
+        if (employeeIds.Count == 0)
+        {
+            return;
+        }
+
+        using var transaction = context.Database.BeginTransaction();
+        DeleteWorkOrderGraph(context, employeeIds);
+        DeleteTeamsWithMembers(context, employeeIds);
+        DeleteEmployeeOwnedRows(context, employeeIds);
+        transaction.Commit();
+    }
+
+    private static void DeleteWorkOrderGraph(DbContext context, List<Guid> employeeIds)
+    {
+        var workOrderIds = context.Set<WorkOrder>()
+            .Where(order =>
+                employeeIds.Contains(order.Creator!.Id)
+                || (order.Assignee != null && employeeIds.Contains(order.Assignee.Id)))
+            .Select(order => order.Id)
+            .ToList();
+        context.Set<WorkOrderAttachment>()
+            .Where(attachment =>
+                workOrderIds.Contains(attachment.WorkOrderId)
+                || employeeIds.Contains(attachment.UploadedById))
+            .ExecuteDelete();
+        context.Set<WorkOrderStatusChange>()
+            .Where(change =>
+                workOrderIds.Contains(change.WorkOrderId)
+                || employeeIds.Contains(change.ChangedById))
+            .ExecuteDelete();
+        context.Set<WorkOrder>().Where(order => workOrderIds.Contains(order.Id)).ExecuteDelete();
+    }
+
+    private static void DeleteTeamsWithMembers(DbContext context, List<Guid> employeeIds)
+    {
+        var teams = context.Set<Team>()
+            .Include(team => team.Members)
+            .Where(team => team.Members.Any(member => employeeIds.Contains(member.Id)))
+            .ToList();
+        context.RemoveRange(teams);
+        context.SaveChanges();
+    }
+
+    private static void DeleteEmployeeOwnedRows(DbContext context, List<Guid> employeeIds)
+    {
+        context.Set<SavedSearchView>()
+            .Where(view => employeeIds.Contains(view.EmployeeId))
+            .ExecuteDelete();
+        context.Set<Dictionary<string, object>>("EmployeeRoles")
+            .Where(link => employeeIds.Contains(EF.Property<Guid>(link, "EmployeeId")))
+            .ExecuteDelete();
+        context.Set<Employee>().Where(employee => employeeIds.Contains(employee.Id)).ExecuteDelete();
+    }
+
     private static IQueryable<Employee> Unreferenced(DbContext context, string userNamePrefix) =>
         context.Set<Employee>().Where(employee =>
             employee.UserName.StartsWith(userNamePrefix)
