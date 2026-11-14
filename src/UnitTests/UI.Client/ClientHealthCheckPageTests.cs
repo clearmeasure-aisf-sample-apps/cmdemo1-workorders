@@ -2,6 +2,7 @@ using Bunit;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.UI.Client.Pages;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Palermo.BlazorMvc;
@@ -24,6 +25,19 @@ public class ClientHealthCheckPageTests
             component.Find($"[data-testid='{ClientHealthCheck.Elements.Status}']").ShouldNotBeNull();
         });
         component.Markup.ShouldNotContain("Loading health report");
+    }
+
+    [Test]
+    public async Task ClientHealthCheck_ShouldRenderPageTitle()
+    {
+        await using var ctx = CreateContextWithHealthChecks();
+
+        var component = ctx.Render<ClientHealthCheck>();
+
+        var pageTitle = component.FindComponent<PageTitle>();
+        pageTitle.Instance.ChildContent.ShouldNotBeNull();
+        using var title = ctx.Render(pageTitle.Instance.ChildContent!);
+        title.Markup.Trim().ShouldBe("Application Health Summary - .NET Conf Work Orders");
     }
 
     [Test]
