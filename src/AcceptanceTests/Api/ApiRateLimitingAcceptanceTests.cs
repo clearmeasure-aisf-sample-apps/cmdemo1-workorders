@@ -3,10 +3,8 @@ using System.Net;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 
 [TestFixture]
-public class ApiRateLimitingAcceptanceTests : AcceptanceTestBase
+public class ApiRateLimitingAcceptanceTests : ApiAcceptanceTestBase
 {
-    protected override bool RequiresBrowser => false;
-
     [Test]
     public async Task Api_RateLimitHeaders_PresentOnEveryResponse()
     {

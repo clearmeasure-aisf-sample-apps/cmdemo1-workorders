@@ -16,8 +16,25 @@ public class AccessibilityAxeRoutesTests
         tests.ShouldContain("Should_HaveNoSeriousOrCriticalAxeViolations_OnRoute");
         tests.ShouldContain("[TestCaseSource(nameof(RouteKeys))]");
         tests.ShouldNotContain("OnEveryRouteInBothThemes");
-        System.Text.RegularExpressions.Regex.Matches(tests, "yield return ").Count.ShouldBeGreaterThanOrEqualTo(12);
+        tests.ShouldNotContain("AcceptanceTeams");
+        System.Text.RegularExpressions.Regex.Matches(tests, "yield return ").Count.ShouldBe(13);
         routes.ShouldContain("AccessibilityAxeRoutes");
+    }
+
+    [Test]
+    public void AxeTeamsFixture_WhenRead_IsSerialAfterParallelWithoutGlobalWipe()
+    {
+        var tests = RepositoryCheckout.Current.ReadText(
+            "src/AcceptanceTests/App/AccessibilityAxeTeamsTests.cs");
+        var serial = RepositoryCheckout.Current.ReadText(
+            "src/AcceptanceTests/acceptance-serial-lane.json");
+
+        tests.ShouldContain("NonParallelizable");
+        tests.ShouldContain("Category(\"SerialLane\")");
+        tests.ShouldContain("Should_HaveNoSeriousOrCriticalAxeViolations_OnTeamsRoute");
+        tests.ShouldNotContain("AcceptanceTeams");
+        tests.ShouldNotContain("ExecuteDelete");
+        serial.ShouldContain("AccessibilityAxeTeamsTests");
     }
 
     [Test]
@@ -37,8 +54,17 @@ public class AccessibilityAxeRoutesTests
     public void AxeCatalog_WhenRead_CountsYieldedRouteKeys()
     {
         var axe = AcceptanceTestCatalog.Read(RepositoryCheckout.Current)
-            .Single(item => item.Name.EndsWith("AccessibilityAxeTests", StringComparison.Ordinal));
-        axe.TestCount.ShouldBe(14);
+            .Single(item => item.Name.EndsWith("AccessibilityAxeTests", StringComparison.Ordinal)
+                && !item.Name.EndsWith("AccessibilityAxeTeamsTests", StringComparison.Ordinal));
+        axe.TestCount.ShouldBe(13);
+    }
+
+    [Test]
+    public void AxeTeamsCatalog_WhenRead_CountsOneSerialCase()
+    {
+        var teams = AcceptanceTestCatalog.Read(RepositoryCheckout.Current)
+            .Single(item => item.Name.EndsWith("AccessibilityAxeTeamsTests", StringComparison.Ordinal));
+        teams.TestCount.ShouldBe(1);
     }
 
     [Test]

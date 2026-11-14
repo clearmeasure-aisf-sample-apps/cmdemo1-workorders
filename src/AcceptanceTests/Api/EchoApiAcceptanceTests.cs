@@ -4,11 +4,8 @@ using System.Text.Json;
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 
 [TestFixture]
-[Parallelizable(ParallelScope.All)]
-public class EchoApiAcceptanceTests : AcceptanceTestBase
+public class EchoApiAcceptanceTests : ApiAcceptanceTestBase
 {
-    protected override bool RequiresBrowser => false;
-
     [Test]
     public async Task GetEcho_Should_Return200AndReflectRequest()
     {

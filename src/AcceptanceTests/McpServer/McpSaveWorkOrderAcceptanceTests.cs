@@ -1,94 +1,179 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.Core.Services;
-using ClearMeasure.Bootcamp.LlmGateway;
-using ClearMeasure.Bootcamp.UI.Shared;
-using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using Login = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
 [TestFixture]
-public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
+public class McpSaveWorkOrderAcceptanceTests : McpAcceptanceTestBase
 {
     private const string DueTodayBackground = "rgb(254, 240, 138)";
 
-    private static McpTestHelper? _helper;
-
-    [OneTimeSetUp]
-    public async Task McpSetUp()
-    {
-        _helper = new McpTestHelper(TestHost.GetRequiredService<ChatClientFactory>());
-        await _helper.ConnectAsync();
-    }
-
-    [OneTimeTearDown]
-    public async Task McpTearDown()
-    {
-        if (_helper != null)
-        {
-            await _helper.DisposeAsync();
-        }
-    }
-
-    [SetUp]
-    public void EnsureMcpAvailable()
-    {
-        if (!_helper!.Connected)
-        {
-            Assert.Inconclusive("MCP server is not available");
-        }
-    }
-
-    [Test, Retry(2)]
+    [Test]
     public async Task ShouldShowSavedTitleAndClearedDueDateOnManageAndSearch()
     {
-        await LoginAsTlovejoyAsync();
-
+        await LoginAsCurrentUser();
         const string instructions = "Watch for preschool play area";
         const string room = "Front lawn";
-        const string dueDate = "2027-06-15";
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
-            new Dictionary<string, object?>
+        var workOrderNumber = await CreateDraftForSavedTitleScenarioAsync(instructions, room);
+        await SaveClearedDueDateTitleAsync(workOrderNumber);
+        await NavigateToManageEditAsync(workOrderNumber);
+        await ExpectSavedClearedFieldsAsync(instructions, room);
+        await AssertSearchRowShowsSavedTitleAsync(workOrderNumber);
+    }
+
+    private Task<string> CreateDraftForSavedTitleScenarioAsync(string instructions, string room) =>
+        CreateDraftAsync(
+            $"[{TestTag}] mow front grass",
+            "Weekly mowing task",
+            new McpDraftCreateSpec
             {
-                ["title"] = $"[{TestTag}] mow front grass",
-                ["description"] = "Weekly mowing task",
-                ["creatorUsername"] = "tlovejoy",
-                ["instructions"] = instructions,
-                ["roomNumber"] = room,
-                ["dueDate"] = dueDate
+                Instructions = instructions,
+                RoomNumber = room,
+                DueDate = "2027-06-15"
             });
 
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
-        workOrderNumber.ShouldNotBeNullOrWhiteSpace();
-
-        var saveResult = await _helper.CallToolDirectly("save-work-order",
+    private async Task SaveClearedDueDateTitleAsync(string workOrderNumber)
+    {
+        var saveResult = await Helper.CallToolDirectly("save-work-order",
             new Dictionary<string, object?>
             {
                 ["workOrderNumber"] = workOrderNumber,
-                ["executingUsername"] = "tlovejoy",
+                ["executingUsername"] = CurrentUser.UserName,
                 ["title"] = "Saturday mow",
                 ["dueDate"] = string.Empty
             });
-
         saveResult.ShouldContain("Saturday mow");
+    }
+
+    [Test]
+    public async Task ShouldShowChicagoTodayDueDateWithYellowOnManageAndSearch()
+    {
+        await LoginAsCurrentUser();
+        var workOrderNumber = await CreateDraftAsync($"[{TestTag}] due today via save", "Due date coloring scenario");
+
+        var today = ChurchTimeZone.Today(TimeProvider.System);
+        var todayText = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        await Helper.CallToolDirectly("save-work-order",
+            new Dictionary<string, object?>
+            {
+                ["workOrderNumber"] = workOrderNumber,
+                ["executingUsername"] = CurrentUser.UserName,
+                ["dueDate"] = todayText
+            });
 
         await NavigateToManageEditAsync(workOrderNumber);
+        var dueDateInput = Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate));
+        await Expect(dueDateInput).ToHaveValueAsync(todayText);
+        (await BackgroundColorAsync(dueDateInput)).ShouldBe(DueTodayBackground);
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status))).ToHaveTextAsync("Draft");
 
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={workOrderNumber}");
+        var dueDateCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + workOrderNumber);
+        await Expect(dueDateCell).ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
+        await Expect(dueDateCell).ToHaveClassAsync(new Regex("due-date-today"));
+        (await BackgroundColorAsync(dueDateCell)).ShouldBe(DueTodayBackground);
+    }
+
+    [Test]
+    public async Task ShouldTruncate4001CharacterInstructionsOnManageEditWithoutValidationBanner()
+    {
+        await LoginAsCurrentUser();
+        var workOrderNumber = await CreateDraftAsync($"[{TestTag}] save truncate instructions", "Truncation via save-work-order");
+
+        var longInstructions = new string('S', WorkOrder.InstructionsMaxLength + 1);
+        var expectedInstructions = new string('S', WorkOrder.InstructionsMaxLength);
+        await Helper.CallToolDirectly("save-work-order",
+            new Dictionary<string, object?>
+            {
+                ["workOrderNumber"] = workOrderNumber,
+                ["executingUsername"] = CurrentUser.UserName,
+                ["instructions"] = longInstructions
+            });
+
+        await NavigateToManageEditAsync(workOrderNumber);
+        var instructionsField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions));
+        await Expect(instructionsField).ToHaveValueAsync(expectedInstructions);
+        await Expect(Page.GetByText("Instructions cannot exceed 4000 characters.")).Not.ToBeVisibleAsync();
+    }
+
+    [Test]
+    public async Task ShouldFailSaveForAssignedWorkOrderWithoutChangingManageFields()
+    {
+        await LoginAsCurrentUser();
+        var assignee = await SeedEmployeeAsync();
+        const string originalTitle = "Assigned save guard";
+        var workOrderNumber = await CreateDraftAsync($"[{TestTag}] {originalTitle}", "Assigned scenario");
+        await AssignDraftAsync(workOrderNumber, assignee.UserName);
+        await AssertSaveRejectedAsync(workOrderNumber);
+        await NavigateToManageEditAsync(workOrderNumber);
         await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)))
-            .ToHaveValueAsync("Saturday mow");
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate)))
-            .ToHaveValueAsync(string.Empty);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions)))
-            .ToHaveValueAsync(instructions);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber)))
-            .ToHaveValueAsync(room);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
-            .ToHaveTextAsync("Draft");
+            .ToHaveValueAsync($"[{TestTag}] {originalTitle}");
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status))).ToHaveTextAsync("Assigned");
+    }
 
-        await NavigateToSearchAsync();
+    private async Task AssignDraftAsync(string workOrderNumber, string assigneeUserName)
+    {
+        await Helper.CallToolDirectly("execute-work-order-command",
+            new Dictionary<string, object?>
+            {
+                ["workOrderNumber"] = workOrderNumber,
+                ["commandName"] = "DraftToAssignedCommand",
+                ["executingUsername"] = CurrentUser.UserName,
+                ["assigneeUsername"] = assigneeUserName
+            });
+    }
 
+    private async Task AssertSaveRejectedAsync(string workOrderNumber)
+    {
+        var saveResult = await Helper.CallToolDirectly("save-work-order",
+            new Dictionary<string, object?>
+            {
+                ["workOrderNumber"] = workOrderNumber,
+                ["executingUsername"] = CurrentUser.UserName,
+                ["title"] = "Should not persist"
+            });
+        saveResult.ShouldContain("cannot be executed");
+    }
+
+    [Test]
+    public async Task ShouldFailSaveForNonCreatorWithoutChangingManageFields()
+    {
+        await LoginAsCurrentUser();
+        var otherUser = await SeedEmployeeAsync();
+        const string originalTitle = "Non-creator save guard";
+        var workOrderNumber = await CreateDraftAsync($"[{TestTag}] {originalTitle}", "Non-creator scenario");
+
+        var saveResult = await Helper.CallToolDirectly("save-work-order",
+            new Dictionary<string, object?>
+            {
+                ["workOrderNumber"] = workOrderNumber,
+                ["executingUsername"] = otherUser.UserName,
+                ["title"] = "Should not persist"
+            });
+        saveResult.ShouldContain("cannot be executed");
+
+        await NavigateToManageEditAsync(workOrderNumber);
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)))
+            .ToHaveValueAsync($"[{TestTag}] {originalTitle}");
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status))).ToHaveTextAsync("Draft");
+    }
+
+    private async Task ExpectSavedClearedFieldsAsync(string instructions, string room)
+    {
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title))).ToHaveValueAsync("Saturday mow");
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate))).ToHaveValueAsync(string.Empty);
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions))).ToHaveValueAsync(instructions);
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber))).ToHaveValueAsync(room);
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status))).ToHaveTextAsync("Draft");
+    }
+
+    private async Task AssertSearchRowShowsSavedTitleAsync(string workOrderNumber)
+    {
+        await Page.EvaluateAsync("u => Blazor.navigateTo(u)", $"/workorder/search?Q={workOrderNumber}");
+        var link = Page.GetByTestId(nameof(WorkOrderSearch.Elements.WorkOrderLink) + workOrderNumber);
+        await Expect(link).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
         var row = SearchRowForWorkOrder(workOrderNumber);
         await Expect(row).ToContainTextAsync("Saturday mow");
 
@@ -98,188 +183,46 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
         await Expect(dueDateCell).Not.ToHaveClassAsync(new Regex("due-date-today|due-date-overdue"));
     }
 
-    [Test, Retry(2)]
-    public async Task ShouldShowChicagoTodayDueDateWithYellowOnManageAndSearch()
+    private async Task<string> CreateDraftAsync(
+        string title,
+        string description,
+        McpDraftCreateSpec? spec = null)
     {
-        await LoginAsTlovejoyAsync();
-
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
-            new Dictionary<string, object?>
-            {
-                ["title"] = $"[{TestTag}] due today via save",
-                ["description"] = "Due date coloring scenario",
-                ["creatorUsername"] = "tlovejoy"
-            });
-
+        var createResult = await Helper.CallToolDirectly(
+            "create-work-order",
+            BuildCreateArguments(title, description, spec ?? new McpDraftCreateSpec()));
         var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
-
-        var today = ChurchTimeZone.Today(TimeProvider.System);
-        var todayText = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-        await _helper.CallToolDirectly("save-work-order",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["executingUsername"] = "tlovejoy",
-                ["dueDate"] = todayText
-            });
-
-        await NavigateToManageEditAsync(workOrderNumber);
-
-        var dueDateInput = Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate));
-        await Expect(dueDateInput).ToHaveValueAsync(todayText);
-        (await BackgroundColorAsync(dueDateInput)).ShouldBe(DueTodayBackground);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
-            .ToHaveTextAsync("Draft");
-
-        await NavigateToSearchAsync();
-
-        var dueDateCell = Page.GetByTestId(nameof(WorkOrderSearch.Elements.DueDateCell) + workOrderNumber);
-        await Expect(dueDateCell).ToBeAttachedAsync(new LocatorAssertionsToBeAttachedOptions { Timeout = 30_000 });
-        await Expect(dueDateCell).ToHaveClassAsync(new Regex("due-date-today"));
-        (await BackgroundColorAsync(dueDateCell)).ShouldBe(DueTodayBackground);
+        return workOrderNumber;
     }
 
-    [Test, Retry(2)]
-    public async Task ShouldTruncate4001CharacterInstructionsOnManageEditWithoutValidationBanner()
+    private Dictionary<string, object?> BuildCreateArguments(
+        string title,
+        string description,
+        McpDraftCreateSpec spec)
     {
-        await LoginAsTlovejoyAsync();
-
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
-            new Dictionary<string, object?>
-            {
-                ["title"] = $"[{TestTag}] save truncate instructions",
-                ["description"] = "Truncation via save-work-order",
-                ["creatorUsername"] = "tlovejoy"
-            });
-
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
-        workOrderNumber.ShouldNotBeNullOrWhiteSpace();
-
-        var longInstructions = new string('S', WorkOrder.InstructionsMaxLength + 1);
-        var expectedInstructions = new string('S', WorkOrder.InstructionsMaxLength);
-
-        await _helper.CallToolDirectly("save-work-order",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["executingUsername"] = "tlovejoy",
-                ["instructions"] = longInstructions
-            });
-
-        await NavigateToManageEditAsync(workOrderNumber);
-
-        var instructionsField = Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions));
-        await Expect(instructionsField).ToHaveValueAsync(expectedInstructions);
-        await Expect(Page.GetByText("Instructions cannot exceed 4000 characters.")).Not.ToBeVisibleAsync();
-    }
-
-    [Test, Retry(2)]
-    public async Task ShouldFailSaveForAssignedWorkOrderWithoutChangingManageFields()
-    {
-        await LoginAsTlovejoyAsync();
-
-        const string originalTitle = "Assigned save guard";
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
-            new Dictionary<string, object?>
-            {
-                ["title"] = $"[{TestTag}] {originalTitle}",
-                ["description"] = "Assigned scenario",
-                ["creatorUsername"] = "tlovejoy"
-            });
-
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
-        workOrderNumber.ShouldNotBeNullOrWhiteSpace();
-
-        await _helper.CallToolDirectly("execute-work-order-command",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["commandName"] = "DraftToAssignedCommand",
-                ["executingUsername"] = "tlovejoy",
-                ["assigneeUsername"] = "gwillie"
-            });
-
-        var saveResult = await _helper.CallToolDirectly("save-work-order",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["executingUsername"] = "tlovejoy",
-                ["title"] = "Should not persist"
-            });
-
-        saveResult.ShouldContain("cannot be executed");
-
-        await NavigateToManageEditAsync(workOrderNumber);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)))
-            .ToHaveValueAsync($"[{TestTag}] {originalTitle}");
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
-            .ToHaveTextAsync("Assigned");
-    }
-
-    [Test, Retry(2)]
-    public async Task ShouldFailSaveForNonCreatorWithoutChangingManageFields()
-    {
-        await LoginAsTlovejoyAsync();
-
-        const string originalTitle = "Non-creator save guard";
-        var createResult = await _helper!.CallToolDirectly("create-work-order",
-            new Dictionary<string, object?>
-            {
-                ["title"] = $"[{TestTag}] {originalTitle}",
-                ["description"] = "Non-creator scenario",
-                ["creatorUsername"] = "tlovejoy"
-            });
-
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
-        workOrderNumber.ShouldNotBeNullOrWhiteSpace();
-
-        var saveResult = await _helper.CallToolDirectly("save-work-order",
-            new Dictionary<string, object?>
-            {
-                ["workOrderNumber"] = workOrderNumber,
-                ["executingUsername"] = "gwillie",
-                ["title"] = "Should not persist"
-            });
-
-        saveResult.ShouldContain("cannot be executed");
-
-        await NavigateToManageEditAsync(workOrderNumber);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)))
-            .ToHaveValueAsync($"[{TestTag}] {originalTitle}");
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
-            .ToHaveTextAsync("Draft");
-    }
-
-    private async Task LoginAsTlovejoyAsync()
-    {
-        await Page.GotoAsync("/login");
-        var shortcut = Page.GetByTestId(nameof(Login.Elements.LovejoyShortcut));
-        await shortcut.WaitForAsync(new LocatorWaitForOptions
+        var arguments = new Dictionary<string, object?>
         {
-            State = WaitForSelectorState.Visible,
-            Timeout = 90_000
-        });
-        await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
-            .ToHaveTextAsync("Welcome tlovejoy!");
-    }
+            ["title"] = title,
+            ["description"] = description,
+            ["creatorUsername"] = CurrentUser.UserName
+        };
+        if (spec.Instructions is not null)
+        {
+            arguments["instructions"] = spec.Instructions;
+        }
 
-    private async Task NavigateToManageEditAsync(string workOrderNumber)
-    {
-        await Page.GotoAsync($"/workorder/manage/{workOrderNumber}?mode=Edit");
-        var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        await Expect(woNumberLocator).ToHaveTextAsync(workOrderNumber);
-    }
+        if (spec.RoomNumber is not null)
+        {
+            arguments["roomNumber"] = spec.RoomNumber;
+        }
 
-    private async Task NavigateToSearchAsync()
-    {
-        await Click(nameof(NavMenu.Elements.Search));
-        await Page.WaitForURLAsync("**/workorder/search");
-        var searchTable = Page.Locator(".grid-data tbody");
-        await searchTable.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible, Timeout = 30_000 });
+        if (spec.DueDate is not null)
+        {
+            arguments["dueDate"] = spec.DueDate;
+        }
+
+        return arguments;
     }
 
     private ILocator SearchRowForWorkOrder(string workOrderNumber)
@@ -288,9 +231,6 @@ public class McpSaveWorkOrderAcceptanceTests : AcceptanceTestBase
         return Page.Locator("tr").Filter(new LocatorFilterOptions { Has = link });
     }
 
-    private static async Task<string> BackgroundColorAsync(ILocator locator)
-    {
-        return await locator.EvaluateAsync<string>(
-            "element => window.getComputedStyle(element).backgroundColor");
-    }
+    private static async Task<string> BackgroundColorAsync(ILocator locator) =>
+        await locator.EvaluateAsync<string>("element => window.getComputedStyle(element).backgroundColor");
 }

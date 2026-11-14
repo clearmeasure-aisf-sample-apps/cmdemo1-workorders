@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
+using ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 
@@ -9,6 +10,13 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.TeamsAndVendors;
 /// </summary>
 public abstract class TeamsAndVendorsAcceptanceTestBase : AcceptanceApiTestBase
 {
+    [TearDown]
+    public void DeleteTaggedTeamsAfterTest()
+    {
+        // Scoped by TestTag only — never a global team wipe under ParallelScope.All.
+        AcceptanceTeams.DeleteCreatedWithTag(TestTag);
+    }
+
     /// <summary>Opens the Teams &amp; Vendors admin page and waits for network idle.</summary>
     protected async Task GotoTeamsPageAsync()
     {

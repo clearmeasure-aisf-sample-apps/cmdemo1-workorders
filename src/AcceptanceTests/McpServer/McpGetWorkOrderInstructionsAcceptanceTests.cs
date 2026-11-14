@@ -1,136 +1,49 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Text.Json;
-using ClearMeasure.Bootcamp.LlmGateway;
-using ClearMeasure.Bootcamp.UI.Shared.Components;
+using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
-using Login = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
 [TestFixture]
-public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
+public class McpGetWorkOrderInstructionsAcceptanceTests : McpAcceptanceTestBase
 {
-    private static McpTestHelper? _helper;
-    private McpTestHelper Helper =>
-        _helper ?? throw new InvalidOperationException("MCP helper is not initialized.");
-
-    [OneTimeSetUp]
-    public async Task McpSetUp()
-    {
-        _helper = new McpTestHelper(TestHost.GetRequiredService<ChatClientFactory>());
-        await _helper.ConnectAsync();
-    }
-
-    [OneTimeTearDown]
-    public async Task McpTearDown()
-    {
-        if (_helper != null)
-        {
-            await _helper.DisposeAsync();
-        }
-    }
-
-    [SetUp]
-    public void EnsureMcpAvailable()
-    {
-        if (!Helper.Connected)
-        {
-            Assert.Inconclusive("MCP server is not available");
-        }
-    }
-
-    [Test, Retry(2)]
+    [Test]
     public async Task ShouldMatchGetWorkOrderDetailWithManageWhenInstructionsSet()
     {
-        await LoginAsTlovejoyAsync();
+        await LoginAsCurrentUser();
 
         const string title = "Saturday mow";
         const string description = "Mow the front lawn";
         const string instructions = "preschool quiet";
         const string room = "Front lawn";
         const string dueDate = "2027-06-15";
-        var createResult = await Helper.CallToolDirectly("create-work-order",
-            new Dictionary<string, object?>
-            {
-                ["title"] = title,
-                ["description"] = description,
-                ["creatorUsername"] = "tlovejoy",
-                ["roomNumber"] = room,
-                ["dueDate"] = dueDate,
-                ["instructions"] = instructions
-            });
-        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
-        workOrderNumber.ShouldNotBeNullOrWhiteSpace();
+        var details = new McpDraftCreateSpec
+        {
+            Instructions = instructions,
+            RoomNumber = room,
+            DueDate = dueDate
+        };
+        var workOrderNumber = await CreateDraftWithDetailsAsync(title, description, details);
 
-        var getResult = await GetWorkOrderAsync(workOrderNumber);
-        using var document = JsonDocument.Parse(getResult);
-        var detail = document.RootElement;
-
-        RequiredString(detail, "Instructions").ShouldBe(instructions);
-        RequiredString(detail, "Title").ShouldBe(title);
-        RequiredString(detail, "Description").ShouldBe(description);
-        RequiredString(detail, "RoomNumber").ShouldBe(room);
-        RequiredString(detail, "DueDate").ShouldBe(dueDate);
-        RequiredString(detail, "Status").ShouldBe("Draft");
-        RequiredString(detail, "CreatorUsername").ShouldBe("tlovejoy");
-        detail.GetProperty("Assignee").ValueKind.ShouldBe(JsonValueKind.Null);
-        detail.GetProperty("AssigneeUsername").ValueKind.ShouldBe(JsonValueKind.Null);
-        detail.GetProperty("AssignedDate").ValueKind.ShouldBe(JsonValueKind.Null);
-        detail.GetProperty("CompletedDate").ValueKind.ShouldBe(JsonValueKind.Null);
-
-        await NavigateToManageEditAsync(workOrderNumber);
-
-        // AutoReformatAgent can add trailing punctuation after create. Re-read MCP
-        // detail for the Manage match so UI and get-work-order stay aligned.
-        getResult = await GetWorkOrderAsync(workOrderNumber);
-        using var liveDocument = JsonDocument.Parse(getResult);
-        var live = liveDocument.RootElement;
-
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)))
-            .ToHaveValueAsync(RequiredString(live, "Title"));
-        var expectedDescription = RequiredString(live, "Description").TrimEnd();
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description)))
-            .ToHaveValueAsync(new Regex("^" + Regex.Escape(expectedDescription.TrimEnd('.')) + @"\.?$"));
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions)))
-            .ToHaveValueAsync(RequiredString(live, "Instructions"));
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber)))
-            .ToHaveValueAsync(RequiredString(live, "RoomNumber"));
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate)))
-            .ToHaveValueAsync(RequiredString(live, "DueDate"));
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
-            .ToHaveTextAsync(RequiredString(live, "Status"));
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Assignee)))
-            .ToHaveValueAsync(string.Empty);
-
-        var creator = RequiredString(live, "Creator");
-        var creatorGroup = Page.Locator(".form-group").Filter(new LocatorFilterOptions { HasText = "Creator" });
-        await Expect(creatorGroup.Locator("span.value").GetByText(creator, new LocatorGetByTextOptions { Exact = true }))
-            .ToBeVisibleAsync();
-
-        var createdDate = live.GetProperty("CreatedDate").GetDateTime();
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.CreatedDate)))
-            .ToHaveTextAsync(createdDate.ToString("G", CultureInfo.GetCultureInfo("en-US")));
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.AssignedDate)))
-            .ToHaveTextAsync(string.Empty);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.CompletedDate)))
-            .ToHaveTextAsync(string.Empty);
+        await AssertGetWorkOrderShapeAsync(workOrderNumber, title, description, details);
+        await AssertManageMatchesLiveGetAsync(workOrderNumber);
 
         var unknownResult = await GetWorkOrderAsync("ZZ9103");
         unknownResult.ShouldBe("No work order found with number 'ZZ9103'.");
     }
 
-    [Test, Retry(2)]
+    [Test]
     public async Task ShouldMatchEmptyManageInstructionsWithPresentEmptyGetProperty()
     {
-        await LoginAsTlovejoyAsync();
+        await LoginAsCurrentUser();
 
         var createResult = await Helper.CallToolDirectly("create-work-order",
             new Dictionary<string, object?>
             {
-                ["title"] = "No special instructions",
+                ["title"] = $"[{TestTag}] No special instructions",
                 ["description"] = "Instructions intentionally omitted",
-                ["creatorUsername"] = "tlovejoy"
+                ["creatorUsername"] = CurrentUser.UserName
             });
         var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
         workOrderNumber.ShouldNotBeNullOrWhiteSpace();
@@ -148,32 +61,100 @@ public class McpGetWorkOrderInstructionsAcceptanceTests : AcceptanceTestBase
             .ToHaveValueAsync(string.Empty);
     }
 
+    private async Task<string> CreateDraftWithDetailsAsync(
+        string title,
+        string description,
+        McpDraftCreateSpec details)
+    {
+        var createResult = await Helper.CallToolDirectly("create-work-order",
+            new Dictionary<string, object?>
+            {
+                ["title"] = title,
+                ["description"] = description,
+                ["creatorUsername"] = CurrentUser.UserName,
+                ["roomNumber"] = details.RoomNumber,
+                ["dueDate"] = details.DueDate,
+                ["instructions"] = details.Instructions
+            });
+        var workOrderNumber = McpTestHelper.ExtractJsonValue(createResult, "Number");
+        workOrderNumber.ShouldNotBeNullOrWhiteSpace();
+        return workOrderNumber;
+    }
+
+    private async Task AssertGetWorkOrderShapeAsync(
+        string workOrderNumber,
+        string title,
+        string description,
+        McpDraftCreateSpec details)
+    {
+        var getResult = await GetWorkOrderAsync(workOrderNumber);
+        using var document = JsonDocument.Parse(getResult);
+        var detail = document.RootElement;
+
+        RequiredString(detail, "Instructions").ShouldBe(details.Instructions);
+        RequiredString(detail, "Title").ShouldBe(title);
+        RequiredString(detail, "Description").ShouldBe(description);
+        RequiredString(detail, "RoomNumber").ShouldBe(details.RoomNumber);
+        RequiredString(detail, "DueDate").ShouldBe(details.DueDate);
+        RequiredString(detail, "Status").ShouldBe("Draft");
+        RequiredString(detail, "CreatorUsername").ShouldBe(CurrentUser.UserName);
+        detail.GetProperty("Assignee").ValueKind.ShouldBe(JsonValueKind.Null);
+        detail.GetProperty("AssigneeUsername").ValueKind.ShouldBe(JsonValueKind.Null);
+        detail.GetProperty("AssignedDate").ValueKind.ShouldBe(JsonValueKind.Null);
+        detail.GetProperty("CompletedDate").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    private async Task AssertManageMatchesLiveGetAsync(string workOrderNumber)
+    {
+        await NavigateToManageEditAsync(workOrderNumber);
+
+        // AutoReformatAgent can add trailing punctuation after create. Re-read MCP
+        // detail for the Manage match so UI and get-work-order stay aligned.
+        var getResult = await GetWorkOrderAsync(workOrderNumber);
+        using var liveDocument = JsonDocument.Parse(getResult);
+        var live = liveDocument.RootElement;
+        await AssertManageCoreFieldsAsync(live);
+        await AssertManageCreatorAndDatesAsync(live);
+    }
+
+    private async Task AssertManageCoreFieldsAsync(JsonElement live)
+    {
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title)))
+            .ToHaveValueAsync(RequiredString(live, "Title"));
+        var expectedDescription = RequiredString(live, "Description").TrimEnd();
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Description)))
+            .ToHaveValueAsync(new Regex("^" + Regex.Escape(expectedDescription.TrimEnd('.')) + @"\.?$"));
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Instructions)))
+            .ToHaveValueAsync(RequiredString(live, "Instructions"));
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.RoomNumber)))
+            .ToHaveValueAsync(RequiredString(live, "RoomNumber"));
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.DueDate)))
+            .ToHaveValueAsync(RequiredString(live, "DueDate"));
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Status)))
+            .ToHaveTextAsync(RequiredString(live, "Status"));
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Assignee)))
+            .ToHaveValueAsync(string.Empty);
+    }
+
+    private async Task AssertManageCreatorAndDatesAsync(JsonElement live)
+    {
+        var creator = RequiredString(live, "Creator");
+        var creatorGroup = Page.Locator(".form-group").Filter(new LocatorFilterOptions { HasText = "Creator" });
+        await Expect(creatorGroup.Locator("span.value").GetByText(creator, new LocatorGetByTextOptions { Exact = true }))
+            .ToBeVisibleAsync();
+
+        var createdDate = live.GetProperty("CreatedDate").GetDateTime();
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.CreatedDate)))
+            .ToHaveTextAsync(createdDate.ToString("G", CultureInfo.GetCultureInfo("en-US")));
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.AssignedDate)))
+            .ToHaveTextAsync(string.Empty);
+        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.CompletedDate)))
+            .ToHaveTextAsync(string.Empty);
+    }
+
     private static string RequiredString(JsonElement element, string propertyName) =>
         element.GetProperty(propertyName).GetString()
         ?? throw new InvalidOperationException($"Property '{propertyName}' was null.");
-
-    private async Task LoginAsTlovejoyAsync()
-    {
-        await Page.GotoAsync("/login");
-        var shortcut = Page.GetByTestId(nameof(Login.Elements.LovejoyShortcut));
-        await shortcut.WaitForAsync(new LocatorWaitForOptions
-        {
-            State = WaitForSelectorState.Visible,
-            Timeout = 90_000
-        });
-        await Click(nameof(Login.Elements.LovejoyShortcut));
-        await Expect(Page.GetByTestId(nameof(Logout.Elements.WelcomeText)))
-            .ToHaveTextAsync("Welcome tlovejoy!");
-    }
-
-    private async Task NavigateToManageEditAsync(string workOrderNumber)
-    {
-        await Page.GotoAsync($"/workorder/manage/{workOrderNumber}?mode=Edit");
-        var workOrderNumberField = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
-        await Expect(workOrderNumberField)
-            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        await Expect(workOrderNumberField).ToHaveTextAsync(workOrderNumber);
-    }
 
     private Task<string> GetWorkOrderAsync(string workOrderNumber) =>
         Helper.CallToolDirectly("get-work-order",

@@ -20,8 +20,12 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests;
 /// </summary>
 public class TestState
 {
-    public required IPage Page { get; init; }
-    public required IBrowserContext BrowserContext { get; init; }
+    /// <summary>Browser page when <see cref="AcceptanceTestBase.RequiresBrowser"/> is true; otherwise null.</summary>
+    public IPage? Page { get; init; }
+
+    /// <summary>Browser context when a page is open; otherwise null.</summary>
+    public IBrowserContext? BrowserContext { get; init; }
+
     public Employee CurrentUser { get; init; } = null!;
     public required string TestTag { get; init; }
 }
@@ -59,7 +63,8 @@ public abstract class AcceptanceTestBase
     /// <summary>
     /// Gets the browser page for the current test.
     /// </summary>
-    protected IPage Page => State.Page;
+    protected IPage Page =>
+        State.Page ?? throw new InvalidOperationException("This test did not open a browser page.");
 
     /// <summary>
     /// Gets the current user for the current test.
@@ -82,7 +87,14 @@ public abstract class AcceptanceTestBase
     [SetUp]
     public async Task SetUpAsync()
     {
-        if (!RequiresBrowser) return;
+        if (!RequiresBrowser)
+        {
+            TestStates[TestId] = new TestState
+            {
+                TestTag = Guid.NewGuid().ToString("N")[..8]
+            };
+            return;
+        }
 
         TestStates[TestId] = await BrowserFixtureSetup.CreateAsync(new BrowserSetupRequest
         {
@@ -100,17 +112,20 @@ public abstract class AcceptanceTestBase
         if (!TestStates.TryRemove(TestId, out var state))
             return;
 
-        await SafeStopTracingAsync(state);
+        if (state.Page is null || state.BrowserContext is null)
+            return;
+
+        await SafeStopTracingAsync(state.BrowserContext);
         await SafeCloseAsync(() => state.Page.CloseAsync(), "Page");
         await SafeCloseAsync(() => state.BrowserContext.CloseAsync(), "BrowserContext");
         // Browser stays open for the worker until ServerFixture.OneTimeTearDown.
     }
 
-    private async Task SafeStopTracingAsync(TestState state)
+    private async Task SafeStopTracingAsync(IBrowserContext browserContext)
     {
         try
         {
-            await state.BrowserContext.Tracing.StopAsync(new TracingStopOptions
+            await browserContext.Tracing.StopAsync(new TracingStopOptions
             {
                 Path = Path.Combine(TestContext.CurrentContext.WorkDirectory, "playwright-traces",
                     $"{TestContext.CurrentContext.Test.ClassName}.{TestContext.CurrentContext.Test.Name}.zip")

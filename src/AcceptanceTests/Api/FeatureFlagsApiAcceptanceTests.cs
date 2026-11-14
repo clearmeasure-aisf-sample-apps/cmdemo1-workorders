@@ -11,10 +11,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 /// Integration tests cover the shared runtime when those flags are configured off.
 /// </summary>
 [TestFixture]
-public class FeatureFlagsApiAcceptanceTests : AcceptanceTestBase
+public class FeatureFlagsApiAcceptanceTests : ApiAcceptanceTestBase
 {
-    protected override bool RequiresBrowser => false;
-
     [Test]
     public async Task GetFeatureFlags_Should_Return200WithJsonDictionary_When_EndpointCalled()
     {

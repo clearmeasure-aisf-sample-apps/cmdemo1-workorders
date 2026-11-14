@@ -1,55 +1,38 @@
-using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.LlmGateway;
-
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
 [TestFixture]
-public class McpServerLlmAcceptanceTests : AcceptanceTestBase
+public class McpServerLlmAcceptanceTests : McpAcceptanceTestBase
 {
     protected override bool RequiresBrowser => false;
 
-    private static McpTestHelper? _helper;
-
-    [OneTimeSetUp]
-    public async Task McpSetUp()
-    {
-        _helper = new McpTestHelper(TestHost.GetRequiredService<ChatClientFactory>());
-        await _helper.ConnectAsync();
-    }
-
-    [OneTimeTearDown]
-    public async Task McpTearDown()
-    {
-        if (_helper != null) await _helper.DisposeAsync();
-    }
-
     [SetUp]
-    public async Task EnsureAvailability()
+    public async Task EnsureChatClientAsync()
     {
-        if (!_helper!.Connected)
-            Assert.Inconclusive("MCP server is not available");
         await SkipIfNoChatClient();
     }
 
     [Test, LlmTest]
     public async Task ShouldListWorkOrdersViaLlm()
     {
-        var response = await _helper!.SendPrompt(
-            "Use the list-work-orders tool to list all work orders in the system. " +
-            "Return the work order numbers you find.");
+        var creator = await SeedEmployeeAsync();
+        var seeded = await SeedWorkOrderAsync(creator);
+        seeded.Number.ShouldNotBeNullOrWhiteSpace();
+
+        var response = await Helper.SendPrompt(
+            $"Use the list-work-orders tool with creatorUsername='{creator.UserName}' to list work orders. " +
+            $"Return the work order numbers you find, including '{seeded.Number}'.");
 
         response.Text.ShouldNotBeNullOrEmpty();
+        response.Text.ShouldContain(seeded.Number!);
     }
 
     [Test, LlmTest]
     public async Task ShouldGetWorkOrderByNumberViaLlm()
     {
-        var bus = TestHost.GetRequiredService<IBus>();
-        var workOrders = await bus.Send(new WorkOrderSpecificationQuery());
-        var knownOrder = workOrders.First();
+        var creator = await SeedEmployeeAsync();
+        var knownOrder = await SeedWorkOrderAsync(creator);
 
-        var response = await _helper!.SendPrompt(
+        var response = await Helper.SendPrompt(
             $"Use the get-work-order tool to get the details of work order number '{knownOrder.Number}'. " +
             "Return the title and status.");
 
@@ -60,35 +43,31 @@ public class McpServerLlmAcceptanceTests : AcceptanceTestBase
     [Test, LlmTest]
     public async Task ShouldCreateWorkOrderViaLlm()
     {
-        var bus = TestHost.GetRequiredService<IBus>();
-        var employees = await bus.Send(new EmployeeGetAllQuery());
-        var creator = employees.First(e => e.Roles.Any(r => r.CanCreateWorkOrder));
+        var creator = await SeedEmployeeAsync();
+        var title = $"[{TestTag}] Repair sanctuary roof";
 
-        var response = await _helper!.SendPrompt(
+        var response = await Helper.SendPrompt(
             $"Call the create-work-order tool with these exact parameters: " +
-            $"title='Repair sanctuary roof', description='Roof tiles need replacement', " +
+            $"title='{title}', description='Roof tiles need replacement', " +
             $"creatorUsername='{creator.UserName}'.");
 
         response.Text.ShouldNotBeNullOrEmpty();
         var responseText = response.Text.ToLowerInvariant();
-        (responseText.Contains("repair") || responseText.Contains("draft") || responseText.Contains("created") || responseText.Contains("wo-"))
+        (responseText.Contains("repair") || responseText.Contains("draft") || responseText.Contains("created") ||
+         responseText.Contains(TestTag.ToLowerInvariant()) || responseText.Contains("wo-"))
             .ShouldBeTrue($"Expected creation confirmation in response: {response.Text}");
     }
 
     [Test, LlmTest]
     public async Task ShouldListEmployeesViaLlm()
     {
-        var bus = TestHost.GetRequiredService<IBus>();
-        var employees = await bus.Send(new EmployeeGetAllQuery());
-        var knownUsernames = employees.Select(e => e.UserName).ToList();
+        var known = await SeedEmployeeAsync();
 
-        var response = await _helper!.SendPrompt(
-            "Use the list-employees tool to list all employees in the system. " +
-            "Return their usernames.");
+        var response = await Helper.SendPrompt(
+            "Use the list-employees tool to list employees in the system. " +
+            $"Return their usernames, and include '{known.UserName}' if present.");
 
         response.Text.ShouldNotBeNullOrEmpty();
-        knownUsernames.ShouldContain(
-            username => response.Text.Contains(username),
-            "Response should contain at least one known employee username");
+        response.Text.ShouldContain(known.UserName);
     }
 }
