@@ -15,6 +15,14 @@ public static class TestSupportEndpoints
         group.MapPost("/employees", CreateEmployeeAsync);
         group.MapPost("/work-orders", CreateWorkOrderAsync);
         group.MapGet("/sign-in-storage-state", BuildSignInStorageState);
+        group.MapGet("/chat-client", GetChatClientStatus);
+    }
+
+    private static IResult GetChatClientStatus(IConfiguration configuration)
+    {
+        var testSupport = TestSupportOptions.FromConfiguration(configuration);
+        var useStub = configuration.GetValue("AI_UseStubChatClient", false) || testSupport.Enabled;
+        return Results.Json(new TestSupportChatClientStatus(useStub));
     }
 
     private static async Task<IResult> CreateEmployeeAsync(

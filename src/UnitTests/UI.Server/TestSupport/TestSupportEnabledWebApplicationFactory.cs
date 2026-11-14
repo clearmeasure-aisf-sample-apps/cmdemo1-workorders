@@ -22,6 +22,7 @@ public sealed class TestSupportEnabledWebApplicationFactory : WebApplicationFact
                 ["AI_OpenAI_ApiKey"] = "",
                 ["AI_OpenAI_Url"] = "",
                 ["AI_OpenAI_Model"] = "",
+                ["AI_UseStubChatClient"] = "true",
                 ["ApiKeyAuthentication:Enabled"] = "false",
                 ["TestSupport:Enabled"] = "true",
                 ["TestSupport:Secret"] = Secret

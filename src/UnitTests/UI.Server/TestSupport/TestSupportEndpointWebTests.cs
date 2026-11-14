@@ -102,5 +102,22 @@ public class TestSupportEndpointWebTests
         json.ShouldContain("https://localhost:7174");
     }
 
+    [Test]
+    public async Task Should_ReportStubChatClient_When_PoolSlotConfigured()
+    {
+        await using var factory = new TestSupportEnabledWebApplicationFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(
+            TestSupportConstants.SecretHeaderName,
+            TestSupportEnabledWebApplicationFactory.Secret);
+
+        var response = await client.GetAsync("/api/test-support/chat-client");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var status = await response.Content.ReadFromJsonAsync<TestSupportChatClientStatus>();
+        status.ShouldNotBeNull();
+        status.UseStubChatClient.ShouldBeTrue();
+    }
+
     private sealed record CreatedEmployee(string UserName, string FirstName, string LastName);
 }

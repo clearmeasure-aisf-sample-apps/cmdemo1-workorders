@@ -13,12 +13,20 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
 public abstract class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase
 {
     /// <summary>
-    /// Pool slots force the stub via TestSupport; skip only when a non-pool host has no real model.
+    /// Pool slots must report stub chat active (TestSupport forces stub); otherwise skip — never call the real model.
+    /// Non-pool hosts use the real-model availability gate.
     /// </summary>
     protected static async Task SkipUnlessAiAgentChatReadyAsync()
     {
         if (await IsPoolSlotHostAsync())
         {
+            if (!await IsStubChatClientActiveAsync())
+            {
+                Assert.Ignore(
+                    "Pool-slot host does not report UseStubChatClient; " +
+                    "refusing to call the real model.");
+            }
+
             return;
         }
 
@@ -32,10 +40,17 @@ public abstract class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase
         return status != HttpStatusCode.NotFound;
     }
 
+    /// <summary>True when test-support reports <c>UseStubChatClient</c>.</summary>
+    protected static async Task<bool> IsStubChatClientActiveAsync()
+    {
+        var status = await AcceptanceTestSupportSettings.CreateClient().GetChatClientStatusAsync();
+        return status is { UseStubChatClient: true };
+    }
+
     /// <summary>Ignores when the host is tdd/uat/prod (no test-support); stub-only scenarios need a pool slot.</summary>
     protected static async Task RequirePoolSlotHostAsync()
     {
-        if (await IsPoolSlotHostAsync())
+        if (await IsPoolSlotHostAsync() && await IsStubChatClientActiveAsync())
         {
             return;
         }

@@ -106,6 +106,23 @@ public sealed class TestSupportClient
         return response.StatusCode;
     }
 
+    /// <summary>
+    /// Reads whether the host selected <c>StubChatClient</c> (<c>AI_UseStubChatClient</c>).
+    /// Null when the endpoint is missing or not OK (unconfigured slot).
+    /// </summary>
+    public async Task<TestSupportChatClientStatus?> GetChatClientStatusAsync()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{_baseUrl}{PathPrefix}/chat-client");
+        AddSecret(request);
+        using var response = await _http.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TestSupportChatClientStatus>(JsonOptions);
+    }
+
     private void AddSecret(HttpRequestMessage request) =>
         request.Headers.TryAddWithoutValidation(SecretHeaderName, _secret);
 
