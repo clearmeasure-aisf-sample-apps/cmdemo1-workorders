@@ -91,6 +91,19 @@ public class TestToPageMapTests
     }
 
     [Test]
+    public void Evaluate_WhenCommittedComponentHostsMatchScannedUsage_HasNoHostMismatches()
+    {
+        var checkout = RepositoryCheckout.Current;
+        var map = TestToPageMap.Load(checkout);
+
+        var problems = TestToPageMapCoverage.Evaluate(map, PageLevelAcceptanceCatalog.Read(checkout), checkout)
+            .Where(problem => problem.Contains("scanned usage hosts", StringComparison.Ordinal))
+            .ToArray();
+
+        problems.ShouldBeEmpty();
+    }
+
+    [Test]
     public void TestsForRazorPaths_WhenUnmappedRazorChanges_ReturnsEmpty()
     {
         TestToPageMapMother.LoginLandingAndTeams()

@@ -1,5 +1,5 @@
 {
-  "notes": "Maps page-level acceptance fixtures to Razor pages and shared components (PR environments plan item 23 / #1670). Item 16 selects changed-UI videos via scripts/acceptance/Get-TestsForChangedRazor.ps1. Pipe changed paths into the script (ValueFromPipeline / Console.In under pwsh -File); use -PathsFile for a real file. components[] lists each shared/shell Razor file and the Razor hosts that render it (immediate parents; helper expands hosts recursively through other components[] entries to page paths in tests[]). ignoredRazor paths (_Imports) never select tests. A new page-level fixture must add a tests[] entry; a new UI .razor must appear under tests, components, or ignoredRazor \u2014 TestToPageMapTests fails otherwise. Non-page fixtures (Api, NServiceBus, MCP without browser, Extensions, TestUsers, NeedsRebootHealthCheckTests) stay out of tests[].",
+  "notes": "Maps page-level acceptance fixtures to Razor pages and shared components (PR environments plan item 23 / #1670). Item 16 selects changed-UI videos via scripts/acceptance/Get-TestsForChangedRazor.ps1. Pipe changed paths into the script (ValueFromPipeline on -RazorPaths); use -PathsFile for a real file. components[] hosts are derived from markup tag usage, resolved transitively through nested components up to Pages/, MainLayout, NavMenu, PrintLayout, and App.razor; BuildGates fails when hosts drift. ignoredRazor paths (_Imports) never select tests. A new page-level fixture must add a tests[] entry; a new Components/*.razor must add a components[] entry. Non-page fixtures stay out of tests[].",
   "tests": [
     {
       "class": "ClearMeasure.Bootcamp.AcceptanceTests.AIAgents.ApplicationChatAgentTests",
@@ -451,6 +451,12 @@
   ],
   "components": [
     {
+      "path": "src/UI.Shared/Authentication/RedirectToLogin.razor",
+      "pages": [
+        "src/UI/Client/App.razor"
+      ]
+    },
+    {
       "path": "src/UI.Shared/Components/Breadcrumbs.razor",
       "pages": [
         "src/UI.Shared/MainLayout.razor"
@@ -484,7 +490,7 @@
       "path": "src/UI.Shared/Components/KpiCard.razor",
       "pages": [
         "src/UI.Shared/Pages/Index.razor",
-        "src/UI.Shared/Components/WorkOrderSummaryCards.razor"
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
       ]
     },
     {
@@ -520,20 +526,19 @@
     {
       "path": "src/UI.Shared/Components/PageHeader.razor",
       "pages": [
-        "src/UI.Shared/Pages/Index.razor",
-        "src/UI.Shared/Pages/WorkOrderSearch.razor",
-        "src/UI.Shared/Pages/WorkOrderManage.razor",
-        "src/UI.Shared/Pages/Reports.razor",
         "src/UI.Shared/Pages/ApplicationChat.razor",
+        "src/UI.Shared/Pages/Index.razor",
+        "src/UI.Shared/Pages/Reports.razor",
         "src/UI.Shared/Pages/Settings.razor",
+        "src/UI.Shared/Pages/WorkOrderManage.razor",
+        "src/UI.Shared/Pages/WorkOrderSearch.razor",
         "src/UI/Client/Pages/NotFound.razor"
       ]
     },
     {
       "path": "src/UI.Shared/Components/Search/AssigneeAvatar.razor",
       "pages": [
-        "src/UI.Shared/Components/Search/WorkOrderSearchBoard.razor",
-        "src/UI.Shared/Components/Search/WorkOrderSearchTable.razor"
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
       ]
     },
     {
@@ -551,15 +556,13 @@
     {
       "path": "src/UI.Shared/Components/Search/WorkOrderDueDate.razor",
       "pages": [
-        "src/UI.Shared/Components/Search/WorkOrderSearchBoard.razor",
-        "src/UI.Shared/Components/Search/WorkOrderSearchTable.razor"
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
       ]
     },
     {
       "path": "src/UI.Shared/Components/Search/WorkOrderPriorityLabel.razor",
       "pages": [
-        "src/UI.Shared/Components/Search/WorkOrderSearchBoard.razor",
-        "src/UI.Shared/Components/Search/WorkOrderSearchTable.razor"
+        "src/UI.Shared/Pages/WorkOrderSearch.razor"
       ]
     },
     {
@@ -638,14 +641,8 @@
     {
       "path": "src/UI/Client/App.razor",
       "pages": [
-        "src/UI.Shared/Pages/Index.razor",
-        "src/UI.Shared/MainLayout.razor"
-      ]
-    },
-    {
-      "path": "src/UI.Shared/Authentication/RedirectToLogin.razor",
-      "pages": [
-        "src/UI/Client/App.razor"
+        "src/UI.Shared/MainLayout.razor",
+        "src/UI.Shared/Pages/Index.razor"
       ]
     }
   ],

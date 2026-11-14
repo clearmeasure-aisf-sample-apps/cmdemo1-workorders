@@ -21,6 +21,7 @@ internal static class TestToPageMapCoverage
         problems.AddRange(EmptyOrBlankEntries(map));
         problems.AddRange(MissingRazorFiles(map, checkout));
         problems.AddRange(ComponentEntryProblems(map));
+        problems.AddRange(ComponentHostUsageMismatches(map, checkout));
         problems.AddRange(UnmappedUiRazor(map, checkout));
         return problems;
     }
@@ -114,6 +115,35 @@ internal static class TestToPageMapCoverage
             {
                 yield return
                     $"A components entry in {TestToPageMap.RelativePath} needs a path and at least one host page.";
+            }
+        }
+    }
+
+
+    private static IEnumerable<string> ComponentHostUsageMismatches(
+        TestToPageMap map,
+        RepositoryCheckout checkout)
+    {
+        var scanned = RazorComponentHostScanner.Scan(checkout);
+        var mapped = map.Components.ToDictionary(
+            entry => TestToPageMap.CanonicalRazorPath(entry.Path),
+            entry => entry.Pages.Select(TestToPageMap.CanonicalRazorPath)
+                .OrderBy(static path => path, StringComparer.Ordinal)
+                .ToArray(),
+            StringComparer.OrdinalIgnoreCase);
+        foreach (var (component, hosts) in scanned)
+        {
+            if (!mapped.TryGetValue(component, out var listed))
+            {
+                yield return
+                    $"{component} is used as a shared component but has no components[] entry in {TestToPageMap.RelativePath}.";
+                continue;
+            }
+
+            if (!listed.SequenceEqual(hosts, StringComparer.OrdinalIgnoreCase))
+            {
+                yield return
+                    $"{component} components[] hosts [{string.Join(", ", listed)}] do not match scanned usage hosts [{string.Join(", ", hosts)}].";
             }
         }
     }
