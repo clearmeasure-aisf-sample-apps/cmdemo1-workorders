@@ -159,6 +159,27 @@ public class IndexPageTests
     }
 
     [Test]
+    public async Task ShouldExposeRecentActivityLinkAccessibleNameWithTitle()
+    {
+        var order = new WorkOrder
+        {
+            Number = "ABC1234", Title = "Fix the organ", Status = WorkOrderStatus.Complete,
+            CreatedDate = new DateTime(2026, 10, 1, 12, 0, 0), CompletedDate = new DateTime(2026, 10, 14, 3, 0, 0)
+        };
+        var bus = new StubBus { RecentWorkOrders = [order] };
+        await using var ctx = CreateContext(bus, User(true));
+
+        var component = ctx.Render<IndexPage>();
+
+        var link = component.Find(TestId(IndexPage.Elements.RecentActivityLink, "ABC1234"));
+        var linkAriaLabel = link.GetAttribute("aria-label");
+        linkAriaLabel.ShouldNotBeNull();
+        linkAriaLabel.ShouldStartWith("WO-ABC1234");
+        linkAriaLabel.ShouldContain("Fix the organ");
+        linkAriaLabel.ShouldBe("WO-ABC1234: Fix the organ");
+    }
+
+    [Test]
     public async Task ShouldShowEmptyRecentActivity()
     {
         await using var ctx = CreateContext(new StubBus(), User(true));

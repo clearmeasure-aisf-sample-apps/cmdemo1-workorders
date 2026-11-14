@@ -57,7 +57,8 @@
                             {
                                 <li class="activity-item" data-testid="@(nameof(Elements.RecentActivityItem) + order.Number)">
                                     <a class="activity-number" data-testid="@(nameof(Elements.RecentActivityLink) + order.Number)"
-                                       href="/workorder/manage/@order.Number?mode=Edit">WO-@order.Number</a>
+                                       href="/workorder/manage/@order.Number?mode=Edit"
+                                       aria-label="WO-@order.Number: @order.Title">WO-@order.Number</a>
                                     <span class="activity-title">@order.Title</span>
                                     <span class="activity-meta">@ActivityText(order)</span>
                                 </li>
