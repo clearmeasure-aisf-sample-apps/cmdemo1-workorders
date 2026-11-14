@@ -27,6 +27,22 @@ public class SearchSavedViewsMenuTests
     }
 
     [Test]
+    public async Task ShouldNameTheViewInTheDeleteTooltip_WhenAUserViewIsListed()
+    {
+        var bus = new StubBus();
+        bus.SavedViews.Add(new SavedSearchView { Name = "My open orders", Query = "OpenOnly=true" });
+        await using var ctx = ComponentContextBuilder.WithStubBuses(bus);
+
+        var menu = ctx.Render<SearchSavedViewsMenu>(parameters => parameters
+            .Add(p => p.CurrentUserName, "ada")
+            .Add(p => p.CurrentQuery, string.Empty));
+
+        var deleteButton = menu.Find($"[data-testid='{WorkOrderSearch.Elements.UserSavedViewDeleteButton}My open orders']");
+        deleteButton.GetAttribute("title").ShouldBe("Delete saved view My open orders");
+        deleteButton.GetAttribute("aria-label").ShouldBe("Delete saved view My open orders");
+    }
+
+    [Test]
     public async Task ShouldSaveTheCurrentQueryUnderTheTypedName_WhenSaved()
     {
         var bus = new StubBus();
