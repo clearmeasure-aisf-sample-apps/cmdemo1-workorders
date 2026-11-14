@@ -38,8 +38,8 @@
                                 @if (_pendingRemoveId == attachment.Id)
                                 {
                                     <span>Remove @attachment.FileName?</span>
-                                    <button type="button" class="btn-app btn-app--danger" data-testid="@WorkOrderManage.Elements.AttachmentRemoveConfirm" @onclick="() => ConfirmRemoveAsync(attachment)">Confirm</button>
-                                    <button type="button" class="btn-app btn-app--secondary" data-testid="@WorkOrderManage.Elements.AttachmentRemoveCancel" @onclick="CancelRemove">Cancel</button>
+                                    <button type="button" class="btn-app btn-app--danger" data-testid="@WorkOrderManage.Elements.AttachmentRemoveConfirm" aria-label="@($"Confirm remove attachment {attachment.FileName}")" @onclick="() => ConfirmRemoveAsync(attachment)">Confirm</button>
+                                    <button type="button" class="btn-app btn-app--secondary" data-testid="@WorkOrderManage.Elements.AttachmentRemoveCancel" aria-label="@($"Cancel remove attachment {attachment.FileName}")" @onclick="CancelRemove">Cancel</button>
                                 }
                                 else
                                 {
