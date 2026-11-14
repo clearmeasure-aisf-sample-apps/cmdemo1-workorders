@@ -14,6 +14,7 @@
             }
         </select>
         <button type="button" class="bulk-button" data-testid="@Elements.BulkAssignButton"
+                aria-label="Assign selected work orders"
                 disabled="@string.IsNullOrEmpty(_assignee)" @onclick="AssignAsync">Assign</button>
     </span>
 
