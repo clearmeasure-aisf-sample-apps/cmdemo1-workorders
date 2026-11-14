@@ -1,3 +1,5 @@
+using ClearMeasure.Bootcamp.UI.Shared;
+
 namespace ClearMeasure.Bootcamp.AcceptanceTests.App;
 
 /// <summary>The navy sidebar stretches to the bottom of a tall page in both themes.</summary>
@@ -17,10 +19,10 @@ public class SidebarHeightTests : AppAcceptanceTestBase
         await Page.EvaluateAsync(
             "() => { const host = document.querySelector('.content-wrapper'); const spacer = document.createElement('div'); spacer.style.height = '2500px'; host.appendChild(spacer); }");
 
-        await Page.EvaluateAsync("() => document.documentElement.setAttribute('data-theme', 'light')");
+        await SetThemeAsync("light");
         await AssertRailReachesPage(2500);
 
-        await Page.EvaluateAsync("() => document.documentElement.setAttribute('data-theme', 'dark')");
+        await SetThemeAsync("dark");
         await Page.WaitForFunctionAsync(
             """
             () => {
@@ -34,6 +36,18 @@ public class SidebarHeightTests : AppAcceptanceTestBase
             .EvaluateAsync<string>("e => getComputedStyle(e).backgroundImage");
         background.ShouldContain("rgb(7, 12, 22)");
         background.ShouldContain("rgb(11, 18, 32)");
+    }
+
+    private async Task SetThemeAsync(string theme)
+    {
+        var current = await Page.EvaluateAsync<string>("() => document.documentElement.getAttribute('data-theme')");
+        if (current == theme)
+        {
+            return;
+        }
+
+        await Click(nameof(MainLayout.Elements.DarkModeToggle));
+        await Page.WaitForFunctionAsync("t => document.documentElement.getAttribute('data-theme') === t", theme);
     }
 
     private async Task AssertRailReachesPage(double minimum)
