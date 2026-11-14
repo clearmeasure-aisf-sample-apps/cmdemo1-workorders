@@ -38,7 +38,7 @@
                         var statusName = WorkOrderStatus.FromKey(statusKey).FriendlyName;
                         <div class="bar-item">
                             <div class="bar-label">@statusName</div>
-                            <div class="bar-container">
+                            <div class="bar-container" aria-hidden="true">
                                 <div class="bar-fill" style="width: @(percentage)%"></div>
                             </div>
                             <div class="bar-value">@count</div>
@@ -65,7 +65,7 @@
                         var percentage = maxPriorityCount > 0 ? (count * 100) / maxPriorityCount : 0;
                         <div class="bar-item">
                             <div class="bar-label">@label</div>
-                            <div class="bar-container">
+                            <div class="bar-container" aria-hidden="true">
                                 <div class="bar-fill" style="width: @(percentage)%"></div>
                             </div>
                             <div class="bar-value">@count</div>
@@ -97,7 +97,7 @@
                             var percentage = maxBuildingCount > 0 ? (building.Value * 100) / maxBuildingCount : 0;
                             <div class="bar-item">
                                 <div class="bar-label" title="@building.Key">@building.Key</div>
-                                <div class="bar-container">
+                                <div class="bar-container" aria-hidden="true">
                                     <div class="bar-fill" style="width: @(percentage)%"></div>
                                 </div>
                                 <div class="bar-value">@building.Value</div>
