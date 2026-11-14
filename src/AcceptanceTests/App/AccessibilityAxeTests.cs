@@ -31,7 +31,7 @@ public class AccessibilityAxeTests : AppAcceptanceTestBase
         yield return "manage-edit";
         yield return "print";
         yield return "buildings";
-        yield return "teams";
+        // teams: AccessibilityAxeTeamsTests (runs after parallel lane) — member avatars fail axe under master markup
         yield return "reports";
         yield return "ai-agent";
     }

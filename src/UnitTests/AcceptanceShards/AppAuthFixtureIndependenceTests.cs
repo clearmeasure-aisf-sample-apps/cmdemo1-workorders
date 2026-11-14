@@ -18,6 +18,14 @@ public class AppAuthFixtureIndependenceTests
             .Where(path => path.EndsWith("Tests.cs", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// Parallel App/Auth fixtures only — <c>AccessibilityAxeTeamsTests</c> is SerialLane by design
+    /// (teams axe after peer TearDowns; master TeamCards markup).
+    /// </summary>
+    public static IEnumerable<string> ParallelAppAndAuthFixturePaths() =>
+        AppAndAuthFixturePaths()
+            .Where(path => !path.EndsWith("AccessibilityAxeTeamsTests.cs", StringComparison.Ordinal));
+
     [Test]
     public void AcceptanceApiTestBase_WhenRead_SeedsThroughObjectMother()
     {
@@ -39,7 +47,7 @@ public class AppAuthFixtureIndependenceTests
         text.ShouldNotContain("SaveChangesAsync");
     }
 
-    [TestCaseSource(nameof(AppAndAuthFixturePaths))]
+    [TestCaseSource(nameof(ParallelAppAndAuthFixturePaths))]
     public void AppOrAuthFixture_WhenRead_IsParallelScopeAll(string path)
     {
         var text = RepositoryCheckout.Current.ReadText(path);
@@ -49,5 +57,18 @@ public class AppAuthFixtureIndependenceTests
         (inheritsApiBase || declaresAll).ShouldBeTrue(path);
         text.ShouldNotContain("NonParallelizable");
         text.ShouldNotContain("SerialLane");
+    }
+
+    [Test]
+    public void AxeTeamsFixture_WhenRead_IsSerialLaneWithoutDataContext()
+    {
+        var text = RepositoryCheckout.Current.ReadText(
+            "src/AcceptanceTests/App/AccessibilityAxeTeamsTests.cs");
+        text.ShouldContain("NonParallelizable");
+        text.ShouldContain("Category(\"SerialLane\")");
+        text.ShouldContain("AppAcceptanceTestBase");
+        text.ShouldNotContain("NewDbContext");
+        text.ShouldNotContain("AcceptanceTeams");
+        text.ShouldNotContain("ExecuteDelete");
     }
 }

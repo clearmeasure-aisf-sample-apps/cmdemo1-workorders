@@ -8,11 +8,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.Api;
 /// Proves test-support is on for the local acceptance host (pool-slot shape) and 404 on non-pool remotes.
 /// </summary>
 [TestFixture]
-[Parallelizable(ParallelScope.All)]
-public class TestSupportApiAcceptanceTests : AcceptanceTestBase
+public class TestSupportApiAcceptanceTests : ApiAcceptanceTestBase
 {
-    protected override bool RequiresBrowser => false;
-
     [Test]
     public async Task Should_CreateEmployee_When_LocalHostEnablesTestSupport()
     {
