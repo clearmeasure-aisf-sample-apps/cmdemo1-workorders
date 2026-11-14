@@ -164,16 +164,4 @@ public class AppShellTests : AppAcceptanceTestBase
 
         await SetThemeAsync("light");
     }
-
-    private async Task SetThemeAsync(string theme)
-    {
-        var current = await Page.EvaluateAsync<string>("() => document.documentElement.getAttribute('data-theme')");
-        if (current == theme)
-        {
-            return;
-        }
-
-        await Click(nameof(MainLayout.Elements.DarkModeToggle));
-        await Page.WaitForFunctionAsync("t => document.documentElement.getAttribute('data-theme') === t", theme);
-    }
 }

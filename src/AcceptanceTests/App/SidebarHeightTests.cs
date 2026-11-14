@@ -17,10 +17,10 @@ public class SidebarHeightTests : AppAcceptanceTestBase
         await Page.EvaluateAsync(
             "() => { const host = document.querySelector('.content-wrapper'); const spacer = document.createElement('div'); spacer.style.height = '2500px'; host.appendChild(spacer); }");
 
-        await Page.EvaluateAsync("() => document.documentElement.setAttribute('data-theme', 'light')");
+        await SetThemeAsync("light");
         await AssertRailReachesPage(2500);
 
-        await Page.EvaluateAsync("() => document.documentElement.setAttribute('data-theme', 'dark')");
+        await SetThemeAsync("dark");
         await Page.WaitForFunctionAsync(
             """
             () => {
