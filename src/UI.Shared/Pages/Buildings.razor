@@ -54,18 +54,21 @@
                                         }
                                         <a href="@($"workorder/search?{buildingQuery}&{roomQuery}&OpenOnly=true")"
                                            class="count-link"
+                                           aria-label="@($"{room.OpenCount} Open in {buildingLabel}, {roomLabel}")"
                                            data-testid="@($"room-open-link-{buildingLabel}-{roomLabel}")">
                                             <span class="count-value">@room.OpenCount</span>
                                             <span class="count-label">Open</span>
                                         </a>
                                         <a href="@($"workorder/search?{buildingQuery}&{roomQuery}&OverdueOnly=true")"
                                            class="count-link"
+                                           aria-label="@($"{room.OverdueCount} Overdue in {buildingLabel}, {roomLabel}")"
                                            data-testid="@($"room-overdue-link-{buildingLabel}-{roomLabel}")">
                                             <span class="count-value">@room.OverdueCount</span>
                                             <span class="count-label">Overdue</span>
                                         </a>
                                         <a href="@($"workorder/search?{buildingQuery}&{roomQuery}&Status=Complete&CompletedWithinDays=30")"
                                            class="count-link"
+                                           aria-label="@($"{room.CompletedLast30Days} Completed 30d in {buildingLabel}, {roomLabel}")"
                                            data-testid="@($"room-completed-link-{buildingLabel}-{roomLabel}")">
                                             <span class="count-value">@room.CompletedLast30Days</span>
                                             <span class="count-label">Completed 30d</span>
