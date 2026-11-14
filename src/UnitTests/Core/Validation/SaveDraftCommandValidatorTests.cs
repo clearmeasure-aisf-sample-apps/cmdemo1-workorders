@@ -37,7 +37,7 @@ public class SaveDraftCommandValidatorTests
         var result = _validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Title)
-            .WithErrorMessage("Title cannot exceed 300 characters.");
+            .WithErrorMessage("Title cannot exceed 600 characters.");
     }
 
     [Test]
