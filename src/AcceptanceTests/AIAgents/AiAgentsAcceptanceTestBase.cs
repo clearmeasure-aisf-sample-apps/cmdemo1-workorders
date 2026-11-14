@@ -8,12 +8,12 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.AIAgents;
 
 /// <summary>
 /// AI Agents acceptance base: API-backed seeding keyed by <see cref="AcceptanceTestBase.TestTag"/>.
-/// Pool slots use the stub model (item 22); tdd keeps the real model. Do not point slots at the real model.
+/// Pool slots (<c>TestSupport</c> on) always use <c>StubChatClient</c>; tdd keeps the real model.
 /// </summary>
 public abstract class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase
 {
     /// <summary>
-    /// On pool slots the server runs <c>StubChatClient</c>; skip only when a non-pool host has no real model.
+    /// Pool slots force the stub via TestSupport; skip only when a non-pool host has no real model.
     /// </summary>
     protected static async Task SkipUnlessAiAgentChatReadyAsync()
     {

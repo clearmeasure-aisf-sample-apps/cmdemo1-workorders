@@ -8,7 +8,8 @@ public class ChatClientConfig
 
     /// <summary>
     /// When true, <see cref="ChatClientFactory"/> returns <see cref="StubChatClient"/> instead of Azure OpenAI.
-    /// Set only on pool-slot hosts (<c>AI_UseStubChatClient</c>); leave false on tdd (real model), uat, and prod.
+    /// True when <c>AI_UseStubChatClient</c> is set or when <c>TestSupport:Enabled</c> (pool slots).
+    /// False on tdd (real model), uat, and prod.
     /// </summary>
     public bool UseStubChatClient { get; init; }
 }
