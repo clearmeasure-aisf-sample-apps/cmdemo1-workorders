@@ -143,11 +143,17 @@ When enabled, screenshots are written to the working directory as `<TestClass>-<
 
 ### Playwright Traces
 
-Playwright browser traces are recorded on test failure and written to the NUnit work directory under `playwright-traces/`. Use Playwright Inspector to view:
+Playwright browser traces are recorded for each browser test and written to the NUnit work directory under `playwright-traces/`. Use Playwright Inspector to view:
 
 ```bash
 npx playwright show-trace playwright-traces/<trace>.zip
 ```
+
+PR environment runs scrub secret headers and upload selected traces/videos to private Azure storage (not GitHub artifacts). See [pr-acceptance-artifacts.md](pr-acceptance-artifacts.md) (#1671).
+
+### Playwright Videos
+
+Set `ACCEPTANCE_RECORD_VIDEO=true` to record WebM files under `playwright-videos/`. Failed tests and changed-UI fixtures are linked from a sticky PR comment after the **PR environment** check.
 
 ## Database Engine Resolution
 
