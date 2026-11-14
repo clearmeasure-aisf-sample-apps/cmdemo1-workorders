@@ -12,8 +12,7 @@
 @if (DueDateUrgencyCalculator.BadgeText(Row.Urgency, Row.WorkOrder.DueDate) is { } badgeText)
 {
     <span class="urgency-badge @(string.IsNullOrEmpty(Row.DueDateCssClass) ? "on-track" : Row.DueDateCssClass)"
-          data-testid="@(WorkOrderSearch.Elements.UrgencyBadge + Row.Number)"
-          aria-label="@badgeText">@badgeText</span>
+          data-testid="@(WorkOrderSearch.Elements.UrgencyBadge + Row.Number)">@badgeText</span>
 }
 
 @code {
