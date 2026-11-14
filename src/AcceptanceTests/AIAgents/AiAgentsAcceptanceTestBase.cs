@@ -18,19 +18,25 @@ public abstract class AiAgentsAcceptanceTestBase : AcceptanceApiTestBase
     /// </summary>
     protected static async Task SkipUnlessAiAgentChatReadyAsync()
     {
-        if (await IsPoolSlotHostAsync())
+        if (!await IsPoolSlotHostAsync())
         {
-            if (!await IsStubChatClientActiveAsync())
-            {
-                Assert.Ignore(
-                    "Pool-slot host does not report UseStubChatClient; " +
-                    "refusing to call the real model.");
-            }
-
+            await SkipIfNoChatClient();
             return;
         }
 
-        await SkipIfNoChatClient();
+        await IgnoreUnlessStubChatClientActiveAsync();
+    }
+
+    private static async Task IgnoreUnlessStubChatClientActiveAsync()
+    {
+        if (await IsStubChatClientActiveAsync())
+        {
+            return;
+        }
+
+        Assert.Ignore(
+            "Pool-slot host does not report UseStubChatClient; " +
+            "refusing to call the real model.");
     }
 
     /// <summary>True when the host exposes test-support (local acceptance host or remote pool slot).</summary>
