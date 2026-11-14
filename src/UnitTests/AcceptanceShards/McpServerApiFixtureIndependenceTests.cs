@@ -70,6 +70,22 @@ public class McpServerApiFixtureIndependenceTests
     }
 
     [Test]
+    public void McpListWorkOrders_WhenRead_ScopesParityToSeededNumbers()
+    {
+        var tests = RepositoryCheckout.Current.ReadText(
+            "src/AcceptanceTests/McpServer/McpListWorkOrdersAcceptanceTests.cs");
+        var seed = RepositoryCheckout.Current.ReadText(
+            "src/AcceptanceTests/McpServer/McpListWorkOrderSeed.cs");
+        tests.ShouldNotContain("TestTag[..4]");
+        tests.ShouldContain("WaitForSeededPortalFilterAsync");
+        tests.ShouldContain("AllSeeded");
+        tests.ShouldContain("NewNumber");
+        seed.ShouldContain("CreatorOwned");
+        seed.ShouldContain("AssigneeOwned");
+        seed.ShouldContain("PeerAssigneeInProgress");
+    }
+
+    [Test]
     public void SerialLaneJson_WhenRead_OmitsMcpServerFixtures()
     {
         var text = RepositoryCheckout.Current.ReadText(
