@@ -85,6 +85,60 @@ public class NotificationsPanelTests
     }
 
     [Test]
+    public void ShouldNotRenderListRoles_WhenAllSectionsAreEmpty()
+    {
+        using var ctx = new BunitContext();
+        SetupJsInterop(ctx);
+
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+
+        component.FindAll("[role=list]").Count.ShouldBe(0);
+        component.FindAll("[role=listitem]").Count.ShouldBe(0);
+        component.Markup.ShouldContain("No overdue or due-today work orders");
+        component.Markup.ShouldContain("No newly assigned work orders");
+        component.Markup.ShouldContain("No work orders with status changes");
+    }
+
+    [Test]
+    public void ShouldAnnounceCardsAsLists_WhenSectionsHaveItems()
+    {
+        using var ctx = new BunitContext();
+        SetupJsInterop(ctx);
+        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
+            [BuildAssignedOrder("WO-001"), BuildAssignedOrder("WO-002")],
+            [BuildAssignedOrder("WO-003")],
+            [BuildAssignedOrder("WO-004"), BuildAssignedOrder("WO-005"), BuildAssignedOrder("WO-006")]);
+        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+            .Add(c => c.IsOpen, true)
+            .Add(c => c.Data, data));
+        var lists = component.FindAll(".cards-container[role=list]");
+        lists.Count.ShouldBe(3);
+        AssertListWrapsCards(lists[0], 2);
+        AssertListWrapsCards(lists[1], 1);
+        AssertListWrapsCards(lists[2], 3);
+    }
+
+    private static WorkOrder BuildAssignedOrder(string number) => new()
+    {
+        Id = Guid.NewGuid(),
+        Number = number,
+        Title = number,
+        Creator = new Employee("test_user", "Test", "User", "test@example.com"),
+        Assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com"),
+        Status = WorkOrderStatus.Assigned,
+        DueDate = DateOnly.FromDateTime(DateTime.Today)
+    };
+
+    private static void AssertListWrapsCards(AngleSharp.Dom.IElement list, int expectedCount)
+    {
+        list.QuerySelectorAll("[role=listitem]").Length.ShouldBe(expectedCount);
+        list.QuerySelectorAll("[role=listitem] > a.notification-card").Length.ShouldBe(expectedCount);
+        list.QuerySelectorAll("a.notification-card[role]").Length.ShouldBe(0);
+    }
+
+    [Test]
     public void ShouldRenderWorkOrderCards_WhenOverdueAndDueTodayHasItems()
     {
         using var ctx = new BunitContext();
