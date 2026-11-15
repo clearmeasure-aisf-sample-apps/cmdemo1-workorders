@@ -350,7 +350,8 @@ public class WorkOrderManageSubmitTests
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(user));
-        ctx.Services.AddSingleton<IUserSession>(session ?? new StubUserSession(user));
+        IUserSession userSession = session ?? new StubUserSession(user);
+        ctx.Services.AddSingleton(userSession);
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
         ctx.Services.AddSpeechSynthesis();
         ctx.Services.AddSpeechRecognition();

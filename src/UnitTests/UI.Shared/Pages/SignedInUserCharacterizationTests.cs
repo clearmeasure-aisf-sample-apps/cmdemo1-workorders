@@ -273,12 +273,8 @@ public class SignedInUserCharacterizationTests
         }
     }
 
-    private sealed class CapturingChatBus : Bus
+    private sealed class CapturingChatBus() : Bus(null!, TimeProvider.System)
     {
-        public CapturingChatBus() : base(null!, TimeProvider.System)
-        {
-        }
-
         public string? LastUserName { get; private set; }
 
         public override Task Publish(INotification notification) => Task.CompletedTask;
