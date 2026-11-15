@@ -22,6 +22,26 @@ public class WorkOrderSpecificationsTests
         SampleOrders().Where(WorkOrderSpecifications.IsOpen).Select(o => o.Number).ShouldBe(["1", "2", "3"]);
     }
 
+    [TestCase("Draft", true)]
+    [TestCase("Assigned", true)]
+    [TestCase("InProgress", true)]
+    [TestCase("Complete", false)]
+    [TestCase("Cancelled", false)]
+    public void ShouldMatchOpenExpression_WhenStatusCheckedDirectly(string statusKey, bool expected)
+    {
+        var status = WorkOrderStatus.FromKey(statusKey);
+
+        WorkOrderSpecifications.IsOpen(status).ShouldBe(expected);
+        WorkOrderSpecifications.Open.Compile()(new WorkOrder { Status = status }).ShouldBe(expected);
+    }
+
+    [Test]
+    public void ShouldTreatNoneAsNotOpen_WhenStatusCheckedDirectly()
+    {
+        WorkOrderSpecifications.IsOpen(WorkOrderStatus.None).ShouldBeFalse();
+        WorkOrderSpecifications.Open.Compile()(new WorkOrder { Status = WorkOrderStatus.None }).ShouldBeFalse();
+    }
+
     [Test]
     public void ShouldMatchPastDueOpenOrders_WhenOverdueSpecificationApplied()
     {

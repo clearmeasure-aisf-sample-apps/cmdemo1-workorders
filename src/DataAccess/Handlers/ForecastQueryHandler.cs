@@ -22,7 +22,7 @@ public class ForecastQueryHandler(TimeProvider timeProvider) : IRequestHandler<F
 
         public WeatherForecastData(TimeProvider timeProvider)
         {
-            var now = timeProvider.GetUtcNow().DateTime;
+            var now = timeProvider.GetLocalNow().DateTime;
             var forecasts = new List<WeatherForecast>();
             for (var i = 1; i <= 5; i++)
             {

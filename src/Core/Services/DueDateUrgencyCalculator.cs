@@ -28,7 +28,7 @@ public static class DueDateUrgencyCalculator
         ArgumentNullException.ThrowIfNull(status);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        if (dueDate is not { } due || !WorkOrderSpecifications.IsOpen(new WorkOrder { Status = status }))
+        if (dueDate is not { } due || !WorkOrderSpecifications.IsOpen(status))
         {
             return DueDateUrgency.None;
         }

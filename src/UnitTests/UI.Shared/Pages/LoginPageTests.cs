@@ -354,7 +354,7 @@ public class LoginPageTests
             .First(d => d.QuerySelector("small.text-muted")?.TextContent
                 .Contains("Kalahari Church") == true);
         footerDiv.QuerySelector("small.text-muted")!.TextContent
-            .ShouldBe("Kalahari Church · " + TimeProvider.System.GetUtcNow().Year);
+            .ShouldBe("Kalahari Church · " + TimeProvider.System.GetLocalNow().Year);
     }
 
     [Test]

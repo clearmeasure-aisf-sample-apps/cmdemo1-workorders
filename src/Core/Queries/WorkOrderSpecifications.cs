@@ -12,10 +12,14 @@ public static class WorkOrderSpecifications
     /// <summary>Open work orders: Draft, Assigned or In Progress.</summary>
     public static Expression<Func<WorkOrder, bool>> Open { get; } = CreateOpen();
 
-    private static readonly Func<WorkOrder, bool> OpenCompiled = Open.Compile();
-
     /// <summary>True when <paramref name="workOrder"/> satisfies <see cref="Open"/>.</summary>
-    public static bool IsOpen(WorkOrder workOrder) => OpenCompiled(workOrder);
+    public static bool IsOpen(WorkOrder workOrder) => IsOpen(workOrder.Status);
+
+    /// <summary>True when <paramref name="status"/> is Draft, Assigned or In Progress (same as <see cref="Open"/>).</summary>
+    public static bool IsOpen(WorkOrderStatus status) =>
+        status == WorkOrderStatus.Draft
+        || status == WorkOrderStatus.Assigned
+        || status == WorkOrderStatus.InProgress;
 
     /// <summary>Open work orders whose due date is before <paramref name="today"/>.</summary>
     public static Expression<Func<WorkOrder, bool>> Overdue(DateOnly today) =>

@@ -17,7 +17,7 @@ public class ForecastQueryHandlerTests
 
         forecasts.ShouldNotBeNull();
         forecasts.Length.ShouldBe(5);
-        var today = clock.GetUtcNow().DateTime.Date;
+        var today = clock.GetLocalNow().Date;
         foreach (var forecast in forecasts)
         {
             forecast.Date.ShouldBeGreaterThan(today);
