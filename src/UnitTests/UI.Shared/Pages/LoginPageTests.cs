@@ -568,6 +568,20 @@ public class LoginPageTests
     }
 
     [Test]
+    public async Task Should_AnnounceWelcomeMessage_WithRoleStatus()
+    {
+        await using var ctx = CreateContext();
+
+        var component = ctx.Render<Login>();
+
+        var employeeSelect = component.Find($"[data-testid='{Login.Elements.User}']");
+        await employeeSelect.ChangeAsync(new() { Value = "hsimpson" });
+
+        var welcomeMessage = component.Find("small.text-success");
+        welcomeMessage.GetAttribute("role").ShouldBe("status");
+    }
+
+    [Test]
     public async Task Should_AnnounceErrorMessage_WithRoleAlert()
     {
         await using var ctx = CreateContext(new FailingEmployeeStubBus());
