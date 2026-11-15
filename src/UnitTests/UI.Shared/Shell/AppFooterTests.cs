@@ -182,6 +182,16 @@ public class AppFooterTests
     }
 
     [Test]
+    public async Task ShouldRenderUnknown_ForGitShaAndEnvironment_WhenRemotingCallFails()
+    {
+        await using var ctx = ShellLayoutContext.Create(bus: ShellLayoutContext.BusThatFailsDeploymentWithRemotingError());
+        var layout = RenderLayout(ctx);
+
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.GitSha)}']").TextContent.Trim().ShouldBe("unknown");
+        layout.Find($"[data-testid='{nameof(MainLayout.Elements.EnvironmentName)}']").TextContent.Trim().ShouldBe("unknown");
+    }
+
+    [Test]
     public async Task ShouldRenderUnknown_ForGitSha_WhenIdentityIsUnreported()
     {
         var bus = ShellLayoutContext.BusWithDeployment(DeploymentIdentity.Unreported);

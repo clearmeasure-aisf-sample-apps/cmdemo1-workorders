@@ -53,12 +53,27 @@ internal static class ShellLayoutContext
         return new FailingDeploymentBus();
     }
 
+    internal static StubBus BusThatFailsDeploymentWithRemotingError()
+    {
+        return new RemotingFailureDeploymentBus();
+    }
+
     private sealed class FailingDeploymentBus : StubBus
     {
         public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
         {
             if (request is DeploymentIdentityQuery)
                 throw new HttpRequestException("boom");
+            return base.Send(request);
+        }
+    }
+
+    private sealed class RemotingFailureDeploymentBus : StubBus
+    {
+        public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        {
+            if (request is DeploymentIdentityQuery)
+                throw new InvalidOperationException("Remoting call failed (500)");
             return base.Send(request);
         }
     }

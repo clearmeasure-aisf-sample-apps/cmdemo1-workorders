@@ -32,7 +32,7 @@ public partial class AppFooter
         {
             _deployment = await Bus.Send(new DeploymentIdentityQuery());
         }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException)
         {
             _deployment = DeploymentIdentity.Unreported;
         }
