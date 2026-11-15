@@ -40,26 +40,71 @@ public class PrEnvironmentWorkflowTests
     }
 
     [Test]
-    public void Workflow_WhenRead_SucceedsDocsOnlyAndLeasesViaSystemScripts()
+    public void Workflow_WhenPoolNotLive_SkipsAllAzureAndOctopusMutations()
+    {
+        var text = WorkflowText();
+        text.ShouldContain("pool_live");
+        text.ShouldContain("name: Shadow mode");
+        text.ShouldContain("Succeed without live Azure or Octopus");
+        text.ShouldContain(
+            "if: needs.prepare.outputs.should_run == 'true' && needs.prepare.outputs.pool_live == 'true'");
+        text.ShouldContain("POOL_LEASE_STORAGE_ACCOUNT");
+
+        var leaseJobStart = text.IndexOf("lease-and-deploy:", StringComparison.Ordinal);
+        leaseJobStart.ShouldBeGreaterThan(0);
+        var afterLease = text[leaseJobStart..];
+        var nextJob = afterLease.IndexOf("\n  parallel-shards:", StringComparison.Ordinal);
+        nextJob.ShouldBeGreaterThan(0);
+        var leaseJob = afterLease[..nextJob];
+
+        leaseJob.ShouldContain("environment: release");
+        leaseJob.ShouldContain("pool_live == 'true'");
+        leaseJob.ShouldContain("OctopusDeploy/login@v2");
+        leaseJob.ShouldContain("azure/login@v3");
+        leaseJob.ShouldContain("az acr import");
+        leaseJob.ShouldContain("push-package-action");
+        leaseJob.ShouldContain("create-release-action");
+        leaseJob.ShouldContain("deploy-release-action");
+
+        var shadowStart = text.IndexOf("name: Shadow mode", StringComparison.Ordinal);
+        shadowStart.ShouldBeGreaterThan(0);
+        var shadowSection = text[Math.Max(0, shadowStart - 200)..Math.Min(text.Length, shadowStart + 800)];
+        shadowSection.ShouldNotContain("OctopusDeploy/login");
+        shadowSection.ShouldNotContain("azure/login");
+        shadowSection.ShouldNotContain("az acr import");
+    }
+
+    [Test]
+    public void Workflow_WhenPrivileged_ChecksOutTrustedDefaultBranchScripts()
+    {
+        var text = WorkflowText();
+        text.ShouldContain("Checkout trusted scripts (default branch)");
+        text.ShouldContain("ref: ${{ github.event.repository.default_branch }}");
+        text.ShouldContain("path: _trusted");
+        text.ShouldContain("${TRUSTED}/.github/scripts/");
+        text.ShouldContain("require-artifact churchbulletin-nuget-packages-pr");
+        text.ShouldContain("dispatch-if-missing");
+    }
+
+    [Test]
+    public void Workflow_WhenReleaseSlot_AlwaysReleasesLease()
+    {
+        var text = WorkflowText();
+        text.ShouldContain("Release pool lease");
+        text.ShouldContain("if: always() && needs.lease-and-deploy.outputs.slot != ''");
+        text.ShouldContain("if: always() && needs.prepare.outputs.pool_live == 'true'");
+    }
+
+    [Test]
+    public void Workflow_WhenRead_SucceedsDocsOnlyAndKeepsVideoOffClock()
     {
         var text = WorkflowText();
         text.ShouldContain("Docs-only success");
         text.ShouldContain("detect-code-changes.sh");
-        text.ShouldContain("Acquire-PrEnvironmentLease.ps1");
-        text.ShouldContain("Release-PrEnvironmentLease.ps1");
-        text.ShouldContain("post-pr-slot-wait-comment.sh");
-        text.ShouldContain("cancel-superseded-octopus-tasks.sh");
-        text.ShouldContain("cancel-octopus-server-task.sh");
-        text.ShouldContain("channel: Pull requests");
-        text.ShouldContain("cmdemo1-system");
-    }
-
-    [Test]
-    public void Workflow_WhenRead_KeepsVideoUploadOffTheCheckClock()
-    {
-        var text = WorkflowText();
         text.ShouldContain("#1671");
         text.ShouldContain("off this check's clock");
+        text.ShouldContain("channel: Pull requests");
+        text.ShouldContain("cmdemo1-system");
     }
 
     [Test]
@@ -75,9 +120,9 @@ public class PrEnvironmentWorkflowTests
     public void SupportingScripts_WhenPresent_AreReadable()
     {
         var root = RepositoryCheckout.Current;
-        root.ReadText(".github/scripts/wait-for-workflow-run.sh").ShouldContain("wait-for-workflow-run");
+        root.ReadText(".github/scripts/wait-for-workflow-run.sh").ShouldContain("require-artifact");
         root.ReadText(".github/scripts/parse-pr-package-version.sh").ShouldContain("2.4");
         root.ReadText("scripts/pool/Release-PrEnvironmentLease.ps1").ShouldContain("release");
-        root.ReadText("docs/ops/pr-environment.md").ShouldContain("PR environment");
+        root.ReadText("docs/ops/pr-environment.md").ShouldContain("shadow mode");
     }
 }

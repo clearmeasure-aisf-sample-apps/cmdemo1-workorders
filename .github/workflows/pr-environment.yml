@@ -3,8 +3,11 @@
 # runs 12 parallel shards × 4 workers (48) then the serial lane, reports, and releases.
 # Tests the branch-head SHA on push (same as Build), not the pull_request merge ref.
 # Docs-only PRs succeed without leasing or running the suite.
+# Shadow (vars.POOL_LEASE_STORAGE_ACCOUNT unset / system #652 not applied): succeed without
+# any live Azure or Octopus mutation — DryRun lease alone is not enough.
 # Not required: do not change the default-branch ruleset.
 # Video/trace upload (issue #1671) must not sit on this check's clock — omitted here.
+# Privileged jobs (environment: release + OIDC) run scripts from the default branch only.
 # VERSION-MARKER: the "2.4." prefix in run-name matches MAJOR_VERSION/MINOR_VERSION below.
 name: PR environment
 run-name: "2.4.${{ github.run_number }}-pr • PR environment • ${{ github.head_ref || github.ref_name }}"
@@ -45,7 +48,6 @@ jobs:
           EVENT_BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          ZERO_SHA='0000000000000000000000000000000000000000'
           changed_list="${RUNNER_TEMP:-/tmp}/changed-paths.txt"
 
           fail_open() {
@@ -82,6 +84,7 @@ jobs:
     outputs:
       pr_number: ${{ steps.pr.outputs.pr_number }}
       should_run: ${{ steps.gate.outputs.should_run }}
+      pool_live: ${{ steps.pool.outputs.pool_live }}
       image_tag: ${{ steps.ids.outputs.image_tag }}
     permissions:
       contents: read
@@ -108,6 +111,19 @@ jobs:
           bash .github/scripts/resolve-open-pr.sh \
             --repo "${{ github.repository }}" \
             --head "${{ github.ref_name }}"
+
+      - name: Detect live pool (lease store)
+        id: pool
+        env:
+          POOL_LEASE_STORAGE_ACCOUNT: ${{ vars.POOL_LEASE_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          # Live Azure/Octopus mutations require the lease store (system #652). Empty = shadow no-op.
+          if [ -n "${POOL_LEASE_STORAGE_ACCOUNT:-}" ]; then
+            echo "pool_live=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pool_live=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Gate
         id: gate
@@ -151,16 +167,36 @@ jobs:
           set -euo pipefail
           echo "Docs-only PR #${{ needs.prepare.outputs.pr_number }}: PR environment succeeds without leasing a slot or running the suite." >> "$GITHUB_STEP_SUMMARY"
 
+  shadow:
+    name: Shadow mode
+    needs: [changes, prepare]
+    if: |
+      needs.prepare.outputs.should_run == 'true'
+      && needs.prepare.outputs.pool_live != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Succeed without live Azure or Octopus
+        run: |
+          set -euo pipefail
+          {
+            echo "## PR environment — shadow mode"
+            echo ""
+            echo "\`vars.POOL_LEASE_STORAGE_ACCOUNT\` is unset (lease store / system #652 not applied)."
+            echo "This check succeeds without leasing a slot, touching ACR, or calling Octopus."
+            echo "When the pool is live, the same workflow leases, deploys to \`pool-N\`, and runs 12×4 workers."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   lease-and-deploy:
     name: Lease slot and deploy
     needs: [changes, prepare]
-    if: needs.prepare.outputs.should_run == 'true'
+    # LIVE GATE: never enter this job (OIDC / environment:release) unless the lease store is configured.
+    if: needs.prepare.outputs.should_run == 'true' && needs.prepare.outputs.pool_live == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: release
     permissions:
       contents: read
-      actions: read
+      actions: write
       pull-requests: write
       id-token: write
     outputs:
@@ -174,15 +210,21 @@ jobs:
     env:
       POOL_LEASE_STORAGE_ACCOUNT: ${{ vars.POOL_LEASE_STORAGE_ACCOUNT }}
       POOL_RESOURCE_GROUP: ${{ vars.POOL_RESOURCE_GROUP }}
+      TRUSTED: _trusted
     steps:
-      - name: Checkout workorders
+      # Privileged scripts come from the default branch only (not the pushed PR head).
+      - name: Checkout trusted scripts (default branch)
         uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: _trusted
 
       - name: Checkout pool manager (cmdemo1-system)
         uses: actions/checkout@v6.0.1
         with:
           repository: clearmeasure-aisf-sample-apps/cmdemo1-system
           path: _system
+          ref: master
 
       - name: Sign in to Octopus
         uses: OctopusDeploy/login@v2
@@ -196,7 +238,7 @@ jobs:
           OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
         run: |
           set -euo pipefail
-          bash .github/scripts/cancel-superseded-octopus-tasks.sh \
+          bash "${TRUSTED}/.github/scripts/cancel-superseded-octopus-tasks.sh" \
             --project "${{ vars.SYSTEM_SLUG }}-${{ vars.DEPLOYABLE_NAME }}" \
             --pr "${{ needs.prepare.outputs.pr_number }}"
 
@@ -205,16 +247,17 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $dry = [string]::IsNullOrWhiteSpace($env:POOL_LEASE_STORAGE_ACCOUNT)
-          ./scripts/pool/Acquire-PrEnvironmentLease.ps1 `
+          if ([string]::IsNullOrWhiteSpace($env:POOL_LEASE_STORAGE_ACCOUNT)) {
+            throw "pool_live job entered without POOL_LEASE_STORAGE_ACCOUNT — refusing DryRun under OIDC."
+          }
+          & (Join-Path $env:TRUSTED 'scripts/pool/Acquire-PrEnvironmentLease.ps1') `
             -SystemRoot (Join-Path $PWD '_system') `
             -PrNumber ${{ needs.prepare.outputs.pr_number }} `
             -CommitSha '${{ github.sha }}' `
             -RunId '${{ github.run_id }}' `
             -Repository '${{ github.repository }}' `
             -StorageAccount $env:POOL_LEASE_STORAGE_ACCOUNT `
-            -PreferWarmCount 2 `
-            -DryRun:$dry
+            -PreferWarmCount 2
 
       - name: Post PR comment when slot wait exceeds 5 minutes
         if: steps.lease.outputs.wait_notify == 'true'
@@ -222,20 +265,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          bash .github/scripts/post-pr-slot-wait-comment.sh \
+          bash "${TRUSTED}/.github/scripts/post-pr-slot-wait-comment.sh" \
             --repo "${{ github.repository }}" \
             --pr "${{ needs.prepare.outputs.pr_number }}"
 
-      - name: Wait for Publish image on this SHA
+      - name: Wait for Publish image with packages on this SHA
         id: publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          bash .github/scripts/wait-for-workflow-run.sh \
+          bash "${TRUSTED}/.github/scripts/wait-for-workflow-run.sh" \
             --repo "${{ github.repository }}" \
             --workflow publish-image.yml \
             --sha "${{ github.sha }}" \
+            --ref "${{ github.ref_name }}" \
+            --require-artifact churchbulletin-nuget-packages-pr \
+            --dispatch-if-missing \
             --timeout-seconds 900
 
       - name: Download publish-only packages
@@ -250,7 +296,7 @@ jobs:
         id: version
         run: |
           set -euo pipefail
-          bash .github/scripts/parse-pr-package-version.sh --packages-dir ./packages
+          bash "${TRUSTED}/.github/scripts/parse-pr-package-version.sh" --packages-dir ./packages
 
       - uses: azure/login@v3
         with:
@@ -265,8 +311,6 @@ jobs:
           DST_TAG: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          # update-deployable.ps1 points the container app at <registry>/<slug>/<deployable>:<release>.
-          # Publish image uses pr-<n>-<sha>; also tag as 2.4.N-pr.<n> so the release number matches the image.
           az acr import \
             --name "${{ vars.ACR_NAME }}" \
             --source "$SRC" \
@@ -321,7 +365,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $rg = $env:POOL_RG
           if ([string]::IsNullOrWhiteSpace($rg)) { $rg = 'rg-cmdemo1-nonprod' }
-          ./scripts/pool/Resolve-PrEnvironmentSlotUrl.ps1 `
+          & (Join-Path $env:TRUSTED 'scripts/pool/Resolve-PrEnvironmentSlotUrl.ps1') `
             -Slot '${{ steps.lease.outputs.slot }}' `
             -Slug '${{ vars.SYSTEM_SLUG }}' `
             -ResourceGroup $rg
@@ -481,7 +525,7 @@ jobs:
   report:
     name: Report results
     needs: [prepare, lease-and-deploy, parallel-shards, serial-lane]
-    if: always() && needs.prepare.outputs.should_run == 'true' && needs.lease-and-deploy.result != 'cancelled'
+    if: always() && needs.prepare.outputs.pool_live == 'true' && needs.prepare.outputs.should_run == 'true' && needs.lease-and-deploy.result != 'cancelled'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -528,7 +572,7 @@ jobs:
   release-slot:
     name: Release slot and cancel Octopus on cancel
     needs: [prepare, lease-and-deploy, parallel-shards, serial-lane, report]
-    if: always() && needs.prepare.outputs.should_run == 'true' && needs.lease-and-deploy.result != 'skipped'
+    if: always() && needs.prepare.outputs.pool_live == 'true' && needs.prepare.outputs.should_run == 'true' && needs.lease-and-deploy.result != 'skipped'
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -536,18 +580,23 @@ jobs:
       id-token: write
     env:
       POOL_LEASE_STORAGE_ACCOUNT: ${{ vars.POOL_LEASE_STORAGE_ACCOUNT }}
+      TRUSTED: _trusted
     steps:
-      - name: Checkout workorders
+      - name: Checkout trusted scripts (default branch)
         uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: _trusted
 
       - name: Checkout pool manager (cmdemo1-system)
         uses: actions/checkout@v6.0.1
         with:
           repository: clearmeasure-aisf-sample-apps/cmdemo1-system
           path: _system
+          ref: master
 
       - name: Sign in to Octopus
-        if: needs.lease-and-deploy.outputs.server_task_id != '' && (cancelled() || needs.report.result != 'success')
+        if: always() && needs.lease-and-deploy.outputs.server_task_id != '' && (cancelled() || needs.report.result != 'success')
         continue-on-error: true
         uses: OctopusDeploy/login@v2
         with:
@@ -555,32 +604,33 @@ jobs:
           service_account_id: ${{ vars.OCTOPUS_SERVICE_ACCOUNT_ID }}
 
       - name: Cancel this run's Octopus task when superseded or failed mid-flight
-        if: needs.lease-and-deploy.outputs.server_task_id != '' && (cancelled() || failure())
+        if: always() && needs.lease-and-deploy.outputs.server_task_id != '' && (cancelled() || failure())
         continue-on-error: true
         env:
           OCTOPUS_URL: ${{ vars.OCTOPUS_URL }}
           OCTOPUS_SPACE: ${{ vars.OCTOPUS_SPACE_NAME }}
         run: |
           set -euo pipefail
-          bash .github/scripts/cancel-octopus-server-task.sh \
+          bash "${TRUSTED}/.github/scripts/cancel-octopus-server-task.sh" \
             --task-id "${{ needs.lease-and-deploy.outputs.server_task_id }}"
 
       - name: Release pool lease
-        if: needs.lease-and-deploy.outputs.slot != ''
+        if: always() && needs.lease-and-deploy.outputs.slot != ''
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $dry = [string]::IsNullOrWhiteSpace($env:POOL_LEASE_STORAGE_ACCOUNT) -or '${{ needs.lease-and-deploy.outputs.dry_run }}' -eq 'true'
-          ./scripts/pool/Release-PrEnvironmentLease.ps1 `
+          if ([string]::IsNullOrWhiteSpace($env:POOL_LEASE_STORAGE_ACCOUNT)) {
+            throw "Refusing lease release without POOL_LEASE_STORAGE_ACCOUNT in the live job."
+          }
+          & (Join-Path $env:TRUSTED 'scripts/pool/Release-PrEnvironmentLease.ps1') `
             -SystemRoot (Join-Path $PWD '_system') `
             -Slot '${{ needs.lease-and-deploy.outputs.slot }}' `
             -LeaseId '${{ needs.lease-and-deploy.outputs.lease_id }}' `
-            -StorageAccount $env:POOL_LEASE_STORAGE_ACCOUNT `
-            -DryRun:$dry
+            -StorageAccount $env:POOL_LEASE_STORAGE_ACCOUNT
 
   pr-environment:
     name: PR environment
-    needs: [changes, prepare, docs-only, lease-and-deploy, parallel-shards, serial-lane, report, release-slot]
+    needs: [changes, prepare, docs-only, shadow, lease-and-deploy, parallel-shards, serial-lane, report, release-slot]
     if: always() && !cancelled() && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -589,6 +639,7 @@ jobs:
           set -euo pipefail
           code="${{ needs.changes.outputs.code }}"
           should="${{ needs.prepare.outputs.should_run }}"
+          pool_live="${{ needs.prepare.outputs.pool_live }}"
           pr="${{ needs.prepare.outputs.pr_number }}"
 
           if [ -z "$pr" ]; then
@@ -606,6 +657,15 @@ jobs:
           if [ "$should" != "true" ]; then
             echo "Skipped (should_run=false)."
             exit 0
+          fi
+
+          if [ "$pool_live" != "true" ]; then
+            if [ "${{ needs.shadow.result }}" = "success" ]; then
+              echo "Shadow mode: no live Azure/Octopus; PR environment success."
+              exit 0
+            fi
+            echo "Shadow job did not succeed (${{ needs.shadow.result }})." >&2
+            exit 1
           fi
 
           report="${{ needs.report.result }}"
