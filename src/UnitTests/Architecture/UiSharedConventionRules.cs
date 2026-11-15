@@ -75,10 +75,7 @@ internal static class UiSharedConventionRules
     internal static IReadOnlyList<int> EmptyCatchLineNumbers(string source) =>
         EmptyCatchLineNumbers(ArchitectureRules.Parse(CSharpForCatchScan(source)));
 
-    /// <summary>
-    /// Line numbers of empty <c>catch</c> blocks in already-parsed C# (or a Razor <c>@code</c> wrapper).
-    /// </summary>
-    internal static IReadOnlyList<int> EmptyCatchLineNumbers(CompilationUnitSyntax root)
+    private static IReadOnlyList<int> EmptyCatchLineNumbers(CompilationUnitSyntax root)
     {
         var lines = new List<int>();
         foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
@@ -119,10 +116,7 @@ internal static class UiSharedConventionRules
     internal static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(string source) =>
         CatchExceptionWithoutLogLineNumbers(ArchitectureRules.Parse(CSharpForCatchScan(source)));
 
-    /// <summary>
-    /// Line numbers of silent catch-alls in already-parsed C#.
-    /// </summary>
-    internal static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(CompilationUnitSyntax root)
+    private static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(CompilationUnitSyntax root)
     {
         var lines = new List<int>();
         foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
@@ -142,7 +136,7 @@ internal static class UiSharedConventionRules
     /// C# text to scan for catch rules: plain <c>.cs</c> as-is, or each Razor <c>@code</c> block
     /// wrapped so Roslyn can parse it.
     /// </summary>
-    internal static string CSharpForCatchScan(string source)
+    private static string CSharpForCatchScan(string source)
     {
         if (!source.Contains("@code", StringComparison.Ordinal))
         {
