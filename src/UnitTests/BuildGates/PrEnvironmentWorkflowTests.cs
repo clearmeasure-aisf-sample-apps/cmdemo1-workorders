@@ -76,6 +76,8 @@ public class PrEnvironmentWorkflowTests
             job.Text.ShouldContain("path: _trusted");
             job.Text.ShouldContain("persist-credentials: false");
             job.Text.ShouldNotContain("bash .github/scripts/");
+            job.Step("Checkout pool manager (cmdemo1-system)").ShouldContain("ref: main");
+            job.Step("Checkout pool manager (cmdemo1-system)").ShouldNotContain("ref: master");
         }
     }
 

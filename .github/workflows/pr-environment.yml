@@ -232,7 +232,7 @@ jobs:
         with:
           repository: clearmeasure-aisf-sample-apps/cmdemo1-system
           path: _system
-          ref: master
+          ref: main
           persist-credentials: false
 
       - name: Lease a warm pool slot
@@ -637,7 +637,7 @@ jobs:
         with:
           repository: clearmeasure-aisf-sample-apps/cmdemo1-system
           path: _system
-          ref: master
+          ref: main
           persist-credentials: false
 
       - name: Sign in to Octopus
