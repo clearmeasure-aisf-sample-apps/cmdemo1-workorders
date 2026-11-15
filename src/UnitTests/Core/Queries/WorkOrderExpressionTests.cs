@@ -23,6 +23,22 @@ public class WorkOrderExpressionTests
     }
 
     [Test]
+    public void ShouldCombinePredicates_WhenOrElseApplied()
+    {
+        var today = new DateOnly(2026, 10, 13);
+        var combined = WorkOrderExpression.OrElse(
+            WorkOrderSpecifications.Overdue(today),
+            WorkOrderSpecifications.DueThisWeek(today));
+
+        combined.Compile()(new WorkOrder { Status = WorkOrderStatus.Draft, DueDate = today.AddDays(-1) })
+            .ShouldBeTrue();
+        combined.Compile()(new WorkOrder { Status = WorkOrderStatus.Draft, DueDate = today.AddDays(2) })
+            .ShouldBeTrue();
+        combined.Compile()(new WorkOrder { Status = WorkOrderStatus.Draft, DueDate = today.AddDays(14) })
+            .ShouldBeFalse();
+    }
+
+    [Test]
     public void ShouldRebindOntoSharedParameter_WhenRebindApplied()
     {
         var parameter = Expression.Parameter(typeof(WorkOrder), "wo");

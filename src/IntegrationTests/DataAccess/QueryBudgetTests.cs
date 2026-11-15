@@ -228,7 +228,7 @@ public sealed class QueryBudgetTests
             });
         }
 
-        return worker.UserName!;
+        return worker.UserName;
     }
 
     private static void SeedCompletedOrders(QueryBudgetContext context, int orderCount, TimeProvider clock)

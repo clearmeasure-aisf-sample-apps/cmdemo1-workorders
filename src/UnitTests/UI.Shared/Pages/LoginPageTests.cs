@@ -615,7 +615,7 @@ public class LoginPageTests
         ctx.Services.AddSingleton(auth);
         ctx.Services.AddSingleton<AuthenticationStateProvider>(auth);
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(bus ?? new StubBus());
+        ctx.Services.AddSingleton(bus ?? new StubBus());
         ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment(environmentName));
         ctx.Services.AddSingleton(TimeProvider.System);
         return ctx;

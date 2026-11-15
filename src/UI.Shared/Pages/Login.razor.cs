@@ -18,7 +18,7 @@ public partial class Login : AppComponentBase
     [Inject] public TimeProvider Clock { get; set; } = null!;
 
     /// <summary>Calendar year on the login footer (UTC).</summary>
-    public int CopyrightYear => Clock.GetUtcNow().Year;
+    private int CopyrightYear => Clock.GetUtcNow().Year;
 
     public readonly LoginModel LoginModelValue = new();
     private string? _errorMessage;

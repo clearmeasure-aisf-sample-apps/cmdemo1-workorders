@@ -252,7 +252,7 @@ internal static partial class ArchitectureRules
     /// <summary>
     /// Method and property names whose declared return type is <c>Expression&lt;Func&lt;WorkOrder, bool&gt;&gt;</c>.
     /// </summary>
-    internal static IReadOnlyList<string> WorkOrderBoolExpressionMembers(CompilationUnitSyntax root)
+    private static IReadOnlyList<string> WorkOrderBoolExpressionMembers(CompilationUnitSyntax root)
     {
         var names = new List<string>();
         foreach (var member in root.DescendantNodes())

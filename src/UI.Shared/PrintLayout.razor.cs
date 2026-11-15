@@ -9,5 +9,5 @@ public partial class PrintLayout
     private TimeProvider Clock { get; set; } = null!;
 
     /// <summary>Calendar year shown in the print copyright line (UTC).</summary>
-    protected int CopyrightYear => Clock.GetUtcNow().Year;
+    private int CopyrightYear => Clock.GetUtcNow().Year;
 }

@@ -128,11 +128,6 @@ internal static class WorkOrderQueryFilters
         }
 
         var q = searchText.Trim().ToLower();
-        return query.Where(wo =>
-            (wo.Number != null && wo.Number.ToLower().Contains(q)) ||
-            (wo.Title != null && wo.Title.ToLower().Contains(q)) ||
-            (wo.RoomNumber != null && wo.RoomNumber.ToLower().Contains(q)) ||
-            (wo.Creator != null && (wo.Creator.FirstName.ToLower().Contains(q) || wo.Creator.LastName.ToLower().Contains(q))) ||
-            (wo.Assignee != null && (wo.Assignee.FirstName.ToLower().Contains(q) || wo.Assignee.LastName.ToLower().Contains(q))));
+        return query.Where(WorkOrderSearchText.Matches(q));
     }
 }
