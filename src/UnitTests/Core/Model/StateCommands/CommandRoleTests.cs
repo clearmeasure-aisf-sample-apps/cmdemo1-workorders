@@ -1,0 +1,72 @@
+using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using Shouldly;
+
+namespace ClearMeasure.Bootcamp.UnitTests.Core.Model.StateCommands;
+
+[TestFixture]
+public class CommandRoleTests
+{
+    private static readonly WorkOrder Order = new() { Number = "WO-1", Status = WorkOrderStatus.Draft };
+    private static readonly Employee User = new("user", "U", "Ser", "user@example.com");
+
+    [Test]
+    public void Role_WhenAssign_IsForward()
+    {
+        new DraftToAssignedCommand(Order, User).Role.ShouldBe(CommandRole.Forward);
+    }
+
+    [Test]
+    public void Role_WhenBegin_IsForward()
+    {
+        new AssignedToInProgressCommand(Order, User).Role.ShouldBe(CommandRole.Forward);
+    }
+
+    [Test]
+    public void Role_WhenComplete_IsForward()
+    {
+        new InProgressToCompleteCommand(Order, User).Role.ShouldBe(CommandRole.Forward);
+    }
+
+    [Test]
+    public void Role_WhenSave_IsSecondary()
+    {
+        new SaveDraftCommand(Order, User).Role.ShouldBe(CommandRole.Secondary);
+    }
+
+    [Test]
+    public void Role_WhenShelve_IsSecondary()
+    {
+        new InProgressToAssignedCommand(Order, User).Role.ShouldBe(CommandRole.Secondary);
+    }
+
+    [Test]
+    public void Role_WhenWaitOnVendor_IsSecondary()
+    {
+        new InProgressToWaitingOnVendorCommand(Order, User).Role.ShouldBe(CommandRole.Secondary);
+    }
+
+    [Test]
+    public void Role_WhenResume_IsSecondary()
+    {
+        new WaitingOnVendorToInProgressCommand(Order, User).Role.ShouldBe(CommandRole.Secondary);
+    }
+
+    [Test]
+    public void Role_WhenCancelFromAssigned_IsDestructive()
+    {
+        new AssignedToCancelledCommand(Order, User).Role.ShouldBe(CommandRole.Destructive);
+    }
+
+    [Test]
+    public void Role_WhenCancelFromInProgress_IsDestructive()
+    {
+        new InProgressToCancelledCommand(Order, User).Role.ShouldBe(CommandRole.Destructive);
+    }
+
+    [Test]
+    public void Role_WhenCancelWhileWaitingOnVendor_IsDestructive()
+    {
+        new WaitingOnVendorToCancelledCommand(Order, User).Role.ShouldBe(CommandRole.Destructive);
+    }
+}

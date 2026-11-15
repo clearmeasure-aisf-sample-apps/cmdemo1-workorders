@@ -9,18 +9,58 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Models;
 [TestFixture]
 public class WorkOrderCommandButtonsTests
 {
+    private static readonly WorkOrder Draft = new() { Number = "WO-D", Status = WorkOrderStatus.Draft };
+    private static readonly WorkOrder Assigned = new() { Number = "WO-A", Status = WorkOrderStatus.Assigned };
     private static readonly WorkOrder InProgress = new() { Number = "WO-1", Status = WorkOrderStatus.InProgress };
+    private static readonly Employee Creator = new("creator", "Cre", "Ator", "creator@example.com");
     private static readonly Employee Fixer = new("fixer", "Fix", "Er", "fixer@example.com");
 
     [Test]
     public void ShouldPutThePrimaryCommandLast_WhenCommandsAreSorted()
     {
-        IStateCommand[] commands = [new InProgressToCompleteCommand(InProgress, Fixer), new InProgressToAssignedCommand(InProgress, Fixer)];
+        IStateCommand[] commands =
+        [
+            new InProgressToCompleteCommand(InProgress, Fixer),
+            new InProgressToAssignedCommand(InProgress, Fixer)
+        ];
 
         var buttons = new WorkOrderCommandButtons(commands);
 
         buttons.Sorted.Last().TransitionVerbPresentTense.ShouldBe(InProgressToCompleteCommand.Name);
         buttons.CssClass(buttons.Sorted.Last()).ShouldBe("btn-app btn-app--primary");
+    }
+
+    [Test]
+    public void ShouldOrderSecondaryThenDangerThenPrimary_WhenDraftCommandsAreSorted()
+    {
+        IStateCommand[] commands =
+        [
+            new DraftToAssignedCommand(Draft, Creator),
+            new SaveDraftCommand(Draft, Creator),
+            new AssignedToCancelledCommand(Assigned, Creator)
+        ];
+
+        var buttons = new WorkOrderCommandButtons(commands);
+
+        buttons.Sorted[0].Role.ShouldBe(CommandRole.Secondary);
+        buttons.Sorted[1].Role.ShouldBe(CommandRole.Destructive);
+        buttons.Sorted[2].Role.ShouldBe(CommandRole.Forward);
+        buttons.CssClass(buttons.Sorted[0]).ShouldBe("btn-app btn-app--secondary");
+        buttons.CssClass(buttons.Sorted[1]).ShouldBe("btn-app btn-app--danger");
+        buttons.CssClass(buttons.Sorted[2]).ShouldBe("btn-app btn-app--primary");
+    }
+
+    [Test]
+    public void ShouldMapBeginToPrimary_WhenAssignedCommandsAreSorted()
+    {
+        var begin = new AssignedToInProgressCommand(Assigned, Fixer);
+        IStateCommand[] commands = [new AssignedToCancelledCommand(Assigned, Creator), begin];
+
+        var buttons = new WorkOrderCommandButtons(commands);
+
+        buttons.Sorted.Last().ShouldBe(begin);
+        buttons.CssClass(begin).ShouldBe("btn-app btn-app--primary");
+        buttons.CssClass(commands[0]).ShouldBe("btn-app btn-app--danger");
     }
 
     [Test]

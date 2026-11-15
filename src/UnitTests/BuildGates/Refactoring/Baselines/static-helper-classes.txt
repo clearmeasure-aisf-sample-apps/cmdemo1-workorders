@@ -2,5 +2,4 @@
 # See docs/refactoring-oversized-code.md.
 src/AcceptanceTests/ProcessCleanupHelper.cs :: ProcessCleanupHelper
 src/Analyzers/ClearMeasure.NpoAnalyzers/LoopHelpers.cs :: LoopHelpers
-src/Core/Services/Impl/CommandButtonStyleHelper.cs :: CommandButtonStyleHelper
 src/UnitTests/Analyzers/AnalyzerTestHelper.cs :: AnalyzerTestHelper

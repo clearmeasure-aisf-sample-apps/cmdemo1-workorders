@@ -23,6 +23,8 @@ public record DraftToAssignedCommand(WorkOrder WorkOrder, Employee CurrentUser)
 
     public override string TransitionVerbPastTense => "Assigned";
 
+    public override CommandRole Role => CommandRole.Forward;
+
     public override void Execute(StateCommandContext context)
     {
         WorkOrder.AssignedDate = context.CurrentDateTime;

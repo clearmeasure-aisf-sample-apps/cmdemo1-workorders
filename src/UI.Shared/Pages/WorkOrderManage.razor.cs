@@ -40,10 +40,10 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             : DueDateUrgencyCalculator.Calculate(Model.DueDateInput, _workOrder.Status, Clock);
 
     private string CurrentDueDateCssClass =>
-        DueDateUrgencyCalculator.CssClass(CurrentDueDateUrgency);
+        DueDateUrgencyPresenter.CssClass(CurrentDueDateUrgency);
 
     private string? CurrentDueDateUrgencyText =>
-        DueDateUrgencyCalculator.ScreenReaderText(CurrentDueDateUrgency);
+        DueDateUrgencyPresenter.ScreenReaderText(CurrentDueDateUrgency);
 
     private StatusPill? CurrentStatusPill =>
         _workOrder == null
