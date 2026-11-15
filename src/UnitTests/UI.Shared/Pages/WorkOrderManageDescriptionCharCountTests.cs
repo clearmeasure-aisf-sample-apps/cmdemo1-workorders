@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
@@ -165,10 +166,6 @@ public class WorkOrderManageDescriptionCharCountTests
         }
     }
 
-    private class StubUserSession(Employee user) : IUserSession
-    {
-        public Task<Employee?> GetCurrentUserAsync() => Task.FromResult<Employee?>(user);
-    }
 
     private class StubTranslationService : ITranslationService
     {

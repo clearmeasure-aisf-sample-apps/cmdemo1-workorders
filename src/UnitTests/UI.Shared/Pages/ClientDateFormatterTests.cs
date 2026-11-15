@@ -154,7 +154,7 @@ public class ClientDateFormatterTests
         var bus = new StubBus([order]);
         var uiBus = new StubUiBus();
         ctx.Services.AddSingleton<IBus>(bus);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "jpalermo"));
         ctx.Services.AddSingleton<IUiBus>(uiBus);
         ctx.Services.AddSingleton(new WorkOrderBulkActionService(bus, uiBus));
         ctx.Services.AddSingleton(TimeProvider.System);

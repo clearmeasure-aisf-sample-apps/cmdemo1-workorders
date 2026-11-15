@@ -18,7 +18,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared;
 public partial class NavMenu : AppComponentBase,
     IListener<UserLoggedInEvent>, IListener<UserLoggedOutEvent>, IListener<WorkOrderChangedEvent>
 {
-    [Inject] public IUserSession? UserSession { get; set; }
+    [Inject] public IUserSession UserSession { get; set; } = null!;
 
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
@@ -40,7 +40,7 @@ public partial class NavMenu : AppComponentBase,
 
     private async Task SetCurrentUser()
     {
-        CurrentUser = await UserSession!.GetCurrentUserAsync();
+        CurrentUser = await UserSession.GetCurrentUserAsync();
     }
 
     private async Task LoadSummaryAsync()

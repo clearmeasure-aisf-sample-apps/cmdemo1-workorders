@@ -28,7 +28,7 @@ public class LogoutTests
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -49,7 +49,7 @@ public class LogoutTests
         var employee = new Employee("hsimpson", "Homer", "Simpson", "homer@example.com") { MiddleName = "Jay" };
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee) { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -69,7 +69,7 @@ public class LogoutTests
         var employee = new Employee("hsimpson", "Homer", "Simpson", "homer@example.com");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee) { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -88,7 +88,7 @@ public class LogoutTests
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubFailingUserSession());
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { GetCurrentUserFault = new InvalidOperationException("lookup failed"), OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -107,7 +107,7 @@ public class LogoutTests
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -131,7 +131,7 @@ public class LogoutTests
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -151,7 +151,7 @@ public class LogoutTests
         var spyEventBus = new SpyUiBus();
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -173,7 +173,7 @@ public class LogoutTests
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -196,7 +196,7 @@ public class LogoutTests
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -267,7 +267,7 @@ public class LogoutTests
         employee.AddRole(new Role("Pastor", true, false));
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee) { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
         return ctx;
@@ -287,7 +287,7 @@ public class LogoutTests
         var spyEventBus = new SpyUiBus();
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -305,21 +305,6 @@ public class LogoutTests
     }
 }
 
-public class StubUserSession(Employee? currentUser) : IUserSession
-{
-    public Task<Employee?> GetCurrentUserAsync()
-    {
-        return Task.FromResult(currentUser);
-    }
-}
-
-public class StubFailingUserSession : IUserSession
-{
-    public Task<Employee?> GetCurrentUserAsync()
-    {
-        throw new InvalidOperationException("lookup failed");
-    }
-}
 
 public class SpyUiBus : IUiBus
 {

@@ -12,7 +12,7 @@
                         disabled="@(Model.Results.Length == 0)" title="Download the filtered work orders as CSV" @onclick="ExportAllAsync">
                     <i class="bi bi-download" aria-hidden="true"></i> Export CSV
                 </button>
-                <SearchSavedViewsMenu CurrentUserName="@_currentUserName" CurrentQuery="@SavedViewQuery"/>
+                <SearchSavedViewsMenu CurrentUserName="@_signedInUserName" CurrentQuery="@SavedViewQuery"/>
                 @if (_canCreate)
                 {
                     <a class="btn-app btn-app--primary" data-testid="@Elements.NewWorkOrderButton" href="workorder/manage?mode=New">

@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Bunit;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
@@ -189,6 +190,7 @@ public class ApplicationChatTests
         var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         provider.Login("hsimpson").GetAwaiter().GetResult();
         ctx.Services.AddSingleton(provider);
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson"));
 
         return ctx;
     }

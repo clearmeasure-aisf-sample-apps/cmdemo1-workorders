@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.Services;
 using Bunit;
 using System.ComponentModel.DataAnnotations;
 using ClearMeasure.Bootcamp.Core;
@@ -614,6 +615,7 @@ public class LoginPageTests
         auth = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         ctx.Services.AddSingleton(auth);
         ctx.Services.AddSingleton<AuthenticationStateProvider>(auth);
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession { OnSignIn = auth.Login });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(bus ?? new StubBus());
         ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment(environmentName));

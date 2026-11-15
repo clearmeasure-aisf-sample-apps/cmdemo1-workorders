@@ -1,12 +1,11 @@
 using System.Reflection;
-using System.Security.Claims;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
@@ -65,7 +64,7 @@ public partial class MainLayout : IAsyncDisposable
     private NavigationManager Navigation { get; set; } = null!;
 
     [Inject]
-    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    private IUserSession UserSession { get; set; } = null!;
 
     private ElementReference _navToggleButtonRef;
     private ElementReference _bellButtonRef;
@@ -115,7 +114,7 @@ public partial class MainLayout : IAsyncDisposable
     {
         await ApplyBrowserCultureAsync();
         Navigation.LocationChanged += OnLocationChanged;
-        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        UserSession.AuthenticationStateChanged += OnUserSessionChanged;
 
         _deployment = await DeploymentIdentity.LoadAsync(Http);
         await LoadNotificationsAsync();
@@ -205,8 +204,7 @@ public partial class MainLayout : IAsyncDisposable
     {
         try
         {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var currentUserName = ResolveUserName(authState.User);
+            var currentUserName = await UserSession.GetCurrentUserNameAsync();
             if (string.IsNullOrWhiteSpace(currentUserName))
             {
                 _notificationsPanelData = null;
@@ -223,13 +221,10 @@ public partial class MainLayout : IAsyncDisposable
         }
     }
 
-    private static string? ResolveUserName(ClaimsPrincipal user) =>
-        (user.FindFirst("preferred_username") ?? user.FindFirst("name"))?.Value ?? user.Identity?.Name;
-
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
         InvokeAsync(CloseAndRefreshNotificationsAsync);
 
-    private void OnAuthenticationStateChanged(Task<AuthenticationState> task) =>
+    private void OnUserSessionChanged() =>
         InvokeAsync(RefreshNotificationsAsync);
 
     private async Task CloseAndRefreshNotificationsAsync()
@@ -255,7 +250,7 @@ public partial class MainLayout : IAsyncDisposable
         _disposed = true;
         Theme.OnChange -= OnThemeChanged;
         Navigation.LocationChanged -= OnLocationChanged;
-        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        UserSession.AuthenticationStateChanged -= OnUserSessionChanged;
 
         if (_navToggleHelper is not null)
         {
