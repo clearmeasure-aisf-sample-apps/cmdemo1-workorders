@@ -11,15 +11,20 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
 /// </summary>
 public static class WorkOrderQuerySteps
 {
-    /// <summary>Saves <paramref name="creator"/> and <paramref name="orders"/>, attaching distinct assignees.</summary>
+    /// <summary>Saves <paramref name="creator"/> and <paramref name="orders"/>, tracking distinct people.</summary>
     public static async Task SaveOrdersAsync(Employee creator, params WorkOrder[] orders)
     {
         await using var context = TestHost.GetRequiredService<DbContext>();
-        var assignees = orders.Select(order => order.Assignee).OfType<Employee>()
-            .Where(employee => employee != creator)
+        var people = orders
+            .SelectMany(order => new[] { order.Creator, order.Assignee })
+            .Append(creator)
+            .OfType<Employee>()
             .Distinct();
-        context.AttachRange(assignees);
-        context.Add(creator);
+        foreach (var person in people)
+        {
+            TrackEmployee(context, person);
+        }
+
         context.AddRange(orders.Cast<object>());
         await context.SaveChangesAsync();
     }
@@ -37,5 +42,22 @@ public static class WorkOrderQuerySteps
             TestHost.GetRequiredService<DataContext>(),
             clock ?? TimeProvider.System);
         return await handler.Handle(specification);
+    }
+
+    private static void TrackEmployee(DbContext context, Employee employee)
+    {
+        if (context.ChangeTracker.Entries<Employee>().Any(entry => ReferenceEquals(entry.Entity, employee)))
+        {
+            return;
+        }
+
+        if (employee.Id != Guid.Empty &&
+            context.Set<Employee>().AsNoTracking().Any(existing => existing.Id == employee.Id))
+        {
+            context.Attach(employee);
+            return;
+        }
+
+        context.Add(employee);
     }
 }
