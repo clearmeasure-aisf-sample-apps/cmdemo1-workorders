@@ -102,7 +102,7 @@ public class StateCommandListTests
 
         public string TransitionVerbPresentTense { get; init; } = String.Empty;
 
-        public CommandRole Role { get; init; } = CommandRole.Secondary;
+        public CommandRole Role { get; } = CommandRole.Secondary;
 
         public bool Matches(string commandName)
         {
