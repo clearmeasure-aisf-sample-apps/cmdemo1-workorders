@@ -200,6 +200,7 @@ function Invoke-Unprotect {
         & openssl enc -d -aes-256-cbc -pbkdf2 -pass file:$sessionKey -in $cipherPath -out $tarPath
         if ($LASTEXITCODE -ne 0) { throw "openssl enc decrypt failed (exit $LASTEXITCODE)" }
 
+        Assert-TarEntriesAreRegularFilesOrDirectories -TarPath $tarPath
         New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
         & tar -xzf $tarPath -C $OutputDirectory
         if ($LASTEXITCODE -ne 0) { throw "tar extract failed (exit $LASTEXITCODE)" }
@@ -209,6 +210,29 @@ function Invoke-Unprotect {
         Remove-Item -LiteralPath $sessionKey, $tarPath -Force -ErrorAction SilentlyContinue
         if ($ownsPrivateKeyFile) {
             Remove-Item -LiteralPath $privateKey -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Assert-TarEntriesAreRegularFilesOrDirectories {
+    param([Parameter(Mandatory = $true)][string]$TarPath)
+
+    $listing = & tar -tvzf $TarPath 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "tar -tvzf failed for $TarPath (exit $LASTEXITCODE): $listing"
+    }
+
+    foreach ($line in @($listing)) {
+        $text = [string]$line
+        if ([string]::IsNullOrWhiteSpace($text)) { continue }
+        $type = $text[0]
+        if ($type -ne '-' -and $type -ne 'd') {
+            throw "Blocker: ciphertext tar contains a non-file/dir entry (refusing extract): $text"
+        }
+        # Path is the last whitespace-separated field in GNU tar -t output.
+        $path = ($text -split '\s+', 6)[-1]
+        if ($path.StartsWith('/') -or $path.Contains('../')) {
+            throw "Blocker: ciphertext tar contains an unsafe path (refusing extract): $text"
         }
     }
 }

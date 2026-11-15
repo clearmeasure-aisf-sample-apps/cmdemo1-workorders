@@ -45,10 +45,10 @@ try {
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $bundle 'session.key'))) 'session key removed'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $bundle 'payload.tar.gz'))) 'plaintext tar removed'
 
-    $plain = Get-Content -LiteralPath (Join-Path $bundle 'payload.tar.gz.enc') -Raw -ErrorAction SilentlyContinue
-    Assert-True ($plain -notmatch 'acceptance-artifact-secret-payload') 'ciphertext must not contain plaintext'
+    $cipherBytes = [System.IO.File]::ReadAllBytes((Join-Path $bundle 'payload.tar.gz.enc'))
+    $cipherText = [System.Text.Encoding]::UTF8.GetString($cipherBytes)
+    Assert-True ($cipherText -notmatch 'acceptance-artifact-secret-payload') 'ciphertext must not contain plaintext'
 
-    # Local unprotect without Azure: decrypt with the minted private key via openssl (unit path).
     $sessionKey = Join-Path $temp 'session.key'
     $tarPath = Join-Path $temp 'payload.tar.gz'
     & openssl pkeyutl -decrypt -inkey $privateKey -pkeyopt rsa_padding_mode:oaep `
@@ -62,6 +62,26 @@ try {
     Assert-True ($LASTEXITCODE -eq 0) 'extract'
     $recovered = Get-Content -LiteralPath (Join-Path $out 'hello.txt') -Raw
     Assert-True ($recovered.Trim() -eq 'acceptance-artifact-secret-payload') 'round-trip'
+
+    # Symlink entries must be rejected on Unprotect (trusted Upload hardening).
+    $evilSource = Join-Path $temp 'evil-source'
+    New-Item -ItemType Directory -Force -Path $evilSource | Out-Null
+    Set-Content -LiteralPath (Join-Path $evilSource 'ok.txt') -Value 'ok'
+    Push-Location $evilSource
+    try { & ln -s /etc/passwd evil-link } finally { Pop-Location }
+    $evilBundle = Join-Path $temp 'evil-bundle'
+    & pwsh -NoProfile -File $scriptPath -Mode Protect `
+        -PublicKeyPath $publicKey `
+        -SourceDirectory $evilSource `
+        -BundleDirectory $evilBundle
+    Assert-True ($LASTEXITCODE -eq 0) 'Protect evil bundle'
+    $evilOut = Join-Path $temp 'evil-out'
+    $null = & pwsh -NoProfile -File $scriptPath -Mode Unprotect `
+        -PrivateKeyPath $privateKey `
+        -BundleDirectory $evilBundle `
+        -OutputDirectory $evilOut 2>&1
+    Assert-True ($LASTEXITCODE -ne 0) 'Unprotect must refuse symlink entries'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $evilOut 'evil-link'))) 'symlink not extracted'
 }
 finally {
     Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue

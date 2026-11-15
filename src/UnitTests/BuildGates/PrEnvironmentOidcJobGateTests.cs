@@ -10,17 +10,18 @@ public class PrEnvironmentOidcJobGateTests
     {
         const string yaml = """
             jobs:
-              shards:
+              probe-oidc-branch:
                 permissions:
                   id-token: write
                 steps:
-                  - uses: actions/checkout@v6.0.1
+                  - name: Checkout code
+                    uses: actions/checkout@v6.0.1
                   - run: echo hi
             """;
 
         var problems = PrEnvironmentOidcJobGate.Problems(yaml);
 
-        problems.ShouldContain(p => p.Contains("shards", StringComparison.Ordinal));
+        problems.ShouldContain(p => p.Contains("probe-oidc-branch", StringComparison.Ordinal));
     }
 
     [Test]

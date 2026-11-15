@@ -1,24 +1,22 @@
-using System.Text.RegularExpressions;
-
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 
 /// <summary>
-/// For an OIDC job, every <c>actions/checkout</c> must use the default branch
-/// (or another repository), never the push branch head.
+/// For an OIDC job, every <c>actions/checkout</c> must pin the default branch
+/// (same repo) or an allow-listed external repository — never the push branch head.
 /// </summary>
 internal static class PrEnvironmentOidcCheckoutRule
 {
-    private static readonly Regex CheckoutUses = new(
-        @"^\s+- uses:\s*actions/checkout@",
-        RegexOptions.Compiled | RegexOptions.Multiline);
+    private const string StepPrefix = "      - ";
+    private const string DefaultBranchRef = "ref: ${{ github.event.repository.default_branch }}";
+    private const string AllowedExternalRepo =
+        "repository: clearmeasure-aisf-sample-apps/cmdemo1-system";
 
     /// <summary>Appends a problem for each untrusted checkout in <paramref name="job"/>.</summary>
     public static void Collect(ICollection<string> problems, WorkflowJobSlice job)
     {
-        foreach (Match match in CheckoutUses.Matches(job.Text))
+        foreach (var step in CheckoutSteps(job.Text))
         {
-            var block = CheckoutBlock(job.Text, match.Index);
-            if (IsTrustedCheckout(block))
+            if (IsTrustedCheckout(step))
             {
                 continue;
             }
@@ -29,14 +27,54 @@ internal static class PrEnvironmentOidcCheckoutRule
         }
     }
 
-    private static string CheckoutBlock(string jobText, int usesIndex)
+    private static IEnumerable<string> CheckoutSteps(string jobText)
     {
-        var fromUses = jobText[usesIndex..];
-        var nextStep = Regex.Match(fromUses, @"\n      - ", RegexOptions.None);
-        return nextStep.Success ? fromUses[..nextStep.Index] : fromUses;
+        foreach (var step in Steps(jobText))
+        {
+            if (step.Contains("uses: actions/checkout@", StringComparison.Ordinal))
+            {
+                yield return step;
+            }
+        }
     }
 
-    private static bool IsTrustedCheckout(string block) =>
-        block.Contains("repository:", StringComparison.Ordinal) ||
-        block.Contains("ref: ${{ github.event.repository.default_branch }}", StringComparison.Ordinal);
+    private static IEnumerable<string> Steps(string jobText)
+    {
+        var lines = jobText.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var current = new List<string>();
+        foreach (var line in lines)
+        {
+            if (current.Count > 0 && line.StartsWith(StepPrefix, StringComparison.Ordinal))
+            {
+                yield return string.Join('\n', current);
+                current.Clear();
+            }
+
+            if (current.Count > 0 || line.StartsWith(StepPrefix, StringComparison.Ordinal))
+            {
+                current.Add(line);
+            }
+        }
+
+        if (current.Count > 0)
+        {
+            yield return string.Join('\n', current);
+        }
+    }
+
+    private static bool IsTrustedCheckout(string step)
+    {
+        if (step.Contains(AllowedExternalRepo, StringComparison.Ordinal) &&
+            step.Contains("ref: main", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (step.Contains("repository:", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return step.Contains(DefaultBranchRef, StringComparison.Ordinal);
+    }
 }
