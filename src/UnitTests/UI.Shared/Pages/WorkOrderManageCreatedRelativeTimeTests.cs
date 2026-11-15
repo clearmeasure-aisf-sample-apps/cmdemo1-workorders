@@ -88,7 +88,7 @@ public class WorkOrderManageCreatedRelativeTimeTests
         public override DateTimeOffset GetUtcNow() => utcNow;
     }
 
-    private sealed class StubWorkOrderManageBus(WorkOrder workOrder) : Bus(null!, TimeProvider.System)
+    private sealed class StubWorkOrderManageBus(WorkOrder workOrder) : Bus(null!)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

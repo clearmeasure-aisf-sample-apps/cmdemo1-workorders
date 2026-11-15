@@ -77,6 +77,6 @@ internal static class WebServiceMessagePayloadValidator
             return fromDi;
         }
 
-        return HttpEnvelopeFluentValidators.Resolve(payload, services);
+        return HttpEnvelopeFluentValidators.Resolve(payload);
     }
 }

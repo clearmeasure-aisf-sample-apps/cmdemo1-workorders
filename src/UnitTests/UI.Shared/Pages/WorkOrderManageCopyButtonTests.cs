@@ -217,7 +217,7 @@ public class WorkOrderManageCopyButtonTests
         statusElement.TextContent.ShouldNotContain("Copied");
     }
 
-    private class StubWorkOrderManageBus(WorkOrder? workOrder = null) : Bus(null!, TimeProvider.System)
+    private class StubWorkOrderManageBus(WorkOrder? workOrder = null) : Bus(null!)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

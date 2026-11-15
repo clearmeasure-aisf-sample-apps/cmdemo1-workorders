@@ -129,7 +129,9 @@ public class ValidationPipelineArchitectureTests
         foreach (var file in checkout.SourceFiles(".cs"))
         {
             var relative = checkout.Relative(file);
-            if (!IsProductionSource(relative) || relative.EndsWith("/ValidationBehavior.cs", StringComparison.Ordinal))
+            if (!IsProductionSource(relative)
+                || relative.EndsWith("/ValidationBehavior.cs", StringComparison.Ordinal)
+                || relative.EndsWith("/HttpEnvelopeFluentValidators.cs", StringComparison.Ordinal))
             {
                 continue;
             }

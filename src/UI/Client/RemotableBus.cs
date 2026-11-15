@@ -4,8 +4,8 @@ using MediatR;
 
 namespace ClearMeasure.Bootcamp.UI.Client;
 
-public class RemotableBus(IMediator mediator, IPublisherGateway gateway, TimeProvider timeProvider)
-    : Bus(mediator, timeProvider)
+public class RemotableBus(IMediator mediator, IPublisherGateway gateway)
+    : Bus(mediator)
 {
     public override async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
     {

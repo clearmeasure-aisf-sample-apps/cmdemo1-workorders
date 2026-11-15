@@ -127,7 +127,7 @@ public class WorkOrderManageDescriptionCharCountTests
         return ctx;
     }
 
-    private class StubWorkOrderManageBus(WorkOrder? workOrderByNumber = null) : Bus(null!, TimeProvider.System)
+    private class StubWorkOrderManageBus(WorkOrder? workOrderByNumber = null) : Bus(null!)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

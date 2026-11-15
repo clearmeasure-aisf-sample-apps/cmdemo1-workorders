@@ -161,7 +161,7 @@ public class WorkOrderManageDueDateValidationTests
         return ctx.Services.GetRequiredService<NavigationManager>();
     }
 
-    private sealed class StubDueDateBus(WorkOrder? existing = null) : Bus(null!, TimeProvider.System)
+    private sealed class StubDueDateBus(WorkOrder? existing = null) : Bus(null!)
     {
         public object? LastCommand { get; private set; }
 

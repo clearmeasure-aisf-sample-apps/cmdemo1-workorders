@@ -189,7 +189,7 @@ public class MyWorkOrdersTests
         }
     }
 
-    private class StubBusWithWorkOrders(Employee creator) : Bus(null!, TimeProvider.System)
+    private class StubBusWithWorkOrders(Employee creator) : Bus(null!)
     {
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
@@ -219,7 +219,7 @@ public class MyWorkOrdersTests
         }
     }
 
-    private class StubBusWithNoWorkOrders() : Bus(null!, TimeProvider.System)
+    private class StubBusWithNoWorkOrders() : Bus(null!)
     {
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {

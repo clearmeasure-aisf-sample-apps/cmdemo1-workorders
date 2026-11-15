@@ -80,7 +80,7 @@ public class WorkOrderManagePrintLinkTests
         return ctx;
     }
 
-    private sealed class StubWorkOrderManageBus(WorkOrder order) : Bus(null!, TimeProvider.System)
+    private sealed class StubWorkOrderManageBus(WorkOrder order) : Bus(null!)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

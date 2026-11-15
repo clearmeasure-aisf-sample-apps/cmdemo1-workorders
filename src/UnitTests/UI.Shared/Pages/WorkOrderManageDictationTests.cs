@@ -251,7 +251,7 @@ public class WorkOrderManageDictationTests
         };
     }
 
-    private class StubBus(WorkOrder? workOrderByNumber) : Bus(null!, TimeProvider.System)
+    private class StubBus(WorkOrder? workOrderByNumber) : Bus(null!)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

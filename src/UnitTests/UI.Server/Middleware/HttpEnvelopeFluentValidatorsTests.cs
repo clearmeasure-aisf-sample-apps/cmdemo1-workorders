@@ -2,7 +2,6 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.Middleware;
@@ -38,13 +37,8 @@ public class HttpEnvelopeFluentValidatorsTests
     [Test]
     public void Resolve_ShouldReturnConcreteValidator_WhenCreateVendorPayload()
     {
-        var services = new ServiceCollection();
-        HttpEnvelopeFluentValidators.RegisterConcrete(services);
-        var provider = services.BuildServiceProvider();
-
         var validator = HttpEnvelopeFluentValidators.Resolve(
-            new CreateVendorCommand("", null, null, null, null),
-            provider);
+            new CreateVendorCommand("", null, null, null, null));
 
         validator.ShouldBeOfType<CreateVendorCommandValidator>();
     }
@@ -52,13 +46,8 @@ public class HttpEnvelopeFluentValidatorsTests
     [Test]
     public void Resolve_ShouldReturnConcreteValidator_WhenCreateDatedWorkOrdersPayload()
     {
-        var services = new ServiceCollection();
-        HttpEnvelopeFluentValidators.RegisterConcrete(services);
-        var provider = services.BuildServiceProvider();
-
         var validator = HttpEnvelopeFluentValidators.Resolve(
-            new CreateDatedWorkOrdersCommand("a", "b", "t", "d", []),
-            provider);
+            new CreateDatedWorkOrdersCommand("a", "b", "t", "d", []));
 
         validator.ShouldBeOfType<CreateDatedWorkOrdersCommandValidator>();
     }
@@ -66,10 +55,6 @@ public class HttpEnvelopeFluentValidatorsTests
     [Test]
     public void Resolve_ShouldReturnNull_WhenPayloadIsNotDeferred()
     {
-        var services = new ServiceCollection();
-        HttpEnvelopeFluentValidators.RegisterConcrete(services);
-        var provider = services.BuildServiceProvider();
-
-        HttpEnvelopeFluentValidators.Resolve(new object(), provider).ShouldBeNull();
+        HttpEnvelopeFluentValidators.Resolve(new object()).ShouldBeNull();
     }
 }
