@@ -26,6 +26,38 @@ public class CorePresentationArchitectureTests
     }
 
     [Test]
+    public void ShouldRejectInterpolatedCssLikeLiteral_WhenSampleCoreSourceContainsBtnOutline()
+    {
+        var violations = CorePresentationRules.Violations(
+            "src/Core/Services/Sample.cs",
+            """
+            namespace Sample;
+            public static class Sample
+            {
+                public static string Style(int n) => $"btn-outline-{n}";
+            }
+            """);
+
+        violations.ShouldContain(v => v.Contains("btn-outline-", StringComparison.Ordinal));
+    }
+
+    [Test]
+    public void ShouldRejectInterpolatedCssLikeLiteral_WhenSampleCoreSourceContainsStatusBadge()
+    {
+        var violations = CorePresentationRules.Violations(
+            "src/Core/Services/Sample.cs",
+            """
+            namespace Sample;
+            public static class Sample
+            {
+                public static string Style(string s) => $"status-badge--{s}";
+            }
+            """);
+
+        violations.ShouldContain(v => v.Contains("status-badge--", StringComparison.Ordinal));
+    }
+
+    [Test]
     public void ShouldRejectCssNamedMember_WhenSampleCoreSourceDeclaresCssClass()
     {
         var violations = CorePresentationRules.Violations(

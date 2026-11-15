@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -78,34 +77,10 @@ internal static class WorkOrderFieldMessageRules
         CompilationUnitSyntax root,
         List<string> violations)
     {
-        foreach (var literal in root.DescendantNodes().OfType<LiteralExpressionSyntax>())
+        foreach (var text in SourceStringTexts.From(root))
         {
-            if (!literal.IsKind(SyntaxKind.StringLiteralExpression))
-            {
-                continue;
-            }
-
-            AppendBannedPhrases(relativePath, literal.Token.ValueText, violations);
+            AppendBannedPhrases(relativePath, text, violations);
         }
-
-        foreach (var interpolated in root.DescendantNodes().OfType<InterpolatedStringExpressionSyntax>())
-        {
-            AppendBannedPhrases(relativePath, InterpolatedPlainText(interpolated), violations);
-        }
-    }
-
-    private static string InterpolatedPlainText(InterpolatedStringExpressionSyntax interpolated)
-    {
-        var text = new StringBuilder();
-        foreach (var content in interpolated.Contents)
-        {
-            if (content is InterpolatedStringTextSyntax plain)
-            {
-                text.Append(plain.TextToken.ValueText);
-            }
-        }
-
-        return text.ToString();
     }
 
     private static void AppendBannedPhrases(string relativePath, string text, List<string> violations)

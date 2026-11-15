@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -25,7 +24,7 @@ internal static class CorePresentationRules
 
         var root = CSharpSyntaxTree.ParseText(source).GetCompilationUnitRoot();
         var violations = new List<string>();
-        foreach (var text in StringLiteralValues(root))
+        foreach (var text in SourceStringTexts.From(root))
         {
             if (LooksLikeCss(text))
             {
@@ -42,24 +41,6 @@ internal static class CorePresentationRules
         }
 
         return violations;
-    }
-
-    private static IEnumerable<string> StringLiteralValues(CompilationUnitSyntax root)
-    {
-        foreach (var node in root.DescendantNodes())
-        {
-            if (node is LiteralExpressionSyntax
-                {
-                    RawKind: (int)SyntaxKind.StringLiteralExpression
-                } literal)
-            {
-                var text = literal.Token.ValueText;
-                if (!string.IsNullOrEmpty(text))
-                {
-                    yield return text;
-                }
-            }
-        }
     }
 
     private static IEnumerable<string> DeclaredNames(CompilationUnitSyntax root)

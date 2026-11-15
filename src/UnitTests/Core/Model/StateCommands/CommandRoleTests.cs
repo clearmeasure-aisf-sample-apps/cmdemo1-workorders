@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Services.Impl;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Model.StateCommands;
@@ -9,6 +10,19 @@ public class CommandRoleTests
 {
     private static readonly WorkOrder Order = new() { Number = "WO-1", Status = WorkOrderStatus.Draft };
     private static readonly Employee User = new("user", "U", "Ser", "user@example.com");
+
+    [Test]
+    public void Role_WhenCommandsShareBeginStatus_HasAtMostOneForward()
+    {
+        var excess = new StateCommandList()
+            .GetAllStateCommands(Order, User)
+            .GroupBy(command => command.GetBeginStatus().Key)
+            .Where(group => group.Count(command => command.Role == CommandRole.Forward) > 1)
+            .Select(group => group.Key)
+            .ToArray();
+
+        excess.ShouldBeEmpty();
+    }
 
     [Test]
     public void Role_WhenAssign_IsForward()
