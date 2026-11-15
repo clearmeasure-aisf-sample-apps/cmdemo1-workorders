@@ -1,12 +1,8 @@
-using ClearMeasure.Bootcamp.Core;
+using Bunit;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.UI.Shared;
-using ClearMeasure.Bootcamp.UI.Shared.Components;
-using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
-using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
-using Bunit;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 
@@ -14,25 +10,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 public class WorkOrderChatAutocompleteTests
 {
     [Test]
-    public async Task ShouldTurnOffAutofillOnTheChatInput()
+    public async Task ChatInputTurnsAutocompleteOff()
     {
-        await using var ctx = new BunitContext();
-        ctx.Services.AddLogging();
-
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-
-        var component = ctx.Render<WorkOrderChat>();
-
-        var workOrder = new WorkOrder
-        {
-            Number = "WO-005",
-            Assignee = new Employee("jpalermo", "Jeffrey", "Palermo", "jeffrey@example.com")
-        };
-        await component.InvokeAsync(() => component.Instance.Handle(new WorkOrderSelectedEvent(workOrder)));
-        component.Render();
-
-        var input = component.Find($"[data-testid='{nameof(WorkOrderChat.Elements.ChatInput)}']");
-        input.GetAttribute("autocomplete").ShouldBe("off");
+        await using var ctx = ComponentContextBuilder.WithStubBuses();
+        var chat = ctx.Render<ClearMeasure.Bootcamp.UI.Shared.Components.WorkOrderChat>();
+        var assigned = new WorkOrder { Number = "WO-777", Assignee = new Employee("hsimpson", "Homer", "Simpson", "homer@example.org") };
+        await chat.InvokeAsync(() => chat.Instance.Handle(new WorkOrderSelectedEvent(assigned)));
+        chat.Find("input#work-order-chat-input").GetAttribute("autocomplete").ShouldBe("off");
     }
 }
