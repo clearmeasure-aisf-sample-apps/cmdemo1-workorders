@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UI.Shared.Components.Search;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -40,8 +41,7 @@ public partial class Reports : AppComponentBase
         var csv = WorkOrderReportsExporter.ToCsv(Data);
         var fileName = $"reports-{DateOnly.FromDateTime(Clock.GetUtcNow().DateTime):yyyyMMdd}.csv";
 
-        var module = await Js.InvokeAsync<IJSObjectReference>("import",
-            "./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js");
-        await module.InvokeVoidAsync("downloadCsv", fileName, csv);
+        await using var script = new SearchPageScript(Js);
+        await script.DownloadCsvAsync(fileName, csv);
     }
 }

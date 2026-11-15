@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Components;
 
@@ -34,6 +35,7 @@ public partial class AppFooter
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or InvalidOperationException)
         {
+            Logger.LogWarning(ex, "Deployment identity could not be loaded; footer shows unreported values.");
             _deployment = DeploymentIdentity.Unreported;
         }
     }

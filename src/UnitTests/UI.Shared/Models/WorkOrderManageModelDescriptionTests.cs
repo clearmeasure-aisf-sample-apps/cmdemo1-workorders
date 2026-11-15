@@ -61,7 +61,7 @@ public class WorkOrderManageModelDescriptionTests
         var results = Validate(model);
 
         results.Single(r => r.MemberNames.Contains(nameof(WorkOrderManageModel.Description)))
-            .ErrorMessage.ShouldBe("Description cannot exceed 4000 characters.");
+            .ErrorMessage.ShouldBe(WorkOrderFieldRules.DescriptionCannotExceed);
     }
 
     [Test]

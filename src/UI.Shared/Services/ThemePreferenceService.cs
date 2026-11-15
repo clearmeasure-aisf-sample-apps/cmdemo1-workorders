@@ -1,5 +1,3 @@
-using Microsoft.JSInterop;
-
 namespace ClearMeasure.Bootcamp.UI.Shared.Services;
 
 /// <summary>
@@ -7,15 +5,14 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Services;
 /// </summary>
 public sealed class ThemePreferenceService : IAsyncDisposable
 {
-    public const string ThemeJsModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/theme.js";
+    public const string ThemeJsModulePath = ThemeScript.ModulePath;
 
-    private readonly IJSRuntime _js;
-    private IJSObjectReference? _module;
+    private readonly ThemeScript _script;
     private bool _isDarkMode;
     private bool _initialized;
 
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
-    public ThemePreferenceService(IJSRuntime js) => _js = js;
+    public ThemePreferenceService(Microsoft.JSInterop.IJSRuntime js) => _script = new ThemeScript(js);
 
     // ReSharper disable once EventNeverSubscribedTo.Global -- public Blazor state-change event; consumers subscribe at runtime
     public event Action? OnChange;
@@ -30,15 +27,11 @@ public sealed class ThemePreferenceService : IAsyncDisposable
         if (_initialized)
             return;
 
-        try
+        var theme = await _script.GetThemeAsync();
+        if (theme is not null)
         {
-            _module = await _js.InvokeAsync<IJSObjectReference>("import", ThemeJsModulePath);
-            var theme = await _module.InvokeAsync<string>("getTheme");
             _isDarkMode = string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase);
-            await _module.InvokeVoidAsync("syncDomFromTheme", theme);
-        }
-        catch (JSDisconnectedException)
-        {
+            await _script.SyncDomFromThemeAsync(theme);
         }
 
         _initialized = true;
@@ -54,31 +47,10 @@ public sealed class ThemePreferenceService : IAsyncDisposable
             return;
 
         _isDarkMode = enabled;
-
-        try
-        {
-            _module ??= await _js.InvokeAsync<IJSObjectReference>("import", ThemeJsModulePath);
-            await _module.InvokeVoidAsync("setTheme", enabled);
-        }
-        catch (JSDisconnectedException)
-        {
-        }
-
+        await _script.SetThemeAsync(enabled);
         _initialized = true;
         OnChange?.Invoke();
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_module is not null)
-        {
-            try
-            {
-                await _module.DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-            }
-        }
-    }
+    public ValueTask DisposeAsync() => _script.DisposeAsync();
 }

@@ -64,7 +64,8 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        _dictation = new WorkOrderDictation(SpeechRecognition, AppendDictation, () => InvokeAsync(StateHasChanged));
+        _dictation = new WorkOrderDictation(SpeechRecognition, AppendDictation, () => InvokeAsync(StateHasChanged),
+            Logger);
         await LoadUserOptions();
         await LoadWorkOrder();
     }
@@ -189,23 +190,16 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private InProgressToAssignedCommand? ShelvedCommand(InProgressToAssignedCommand shelve)
     {
         var reason = Model.ShelveReason?.Trim() ?? "";
-        if (!ShelveReasonLengthIsValid(reason))
+        var error = WorkOrderFieldRules.ShelveReasonError(reason);
+        if (error != null)
         {
-            _shelveReasonError = ShelveReasonMessage(reason);
+            _shelveReasonError = error;
             return null;
         }
 
         _shelveReasonError = null;
         return shelve with { Reason = reason };
     }
-
-    private static bool ShelveReasonLengthIsValid(string reason) =>
-        reason is { Length: > 0 and <= InProgressToAssignedCommand.ReasonMaxLength };
-
-    private static string ShelveReasonMessage(string reason) =>
-        reason.Length == 0
-            ? "A reason is required to shelve a work order."
-            : $"Reason cannot exceed {InProgressToAssignedCommand.ReasonMaxLength} characters.";
 
     private async Task SendIfReady(IStateCommand? command)
     {
@@ -219,7 +213,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         NavigationManager.NavigateTo("/workorder/search");
     }
 
-    private WorkOrderReadAloud ReadAloud => new(TranslationService, SpeechSynthesis);
+    private WorkOrderReadAloud ReadAloud => new(TranslationService, SpeechSynthesis, Logger);
 
     private Task SpeakTitleAsync() => ReadAloud.SpeakAsync(Model.Title, _preferredLanguage);
 

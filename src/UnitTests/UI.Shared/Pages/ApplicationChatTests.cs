@@ -183,6 +183,7 @@ public class ApplicationChatTests
     private static BunitContext CreateContext()
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.JSInterop.SetupVoid("scrollToBottom", _ => true).SetVoidResult();
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new ApplicationChatStubBus());

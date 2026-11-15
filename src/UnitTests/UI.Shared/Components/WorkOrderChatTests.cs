@@ -17,6 +17,7 @@ public class WorkOrderChatTests
     public async Task ShouldRenderTooltipWithExactTitleOnWorkOrderChatPanel()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         ctx.Services.AddSingleton<IBus>(new StubBus());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
@@ -39,6 +40,7 @@ public class WorkOrderChatTests
     public async Task ShouldNotRenderTooltipHookWhenChatPanelHidden()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         ctx.Services.AddSingleton<IBus>(new StubBus());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
@@ -61,6 +63,7 @@ public class WorkOrderChatTests
     public async Task ShouldUseAppPrimaryButtonOnWorkOrderChatSend()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         ctx.Services.AddSingleton<IBus>(new StubBus());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
@@ -85,6 +88,7 @@ public class WorkOrderChatTests
     public async Task ShouldAssociateAiAssistantLabelWithChatInput()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         ctx.Services.AddSingleton<IBus>(new StubBus());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());

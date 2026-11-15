@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Logging;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Components.Search;
 
@@ -99,10 +100,11 @@ public partial class SearchSavedViewsMenu
         {
             _userViews = await Bus.Send(new SavedSearchViewsQuery(CurrentUserName));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Saved views are an optional extra: a failure loading them (for example a database not yet
             // upgraded with the SavedSearchView table) must never break the search page.
+            Logger.LogWarning(ex, "Saved views could not be loaded for {UserName}; listing stays empty.", CurrentUserName);
             _userViews = [];
         }
     }
@@ -148,8 +150,9 @@ public partial class SearchSavedViewsMenu
             var result = await Bus.Send(new SaveSearchViewCommand(userName, _newName.Trim(), CurrentQuery));
             return result.Succeeded ? null : result.Error ?? "The view could not be saved.";
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Saved view could not be saved for {UserName}.", userName);
             return "The view could not be saved. Please try again later.";
         }
     }
@@ -174,8 +177,9 @@ public partial class SearchSavedViewsMenu
                 _deleteError = result.Error ?? "The view could not be deleted.";
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Saved view {ViewId} could not be deleted for {UserName}.", view.Id, CurrentUserName);
             _deleteError = "The view could not be deleted. Please try again later.";
         }
     }

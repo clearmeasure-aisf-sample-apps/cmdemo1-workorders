@@ -41,7 +41,7 @@ public class WorkOrderTools
         return workOrder == null ? NotFound(workOrderNumber) : WorkOrderJson.Detail(workOrder);
     }
 
-    [McpServerTool(Name = "create-work-order"), Description("Creates a new draft work order. Requires a title, description, and the username of the creator. Optionally accepts a room number, due date (yyyy-MM-dd), and instructions. Priority values: Low, Medium (default), High (case-insensitive). Building is a short name (max 100 characters).")]
+    [McpServerTool(Name = "create-work-order"), Description(WorkOrderFieldRules.CreateWorkOrderToolDescription)]
     public static async Task<string> CreateWorkOrder(
         IBus bus,
         IWorkOrderNumberGenerator numberGenerator,
@@ -52,7 +52,7 @@ public class WorkOrderTools
         [Description("Optional due date as yyyy-MM-dd")] string? dueDate = null,
         [Description("Optional instructions for the work order")] string? instructions = null,
         [Description("Optional priority: Low, Medium (default), High; case-insensitive")] string? priority = null,
-        [Description("Optional building name; max 100 characters")] string? building = null)
+        [Description(WorkOrderFieldRules.BuildingParameterDescription)] string? building = null)
     {
         var arguments = new NewWorkOrderArguments
         {
@@ -124,17 +124,13 @@ public class WorkOrderTools
         return error ?? WorkOrderJson.Detail((await bus.Send(patch.ApplyAsSave(context!))).WorkOrder);
     }
 
-    [McpServerTool(Name = "update-work-order"), Description(
-        "Updates priority, building, room, and/or due date on an existing draft work order. " +
-        "Requires the work order number and executing username (the creator). " +
-        "Omitted fields are unchanged; empty building/room/due date clears those fields; empty priority is an error. " +
-        "Priority values: Low, Medium, High (case-insensitive). Building: max 100 characters.")]
+    [McpServerTool(Name = "update-work-order"), Description(WorkOrderFieldRules.UpdateWorkOrderToolDescription)]
     public static async Task<string> UpdateWorkOrder(
         IBus bus,
         [Description("The work order number")] string workOrderNumber,
         [Description("Username of the employee executing the update (must be the creator)")] string executingUsername,
         [Description("Optional priority: Low, Medium, High; case-insensitive")] string? priority = null,
-        [Description("Optional building name; max 100 characters; empty clears")] string? building = null,
+        [Description(WorkOrderFieldRules.BuildingParameterClearDescription)] string? building = null,
         [Description("Optional room number; empty clears")] string? roomNumber = null,
         [Description("Optional due date as yyyy-MM-dd; empty clears")] string? dueDate = null)
     {
@@ -144,14 +140,14 @@ public class WorkOrderTools
         return error ?? WorkOrderJson.Detail((await bus.Send(patch.ApplyAsSave(context!))).WorkOrder);
     }
 
-    [McpServerTool(Name = "execute-work-order-command"), Description("Executes a state command on a work order. Available commands: DraftToAssignedCommand (requires assigneeUsername), AssignedToInProgressCommand, InProgressToAssignedCommand, Shelve, InProgressToCompleteCommand, AssignedToCancelledCommand. Shelve and InProgressToAssignedCommand require a reason of at most 200 characters.")]
+    [McpServerTool(Name = "execute-work-order-command"), Description(WorkOrderFieldRules.ExecuteWorkOrderCommandToolDescription)]
     public static Task<string> ExecuteWorkOrderCommand(
         IBus bus,
         [Description("The work order number")] string workOrderNumber,
         [Description("The command name (e.g., DraftToAssignedCommand)")] string commandName,
         [Description("Username of the employee executing the command")] string executingUsername,
         [Description("Username of the employee to assign the work order to (required for DraftToAssignedCommand)")] string? assigneeUsername = null,
-        [Description("Reason for shelving (required for Shelve and InProgressToAssignedCommand, at most 200 characters)")] string? reason = null) =>
+        [Description(WorkOrderFieldRules.ShelveReasonParameterDescription)] string? reason = null) =>
         WorkOrderCommandExecutor.ExecuteCommandAsync(bus, new WorkOrderCommandRequest
         {
             WorkOrderNumber = workOrderNumber, CommandName = commandName, ExecutingUsername = executingUsername,

@@ -291,6 +291,7 @@ public class SlaHealthCardTests
     private static BunitContext CreateContext(SlaHealth? health = null, Task? pending = null)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.Services.AddSingleton<IBus>(new StubSlaHealthBus(health, pending));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         return ctx;

@@ -21,24 +21,24 @@ public sealed class SaveDraftCommandValidator : AbstractValidator<SaveDraftComma
     {
         RuleFor(x => x.WorkOrder.Title)
             .MaximumLength(WorkOrder.TitleMaxLength)
-            .WithMessage($"Title cannot exceed {WorkOrder.TitleMaxLength} characters.");
+            .WithMessage(WorkOrderFieldRules.TitleCannotExceed);
 
         RuleFor(x => x.WorkOrder.Description)
             .MaximumLength(WorkOrder.DescriptionMaxLength)
-            .WithMessage($"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.");
+            .WithMessage(WorkOrderFieldRules.DescriptionCannotExceed);
 
         RuleFor(x => x.WorkOrder.RoomNumber)
             .MaximumLength(WorkOrder.RoomNumberEntryMaxLength)
-            .WithMessage($"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters.")
+            .WithMessage(WorkOrderFieldRules.RoomNumberCannotExceed)
             .When(x => x.WorkOrder.RoomNumber != x.PreviousRoomNumber);
 
         RuleFor(x => x.WorkOrder.Building)
             .MaximumLength(WorkOrder.BuildingMaxLength)
-            .WithMessage($"Building cannot exceed {WorkOrder.BuildingMaxLength} characters.");
+            .WithMessage(WorkOrderFieldRules.BuildingCannotExceed);
 
         RuleFor(x => x.WorkOrder.Floor)
             .MaximumLength(WorkOrder.FloorMaxLength)
-            .WithMessage($"Floor cannot exceed {WorkOrder.FloorMaxLength} characters.");
+            .WithMessage(WorkOrderFieldRules.FloorCannotExceed);
 
         RuleFor(x => x.WorkOrder.DueDate)
             .Must((command, dueDate) => !WorkOrder.IsNewlySetPastDueDate(

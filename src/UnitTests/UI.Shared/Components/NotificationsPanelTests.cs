@@ -15,7 +15,7 @@ public class NotificationsPanelTests
     private static void SetupClockAndJs(BunitContext ctx)
     {
         ctx.Services.AddSingleton(TimeProvider.System);
-        var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/notificationsPanel.js");
+        var module = ctx.JSInterop.SetupModule(NotificationsPanelScript.ModulePath);
         module.SetupVoid("setupEscapeHandler", _ => true);
     }
 

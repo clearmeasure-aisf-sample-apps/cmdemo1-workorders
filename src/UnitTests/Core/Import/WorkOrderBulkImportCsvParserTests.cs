@@ -185,7 +185,7 @@ public class WorkOrderBulkImportCsvParserTests
 
         result.Rows[0].Error.ShouldBeNull();
         result.Rows[1].LineNumber.ShouldBe(3);
-        result.Rows[1].Error.ShouldBe("Building must be at most 100 characters.");
+        result.Rows[1].Error.ShouldBe(WorkOrderFieldRules.BuildingMustBeAtMost);
     }
 
     [Test]
@@ -205,7 +205,7 @@ public class WorkOrderBulkImportCsvParserTests
 
         result.Rows[0].Error.ShouldBeNull();
         result.Rows[1].LineNumber.ShouldBe(3);
-        result.Rows[1].Error.ShouldBe("Description cannot exceed 4000 characters.");
+        result.Rows[1].Error.ShouldBe(WorkOrderFieldRules.DescriptionCannotExceed);
     }
 
     [Test]

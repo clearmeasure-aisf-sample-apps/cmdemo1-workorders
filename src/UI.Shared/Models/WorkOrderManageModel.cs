@@ -59,13 +59,13 @@ public class WorkOrderManageModel : IValidatableObject
 
     public string? AssignedToUserName { get; set; }
 
-    [Required, StringLength(WorkOrder.TitleMaxLength, ErrorMessage = "Title cannot exceed 600 characters.")]
+    [Required, StringLength(WorkOrder.TitleMaxLength, ErrorMessage = WorkOrderFieldRules.TitleCannotExceed)]
     public string? Title { get; set; }
 
-    [Required, StringLength(WorkOrder.DescriptionMaxLength, ErrorMessage = "Description cannot exceed 4000 characters.")]
+    [Required, StringLength(WorkOrder.DescriptionMaxLength, ErrorMessage = WorkOrderFieldRules.DescriptionCannotExceed)]
     public string? Description { get; set; }
 
-    [StringLength(WorkOrder.InstructionsMaxLength, ErrorMessage = "Instructions cannot exceed 4000 characters.")]
+    [StringLength(WorkOrder.InstructionsMaxLength, ErrorMessage = WorkOrderFieldRules.InstructionsCannotExceed)]
     public string? Instructions { get; set; }
 
     public bool IsReadOnly { get; set; }
@@ -117,28 +117,24 @@ public class WorkOrderManageModel : IValidatableObject
     /// <summary>
     /// Optional building the work happens in.
     /// </summary>
-    [StringLength(WorkOrder.BuildingMaxLength, ErrorMessage = "Building cannot exceed 100 characters.")]
+    [StringLength(WorkOrder.BuildingMaxLength, ErrorMessage = WorkOrderFieldRules.BuildingCannotExceed)]
     public string? Building { get; set; }
 
     /// <summary>
     /// Optional floor the work happens on.
     /// </summary>
-    [StringLength(WorkOrder.FloorMaxLength, ErrorMessage = "Floor cannot exceed 20 characters.")]
+    [StringLength(WorkOrder.FloorMaxLength, ErrorMessage = WorkOrderFieldRules.FloorCannotExceed)]
     public string? Floor { get; set; }
 
-    /// <summary>
-    /// Reason typed when shelving an in-progress work order. At most 200 characters.
-    /// </summary>
+    /// <summary>Reason typed when shelving an in-progress work order.</summary>
     public string? ShelveReason { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext context)
     {
-        // Skip room number entry length validation when the value is unchanged
-        if (RoomNumber != OriginalRoomNumber && RoomNumber?.Length > WorkOrder.RoomNumberEntryMaxLength)
+        var roomError = WorkOrderFieldRules.RoomNumberEntryLengthError(RoomNumber, OriginalRoomNumber);
+        if (roomError != null)
         {
-            yield return new ValidationResult(
-                "Room number cannot exceed 50 characters.",
-                [nameof(RoomNumber)]);
+            yield return new ValidationResult(roomError, [nameof(RoomNumber)]);
         }
 
         if (WorkOrder.IsNewlySetPastDueDate(DueDateInput, OriginalDueDate, ChurchToday))

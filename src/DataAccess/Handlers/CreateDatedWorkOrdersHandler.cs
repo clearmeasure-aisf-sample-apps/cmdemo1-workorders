@@ -49,12 +49,11 @@ public class CreateDatedWorkOrdersHandler(
     {
         if (count == 0)
         {
-            return CreateDatedWorkOrdersResult.Failed("At least one due date is required.");
+            return CreateDatedWorkOrdersResult.Failed(CreateDatedWorkOrdersCommand.AtLeastOneDueDateRequired);
         }
 
         return count > CreateDatedWorkOrdersCommand.MaximumBatchSize
-            ? CreateDatedWorkOrdersResult.Failed(
-                $"A dated work-order batch cannot exceed {CreateDatedWorkOrdersCommand.MaximumBatchSize} dates.")
+            ? CreateDatedWorkOrdersResult.Failed(CreateDatedWorkOrdersCommand.BatchCannotExceed)
             : null;
     }
 

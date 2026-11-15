@@ -40,7 +40,7 @@ public class NewWorkOrderArgumentsTests
         draft.Building.ShouldBeNull();
     }
 
-    [TestCase(" ", null, null, "Description is required.")]
+    [TestCase(" ", null, null, WorkOrderFieldRules.DescriptionRequired)]
     [TestCase("It is cold.", "03/01/2027", null, "Invalid due date '03/01/2027'. Use yyyy-MM-dd.")]
     [TestCase("It is cold.", null, "Urgent", "Invalid priority 'Urgent'. Valid values are: Low, Medium, High.")]
     public void ShouldReportTheFirstError_WhenAnArgumentBreaksItsRule(string description, string? dueDate, string? priority, string expected)
@@ -62,6 +62,6 @@ public class NewWorkOrderArgumentsTests
 
         var error = NewWorkOrderArguments.DescriptionError(description);
 
-        error.ShouldBe($"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.");
+        error.ShouldBe(WorkOrderFieldRules.DescriptionCannotExceed);
     }
 }

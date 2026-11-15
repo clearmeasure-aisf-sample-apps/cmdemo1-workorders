@@ -28,6 +28,7 @@ internal static class ShellLayoutContext
         if (authenticateAsUser != null)
             bunitAuth.SetAuthorized(authenticateAsUser);
 
+        ctx.Services.AddLogging();
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(bus ?? new StubBus());
         ctx.Services.AddSingleton<IUserSession>(userSession ?? new StubUserSession(userName: authenticateAsUser));

@@ -47,19 +47,9 @@ internal sealed record SaveWorkOrderPatch
         DueDate.ApplyTo(workOrder);
     }
 
-    private string? TitleError()
-    {
-        if (Title != null && string.IsNullOrWhiteSpace(Title))
-        {
-            return "The Title field is required.";
-        }
+    private string? TitleError() => WorkOrderFieldRules.TitlePatchError(Title);
 
-        return Title is { Length: > WorkOrder.TitleMaxLength }
-            ? $"Title cannot exceed {WorkOrder.TitleMaxLength} characters."
-            : null;
-    }
-
-    private string? DescriptionError() => NewWorkOrderArguments.DescriptionLengthError(Description);
+    private string? DescriptionError() => WorkOrderFieldRules.DescriptionLengthError(Description);
 
     private static string BlankToEmpty(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value;
 }

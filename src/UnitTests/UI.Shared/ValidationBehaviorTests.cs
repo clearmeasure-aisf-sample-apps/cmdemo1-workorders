@@ -23,7 +23,7 @@ public class ValidationBehaviorTests
 
         ex.Errors.ShouldContain(failure =>
             failure.PropertyName == "WorkOrder.Title" &&
-            failure.ErrorMessage == "Title cannot exceed 600 characters.");
+            failure.ErrorMessage == WorkOrderFieldRules.TitleCannotExceed);
     }
 
     [Test]
@@ -55,7 +55,7 @@ public class ValidationBehaviorTests
 
         ex.Errors.ShouldContain(failure =>
             failure.PropertyName == "WorkOrder.Building" &&
-            failure.ErrorMessage == "Building cannot exceed 100 characters.");
+            failure.ErrorMessage == WorkOrderFieldRules.BuildingCannotExceed);
     }
 
     [Test]

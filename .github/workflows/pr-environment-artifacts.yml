@@ -1,0 +1,140 @@
+# Item 16 / #1671 — sticky PR comment + private Azure video/trace publish.
+# Runs AFTER the "PR environment" check (workflow_run), so upload/comment time is off that
+# check's 10-minute / 0:30 report clock. Does not loosen gates.
+#
+# Videos/traces are never published as GitHub Actions artifacts (repo is public).
+# Auth: existing Azure OIDC only (AZURE_CLIENT_ID_ACR_PUSH). No keys, SAS, or new secrets.
+# Storage: item 4 pool stack (cmdemo1-system infra/pool/modules/artifacts.bicep) —
+# containers videos/traces, 14-day lifecycle, allowBlobPublicAccess=false, allowSharedKeyAccess=false.
+#
+# Security: this workflow_run job has id-token: write and pull-requests: write. It MUST check out
+# only the trusted default-branch commit (github.sha / github.workflow_sha) with
+# persist-credentials: false. workflow_run.head_sha and run_id are data only (PR lookup, blob
+# prefix, run URL). Never check out or execute PR head code while OIDC credentials are present.
+#
+# Requires GitHub Actions variable POOL_ARTIFACTS_STORAGE_ACCOUNT (account name, not a secret)
+# after the pool stack is applied. Until then this workflow skips with a clear message.
+name: PR environment artifacts
+
+on:
+  workflow_run:
+    workflows: ["PR environment"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: PR number (manual sticky-comment / upload orchestration)
+        required: true
+        type: string
+      run_id:
+        description: Source Actions run id whose videos/traces prefix to comment on
+        required: false
+        type: string
+
+# Least privilege at workflow level; the job opts into write scopes it needs.
+permissions: {}
+
+concurrency:
+  group: pr-environment-artifacts-${{ github.event.workflow_run.head_branch || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sticky-comment:
+    name: Sticky PR artifact comment
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+      id-token: write
+    # Upload/comment must not block or extend the "PR environment" check.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.event == 'pull_request' ||
+      github.event.workflow_run.event == 'push'
+    steps:
+      # Trusted checkout only — never head_sha / head_ref (pwn-request).
+      - uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Resolve PR number and run metadata
+        id: meta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PR: ${{ inputs.pull_request_number }}
+          INPUT_RUN: ${{ inputs.run_id }}
+          WR_ID: ${{ github.event.workflow_run.id }}
+          # head_sha is data only (find the PR); never used as a checkout ref.
+          WR_SHA: ${{ github.event.workflow_run.head_sha }}
+          WR_REPO: ${{ github.repository }}
+          WR_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "pr=$INPUT_PR" >> "$GITHUB_OUTPUT"
+            echo "run_id=${INPUT_RUN:-$GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+            echo "run_url=${GITHUB_SERVER_URL}/${WR_REPO}/actions/runs/${INPUT_RUN:-$GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          pr=$(gh api "repos/${WR_REPO}/actions/runs/${WR_ID}/pull-requests" --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            pr=$(gh api "repos/${WR_REPO}/commits/${WR_SHA}/pulls" --jq '.[0].number // empty')
+          fi
+          if [ -z "$pr" ]; then
+            echo "No pull request for run ${WR_ID}; skipping sticky comment."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
+          echo "run_id=$WR_ID" >> "$GITHUB_OUTPUT"
+          echo "run_url=$WR_URL" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Require storage account variable (no secrets)
+        id: storage
+        if: steps.meta.outputs.skip != 'true'
+        env:
+          ACCOUNT: ${{ vars.POOL_ARTIFACTS_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ACCOUNT}" ]; then
+            echo "::warning::Blocker: vars.POOL_ARTIFACTS_STORAGE_ACCOUNT is unset. Apply cmdemo1-system infra/pool (item 4 artifacts) and set the variable to the account name. No key/SAS will be added."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "account=$ACCOUNT" >> "$GITHUB_OUTPUT"
+
+      - name: Azure login (existing OIDC)
+        if: steps.meta.outputs.skip != 'true' && steps.storage.outputs.ready == 'true'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sticky comment from private blobs (OIDC list; no SAS)
+        if: steps.meta.outputs.skip != 'true' && steps.storage.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          POOL_ARTIFACTS_STORAGE_ACCOUNT: ${{ steps.storage.outputs.account }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Refuse account-key / shared-access-signature material if ever injected.
+          if [ -n "${AZURE_STORAGE_KEY:-}" ] || [ -n "${AZURE_STORAGE_SAS_TOKEN:-}" ]; then
+            echo "Blocker: account key or shared-access signature present; #1671 forbids them."
+            exit 1
+          fi
+          # Scripts come only from the trusted checkout above (github.sha).
+          pwsh -NoProfile -File scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1 \
+            -Mode Comment \
+            -StorageAccountName "$POOL_ARTIFACTS_STORAGE_ACCOUNT" \
+            -RunId "${{ steps.meta.outputs.run_id }}" \
+            -RunUrl "${{ steps.meta.outputs.run_url }}" \
+            -PullRequestNumber "$PR_NUMBER" \
+            -Repository "$GITHUB_REPOSITORY"

@@ -16,6 +16,12 @@ public record CreateDatedWorkOrdersCommand(
     /// Maximum work orders allowed in one transactional create.
     /// </summary>
     public const int MaximumBatchSize = 10;
+
+    /// <summary>User-visible message when the due-date list is empty.</summary>
+    public const string AtLeastOneDueDateRequired = "At least one due date is required.";
+
+    /// <summary>User-visible message when the due-date list is larger than <see cref="MaximumBatchSize"/>.</summary>
+    public const string BatchCannotExceed = "A dated work-order batch cannot exceed 10 dates.";
 }
 
 /// <summary>
