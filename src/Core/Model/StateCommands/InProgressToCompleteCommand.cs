@@ -10,6 +10,8 @@ CurrentUser)
 
     public override string TransitionVerbPastTense => "Completed";
 
+    public override CommandRole Role => CommandRole.Forward;
+
     public override WorkOrderStatus GetBeginStatus()
     {
         return WorkOrderStatus.InProgress;

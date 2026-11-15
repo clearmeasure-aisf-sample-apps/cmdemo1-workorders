@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
-using ClearMeasure.Bootcamp.Core.Services.Impl;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 
@@ -10,37 +9,32 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 /// </summary>
 public sealed class WorkOrderCommandButtons
 {
-    private readonly List<string> _verbs;
-
     public WorkOrderCommandButtons(IEnumerable<IStateCommand> validCommands)
     {
         var commands = validCommands.ToList();
-        _verbs = commands.Select(command => command.TransitionVerbPresentTense).ToList();
-        Sorted = commands.OrderBy(command => StyleRank(Style(command))).ToList();
+        Sorted = commands.OrderBy(command => RoleRank(command.Role)).ToList();
+        ShowsShelveReason = commands.Exists(command => command.Matches(InProgressToAssignedCommand.Name));
     }
 
     public static WorkOrderCommandButtons None { get; } = new([]);
 
     public IReadOnlyList<IStateCommand> Sorted { get; }
 
-    public bool Any => _verbs.Count > 0;
+    public bool Any => Sorted.Count > 0;
 
-    public bool ShowsShelveReason => _verbs.Contains(InProgressToAssignedCommand.Name);
+    public bool ShowsShelveReason { get; }
 
-    public string CssClass(IStateCommand command) => Style(command) switch
+    public string CssClass(IStateCommand command) => command.Role switch
     {
-        "btn-primary" => "btn-app btn-app--primary",
-        "btn-outline-danger" => "btn-app btn-app--danger",
+        CommandRole.Forward => "btn-app btn-app--primary",
+        CommandRole.Destructive => "btn-app btn-app--danger",
         _ => "btn-app btn-app--secondary"
     };
 
-    private string Style(IStateCommand command) =>
-        CommandButtonStyleHelper.GetButtonStyle(command.TransitionVerbPresentTense, _verbs);
-
-    private static int StyleRank(string style) => style switch
+    private static int RoleRank(CommandRole role) => role switch
     {
-        "btn-outline-danger" => 1,
-        "btn-primary" => 2,
+        CommandRole.Destructive => 1,
+        CommandRole.Forward => 2,
         _ => 0
     };
 }

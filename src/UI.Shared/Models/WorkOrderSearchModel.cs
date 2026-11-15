@@ -91,8 +91,8 @@ public class WorkOrderSearchResultRow
         {
             WorkOrder = workOrder,
             DueDateDisplay = ClientDateFormatter.Format(workOrder.DueDate),
-            DueDateCssClass = DueDateUrgencyCalculator.CssClass(urgency),
-            DueDateUrgencyText = DueDateUrgencyCalculator.ScreenReaderText(urgency),
+            DueDateCssClass = DueDateUrgencyPresenter.CssClass(urgency),
+            DueDateUrgencyText = DueDateUrgencyPresenter.ScreenReaderText(urgency),
             Urgency = urgency
         };
     }

@@ -23,4 +23,6 @@ public record AssignedToInProgressCommand(WorkOrder WorkOrder, Employee CurrentU
     public override string TransitionVerbPresentTense => Name;
 
     public override string TransitionVerbPastTense => "Begun";
+
+    public override CommandRole Role => CommandRole.Forward;
 }

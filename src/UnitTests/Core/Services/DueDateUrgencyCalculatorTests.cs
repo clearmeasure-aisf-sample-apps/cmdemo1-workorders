@@ -19,8 +19,6 @@ public class DueDateUrgencyCalculatorTests
         var clock = ChicagoNoonOn(2026, 8, 29);
 
         DueDateUrgencyCalculator.Calculate(workOrder, clock).ShouldBe(DueDateUrgency.None);
-        DueDateUrgencyCalculator.CssClass(DueDateUrgency.None).ShouldBe(string.Empty);
-        DueDateUrgencyCalculator.ScreenReaderText(DueDateUrgency.None).ShouldBeNull();
     }
 
     [Test]
@@ -36,8 +34,6 @@ public class DueDateUrgencyCalculatorTests
         var urgency = DueDateUrgencyCalculator.Calculate(workOrder, ChicagoNoonOn(2026, 8, 29));
 
         urgency.ShouldBe(DueDateUrgency.DueToday);
-        DueDateUrgencyCalculator.CssClass(urgency).ShouldBe("due-date-today");
-        DueDateUrgencyCalculator.ScreenReaderText(urgency).ShouldBe("Due today");
     }
 
     [TestCase("Draft")]
@@ -52,11 +48,7 @@ public class DueDateUrgencyCalculatorTests
             DueDate = ChurchTimeZone.Today(clock).AddDays(-1)
         };
 
-        var urgency = DueDateUrgencyCalculator.Calculate(workOrder, clock);
-
-        urgency.ShouldBe(DueDateUrgency.Overdue);
-        DueDateUrgencyCalculator.CssClass(urgency).ShouldBe("due-date-overdue");
-        DueDateUrgencyCalculator.ScreenReaderText(urgency).ShouldBe("Overdue");
+        DueDateUrgencyCalculator.Calculate(workOrder, clock).ShouldBe(DueDateUrgency.Overdue);
     }
 
     [TestCase("Complete")]
@@ -103,34 +95,6 @@ public class DueDateUrgencyCalculatorTests
 
         futureUrgency.ShouldBe(DueDateUrgency.None);
         todayUrgency.ShouldBe(DueDateUrgency.DueToday);
-    }
-
-    [Test]
-    public void BadgeText_WhenOverdue_ReturnsOverdue()
-    {
-        DueDateUrgencyCalculator.BadgeText(DueDateUrgency.Overdue, new DateOnly(2026, 8, 1))
-            .ShouldBe("Overdue");
-    }
-
-    [Test]
-    public void BadgeText_WhenDueToday_ReturnsDueToday()
-    {
-        DueDateUrgencyCalculator.BadgeText(DueDateUrgency.DueToday, new DateOnly(2026, 8, 29))
-            .ShouldBe("Due Today");
-    }
-
-    [Test]
-    public void BadgeText_WhenNoneWithFutureDate_ReturnsOnTrack()
-    {
-        DueDateUrgencyCalculator.BadgeText(DueDateUrgency.None, new DateOnly(2026, 9, 30))
-            .ShouldBe("On Track");
-    }
-
-    [Test]
-    public void BadgeText_WhenNoneWithNullDate_ReturnsNull()
-    {
-        DueDateUrgencyCalculator.BadgeText(DueDateUrgency.None, null)
-            .ShouldBeNull();
     }
 
     [Test]

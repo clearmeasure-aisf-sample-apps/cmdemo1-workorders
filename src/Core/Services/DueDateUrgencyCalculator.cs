@@ -40,38 +40,4 @@ public static class DueDateUrgencyCalculator
             _ => DueDateUrgency.None
         };
     }
-
-    /// <summary>
-    /// CSS class for the Due Date cell only (empty when no urgency color).
-    /// </summary>
-    public static string CssClass(DueDateUrgency urgency) =>
-        urgency switch
-        {
-            DueDateUrgency.DueToday => "due-date-today",
-            DueDateUrgency.Overdue => "due-date-overdue",
-            _ => string.Empty
-        };
-
-    /// <summary>
-    /// Accessible label next to the date when urgency applies.
-    /// </summary>
-    public static string? ScreenReaderText(DueDateUrgency urgency) =>
-        urgency switch
-        {
-            DueDateUrgency.DueToday => "Due today",
-            DueDateUrgency.Overdue => "Overdue",
-            _ => null
-        };
-
-    /// <summary>
-    /// Badge label for the urgency pill shown in the work order list.
-    /// Returns null when no badge should be rendered (no due date).
-    /// </summary>
-    public static string? BadgeText(DueDateUrgency urgency, DateOnly? dueDate) =>
-        urgency switch
-        {
-            DueDateUrgency.Overdue => "Overdue",
-            DueDateUrgency.DueToday => "Due Today",
-            _ => dueDate.HasValue ? "On Track" : null
-        };
 }

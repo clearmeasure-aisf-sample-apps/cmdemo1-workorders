@@ -11,6 +11,14 @@ public abstract record StateCommandBase(WorkOrder WorkOrder, Employee CurrentUse
     public abstract string TransitionVerbPresentTense { get; }
     public abstract string TransitionVerbPastTense { get; }
 
+    /// <summary>
+    /// Cancel commands are destructive; everything else is secondary unless a forward command overrides.
+    /// </summary>
+    public virtual CommandRole Role =>
+        GetEndStatus() == WorkOrderStatus.Cancelled
+            ? CommandRole.Destructive
+            : CommandRole.Secondary;
+
     public IStateTransitionEvent? StateTransitionEvent { get; protected set; }
 
     public bool IsValid()

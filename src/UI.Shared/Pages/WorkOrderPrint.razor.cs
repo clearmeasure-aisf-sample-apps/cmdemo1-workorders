@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -59,7 +60,7 @@ public partial class WorkOrderPrint : AppComponentBase
         {
             if (_workOrder?.DueDate is null) return "None";
             var text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd");
-            var urgency = DueDateUrgencyCalculator.ScreenReaderText(
+            var urgency = DueDateUrgencyPresenter.ScreenReaderText(
                 DueDateUrgencyCalculator.Calculate(_workOrder, Clock));
             return string.IsNullOrEmpty(urgency) ? text : $"{text} ({urgency})";
         }
