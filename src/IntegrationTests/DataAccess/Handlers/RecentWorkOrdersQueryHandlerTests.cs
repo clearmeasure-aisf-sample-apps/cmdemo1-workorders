@@ -49,23 +49,9 @@ public class RecentWorkOrdersQueryHandlerTests
         var userName = TestData.UserName("recentcreator");
         var creator = EmployeeBuilder.Create(userName)
             .WithFirstName("Recent").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
-        var orders = BuildLatestChangedOrders(creator, start, numbers);
+        var orders = RecentWorkOrdersSteps.BuildLatestChangedOrders(creator, start, numbers);
         await WorkOrderQuerySteps.SaveOrdersAsync(creator, orders);
         return creator.UserName;
-    }
-
-    private static WorkOrder[] BuildLatestChangedOrders(Employee creator, DateTime start, string[] numbers)
-    {
-        var orders = Enumerable.Range(1, 11)
-            .Select(i => WorkOrderBuilder.For(creator, WorkOrderStatus.Draft)
-                .WithNumber(numbers[i - 1]).WithTitle(numbers[i - 1]).CreatedAt(start.AddDays(10 + i)).Build())
-            .ToList();
-        orders.Add(WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
-            .WithNumber(numbers[11]).WithTitle(numbers[11])
-            .CreatedAt(start).CompletedAt(start.AddDays(40)).Build());
-        orders.Add(WorkOrderBuilder.For(creator, WorkOrderStatus.Draft)
-            .WithNumber(numbers[12]).WithTitle(numbers[12]).CreatedAt(null).Build());
-        return orders.ToArray();
     }
 
     private static async Task GivenTiedOrdersAsync(DateTime created, string[] numbers)

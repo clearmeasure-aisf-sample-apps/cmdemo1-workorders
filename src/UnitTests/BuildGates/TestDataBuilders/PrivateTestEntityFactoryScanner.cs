@@ -6,7 +6,8 @@ using ClearMeasure.Bootcamp.UnitTests.BuildGates.Refactoring;
 namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.TestDataBuilders;
 
 /// <summary>
-/// Finds private methods on test fixtures that return <c>WorkOrder</c> or <c>Employee</c>.
+/// Finds private (or default-private) methods on test fixtures that return <c>WorkOrder</c>,
+/// <c>Employee</c>, or arrays of those types. Async <c>Task&lt;…&gt;</c> query steps are left alone.
 /// Test data must come from ObjectMother or builders, not fixture-local factories.
 /// </summary>
 internal static class PrivateTestEntityFactoryScanner
@@ -48,7 +49,7 @@ internal static class PrivateTestEntityFactoryScanner
         {
             foreach (var method in type.Members.OfType<MethodDeclarationSyntax>())
             {
-                if (!IsPrivate(method) || !ReturnsEntity(method))
+                if (!IsPrivate(method) || !ReturnsEntityOrEntityArray(method))
                 {
                     continue;
                 }
@@ -80,13 +81,18 @@ internal static class PrivateTestEntityFactoryScanner
         method.Modifiers.Any(SyntaxKind.PrivateKeyword)
         || !method.Modifiers.Any(modifier => AccessModifiers.Contains(modifier.Kind()));
 
-    private static bool ReturnsEntity(MethodDeclarationSyntax method)
+    private static bool ReturnsEntityOrEntityArray(MethodDeclarationSyntax method)
     {
-        var name = method.ReturnType switch
+        var type = method.ReturnType;
+        if (type is ArrayTypeSyntax array)
+        {
+            type = array.ElementType;
+        }
+
+        var name = type switch
         {
             IdentifierNameSyntax identifier => identifier.Identifier.Text,
             QualifiedNameSyntax qualified => qualified.Right.Identifier.Text,
-            GenericNameSyntax generic => generic.Identifier.Text,
             NullableTypeSyntax { ElementType: IdentifierNameSyntax identifier } => identifier.Identifier.Text,
             _ => null
         };

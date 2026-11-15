@@ -50,11 +50,37 @@ public class PrivateTestEntityFactoryScannerTests
     }
 
     [Test]
-    public void ShouldIgnorePrivateHelpers_OnBuilders()
+    public void ShouldFlagPrivateFactory_ReturningWorkOrderArray()
     {
         const string code =
             """
             using ClearMeasure.Bootcamp.Core.Model;
+            [TestFixture]
+            public class SampleTests
+            {
+                [Test]
+                public void ShouldArrange() { }
+                private static WorkOrder[] SeedOrders() => [new WorkOrder()];
+            }
+            """;
+
+        var keys = PrivateTestEntityFactoryScanner.ScanFile("src/UnitTests/SampleTests.cs", code);
+
+        keys.ShouldBe(["src/UnitTests/SampleTests.cs :: SampleTests.SeedOrders"]);
+    }
+
+    [Test]
+    public void ShouldIgnoreAsyncTaskFactories_AndBuilders()
+    {
+        const string code =
+            """
+            using ClearMeasure.Bootcamp.Core.Model;
+            [TestFixture]
+            public class SampleTests
+            {
+                private static async Task<WorkOrder[]> WhenSearch() => [];
+                private static async Task<WorkOrder> SeedDraftAsync() => new WorkOrder();
+            }
             public sealed class WorkOrderBuilder
             {
                 private WorkOrder Seed() => new WorkOrder();
@@ -62,7 +88,7 @@ public class PrivateTestEntityFactoryScannerTests
             }
             """;
 
-        var keys = PrivateTestEntityFactoryScanner.ScanFile("src/UnitTests/TestSupport/WorkOrderBuilder.cs", code);
+        var keys = PrivateTestEntityFactoryScanner.ScanFile("src/UnitTests/SampleTests.cs", code);
 
         keys.ShouldBeEmpty();
     }
