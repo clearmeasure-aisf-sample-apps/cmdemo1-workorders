@@ -4,8 +4,8 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
 
 /// <summary>
-/// UI.Shared JS interop conventions: empty catches only in <c>*Script.cs</c>, no
-/// <c>IJSObjectReference</c> in <c>.razor.cs</c>, and every <c>catch (Exception)</c> logs.
+/// UI.Shared JS interop conventions: empty catches only in allow-listed script classes, no
+/// <c>IJSObjectReference</c> in <c>.razor.cs</c>, and every silent catch-all logs (or rethrows).
 /// </summary>
 [TestFixture]
 public class UiSharedJsInteropArchitectureTests
@@ -15,7 +15,7 @@ public class UiSharedJsInteropArchitectureTests
     {
         var violations = UiSharedConventionScan.EmptyCatchViolations(RepositoryCheckout.Current);
         violations.ShouldBeEmpty(
-            "Empty catch blocks belong only in *Script.cs (circuit disconnect). Found: " +
+            "Empty catch blocks belong only in allow-listed *Script.cs (circuit disconnect). Found: " +
             string.Join(", ", violations));
     }
 
@@ -30,11 +30,11 @@ public class UiSharedJsInteropArchitectureTests
     }
 
     [Test]
-    public void UiShared_CatchExceptionBlocks_ShouldLog_WhenSourcesAreScanned()
+    public void UiShared_SilentCatchAlls_ShouldLogOrRethrow_WhenSourcesAreScanned()
     {
         var violations = UiSharedConventionScan.CatchExceptionWithoutLogViolations(RepositoryCheckout.Current);
         violations.ShouldBeEmpty(
-            "catch (Exception) in UI.Shared must LogWarning (or Error/Critical). Found: " +
+            "catch / catch (Exception) in UI.Shared must LogWarning (or rethrow). Found: " +
             string.Join(", ", violations));
     }
 
@@ -47,6 +47,20 @@ public class UiSharedJsInteropArchitectureTests
               public void Go() {
                 try { }
                 catch (System.Exception) { }
+              }
+            }
+            """).ShouldNotBeEmpty();
+    }
+
+    [Test]
+    public void EmptyCatchLineNumbers_WhenRazorCodeHasEmptyCatch_ReportsTheLine()
+    {
+        UiSharedConventionRules.EmptyCatchLineNumbers("""
+            @page "/x"
+            @code {
+              void Go() {
+                try { }
+                catch (JSDisconnectedException) { }
               }
             }
             """).ShouldNotBeEmpty();
@@ -86,6 +100,49 @@ public class UiSharedJsInteropArchitectureTests
                 try { return true; }
                 catch (System.Exception) { return false; }
               }
+            }
+            """).ShouldNotBeEmpty();
+    }
+
+    [Test]
+    public void CatchExceptionWithoutLogLineNumbers_WhenBareCatchHasNoLog_ReportsTheLine()
+    {
+        UiSharedConventionRules.CatchExceptionWithoutLogLineNumbers("""
+            namespace Sample;
+            public class C {
+              public void Go() {
+                try { }
+                catch { _ = 1; }
+              }
+            }
+            """).ShouldNotBeEmpty();
+    }
+
+    [Test]
+    public void CatchExceptionWithoutLogLineNumbers_WhenCatchRethrows_ReportsNothing()
+    {
+        UiSharedConventionRules.CatchExceptionWithoutLogLineNumbers("""
+            namespace Sample;
+            public class C {
+              public void Go() {
+                try { }
+                catch (System.Exception) { throw; }
+              }
+            }
+            """).ShouldBeEmpty();
+    }
+
+    [Test]
+    public void CatchExceptionWithoutLogLineNumbers_WhenRazorCatchHasNoLog_ReportsTheLine()
+    {
+        UiSharedConventionRules.CatchExceptionWithoutLogLineNumbers("""
+            @page "/x"
+            @code {
+              void Go() {
+                try { }
+                catch (Exception) { _x = null; }
+              }
+              object? _x;
             }
             """).ShouldNotBeEmpty();
     }

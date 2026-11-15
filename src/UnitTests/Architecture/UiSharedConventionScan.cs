@@ -82,16 +82,16 @@ internal static class UiSharedConventionScan
     }
 
     /// <summary>
-    /// Empty <c>catch</c> blocks in UI.Shared production sources outside JS-module script classes
-    /// (allow-list: files named <c>*Script.cs</c>, which own circuit-disconnect tolerance).
+    /// Empty <c>catch</c> blocks in UI.Shared production sources outside the JS-module script allow-list
+    /// (those classes own circuit-disconnect tolerance for one imported module).
     /// </summary>
     internal static IReadOnlyList<string> EmptyCatchViolations(RepositoryCheckout checkout)
     {
         var violations = new List<string>();
-        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        foreach (var sourceFile in checkout.SourceFiles(".cs", ".razor"))
         {
             var relative = checkout.Relative(sourceFile);
-            if (!IsUiSharedProduction(relative) || IsJsModuleScriptClass(relative))
+            if (!IsUiSharedProduction(relative) || IsJsModuleScriptAllowListed(relative))
             {
                 continue;
             }
@@ -128,15 +128,15 @@ internal static class UiSharedConventionScan
     }
 
     /// <summary>
-    /// <c>catch (Exception)</c> blocks in UI.Shared that do not log via <c>ILogger</c> extension methods.
+    /// Silent catch-alls in UI.Shared (<c>catch</c> / <c>catch (Exception)</c> that neither log nor rethrow).
     /// </summary>
     internal static IReadOnlyList<string> CatchExceptionWithoutLogViolations(RepositoryCheckout checkout)
     {
         var violations = new List<string>();
-        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        foreach (var sourceFile in checkout.SourceFiles(".cs", ".razor"))
         {
             var relative = checkout.Relative(sourceFile);
-            if (!IsUiSharedProduction(relative))
+            if (!IsUiSharedProduction(relative) || IsJsModuleScriptAllowListed(relative))
             {
                 continue;
             }
@@ -151,8 +151,21 @@ internal static class UiSharedConventionScan
         return violations;
     }
 
-    private static bool IsJsModuleScriptClass(string relative) =>
-        relative.EndsWith("Script.cs", StringComparison.OrdinalIgnoreCase);
+    /// <summary>
+    /// JS-module script classes that may empty-catch circuit disconnect: each owns one
+    /// <c>IJSObjectReference</c> module import.
+    /// </summary>
+    private static readonly HashSet<string> JsModuleScriptAllowList = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "src/UI.Shared/Components/Search/SearchPageScript.cs",
+        "src/UI.Shared/Components/MainLayoutNavScript.cs",
+        "src/UI.Shared/Components/NotificationsPanelScript.cs",
+        "src/UI.Shared/Services/ThemeScript.cs",
+        "src/UI.Shared/Components/ClipboardScript.cs",
+    };
+
+    private static bool IsJsModuleScriptAllowListed(string relative) =>
+        JsModuleScriptAllowList.Contains(relative.Replace('\\', '/'));
 
     private static void CollectAuthProviderViolation(
         RepositoryCheckout checkout, string sourceFile, List<string> violations)

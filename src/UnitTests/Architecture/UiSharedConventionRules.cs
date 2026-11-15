@@ -72,10 +72,15 @@ internal static class UiSharedConventionRules
     /// <summary>
     /// Line numbers of empty <c>catch</c> blocks (no statements; comments do not count).
     /// </summary>
-    internal static IReadOnlyList<int> EmptyCatchLineNumbers(string source)
+    internal static IReadOnlyList<int> EmptyCatchLineNumbers(string source) =>
+        EmptyCatchLineNumbers(ArchitectureRules.Parse(CSharpForCatchScan(source)));
+
+    /// <summary>
+    /// Line numbers of empty <c>catch</c> blocks in already-parsed C# (or a Razor <c>@code</c> wrapper).
+    /// </summary>
+    internal static IReadOnlyList<int> EmptyCatchLineNumbers(CompilationUnitSyntax root)
     {
         var lines = new List<int>();
-        var root = ArchitectureRules.Parse(source);
         foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
         {
             if (clause.Block.Statements.Count == 0)
@@ -90,7 +95,7 @@ internal static class UiSharedConventionRules
     /// <summary>True when the source mentions <c>IJSObjectReference</c> as a type name.</summary>
     internal static bool UsesIjsObjectReference(string source)
     {
-        var root = ArchitectureRules.Parse(source);
+        var root = ArchitectureRules.Parse(CSharpForCatchScan(source));
         foreach (var node in root.DescendantNodes())
         {
             if (node is IdentifierNameSyntax { Identifier.ValueText: "IJSObjectReference" })
@@ -108,16 +113,21 @@ internal static class UiSharedConventionRules
     }
 
     /// <summary>
-    /// True when <c>catch (Exception</c> (or <c>System.Exception</c>) has no <c>LogWarning</c> /
-    /// <c>LogError</c> / <c>LogCritical</c> call in its block.
+    /// Line numbers of silent catch-alls: bare <c>catch</c> or <c>catch (Exception)</c> that neither
+    /// logs nor rethrows (<c>throw;</c>).
     /// </summary>
-    internal static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(string source)
+    internal static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(string source) =>
+        CatchExceptionWithoutLogLineNumbers(ArchitectureRules.Parse(CSharpForCatchScan(source)));
+
+    /// <summary>
+    /// Line numbers of silent catch-alls in already-parsed C#.
+    /// </summary>
+    internal static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(CompilationUnitSyntax root)
     {
         var lines = new List<int>();
-        var root = ArchitectureRules.Parse(source);
         foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
         {
-            if (!IsExceptionCatch(clause) || CatchBlockLogs(clause.Block))
+            if (!IsSilentCatchAll(clause) || CatchBlockLogsOrRethrows(clause.Block))
             {
                 continue;
             }
@@ -128,14 +138,100 @@ internal static class UiSharedConventionRules
         return lines;
     }
 
-    private static bool IsExceptionCatch(CatchClauseSyntax clause)
+    /// <summary>
+    /// C# text to scan for catch rules: plain <c>.cs</c> as-is, or each Razor <c>@code</c> block
+    /// wrapped so Roslyn can parse it.
+    /// </summary>
+    internal static string CSharpForCatchScan(string source)
+    {
+        if (!source.Contains("@code", StringComparison.Ordinal))
+        {
+            return source;
+        }
+
+        var blocks = new List<string>();
+        var index = 0;
+        while (true)
+        {
+            var at = source.IndexOf("@code", index, StringComparison.Ordinal);
+            if (at < 0)
+            {
+                break;
+            }
+
+            var open = source.IndexOf('{', at);
+            if (open < 0)
+            {
+                break;
+            }
+
+            var close = MatchingBrace(source, open);
+            if (close < 0)
+            {
+                break;
+            }
+
+            blocks.Add(source[(open + 1)..close]);
+            index = close + 1;
+        }
+
+        if (blocks.Count == 0)
+        {
+            return source;
+        }
+
+        return "namespace RazorCodeScan { class Code { " + string.Join("\n", blocks) + " } }";
+    }
+
+    private static int MatchingBrace(string text, int openIndex)
+    {
+        var depth = 0;
+        for (var i = openIndex; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '{')
+            {
+                depth++;
+            }
+            else if (c == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool IsSilentCatchAll(CatchClauseSyntax clause)
     {
         if (clause.Declaration?.Type is null)
         {
-            return false;
+            return true;
         }
 
         return SimpleTypeName(UnwrapNullable(clause.Declaration.Type)) == "Exception";
+    }
+
+    private static bool CatchBlockLogsOrRethrows(BlockSyntax block)
+    {
+        if (CatchBlockLogs(block))
+        {
+            return true;
+        }
+
+        foreach (var statement in block.DescendantNodes().OfType<ThrowStatementSyntax>())
+        {
+            if (statement.Expression is null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool CatchBlockLogs(BlockSyntax block)

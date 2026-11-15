@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using ClearMeasure.Bootcamp.Core;
 using MediatR;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
 
@@ -11,13 +9,11 @@ public class Bus : IBus
     private static readonly ActivitySource ActivitySource = new("ChurchBulletin.Application.Bus", "1.0.0");
 
     private readonly IMediator _mediator;
-    private readonly ILogger _logger;
 
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
-    public Bus(IMediator mediator, ILogger<Bus>? logger = null)
+    public Bus(IMediator mediator)
     {
         _mediator = mediator;
-        _logger = logger ?? NullLogger<Bus>.Instance;
     }
 
     public virtual async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
@@ -30,7 +26,6 @@ public class Bus : IBus
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Bus.Send failed for {RequestType}.", request.GetType().Name);
             SetActivityError(activity, ex);
             throw;
         }
@@ -46,7 +41,6 @@ public class Bus : IBus
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Bus.Send failed for {RequestType}.", request.GetType().Name);
             SetActivityError(activity, ex);
             throw;
         }
@@ -62,7 +56,6 @@ public class Bus : IBus
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Bus.Publish failed for {NotificationType}.", notification.GetType().Name);
             SetActivityError(activity, ex);
             throw;
         }

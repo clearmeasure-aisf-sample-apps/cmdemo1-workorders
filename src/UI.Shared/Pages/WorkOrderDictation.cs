@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
 using Toolbelt.Blazor.SpeechRecognition;
 
@@ -21,12 +20,12 @@ internal sealed class WorkOrderDictation : IAsyncDisposable
         SpeechRecognition? recognition,
         Action<DictationTarget, string> onTranscript,
         Func<Task> onChanged,
-        ILogger? logger = null)
+        ILogger logger)
     {
         _recognition = recognition;
         _onTranscript = onTranscript;
         _onChanged = onChanged;
-        _logger = logger ?? NullLogger.Instance;
+        _logger = logger;
         if (recognition != null)
         {
             recognition.Result += OnResult;

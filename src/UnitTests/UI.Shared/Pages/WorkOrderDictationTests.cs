@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Toolbelt.Blazor.SpeechRecognition;
 
@@ -30,7 +31,8 @@ public class WorkOrderDictationTests
     [Test]
     public async Task ShouldStayIdle_WhenTheBrowserHasNoSpeechRecognition()
     {
-        await using var dictation = new WorkOrderDictation(null, (_, _) => { }, () => Task.CompletedTask);
+        await using var dictation = new WorkOrderDictation(null, (_, _) => { }, () => Task.CompletedTask,
+            NullLogger.Instance);
 
         await dictation.ToggleAsync(DictationTarget.Title, "en-US");
 

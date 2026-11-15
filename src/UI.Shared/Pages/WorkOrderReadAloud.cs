@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Toolbelt.Blazor.SpeechSynthesis;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -12,10 +11,8 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 internal sealed class WorkOrderReadAloud(
     ITranslationService? translationService,
     SpeechSynthesis? speechSynthesis,
-    ILogger? logger = null)
+    ILogger logger)
 {
-    private readonly ILogger _logger = logger ?? NullLogger.Instance;
-
     public async Task SpeakAsync(string? text, string language)
     {
         if (string.IsNullOrEmpty(text) || speechSynthesis == null || translationService == null)
@@ -31,7 +28,7 @@ internal sealed class WorkOrderReadAloud(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Speech synthesis failed; read-aloud is skipped.");
+            logger.LogWarning(ex, "Speech synthesis failed; read-aloud is skipped.");
         }
     }
 
