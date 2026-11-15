@@ -101,6 +101,37 @@ public class PrAcceptanceArtifactsTests
     }
 
     [Test]
+    public void Workflow_WhenResolvingPr_PrefersEventPayloadThenCommitPulls()
+    {
+        var yaml = ArtifactsWorkflowText();
+        var eventPr = yaml.IndexOf("github.event.workflow_run.pull_requests[0].number", StringComparison.Ordinal);
+        var commitPulls = yaml.IndexOf("commits/${WR_SHA}/pulls", StringComparison.Ordinal);
+
+        eventPr.ShouldBeGreaterThan(0);
+        commitPulls.ShouldBeGreaterThan(eventPr);
+        yaml.ShouldNotContain("actions/runs/${WR_ID}/pull-requests");
+        yaml.ShouldNotContain("continue-on-error:");
+    }
+
+    [Test]
+    public void Workflow_WhenNoPrFound_SkipsStickyCommentWithExitZero()
+    {
+        var resolve = ArtifactsWorkflow().Job("sticky-comment")
+            .Step("Resolve PR number and run metadata");
+
+        resolve.ShouldContain("No pull request for run ${WR_ID}; skipping sticky comment.");
+        resolve.ShouldContain("echo \"skip=true\" >> \"$GITHUB_OUTPUT\"");
+        resolve.ShouldContain("exit 0");
+        resolve.ShouldContain("if pr=$(gh api \"repos/${WR_REPO}/commits/${WR_SHA}/pulls\"");
+        resolve.ShouldContain("treating as no PR.");
+    }
+
+    private static WorkflowFile ArtifactsWorkflow() =>
+        WorkflowFile.Read(RepositoryCheckout.Current, "pr-environment-artifacts.yml");
+
+    private static string ArtifactsWorkflowText() => ArtifactsWorkflow().Text;
+
+    [Test]
     public void PublishScript_WhenSourceMentionsAuth_UsesAuthModeLoginOnly()
     {
         var script = RepositoryCheckout.Current.ReadText("scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1");
