@@ -8,20 +8,11 @@ public class PrEnvironmentOidcCheckoutRuleTests
     [Test]
     public void Collect_WhenNameThenUsesOmitsRef_AddsProblem()
     {
-        var job = new WorkflowJobSlice(
-            "probe-oidc-branch",
-            """
-              probe-oidc-branch:
-                permissions:
-                  id-token: write
-                steps:
+        var problems = Collect("probe-oidc-branch", """
                   - name: Checkout code
                     uses: actions/checkout@v6.0.1
                   - run: echo hi
             """);
-        var problems = new List<string>();
-
-        PrEnvironmentOidcCheckoutRule.Collect(problems, job);
 
         problems.Count.ShouldBe(1);
         problems[0].ShouldContain("probe-oidc-branch");
@@ -30,19 +21,10 @@ public class PrEnvironmentOidcCheckoutRuleTests
     [Test]
     public void Collect_WhenUsesFirstOmitsRef_AddsProblem()
     {
-        var job = new WorkflowJobSlice(
-            "shards",
-            """
-              shards:
-                permissions:
-                  id-token: write
-                steps:
+        var problems = Collect("shards", """
                   - uses: actions/checkout@v6.0.1
                   - run: echo hi
             """);
-        var problems = new List<string>();
-
-        PrEnvironmentOidcCheckoutRule.Collect(problems, job);
 
         problems.Count.ShouldBe(1);
         problems[0].ShouldContain("shards");
@@ -51,13 +33,7 @@ public class PrEnvironmentOidcCheckoutRuleTests
     [Test]
     public void Collect_WhenCheckoutUsesDefaultBranch_IsSilent()
     {
-        var job = new WorkflowJobSlice(
-            "upload",
-            """
-              upload:
-                permissions:
-                  id-token: write
-                steps:
+        var problems = Collect("upload", """
                   - name: Checkout trusted scripts (default branch)
                     uses: actions/checkout@v6.0.1
                     with:
@@ -65,9 +41,6 @@ public class PrEnvironmentOidcCheckoutRuleTests
                       path: _trusted
                       persist-credentials: false
             """);
-        var problems = new List<string>();
-
-        PrEnvironmentOidcCheckoutRule.Collect(problems, job);
 
         problems.ShouldBeEmpty();
     }
@@ -75,22 +48,13 @@ public class PrEnvironmentOidcCheckoutRuleTests
     [Test]
     public void Collect_WhenRepositoryIsGithubRepositoryExpression_AddsProblem()
     {
-        var job = new WorkflowJobSlice(
-            "spoof",
-            """
-              spoof:
-                permissions:
-                  id-token: write
-                steps:
+        var problems = Collect("spoof", """
                   - name: Checkout
                     uses: actions/checkout@v6.0.1
                     with:
                       repository: ${{ github.repository }}
                       ref: ${{ github.sha }}
             """);
-        var problems = new List<string>();
-
-        PrEnvironmentOidcCheckoutRule.Collect(problems, job);
 
         problems.Count.ShouldBe(1);
         problems[0].ShouldContain("spoof");
@@ -99,13 +63,7 @@ public class PrEnvironmentOidcCheckoutRuleTests
     [Test]
     public void Collect_WhenCmdemo1SystemMain_IsSilent()
     {
-        var job = new WorkflowJobSlice(
-            "lease",
-            """
-              lease:
-                permissions:
-                  id-token: write
-                steps:
+        var problems = Collect("lease", """
                   - name: Checkout pool manager (cmdemo1-system)
                     uses: actions/checkout@v6.0.1
                     with:
@@ -114,10 +72,23 @@ public class PrEnvironmentOidcCheckoutRuleTests
                       ref: main
                       persist-credentials: false
             """);
-        var problems = new List<string>();
-
-        PrEnvironmentOidcCheckoutRule.Collect(problems, job);
 
         problems.ShouldBeEmpty();
+    }
+
+    private static List<string> Collect(string jobId, string stepsYaml)
+    {
+        var job = new WorkflowJobSlice(
+            jobId,
+            $"""
+              {jobId}:
+                permissions:
+                  id-token: write
+                steps:
+            {stepsYaml}
+            """);
+        var problems = new List<string>();
+        PrEnvironmentOidcCheckoutRule.Collect(problems, job);
+        return problems;
     }
 }

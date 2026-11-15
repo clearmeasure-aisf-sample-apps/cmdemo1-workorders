@@ -3,6 +3,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// <summary>One job block cut from a GitHub Actions workflow YAML text.</summary>
 internal sealed class WorkflowJobSlice
 {
+    // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
     public WorkflowJobSlice(string id, string text)
     {
         Id = id;

@@ -7,6 +7,36 @@ function Assert-True {
     if (-not $Condition) { throw $Message }
 }
 
+function New-TarGzWithSymlink {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$FileName,
+        [Parameter(Mandatory = $true)][string]$FileText,
+        [Parameter(Mandatory = $true)][string]$LinkName,
+        [Parameter(Mandatory = $true)][string]$LinkTarget
+    )
+
+    $fileStream = [System.IO.File]::Create($Path)
+    $gzip = [System.IO.Compression.GZipStream]::new(
+        $fileStream, [System.IO.Compression.CompressionMode]::Compress)
+    $writer = [System.Formats.Tar.TarWriter]::new($gzip)
+    try {
+        $ok = [System.Formats.Tar.PaxTarEntry]::new(
+            [System.Formats.Tar.TarEntryType]::RegularFile, $FileName)
+        $okBytes = [System.Text.Encoding]::UTF8.GetBytes($FileText)
+        $ok.DataStream = [System.IO.MemoryStream]::new($okBytes)
+        $writer.WriteEntry($ok)
+
+        $link = [System.Formats.Tar.PaxTarEntry]::new(
+            [System.Formats.Tar.TarEntryType]::SymbolicLink, $LinkName)
+        $link.LinkName = $LinkTarget
+        $writer.WriteEntry($link)
+    }
+    finally {
+        $writer.Dispose()
+    }
+}
+
 $env:AZURE_STORAGE_SAS_TOKEN = 'not-a-real-sas'
 try {
     & pwsh -NoProfile -File $scriptPath -Mode Protect `
@@ -64,17 +94,25 @@ try {
     Assert-True ($recovered.Trim() -eq 'acceptance-artifact-secret-payload') 'round-trip'
 
     # Symlink entries must be rejected on Unprotect (trusted Upload hardening).
-    $evilSource = Join-Path $temp 'evil-source'
-    New-Item -ItemType Directory -Force -Path $evilSource | Out-Null
-    Set-Content -LiteralPath (Join-Path $evilSource 'ok.txt') -Value 'ok'
-    Push-Location $evilSource
-    try { & ln -s /etc/passwd evil-link } finally { Pop-Location }
+    $evilPlainTarGz = Join-Path $temp 'evil-plain.tar.gz'
+    New-TarGzWithSymlink -Path $evilPlainTarGz `
+        -FileName 'ok.txt' -FileText 'ok' `
+        -LinkName 'evil-link' -LinkTarget 'ok.txt'
+
     $evilBundle = Join-Path $temp 'evil-bundle'
-    & pwsh -NoProfile -File $scriptPath -Mode Protect `
-        -PublicKeyPath $publicKey `
-        -SourceDirectory $evilSource `
-        -BundleDirectory $evilBundle
-    Assert-True ($LASTEXITCODE -eq 0) 'Protect evil bundle'
+    New-Item -ItemType Directory -Force -Path $evilBundle | Out-Null
+    $evilSession = Join-Path $evilBundle 'session.key'
+    $keyBytes = [byte[]]::new(32)
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($keyBytes)
+    [System.IO.File]::WriteAllBytes($evilSession, $keyBytes)
+    & openssl enc -aes-256-cbc -pbkdf2 -salt -pass file:$evilSession `
+        -in $evilPlainTarGz -out (Join-Path $evilBundle 'payload.tar.gz.enc')
+    Assert-True ($LASTEXITCODE -eq 0) 'encrypt evil tar'
+    & openssl pkeyutl -encrypt -pubin -inkey $publicKey -pkeyopt rsa_padding_mode:oaep `
+        -in $evilSession -out (Join-Path $evilBundle 'session.key.enc')
+    Assert-True ($LASTEXITCODE -eq 0) 'wrap evil session key'
+    Remove-Item -LiteralPath $evilSession -Force
+
     $evilOut = Join-Path $temp 'evil-out'
     $null = & pwsh -NoProfile -File $scriptPath -Mode Unprotect `
         -PrivateKeyPath $privateKey `

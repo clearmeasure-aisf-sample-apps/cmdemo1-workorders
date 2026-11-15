@@ -5,19 +5,19 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 [TestFixture]
 public class PrEnvironmentWorkflowJobsTests
 {
+    private const string TwoJobYaml = """
+        jobs:
+          build:
+            runs-on: ubuntu-latest
+          upload:
+            permissions:
+              id-token: write
+        """;
+
     [Test]
     public void All_WhenWorkflowHasTwoJobs_ReturnsBothIds()
     {
-        const string yaml = """
-            jobs:
-              build:
-                runs-on: ubuntu-latest
-              upload:
-                permissions:
-                  id-token: write
-            """;
-
-        var jobs = PrEnvironmentWorkflowJobs.All(yaml);
+        var jobs = PrEnvironmentWorkflowJobs.All(TwoJobYaml);
 
         jobs.Count.ShouldBe(2);
         jobs[0].Id.ShouldBe("build");
@@ -27,16 +27,7 @@ public class PrEnvironmentWorkflowJobsTests
     [Test]
     public void WithIdTokenWrite_WhenOnlyUploadHasOidc_ReturnsUploadAlone()
     {
-        const string yaml = """
-            jobs:
-              build:
-                runs-on: ubuntu-latest
-              upload:
-                permissions:
-                  id-token: write
-            """;
-
-        var jobs = PrEnvironmentWorkflowJobs.WithIdTokenWrite(yaml);
+        var jobs = PrEnvironmentWorkflowJobs.WithIdTokenWrite(TwoJobYaml);
 
         jobs.Count.ShouldBe(1);
         jobs[0].Id.ShouldBe("upload");

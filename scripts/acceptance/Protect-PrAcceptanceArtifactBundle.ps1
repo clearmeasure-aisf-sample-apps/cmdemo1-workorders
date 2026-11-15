@@ -217,23 +217,42 @@ function Invoke-Unprotect {
 function Assert-TarEntriesAreRegularFilesOrDirectories {
     param([Parameter(Mandatory = $true)][string]$TarPath)
 
-    $listing = & tar -tvzf $TarPath 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw "tar -tvzf failed for $TarPath (exit $LASTEXITCODE): $listing"
+    # Use System.Formats.Tar (not tar -t) so symlink/hardlink detection is
+    # identical on GNU tar hosts and Windows bsdtar runners.
+    Add-Type -AssemblyName System.Formats.Tar
+    $fileStream = [System.IO.File]::OpenRead($TarPath)
+    try {
+        $gzip = [System.IO.Compression.GZipStream]::new(
+            $fileStream, [System.IO.Compression.CompressionMode]::Decompress)
+        $reader = [System.Formats.Tar.TarReader]::new($gzip)
+        try {
+            while ($true) {
+                $entry = $reader.GetNextEntry()
+                if ($null -eq $entry) { break }
+                Assert-SafeTarEntry -Entry $entry
+            }
+        }
+        finally { $reader.Dispose() }
+    }
+    finally { $fileStream.Dispose() }
+}
+
+function Assert-SafeTarEntry {
+    param([Parameter(Mandatory = $true)]$Entry)
+
+    $allowed = @(
+        [System.Formats.Tar.TarEntryType]::RegularFile,
+        [System.Formats.Tar.TarEntryType]::V7RegularFile,
+        [System.Formats.Tar.TarEntryType]::Directory
+    )
+    if ($allowed -notcontains $Entry.EntryType) {
+        throw "Blocker: ciphertext tar contains a non-file/dir entry (refusing extract): $($Entry.EntryType) $($Entry.Name)"
     }
 
-    foreach ($line in @($listing)) {
-        $text = [string]$line
-        if ([string]::IsNullOrWhiteSpace($text)) { continue }
-        $type = $text[0]
-        if ($type -ne '-' -and $type -ne 'd') {
-            throw "Blocker: ciphertext tar contains a non-file/dir entry (refusing extract): $text"
-        }
-        # Path is the last whitespace-separated field in GNU tar -t output.
-        $path = ($text -split '\s+', 6)[-1]
-        if ($path.StartsWith('/') -or $path.Contains('../')) {
-            throw "Blocker: ciphertext tar contains an unsafe path (refusing extract): $text"
-        }
+    $path = [string]$Entry.Name
+    $segments = $path.Replace('\', '/').Split('/', [System.StringSplitOptions]::RemoveEmptyEntries)
+    if ($path.StartsWith('/') -or ($segments -contains '..')) {
+        throw "Blocker: ciphertext tar contains an unsafe path (refusing extract): $path"
     }
 }
 

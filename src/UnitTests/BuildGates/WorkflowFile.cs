@@ -8,8 +8,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// </summary>
 public sealed class WorkflowFile
 {
-    private const string StepStart = "      - ";
-
     private static readonly Regex JobHeader = new(@"^  [A-Za-z0-9_-]+:\s*$", RegexOptions.Compiled);
 
     private static readonly Regex StepName = new(
@@ -58,22 +56,7 @@ public sealed class WorkflowFile
             ?? throw new InvalidOperationException($"The workflow has no step '{stepName}'.");
     }
 
-    private List<string> Steps()
-    {
-        var lines = Lines();
-        var boundaries = Enumerable.Range(0, lines.Count).Where(index => EndsStep(lines[index])).Append(lines.Count).ToList();
-        return boundaries
-            .Zip(boundaries.Skip(1), (start, end) => (Start: start, End: end))
-            .Where(block => block.Start < lines.Count && lines[block.Start].StartsWith(StepStart, StringComparison.Ordinal))
-            .Select(block => Join(lines, block.Start, block.End))
-            .ToList();
-    }
-
-    private static bool EndsStep(string line)
-    {
-        var indent = line.Length - line.TrimStart(' ').Length;
-        return line.StartsWith(StepStart, StringComparison.Ordinal) || (line.Trim().Length > 0 && indent < StepStart.Length - 2);
-    }
+    private IEnumerable<string> Steps() => WorkflowYamlSteps.In(Text);
 
     private static string NameOf(string step)
     {

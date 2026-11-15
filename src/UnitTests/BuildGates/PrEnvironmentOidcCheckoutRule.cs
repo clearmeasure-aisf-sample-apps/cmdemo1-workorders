@@ -6,7 +6,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// </summary>
 internal static class PrEnvironmentOidcCheckoutRule
 {
-    private const string StepPrefix = "      - ";
     private const string DefaultBranchRef = "ref: ${{ github.event.repository.default_branch }}";
     private const string AllowedExternalRepo =
         "repository: clearmeasure-aisf-sample-apps/cmdemo1-system";
@@ -27,40 +26,9 @@ internal static class PrEnvironmentOidcCheckoutRule
         }
     }
 
-    private static IEnumerable<string> CheckoutSteps(string jobText)
-    {
-        foreach (var step in Steps(jobText))
-        {
-            if (step.Contains("uses: actions/checkout@", StringComparison.Ordinal))
-            {
-                yield return step;
-            }
-        }
-    }
-
-    private static IEnumerable<string> Steps(string jobText)
-    {
-        var lines = jobText.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
-        var current = new List<string>();
-        foreach (var line in lines)
-        {
-            if (current.Count > 0 && line.StartsWith(StepPrefix, StringComparison.Ordinal))
-            {
-                yield return string.Join('\n', current);
-                current.Clear();
-            }
-
-            if (current.Count > 0 || line.StartsWith(StepPrefix, StringComparison.Ordinal))
-            {
-                current.Add(line);
-            }
-        }
-
-        if (current.Count > 0)
-        {
-            yield return string.Join('\n', current);
-        }
-    }
+    private static IEnumerable<string> CheckoutSteps(string jobText) =>
+        WorkflowYamlSteps.In(jobText)
+            .Where(step => step.Contains("uses: actions/checkout@", StringComparison.Ordinal));
 
     private static bool IsTrustedCheckout(string step)
     {
