@@ -273,7 +273,7 @@ public class SignedInUserCharacterizationTests
         }
     }
 
-    private sealed class CapturingChatBus() : Bus(null!, TimeProvider.System)
+    private sealed class CapturingChatBus() : Bus(null!)
     {
         public string? LastUserName { get; private set; }
 
