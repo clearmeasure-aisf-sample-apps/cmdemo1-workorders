@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.Core;
 /// the HTTP envelope only via <see cref="IHttpEnvelopeValidation"/> (#1804 review).
 /// </summary>
 [TestFixture]
-public class IHttpEnvelopeValidationTests
+public class HttpEnvelopeValidationTests
 {
     [Test]
     public void ShouldMarkCreateVendor_WhenHttpEnvelopeValidationIsRequired()
