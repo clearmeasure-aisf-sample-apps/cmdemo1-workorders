@@ -5,8 +5,10 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 [TestFixture]
 public class PrEnvironmentWorkflowTests
 {
-    private static string WorkflowText() =>
-        RepositoryCheckout.Current.ReadText(".github/workflows/pr-environment.yml");
+    private static WorkflowFile Workflow() =>
+        WorkflowFile.Read(RepositoryCheckout.Current, "pr-environment.yml");
+
+    private static string WorkflowText() => Workflow().Text;
 
     [Test]
     public void Workflow_WhenRead_IsNamedPrEnvironmentCheck()
@@ -15,6 +17,7 @@ public class PrEnvironmentWorkflowTests
         text.ShouldContain("name: PR environment");
         text.ShouldContain("group: pr-environment-${{ github.ref }}");
         text.ShouldContain("cancel-in-progress: true");
+        text.ShouldContain("permissions: {}");
     }
 
     [Test]
@@ -40,59 +43,49 @@ public class PrEnvironmentWorkflowTests
     }
 
     [Test]
-    public void Workflow_WhenPoolNotLive_SkipsAllAzureAndOctopusMutations()
+    public void Workflow_WhenPoolVarsUnset_SkipsLeaseAndDeployJob()
     {
         var text = WorkflowText();
-        text.ShouldContain("pool_live");
         text.ShouldContain("name: Shadow mode");
-        text.ShouldContain("Succeed without live Azure or Octopus");
+        text.ShouldContain("POOL_RESOURCE_GROUP");
         text.ShouldContain(
             "if: needs.prepare.outputs.should_run == 'true' && needs.prepare.outputs.pool_live == 'true'");
-        text.ShouldContain("POOL_LEASE_STORAGE_ACCOUNT");
-
-        var leaseJobStart = text.IndexOf("lease-and-deploy:", StringComparison.Ordinal);
-        leaseJobStart.ShouldBeGreaterThan(0);
-        var afterLease = text[leaseJobStart..];
-        var nextJob = afterLease.IndexOf("\n  parallel-shards:", StringComparison.Ordinal);
-        nextJob.ShouldBeGreaterThan(0);
-        var leaseJob = afterLease[..nextJob];
-
-        leaseJob.ShouldContain("environment: release");
-        leaseJob.ShouldContain("pool_live == 'true'");
-        leaseJob.ShouldContain("OctopusDeploy/login@v2");
-        leaseJob.ShouldContain("azure/login@v3");
-        leaseJob.ShouldContain("az acr import");
-        leaseJob.ShouldContain("push-package-action");
-        leaseJob.ShouldContain("create-release-action");
-        leaseJob.ShouldContain("deploy-release-action");
-
-        var shadowStart = text.IndexOf("name: Shadow mode", StringComparison.Ordinal);
-        shadowStart.ShouldBeGreaterThan(0);
-        var shadowSection = text[Math.Max(0, shadowStart - 200)..Math.Min(text.Length, shadowStart + 800)];
-        shadowSection.ShouldNotContain("OctopusDeploy/login");
-        shadowSection.ShouldNotContain("azure/login");
-        shadowSection.ShouldNotContain("az acr import");
+        Workflow().Job("shadow").Text.ShouldNotContain("OctopusDeploy/login");
+        Workflow().Job("shadow").Text.ShouldNotContain("azure/login");
     }
 
     [Test]
-    public void Workflow_WhenPrivileged_ChecksOutTrustedDefaultBranchScripts()
+    public void LeaseAndDeploy_WhenDryRun_GatesEveryAzureAndOctopusMutation()
     {
-        var text = WorkflowText();
-        text.ShouldContain("Checkout trusted scripts (default branch)");
-        text.ShouldContain("ref: ${{ github.event.repository.default_branch }}");
-        text.ShouldContain("path: _trusted");
-        text.ShouldContain("${TRUSTED}/.github/scripts/");
-        text.ShouldContain("require-artifact churchbulletin-nuget-packages-pr");
-        text.ShouldContain("dispatch-if-missing");
+        var lease = Workflow().Job("lease-and-deploy");
+        lease.Text.ShouldContain("Gate Azure and Octopus mutations on non-DryRun lease");
+        lease.Text.ShouldContain("dry_run");
+        foreach (var step in MutationStepNames())
+        {
+            lease.Step(step).ShouldContain("steps.mutate.outputs.allow == 'true'");
+        }
     }
 
     [Test]
-    public void Workflow_WhenReleaseSlot_AlwaysReleasesLease()
+    public void PrivilegedJobs_WhenCheckout_UseTrustedRefWithPersistCredentialsFalse()
     {
-        var text = WorkflowText();
-        text.ShouldContain("Release pool lease");
-        text.ShouldContain("if: always() && needs.lease-and-deploy.outputs.slot != ''");
-        text.ShouldContain("if: always() && needs.prepare.outputs.pool_live == 'true'");
+        foreach (var jobId in new[] { "lease-and-deploy", "release-slot" })
+        {
+            var job = Workflow().Job(jobId);
+            job.Text.ShouldContain("ref: ${{ github.event.repository.default_branch }}");
+            job.Text.ShouldContain("path: _trusted");
+            job.Text.ShouldContain("persist-credentials: false");
+            job.Text.ShouldNotContain("bash .github/scripts/");
+        }
+    }
+
+    [Test]
+    public void Workflow_WhenReleaseSlot_AlwaysReleasesLeaseSafely()
+    {
+        var release = Workflow().Job("release-slot");
+        release.Text.ShouldContain("if: always() && needs.prepare.outputs.pool_live == 'true'");
+        release.Step("Release pool lease").ShouldContain("if: always()");
+        release.Step("Release pool lease").ShouldContain("No slot leased");
     }
 
     [Test]
@@ -104,7 +97,7 @@ public class PrEnvironmentWorkflowTests
         text.ShouldContain("#1671");
         text.ShouldContain("off this check's clock");
         text.ShouldContain("channel: Pull requests");
-        text.ShouldContain("cmdemo1-system");
+        text.ShouldContain("require-artifact churchbulletin-nuget-packages-pr");
     }
 
     [Test]
@@ -121,8 +114,23 @@ public class PrEnvironmentWorkflowTests
     {
         var root = RepositoryCheckout.Current;
         root.ReadText(".github/scripts/wait-for-workflow-run.sh").ShouldContain("require-artifact");
-        root.ReadText(".github/scripts/parse-pr-package-version.sh").ShouldContain("2.4");
-        root.ReadText("scripts/pool/Release-PrEnvironmentLease.ps1").ShouldContain("release");
+        root.ReadText("scripts/pool/Release-PrEnvironmentLease.ps1").ShouldContain("No slot leased");
         root.ReadText("docs/ops/pr-environment.md").ShouldContain("shadow mode");
+    }
+
+    private static IEnumerable<string> MutationStepNames()
+    {
+        yield return "Sign in to Octopus";
+        yield return "Cancel superseded Octopus tasks for this PR";
+        yield return "Wait for Publish image with packages on this SHA";
+        yield return "Download publish-only packages";
+        yield return "Parse package version";
+        yield return "Sign in to Azure for ACR";
+        yield return "Retag publish image as the Octopus release number";
+        yield return "Push Database package to Octopus";
+        yield return "Create Pull requests channel release";
+        yield return "Deploy release to pool slot";
+        yield return "Record Octopus server task id";
+        yield return "Resolve slot application URL";
     }
 }

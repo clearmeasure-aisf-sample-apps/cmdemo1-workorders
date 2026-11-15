@@ -9,7 +9,7 @@
   Checkout root of cmdemo1-system.
 
 .PARAMETER Slot
-  pool-N
+  pool-N. Empty means nothing was leased; the script exits 0 (safe under if: always()).
 
 .PARAMETER LeaseId
   Lease id from Acquire (dry-run uses 'dry-run').
@@ -19,8 +19,7 @@ param(
     [Parameter(Mandatory)]
     [string] $SystemRoot,
 
-    [Parameter(Mandatory)]
-    [string] $Slot,
+    [string] $Slot = '',
 
     [string] $LeaseId = '',
 
@@ -33,6 +32,11 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($Slot)) {
+    Write-Host 'No slot leased; nothing to release.'
+    exit 0
+}
 
 $leaseScript = Join-Path $SystemRoot 'scripts/pool/lease.ps1'
 if (-not (Test-Path -LiteralPath $leaseScript)) {
