@@ -6,8 +6,9 @@
 # Shadow (vars.POOL_LEASE_STORAGE_ACCOUNT unset / system #652 not applied): succeed without
 # any live Azure or Octopus mutation — DryRun lease alone is not enough.
 # Not required: do not change the default-branch ruleset.
-# Video/trace upload (issue #1671) must not sit on this check's clock — omitted here.
-# Privileged jobs (environment: release + OIDC) run scripts from the default branch only.
+# Video/trace Upload (#1671) runs on shard runners after tests (files are local on the runner);
+# sticky comment stays on pr-environment-artifacts.yml off this check's clock.
+# Privileged jobs (environment: release + OIDC) and artifact Upload (OIDC) run scripts from the default branch only.
 # VERSION-MARKER: the "2.4." prefix in run-name matches MAJOR_VERSION/MINOR_VERSION below.
 name: PR environment
 run-name: "2.4.${{ github.run_number }}-pr • PR environment • ${{ github.head_ref || github.ref_name }}"
@@ -419,6 +420,7 @@ jobs:
       contents: read
       packages: read
       checks: write
+      id-token: write
     env:
       BUILD_CONFIGURATION: Release
     steps:
@@ -465,6 +467,7 @@ jobs:
         shell: pwsh
         env:
           ApplicationBaseUrl: ${{ needs.lease-and-deploy.outputs.application_base_url }}
+          ACCEPTANCE_RECORD_VIDEO: "true"
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/acceptance/Write-AcceptanceRunSettings.ps1 -Workers ${{ env.PR_ENVIRONMENT_WORKERS }}
@@ -474,6 +477,63 @@ jobs:
             -ShardCount ${{ env.PR_ENVIRONMENT_SHARD_COUNT }} `
             -ApplicationBaseUrl $env:ApplicationBaseUrl `
             -ResultsDirectory "build/test/AcceptanceTests-Parallel-${{ matrix.shard }}"
+
+      - name: Gate private artifact upload
+        id: artifacts
+        if: always()
+        env:
+          ACCOUNT: ${{ vars.POOL_ARTIFACTS_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ACCOUNT}" ]; then
+            echo "::warning::vars.POOL_ARTIFACTS_STORAGE_ACCOUNT is unset; skipping PR acceptance video/trace upload (#1671)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "account=${ACCOUNT}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout trusted upload scripts
+        if: always() && steps.artifacts.outputs.ready == 'true'
+        uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: _trusted
+          persist-credentials: false
+
+      - name: Azure login for artifact upload
+        if: always() && steps.artifacts.outputs.ready == 'true'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Upload acceptance videos and traces
+        if: always() && steps.artifacts.outputs.ready == 'true'
+        env:
+          POOL_ARTIFACTS_STORAGE_ACCOUNT: ${{ steps.artifacts.outputs.account }}
+          RESULTS_DIR: build/test/AcceptanceTests-Parallel-${{ matrix.shard }}
+          BUILD_CONFIGURATION: ${{ env.BUILD_CONFIGURATION }}
+        run: |
+          set -euo pipefail
+          if [ -n "${AZURE_STORAGE_KEY:-}" ] || [ -n "${AZURE_STORAGE_SAS_TOKEN:-}" ]; then
+            echo "Blocker: account key or shared-access signature present; #1671 forbids them."
+            exit 1
+          fi
+          BIN_OUT="src/AcceptanceTests/bin/${BUILD_CONFIGURATION}/net10.0"
+          SCAN_ROOT="${RUNNER_TEMP}/pr-acceptance-artifact-scan"
+          mkdir -p "${SCAN_ROOT}"
+          ln -sfn "${GITHUB_WORKSPACE}/${BIN_OUT}" "${SCAN_ROOT}/bin"
+          ln -sfn "${GITHUB_WORKSPACE}/${RESULTS_DIR}" "${SCAN_ROOT}/results"
+          # Scripts come only from the trusted default-branch checkout (not PR head).
+          pwsh -NoProfile -File _trusted/scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1 \
+            -Mode Upload \
+            -StorageAccountName "${POOL_ARTIFACTS_STORAGE_ACCOUNT}" \
+            -RunId "${{ github.run_id }}" \
+            -TrxDirectory "${RESULTS_DIR}" \
+            -TraceDirectory "${SCAN_ROOT}" \
+            -VideoDirectory "${SCAN_ROOT}"
 
       - name: Upload parallel shard results
         uses: actions/upload-artifact@v4
@@ -497,6 +557,7 @@ jobs:
     permissions:
       contents: read
       packages: read
+      id-token: write
     env:
       BUILD_CONFIGURATION: Release
     steps:
@@ -543,12 +604,70 @@ jobs:
         shell: pwsh
         env:
           ApplicationBaseUrl: ${{ needs.lease-and-deploy.outputs.application_base_url }}
+          ACCEPTANCE_RECORD_VIDEO: "true"
         run: |
           $ErrorActionPreference = 'Stop'
           ./scripts/acceptance/Invoke-PrEnvironmentAcceptanceLane.ps1 `
             -Lane Serial `
             -ApplicationBaseUrl $env:ApplicationBaseUrl `
             -ResultsDirectory build/test/AcceptanceTests-Serial
+
+      - name: Gate private artifact upload
+        id: artifacts
+        if: always()
+        env:
+          ACCOUNT: ${{ vars.POOL_ARTIFACTS_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ACCOUNT}" ]; then
+            echo "::warning::vars.POOL_ARTIFACTS_STORAGE_ACCOUNT is unset; skipping PR acceptance video/trace upload (#1671)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "account=${ACCOUNT}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout trusted upload scripts
+        if: always() && steps.artifacts.outputs.ready == 'true'
+        uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: _trusted
+          persist-credentials: false
+
+      - name: Azure login for artifact upload
+        if: always() && steps.artifacts.outputs.ready == 'true'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID_ACR_PUSH }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Upload acceptance videos and traces
+        if: always() && steps.artifacts.outputs.ready == 'true'
+        env:
+          POOL_ARTIFACTS_STORAGE_ACCOUNT: ${{ steps.artifacts.outputs.account }}
+          RESULTS_DIR: build/test/AcceptanceTests-Serial
+          BUILD_CONFIGURATION: ${{ env.BUILD_CONFIGURATION }}
+        run: |
+          set -euo pipefail
+          if [ -n "${AZURE_STORAGE_KEY:-}" ] || [ -n "${AZURE_STORAGE_SAS_TOKEN:-}" ]; then
+            echo "Blocker: account key or shared-access signature present; #1671 forbids them."
+            exit 1
+          fi
+          BIN_OUT="src/AcceptanceTests/bin/${BUILD_CONFIGURATION}/net10.0"
+          SCAN_ROOT="${RUNNER_TEMP}/pr-acceptance-artifact-scan"
+          mkdir -p "${SCAN_ROOT}"
+          ln -sfn "${GITHUB_WORKSPACE}/${BIN_OUT}" "${SCAN_ROOT}/bin"
+          ln -sfn "${GITHUB_WORKSPACE}/${RESULTS_DIR}" "${SCAN_ROOT}/results"
+          # Scripts come only from the trusted default-branch checkout (not PR head).
+          pwsh -NoProfile -File _trusted/scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1 \
+            -Mode Upload \
+            -StorageAccountName "${POOL_ARTIFACTS_STORAGE_ACCOUNT}" \
+            -RunId "${{ github.run_id }}" \
+            -TrxDirectory "${RESULTS_DIR}" \
+            -TraceDirectory "${SCAN_ROOT}" \
+            -VideoDirectory "${SCAN_ROOT}"
 
       - name: Upload serial lane results
         uses: actions/upload-artifact@v4
@@ -598,7 +717,7 @@ jobs:
             echo "- Parallel shards: ${{ needs.parallel-shards.result }}"
             echo "- Serial lane: ${{ needs.serial-lane.result }}"
             echo ""
-            echo "Video and trace upload (issue #1671) runs off this check's clock."
+            echo "Sticky PR artifact comment (#1671) runs off this check's clock; shards upload when POOL_ARTIFACTS_STORAGE_ACCOUNT is set."
           } >> "$GITHUB_STEP_SUMMARY"
 
           parallel="${{ needs.parallel-shards.result }}"

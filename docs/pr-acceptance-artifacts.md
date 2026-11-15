@@ -20,7 +20,9 @@ Set Actions variable `POOL_ARTIFACTS_STORAGE_ACCOUNT` to the applied account nam
 
 ## Timing
 
-Workflow [pr-environment-artifacts.yml](../.github/workflows/pr-environment-artifacts.yml) runs on `workflow_run` of **PR environment**, so sticky-comment / list time is off that check’s clock. Shard jobs from #1664 should call `Publish-PrAcceptanceArtifacts.ps1 -Mode Upload` after tests (files stay on the runner; never `actions/upload-artifact` for videos/traces). The follow-up workflow runs `-Mode Comment`.
+[pr-environment.yml](../.github/workflows/pr-environment.yml) shard jobs (`parallel-shards`, `serial-lane`) call `Publish-PrAcceptanceArtifacts.ps1 -Mode Upload` after tests when `vars.POOL_ARTIFACTS_STORAGE_ACCOUNT` is set (OIDC via `vars.AZURE_CLIENT_ID_ACR_PUSH`, scripts from the default-branch `_trusted` checkout). When the variable is unset, the gate step warns and skips without failing. Files stay on the runner; never `actions/upload-artifact` for videos/traces.
+
+Workflow [pr-environment-artifacts.yml](../.github/workflows/pr-environment-artifacts.yml) runs on `workflow_run` of **PR environment** and runs `-Mode Comment`, so sticky-comment / list time is off that check’s clock.
 
 ## Local video recording
 

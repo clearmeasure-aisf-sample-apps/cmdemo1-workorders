@@ -103,15 +103,67 @@ public class PrEnvironmentWorkflowTests
     }
 
     [Test]
-    public void Workflow_WhenRead_SucceedsDocsOnlyAndKeepsVideoOffClock()
+    public void Workflow_WhenRead_SucceedsDocsOnlyAndKeepsStickyCommentOffClock()
     {
         var text = WorkflowText();
         text.ShouldContain("Docs-only success");
         text.ShouldContain("detect-code-changes.sh");
         text.ShouldContain("#1671");
         text.ShouldContain("off this check's clock");
+        text.ShouldContain("Sticky PR artifact comment");
         text.ShouldContain("channel: Pull requests");
         text.ShouldContain("require-artifact churchbulletin-nuget-packages-pr");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenArtifactUpload_GatesOnStorageVariable(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        var gate = job.Step("Gate private artifact upload");
+        gate.ShouldContain("if: always()");
+        gate.ShouldContain("vars.POOL_ARTIFACTS_STORAGE_ACCOUNT");
+        gate.ShouldContain("::warning::");
+        gate.ShouldContain("ready=false");
+        gate.ShouldContain("ready=true");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenArtifactUpload_UsesOidcAndTrustedScripts(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        job.Text.ShouldContain("id-token: write");
+        job.Step("Checkout trusted upload scripts")
+            .ShouldContain("ref: ${{ github.event.repository.default_branch }}");
+        job.Step("Checkout trusted upload scripts").ShouldContain("path: _trusted");
+        job.Step("Checkout trusted upload scripts").ShouldContain("persist-credentials: false");
+        job.Step("Azure login for artifact upload").ShouldContain("azure/login@v3");
+        job.Step("Azure login for artifact upload").ShouldContain("AZURE_CLIENT_ID_ACR_PUSH");
+        job.Step("Upload acceptance videos and traces").ShouldContain("-Mode Upload");
+        job.Step("Upload acceptance videos and traces")
+            .ShouldContain("_trusted/scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenArtifactUpload_ForbidsSecretsAndKeys(string jobId)
+    {
+        var upload = Workflow().Job(jobId).Step("Upload acceptance videos and traces");
+        upload.ShouldContain("AZURE_STORAGE_KEY");
+        upload.ShouldContain("AZURE_STORAGE_SAS_TOKEN");
+        upload.ShouldContain("Blocker");
+        upload.ShouldNotContain("${{ secrets.");
+        upload.ShouldNotContain("--account-key");
+        upload.ShouldNotContain("generate-sas");
+        upload.ShouldNotContain("actions/upload-artifact");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenRunningTests_RecordsAcceptanceVideo(string jobId)
+    {
+        Workflow().Job(jobId).Text.ShouldContain("ACCEPTANCE_RECORD_VIDEO");
     }
 
     [Test]
