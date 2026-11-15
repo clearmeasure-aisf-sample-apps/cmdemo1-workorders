@@ -7,7 +7,7 @@ namespace ClearMeasure.Bootcamp.Core.Queries;
 /// Creates a team with the employees whose user names are listed as members.
 /// </summary>
 public record CreateTeamCommand(string Name, string? Description, IReadOnlyList<string> MemberUserNames)
-    : IRequest<CreateTeamResult>, IRemotableRequest
+    : IRequest<CreateTeamResult>, IRemotableRequest, IHttpEnvelopeValidation
 {
     /// <summary>
     /// Returns the rules this command breaks given the data already stored: a team name that matches an

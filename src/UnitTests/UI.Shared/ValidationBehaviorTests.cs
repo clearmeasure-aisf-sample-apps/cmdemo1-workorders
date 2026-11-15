@@ -107,22 +107,28 @@ public class ValidationBehaviorTests
     }
 
     [Test]
-    public async Task Handle_Should_ReachHandler_WhenCreateVendorWouldFailFluentValidation()
+    public async Task Handle_Should_ReachHandler_WhenHttpEnvelopeValidationWouldFailFluentValidation()
     {
         var services = new ServiceCollection();
         services.AddTransient<IValidator<CreateVendorCommand>, CreateVendorCommandValidator>();
+        services.AddTransient<IValidator<CreateDatedWorkOrdersCommand>, CreateDatedWorkOrdersCommandValidator>();
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<ValidationBehaviorTests>();
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
         services.AddTransient<IRequestHandler<CreateVendorCommand, CreateVendorResult>, CreateVendorProbeHandler>();
+        services.AddTransient<IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>,
+            CreateDatedProbeHandler>();
         var bus = new Bus(services.BuildServiceProvider().GetRequiredService<IMediator>());
 
-        var result = await bus.Send(new CreateVendorCommand("", "HVAC", null, null, null));
+        var vendor = await bus.Send(new CreateVendorCommand("", "HVAC", null, null, null));
+        var dated = await bus.Send(new CreateDatedWorkOrdersCommand("a", "b", "t", "d", []));
 
-        result.Succeeded.ShouldBeTrue();
-        result.Message.ShouldBe("handler-ran");
+        vendor.Succeeded.ShouldBeTrue();
+        vendor.Message.ShouldBe("handler-ran");
+        dated.Success.ShouldBeTrue();
+        dated.Message.ShouldBe("handler-ran");
     }
 
     private static Bus BusWithValidators(StateCommandResult? response = null)
@@ -180,5 +186,14 @@ public class ValidationBehaviorTests
     {
         public Task<CreateVendorResult> Handle(CreateVendorCommand request, CancellationToken cancellationToken) =>
             Task.FromResult(new CreateVendorResult(true, "handler-ran", Guid.Empty));
+    }
+
+    private sealed class CreateDatedProbeHandler
+        : IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>
+    {
+        public Task<CreateDatedWorkOrdersResult> Handle(
+            CreateDatedWorkOrdersCommand request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(new CreateDatedWorkOrdersResult(true, "handler-ran", []));
     }
 }

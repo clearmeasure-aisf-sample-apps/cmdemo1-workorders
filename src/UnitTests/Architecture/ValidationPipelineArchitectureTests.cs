@@ -71,6 +71,18 @@ public class ValidationPipelineArchitectureTests
         typeof(ValidationBehavior<,>).Assembly.ShouldBe(typeof(Bus).Assembly);
     }
 
+    [Test]
+    public void ShouldSkipViaMarkerInterface_WhenValidationBehaviorOmitsTypeNameLists()
+    {
+        var source = RepositoryCheckout.Current.ReadText("src/UI.Shared/ValidationBehavior.cs");
+
+        source.ShouldContain(nameof(IHttpEnvelopeValidation));
+        source.ShouldNotContain("CreateVendorCommand");
+        source.ShouldNotContain("CreateTeamCommand");
+        source.ShouldNotContain("CreateDatedWorkOrdersCommand");
+        source.ShouldNotContain("HttpOnlyFluentValidationRequests");
+    }
+
     private static IReadOnlyList<string> EmptyAbstractValidators(RepositoryCheckout checkout)
     {
         var empty = new List<string>();

@@ -14,7 +14,7 @@ public record CreateVendorCommand(
     string? ContactName,
     string? EmailAddress,
     string? PhoneNumber,
-    bool IsActive = true) : IRequest<CreateVendorResult>, IRemotableRequest
+    bool IsActive = true) : IRequest<CreateVendorResult>, IRemotableRequest, IHttpEnvelopeValidation
 {
     /// <summary>
     /// Returns the rules this command breaks given the data already stored: a vendor name that matches an
