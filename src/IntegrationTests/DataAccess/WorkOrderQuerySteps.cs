@@ -29,10 +29,6 @@ public static class WorkOrderQuerySteps
         await context.SaveChangesAsync();
     }
 
-    /// <summary>Saves an employee and a list of work orders.</summary>
-    public static async Task SaveOrdersAsync(Employee creator, IReadOnlyList<WorkOrder> orders) =>
-        await SaveOrdersAsync(creator, orders.ToArray());
-
     /// <summary>Runs a work-order specification search.</summary>
     public static async Task<WorkOrder[]> SearchAsync(
         WorkOrderSpecificationQuery specification,

@@ -21,6 +21,7 @@ public sealed class EmployeeBuilder
         new EmployeeBuilder().WithUserName(userName);
 
     /// <summary>Sets the unique user name and a matching example.test e-mail when the e-mail was still default.</summary>
+    // ReSharper disable once MemberCanBePrivate.Global -- fluent builder API used from Create and call sites
     public EmployeeBuilder WithUserName(string userName)
     {
         _userName = userName;

@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.WorkOrderSpecificati
 public static class WorkOrderSpecificationSteps
 {
     /// <summary>Builds a work order for <paramref name="creator"/> with status and optional due date.</summary>
-    public static WorkOrder OrderFor(Employee creator, WorkOrderStatus status, DateOnly? due) =>
+    private static WorkOrder OrderFor(Employee creator, WorkOrderStatus status, DateOnly? due) =>
         WorkOrderBuilder.For(creator, status).DueOn(due).WithNumber(TestData.Number("S")).Build();
 
     /// <summary>

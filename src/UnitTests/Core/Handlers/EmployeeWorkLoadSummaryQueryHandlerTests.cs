@@ -78,7 +78,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         var other = EmployeeBuilder.Create("other").WithFirstName("Ot").WithLastName("Her")
             .WithEmail("other@example.test").WithRole("Worker", canCreate: false, canFulfill: true).Build();
         _context.AddRange(creator, worker, idle, other);
-        _context.AddRange(AssignableOrders(new People(creator, worker, other), today, since));
+        _context.AddRange(AssignableOrders(new People(creator, worker, other), today, since).Cast<object>());
         await _context.SaveChangesAsync();
     }
 
@@ -168,7 +168,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
     private void AssertGroupedSql(string connectionString)
     {
         using var context = new DataContext(new FileDbConfig(connectionString));
-        var sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock ?? new FixedClock(Now))
+        var sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock)
             .SummaryQuery()
             .ToQueryString();
 
