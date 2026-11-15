@@ -51,8 +51,8 @@ public class TestEntityCreationScannerTests
         var keys = TestEntityCreationScanner.ScanFile("src/UnitTests/SampleTests.cs", code);
 
         keys.ShouldBe([
-            "Employee src/UnitTests/SampleTests.cs#1",
             "WorkOrder src/UnitTests/SampleTests.cs#1",
+            "Employee src/UnitTests/SampleTests.cs#1",
             "WorkOrder src/UnitTests/SampleTests.cs#2"
         ]);
     }
