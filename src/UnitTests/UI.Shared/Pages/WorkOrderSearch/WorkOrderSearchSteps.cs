@@ -15,7 +15,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.WorkOrderSearch;
 public static class WorkOrderSearchSteps
 {
     /// <summary>Default signed-in user name (same as <see cref="WorkOrderSearchPageBuilder.DefaultUserName"/>).</summary>
-    public const string DefaultUserName = WorkOrderSearchPageBuilder.DefaultUserName;
+    private const string DefaultUserName = WorkOrderSearchPageBuilder.DefaultUserName;
 
     /// <summary>CSS selector for a data-testid built from an Elements enum value.</summary>
     public static string TestId(WorkOrderSearchPage.Elements element, string suffix = "") =>
