@@ -34,14 +34,26 @@ public class WebServiceMessagePayloadValidatorTests
     }
 
     [Test]
-    public async Task ShouldBeABadRequest_WhenNoValidatorIsRegisteredForThePayload()
+    public async Task ShouldPass_WhenARemotablePayloadHasNoValidator()
     {
         var services = new ServiceCollection().BuildServiceProvider();
 
         var result = await WebServiceMessagePayloadValidator.ValidateAsync(
             new WebServiceMessage(new WorkOrderByNumberQuery("WO-1")), services, CancellationToken.None);
 
-        result.BadRequestDetail.ShouldBe($"No validator registered for type {typeof(WorkOrderByNumberQuery).FullName}.");
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ShouldBeABadRequest_WhenThePayloadIsNotRemotable()
+    {
+        var services = new ServiceCollection().BuildServiceProvider();
+
+        var result = await WebServiceMessagePayloadValidator.ValidateAsync(
+            new WebServiceMessage(new NotRemotablePayload()), services, CancellationToken.None);
+
+        result.BadRequestDetail.ShouldBe(
+            $"Type {typeof(NotRemotablePayload).FullName} is not a remotable request or event.");
     }
 
     [Test]
@@ -62,4 +74,6 @@ public class WebServiceMessagePayloadValidatorTests
     {
         public WorkOrderByNumberQueryRule() => RuleFor(query => query.Number).NotEmpty();
     }
+
+    private sealed class NotRemotablePayload;
 }

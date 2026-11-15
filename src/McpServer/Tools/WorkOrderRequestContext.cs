@@ -14,6 +14,11 @@ internal sealed record WorkOrderRequestContext(WorkOrder WorkOrder, Employee Exe
         string workOrderNumber,
         string executingUsername)
     {
+        if (string.IsNullOrWhiteSpace(workOrderNumber))
+        {
+            return (null, $"No work order found with number '{workOrderNumber}'.");
+        }
+
         var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
         if (workOrder == null)
         {

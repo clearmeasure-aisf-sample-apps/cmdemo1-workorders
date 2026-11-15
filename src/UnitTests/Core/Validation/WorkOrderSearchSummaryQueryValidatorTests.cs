@@ -25,11 +25,4 @@ public class WorkOrderSearchSummaryQueryValidatorTests
         validator.TestValidate(new WorkOrderSearchSummaryQuery(new string('u', 257)))
             .ShouldHaveValidationErrorFor(x => x.UserName);
     }
-
-    [Test]
-    public void ShouldPass_ForBuildingsQuery()
-    {
-        new WorkOrderBuildingsQueryValidator().TestValidate(new WorkOrderBuildingsQuery()).IsValid.ShouldBeTrue();
-        new WorkOrderReportsQueryValidator().TestValidate(new WorkOrderReportsQuery()).IsValid.ShouldBeTrue();
-    }
 }

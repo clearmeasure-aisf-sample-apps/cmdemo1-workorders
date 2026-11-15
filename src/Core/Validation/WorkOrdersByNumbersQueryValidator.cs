@@ -5,7 +5,7 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// Remoting envelope requires a registered FluentValidation validator for every payload type.
+/// Validator for <see cref="WorkOrdersByNumbersQuery"/>: the number list is required and capped.
 /// </summary>
 public sealed class WorkOrdersByNumbersQueryValidator : AbstractValidator<WorkOrdersByNumbersQuery>
 {
