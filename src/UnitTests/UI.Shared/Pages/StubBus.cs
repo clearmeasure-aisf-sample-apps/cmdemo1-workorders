@@ -188,8 +188,22 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
             return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
         }
 
+        if (request is DeploymentIdentityQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)(Deployment ?? DeploymentIdentity.Unreported));
+        }
+
+        if (request is NotificationsPanelQuery)
+        {
+            return Task.FromResult<TResponse>((TResponse)(object)(Notifications ?? new NotificationsSummary([], [], [])));
+        }
+
         throw new NotImplementedException();
     }
+
+    public DeploymentIdentity? Deployment { get; set; }
+
+    public NotificationsSummary? Notifications { get; set; }
 
     private static Func<WorkOrder[]> WorkOrderSpecificationQueryResponse => () =>
     [

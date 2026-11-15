@@ -20,6 +20,7 @@ internal static class HttpAllowListTypes
         "CreateTeamCommand",
         "CreateVendorCommand",
         "DeleteSearchViewCommand",
+        "DeploymentIdentityQuery",
         "DraftToAssignedCommand",
         "EmployeeByUserNameQuery",
         "EmployeeGetAllQuery",

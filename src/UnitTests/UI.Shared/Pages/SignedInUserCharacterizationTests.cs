@@ -115,7 +115,7 @@ public class SignedInUserCharacterizationTests
     public async Task MainLayout_ShouldLoadNotifications_ForSessionUser()
     {
         var orders = new WorkOrder[] { new() { Number = "WO-1" } };
-        var panel = new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(orders, [], []);
+        var panel = new ClearMeasure.Bootcamp.Core.Queries.NotificationsSummary(orders, [], []);
         var bus = new NotificationsStubBus(panel);
         var session = new StubUserSession(userName: "hsimpson");
         await using var ctx = CreateLayoutContext(session, bus);
@@ -236,10 +236,6 @@ public class SignedInUserCharacterizationTests
         }
 
         ctx.Services.AddSingleton(customAuth);
-        ctx.Services.AddSingleton(new HttpClient(new StubEnvironmentStatusHandler())
-        {
-            BaseAddress = new Uri("http://localhost/")
-        });
         return ctx;
     }
 
@@ -257,7 +253,7 @@ public class SignedInUserCharacterizationTests
     private static string Normalize(string text) =>
         System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
 
-    private sealed class NotificationsStubBus(ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? result) : StubBus
+    private sealed class NotificationsStubBus(ClearMeasure.Bootcamp.Core.Queries.NotificationsSummary? result) : StubBus
     {
         public string? LastUserName { get; private set; }
 
@@ -299,16 +295,4 @@ public class SignedInUserCharacterizationTests
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
-    private sealed class StubEnvironmentStatusHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            var json = """{"version":"1.0.0","gitSha":"unknown","environmentName":"unknown"}""";
-            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-            {
-                Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
-            });
-        }
-    }
 }

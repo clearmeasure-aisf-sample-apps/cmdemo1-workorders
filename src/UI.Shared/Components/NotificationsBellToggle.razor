@@ -1,0 +1,16 @@
+@namespace ClearMeasure.Bootcamp.UI.Shared.Components
+
+<button type="button"
+        class="icon-button"
+        data-testid="@nameof(MainLayout.Elements.NotificationsButton)"
+        @ref="_bellButtonRef"
+        @onclick="OnOpenAsync"
+        title="@Bell.NotificationsButtonLabel"
+        aria-label="@Bell.NotificationsButtonLabel"
+        aria-expanded="@(Bell.IsPanelOpen ? "true" : "false")">
+    <i class="bi bi-bell" aria-hidden="true"></i>
+    @if (Bell.BadgeCount > 0)
+    {
+        <span class="badge-count" data-testid="@nameof(MainLayout.Elements.NotificationsBadge)">@Bell.BadgeCount</span>
+    }
+</button>

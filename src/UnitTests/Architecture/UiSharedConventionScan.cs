@@ -58,6 +58,29 @@ internal static class UiSharedConventionScan
         return violations;
     }
 
+    /// <summary>UI.Shared injections or constructions of <c>HttpClient</c> (allow-list empty).</summary>
+    internal static IReadOnlyList<string> HttpClientViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs", ".razor"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!IsUiSharedProduction(relative))
+            {
+                continue;
+            }
+
+            var text = File.ReadAllText(sourceFile);
+            AppendNamed(violations, relative, UiSharedConventionRules.HttpClientInjections(text));
+            foreach (var _ in UiSharedConventionRules.HttpClientConstructions(text))
+            {
+                violations.Add($"{relative}:new HttpClient");
+            }
+        }
+
+        return violations;
+    }
+
     private static void CollectAuthProviderViolation(
         RepositoryCheckout checkout, string sourceFile, List<string> violations)
     {

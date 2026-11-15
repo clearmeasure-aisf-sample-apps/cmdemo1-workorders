@@ -11,7 +11,7 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     public bool IsOpen { get; set; }
 
     [Parameter]
-    public global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? Data { get; set; }
+    public ClearMeasure.Bootcamp.Core.Queries.NotificationsSummary? Data { get; set; }
 
     [Parameter]
     public ElementReference BellButtonRef { get; set; }

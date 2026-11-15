@@ -1,0 +1,11 @@
+@namespace ClearMeasure.Bootcamp.UI.Shared.Components
+
+@* Panel host placed after the header (same DOM position as before the MainLayout split). *@
+<AuthorizeView>
+    <Authorized>
+        <NotificationsPanel IsOpen="@Bell.IsPanelOpen"
+                           Data="@Bell.Summary"
+                           BellButtonRef="Bell.BellButtonRef"
+                           OnClose="Bell.ClosePanelAsync"/>
+    </Authorized>
+</AuthorizeView>

@@ -8,15 +8,15 @@ using Microsoft.EntityFrameworkCore;
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
 public class NotificationsPanelQueryHandler(DataContext context, TimeProvider time)
-    : IRequestHandler<NotificationsPanelQuery, NotificationsPanel>
+    : IRequestHandler<NotificationsPanelQuery, NotificationsSummary>
 {
-    public async Task<NotificationsPanel> Handle(
+    public async Task<NotificationsSummary> Handle(
         NotificationsPanelQuery request,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.UserName))
         {
-            return new NotificationsPanel([], [], []);
+            return new NotificationsSummary([], [], []);
         }
 
         var employee = await context.Set<Employee>()
@@ -24,14 +24,14 @@ public class NotificationsPanelQueryHandler(DataContext context, TimeProvider ti
 
         if (employee == null)
         {
-            return new NotificationsPanel([], [], []);
+            return new NotificationsSummary([], [], []);
         }
 
         var overdue = await GetOverdueAndDueTodayAsync(employee, cancellationToken);
         var newlyAssigned = await GetNewlyAssignedLast7DaysAsync(employee, cancellationToken);
         var createdByMeChanged = await GetCreatedByMeStatusChangedLast7DaysAsync(employee, cancellationToken);
 
-        return new NotificationsPanel(overdue, newlyAssigned, createdByMeChanged);
+        return new NotificationsSummary(overdue, newlyAssigned, createdByMeChanged);
     }
 
     private async Task<WorkOrder[]> GetOverdueAndDueTodayAsync(

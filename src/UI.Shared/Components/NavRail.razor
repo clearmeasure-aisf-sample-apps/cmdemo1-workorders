@@ -1,0 +1,34 @@
+@namespace ClearMeasure.Bootcamp.UI.Shared.Components
+
+<div class="@AppContainerClass">
+    <a class="skip-link visually-hidden-focusable" href="#main-content">Skip to main content</a>
+    <aside id="app-navigation-rail" class="@SidebarClass" aria-label="Application sidebar">
+        <div class="sidebar-header">
+            <div class="church-brand">
+                <div class="church-icon brand-mark" aria-hidden="true">KC</div>
+                <div class="brand-block">
+                    <div class="brand-text">
+                        <h4>.NET Conf Work Orders</h4>
+                    </div>
+                    <p class="brand-subtitle" data-testid="@nameof(MainLayout.Elements.BrandSubtitle)">Kalahari Church · Facilities</p>
+                </div>
+            </div>
+        </div>
+        <nav class="sidebar-nav" aria-label="Main navigation">
+            <NavMenu/>
+        </nav>
+        <div class="sidebar-footer">
+            <HealthCheckLink/>
+            <BuildInfoLink/>
+        </div>
+    </aside>
+
+    @if (_isNarrowViewport && _navVisible)
+    {
+        <div class="nav-backdrop" @onclick="ToggleAsync"></div>
+    }
+
+    <CascadingValue Value="this" IsFixed="true">
+        @ChildContent
+    </CascadingValue>
+</div>

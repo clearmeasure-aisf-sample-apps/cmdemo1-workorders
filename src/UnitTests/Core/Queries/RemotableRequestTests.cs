@@ -124,6 +124,18 @@ public class RemotableRequestTests
     }
 
     [Test]
+    public void ShouldRoundTripDeploymentIdentityQueryAndResult()
+    {
+        AssertRemotable(new DeploymentIdentityQuery());
+        var identity = new DeploymentIdentity("0123456789abcdef", "tdd");
+
+        var rehydrated = SimulateRemoteObject(identity);
+
+        rehydrated.ShouldBe(identity);
+        rehydrated.ShortSha.ShouldBe("0123456");
+    }
+
+    [Test]
     public void ShouldRoundTripBuildingRoomSummaryQueryAndResult()
     {
         AssertRemotable(new BuildingRoomSummaryQuery());
