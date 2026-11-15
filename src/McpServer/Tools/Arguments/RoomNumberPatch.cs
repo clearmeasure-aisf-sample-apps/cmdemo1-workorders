@@ -4,7 +4,8 @@ namespace ClearMeasure.Bootcamp.McpServer.Tools.Arguments;
 
 /// <summary>
 /// A room-number patch from an MCP tool: omitted (null) leaves the room unchanged, blank stores an empty room, and a
-/// stored room is cut to <see cref="WorkOrder.RoomNumberMaxLength"/> characters.
+/// stored room is cut to <see cref="WorkOrder.RoomNumberMaxLength"/> characters. Entry length uses
+/// <see cref="WorkOrderFieldRules"/>.
 /// </summary>
 internal readonly record struct RoomNumberPatch(string? Text)
 {
@@ -13,9 +14,7 @@ internal readonly record struct RoomNumberPatch(string? Text)
     /// current room is always allowed.
     /// </summary>
     public string? ErrorFor(WorkOrder workOrder) =>
-        Text is { Length: > WorkOrder.RoomNumberEntryMaxLength } && Text != workOrder.RoomNumber
-            ? $"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters."
-            : null;
+        WorkOrderFieldRules.RoomNumberEntryLengthError(Text, workOrder.RoomNumber);
 
     public void ApplyTo(WorkOrder workOrder)
     {

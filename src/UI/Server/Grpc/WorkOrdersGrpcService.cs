@@ -1,5 +1,6 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using Grpc.Core;
 using Google.Protobuf.WellKnownTypes;
@@ -22,7 +23,7 @@ public class WorkOrdersGrpcService(IBus bus) : WorkOrders.WorkOrdersBase
     {
         if (string.IsNullOrWhiteSpace(request.Number))
         {
-            throw new RpcException(new Status(StatusCode.InvalidArgument, "Work order number is required."));
+            throw new RpcException(new Status(StatusCode.InvalidArgument, WorkOrderFieldRules.WorkOrderNumberRequired));
         }
 
         var workOrder = await bus.Send(new WorkOrderByNumberQuery(request.Number.Trim()));

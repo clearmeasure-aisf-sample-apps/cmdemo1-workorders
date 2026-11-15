@@ -49,12 +49,10 @@ internal sealed record NewWorkOrderArguments
 
     /// <summary>A work-order description is required and at most <see cref="WorkOrder.DescriptionMaxLength"/> characters.</summary>
     public static string? DescriptionError(string? description) =>
-        string.IsNullOrWhiteSpace(description) ? "Description is required." : DescriptionLengthError(description);
+        WorkOrderFieldRules.DescriptionRequiredOrLengthError(description);
 
     public static string? DescriptionLengthError(string? description) =>
-        description is { Length: > WorkOrder.DescriptionMaxLength }
-            ? $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters."
-            : null;
+        WorkOrderFieldRules.DescriptionLengthError(description);
 
     private string? DueDateError() =>
         DatedWorkOrderScheduling.TryParseOptionalDueDate(DueDate, out _, out var error) ? null : error;
