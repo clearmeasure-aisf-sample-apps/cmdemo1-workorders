@@ -1,40 +1,43 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.Core.Services;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-///     Background service that periodically evaluates work orders and reformats
-///     their title and description fields using an AI agent.
+///     Background service that periodically evaluates draft work orders and reformats
+///     their title and description fields using an AI agent, persisting through
+///     <see cref="ReformatWorkOrderCommand"/> on the bus.
 /// </summary>
 public class AutoReformatAgentService : BackgroundService
 {
-    private readonly IServiceScope _serviceScope;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<AutoReformatAgentService> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly AutoReformatOptions _options;
     private readonly TimeProvider _timeProvider;
 
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
     public AutoReformatAgentService(
-        IServiceProvider serviceProvider,
+        IServiceScopeFactory scopeFactory,
         ILogger<AutoReformatAgentService> logger,
-        IConfiguration configuration,
+        IOptions<AutoReformatOptions> options,
         TimeProvider timeProvider)
     {
-        _serviceScope = serviceProvider.CreateScope();
+        _scopeFactory = scopeFactory;
         _logger = logger;
-        _configuration = configuration;
+        _options = options.Value;
         _timeProvider = timeProvider;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (IsDisabled(_configuration))
+        if (_options.Disabled)
         {
-            _logger.LogInformation("AutoReformatAgentService disabled via DISABLE_AUTO_REFORMAT_AGENT configuration");
+            _logger.LogInformation(
+                "AutoReformatAgentService disabled via {DisableKey} configuration",
+                AutoReformatOptions.DisableConfigurationKey);
             return;
         }
 
@@ -44,7 +47,10 @@ public class AutoReformatAgentService : BackgroundService
     }
 
     internal static bool IsDisabled(IConfiguration configuration) =>
-        string.Equals(configuration["DISABLE_AUTO_REFORMAT_AGENT"], "true", StringComparison.OrdinalIgnoreCase);
+        string.Equals(
+            configuration[AutoReformatOptions.DisableConfigurationKey],
+            "true",
+            StringComparison.OrdinalIgnoreCase);
 
     private async Task RunLoopAsync(CancellationToken stoppingToken)
     {
@@ -58,7 +64,7 @@ public class AutoReformatAgentService : BackgroundService
         try
         {
             await ReformatWorkOrdersAsync(stoppingToken);
-            await Task.Delay(TimeSpan.FromSeconds(5), _timeProvider, stoppingToken);
+            await Task.Delay(_options.PollInterval, _timeProvider, stoppingToken);
             return true;
         }
         catch (OperationCanceledException)
@@ -68,15 +74,16 @@ public class AutoReformatAgentService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in AutoReformatAgentService execution");
-            await Task.Delay(TimeSpan.FromSeconds(30), _timeProvider, stoppingToken);
+            await Task.Delay(_options.ErrorRetryDelay, _timeProvider, stoppingToken);
             return true;
         }
     }
 
     internal async Task ReformatWorkOrdersAsync(CancellationToken cancellationToken = default)
     {
-        var bus = _serviceScope.ServiceProvider.GetRequiredService<IBus>();
-        var agent = _serviceScope.ServiceProvider.GetRequiredService<WorkOrderReformatAgent>();
+        using var scope = _scopeFactory.CreateScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IBus>();
+        var agent = scope.ServiceProvider.GetRequiredService<WorkOrderReformatAgent>();
 
         try
         {
@@ -85,7 +92,12 @@ public class AutoReformatAgentService : BackgroundService
 
             foreach (var workOrder in draftWorkOrders)
             {
-                await TryReformatSingleWorkOrderAsync(agent, workOrder, cancellationToken);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                await TryReformatSingleWorkOrderAsync(bus, agent, workOrder);
             }
         }
         catch (Exception ex)
@@ -101,15 +113,21 @@ public class AutoReformatAgentService : BackgroundService
         return await bus.Send(specification);
     }
 
-    private async Task TryReformatSingleWorkOrderAsync(WorkOrderReformatAgent agent, WorkOrder workOrder, CancellationToken cancellationToken)
+    private async Task TryReformatSingleWorkOrderAsync(
+        IBus bus,
+        WorkOrderReformatAgent agent,
+        WorkOrder workOrder)
     {
         try
         {
             var result = await agent.ReformatWorkOrderAsync(workOrder);
-            if (result != null)
+            if (result is null)
             {
-                await ApplyReformatAsync(workOrder, result, cancellationToken);
+                return;
             }
+
+            await PersistReformatAsync(bus, workOrder, result);
+            _logger.LogInformation("Successfully reformatted WorkOrder {WorkOrderNumber}", workOrder.Number);
         }
         catch (Exception ex)
         {
@@ -117,25 +135,9 @@ public class AutoReformatAgentService : BackgroundService
         }
     }
 
-    private async Task ApplyReformatAsync(WorkOrder workOrder, ReformatResult result, CancellationToken cancellationToken)
-    {
-        using var scope = _serviceScope.ServiceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
-
-        try
-        {
-            workOrder.Title = result.Title;
-            workOrder.Description = WorkOrderStringUtility.TruncateDescription(result.Description);
-
-            dbContext.Attach(workOrder);
-            dbContext.Update(workOrder);
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Successfully reformatted WorkOrder {WorkOrderNumber}", workOrder.Number);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error saving reformatted WorkOrder {WorkOrderNumber}", workOrder.Number);
-        }
-    }
+    private static Task PersistReformatAsync(
+        IBus bus,
+        WorkOrder workOrder,
+        WorkOrderReformatAgent.ReformatResult result) =>
+        bus.Send(new ReformatWorkOrderCommand(workOrder.Number!, result.Title, result.Description));
 }

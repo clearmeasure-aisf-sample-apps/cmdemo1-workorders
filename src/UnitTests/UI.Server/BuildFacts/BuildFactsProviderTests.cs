@@ -69,45 +69,23 @@ public class BuildFactsProviderTests
     public void Json_WhenTheFileIsNotAJsonObject_ShouldAnswerWithoutItAndWarn()
     {
         File.WriteAllText(Path.Combine(_contentRoot, BuildFactsProvider.FileName), "{ \"version\": ");
-        var logger = new StubLogger();
+        var logger = new CapturingLogger();
         var provider = new BuildFactsProvider(_contentRoot, "1.0.0+local", logger);
 
         using var document = JsonDocument.Parse(provider.Json);
 
         document.RootElement.GetProperty("version").GetString().ShouldBe("1.0.0");
-        logger.Warnings.ShouldHaveSingleItem().ShouldContain(BuildFactsProvider.FileName);
+        logger.MessagesAt(LogLevel.Warning).ShouldHaveSingleItem().ShouldContain(BuildFactsProvider.FileName);
     }
 
     [Test]
     public void Json_WhenThereIsNoFile_ShouldNotWarn()
     {
-        var logger = new StubLogger();
+        var logger = new CapturingLogger();
         var provider = new BuildFactsProvider(_contentRoot, "1.0.0+local", logger);
 
         provider.Json.ShouldNotBeNullOrEmpty();
 
-        logger.Warnings.ShouldBeEmpty();
-    }
-
-    private sealed class StubLogger : ILogger
-    {
-        public List<string> Warnings { get; } = [];
-
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(
-            LogLevel logLevel,
-            EventId eventId,
-            TState state,
-            Exception? exception,
-            Func<TState, Exception?, string> formatter)
-        {
-            if (logLevel == LogLevel.Warning)
-            {
-                Warnings.Add(formatter(state, exception));
-            }
-        }
+        logger.MessagesAt(LogLevel.Warning).ShouldBeEmpty();
     }
 }

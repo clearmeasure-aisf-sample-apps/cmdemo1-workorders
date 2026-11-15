@@ -293,4 +293,87 @@ internal static partial class ArchitectureRules
         type is PredefinedTypeSyntax predefined
             ? predefined.Keyword.IsKind(SyntaxKind.BoolKeyword)
             : SimpleTypeName(type) is "Boolean";
+
+    /// <summary>
+    /// True when the source references <c>DbContext</c> or <c>DataContext</c> as a type name
+    /// (identifier, typeof, generic type argument, or using of EntityFrameworkCore).
+    /// </summary>
+    internal static bool ReferencesDbContext(string source) =>
+        ReferencesDbContext(Parse(source));
+
+    /// <summary>
+    /// True when the parsed tree references a persistence context type or EF Core namespace.
+    /// </summary>
+    internal static bool ReferencesDbContext(CompilationUnitSyntax root)
+    {
+        foreach (var usingDirective in root.Usings)
+        {
+            if (usingDirective.Name?.ToString().Contains("EntityFrameworkCore", StringComparison.Ordinal) == true)
+            {
+                return true;
+            }
+        }
+
+        foreach (var identifier in root.DescendantNodes().OfType<IdentifierNameSyntax>())
+        {
+            var name = identifier.Identifier.ValueText;
+            if (name is "DbContext" or "DataContext")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Constructor declarations that invoke <c>CreateScope()</c> (scope leak smell).
+    /// </summary>
+    internal static IReadOnlyList<string> ConstructorsCallingCreateScope(string source) =>
+        ConstructorsCallingCreateScope(Parse(source));
+
+    /// <summary>
+    /// Constructor declarations that invoke <c>CreateScope()</c>.
+    /// </summary>
+    internal static IReadOnlyList<string> ConstructorsCallingCreateScope(CompilationUnitSyntax root)
+    {
+        var names = new List<string>();
+        foreach (var ctor in root.DescendantNodes().OfType<ConstructorDeclarationSyntax>())
+        {
+            if (ctor.Body is null && ctor.ExpressionBody is null)
+            {
+                continue;
+            }
+
+            if (CallsCreateScope(ctor))
+            {
+                names.Add(ctor.Identifier.ValueText);
+            }
+        }
+
+        return SortedDistinct(names);
+    }
+
+    private static bool CallsCreateScope(ConstructorDeclarationSyntax ctor)
+    {
+        foreach (var invocation in ctor.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            if (IsCreateScopeCall(invocation))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsCreateScopeCall(InvocationExpressionSyntax invocation)
+    {
+        return invocation.Expression switch
+        {
+            IdentifierNameSyntax { Identifier.ValueText: "CreateScope" } => true,
+            MemberAccessExpressionSyntax { Name.Identifier.ValueText: "CreateScope" } => true,
+            _ => false
+        };
+    }
 }

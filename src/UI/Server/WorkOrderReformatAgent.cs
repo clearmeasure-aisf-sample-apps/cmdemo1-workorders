@@ -4,12 +4,34 @@ using Microsoft.Extensions.AI;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
+/// <summary>
+/// Asks the chat model to reformat a work order's title and description, then parses the answer.
+/// Persistence is the caller's responsibility (via <c>ReformatWorkOrderCommand</c>).
+/// </summary>
 public class WorkOrderReformatAgent(
     ChatClientFactory chatClientFactory,
     ILogger<WorkOrderReformatAgent> logger)
 {
-    public Task<ReformatResult?> ReformatWorkOrderAsync(WorkOrder workOrder) =>
-        ReformatWorkOrderRunner.RunAsync(chatClientFactory, logger, workOrder);
+    /// <summary>Reformatted title and description when the model proposed a change.</summary>
+    public sealed record ReformatResult(string Title, string Description);
+
+    /// <summary>
+    /// Returns a result when the model proposes a change; <c>null</c> for <c>NO_CHANGES</c>
+    /// or an answer that matches the current fields. Exceptions propagate to the caller.
+    /// </summary>
+    public virtual async Task<ReformatResult?> ReformatWorkOrderAsync(WorkOrder workOrder)
+    {
+        var responseText = await RequestReformatTextAsync(workOrder);
+        if (IsNoChangeResponse(responseText))
+        {
+            logger.LogInformation("No reformatting needed for WorkOrder {WorkOrderNumber}", workOrder.Number);
+            return null;
+        }
+
+        var result = ParseResponse(responseText!, workOrder);
+        LogReformat(workOrder, result);
+        return result;
+    }
 
     internal static ReformatResult? ParseResponse(string responseText, WorkOrder workOrder)
     {
@@ -20,48 +42,12 @@ public class WorkOrderReformatAgent(
             ? null
             : new ReformatResult(title, description);
     }
-}
-
-internal static class ReformatWorkOrderRunner
-{
-    internal static async Task<ReformatResult?> RunAsync(
-        ChatClientFactory chatClientFactory,
-        ILogger<WorkOrderReformatAgent> logger,
-        WorkOrder workOrder)
-    {
-        try
-        {
-            return await RunCoreAsync(chatClientFactory, logger, workOrder);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error reformatting WorkOrder {WorkOrderNumber}", workOrder.Number);
-            return null;
-        }
-    }
-
-    private static async Task<ReformatResult?> RunCoreAsync(
-        ChatClientFactory chatClientFactory,
-        ILogger<WorkOrderReformatAgent> logger,
-        WorkOrder workOrder)
-    {
-        var responseText = await RequestReformatTextAsync(chatClientFactory, workOrder);
-        if (IsNoChangeResponse(responseText))
-        {
-            logger.LogInformation("No reformatting needed for WorkOrder {WorkOrderNumber}", workOrder.Number);
-            return null;
-        }
-
-        var result = WorkOrderReformatAgent.ParseResponse(responseText!, workOrder);
-        LogReformat(logger, workOrder, result);
-        return result;
-    }
 
     private static bool IsNoChangeResponse(string? responseText) =>
         string.IsNullOrWhiteSpace(responseText)
         || responseText.Equals("NO_CHANGES", StringComparison.OrdinalIgnoreCase);
 
-    private static void LogReformat(ILogger logger, WorkOrder workOrder, ReformatResult? result)
+    private void LogReformat(WorkOrder workOrder, ReformatResult? result)
     {
         if (result == null)
         {
@@ -75,7 +61,7 @@ internal static class ReformatWorkOrderRunner
             result.Description != workOrder.Description);
     }
 
-    private static async Task<string?> RequestReformatTextAsync(ChatClientFactory chatClientFactory, WorkOrder workOrder)
+    private async Task<string?> RequestReformatTextAsync(WorkOrder workOrder)
     {
         var chatClient = await chatClientFactory.GetChatClient();
         var messages = new List<ChatMessage>
@@ -158,5 +144,3 @@ internal static class ReformatPrompts
          Description: {workOrder.Description}
          """;
 }
-
-public record ReformatResult(string Title, string Description);

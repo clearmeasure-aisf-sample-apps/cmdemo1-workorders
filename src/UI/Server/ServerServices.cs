@@ -55,6 +55,7 @@ public static class ServerServices
         builder.Services.AddMemoryCache();
         builder.Services.AddGrpc();
         builder.Services.Configure<LlmHealthCheckOptions>(builder.Configuration.GetSection("LlmHealthCheck"));
+        builder.Services.AddAutoReformatOptions(builder.Configuration);
     }
 
     /// <summary>Idempotency, rate limits, timeouts, API keys, body buffering, decompression and CORS.</summary>

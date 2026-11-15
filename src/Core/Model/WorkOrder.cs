@@ -131,6 +131,24 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public bool IsWaitingOnVendor => Status == WorkOrderStatus.InProgress && WaitingOnVendorSince != null;
 
+    /// <summary>
+    /// Sets title and description from an AI reformat, truncating the description to
+    /// <see cref="DescriptionMaxLength"/>.
+    /// </summary>
+    public void ApplyReformat(string title, string description)
+    {
+        Title = title;
+        Description = TruncateDescription(description);
+    }
+
+    /// <summary>
+    /// Truncates <paramref name="description"/> to <see cref="DescriptionMaxLength"/>.
+    /// </summary>
+    public static string TruncateDescription(string description) =>
+        description.Length <= DescriptionMaxLength
+            ? description
+            : description[..DescriptionMaxLength];
+
     private string GetTruncatedString(string? value)
     {
         if (value == null)
