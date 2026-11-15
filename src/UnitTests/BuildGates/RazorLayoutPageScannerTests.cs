@@ -17,7 +17,7 @@ public class RazorLayoutPageScannerTests
     }
 
     [Test]
-    public void ShellPageExpansion_WhenNavMenuIsInMainLayout_ListsMainLayoutPages()
+    public void ShellPageExpansion_WhenNavMenuIsInShellChrome_ListsMainLayoutPages()
     {
         var expansion = RazorLayoutPageScanner.ShellPageExpansion(RepositoryCheckout.Current);
 

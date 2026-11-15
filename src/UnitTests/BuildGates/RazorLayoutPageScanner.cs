@@ -100,7 +100,7 @@ internal static class RazorLayoutPageScanner
         var pages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (layout, layoutPages) in pagesByLayout)
         {
-            if (!TagUsed(checkout.ReadText(layout), "NavMenu"))
+            if (!LayoutUsesNavMenu(checkout, layout))
             {
                 continue;
             }
@@ -112,6 +112,60 @@ internal static class RazorLayoutPageScanner
         {
             expansion[NavMenuRazor] = pages.OrderBy(static path => path, StringComparer.Ordinal).ToArray();
         }
+    }
+
+    /// <summary>
+    /// True when the layout markup hosts <c>NavMenu</c>, or a one-hop child component does (e.g. <c>NavRail</c>).
+    /// </summary>
+    private static bool LayoutUsesNavMenu(RepositoryCheckout checkout, string layoutPath)
+    {
+        var layoutText = checkout.ReadText(layoutPath);
+        if (TagUsed(layoutText, "NavMenu"))
+        {
+            return true;
+        }
+
+        foreach (var childStem in ComponentTags(layoutText))
+        {
+            var childPath = ResolveComponentPath(checkout, childStem);
+            if (childPath is not null && TagUsed(checkout.ReadText(childPath), "NavMenu"))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static IEnumerable<string> ComponentTags(string razorText)
+    {
+        foreach (Match match in Regex.Matches(
+                     razorText,
+                     @"<(?<name>[A-Z][A-Za-z0-9]*)([\s/>]|$)",
+                     RegexOptions.Multiline))
+        {
+            yield return match.Groups["name"].Value;
+        }
+    }
+
+    private static string? ResolveComponentPath(RepositoryCheckout checkout, string componentStem)
+    {
+        var fileName = componentStem + ".razor";
+        foreach (var root in LayoutSearchRoots)
+        {
+            var absolute = checkout.PathOf(root);
+            if (!Directory.Exists(absolute))
+            {
+                continue;
+            }
+
+            foreach (var file in Directory.EnumerateFiles(absolute, fileName, SearchOption.AllDirectories))
+            {
+                return checkout.Relative(file);
+            }
+        }
+
+        return null;
     }
 
     private static void AddAppExpansion(

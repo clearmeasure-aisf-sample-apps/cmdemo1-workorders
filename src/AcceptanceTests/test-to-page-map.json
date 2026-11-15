@@ -457,6 +457,12 @@
       ]
     },
     {
+      "path": "src/UI.Shared/Components/AppFooter.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
       "path": "src/UI.Shared/Components/Breadcrumbs.razor",
       "pages": [
         "src/UI.Shared/MainLayout.razor"
@@ -515,6 +521,36 @@
       "path": "src/UI.Shared/Components/MyWorkOrders.razor",
       "pages": [
         "src/UI.Shared/NavMenu.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/NavRail.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/NavRailToggle.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/NotificationsBell.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/NotificationsBellPanel.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
+      ]
+    },
+    {
+      "path": "src/UI.Shared/Components/NotificationsBellToggle.razor",
+      "pages": [
+        "src/UI.Shared/MainLayout.razor"
       ]
     },
     {

@@ -10,7 +10,6 @@ file src/IntegrationTests/DataAccess/WorkOrderSpecificationHandlerTests.cs
 file src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs
 file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
 file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
-file src/UnitTests/UI.Shared/MainLayoutTests.cs
 file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs
 file src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs
 file src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs

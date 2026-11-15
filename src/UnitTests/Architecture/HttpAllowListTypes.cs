@@ -5,7 +5,7 @@ using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
 namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
 
 /// <summary>
-/// Master's HTTP single-API allow-list: the 42 payload types that had a FluentValidation
+/// Master's HTTP single-API allow-list: the 43 payload types that had a FluentValidation
 /// <c>IValidator&lt;T&gt;</c> registered (excluding the <c>WebServiceMessage</c> envelope).
 /// </summary>
 internal static class HttpAllowListTypes
@@ -20,6 +20,7 @@ internal static class HttpAllowListTypes
         "CreateTeamCommand",
         "CreateVendorCommand",
         "DeleteSearchViewCommand",
+        "DeploymentIdentityQuery",
         "DraftToAssignedCommand",
         "EmployeeByUserNameQuery",
         "EmployeeGetAllQuery",

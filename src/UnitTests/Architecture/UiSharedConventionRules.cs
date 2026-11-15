@@ -69,6 +69,100 @@ internal static class UiSharedConventionRules
         return false;
     }
 
+    /// <summary>
+    /// Names of <c>[Inject]</c> properties, constructor / primary-constructor parameters, and
+    /// <c>@inject</c> members typed as <c>HttpClient</c>.
+    /// </summary>
+    internal static IReadOnlyList<string> HttpClientInjections(string source)
+    {
+        var names = new List<string>();
+        var root = ArchitectureRules.Parse(source);
+        foreach (var property in root.DescendantNodes().OfType<PropertyDeclarationSyntax>())
+        {
+            if (HasInjectAttribute(property) && IsHttpClientType(UnwrapNullable(property.Type)))
+            {
+                names.Add(property.Identifier.ValueText);
+            }
+        }
+
+        foreach (var parameter in root.DescendantNodes().OfType<ParameterSyntax>())
+        {
+            if (parameter.Type != null &&
+                IsConstructorOrTypeParameter(parameter) &&
+                IsHttpClientType(UnwrapNullable(parameter.Type)))
+            {
+                names.Add(parameter.Identifier.ValueText);
+            }
+        }
+
+        foreach (var line in source.Split('\n'))
+        {
+            CollectRazorHttpClientInject(line.Trim(), names);
+        }
+
+        return Sorted(names);
+    }
+
+    /// <summary>
+    /// Type names from <c>new HttpClient</c> (or qualified) and target-typed <c>HttpClient c = new();</c>.
+    /// </summary>
+    internal static IReadOnlyList<string> HttpClientConstructions(string source)
+    {
+        var names = new List<string>();
+        var root = ArchitectureRules.Parse(source);
+        foreach (var creation in root.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
+        {
+            if (IsHttpClientType(creation.Type))
+            {
+                names.Add("HttpClient");
+            }
+        }
+
+        foreach (var creation in root.DescendantNodes().OfType<ImplicitObjectCreationExpressionSyntax>())
+        {
+            if (IsHttpClientTargetTypedCreation(creation))
+            {
+                names.Add("HttpClient");
+            }
+        }
+
+        return Sorted(names);
+    }
+
+    private static bool IsHttpClientTargetTypedCreation(ImplicitObjectCreationExpressionSyntax creation)
+    {
+        if (creation.Parent is not EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax declarator })
+        {
+            return false;
+        }
+
+        return declarator.Parent is VariableDeclarationSyntax declaration &&
+               IsHttpClientType(UnwrapNullable(declaration.Type));
+    }
+
+    private static void CollectRazorHttpClientInject(string trimmed, List<string> names)
+    {
+        if (!trimmed.StartsWith("@inject ", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var parts = trimmed["@inject ".Length..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length < 2)
+        {
+            return;
+        }
+
+        var typeName = parts[0].Split('.').Last();
+        if (typeName == "HttpClient")
+        {
+            names.Add(parts[1]);
+        }
+    }
+
+    private static bool IsHttpClientType(TypeSyntax type) =>
+        SimpleTypeName(type) == "HttpClient";
+
     private static void CollectInjectedAuthProviders(CompilationUnitSyntax root, List<string> names)
     {
         foreach (var property in root.DescendantNodes().OfType<PropertyDeclarationSyntax>())

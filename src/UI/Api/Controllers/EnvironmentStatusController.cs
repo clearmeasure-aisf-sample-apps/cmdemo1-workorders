@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Asp.Versioning;
+using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -49,6 +50,7 @@ public class EnvironmentStatusController : ControllerBase
         var names = ReportedEnvironmentVariableNames
             .Where(name => Environment.GetEnvironmentVariable(name) is not null)
             .ToList();
+        var deployment = DeploymentIdentity.FromProcess();
         return new EnvironmentStatusResponse(
             OsDescription: RuntimeInformation.OSDescription,
             ProcessorCount: Environment.ProcessorCount,
@@ -56,22 +58,14 @@ public class EnvironmentStatusController : ControllerBase
             EnvironmentVariableNames: names,
             EnvironmentVariables: names.ToDictionary(name => name, _ => RedactedValue, StringComparer.OrdinalIgnoreCase),
             Version: EntryAssemblyVersion(),
-            GitSha: EntryAssemblySourceRevision(),
-            EnvironmentName: Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-                ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
-                ?? "unknown");
+            GitSha: deployment.GitSha,
+            EnvironmentName: deployment.EnvironmentName);
     }
 
     private static string EntryAssemblyVersion() =>
         Assembly.GetEntryAssembly()
             ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion ?? "unknown";
-
-    private static string EntryAssemblySourceRevision() =>
-        Assembly.GetEntryAssembly()
-            ?.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .FirstOrDefault(a => a.Key == "SourceRevisionId")
-            ?.Value ?? "unknown";
 }
 
 /// <summary>
