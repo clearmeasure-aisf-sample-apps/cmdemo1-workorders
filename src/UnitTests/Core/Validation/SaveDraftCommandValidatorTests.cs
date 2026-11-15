@@ -37,7 +37,7 @@ public class SaveDraftCommandValidatorTests
         var result = _validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Title)
-            .WithErrorMessage("Title cannot exceed 600 characters.");
+            .WithErrorMessage(WorkOrderFieldRules.TitleCannotExceed);
     }
 
     [Test]
@@ -126,7 +126,7 @@ public class SaveDraftCommandValidatorTests
         var result = _validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.WorkOrder.RoomNumber)
-            .WithErrorMessage("Room number cannot exceed 50 characters.");
+            .WithErrorMessage(WorkOrderFieldRules.RoomNumberCannotExceed);
     }
 
     [Test]
@@ -164,7 +164,7 @@ public class SaveDraftCommandValidatorTests
 
         result.IsValid.ShouldBeFalse();
         result.ShouldHaveValidationErrorFor(x => x.WorkOrder.RoomNumber)
-            .WithErrorMessage("Room number cannot exceed 50 characters.");
+            .WithErrorMessage(WorkOrderFieldRules.RoomNumberCannotExceed);
     }
 
     [Test]
@@ -185,7 +185,7 @@ public class SaveDraftCommandValidatorTests
         var result = _validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Building)
-            .WithErrorMessage("Building cannot exceed 100 characters.");
+            .WithErrorMessage(WorkOrderFieldRules.BuildingCannotExceed);
     }
 
     [Test]
@@ -226,7 +226,7 @@ public class SaveDraftCommandValidatorTests
         var result = _validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.WorkOrder.Floor)
-            .WithErrorMessage("Floor cannot exceed 20 characters.");
+            .WithErrorMessage(WorkOrderFieldRules.FloorCannotExceed);
     }
 
     [Test]

@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.McpServer.Tools.Arguments;
 using Shouldly;
@@ -23,7 +24,7 @@ public class ShelveReasonTests
     {
         var reason = ShelveReason.For("Shelve", text);
 
-        reason.Error.ShouldBe("Shelve requires a reason.");
+        reason.Error.ShouldBe(WorkOrderFieldRules.ShelveRequiresReason);
     }
 
     [Test]
@@ -31,7 +32,7 @@ public class ShelveReasonTests
     {
         var reason = ShelveReason.For("Shelve", new string('r', InProgressToAssignedCommand.ReasonMaxLength + 1));
 
-        reason.Error.ShouldBe($"Reason cannot exceed {InProgressToAssignedCommand.ReasonMaxLength} characters.");
+        reason.Error.ShouldBe(WorkOrderFieldRules.ReasonCannotExceed);
     }
 
     [Test]

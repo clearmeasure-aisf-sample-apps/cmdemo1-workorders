@@ -50,7 +50,7 @@ public class WorkOrderManageModelBuildingTests
         var results = Validate(model);
 
         results.Single(r => r.MemberNames.Contains(nameof(WorkOrderManageModel.Building)))
-            .ErrorMessage.ShouldBe("Building cannot exceed 100 characters.");
+            .ErrorMessage.ShouldBe(WorkOrderFieldRules.BuildingCannotExceed);
     }
 
     private static WorkOrderManageModel ValidModel()

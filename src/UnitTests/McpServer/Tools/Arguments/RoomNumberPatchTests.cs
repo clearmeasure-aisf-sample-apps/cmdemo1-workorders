@@ -36,7 +36,7 @@ public class RoomNumberPatchTests
 
         var error = new RoomNumberPatch(new string('r', WorkOrder.RoomNumberEntryMaxLength + 1)).ErrorFor(workOrder);
 
-        error.ShouldBe($"Room number cannot exceed {WorkOrder.RoomNumberEntryMaxLength} characters.");
+        error.ShouldBe(WorkOrderFieldRules.RoomNumberCannotExceed);
     }
 
     [Test]
