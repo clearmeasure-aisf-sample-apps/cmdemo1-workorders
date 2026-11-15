@@ -84,6 +84,20 @@ public class SettingsTests
     }
 
     [Test]
+    public async Task Settings_DarkModeStatus_ShouldBeAnnouncedAsStatus()
+    {
+        await using var ctx = CreateContext();
+        var module = ctx.JSInterop.SetupModule(ThemePreferenceService.ThemeJsModulePath);
+        module.Setup<string>("getTheme").SetResult("light");
+        module.SetupVoid("syncDomFromTheme", _ => true).SetVoidResult();
+
+        var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Settings>());
+
+        var status = component.Find($"[data-testid='{nameof(Settings.Elements.DarkModeStatus)}']");
+        status.GetAttribute("role").ShouldBe("status");
+    }
+
+    [Test]
     public async Task Settings_DarkModeStatus_WhenToggledOn_ShouldShowOn()
     {
         await using var ctx = CreateContext();
