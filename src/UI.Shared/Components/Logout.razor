@@ -1,5 +1,4 @@
 @using Palermo.BlazorMvc
-@inject CustomAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
 @inject IUserSession UserSession
 @implements IListener<UserLoggedInEvent>
@@ -15,14 +14,11 @@
             @onclick="ToggleMenu">
         <span class="visually-hidden" data-testid="@Elements.WelcomeText">
             Welcome
-            @{
-                var userIdentity = AuthStateProvider.GetUsername();
-            }
-            @(HasMiddleName(_currentEmployee) ? _currentEmployee!.GetFullName() : userIdentity)!
+            @(HasMiddleName(_currentEmployee) ? _currentEmployee!.GetFullName() : _userName)!
         </span>
-        <span class="user-avatar" aria-hidden="true">@UserDisplay.Initials(_currentEmployee, userIdentity)</span>
+        <span class="user-avatar" aria-hidden="true">@UserDisplay.Initials(_currentEmployee, _userName)</span>
         <span class="user-identity" aria-hidden="true">
-            <span class="user-name" data-testid="@Elements.UserFullName">@(_currentEmployee?.GetFullName() ?? userIdentity)</span>
+            <span class="user-name" data-testid="@Elements.UserFullName">@(_currentEmployee?.GetFullName() ?? _userName)</span>
             @if (!string.IsNullOrEmpty(Roles))
             {
                 <span class="user-roles" data-testid="@Elements.UserRoles">@Roles</span>
@@ -40,6 +36,7 @@
 @code {
 
     private Employee? _currentEmployee;
+    private string? _userName;
     private bool _open;
     private ElementReference _triggerRef;
 
@@ -63,6 +60,7 @@
 
     private async Task LoadCurrentEmployee()
     {
+        _userName = await UserSession.GetCurrentUserNameAsync();
         try
         {
             _currentEmployee = await UserSession.GetCurrentUserAsync();
@@ -88,9 +86,10 @@
 
     private async Task HandleLogout()
     {
-        await AuthStateProvider.Logout();
+        await UserSession.SignOutAsync();
         _open = false;
-        EventBus.Notify(new UserLoggedOutEvent(AuthStateProvider.GetUsername()));
+        // Username is already cleared; avoid another await so NavigateTo runs before auth re-render can dispose this component.
+        EventBus.Notify(new UserLoggedOutEvent(null));
         NavigationManager.NavigateTo("/login");
     }
 

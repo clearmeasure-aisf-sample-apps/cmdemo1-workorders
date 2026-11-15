@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -178,16 +179,6 @@ public class MyWorkOrdersTests
         component.Instance.Count.ShouldBe(0);
     }
 
-    private class StubUserSession(Employee? currentUser = null) : IUserSession
-    {
-        private readonly Employee? _currentUser =
-            currentUser ?? new Employee("testuser", "Test", "User", "test@example.com");
-
-        public Task<Employee?> GetCurrentUserAsync()
-        {
-            return Task.FromResult(_currentUser);
-        }
-    }
 
     private class StubBusWithWorkOrders(Employee creator) : Bus(null!)
     {

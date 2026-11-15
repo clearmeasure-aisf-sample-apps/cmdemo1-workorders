@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.UI.Shared.Authentication;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Hosting;
@@ -12,9 +12,9 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 [Route("/login")]
 public partial class Login : AppComponentBase
 {
-    [Inject] public CustomAuthenticationStateProvider? AuthStateProvider { get; set; }
-    [Inject] public NavigationManager? NavigationManager { get; set; }
-    [Inject] public IHostEnvironment? HostEnvironment { get; set; }
+    [Inject] public IUserSession UserSession { get; set; } = null!;
+    [Inject] public NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] public IHostEnvironment HostEnvironment { get; set; } = null!;
     [Inject] public TimeProvider Clock { get; set; } = null!;
 
     /// <summary>Calendar year on the login footer (machine-local, matching the former DateTime.Now.Year).</summary>
@@ -39,7 +39,7 @@ public partial class Login : AppComponentBase
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
             ?? typeof(Login).Assembly.GetName().Version?.ToString()
             ?? string.Empty;
-        AppEnvironment = string.IsNullOrWhiteSpace(HostEnvironment?.EnvironmentName)
+        AppEnvironment = string.IsNullOrWhiteSpace(HostEnvironment.EnvironmentName)
             ? "unknown"
             : HostEnvironment.EnvironmentName;
         _employeesLoadTask = LoadEmployees();
@@ -91,10 +91,10 @@ public partial class Login : AppComponentBase
         var selectedEmployee = _employees.FirstOrDefault(e => e.UserName == LoginModelValue.Username);
         if (selectedEmployee != null)
         {
-            await AuthStateProvider!.Login(LoginModelValue.Username);
+            await UserSession.SignInAsync(LoginModelValue.Username);
             EventBus.Notify(new UserLoggedInEvent(LoginModelValue.Username));
             await Bus.Publish(new Core.Model.Events.UserLoggedInEvent(LoginModelValue.Username));
-            NavigationManager!.NavigateTo("/");
+            NavigationManager.NavigateTo("/");
         }
         else
         {

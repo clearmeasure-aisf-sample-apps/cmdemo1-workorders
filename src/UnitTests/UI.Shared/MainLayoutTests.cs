@@ -503,7 +503,6 @@ public class MainLayoutTests
         layout.FindAll(".nav-backdrop").Count.ShouldBe(0);
     }
 
-
     [Test]
     public async Task DarkModeToggle_ShouldRender_WithSunIcon_WhenLightMode()
     {
@@ -583,7 +582,6 @@ public class MainLayoutTests
 
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.DarkModeToggle)}']").ShouldNotBeNull();
     }
-
 
     [Test]
     public async Task NotificationsButton_ShouldNotBeDisabled_WhenUserIsAuthenticated()
@@ -761,13 +759,17 @@ public class MainLayoutTests
     {
         WorkOrder[] orders = [new() { Number = "WO-1" }, new() { Number = "WO-2" }];
         var bus = new NotificationsStubBus(new ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(orders, [], []));
-        await using var ctx = CreateContext(bus: bus);
+        var session = new StubUserSession();
+        await using var ctx = CreateContext(bus: bus, userSession: session);
         var layout = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
         layout.FindAll($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").Count.ShouldBe(0);
         bus.LastUserName.ShouldBeNull();
 
-        await layout.InvokeAsync(() => ((BunitAuthenticationStateProvider)ctx.Services.GetRequiredService<AuthenticationStateProvider>())
-            .TriggerAuthenticationStateChanged("mflanders"));
+        await layout.InvokeAsync(() =>
+        {
+            session.UserName = "mflanders";
+            session.RaiseAuthenticationStateChanged();
+        });
 
         await layout.WaitForAssertionAsync(() =>
             layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("2"));
@@ -858,7 +860,8 @@ public class MainLayoutTests
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
-    private static BunitContext CreateContext(IBus? bus = null, string? authenticateAsUser = null)
+    private static BunitContext CreateContext(IBus? bus = null, string? authenticateAsUser = null,
+        StubUserSession? userSession = null)
     {
         var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
@@ -868,7 +871,7 @@ public class MainLayoutTests
 
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(bus ?? new StubBus());
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession());
+        ctx.Services.AddSingleton<IUserSession>(userSession ?? new StubUserSession(userName: authenticateAsUser));
         ctx.Services.AddSingleton<IFeatureFlags>(new StubFeatureFlags());
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();
@@ -884,11 +887,6 @@ public class MainLayoutTests
             BaseAddress = new Uri("http://localhost/")
         });
         return ctx;
-    }
-
-    private sealed class StubUserSession : IUserSession
-    {
-        public Task<Employee?> GetCurrentUserAsync() => Task.FromResult<Employee?>(null);
     }
 
     // ReSharper disable NotAccessedPositionalProperty.Local -- properties consumed via JSON serialization reflection

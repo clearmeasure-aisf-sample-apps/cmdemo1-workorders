@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
@@ -154,7 +155,7 @@ public class WorkOrderManageDueDateValidationTests
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubDueDateWorkOrderBuilder(user));
-        ctx.Services.AddSingleton<IUserSession>(new StubDueDateUserSession(user));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(user));
         ctx.Services.AddSingleton<ITranslationService>(new StubDueDateTranslationService());
         ctx.Services.AddSpeechSynthesis();
         ctx.Services.AddSpeechRecognition();
@@ -218,11 +219,6 @@ public class WorkOrderManageDueDateValidationTests
                 Title = "",
                 Description = ""
             };
-    }
-
-    private sealed class StubDueDateUserSession(Employee user) : IUserSession
-    {
-        public Task<Employee?> GetCurrentUserAsync() => Task.FromResult<Employee?>(user);
     }
 
     private sealed class StubDueDateTranslationService : ITranslationService

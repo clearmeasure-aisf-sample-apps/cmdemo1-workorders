@@ -156,11 +156,6 @@ public class MainLayoutDeploymentFooterTests
         return ctx;
     }
 
-    private sealed class StubUserSession : IUserSession
-    {
-        public Task<Employee?> GetCurrentUserAsync() => Task.FromResult<Employee?>(null);
-    }
-
     // ReSharper disable NotAccessedPositionalProperty.Local -- properties consumed via JSON serialization reflection
     private sealed record EnvironmentStatusStub(string Version, string GitSha, string EnvironmentName);
     // ReSharper restore NotAccessedPositionalProperty.Local
