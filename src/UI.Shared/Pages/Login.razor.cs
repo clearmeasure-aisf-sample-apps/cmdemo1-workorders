@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ClearMeasure.Bootcamp.Core.Queries;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -54,6 +55,7 @@ public partial class Login : AppComponentBase
         }
         catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Employee list could not be loaded for the login page.");
             _errorMessage = "Error loading employees: " + ex.Message;
         }
     }

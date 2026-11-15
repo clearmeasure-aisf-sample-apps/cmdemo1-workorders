@@ -70,6 +70,185 @@ internal static class UiSharedConventionRules
     }
 
     /// <summary>
+    /// Line numbers of empty <c>catch</c> blocks (no statements; comments do not count).
+    /// </summary>
+    internal static IReadOnlyList<int> EmptyCatchLineNumbers(string source) =>
+        EmptyCatchLineNumbers(ArchitectureRules.Parse(CSharpForCatchScan(source)));
+
+    private static IReadOnlyList<int> EmptyCatchLineNumbers(CompilationUnitSyntax root)
+    {
+        var lines = new List<int>();
+        foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
+        {
+            if (clause.Block.Statements.Count == 0)
+            {
+                lines.Add(clause.GetLocation().GetLineSpan().StartLinePosition.Line + 1);
+            }
+        }
+
+        return lines;
+    }
+
+    /// <summary>True when the source mentions <c>IJSObjectReference</c> as a type name.</summary>
+    internal static bool UsesIjsObjectReference(string source)
+    {
+        var root = ArchitectureRules.Parse(CSharpForCatchScan(source));
+        foreach (var node in root.DescendantNodes())
+        {
+            if (node is IdentifierNameSyntax { Identifier.ValueText: "IJSObjectReference" })
+            {
+                return true;
+            }
+
+            if (node is QualifiedNameSyntax qualified && SimpleTypeName(qualified.Right) == "IJSObjectReference")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Line numbers of silent catch-alls: bare <c>catch</c> or <c>catch (Exception)</c> that neither
+    /// logs nor rethrows (<c>throw;</c>).
+    /// </summary>
+    internal static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(string source) =>
+        CatchExceptionWithoutLogLineNumbers(ArchitectureRules.Parse(CSharpForCatchScan(source)));
+
+    private static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(CompilationUnitSyntax root)
+    {
+        var lines = new List<int>();
+        foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
+        {
+            if (!IsSilentCatchAll(clause) || CatchBlockLogsOrRethrows(clause.Block))
+            {
+                continue;
+            }
+
+            lines.Add(clause.GetLocation().GetLineSpan().StartLinePosition.Line + 1);
+        }
+
+        return lines;
+    }
+
+    /// <summary>
+    /// C# text to scan for catch rules: plain <c>.cs</c> as-is, or each Razor <c>@code</c> block
+    /// wrapped so Roslyn can parse it.
+    /// </summary>
+    private static string CSharpForCatchScan(string source)
+    {
+        if (!source.Contains("@code", StringComparison.Ordinal))
+        {
+            return source;
+        }
+
+        var blocks = CollectRazorCodeBlocks(source);
+        return blocks.Count == 0
+            ? source
+            : "namespace RazorCodeScan { class Code { " + string.Join("\n", blocks) + " } }";
+    }
+
+    private static List<string> CollectRazorCodeBlocks(string source)
+    {
+        var blocks = new List<string>();
+        var index = 0;
+        while (true)
+        {
+            var at = source.IndexOf("@code", index, StringComparison.Ordinal);
+            if (at < 0)
+            {
+                return blocks;
+            }
+
+            var open = source.IndexOf('{', at);
+            if (open < 0)
+            {
+                return blocks;
+            }
+
+            var close = MatchingBrace(source, open);
+            if (close < 0)
+            {
+                return blocks;
+            }
+
+            blocks.Add(source[(open + 1)..close]);
+            index = close + 1;
+        }
+    }
+
+    private static int MatchingBrace(string text, int openIndex)
+    {
+        var depth = 0;
+        for (var i = openIndex; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '{')
+            {
+                depth++;
+            }
+            else if (c == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private static bool IsSilentCatchAll(CatchClauseSyntax clause)
+    {
+        if (clause.Declaration?.Type is null)
+        {
+            return true;
+        }
+
+        return SimpleTypeName(UnwrapNullable(clause.Declaration.Type)) == "Exception";
+    }
+
+    private static bool CatchBlockLogsOrRethrows(BlockSyntax block)
+    {
+        if (CatchBlockLogs(block))
+        {
+            return true;
+        }
+
+        foreach (var statement in block.DescendantNodes().OfType<ThrowStatementSyntax>())
+        {
+            if (statement.Expression is null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool CatchBlockLogs(BlockSyntax block)
+    {
+        foreach (var invocation in block.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var name = invocation.Expression switch
+            {
+                MemberAccessExpressionSyntax member => member.Name.Identifier.ValueText,
+                IdentifierNameSyntax id => id.Identifier.ValueText,
+                _ => ""
+            };
+            if (name is "LogWarning" or "LogError" or "LogCritical" or "LogInformation" or "LogDebug")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Names of <c>[Inject]</c> properties, constructor / primary-constructor parameters, and
     /// <c>@inject</c> members typed as <c>HttpClient</c>.
     /// </summary>

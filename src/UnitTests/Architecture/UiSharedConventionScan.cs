@@ -81,6 +81,98 @@ internal static class UiSharedConventionScan
         return violations;
     }
 
+    /// <summary>
+    /// Empty <c>catch</c> blocks in UI.Shared production sources outside the JS-module script allow-list
+    /// (those classes own circuit-disconnect tolerance for one imported module).
+    /// </summary>
+    internal static IReadOnlyList<string> EmptyCatchViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs", ".razor"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!IsUiSharedProduction(relative) || IsJsModuleScriptAllowListed(relative))
+            {
+                continue;
+            }
+
+            foreach (var line in UiSharedConventionRules.EmptyCatchLineNumbers(File.ReadAllText(sourceFile)))
+            {
+                violations.Add($"{relative}:{line}");
+            }
+        }
+
+        return violations;
+    }
+
+    /// <summary><c>IJSObjectReference</c> usage in UI.Shared <c>.razor.cs</c> code-behinds.</summary>
+    internal static IReadOnlyList<string> RazorCodeBehindIjsObjectReferenceViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!IsUiSharedProduction(relative) ||
+                !relative.EndsWith(".razor.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (UiSharedConventionRules.UsesIjsObjectReference(File.ReadAllText(sourceFile)))
+            {
+                violations.Add(relative);
+            }
+        }
+
+        return violations;
+    }
+
+    /// <summary>
+    /// Silent catch-alls in UI.Shared (<c>catch</c> / <c>catch (Exception)</c> that neither log nor rethrow).
+    /// </summary>
+    internal static IReadOnlyList<string> CatchExceptionWithoutLogViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs", ".razor"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!IsUiSharedProduction(relative) || IsJsModuleScriptAllowListed(relative))
+            {
+                continue;
+            }
+
+            foreach (var line in UiSharedConventionRules.CatchExceptionWithoutLogLineNumbers(
+                         File.ReadAllText(sourceFile)))
+            {
+                violations.Add($"{relative}:{line}");
+            }
+        }
+
+        return violations;
+    }
+
+    /// <summary>
+    /// JS-module script classes that may empty-catch circuit disconnect (path → why).
+    /// A random <c>*Script.cs</c> file is not exempt.
+    /// </summary>
+    private static readonly Dictionary<string, string> JsModuleScriptAllowList = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["src/UI.Shared/Components/Search/SearchPageScript.cs"] =
+            "Owns searchExport.js CSV/focus/indeterminate and dispose on disconnect.",
+        ["src/UI.Shared/Components/MainLayoutNavScript.cs"] =
+            "Owns mainLayoutNav.js nav/search init, focus, and dispose on disconnect.",
+        ["src/UI.Shared/Components/NotificationsPanelScript.cs"] =
+            "Owns notificationsPanel.js escape-handler lifecycle and dispose on disconnect.",
+        ["src/UI.Shared/Services/ThemeScript.cs"] =
+            "Owns theme.js get/set preference and dispose on disconnect.",
+        ["src/UI.Shared/Components/ClipboardScript.cs"] =
+            "Owns clipboard.js copy and dispose on disconnect.",
+    };
+
+    /// <summary>True when <paramref name="relative"/> is one of the five module script classes.</summary>
+    internal static bool IsJsModuleScriptAllowListed(string relative) =>
+        JsModuleScriptAllowList.ContainsKey(relative.Replace('\\', '/'));
+
     private static void CollectAuthProviderViolation(
         RepositoryCheckout checkout, string sourceFile, List<string> violations)
     {

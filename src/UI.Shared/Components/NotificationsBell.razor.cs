@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Components;
 
@@ -70,8 +71,9 @@ public partial class NotificationsBell
             _summary = await Bus.Send(new NotificationsPanelQuery(currentUserName));
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Notifications summary could not be loaded; badge stays hidden.");
             return false;
         }
     }

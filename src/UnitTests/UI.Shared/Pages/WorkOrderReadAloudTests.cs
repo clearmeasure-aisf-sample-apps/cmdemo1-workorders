@@ -52,7 +52,8 @@ public class WorkOrderReadAloudTests
     [Test]
     public async Task SpeakAsync_ShouldDoNothing_WhenNoSpeechSynthesisIsAvailable()
     {
-        var readAloud = new WorkOrderReadAloud(translationService: null, speechSynthesis: null);
+        var readAloud = new WorkOrderReadAloud(translationService: null, speechSynthesis: null,
+            logger: Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
 
         var speaking = readAloud.SpeakAsync("Fix the boiler", "es-ES");
 

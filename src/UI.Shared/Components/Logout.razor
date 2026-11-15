@@ -1,3 +1,4 @@
+@using Microsoft.Extensions.Logging
 @using Palermo.BlazorMvc
 @inject NavigationManager NavigationManager
 @inject IUserSession UserSession
@@ -65,8 +66,9 @@
         {
             _currentEmployee = await UserSession.GetCurrentUserAsync();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Current employee could not be loaded for the user menu.");
             _currentEmployee = null;
         }
     }

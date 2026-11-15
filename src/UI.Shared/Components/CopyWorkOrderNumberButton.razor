@@ -11,9 +11,7 @@
 </span>
 
 @code {
-    private const string ClipboardModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/clipboard.js";
-
-    private IJSObjectReference? _clipboardModule;
+    private ClipboardScript? _clipboard;
     private bool _showSuccess;
 
     /// <summary>The work-order number to copy; nothing is copied when it is empty.</summary>
@@ -25,25 +23,14 @@
     /// <summary>Copies the number and shows "Copied" for two seconds. A browser without clipboard access is ignored.</summary>
     private async Task CopyAsync()
     {
-        try
+        if (string.IsNullOrEmpty(Number))
         {
-            if (string.IsNullOrEmpty(Number))
-            {
-                return;
-            }
+            return;
+        }
 
-            _clipboardModule ??= await Js.InvokeAsync<IJSObjectReference>("import", ClipboardModulePath);
-            await _clipboardModule.InvokeAsync<object>("copyToClipboard", Number);
+        _clipboard ??= new ClipboardScript(Js);
+        if (await _clipboard.CopyToClipboardAsync(Number))
             await ShowSuccessForTwoSecondsAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // Clipboard API not available or page disconnected; silently ignore
-        }
-        catch (JSException)
-        {
-            // Clipboard permission denied or other JS error; silently ignore
-        }
     }
 
     private async Task ShowSuccessForTwoSecondsAsync()

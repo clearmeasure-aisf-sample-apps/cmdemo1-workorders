@@ -2,6 +2,8 @@ using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Queries;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Services;
 
@@ -10,8 +12,9 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Services;
 /// A failed query uses the catalog default for <see cref="FeatureFlagNames.ShowPriorityBadges"/> and false for
 /// every other name. A result that omits a key answers false for that key.
 /// </summary>
-public sealed class BusFeatureFlags(IBus bus) : IFeatureFlags
+public sealed class BusFeatureFlags(IBus bus, ILogger<BusFeatureFlags>? logger = null) : IFeatureFlags
 {
+    private readonly ILogger<BusFeatureFlags> _logger = logger ?? NullLogger<BusFeatureFlags>.Instance;
     private Task<IReadOnlyDictionary<string, bool>?>? _flags;
 
     /// <inheritdoc />
@@ -36,6 +39,7 @@ public sealed class BusFeatureFlags(IBus bus) : IFeatureFlags
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException
                                        or InvalidOperationException or JsonException)
         {
+            _logger.LogWarning(ex, "Feature flags query failed; using catalog defaults.");
             return null;
         }
     }

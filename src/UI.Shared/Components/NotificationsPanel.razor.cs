@@ -27,22 +27,15 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     private TimeProvider Clock { get; set; } = null!;
 
     private DotNetObjectReference<NotificationsPanel>? _dotNetRef;
-    private IJSObjectReference? _jsModule;
+    private NotificationsPanelScript? _script;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (IsOpen && _dotNetRef == null)
         {
-            try
-            {
-                _jsModule ??= await Js.InvokeAsync<IJSObjectReference>("import",
-                    "./_content/ClearMeasure.Bootcamp.UI.Shared/js/notificationsPanel.js");
-                _dotNetRef = DotNetObjectReference.Create(this);
-                await _jsModule.InvokeVoidAsync("setupEscapeHandler", _dotNetRef);
-            }
-            catch (JSDisconnectedException)
-            {
-            }
+            _script ??= new NotificationsPanelScript(Js);
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await _script.SetupEscapeHandlerAsync(_dotNetRef);
         }
     }
 
@@ -55,28 +48,13 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     private async Task CloseAsync()
     {
         await OnClose.InvokeAsync();
-        try
-        {
-            await BellButtonRef.FocusAsync();
-        }
-        catch (InvalidOperationException)
-        {
-        }
+        await (_script ??= new NotificationsPanelScript(Js)).FocusAsync(BellButtonRef);
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        try
-        {
-            if (_jsModule is not null)
-            {
-                await _jsModule.InvokeVoidAsync("cleanupEscapeHandler");
-                await _jsModule.DisposeAsync();
-            }
-        }
-        catch (JSDisconnectedException)
-        {
-        }
+        if (_script is not null)
+            await _script.DisposeAsync();
 
         _dotNetRef?.Dispose();
     }

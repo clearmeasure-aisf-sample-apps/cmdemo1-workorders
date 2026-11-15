@@ -91,13 +91,7 @@ public partial class WorkOrderSearchTable
             return;
         }
 
-        try
-        {
-            await Script.SetIndeterminateAsync(_selectAllCheckbox, Selection.IsIndeterminate(PageNumbers));
-        }
-        catch (JSDisconnectedException)
-        {
-        }
+        await Script.SetIndeterminateAsync(_selectAllCheckbox, Selection.IsIndeterminate(PageNumbers));
     }
 
     private SearchPageScript Script => field ??= new SearchPageScript(Js);

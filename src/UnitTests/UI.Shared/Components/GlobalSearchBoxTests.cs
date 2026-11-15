@@ -88,7 +88,7 @@ public class GlobalSearchBoxTests
     public async Task ShouldRegisterCtrlKShortcut_AfterFirstRender()
     {
         await using var ctx = CreateContext();
-        var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/mainLayoutNav.js");
+        var module = ctx.JSInterop.SetupModule(MainLayoutNavScript.ModulePath);
         module.SetupModule(invocation => invocation.Identifier == "initGlobalSearchShortcut");
 
         ctx.Render<GlobalSearchBox>();

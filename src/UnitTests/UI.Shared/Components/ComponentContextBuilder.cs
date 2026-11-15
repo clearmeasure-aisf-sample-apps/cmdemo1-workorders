@@ -14,6 +14,7 @@ public static class ComponentContextBuilder
     public static BunitContext WithStubBuses(IBus? bus = null)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(bus ?? new StubBus());
         return ctx;

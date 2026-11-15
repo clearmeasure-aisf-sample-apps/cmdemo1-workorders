@@ -50,7 +50,11 @@ internal static class ClientDateFormatter
         {
             return CultureInfo.GetCultureInfo(name);
         }
-        catch (Exception ex) when (ex is CultureNotFoundException or ArgumentException)
+        catch (CultureNotFoundException)
+        {
+            return null;
+        }
+        catch (ArgumentException)
         {
             return null;
         }

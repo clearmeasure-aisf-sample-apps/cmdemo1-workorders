@@ -22,9 +22,8 @@ public partial class NavRail : IAsyncDisposable
 
     private ElementReference _navToggleButtonRef;
     private DotNetObjectReference<NavRail>? _dotNetRef;
+    private MainLayoutNavScript? _script;
     private bool _disposed;
-    private IJSObjectReference? _jsModule;
-    private IJSObjectReference? _navToggleHelper;
     private bool _isNarrowViewport;
     private bool _viewportSynced;
     private bool _navVisible = true;
@@ -68,19 +67,9 @@ public partial class NavRail : IAsyncDisposable
         if (!firstRender)
             return;
 
-        try
-        {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            _jsModule = await Js.InvokeAsync<IJSObjectReference>("import",
-                "./_content/ClearMeasure.Bootcamp.UI.Shared/js/mainLayoutNav.js");
-            if (_disposed)
-                return;
-            _navToggleHelper = await _jsModule.InvokeAsync<IJSObjectReference>("initNavToggle", _dotNetRef,
-                BreakpointMediaQuery);
-        }
-        catch (JSDisconnectedException)
-        {
-        }
+        _dotNetRef = DotNetObjectReference.Create(this);
+        _script = new MainLayoutNavScript(Js);
+        await _script.InitNavToggleAsync(_dotNetRef, BreakpointMediaQuery, () => _disposed);
     }
 
     internal async Task ToggleAsync()
@@ -92,13 +81,7 @@ public partial class NavRail : IAsyncDisposable
         if (_isNarrowViewport && wasVisible)
         {
             await Task.Yield();
-            try
-            {
-                await _navToggleButtonRef.FocusAsync();
-            }
-            catch (InvalidOperationException)
-            {
-            }
+            await (_script ??= new MainLayoutNavScript(Js)).FocusAsync(_navToggleButtonRef);
         }
     }
 
@@ -112,21 +95,8 @@ public partial class NavRail : IAsyncDisposable
     {
         _disposed = true;
 
-        if (_navToggleHelper is not null)
-        {
-            try
-            {
-                await _navToggleHelper.InvokeVoidAsync("dispose");
-            }
-            catch (JSDisconnectedException)
-            {
-            }
-
-            await _navToggleHelper.DisposeAsync();
-        }
-
-        if (_jsModule is not null)
-            await _jsModule.DisposeAsync();
+        if (_script is not null)
+            await _script.DisposeAsync();
 
         _dotNetRef?.Dispose();
     }

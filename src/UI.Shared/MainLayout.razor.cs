@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
@@ -50,7 +51,7 @@ public partial class MainLayout
         }
         catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException)
         {
-            // The shell still renders when the browser language cannot be read.
+            Logger.LogWarning(ex, "Browser culture could not be read; shell continues with the default culture.");
         }
     }
 
@@ -59,15 +60,9 @@ public partial class MainLayout
         if (!firstRender)
             return;
 
-        try
-        {
-            await Theme.InitializeAsync();
-            Theme.OnChange += OnThemeChanged;
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (JSDisconnectedException)
-        {
-        }
+        await Theme.InitializeAsync();
+        Theme.OnChange += OnThemeChanged;
+        await InvokeAsync(StateHasChanged);
     }
 
     private void OnThemeChanged() => InvokeAsync(StateHasChanged);

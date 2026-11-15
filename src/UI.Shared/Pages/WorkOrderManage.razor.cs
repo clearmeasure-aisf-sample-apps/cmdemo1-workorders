@@ -64,7 +64,8 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        _dictation = new WorkOrderDictation(SpeechRecognition, AppendDictation, () => InvokeAsync(StateHasChanged));
+        _dictation = new WorkOrderDictation(SpeechRecognition, AppendDictation, () => InvokeAsync(StateHasChanged),
+            Logger);
         await LoadUserOptions();
         await LoadWorkOrder();
     }
@@ -219,7 +220,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         NavigationManager.NavigateTo("/workorder/search");
     }
 
-    private WorkOrderReadAloud ReadAloud => new(TranslationService, SpeechSynthesis);
+    private WorkOrderReadAloud ReadAloud => new(TranslationService, SpeechSynthesis, Logger);
 
     private Task SpeakTitleAsync() => ReadAloud.SpeakAsync(Model.Title, _preferredLanguage);
 
