@@ -94,6 +94,4 @@ src/UnitTests/UI.Shared/Pages/ApplicationChatTests.cs :: ApplicationChatTests.Sh
 src/UnitTests/UI.Shared/Pages/IndexPageTests.cs :: IndexPageTests.ShouldSendSearchSummaryForSignedInUser_AndLinkCards
 src/UnitTests/UI.Shared/Pages/IndexPageTests.cs :: IndexPageTests.ShouldShowNewRequest_OnlyWhenUserCanCreate
 src/UnitTests/UI.Shared/Pages/WorkOrderPrintTests.cs :: WorkOrderPrintTests.ShouldShowNoneForEmptyValues
-src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs :: WorkOrderSearchTests.Board_OnlyDraftRows_ShowsFiveColumnsFourEmpty
-src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs :: WorkOrderSearchTests.Board_OrdersPerStatus_EachColumnHoldsItsStatus
 src/UnitTests/UI/Server/DetailedHealthCheckResponseWriterTests.cs :: DetailedHealthCheckResponseWriterTests.WriteAsync_Should_IncludeAssemblyInformationalVersion_When_ResponseWritten

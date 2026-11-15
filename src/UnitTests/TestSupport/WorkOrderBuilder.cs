@@ -174,4 +174,46 @@ public sealed class WorkOrderBuilder
 
         return order;
     }
+
+    /// <summary>Catalog of <paramref name="count"/> draft work orders numbered WO-001…</summary>
+    public static WorkOrder[] ManyDrafts(int count) =>
+        Enumerable.Range(1, count)
+            .Select(i => Create()
+                .WithNumber($"WO-{i:000}")
+                .WithTitle($"Order {i}")
+                .WithStatus(WorkOrderStatus.Draft)
+                .Build())
+            .ToArray();
+
+    /// <summary>
+    /// Catalog of work orders cycling every <see cref="WorkOrderStatus"/>, <paramref name="perStatus"/> each,
+    /// with even-numbered rows high priority, assigned to Willie, room 101, and overdue.
+    /// </summary>
+    public static WorkOrder[] OnePerStatus(int perStatus)
+    {
+        var statuses = WorkOrderStatus.GetAllItems();
+        var total = statuses.Length * perStatus;
+        var willie = EmployeeBuilder.Create("gwillie")
+            .WithFirstName("Groundskeeper")
+            .WithLastName("Willie")
+            .WithEmail("willie@example.com")
+            .Build();
+        return Enumerable.Range(1, total)
+            .Select(n => BuildOnePerStatusRow(n, total, statuses, willie))
+            .ToArray();
+    }
+
+    private static WorkOrder BuildOnePerStatusRow(int n, int total, WorkOrderStatus[] statuses, Employee willie)
+    {
+        var even = n % 2 == 0;
+        return Create()
+            .WithNumber($"WO-{n:000}")
+            .WithTitle($"Title {total - n + 1:000}")
+            .WithStatus(statuses[(n - 1) % statuses.Length])
+            .WithPriority(even ? WorkOrderPriority.High : WorkOrderPriority.Low)
+            .AssignedTo(even ? willie : null)
+            .InRoom(even ? "101" : null)
+            .DueOn(even ? new DateOnly(2000, 1, 1) : null)
+            .Build();
+    }
 }

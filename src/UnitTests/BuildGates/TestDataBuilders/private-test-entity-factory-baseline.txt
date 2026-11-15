@@ -20,6 +20,4 @@ src/UnitTests/UI.Shared/Pages/WorkOrderManageDueDateValidationTests.cs :: WorkOr
 src/UnitTests/UI.Shared/Pages/WorkOrderManagePrintLinkTests.cs :: WorkOrderManagePrintLinkTests.CreatePrintWorkOrder
 src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs :: WorkOrderManageSubmitTests.Assignee
 src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs :: WorkOrderManageSubmitTests.InProgressOrder
-src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs :: WorkOrderSearchTests.ManyOrders
-src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs :: WorkOrderSearchTests.OrdersPerStatus
 src/UnitTests/UI.Shared/Services/BulkStateChangeTests.cs :: BulkStateChangeTests.Employee

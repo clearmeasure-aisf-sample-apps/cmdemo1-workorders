@@ -64,4 +64,31 @@ public class WorkOrderBuilderTests
         order.Status.ShouldBe(WorkOrderStatus.InProgress);
         order.WaitingOnVendorSince.ShouldBe(since);
     }
+
+    [Test]
+    public void ManyDrafts_ReturnsNumberedDraftCatalog()
+    {
+        var orders = WorkOrderBuilder.ManyDrafts(3);
+
+        orders.Length.ShouldBe(3);
+        orders[0].Number.ShouldBe("WO-001");
+        orders[0].Title.ShouldBe("Order 1");
+        orders[0].Status.ShouldBe(WorkOrderStatus.Draft);
+        orders[2].Number.ShouldBe("WO-003");
+    }
+
+    [Test]
+    public void OnePerStatus_CyclesStatusesAndEvenRowExtras()
+    {
+        var orders = WorkOrderBuilder.OnePerStatus(1);
+
+        orders.Length.ShouldBe(5);
+        orders[0].Status.ShouldBe(WorkOrderStatus.Draft);
+        orders[0].Assignee.ShouldBeNull();
+        orders[1].Status.ShouldBe(WorkOrderStatus.Assigned);
+        orders[1].Priority.ShouldBe(WorkOrderPriority.High);
+        orders[1].Assignee!.UserName.ShouldBe("gwillie");
+        orders[1].RoomNumber.ShouldBe("101");
+        orders[1].DueDate.ShouldBe(new DateOnly(2000, 1, 1));
+    }
 }
