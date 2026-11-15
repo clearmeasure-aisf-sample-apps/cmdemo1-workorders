@@ -214,7 +214,7 @@ public class ClientDateFormatterTests
         }
     }
 
-    private sealed class ManageBus(WorkOrder workOrder) : Bus(null!)
+    private sealed class ManageBus(WorkOrder workOrder) : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

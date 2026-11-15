@@ -291,11 +291,64 @@ public class ArchitectureRulesTests
         ShouldMatchBaseline(mismatches, "namespace-folder-mismatches.txt");
     }
 
+    [Test]
+    public void WorkOrderBoolExpressionMembers_WhenDeclaredOutsideCore_AreAbsent()
+    {
+        var violations = WorkOrderBoolExpressionsOutsideCore(RepositoryCheckout.Current);
+
+        violations.ShouldBeEmpty(
+            "Expression<Func<WorkOrder, bool>> predicates belong in Core WorkOrderSpecifications. Found: " +
+            string.Join(", ", violations));
+    }
+
+    [Test]
+    public void WorkOrderBoolExpressionMembers_WhenSampleDeclaresPredicate_ReportsTheMember()
+    {
+        ArchitectureRules.WorkOrderBoolExpressionMembers("""
+            using System;
+            using System.Linq.Expressions;
+            using ClearMeasure.Bootcamp.Core.Model;
+
+            namespace Sample;
+
+            public static class Filters
+            {
+                public static Expression<Func<WorkOrder, bool>> IsOpen() => wo => true;
+            }
+            """).ShouldBe(["IsOpen"]);
+    }
+
     private static void ShouldMatchBaseline(IReadOnlyList<string> actual, string baselineFile)
     {
         var comparison = SolutionArchitectureScan.ReadBaseline(RepositoryCheckout.Current, baselineFile).Compare(actual);
         comparison.IsClean.ShouldBeTrue(comparison.Report(baselineFile));
     }
+
+    private static IReadOnlyList<string> WorkOrderBoolExpressionsOutsideCore(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (IsTestOrCorePath(relative))
+            {
+                continue;
+            }
+
+            foreach (var member in ArchitectureRules.WorkOrderBoolExpressionMembers(File.ReadAllText(sourceFile)))
+            {
+                violations.Add($"{relative}:{member}");
+            }
+        }
+
+        return violations;
+    }
+
+    private static bool IsTestOrCorePath(string relative) =>
+        relative.StartsWith("src/Core/", StringComparison.OrdinalIgnoreCase) ||
+        relative.Contains("/UnitTests/", StringComparison.OrdinalIgnoreCase) ||
+        relative.Contains("/IntegrationTests/", StringComparison.OrdinalIgnoreCase) ||
+        relative.Contains("/AcceptanceTests/", StringComparison.OrdinalIgnoreCase);
 
     private static SolutionArchitectureScan.Result ScanMaster()
     {

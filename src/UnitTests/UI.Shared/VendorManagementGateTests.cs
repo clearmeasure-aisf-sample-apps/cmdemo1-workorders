@@ -80,6 +80,7 @@ public class VendorManagementGateTests
         CountingHandler<CreateTeamCommand, CreateTeamResult> createTeam)
     {
         var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<IBus>();

@@ -872,6 +872,7 @@ public class MainLayoutTests
         ctx.Services.AddSingleton<IFeatureFlags>(new StubFeatureFlags());
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();
+        ctx.Services.AddSingleton(TimeProvider.System);
         var customAuth = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         if (authenticateAsUser != null)
             customAuth.Login(authenticateAsUser).GetAwaiter().GetResult();

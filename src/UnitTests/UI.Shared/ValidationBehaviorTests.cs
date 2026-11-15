@@ -107,11 +107,9 @@ public class ValidationBehaviorTests
     }
 
     [Test]
-    public async Task Handle_Should_ReachHandler_WhenHttpEnvelopeValidationWouldFailFluentValidation()
+    public async Task Handle_Should_ReachHandler_WhenDeferredHttpEnvelopeValidatorsAreNotRegisteredAsIValidator()
     {
         var services = new ServiceCollection();
-        services.AddTransient<IValidator<CreateVendorCommand>, CreateVendorCommandValidator>();
-        services.AddTransient<IValidator<CreateDatedWorkOrdersCommand>, CreateDatedWorkOrdersCommandValidator>();
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<ValidationBehaviorTests>();

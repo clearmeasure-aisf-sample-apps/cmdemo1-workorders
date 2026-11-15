@@ -20,7 +20,12 @@
     <PackageReference Include="MediatR" />
     <PackageReference Include="Toolbelt.Blazor.SpeechRecognition" />
     <PackageReference Include="Toolbelt.Blazor.SpeechSynthesis" />
+  </ItemGroup>
 
+  <!-- RS0030: UI.Shared reads the clock through TimeProvider, never the system clock. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 
   <ItemGroup>

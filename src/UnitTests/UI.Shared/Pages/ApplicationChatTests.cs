@@ -193,7 +193,7 @@ public class ApplicationChatTests
         return ctx;
     }
 
-    private sealed class ApplicationChatStubBus() : Bus(null!)
+    private sealed class ApplicationChatStubBus() : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification)
         {

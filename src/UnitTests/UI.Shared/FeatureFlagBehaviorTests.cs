@@ -168,6 +168,7 @@ public class FeatureFlagBehaviorTests
     private static ServiceProvider BuildPipeline(IFeatureFlagEvaluator evaluator)
     {
         var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<IBus>();

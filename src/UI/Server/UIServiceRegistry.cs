@@ -24,7 +24,9 @@ public class UiServiceRegistry : ServiceRegistry
     public UiServiceRegistry()
     {
         this.AddSingleton<IStartupFilter, TestingDatabaseStartupFilter>();
-        this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>();
+        this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>(
+            filter: result => !Middleware.HttpEnvelopeFluentValidators.IsDeferredFromMediatR(result.ValidatorType));
+        Middleware.HttpEnvelopeFluentValidators.RegisterConcrete(this);
         this.AddScoped<DbContext, DataContext>();
         AddRealtimeBus();
         this.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();

@@ -24,6 +24,11 @@ public sealed class QueryBudgetTests
     private const int EmployeeWorkLoadSummaryCommandBudget = 1;
 
     /// <summary>
+    /// One employee lookup plus one aggregated load-flag projection (#1806). Flat as assigned orders grow.
+    /// </summary>
+    private const int EmployeeWorkLoadCommandBudget = 2;
+
+    /// <summary>
     /// Commands issued by <see cref="SlaHealthQueryHandler"/> today.
     /// The handler loads every completed order that has a due date in one read, then filters the
     /// months in memory, so the row set is unbounded. Issue #1522 will bound that read.
@@ -101,6 +106,15 @@ public sealed class QueryBudgetTests
     }
 
     [Test]
+    public async Task ShouldKeepEmployeeWorkLoadWithinBudget_WhenAssignedOrdersGrowFrom3To30()
+    {
+        var clock = TestData.FixedClock(FixedNow);
+        var small = await RunEmployeeWorkLoad(FewRows, clock);
+        var large = await RunEmployeeWorkLoad(ManyRows, clock);
+        ShouldMatchBudget(small, large, EmployeeWorkLoadCommandBudget);
+    }
+
+    [Test]
     public async Task ShouldKeepSlaHealthWithinBudget_WhenCompletedOrdersGrowFrom3To30()
     {
         var clock = TestData.FutureClock();
@@ -128,6 +142,19 @@ public sealed class QueryBudgetTests
         var summaries = await new EmployeeWorkLoadSummaryQueryHandler(context, clock)
             .Handle(new EmployeeWorkLoadSummaryQuery());
         summaries.Length.ShouldBeGreaterThanOrEqualTo(employeeCount);
+        return Budget(budget);
+    }
+
+    private static async Task<BudgetResult> RunEmployeeWorkLoad(int assignedOrderCount, TimeProvider clock)
+    {
+        await using var context = NewContext();
+        var workerUserName = SeedWorkerWithAssignedOrders(context, assignedOrderCount, clock);
+        await context.SaveChangesAsync();
+
+        using var budget = context.Begin();
+        var load = await new EmployeeWorkLoadQueryHandler(context, clock)
+            .Handle(new EmployeeWorkLoadQuery(workerUserName));
+        load.AssignedAndOpen.ShouldBe(assignedOrderCount);
         return Budget(budget);
     }
 
@@ -176,6 +203,32 @@ public sealed class QueryBudgetTests
                 DueDate = today
             });
         }
+    }
+
+    private static string SeedWorkerWithAssignedOrders(
+        QueryBudgetContext context, int assignedOrderCount, TimeProvider clock)
+    {
+        var today = ChurchTimeZone.Today(clock);
+        var numbers = TestData.NumberSeries(assignedOrderCount);
+        var creator = NewEmployee("qbc1");
+        var worker = NewEmployee("qbw1");
+        worker.AddRole(new Role("Worker", canCreate: false, canFulfill: true));
+        context.Add(creator);
+        context.Add(worker);
+        for (var index = 0; index < assignedOrderCount; index++)
+        {
+            context.Add(new WorkOrder
+            {
+                Number = numbers[index],
+                Title = "single workload budget",
+                Creator = creator,
+                Assignee = worker,
+                Status = WorkOrderStatus.Assigned,
+                DueDate = today
+            });
+        }
+
+        return worker.UserName;
     }
 
     private static void SeedCompletedOrders(QueryBudgetContext context, int orderCount, TimeProvider clock)

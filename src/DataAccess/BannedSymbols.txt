@@ -1,0 +1,6 @@
+P:System.DateTime.Now;DataAccess reads the clock through an injected TimeProvider so time is testable
+P:System.DateTime.UtcNow;DataAccess reads the clock through an injected TimeProvider so time is testable
+P:System.DateTime.Today;DataAccess reads the clock through an injected TimeProvider so time is testable
+P:System.DateTimeOffset.Now;DataAccess reads the clock through an injected TimeProvider so time is testable
+P:System.DateTimeOffset.UtcNow;DataAccess reads the clock through an injected TimeProvider so time is testable
+P:System.TimeProvider.System;DataAccess reads the clock through an injected TimeProvider; composition roots register System outside DataAccess

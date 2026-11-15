@@ -7,10 +7,8 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// Validator for <see cref="CreateDatedWorkOrdersCommand"/>: creator, assignee, title and description
-/// are required, and the due-date batch is non-empty and capped. The command is
-/// <see cref="IHttpEnvelopeValidation"/> so these rules run on HTTP; in-process callers keep the
-/// handler's Failed result (#1804).
+/// Validator for <see cref="CreateDatedWorkOrdersCommand"/> so the remotable command is accepted by
+/// the single-API validation middleware.
 /// </summary>
 public sealed class CreateDatedWorkOrdersCommandValidator : AbstractValidator<CreateDatedWorkOrdersCommand>
 {

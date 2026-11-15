@@ -17,11 +17,6 @@ namespace ClearMeasure.Bootcamp.Core.Validation;
 /// </summary>
 public sealed class SaveDraftCommandValidator : AbstractValidator<SaveDraftCommand>
 {
-    public SaveDraftCommandValidator()
-        : this(TimeProvider.System)
-    {
-    }
-
     public SaveDraftCommandValidator(TimeProvider timeProvider)
     {
         RuleFor(x => x.WorkOrder.Title)

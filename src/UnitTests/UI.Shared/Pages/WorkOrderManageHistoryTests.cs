@@ -221,7 +221,7 @@ public class WorkOrderManageHistoryTests
         return ctx;
     }
 
-    private class StubWorkOrderManageBusWithHistory(WorkOrder workOrder, WorkOrderStatusChange[] history) : Bus(null!)
+    private class StubWorkOrderManageBusWithHistory(WorkOrder workOrder, WorkOrderStatusChange[] history) : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

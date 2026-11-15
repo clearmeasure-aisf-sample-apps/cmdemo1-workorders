@@ -57,8 +57,8 @@ internal static class WebServiceMessagePayloadValidator
                 $"Type {payload.GetType().FullName} is not a remotable request or event.");
         }
 
-        var validatorType = typeof(IValidator<>).MakeGenericType(payload.GetType());
-        if (services.GetService(validatorType) is not IValidator validator)
+        var validator = ResolveValidator(payload, services);
+        if (validator is null)
         {
             return PayloadValidationResult.Valid;
         }
@@ -67,5 +67,16 @@ internal static class WebServiceMessagePayloadValidator
         return result.IsValid
             ? PayloadValidationResult.Valid
             : new PayloadValidationResult(false, result.Errors, null);
+    }
+
+    private static IValidator? ResolveValidator(object payload, IServiceProvider services)
+    {
+        var validatorType = typeof(IValidator<>).MakeGenericType(payload.GetType());
+        if (services.GetService(validatorType) is IValidator fromDi)
+        {
+            return fromDi;
+        }
+
+        return HttpEnvelopeFluentValidators.Resolve(payload, services);
     }
 }

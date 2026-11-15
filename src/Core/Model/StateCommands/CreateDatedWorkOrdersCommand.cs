@@ -11,7 +11,7 @@ public record CreateDatedWorkOrdersCommand(
     [property: ExcludeFromBusActivity] string Title,
     [property: ExcludeFromBusActivity] string Description,
     IReadOnlyList<DateOnly> DueDates)
-    : IRequest<CreateDatedWorkOrdersResult>, IRemotableRequest, IHttpEnvelopeValidation
+    : IRequest<CreateDatedWorkOrdersResult>, IRemotableRequest
 {
     /// <summary>
     /// Maximum work orders allowed in one transactional create.

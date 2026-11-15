@@ -100,7 +100,7 @@ public class ChatClientFactoryAvailabilityTests
         response.Text.ShouldBe("OK");
     }
 
-    private sealed class StubBus(bool available, bool useStub = false) : Bus(null!)
+    private sealed class StubBus(bool available, bool useStub = false) : Bus(null!, TimeProvider.System)
     {
         public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {

@@ -72,7 +72,7 @@ public class EmployeeWorkLoadSummaryQueryHandler(DataContext context, TimeProvid
         var today = ChurchTimeZone.Today(timeProvider);
         return context.Set<WorkOrder>().AsNoTracking()
             .Where(workOrder => workOrder.Assignee != null)
-            .Select(WorkOrderQueryFilters.AssigneeLoadFlags(today, timeProvider, CompletedWindowDays))
+            .Select(WorkOrderProjection.AssigneeLoadFlags(today, timeProvider, CompletedWindowDays))
             .GroupBy(flag => flag.AssigneeId)
             .Select(group => new AssigneeLoad
             {

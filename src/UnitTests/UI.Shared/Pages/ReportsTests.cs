@@ -283,7 +283,7 @@ public class ReportsTests
         return ctx;
     }
 
-    private class StubBusReturningNull() : Bus(null!)
+    private class StubBusReturningNull() : Bus(null!, TimeProvider.System)
     {
 
         public override Task Publish(INotification notification) => Task.CompletedTask;
@@ -299,7 +299,7 @@ public class ReportsTests
         }
     }
 
-    private class StubBusPending(Task pending) : Bus(null!)
+    private class StubBusPending(Task pending) : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

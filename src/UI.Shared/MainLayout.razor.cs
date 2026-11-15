@@ -38,7 +38,10 @@ public partial class MainLayout : IAsyncDisposable
     /// <summary>
     /// Calendar year shown in the site copyright line (UTC, matches acceptance tests).
     /// </summary>
-    protected int CopyrightYear => DateTime.UtcNow.Year;
+    protected int CopyrightYear => Clock.GetUtcNow().Year;
+
+    [Inject]
+    private TimeProvider Clock { get; set; } = null!;
 
     /// <summary>
     /// Informational version of the running entry assembly, e.g. "1.2.3+abc1234".

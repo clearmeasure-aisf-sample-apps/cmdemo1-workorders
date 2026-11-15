@@ -1,4 +1,5 @@
 using Bunit;
+using Microsoft.Extensions.DependencyInjection;
 using ClearMeasure.Bootcamp.UI.Shared.Components.Search;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -16,6 +17,7 @@ public class WorkOrderSearchTableTests
     {
         _ctx = new BunitContext();
         _ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+        _ctx.Services.AddSingleton(TimeProvider.System);
     }
 
     [TearDown]

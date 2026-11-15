@@ -173,7 +173,7 @@ public class WorkOrderManageRestyleTests
         public override DateTimeOffset GetUtcNow() => utcNow;
     }
 
-    private sealed class StubWorkOrderManageBus(WorkOrder? order) : Bus(null!)
+    private sealed class StubWorkOrderManageBus(WorkOrder? order) : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
