@@ -112,6 +112,7 @@ public class WorkOrderCountByStatusQueryHandlerTests
         {
             var specification = new WorkOrderSearchSpecification();
             specification.MatchStatus(status);
+            // Characterization against the shared filter helper; not a product query path.
 #pragma warning disable CM0002
             var expected = await WorkOrderQueryFilters.Apply(orders, specification).CountAsync();
 #pragma warning restore CM0002
