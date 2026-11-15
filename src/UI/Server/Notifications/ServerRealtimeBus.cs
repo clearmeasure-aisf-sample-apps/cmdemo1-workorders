@@ -7,8 +7,7 @@ namespace ClearMeasure.Bootcamp.UI.Server.Notifications;
 /// <summary>
 /// After MediatR publishes, pushes <see cref="IRemotableEvent"/> to WebSocket subscribers.
 /// </summary>
-public sealed class ServerRealtimeBus(IMediator mediator, IRealtimeNotificationHub hub, TimeProvider timeProvider)
-    : Bus(mediator, timeProvider)
+public sealed class ServerRealtimeBus(IMediator mediator, IRealtimeNotificationHub hub) : Bus(mediator)
 {
     public override async Task Publish(INotification notification)
     {

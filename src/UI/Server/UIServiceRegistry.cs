@@ -2,7 +2,6 @@
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Validation;
-using ClearMeasure.Bootcamp.UI.Server.Validation;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.DataAccess;
 using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
@@ -26,8 +25,9 @@ public class UiServiceRegistry : ServiceRegistry
     public UiServiceRegistry()
     {
         this.AddSingleton<IStartupFilter, TestingDatabaseStartupFilter>();
-        this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>();
-        this.AddValidatorsFromAssemblyContaining<EmployeeGetAllQueryValidator>();
+        this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>(
+            filter: result => !HttpEnvelopeValidationDeferral.IsDeferredValidator(result.ValidatorType));
+        this.AddSingleton<Middleware.HttpEnvelopeValidatorSet>();
         this.AddScoped<DbContext, DataContext>();
         AddRealtimeBus();
         this.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();
@@ -40,7 +40,7 @@ public class UiServiceRegistry : ServiceRegistry
         AddHealthReporting();
     }
 
-    /// <summary>MediatR with the feature-flag behavior, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
+    /// <summary>MediatR with validation and feature-flag behaviors, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
     private void AddRealtimeBus()
     {
         this.AddSingleton<RealtimeNotificationHub>();
@@ -49,13 +49,13 @@ public class UiServiceRegistry : ServiceRegistry
         {
             cfg.RegisterServicesFromAssemblyContaining<UiServiceRegistry>();
             cfg.RegisterServicesFromAssemblyContaining<HealthCheck>();
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IBus>(provider => new ServerRealtimeBus(
             provider.GetRequiredService<IMediator>(),
-            provider.GetRequiredService<IRealtimeNotificationHub>(),
-            provider.GetRequiredService<TimeProvider>()));
+            provider.GetRequiredService<IRealtimeNotificationHub>()));
     }
 
     private void ScanForHandlersAndHealthChecks() =>

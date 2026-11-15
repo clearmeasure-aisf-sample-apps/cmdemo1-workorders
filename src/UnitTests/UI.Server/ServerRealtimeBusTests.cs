@@ -14,7 +14,7 @@ public class ServerRealtimeBusTests
     {
         var mediator = new StubMediator();
         var hub = new RecordingRealtimeHub();
-        var bus = new ServerRealtimeBus(mediator, hub, TimeProvider.System);
+        var bus = new ServerRealtimeBus(mediator, hub);
 
         await bus.Publish(new MediatRUnitTestNotification()).ConfigureAwait(false);
 
@@ -26,7 +26,7 @@ public class ServerRealtimeBusTests
     {
         var mediator = new StubMediator();
         var hub = new RecordingRealtimeHub();
-        var bus = new ServerRealtimeBus(mediator, hub, TimeProvider.System);
+        var bus = new ServerRealtimeBus(mediator, hub);
 
         var evt = new UserLoggedInEvent("u1");
         await bus.Publish(evt).ConfigureAwait(false);

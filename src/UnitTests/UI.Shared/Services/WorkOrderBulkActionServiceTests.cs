@@ -135,7 +135,7 @@ public class WorkOrderBulkActionServiceTests
     private static WorkOrder Order(string number, WorkOrderStatus status) =>
         new() { Id = Guid.NewGuid(), Number = number, Title = number, Status = status, Creator = Creator };
 
-    private sealed class StubCommandBus(params WorkOrder[] orders) : Bus(null!, TimeProvider.System)
+    private sealed class StubCommandBus(params WorkOrder[] orders) : Bus(null!)
     {
         public List<StateCommandBase> Commands { get; } = [];
 

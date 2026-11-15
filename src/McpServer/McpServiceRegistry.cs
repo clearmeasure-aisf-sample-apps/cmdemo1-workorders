@@ -1,8 +1,10 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UI.Shared;
+using FluentValidation;
 using Lamar;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -28,10 +30,11 @@ public class McpServiceRegistry : ServiceRegistry
         this.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<McpServiceRegistry>();
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
         this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DataContext>());
-        this.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>(), provider.GetRequiredService<TimeProvider>()));
+        this.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
     }
 
     private void AddApplicationServices()
@@ -47,7 +50,10 @@ public class McpServiceRegistry : ServiceRegistry
             scanner.WithDefaultConventions();
             scanner.AssemblyContainingType<IBus>();
             scanner.AssemblyContainingType<DataContext>();
+            scanner.AssemblyContainingType<WebServiceMessageValidator>();
+            scanner.Exclude(HttpEnvelopeValidationDeferral.IsDeferredValidator);
             scanner.ConnectImplementationsToTypesClosing(typeof(IRequestHandler<,>));
             scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
+            scanner.ConnectImplementationsToTypesClosing(typeof(IValidator<>));
         });
 }

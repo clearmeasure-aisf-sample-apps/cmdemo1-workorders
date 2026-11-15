@@ -32,6 +32,11 @@ public class WorkOrderTools
         IBus bus,
         [Description("The work order number")] string workOrderNumber)
     {
+        if (string.IsNullOrWhiteSpace(workOrderNumber))
+        {
+            return NotFound(workOrderNumber);
+        }
+
         var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
         return workOrder == null ? NotFound(workOrderNumber) : WorkOrderJson.Detail(workOrder);
     }
@@ -158,6 +163,11 @@ public class WorkOrderTools
         IBus bus,
         [Description("The work order number")] string workOrderNumber)
     {
+        if (string.IsNullOrWhiteSpace(workOrderNumber))
+        {
+            return NotFound(workOrderNumber);
+        }
+
         var workOrder = await bus.Send(new WorkOrderByNumberQuery(workOrderNumber));
         return workOrder == null
             ? NotFound(workOrderNumber)

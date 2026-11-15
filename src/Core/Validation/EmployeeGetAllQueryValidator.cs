@@ -1,9 +1,13 @@
 using ClearMeasure.Bootcamp.Core.Queries;
 using FluentValidation;
 
-namespace ClearMeasure.Bootcamp.UI.Server.Validation;
+namespace ClearMeasure.Bootcamp.Core.Validation;
 
 // ReSharper disable once ClassNeverInstantiated.Global -- registered by DI (FluentValidation assembly scan)
+/// <summary>
+/// Validator for <see cref="EmployeeGetAllQuery"/>: <see cref="EmployeeGetAllQuery.Skip"/> is non-negative
+/// and <see cref="EmployeeGetAllQuery.Take"/> stays within 1..<see cref="EmployeeGetAllQuery.MaxTake"/>.
+/// </summary>
 public sealed class EmployeeGetAllQueryValidator : AbstractValidator<EmployeeGetAllQuery>
 {
     /// <summary>Creates the validator rules.</summary>

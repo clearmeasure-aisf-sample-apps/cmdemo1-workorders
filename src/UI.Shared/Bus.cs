@@ -1,8 +1,5 @@
 using System.Diagnostics;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Model.StateCommands;
-using ClearMeasure.Bootcamp.Core.Validation;
-using FluentValidation;
 using MediatR;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
@@ -12,13 +9,11 @@ public class Bus : IBus
     private static readonly ActivitySource ActivitySource = new("ChurchBulletin.Application.Bus", "1.0.0");
 
     private readonly IMediator _mediator;
-    private readonly TimeProvider _timeProvider;
 
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
-    public Bus(IMediator mediator, TimeProvider timeProvider)
+    public Bus(IMediator mediator)
     {
         _mediator = mediator;
-        _timeProvider = timeProvider;
     }
 
     public virtual async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
@@ -27,7 +22,6 @@ public class Bus : IBus
 
         try
         {
-            ValidateRequest(request);
             return await _mediator.Send(request);
         }
         catch (Exception ex)
@@ -43,7 +37,6 @@ public class Bus : IBus
 
         try
         {
-            ValidateRequest(request);
             return await _mediator.Send(request);
         }
         catch (Exception ex)
@@ -65,19 +58,6 @@ public class Bus : IBus
         {
             SetActivityError(activity, ex);
             throw;
-        }
-    }
-
-    private void ValidateRequest(object request)
-    {
-        if (request is SaveDraftCommand saveDraft)
-        {
-            new SaveDraftCommandValidator(_timeProvider).ValidateAndThrow(saveDraft);
-        }
-
-        if (request is InProgressToAssignedCommand shelve)
-        {
-            new InProgressToAssignedCommandValidator().ValidateAndThrow(shelve);
         }
     }
 

@@ -24,7 +24,7 @@ public class VendorManagementGateTests
         var createTeam = new CountingHandler<CreateTeamCommand, CreateTeamResult>(_ =>
             new CreateTeamResult(true, "created", Guid.NewGuid()));
         await using var provider = BuildPipeline(vendorManagement: false, vendors, createVendor, teams, createTeam);
-        var bus = new Bus(provider.GetRequiredService<IMediator>(), provider.GetRequiredService<TimeProvider>());
+        var bus = new Bus(provider.GetRequiredService<IMediator>());
 
         var list = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new VendorsQuery()));
         list.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
@@ -53,7 +53,7 @@ public class VendorManagementGateTests
             new CountingHandler<TeamsQuery, Team[]>(_ => []),
             new CountingHandler<CreateTeamCommand, CreateTeamResult>(_ =>
                 new CreateTeamResult(true, "created", Guid.NewGuid())));
-        var bus = new Bus(provider.GetRequiredService<IMediator>(), provider.GetRequiredService<TimeProvider>());
+        var bus = new Bus(provider.GetRequiredService<IMediator>());
 
         (await bus.Send(new VendorsQuery())).ShouldBeEmpty();
         (await bus.Send(new CreateVendorCommand("Acme", "HVAC", null, null, null))).Succeeded.ShouldBeTrue();

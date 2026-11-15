@@ -244,7 +244,7 @@ public class WorkOrderManageAttachmentsTests
 
     private static string TestId(WorkOrderManage.Elements element) => $"[data-testid='{element}']";
 
-    private class StubWorkOrderManageBus(IEnumerable<WorkOrderAttachment> attachments) : Bus(null!, TimeProvider.System)
+    private class StubWorkOrderManageBus(IEnumerable<WorkOrderAttachment> attachments) : Bus(null!)
     {
         private readonly List<WorkOrderAttachment> _attachments = attachments.ToList();
 

@@ -30,7 +30,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
 
@@ -51,7 +51,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
 
@@ -71,7 +71,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
 
@@ -90,7 +90,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubFailingUserSession());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
 
@@ -109,7 +109,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
 
@@ -133,7 +133,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
 
@@ -153,7 +153,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
         var logoutButton = component.Find($"[data-testid='{nameof(Logout.Elements.LogoutLink)}']");
@@ -175,7 +175,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
         var logoutButton = component.Find($"[data-testid='{nameof(Logout.Elements.LogoutLink)}']");
@@ -198,7 +198,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
         var logoutButton = component.Find($"[data-testid='{nameof(Logout.Elements.LogoutLink)}']");
@@ -269,7 +269,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
         return ctx;
     }
 
@@ -289,7 +289,7 @@ public class LogoutTests
         ctx.Services.AddSingleton(authProvider);
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
-        ctx.Services.AddSingleton<IBus>(new Bus(null!, TimeProvider.System));
+        ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
         var component = ctx.Render<Logout>();
         var logoutButton = component.Find($"[data-testid='{nameof(Logout.Elements.LogoutLink)}']");
