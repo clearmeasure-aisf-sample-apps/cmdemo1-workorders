@@ -88,7 +88,8 @@
     {
         await UserSession.SignOutAsync();
         _open = false;
-        EventBus.Notify(new UserLoggedOutEvent(await UserSession.GetCurrentUserNameAsync()));
+        // Username is already cleared; avoid another await so NavigateTo runs before auth re-render can dispose this component.
+        EventBus.Notify(new UserLoggedOutEvent(null));
         NavigationManager.NavigateTo("/login");
     }
 

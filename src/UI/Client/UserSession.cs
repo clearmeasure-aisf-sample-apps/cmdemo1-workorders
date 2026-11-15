@@ -10,12 +10,12 @@ namespace ClearMeasure.Bootcamp.UI.Client;
 
 /// <summary>
 /// Circuit-scoped signed-in user: claim-fallback user name and cached <see cref="Employee"/>.
+/// Blazor circuits are single-threaded, so the cache needs no lock.
 /// </summary>
 public class UserSession : IUserSession
 {
     private readonly IBus _bus;
     private readonly CustomAuthenticationStateProvider _authProvider;
-    private readonly object _cacheLock = new();
     private string? _cachedUserName;
     private bool _userNameResolved;
     private Employee? _cachedEmployee;
@@ -37,22 +37,15 @@ public class UserSession : IUserSession
     /// <inheritdoc />
     public async Task<string?> GetCurrentUserNameAsync()
     {
-        lock (_cacheLock)
+        if (_userNameResolved)
         {
-            if (_userNameResolved)
-            {
-                return _cachedUserName;
-            }
+            return _cachedUserName;
         }
 
         var authState = await _authProvider.GetAuthenticationStateAsync();
-        var userName = ResolveUserName(authState.User);
-        lock (_cacheLock)
-        {
-            _cachedUserName = userName;
-            _userNameResolved = true;
-            return _cachedUserName;
-        }
+        _cachedUserName = ResolveUserName(authState.User);
+        _userNameResolved = true;
+        return _cachedUserName;
     }
 
     /// <inheritdoc />
@@ -64,22 +57,16 @@ public class UserSession : IUserSession
             return null;
         }
 
-        lock (_cacheLock)
+        if (_employeeCachedForUserName == username)
         {
-            if (_employeeCachedForUserName == username)
-            {
-                return _cachedEmployee;
-            }
+            return _cachedEmployee;
         }
 
         var currentUser = await _bus.Send(new EmployeeByUserNameQuery(username));
         EnsureEmployeeExists(currentUser);
-        lock (_cacheLock)
-        {
-            _cachedEmployee = currentUser;
-            _employeeCachedForUserName = username;
-            return _cachedEmployee;
-        }
+        _cachedEmployee = currentUser;
+        _employeeCachedForUserName = username;
+        return _cachedEmployee;
     }
 
     /// <inheritdoc />
@@ -90,14 +77,10 @@ public class UserSession : IUserSession
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> _)
     {
-        lock (_cacheLock)
-        {
-            _cachedUserName = null;
-            _userNameResolved = false;
-            _cachedEmployee = null;
-            _employeeCachedForUserName = null;
-        }
-
+        _cachedUserName = null;
+        _userNameResolved = false;
+        _cachedEmployee = null;
+        _employeeCachedForUserName = null;
         AuthenticationStateChanged?.Invoke();
     }
 

@@ -89,7 +89,7 @@ public class WorkOrderManageDictationTests
 
         await component.Find($"[data-testid='{WorkOrderManage.Elements.DictateTitle}']").ClickAsync(new());
         await component.InvokeAsync(() =>
-            component.Instance.SpeechRecognition!._OnResult(CreateFinalResult("broken window")));
+            component.Instance.SpeechRecognition._OnResult(CreateFinalResult("broken window")));
 
         await component.WaitForAssertionAsync(() =>
         {
@@ -106,7 +106,7 @@ public class WorkOrderManageDictationTests
 
         await component.Find($"[data-testid='{WorkOrderManage.Elements.DictateDescription}']").ClickAsync(new());
         await component.InvokeAsync(() =>
-            component.Instance.SpeechRecognition!._OnResult(CreateFinalResult("broken window")));
+            component.Instance.SpeechRecognition._OnResult(CreateFinalResult("broken window")));
 
         await component.WaitForAssertionAsync(() =>
         {
@@ -135,7 +135,7 @@ public class WorkOrderManageDictationTests
             ]
         };
         await component.InvokeAsync(() =>
-            component.Instance.SpeechRecognition!._OnResult(interimResult));
+            component.Instance.SpeechRecognition._OnResult(interimResult));
 
         await component.WaitForAssertionAsync(() =>
         {
@@ -158,7 +158,7 @@ public class WorkOrderManageDictationTests
             element.GetAttribute("aria-pressed").ShouldBe("true");
         });
 
-        await component.InvokeAsync(() => component.Instance.SpeechRecognition!._OnEnd());
+        await component.InvokeAsync(() => component.Instance.SpeechRecognition._OnEnd());
 
         await component.WaitForAssertionAsync(() =>
         {

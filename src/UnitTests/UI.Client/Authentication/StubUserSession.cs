@@ -21,9 +21,11 @@ public class StubUserSession : IUserSession
     public event Action? AuthenticationStateChanged;
 
     /// <summary>Employee returned by <see cref="GetCurrentUserAsync"/> when <see cref="GetCurrentUserFault"/> is null.</summary>
+    // ReSharper disable once MemberCanBePrivate.Global -- tests mutate the stub mid-scenario
     public Employee? CurrentUser { get; set; }
 
     /// <summary>User name returned by <see cref="GetCurrentUserNameAsync"/>.</summary>
+    // ReSharper disable once MemberCanBePrivate.Global -- tests mutate the stub mid-scenario
     public string? UserName { get; set; }
 
     /// <summary>Optional side effect when <see cref="SignInAsync"/> runs (for example auth-provider login).</summary>
