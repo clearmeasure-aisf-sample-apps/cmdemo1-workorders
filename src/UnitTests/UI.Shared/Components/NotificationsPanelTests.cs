@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -129,16 +130,24 @@ public class NotificationsPanelTests
         AssertListWrapsCards(lists[2], 3);
     }
 
-    private static WorkOrder BuildAssignedOrder(string number) => new()
-    {
-        Id = Guid.NewGuid(),
-        Number = number,
-        Title = number,
-        Creator = new Employee("test_user", "Test", "User", "test@example.com"),
-        Assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com"),
-        Status = WorkOrderStatus.Assigned,
-        DueDate = ChurchToday
-    };
+    private static WorkOrder BuildAssignedOrder(string number) =>
+        WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid())
+            .WithNumber(number)
+            .WithTitle(number)
+            .CreatedBy(EmployeeBuilder.Create("test_user")
+                .WithFirstName("Test")
+                .WithLastName("User")
+                .WithEmail("test@example.com")
+                .Build())
+            .AssignedTo(EmployeeBuilder.Create("assigned_user")
+                .WithFirstName("Assigned")
+                .WithLastName("User")
+                .WithEmail("assigned@example.com")
+                .Build())
+            .WithStatus(WorkOrderStatus.Assigned)
+            .DueOn(ChurchToday)
+            .Build();
 
     private static void AssertListWrapsCards(AngleSharp.Dom.IElement list, int expectedCount)
     {
@@ -277,15 +286,19 @@ public class NotificationsPanelTests
         component.Markup.ShouldContain("Assigned to");
     }
 
-    private static WorkOrder BuildOrder(DateOnly? dueDate) => new()
-    {
-        Id = Guid.NewGuid(),
-        Number = "WO-DUE",
-        Title = "Due Test",
-        Creator = new Employee("creator_user", "Creator", "User", "creator@example.com"),
-        Status = WorkOrderStatus.Assigned,
-        DueDate = dueDate
-    };
+    private static WorkOrder BuildOrder(DateOnly? dueDate) =>
+        WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid())
+            .WithNumber("WO-DUE")
+            .WithTitle("Due Test")
+            .CreatedBy(EmployeeBuilder.Create("creator_user")
+                .WithFirstName("Creator")
+                .WithLastName("User")
+                .WithEmail("creator@example.com")
+                .Build())
+            .WithStatus(WorkOrderStatus.Assigned)
+            .DueOn(dueDate)
+            .Build();
 
     [TestCase(-3, "overdue", "Overdue")]
     [TestCase(0, "due-today", "Due today")]

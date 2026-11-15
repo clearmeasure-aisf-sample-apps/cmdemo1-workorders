@@ -4,10 +4,11 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Shouldly;
-using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Client;
 
@@ -202,10 +203,20 @@ public class UserSessionTests
     }
 
     private static Employee Homer() =>
-        new("hsimpson", "Homer", "Simpson", "homer@example.com") { Id = Guid.Parse("11111111-1111-1111-1111-111111111111") };
+        EmployeeBuilder.Create("hsimpson")
+            .WithFirstName("Homer")
+            .WithLastName("Simpson")
+            .WithEmail("homer@example.com")
+            .WithId(Guid.Parse("11111111-1111-1111-1111-111111111111"))
+            .Build();
 
     private static Employee Lovejoy() =>
-        new("tlovejoy", "Timothy", "Lovejoy", "lovejoy@example.com") { Id = Guid.Parse("22222222-2222-2222-2222-222222222222") };
+        EmployeeBuilder.Create("tlovejoy")
+            .WithFirstName("Timothy")
+            .WithLastName("Lovejoy")
+            .WithEmail("lovejoy@example.com")
+            .WithId(Guid.Parse("22222222-2222-2222-2222-222222222222"))
+            .Build();
 
     private static async Task WaitUntilWaiting(GatedAuthProvider authProvider)
     {

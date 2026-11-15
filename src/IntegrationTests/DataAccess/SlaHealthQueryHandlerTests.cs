@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -17,27 +18,15 @@ public class SlaHealthQueryHandlerTests
     public async Task Should_ReturnNullPercentage_When_NoCompletedOrders()
     {
         var clock = TestData.FutureClock();
-
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
-        var order = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = ChurchTimeZone.Today(clock),
-            Status = WorkOrderStatus.Draft
-        };
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
+        var order = WorkOrderBuilder.For(creator, WorkOrderStatus.Draft)
+            .WithNumber(TestData.Number()).DueOn(ChurchTimeZone.Today(clock)).Build();
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(order);
-            await context.SaveChangesAsync();
-        }
+        await GivenPersistedAsync(creator, order);
 
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var handler = new SlaHealthQueryHandler(dataContext, clock);
-        var result = await handler.Handle(new SlaHealthQuery());
+        var result = await WhenSlaQueried(clock);
 
         result.CurrentMonthPercentage.ShouldBeNull();
     }
@@ -46,29 +35,17 @@ public class SlaHealthQueryHandlerTests
     public async Task Should_ExcludeOrders_Without_DueDate()
     {
         var clock = TestData.FutureClock();
-
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
         var today = ChurchTimeZone.Today(clock);
-        var completedOrder = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = null,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
-        };
+        var completedOrder = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+            .WithNumber(TestData.Number())
+            .CompletedAt(today.ToDateTime(new TimeOnly(12, 0))).Build();
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(completedOrder);
-            await context.SaveChangesAsync();
-        }
+        await GivenPersistedAsync(creator, completedOrder);
 
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var handler = new SlaHealthQueryHandler(dataContext, clock);
-        var result = await handler.Handle(new SlaHealthQuery());
+        var result = await WhenSlaQueried(clock);
 
         result.CurrentMonthPercentage.ShouldBeNull();
     }
@@ -77,31 +54,17 @@ public class SlaHealthQueryHandlerTests
     public async Task Should_CountOnTimeCompletion_When_CompletedDateEqualsOrBeforeDueDate()
     {
         var clock = TestData.FutureClock();
-
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
-        var today = ChurchTimeZone.Today(clock);
-        var dueDate = today;
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
+        var dueDate = ChurchTimeZone.Today(clock);
+        var onTimeOrder = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+            .WithNumber(TestData.Number()).DueOn(dueDate)
+            .CompletedAt(dueDate.ToDateTime(new TimeOnly(12, 0))).Build();
 
-        var onTimeOrder = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = dueDate,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = dueDate.ToDateTime(new TimeOnly(12, 0))
-        };
+        await GivenPersistedAsync(creator, onTimeOrder);
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(onTimeOrder);
-            await context.SaveChangesAsync();
-        }
-
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var handler = new SlaHealthQueryHandler(dataContext, clock);
-        var result = await handler.Handle(new SlaHealthQuery());
+        var result = await WhenSlaQueried(clock);
 
         result.CurrentMonthPercentage.ShouldBe(100m);
         result.CurrentMonthOrderCount.ShouldBe(1);
@@ -111,31 +74,17 @@ public class SlaHealthQueryHandlerTests
     public async Task Should_CountLateCompletion_As_NotOnTime()
     {
         var clock = TestData.FutureClock();
-
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
         var today = ChurchTimeZone.Today(clock);
-        var dueDate = today.AddDays(-1);
+        var lateOrder = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+            .WithNumber(TestData.Number()).DueOn(today.AddDays(-1))
+            .CompletedAt(today.ToDateTime(new TimeOnly(12, 0))).Build();
 
-        var lateOrder = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = dueDate,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
-        };
+        await GivenPersistedAsync(creator, lateOrder);
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(lateOrder);
-            await context.SaveChangesAsync();
-        }
-
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var handler = new SlaHealthQueryHandler(dataContext, clock);
-        var result = await handler.Handle(new SlaHealthQuery());
+        var result = await WhenSlaQueried(clock);
 
         result.CurrentMonthPercentage.ShouldBe(0m);
         result.CurrentMonthOrderCount.ShouldBe(1);
@@ -145,40 +94,19 @@ public class SlaHealthQueryHandlerTests
     public async Task Should_CalculatePercentage_With_MixedOnTimeAndLate()
     {
         var clock = TestData.FutureClock();
-
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
         var today = ChurchTimeZone.Today(clock);
+        var noon = today.ToDateTime(new TimeOnly(12, 0));
 
-        var onTimeOrder = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = today,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
-        };
+        await GivenPersistedAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .WithNumber(TestData.Number()).DueOn(today).CompletedAt(noon).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .WithNumber(TestData.Number()).DueOn(today.AddDays(-1)).CompletedAt(noon).Build());
 
-        var lateOrder = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = today.AddDays(-1),
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
-        };
-
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(onTimeOrder);
-            context.Add(lateOrder);
-            await context.SaveChangesAsync();
-        }
-
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var handler = new SlaHealthQueryHandler(dataContext, clock);
-        var result = await handler.Handle(new SlaHealthQuery());
+        var result = await WhenSlaQueried(clock);
 
         result.CurrentMonthPercentage.ShouldBe(50m);
         result.CurrentMonthOrderCount.ShouldBe(2);
@@ -188,41 +116,21 @@ public class SlaHealthQueryHandlerTests
     public async Task Should_SeparateMetrics_For_CurrentAndLastMonth()
     {
         var clock = TestData.FutureClock();
-
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
         var today = ChurchTimeZone.Today(clock);
         var lastMonth = today.AddMonths(-1);
 
-        var currentMonthOrder = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = today,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
-        };
+        await GivenPersistedAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .WithNumber(TestData.Number()).DueOn(today)
+                .CompletedAt(today.ToDateTime(new TimeOnly(12, 0))).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .WithNumber(TestData.Number()).DueOn(lastMonth)
+                .CompletedAt(lastMonth.ToDateTime(new TimeOnly(12, 0))).Build());
 
-        var lastMonthOrder = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = lastMonth,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = lastMonth.ToDateTime(new TimeOnly(12, 0))
-        };
-
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(currentMonthOrder);
-            context.Add(lastMonthOrder);
-            await context.SaveChangesAsync();
-        }
-
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var handler = new SlaHealthQueryHandler(dataContext, clock);
-        var result = await handler.Handle(new SlaHealthQuery());
+        var result = await WhenSlaQueried(clock);
 
         result.CurrentMonthPercentage.ShouldBe(100m);
         result.CurrentMonthOrderCount.ShouldBe(1);
@@ -234,32 +142,17 @@ public class SlaHealthQueryHandlerTests
     public async Task Should_FilterByCompletionMonth_NotDueMonth()
     {
         var clock = TestData.FutureClock();
-
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
         var today = ChurchTimeZone.Today(clock);
-        var nextMonth = today.AddMonths(1);
+        var order = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+            .WithNumber(TestData.Number()).DueOn(today.AddMonths(1))
+            .CompletedAt(today.ToDateTime(new TimeOnly(12, 0))).Build();
 
-        // Order due next month but completed today
-        var order = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = nextMonth,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = today.ToDateTime(new TimeOnly(12, 0))
-        };
+        await GivenPersistedAsync(creator, order);
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(order);
-            await context.SaveChangesAsync();
-        }
-
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var handler = new SlaHealthQueryHandler(dataContext, clock);
-        var result = await handler.Handle(new SlaHealthQuery());
+        var result = await WhenSlaQueried(clock);
 
         // Should be counted in current month (when it was completed), and it's on time
         result.CurrentMonthPercentage.ShouldBe(100m);
@@ -271,40 +164,51 @@ public class SlaHealthQueryHandlerTests
     {
         var clock = TestData.FutureClock();
         var today = ChurchTimeZone.Today(clock);
-        var currentMonthStart = new DateOnly(today.Year, today.Month, 1);
-        var lastMonthStart = currentMonthStart.AddMonths(-1);
-        var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
-        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
-        var completed = windowStart.AddHours(1);
-
+        var window = GivenCompletionWindow(today);
         var userName = TestData.UserName("sla");
-        var creator = new Employee(userName, "Test", "User", TestData.Email(userName));
-        var inWindow = new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = today,
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = completed
-        };
-        var outside = Enumerable.Range(0, 12).Select(index => new WorkOrder
-        {
-            Creator = creator,
-            Number = TestData.Number(),
-            DueDate = today.AddYears(-3),
-            Status = WorkOrderStatus.Complete,
-            CompletedDate = windowStart.AddYears(-2).AddDays(index)
-        }).ToArray();
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
+        var orders = SlaHealthSteps.BuildWindowOrders(creator, today, window.Start, window.Completed);
 
         await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
         context.Add(creator);
-        context.Add(inWindow);
-        context.AddRange(outside.AsEnumerable());
+        context.AddRange(orders.AsEnumerable());
         await context.SaveChangesAsync();
 
         context.Commands.Reset();
         var result = await new SlaHealthQueryHandler(context, clock).Handle(new SlaHealthQuery());
 
+        ThenOneWindowQuery(context, result, window);
+    }
+
+    private static async Task GivenPersistedAsync(Employee creator, params WorkOrder[] orders)
+    {
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(creator);
+        context.AddRange(orders.Cast<object>());
+        await context.SaveChangesAsync();
+    }
+
+    private static Task<SlaHealth> WhenSlaQueried(TimeProvider clock)
+    {
+        var handler = new SlaHealthQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
+        return handler.Handle(new SlaHealthQuery());
+    }
+
+    private static (DateTime Start, DateTime End, DateTime Completed) GivenCompletionWindow(DateOnly today)
+    {
+        var currentMonthStart = new DateOnly(today.Year, today.Month, 1);
+        var lastMonthStart = currentMonthStart.AddMonths(-1);
+        var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
+        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
+        return (windowStart, windowEnd, windowStart.AddHours(1));
+    }
+
+    private static void ThenOneWindowQuery(
+        CountingDataContext context,
+        SlaHealth result,
+        (DateTime Start, DateTime End, DateTime Completed) window)
+    {
         context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, context.Commands.Texts));
         context.Commands.OtherCommands.ShouldBe(0);
         var sql = context.Commands.Texts.Single();
@@ -312,8 +216,8 @@ public class SlaHealthQueryHandlerTests
         sql.ShouldContain(">=");
         sql.ShouldContain("<");
         sql.ShouldNotContain("JOIN");
-        completed.ShouldBeGreaterThanOrEqualTo(windowStart);
-        completed.ShouldBeLessThan(windowEnd);
+        window.Completed.ShouldBeGreaterThanOrEqualTo(window.Start);
+        window.Completed.ShouldBeLessThan(window.End);
         result.LastMonthPercentage.ShouldBe(100m);
         result.LastMonthOrderCount.ShouldBe(1);
         result.CurrentMonthPercentage.ShouldBeNull();

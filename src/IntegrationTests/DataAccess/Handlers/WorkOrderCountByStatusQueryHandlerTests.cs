@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -44,31 +45,10 @@ public class WorkOrderCountByStatusQueryHandlerTests
     public async Task ShouldMatchSearchTotal_ForEachStatus()
     {
         var before = await CountsAsync();
-        var userName = TestData.UserName("wocbs");
-        var creator = new Employee(userName, "First", "Last", TestData.Email(userName));
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Draft });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Assigned });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Assigned });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.InProgress });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Complete });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Cancelled });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Cancelled });
-            await context.SaveChangesAsync();
-        }
+        await GivenOneOfEachStatusAsync();
 
-        var dataContext = TestHost.GetRequiredService<DataContext>();
-        var counts = await new WorkOrderCountByStatusQueryHandler(dataContext).Handle(new WorkOrderCountByStatusQuery());
-
-        foreach (var status in WorkOrderStatus.GetAllItems())
-        {
-            var specification = new WorkOrderSpecificationQuery();
-            specification.MatchStatus(status);
-            var found = await new WorkOrderSearchHandler(dataContext, TimeProvider.System).Handle(specification);
-            counts[status.Key].ShouldBe(found.Length, status.Key);
-        }
+        var counts = await CountsAsync();
+        await ThenMatchesSearchTotalsAsync(counts);
 
         (counts.Values.Sum() - before.Values.Sum()).ShouldBe(7);
     }
@@ -76,36 +56,68 @@ public class WorkOrderCountByStatusQueryHandlerTests
     [Test]
     public async Task ShouldMatchPerStatusFilterCounts()
     {
-        var userName = TestData.UserName("wocbs");
-        var creator = new Employee(userName, "First", "Last", TestData.Email(userName));
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Draft });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Draft });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Assigned });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.InProgress });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Complete });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Cancelled });
-            context.Add(new WorkOrder { Creator = creator, Number = TestData.Number("C"), Status = WorkOrderStatus.Cancelled });
-            await context.SaveChangesAsync();
-        }
+        await GivenPerStatusFilterOrdersAsync();
 
+        var counts = await CountsAsync();
+        await ThenMatchesFilterCountsAsync(counts);
+
+        counts.Count.ShouldBe(WorkOrderStatus.GetAllItems().Length);
+    }
+
+    private static async Task GivenOneOfEachStatusAsync()
+    {
+        var creator = EmployeeBuilder.Create(TestData.UserName("wocbs"))
+            .WithFirstName("First").WithLastName("Last").Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).Build());
+    }
+
+    private static async Task GivenPerStatusFilterOrdersAsync()
+    {
+        var creator = EmployeeBuilder.Create(TestData.UserName("wocbs"))
+            .WithFirstName("First").WithLastName("Last").Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).Build());
+    }
+
+    private static async Task ThenMatchesSearchTotalsAsync(IReadOnlyDictionary<string, int> counts)
+    {
         var dataContext = TestHost.GetRequiredService<DataContext>();
-        var counts = await new WorkOrderCountByStatusQueryHandler(dataContext).Handle(new WorkOrderCountByStatusQuery());
+        foreach (var status in WorkOrderStatus.GetAllItems())
+        {
+            var specification = new WorkOrderSpecificationQuery();
+            specification.MatchStatus(status);
+            var found = await new WorkOrderSearchHandler(dataContext, TimeProvider.System).Handle(specification);
+            counts[status.Key].ShouldBe(found.Length, status.Key);
+        }
+    }
+
+    private static async Task ThenMatchesFilterCountsAsync(IReadOnlyDictionary<string, int> counts)
+    {
+        var dataContext = TestHost.GetRequiredService<DataContext>();
         var orders = dataContext.Set<WorkOrder>().AsNoTracking();
         foreach (var status in WorkOrderStatus.GetAllItems())
         {
             var specification = new WorkOrderSearchSpecification();
             specification.MatchStatus(status);
-            // One count per stored status, compared with the handler's grouped result. Not a product N+1.
+            // Characterization against the shared filter helper; not a product query path.
 #pragma warning disable CM0002
             var expected = await WorkOrderQueryFilters.Apply(orders, specification).CountAsync();
 #pragma warning restore CM0002
             counts[status.Key].ShouldBe(expected, status.Key);
         }
-
-        counts.Count.ShouldBe(WorkOrderStatus.GetAllItems().Length);
     }
 
     private static async Task<IReadOnlyDictionary<string, int>> CountsAsync()

@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -186,11 +187,11 @@ public sealed class QueryBudgetTests
     {
         var today = ChurchTimeZone.Today(clock);
         var numbers = TestData.NumberSeries(employeeCount);
-        var creator = NewEmployee("qbc");
+        var creator = EmployeeBuilder.Create(TestData.UserName("qbc")).WithFirstName("Budget").WithLastName("Tester").Build();
         context.Add(creator);
         for (var index = 0; index < employeeCount; index++)
         {
-            var worker = NewEmployee("qbw");
+            var worker = EmployeeBuilder.Create(TestData.UserName("qbw")).WithFirstName("Budget").WithLastName("Tester").Build();
             worker.AddRole(new Role("Worker", canCreate: false, canFulfill: true));
             context.Add(worker);
             context.Add(new WorkOrder
@@ -210,8 +211,8 @@ public sealed class QueryBudgetTests
     {
         var today = ChurchTimeZone.Today(clock);
         var numbers = TestData.NumberSeries(assignedOrderCount);
-        var creator = NewEmployee("qbc1");
-        var worker = NewEmployee("qbw1");
+        var creator = EmployeeBuilder.Create(TestData.UserName("qbc1")).WithFirstName("Budget").WithLastName("Tester").Build();
+        var worker = EmployeeBuilder.Create(TestData.UserName("qbw1")).WithFirstName("Budget").WithLastName("Tester").Build();
         worker.AddRole(new Role("Worker", canCreate: false, canFulfill: true));
         context.Add(creator);
         context.Add(worker);
@@ -235,7 +236,7 @@ public sealed class QueryBudgetTests
     {
         var today = ChurchTimeZone.Today(clock);
         var numbers = TestData.NumberSeries(orderCount);
-        var creator = NewEmployee("qbs");
+        var creator = EmployeeBuilder.Create(TestData.UserName("qbs")).WithFirstName("Budget").WithLastName("Tester").Build();
         context.Add(creator);
         var completed = today.ToDateTime(new TimeOnly(16, 0), DateTimeKind.Utc);
         for (var index = 0; index < orderCount; index++)
@@ -255,7 +256,7 @@ public sealed class QueryBudgetTests
     private static void SeedOpenOrders(QueryBudgetContext context, int orderCount, TimeProvider clock)
     {
         var numbers = TestData.NumberSeries(orderCount);
-        var creator = NewEmployee("qbr");
+        var creator = EmployeeBuilder.Create(TestData.UserName("qbr")).WithFirstName("Budget").WithLastName("Tester").Build();
         context.Add(creator);
         var created = clock.GetUtcNow().UtcDateTime;
         var today = ChurchTimeZone.Today(clock);
@@ -274,11 +275,6 @@ public sealed class QueryBudgetTests
         }
     }
 
-    private static Employee NewEmployee(string prefix)
-    {
-        var userName = TestData.UserName(prefix);
-        return new Employee(userName, "Budget", "Tester", TestData.Email(userName));
-    }
 
     private static QueryBudgetContext NewContext()
     {

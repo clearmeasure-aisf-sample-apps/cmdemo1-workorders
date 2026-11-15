@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.McpServer.Tools;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
 using Shouldly;
 
@@ -37,7 +38,12 @@ public class WorkOrderToolsSaveTitleLengthTests
 
     private class StubWorkOrderToolsBus : IBus
     {
-        private readonly Employee _creator = new("creator1", "Creator", "One", "creator1@example.com");
+        private readonly Employee _creator = EmployeeBuilder.Create("creator1")
+            .WithFirstName("Creator")
+            .WithLastName("One")
+            .WithEmail("creator1@example.com")
+            .Build();
+
         private readonly WorkOrder _workOrder;
 
         public StubWorkOrderToolsBus()

@@ -3,6 +3,7 @@ using System.Reflection;
 using AutoBogus;
 using AutoBogus.Conventions;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests;
@@ -25,6 +26,42 @@ public static class ObjectMother
         EnsureConfigured();
         return AutoFaker.Generate<TK>();
     }
+
+    /// <summary>A draft work order, optionally created by <paramref name="createdBy"/>.</summary>
+    public static WorkOrder DraftWorkOrder(Employee? createdBy = null) =>
+        WorkOrderBuilder.Create()
+            .CreatedBy(createdBy)
+            .WithStatus(WorkOrderStatus.Draft)
+            .Build();
+
+    /// <summary>An employee with the given user name and optional display names.</summary>
+    public static Employee Employee(
+        string userName,
+        string firstName = "Test",
+        string lastName = "Employee",
+        string? emailAddress = null) =>
+        EmployeeBuilder.Create(userName)
+            .WithFirstName(firstName)
+            .WithLastName(lastName)
+            .WithEmail(emailAddress ?? $"{userName}@example.test")
+            .Build();
+
+    /// <summary>An employee who can fulfill work orders.</summary>
+    public static Employee Fulfiller(string userName = "fulfiller") =>
+        EmployeeBuilder.Create(userName)
+            .WithFirstName("Groundskeeper")
+            .WithLastName("Willie")
+            .WithRole("Fulfiller", canCreate: false, canFulfill: true)
+            .Build();
+
+    /// <summary>An employee who can create work orders.</summary>
+    public static Employee Creator(string userName = "creator") =>
+        EmployeeBuilder.Create(userName)
+            .WithFirstName("Ned")
+            .WithLastName("Flanders")
+            .WithRole("Creator", canCreate: true, canFulfill: false)
+            .Build();
+
 
     private static void ConfigureBogus()
     {

@@ -2,9 +2,9 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
@@ -84,94 +84,21 @@ public class WorkOrderStatusHistoryQueryHandlerTests
     [Test]
     public async Task Handle_ShouldReturnStatusChanges_OrderedByDateDescending()
     {
-        var creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
-        var assignee = new Employee("hsimpson", "Homer", "Simpson", "hs@example.com") { Id = Guid.NewGuid() };
-        var workOrder = new WorkOrder
-        {
-            Id = Guid.NewGuid(),
-            Number = "WO-001",
-            Title = "Test",
-            Description = "Test",
-            Status = WorkOrderStatus.InProgress,
-            Creator = creator,
-            Assignee = assignee,
-            CreatedDate = DateTime.UtcNow
-        };
+        var workOrderId = await GivenTwoChangesAsync();
 
-        var oldDate = new DateTime(2025, 2, 15, 10, 0, 0);
-        var newDate = new DateTime(2025, 3, 1, 10, 0, 0);
-
-        var change1 = new WorkOrderStatusChange
-        {
-            Id = Guid.NewGuid(),
-            WorkOrderId = workOrder.Id,
-            FromStatus = WorkOrderStatus.Draft,
-            ToStatus = WorkOrderStatus.Assigned,
-            ChangedById = assignee.Id,
-            ChangedDate = oldDate
-        };
-
-        var change2 = new WorkOrderStatusChange
-        {
-            Id = Guid.NewGuid(),
-            WorkOrderId = workOrder.Id,
-            FromStatus = WorkOrderStatus.Assigned,
-            ToStatus = WorkOrderStatus.InProgress,
-            ChangedById = assignee.Id,
-            ChangedDate = newDate
-        };
-
-        _context!.Add(creator);
-        _context.Add(assignee);
-        _context.Add(workOrder);
-        _context.Add(change1);
-        _context.Add(change2);
-        await _context.SaveChangesAsync();
-
-        var query = new WorkOrderStatusHistoryQuery(workOrder.Id);
-        var result = await _handler!.Handle(query, CancellationToken.None);
+        var result = await _handler!.Handle(new WorkOrderStatusHistoryQuery(workOrderId), CancellationToken.None);
 
         result.Length.ShouldBe(2);
-        // Should be ordered by date descending (newest first)
-        result[0].ChangedDate.ShouldBe(newDate);
-        result[1].ChangedDate.ShouldBe(oldDate);
+        result[0].ChangedDate.ShouldBe(new DateTime(2025, 3, 1, 10, 0, 0));
+        result[1].ChangedDate.ShouldBe(new DateTime(2025, 2, 15, 10, 0, 0));
     }
 
     [Test]
     public async Task Handle_ShouldIncludeChangedByEmployee()
     {
-        var creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
-        var assignee = new Employee("hsimpson", "Homer", "Simpson", "hs@example.com") { Id = Guid.NewGuid() };
-        var workOrder = new WorkOrder
-        {
-            Id = Guid.NewGuid(),
-            Number = "WO-001",
-            Title = "Test",
-            Description = "Test",
-            Status = WorkOrderStatus.Assigned,
-            Creator = creator,
-            Assignee = assignee,
-            CreatedDate = DateTime.UtcNow
-        };
+        var workOrderId = await GivenSingleChangeAsync();
 
-        var change = new WorkOrderStatusChange
-        {
-            Id = Guid.NewGuid(),
-            WorkOrderId = workOrder.Id,
-            FromStatus = WorkOrderStatus.Draft,
-            ToStatus = WorkOrderStatus.Assigned,
-            ChangedById = assignee.Id,
-            ChangedDate = DateTime.UtcNow
-        };
-
-        _context!.Add(creator);
-        _context.Add(assignee);
-        _context.Add(workOrder);
-        _context.Add(change);
-        await _context.SaveChangesAsync();
-
-        var query = new WorkOrderStatusHistoryQuery(workOrder.Id);
-        var result = await _handler!.Handle(query, CancellationToken.None);
+        var result = await _handler!.Handle(new WorkOrderStatusHistoryQuery(workOrderId), CancellationToken.None);
 
         result.Length.ShouldBe(1);
         result[0].ChangedBy.ShouldNotBeNull();
@@ -182,65 +109,81 @@ public class WorkOrderStatusHistoryQueryHandlerTests
     [Test]
     public async Task Handle_ShouldOnlyReturnChangesForSpecificWorkOrder()
     {
-        var creator = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
-        var assignee = new Employee("hsimpson", "Homer", "Simpson", "hs@example.com") { Id = Guid.NewGuid() };
+        var workOrderId = await GivenTwoWorkOrdersWithChangesAsync();
 
-        var workOrder1 = new WorkOrder
-        {
-            Id = Guid.NewGuid(),
-            Number = "WO-001",
-            Title = "Test 1",
-            Description = "Test",
-            Status = WorkOrderStatus.Assigned,
-            Creator = creator,
-            Assignee = assignee,
-            CreatedDate = DateTime.UtcNow
-        };
-
-        var workOrder2 = new WorkOrder
-        {
-            Id = Guid.NewGuid(),
-            Number = "WO-002",
-            Title = "Test 2",
-            Description = "Test",
-            Status = WorkOrderStatus.Assigned,
-            Creator = creator,
-            Assignee = assignee,
-            CreatedDate = DateTime.UtcNow
-        };
-
-        var change1 = new WorkOrderStatusChange
-        {
-            Id = Guid.NewGuid(),
-            WorkOrderId = workOrder1.Id,
-            FromStatus = WorkOrderStatus.Draft,
-            ToStatus = WorkOrderStatus.Assigned,
-            ChangedById = assignee.Id,
-            ChangedDate = DateTime.UtcNow
-        };
-
-        var change2 = new WorkOrderStatusChange
-        {
-            Id = Guid.NewGuid(),
-            WorkOrderId = workOrder2.Id,
-            FromStatus = WorkOrderStatus.Draft,
-            ToStatus = WorkOrderStatus.Assigned,
-            ChangedById = assignee.Id,
-            ChangedDate = DateTime.UtcNow
-        };
-
-        _context!.Add(creator);
-        _context.Add(assignee);
-        _context.Add(workOrder1);
-        _context.Add(workOrder2);
-        _context.Add(change1);
-        _context.Add(change2);
-        await _context.SaveChangesAsync();
-
-        var query = new WorkOrderStatusHistoryQuery(workOrder1.Id);
-        var result = await _handler!.Handle(query, CancellationToken.None);
+        var result = await _handler!.Handle(new WorkOrderStatusHistoryQuery(workOrderId), CancellationToken.None);
 
         result.Length.ShouldBe(1);
-        result[0].WorkOrderId.ShouldBe(workOrder1.Id);
+        result[0].WorkOrderId.ShouldBe(workOrderId);
     }
+
+    private async Task<Guid> GivenTwoChangesAsync()
+    {
+        var creator = EmployeeBuilder.Create("jpalermo")
+            .WithFirstName("Jeffrey").WithLastName("Palermo").WithEmail("jp@example.com")
+            .WithId(Guid.NewGuid()).Build();
+        var assignee = EmployeeBuilder.Create("hsimpson")
+            .WithFirstName("Homer").WithLastName("Simpson").WithEmail("hs@example.com")
+            .WithId(Guid.NewGuid()).Build();
+        var workOrder = WorkOrderBuilder.Create().WithId(Guid.NewGuid()).WithNumber("WO-001")
+            .WithTitle("Test").WithDescription("Test").CreatedBy(creator).AssignedTo(assignee)
+            .WithStatus(WorkOrderStatus.InProgress).CreatedAt(DateTime.UtcNow).Build();
+        _context!.AddRange(creator, assignee, workOrder,
+            Change(workOrder.Id, assignee.Id, (WorkOrderStatus.Draft, WorkOrderStatus.Assigned,
+                new DateTime(2025, 2, 15, 10, 0, 0))),
+            Change(workOrder.Id, assignee.Id, (WorkOrderStatus.Assigned, WorkOrderStatus.InProgress,
+                new DateTime(2025, 3, 1, 10, 0, 0))));
+        await _context.SaveChangesAsync();
+        return workOrder.Id;
+    }
+
+    private async Task<Guid> GivenSingleChangeAsync()
+    {
+        var creator = EmployeeBuilder.Create("jpalermo")
+            .WithFirstName("Jeffrey").WithLastName("Palermo").WithEmail("jp@example.com")
+            .WithId(Guid.NewGuid()).Build();
+        var assignee = EmployeeBuilder.Create("hsimpson")
+            .WithFirstName("Homer").WithLastName("Simpson").WithEmail("hs@example.com")
+            .WithId(Guid.NewGuid()).Build();
+        var workOrder = WorkOrderBuilder.Create().WithId(Guid.NewGuid()).WithNumber("WO-001")
+            .WithTitle("Test").WithDescription("Test").CreatedBy(creator).AssignedTo(assignee)
+            .WithStatus(WorkOrderStatus.Assigned).CreatedAt(DateTime.UtcNow).Build();
+        _context!.AddRange(creator, assignee, workOrder,
+            Change(workOrder.Id, assignee.Id, (WorkOrderStatus.Draft, WorkOrderStatus.Assigned, DateTime.UtcNow)));
+        await _context.SaveChangesAsync();
+        return workOrder.Id;
+    }
+
+    private async Task<Guid> GivenTwoWorkOrdersWithChangesAsync()
+    {
+        var creator = EmployeeBuilder.Create("jpalermo")
+            .WithFirstName("Jeffrey").WithLastName("Palermo").WithEmail("jp@example.com")
+            .WithId(Guid.NewGuid()).Build();
+        var assignee = EmployeeBuilder.Create("hsimpson")
+            .WithFirstName("Homer").WithLastName("Simpson").WithEmail("hs@example.com")
+            .WithId(Guid.NewGuid()).Build();
+        var workOrder1 = WorkOrderBuilder.Create().WithId(Guid.NewGuid()).WithNumber("WO-001")
+            .WithTitle("Test 1").WithDescription("Test").CreatedBy(creator).AssignedTo(assignee)
+            .WithStatus(WorkOrderStatus.Assigned).CreatedAt(DateTime.UtcNow).Build();
+        var workOrder2 = WorkOrderBuilder.Create().WithId(Guid.NewGuid()).WithNumber("WO-002")
+            .WithTitle("Test 2").WithDescription("Test").CreatedBy(creator).AssignedTo(assignee)
+            .WithStatus(WorkOrderStatus.Assigned).CreatedAt(DateTime.UtcNow).Build();
+        _context!.AddRange(creator, assignee, workOrder1, workOrder2,
+            Change(workOrder1.Id, assignee.Id, (WorkOrderStatus.Draft, WorkOrderStatus.Assigned, DateTime.UtcNow)),
+            Change(workOrder2.Id, assignee.Id, (WorkOrderStatus.Draft, WorkOrderStatus.Assigned, DateTime.UtcNow)));
+        await _context.SaveChangesAsync();
+        return workOrder1.Id;
+    }
+
+    private static WorkOrderStatusChange Change(
+        Guid workOrderId, Guid changedById, (WorkOrderStatus From, WorkOrderStatus To, DateTime When) transition) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            WorkOrderId = workOrderId,
+            FromStatus = transition.From,
+            ToStatus = transition.To,
+            ChangedById = changedById,
+            ChangedDate = transition.When
+        };
 }
