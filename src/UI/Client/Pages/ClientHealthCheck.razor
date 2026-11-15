@@ -29,7 +29,7 @@
 else
 {
     <p><strong>Overall Status:</strong> <span data-testid="@Elements.Status">@_report.Status</span></p>
-    <ul>
+    <ul aria-label="Health check entries">
         @foreach (var entry in _report.Entries)
         {
             <li>

@@ -28,6 +28,20 @@ public class ClientHealthCheckPageTests
     }
 
     [Test]
+    public async Task ClientHealthCheck_EntryList_IsNamedForScreenReaders()
+    {
+        await using var ctx = CreateContextWithHealthChecks();
+
+        var component = ctx.Render<ClientHealthCheck>();
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Find($"[data-testid='{ClientHealthCheck.Elements.Status}']").ShouldNotBeNull();
+        });
+        component.Find("ul").GetAttribute("aria-label").ShouldBe("Health check entries");
+    }
+
+    [Test]
     public async Task ClientHealthCheck_WhileLoading_AnnouncesStatusToScreenReaders()
     {
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
