@@ -44,6 +44,27 @@ public class ThemePreferenceServiceTests
         sut.IsDarkMode.ShouldBeFalse();
     }
 
+    [Test]
+    public async Task WhenJsInteropThrowsDisconnected_ShouldNotCrashOnDispose()
+    {
+        var js = new StubThemeJsRuntime { InitialTheme = "light", ThrowOnDispose = true };
+        var sut = new ThemePreferenceService(js);
+        await sut.InitializeAsync();
+
+        await Should.NotThrowAsync(async () => await sut.DisposeAsync());
+    }
+
+    [Test]
+    public async Task WhenJsInteropThrowsDisconnected_ShouldNotCrashOnSetDarkMode()
+    {
+        var js = new StubDisconnectedJsRuntime();
+        var sut = new ThemePreferenceService(js);
+
+        await Should.NotThrowAsync(async () => await sut.SetDarkModeAsync(true));
+
+        sut.IsDarkMode.ShouldBeTrue();
+    }
+
     private sealed class StubDisconnectedJsRuntime : IJSRuntime
     {
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
@@ -57,6 +78,7 @@ public class ThemePreferenceServiceTests
     private sealed class StubThemeJsRuntime : IJSRuntime
     {
         public string InitialTheme { get; init; } = "light";
+        public bool ThrowOnDispose { get; init; }
         public int SetThemeCalls { get; private set; }
         public bool? LastSetThemeArg { get; private set; }
 
@@ -113,7 +135,12 @@ public class ThemePreferenceServiceTests
                 object?[]? args) =>
                 InvokeAsync<TValue>(identifier, args);
 
-            public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+            public ValueTask DisposeAsync()
+            {
+                if (_parent.ThrowOnDispose)
+                    throw new JSDisconnectedException("circuit disconnected");
+                return ValueTask.CompletedTask;
+            }
         }
     }
 }
