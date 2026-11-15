@@ -11,7 +11,6 @@ file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
 file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
 file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs
 file src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs
-file src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs
 method src/AcceptanceTests/AcceptanceTestBase.cs AcceptanceTestBase.CreateAndSaveNewWorkOrder()
 method src/AcceptanceTests/App/AiAgentPageTests.cs AiAgentPageTests.ShouldKeepPromptVisibleWhenResizingWithLongConversation()
 method src/AcceptanceTests/App/AppShellTests.cs AppShellTests.ShouldFitWithoutHorizontalScroll_At1280()
@@ -142,9 +141,6 @@ method src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs WorkOrderMana
 method src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs WorkOrderManageSubmitTests.StubSubmitBus.Send<1>(IRequest<TResponse>)
 method src/UnitTests/UI.Shared/Pages/WorkOrderManageTitleCharCountTests.cs WorkOrderManageTitleCharCountTests.TitleCharCount_NotRendered_WhenReadOnly()
 method src/UnitTests/UI.Shared/Pages/WorkOrderPrintTests.cs WorkOrderPrintTests.ShouldRenderAllFields()
-method src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs WorkOrderSearchTests.ClickingClearFiltersButton_ShouldResetAllFiltersToEmpty_AndTriggerSearch()
-method src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs WorkOrderSearchTests.Export_DownloadsCsvOfFilteredRows()
-method src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs WorkOrderSearchTests.ShouldLoadDropDownsInitiallyOnLoad()
 method src/UnitTests/UI/Api/DetailedHealthEtagFingerprintTests.cs DetailedHealthEtagFingerprintTests.FromReport_Should_OmitVolatileFields_When_BuildingFingerprint()
 method src/UnitTests/UI/Api/DetailedHealthEtagFingerprintTests.cs DetailedHealthEtagFingerprintTests.FromReport_Should_ProduceSameEtag_When_OnlyVolatileFieldsDiffer()
 method src/UnitTests/UI/Server/DetailedHealthReportProviderTests.cs DetailedHealthReportProviderTests.FromHealthReport_Should_ExcludeLiveTaggedChecks()
@@ -176,5 +172,4 @@ parameters src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs ProcessVitals(do
 parameters src/UI/Server/LiveTelemetry/LiveTelemetrySnapshot.cs RequestCounts(int,int,int,int,int?)
 parameters src/UnitTests/UI.Server/BuildFacts/BuildFactsProviderTests.cs BuildFactsProviderTests.StubLogger.Log<1>(LogLevel,EventId,TState,Exception?,Func<TState,Exception?,string>)
 parameters src/UnitTests/UI.Shared/Models/WorkOrderSearchTableModelTests.cs WorkOrderSearchSorterTests.Row(string,string,WorkOrderStatus,WorkOrderPriority,string?,string?,DateOnly?)
-parameters src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs WorkOrderSearchTests.CreateContext(IBus?,string,WorkOrderSearchState?,Employee?,StubFeatureFlags?)
 parameters src/UnitTests/UI.Shared/VendorManagementGateTests.cs VendorManagementGateTests.BuildPipeline(bool,CountingHandler<VendorsQuery,Vendor[]>,CountingHandler<CreateVendorCommand,CreateVendorResult>,CountingHandler<TeamsQuery,Team[]>,CountingHandler<CreateTeamCommand,CreateTeamResult>)

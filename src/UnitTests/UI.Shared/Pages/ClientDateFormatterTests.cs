@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
+using WorkOrderSearchPage = ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderSearch;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -122,8 +123,8 @@ public class ClientDateFormatterTests
         var order = SampleWorkOrder();
 
         await using var search = CreateSearchContext(order);
-        var list = search.Render<WorkOrderSearch>();
-        var cells = list.FindAll($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}{order.Number}']");
+        var list = search.Render<WorkOrderSearchPage>();
+        var cells = list.FindAll($"[data-testid='{WorkOrderSearchPage.Elements.DueDateCell}{order.Number}']");
         cells.Count.ShouldBeGreaterThan(0);
         foreach (var cell in cells)
         {
