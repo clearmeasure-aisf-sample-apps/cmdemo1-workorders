@@ -180,27 +180,21 @@ public class AutoReformatAgentServiceTests
         }
     }
 
-    // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
-    private sealed class StubReformatAgent : WorkOrderReformatAgent
+    private sealed class StubReformatAgent(
+        WorkOrderReformatAgent.ReformatResult? result = null,
+        Exception? exception = null)
+        : WorkOrderReformatAgent(
+            new ChatClientFactory(new StubUnavailableBus()),
+            NullLogger<WorkOrderReformatAgent>.Instance)
     {
-        private readonly ReformatResult? _result;
-        private readonly Exception? _exception;
-
-        public StubReformatAgent(ReformatResult? result = null, Exception? exception = null)
-            : base(new ChatClientFactory(new StubUnavailableBus()), NullLogger<WorkOrderReformatAgent>.Instance)
-        {
-            _result = result;
-            _exception = exception;
-        }
-
         public override Task<ReformatResult?> ReformatWorkOrderAsync(WorkOrder workOrder)
         {
-            if (_exception is not null)
+            if (exception is not null)
             {
-                throw _exception;
+                throw exception;
             }
 
-            return Task.FromResult(_result);
+            return Task.FromResult(result);
         }
     }
 
