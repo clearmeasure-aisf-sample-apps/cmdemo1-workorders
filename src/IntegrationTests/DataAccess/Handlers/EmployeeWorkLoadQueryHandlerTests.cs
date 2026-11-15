@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -14,59 +15,69 @@ public class EmployeeWorkLoadQueryHandlerTests
     [Test]
     public async Task ShouldCountWorkLoadForEmployeeFromDatabase()
     {
-        var ewlCreatorUserName = TestData.UserName("ewl_creator");
-        var ewlWorkerUserName = TestData.UserName("ewl_worker");
-        var ewlIdleUserName = TestData.UserName("ewl_idle");
+        var names = await GivenWorkloadAsync();
 
-        var creator = new Employee(ewlCreatorUserName, "Cre", "Ator", "creator@test.com");
-        var worker = new Employee(ewlWorkerUserName, "Wor", "Ker", "worker@test.com");
-        var idle = new Employee(ewlIdleUserName, "Id", "Le", "idle@test.com");
-        var today = ChurchTimeZone.Today(TimeProvider.System);
-        var recent = DateTime.UtcNow.AddDays(-5);
-        var old = DateTime.UtcNow.AddDays(-60);
-
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(worker);
-            context.Add(idle);
-            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Draft, today.AddDays(5)));
-            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Assigned, today.AddDays(-3)));
-            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.InProgress, today.AddDays(-1)));
-            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.InProgress, null));
-            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Complete, today.AddDays(-10), recent));
-            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Complete, today.AddDays(-90), old));
-            context.Add(NewOrder(TestData.Number("E"), creator, worker, WorkOrderStatus.Cancelled, today.AddDays(-2)));
-            context.Add(NewOrder(TestData.Number("E"), creator, null, WorkOrderStatus.Assigned, today.AddDays(-2)));
-            await context.SaveChangesAsync();
-        }
-
-        var handler = new EmployeeWorkLoadQueryHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
-
-        var load = await handler.Handle(new EmployeeWorkLoadQuery(ewlWorkerUserName));
-        load.AssignedAndOpen.ShouldBe(4);
-        load.InProgress.ShouldBe(2);
-        load.Overdue.ShouldBe(2);
-        load.CompletedLast30Days.ShouldBe(1);
-
-        var idleLoad = await handler.Handle(new EmployeeWorkLoadQuery(ewlIdleUserName));
-        idleLoad.AssignedAndOpen.ShouldBe(0);
-        idleLoad.InProgress.ShouldBe(0);
-        idleLoad.Overdue.ShouldBe(0);
-        idleLoad.CompletedLast30Days.ShouldBe(0);
+        ThenCountsAre(await WhenQueried(names[0]), Expected(4, 2, 2, 1));
+        ThenCountsAre(await WhenQueried(names[1]), Expected(0, 0, 0, 0));
     }
 
-    private static WorkOrder NewOrder(string number, Employee creator, Employee? assignee,
-        WorkOrderStatus status, DateOnly? dueDate, DateTime? completedDate = null)
+    private static async Task<string[]> GivenWorkloadAsync()
     {
-        return new WorkOrder
+        var today = ChurchTimeZone.Today(TimeProvider.System);
+        var creator = EmployeeBuilder.Create(TestData.UserName("ewl_creator"))
+            .WithFirstName("Cre").WithLastName("Ator").WithEmail("creator@test.com").Build();
+        var worker = EmployeeBuilder.Create(TestData.UserName("ewl_worker"))
+            .WithFirstName("Wor").WithLastName("Ker").WithEmail("worker@test.com").Build();
+        var idle = EmployeeBuilder.Create(TestData.UserName("ewl_idle"))
+            .WithFirstName("Id").WithLastName("Le").WithEmail("idle@test.com").Build();
+        await PersistAsync(creator, worker, idle, WorkloadOrders(creator, worker, today));
+        return [worker.UserName, idle.UserName];
+    }
+
+    private static WorkOrder[] WorkloadOrders(Employee creator, Employee worker, DateOnly today) =>
+    [
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).AssignedTo(worker).DueOn(today.AddDays(5)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).AssignedTo(worker).DueOn(today.AddDays(-3)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).AssignedTo(worker).DueOn(today.AddDays(-1)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).AssignedTo(worker).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).AssignedTo(worker)
+            .DueOn(today.AddDays(-10)).CompletedAt(DateTime.UtcNow.AddDays(-5)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).AssignedTo(worker)
+            .DueOn(today.AddDays(-90)).CompletedAt(DateTime.UtcNow.AddDays(-60)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).AssignedTo(worker).DueOn(today.AddDays(-2)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).DueOn(today.AddDays(-2)).Build()
+    ];
+
+    private static async Task PersistAsync(
+        Employee creator, Employee worker, Employee idle, WorkOrder[] orders)
+    {
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        context.AddRange(creator, worker, idle);
+        context.AddRange(orders.Cast<object>());
+        await context.SaveChangesAsync();
+    }
+
+    private static Task<EmployeeWorkLoad> WhenQueried(string userName)
+    {
+        var handler = new EmployeeWorkLoadQueryHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        return handler.Handle(new EmployeeWorkLoadQuery(userName));
+    }
+
+    private static EmployeeWorkLoad Expected(
+        int assignedAndOpen, int inProgress, int overdue, int completedLast30Days) =>
+        new()
         {
-            Number = number,
-            Creator = creator,
-            Assignee = assignee,
-            Status = status,
-            DueDate = dueDate,
-            CompletedDate = completedDate
+            AssignedAndOpen = assignedAndOpen,
+            InProgress = inProgress,
+            Overdue = overdue,
+            CompletedLast30Days = completedLast30Days
         };
+
+    private static void ThenCountsAre(EmployeeWorkLoad actual, EmployeeWorkLoad expected)
+    {
+        actual.AssignedAndOpen.ShouldBe(expected.AssignedAndOpen);
+        actual.InProgress.ShouldBe(expected.InProgress);
+        actual.Overdue.ShouldBe(expected.Overdue);
+        actual.CompletedLast30Days.ShouldBe(expected.CompletedLast30Days);
     }
 }

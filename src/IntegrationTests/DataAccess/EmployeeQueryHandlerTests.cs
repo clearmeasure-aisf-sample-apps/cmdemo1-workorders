@@ -1,8 +1,10 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -142,40 +144,56 @@ public class EmployeeQueryHandlerTests
     public async Task ShouldPageTheDirectory_InAConstantNumberOfQueries()
     {
         var userName = TestData.UserName("directory");
-        var employee = new Employee(userName, "Paged", "AaaDirectory", TestData.Email(userName));
-        employee.AddRole(new Role($"Role_{TestData.Tag()}", true, false));
-        var secondName = TestData.UserName("directory");
-        var second = new Employee(secondName, "Also", "AaaDirectory", TestData.Email(secondName));
-
-        await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
-        context.AddRange(employee, second);
-        await context.SaveChangesAsync();
+        var context = await GivenDirectoryEmployeesAsync(userName);
         var handler = new EmployeeQueryHandler(context);
 
+        await ThenPagingIsConstantAsync(handler, context);
+        await ThenPastTheEndIsEmptyAsync(handler, context);
+        await ThenRoleHydratedAsync(handler, userName);
+    }
+
+    private static async Task<CountingDataContext> GivenDirectoryEmployeesAsync(string userName)
+    {
+        var employee = EmployeeBuilder.Create(userName)
+            .WithFirstName("Paged").WithLastName("AaaDirectory").WithEmail(TestData.Email(userName))
+            .WithRole($"Role_{TestData.Tag()}", true, false).Build();
+        var secondName = TestData.UserName("directory");
+        var second = EmployeeBuilder.Create(secondName)
+            .WithFirstName("Also").WithLastName("AaaDirectory").WithEmail(TestData.Email(secondName)).Build();
+        var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
+        context.AddRange(employee, second);
+        await context.SaveChangesAsync();
+        return context;
+    }
+
+    private static async Task ThenPagingIsConstantAsync(EmployeeQueryHandler handler, CountingDataContext context)
+    {
         context.Commands.Reset();
         var one = await handler.Handle(new EmployeeGetAllQuery { Take = 1 });
         var oneCommands = context.Commands.ReaderCommands;
-
         context.Commands.Reset();
         var page = await handler.Handle(new EmployeeGetAllQuery { Take = 30 });
         var pageCommands = context.Commands.ReaderCommands;
         var pageSql = string.Join(Environment.NewLine, context.Commands.Texts);
-
         one.Length.ShouldBe(1);
         page.Length.ShouldBeGreaterThanOrEqualTo(2);
         page.Length.ShouldBeLessThanOrEqualTo(30);
         oneCommands.ShouldBe(pageCommands);
         oneCommands.ShouldBe(2, pageSql);
-        var bounded = pageSql.Contains("TOP", StringComparison.Ordinal)
+        (pageSql.Contains("TOP", StringComparison.Ordinal)
             || pageSql.Contains("FETCH", StringComparison.Ordinal)
-            || pageSql.Contains("LIMIT", StringComparison.Ordinal);
-        bounded.ShouldBeTrue(pageSql);
+            || pageSql.Contains("LIMIT", StringComparison.Ordinal)).ShouldBeTrue(pageSql);
+    }
 
+    private static async Task ThenPastTheEndIsEmptyAsync(EmployeeQueryHandler handler, CountingDataContext context)
+    {
         context.Commands.Reset();
-        var pastTheEnd = await handler.Handle(new EmployeeGetAllQuery { Skip = 100_000, Take = 10 });
-        pastTheEnd.ShouldBeEmpty();
+        (await handler.Handle(new EmployeeGetAllQuery { Skip = 100_000, Take = 10 })).ShouldBeEmpty();
         context.Commands.ReaderCommands.ShouldBe(1);
+    }
 
+    private static async Task ThenRoleHydratedAsync(EmployeeQueryHandler handler, string userName)
+    {
         var found = (await handler.Handle(new EmployeeGetAllQuery())).Single(row => row.UserName == userName);
         found.FirstName.ShouldBe("Paged");
         found.LastName.ShouldBe("AaaDirectory");

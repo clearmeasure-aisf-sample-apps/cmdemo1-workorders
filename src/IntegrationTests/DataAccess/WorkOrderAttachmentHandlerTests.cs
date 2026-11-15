@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -13,33 +14,46 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task AddAttachmentMetadataCommand_ShouldPersistAttachment()
     {
-        var uploader = new Employee(TestData.UserName("uploader"), "Attachment", "Uploader", "uploader@example.com");
-        var workOrder = new WorkOrder { Number = TestData.Number("A"), Creator = uploader };
+        var uploader = EmployeeBuilder.Create(TestData.UserName("uploader"))
+            .WithFirstName("Attachment").WithLastName("Uploader").WithEmail("uploader@example.com").Build();
+        var workOrder = WorkOrderBuilder.Create().WithNumber(TestData.Number("A")).CreatedBy(uploader).Build();
+        await GivenPersistedAsync(uploader, workOrder);
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(uploader);
-            context.Add(workOrder);
-            await context.SaveChangesAsync();
-        }
+        var attachment = await WhenAttachmentAddedAsync(workOrder, uploader);
 
-        var bus = TestHost.GetRequiredService<IBus>();
-        var command = new AddAttachmentMetadataCommand(workOrder, uploader, "damage-photo.jpg", "image/jpeg", 4096);
-        var attachment = await bus.Send(command);
+        ThenAttachmentMatches(attachment, workOrder, uploader);
+        await ThenPersistedAsync(attachment.Id);
+    }
 
+    private static async Task GivenPersistedAsync(Employee uploader, WorkOrder workOrder)
+    {
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(uploader);
+        context.Add(workOrder);
+        await context.SaveChangesAsync();
+    }
+
+    private static Task<WorkOrderAttachment> WhenAttachmentAddedAsync(WorkOrder workOrder, Employee uploader) =>
+        TestHost.GetRequiredService<IBus>().Send(
+            new AddAttachmentMetadataCommand(workOrder, uploader, "damage-photo.jpg", "image/jpeg", 4096));
+
+    private static void ThenAttachmentMatches(
+        WorkOrderAttachment attachment, WorkOrder workOrder, Employee uploader)
+    {
         attachment.ShouldNotBeNull();
         attachment.FileName.ShouldBe("damage-photo.jpg");
         attachment.ContentType.ShouldBe("image/jpeg");
         attachment.FileSize.ShouldBe(4096L);
         attachment.WorkOrderId.ShouldBe(workOrder.Id);
         attachment.UploadedById.ShouldBe(uploader.Id);
+    }
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            var persisted = context.Set<WorkOrderAttachment>().SingleOrDefault(a => a.Id == attachment.Id);
-            persisted.ShouldNotBeNull();
-            persisted.FileName.ShouldBe("damage-photo.jpg");
-        }
+    private static async Task ThenPersistedAsync(Guid attachmentId)
+    {
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        var persisted = context.Set<WorkOrderAttachment>().SingleOrDefault(a => a.Id == attachmentId);
+        persisted.ShouldNotBeNull();
+        persisted.FileName.ShouldBe("damage-photo.jpg");
     }
 
     [Test]

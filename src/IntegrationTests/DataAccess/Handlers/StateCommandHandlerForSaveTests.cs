@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.UnitTests.Core.Queries;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -13,33 +14,17 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldSaveWorkOrderBySavingDraft()
     {
-        var currentUser = Faker<Employee>();
-        currentUser.Id = Guid.NewGuid();
-        var context = TestHost.GetRequiredService<DbContext>();
-        context.Add(currentUser);
-        await context.SaveChangesAsync();
-
-        var workOrder = Faker<WorkOrder>();
-        workOrder.Id = Guid.Empty;
-        workOrder.CreatedDate = null; // Ensure CreatedDate is null to test setting it;
-        workOrder.Creator = currentUser;
+        var currentUser = EmployeeBuilder.Create(TestData.UserName("save_draft"))
+            .WithId(Guid.NewGuid()).Build();
+        await StateCommandHandlerSteps.PersistAsync(currentUser);
+        var workOrder = WorkOrderBuilder.Create().WithId(Guid.Empty)
+            .CreatedBy(currentUser).CreatedAt(null).Build();
         workOrder.Instructions = "Turn off water main first";
 
-        var command = RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(workOrder, currentUser));
-        var handler = TestHost.GetRequiredService<StateCommandHandler>();
-        var result = await handler.Handle(command);
+        var result = await StateCommandHandlerSteps.HandleRemotedAsync(
+            new SaveDraftCommand(workOrder, currentUser));
 
-        result.TransitionVerbPresentTense.ShouldBe(command.TransitionVerbPresentTense);
-        result.WorkOrder.Creator.ShouldBe(currentUser);
-        result.WorkOrder.Title.ShouldBe(workOrder.Title);
-        result.WorkOrder.CreatedDate.ShouldBe(TestHost.TestTime.DateTime);
-
-        var context3 = TestHost.GetRequiredService<DbContext>();
-        result.WorkOrder.Id.ShouldNotBe(Guid.Empty);
-        var order = context3.Find<WorkOrder>(result.WorkOrder.Id) ?? throw new InvalidOperationException();
-        order.CreatedDate.ShouldBe(TestHost.TestTime.DateTime);
-        order.Title.ShouldBe(workOrder.Title);
-        order.Instructions.ShouldBe("Turn off water main first");
+        ThenDraftSaved(result, workOrder, currentUser);
     }
 
     [Test]
@@ -91,145 +76,112 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
     [Test]
     public async Task ShouldSaveWorkOrderWithAssigneeAndCreator()
     {
-        var workOrder = Faker<WorkOrder>();
-        var currentUser = Faker<Employee>();
-        workOrder.Creator = currentUser;
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(currentUser);
-            context.Add(workOrder);
-            await context.SaveChangesAsync();
-        }
+        var currentUser = EmployeeBuilder.Create(TestData.UserName("save_ac")).Build();
+        var workOrder = WorkOrderBuilder.Create().CreatedBy(currentUser).Build();
+        await StateCommandHandlerSteps.PersistAsync(currentUser, workOrder);
+        await AssignSelfFromDbAsync(workOrder, currentUser.Id);
 
-        Employee? assignee;
-        await using (var context2 = TestHost.GetRequiredService<DbContext>())
-        {
-            assignee = context2.Find<Employee>(currentUser.Id);
-        }
+        await StateCommandHandlerSteps.HandleRemotedAsync(new SaveDraftCommand(workOrder, currentUser));
 
-        workOrder.Creator = currentUser;
-        workOrder.Assignee = assignee;
-
-        var command = RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(workOrder, currentUser));
-
-        var handler = TestHost.GetRequiredService<StateCommandHandler>();
-
-        _ = await handler.Handle(command);
-        var context3 = TestHost.GetRequiredService<DbContext>();
-        var order = context3.Find<WorkOrder>(workOrder.Id) ?? throw new InvalidOperationException();
-        order.Title.ShouldBe(workOrder.Title);
-        order.Description.ShouldBe(workOrder.Description);
-        order.Creator.ShouldBe(currentUser);
-        order.Assignee.ShouldBe(assignee);
+        ThenPartiesMatch(workOrder.Id, workOrder, currentUser);
     }
 
     [Test]
     public async Task ShouldUpdateWorkOrderWithAssigneeAndCreator()
     {
-        var workOrder = Faker<WorkOrder>();
-        var currentUser = Faker<Employee>();
-        workOrder.Creator = currentUser;
+        var currentUser = EmployeeBuilder.Create(TestData.UserName("save_upd")).Build();
+        var workOrder = WorkOrderBuilder.Create().CreatedBy(currentUser).Build();
+        await StateCommandHandlerSteps.PersistAsync(currentUser, workOrder);
+        await AssignSelfFromDbAsync(workOrder, currentUser.Id);
+        ApplyUpdate(workOrder, currentUser);
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(currentUser);
-            context.Add(workOrder);
-            await context.SaveChangesAsync();
-        }
+        await StateCommandHandlerSteps.HandleRemotedAsync(new SaveDraftCommand(workOrder, currentUser));
 
-        Employee? assignee;
-        await using (var context2 = TestHost.GetRequiredService<DbContext>())
-        {
-            assignee = context2.Find<Employee>(currentUser.Id);
-        }
-
-        workOrder.Creator = currentUser;
-        workOrder.Assignee = assignee;
-        workOrder.Title = "newtitle";
-        workOrder.Instructions = "Updated guidance after inspection.";
-
-        var command = RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(workOrder, currentUser));
-
-        var handler = TestHost.GetRequiredService<StateCommandHandler>();
-
-        _ = await handler.Handle(command);
-        var context3 = TestHost.GetRequiredService<DbContext>();
-        var order = context3.Find<WorkOrder>(workOrder.Id) ?? throw new InvalidOperationException();
-        order.Title.ShouldBe("newtitle");
-        order.Description.ShouldBe(workOrder.Description);
-        order.Instructions.ShouldBe("Updated guidance after inspection.");
-        order.Creator.ShouldBe(currentUser);
-        order.Assignee.ShouldBe(assignee);
+        ThenUpdated(workOrder.Id, workOrder, currentUser);
     }
 
     [Test]
     public async Task ShouldUpdateWorkOrderWithAssigneeAndCreatorWithRemotedOrder()
     {
-        var workOrder = Faker<WorkOrder>();
-        var currentUser = Faker<Employee>();
+        var currentUser = EmployeeBuilder.Create(TestData.UserName("save_rem")).Build();
+        var workOrder = WorkOrderBuilder.Create().CreatedBy(currentUser).Build();
+        await StateCommandHandlerSteps.PersistAsync(currentUser, workOrder);
         workOrder.Creator = currentUser;
-
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(currentUser);
-            context.Add(workOrder);
-            await context.SaveChangesAsync();
-        }
-
-        Employee? assignee;
-        await using (var context2 = TestHost.GetRequiredService<DbContext>())
-        {
-            assignee = context2.Find<Employee>(currentUser.Id);
-        }
-
-        workOrder.Creator = currentUser;
-        workOrder.Assignee = assignee;
+        await AssignSelfFromDbAsync(workOrder, currentUser.Id);
         workOrder.Title = "newtitle";
 
         var command = RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(workOrder, currentUser));
         _ = RemotableRequestTests.SimulateRemoteObject(command);
+        await TestHost.GetRequiredService<StateCommandHandler>().Handle(command);
 
-        var handler = TestHost.GetRequiredService<StateCommandHandler>();
-
-        _ = await handler.Handle(command);
-        var context3 = TestHost.GetRequiredService<DbContext>();
-        var order = context3.Find<WorkOrder>(workOrder.Id) ?? throw new InvalidOperationException();
-        order.Title.ShouldBe("newtitle");
-        order.Description.ShouldBe(workOrder.Description);
-        order.Creator.ShouldBe(currentUser);
-        order.Assignee.ShouldBe(assignee);
+        ThenPartiesMatch(workOrder.Id, workOrder, currentUser);
     }
+
     [Test]
     public async Task ShouldRejectSecondInsert_WhenNumberAlreadyExists()
     {
         var duplicateNumber = TestData.Number("P");
+        var currentUser = EmployeeBuilder.Create(TestData.UserName("save_dup"))
+            .WithId(Guid.NewGuid()).Build();
+        await StateCommandHandlerSteps.PersistAsync(currentUser);
+        var first = DraftWithNumber(duplicateNumber, currentUser)[0];
+        var second = DraftWithNumber(duplicateNumber, currentUser)[0];
 
-        var currentUser = Faker<Employee>();
-        currentUser.Id = Guid.NewGuid();
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(currentUser);
-            await context.SaveChangesAsync();
-        }
+        await StateCommandHandlerSteps.HandleRemotedAsync(new SaveDraftCommand(first, currentUser));
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
+            StateCommandHandlerSteps.HandleRemotedAsync(new SaveDraftCommand(second, currentUser)));
 
-        var first = Faker<WorkOrder>();
-        first.Id = Guid.Empty;
-        first.Number = duplicateNumber;
-        first.Creator = currentUser;
-        var second = Faker<WorkOrder>();
-        second.Id = Guid.Empty;
-        second.Number = duplicateNumber;
-        second.Creator = currentUser;
+        await ThenOnlyOneWithNumberAsync(duplicateNumber, exception);
+    }
 
-        await TestHost.GetRequiredService<StateCommandHandler>()
-            .Handle(RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(first, currentUser)));
-        var secondHandler = TestHost.GetRequiredService<StateCommandHandler>();
-        var secondCommand = RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(second, currentUser));
+    private static WorkOrder[] DraftWithNumber(string number, Employee creator) =>
+        [WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(number).CreatedBy(creator).Build()];
 
-        var exception = await Should.ThrowAsync<InvalidOperationException>(() => secondHandler.Handle(secondCommand));
+    private static async Task AssignSelfFromDbAsync(WorkOrder workOrder, Guid employeeId)
+    {
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        workOrder.Assignee = context.Find<Employee>(employeeId);
+    }
 
-        exception.Message.ShouldContain(duplicateNumber);
+    private static void ApplyUpdate(WorkOrder workOrder, Employee currentUser)
+    {
+        workOrder.Creator = currentUser;
+        workOrder.Title = "newtitle";
+        workOrder.Instructions = "Updated guidance after inspection.";
+    }
+
+    private static void ThenDraftSaved(StateCommandResult result, WorkOrder workOrder, Employee currentUser)
+    {
+        result.TransitionVerbPresentTense.ShouldBe("Save");
+        result.WorkOrder.Creator.ShouldBe(currentUser);
+        result.WorkOrder.Title.ShouldBe(workOrder.Title);
+        result.WorkOrder.CreatedDate.ShouldBe(TestHost.TestTime.DateTime);
+        result.WorkOrder.Id.ShouldNotBe(Guid.Empty);
+        var order = StateCommandHandlerSteps.RequireOrder(result.WorkOrder.Id);
+        order.CreatedDate.ShouldBe(TestHost.TestTime.DateTime);
+        order.Title.ShouldBe(workOrder.Title);
+        order.Instructions.ShouldBe("Turn off water main first");
+    }
+
+    private static void ThenPartiesMatch(Guid id, WorkOrder expected, Employee currentUser)
+    {
+        var order = StateCommandHandlerSteps.RequireOrder(id);
+        order.Title.ShouldBe(expected.Title);
+        order.Description.ShouldBe(expected.Description);
+        order.Creator.ShouldBe(currentUser);
+        order.Assignee.ShouldBe(expected.Assignee);
+    }
+
+    private static void ThenUpdated(Guid id, WorkOrder expected, Employee currentUser)
+    {
+        ThenPartiesMatch(id, expected, currentUser);
+        StateCommandHandlerSteps.RequireOrder(id).Instructions.ShouldBe("Updated guidance after inspection.");
+    }
+
+    private static async Task ThenOnlyOneWithNumberAsync(string number, InvalidOperationException exception)
+    {
+        exception.Message.ShouldContain(number);
         await using var verify = TestHost.GetRequiredService<DbContext>();
-        (await verify.Set<WorkOrder>().CountAsync(w => w.Number == duplicateNumber)).ShouldBe(1);
+        (await verify.Set<WorkOrder>().CountAsync(w => w.Number == number)).ShouldBe(1);
     }
 }

@@ -2,9 +2,9 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UnitTests.Core.Queries;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using System.Text.Json;
@@ -20,193 +20,44 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     [Test]
     public async Task ShouldClearAssigneeAndDate_WhenCancelOnExistingAssignedRowAfterRemoting()
     {
-        var creatorUserName = TestData.UserName("tl");
-        var assigneeUserName = TestData.UserName("gw");
         var number = TestData.Number("P");
+        var creator = EmployeeBuilder.Create(TestData.UserName("tl")).Build();
+        var attachmentId = await GivenAssignedWithAttachmentAsync(number, creator);
 
-        var creator = Faker<Employee>();
-        creator.UserName = creatorUserName;
-        var assignee = Faker<Employee>();
-        assignee.UserName = assigneeUserName;
-        var order = Faker<WorkOrder>();
-        order.Id = Guid.Empty;
-        order.Number = number;
-        order.Status = WorkOrderStatus.Assigned;
-        order.Creator = creator;
-        order.Assignee = assignee;
-        order.AssignedDate = TestHost.TestTime.DateTime;
-        var attachmentId = Guid.NewGuid();
+        await StateCommandHandlerSteps.HandleRemotedAsync(
+            new AssignedToCancelledCommand(await StateCommandHandlerSteps.LoadByNumberAsync(number), creator));
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(creator);
-            context.Add(assignee);
-            context.Add(order);
-            await context.SaveChangesAsync();
-            context.Add(new WorkOrderAttachment
-            {
-                Id = attachmentId,
-                WorkOrderId = order.Id,
-                FileName = "before-cancel.txt",
-                ContentType = "text/plain",
-                FileSize = 12,
-                UploadedById = creator.Id,
-                UploadedDate = TestHost.TestTime.DateTime
-            });
-            await context.SaveChangesAsync();
-        }
-
-        WorkOrder forCancel;
-        await using (var loadCtx = TestHost.GetRequiredService<DbContext>())
-        {
-            forCancel = await loadCtx.Set<WorkOrder>().AsNoTracking()
-                .SingleAsync(w => w.Number == number);
-        }
-
-        var handler = TestHost.GetRequiredService<StateCommandHandler>();
-        var command = RemotableRequestTests.SimulateRemoteObject(
-            new AssignedToCancelledCommand(forCancel, creator));
-        await handler.Handle(command);
-
-        await using var fresh = TestHost.GetRequiredService<DbContext>();
-        var reloaded = await fresh.Set<WorkOrder>().AsNoTracking()
-            .SingleAsync(w => w.Number == number);
-
-        reloaded.Status.ShouldBe(WorkOrderStatus.Cancelled);
-        reloaded.Status.Code.ShouldBe("CNL");
-        reloaded.AssignedDate.ShouldBeNull();
-        reloaded.Assignee.ShouldBeNull();
-        (await fresh.Set<WorkOrderAttachment>()
-            .AnyAsync(attachment => attachment.Id == attachmentId)).ShouldBeTrue();
+        await ThenCancelledPreservingAttachmentAsync(number, attachmentId);
     }
 
     [Test]
     public async Task ShouldPersistAssignedStatusAndDate_WhenSaveDraftThenRemotedAssign_OnExistingId()
     {
-        var creatorUserName = TestData.UserName("tl");
-        var assigneeUserName = TestData.UserName("gw");
+        var creator = EmployeeBuilder.Create(TestData.UserName("tl")).Build();
+        var assignee = EmployeeBuilder.Create(TestData.UserName("gw")).Build();
+        await StateCommandHandlerSteps.PersistAsync(creator, assignee);
         var number = TestData.Number("P");
+        var draft = GivenLawnDraft(number, creator, assignee)[0];
 
-        var creator = Faker<Employee>();
-        creator.UserName = creatorUserName;
-        var assignee = Faker<Employee>();
-        assignee.UserName = assigneeUserName;
+        var saveResult = await StateCommandHandlerSteps.HandleRemotedAsync(new SaveDraftCommand(draft, creator));
+        var assignResult = await WhenAssignExistingDraftAsync(saveResult.WorkOrder.Id, creator);
 
-        await using (var seed = TestHost.GetRequiredService<DbContext>())
-        {
-            seed.Add(creator);
-            seed.Add(assignee);
-            await seed.SaveChangesAsync();
-        }
-
-        var draft = Faker<WorkOrder>();
-        draft.Id = Guid.Empty;
-        draft.Number = number;
-        draft.Title = "mow front grass";
-        draft.Description = "edge the walk";
-        draft.Instructions = "do a good job";
-        draft.RoomNumber = "front lawn";
-        draft.Status = WorkOrderStatus.Draft;
-        draft.Creator = creator;
-        draft.Assignee = assignee;
-        draft.AssignedDate = null;
-
-        var saveHandler = TestHost.GetRequiredService<StateCommandHandler>();
-        var saveCommand = RemotableRequestTests.SimulateRemoteObject(new SaveDraftCommand(draft, creator));
-        var saveResult = await saveHandler.Handle(saveCommand);
-        saveResult.WorkOrder.Id.ShouldNotBe(Guid.Empty);
-        saveResult.WorkOrder.Status.ShouldBe(WorkOrderStatus.Draft);
-
-        var existingId = saveResult.WorkOrder.Id;
-        WorkOrder orderForAssign;
-        await using (var loadCtx = TestHost.GetRequiredService<DbContext>())
-        {
-            orderForAssign = await loadCtx.Set<WorkOrder>()
-                .AsNoTracking()
-                .SingleAsync(w => w.Id == existingId);
-        }
-
-        orderForAssign.Id.ShouldNotBe(Guid.Empty);
-        orderForAssign.Status.ShouldBe(WorkOrderStatus.Draft);
-        orderForAssign.Assignee.ShouldNotBeNull();
-        orderForAssign.Assignee!.UserName.ShouldBe(assigneeUserName);
-
-        var assignHandler = TestHost.GetRequiredService<StateCommandHandler>();
-        var assignCommand = RemotableRequestTests.SimulateRemoteObject(
-            new DraftToAssignedCommand(orderForAssign, creator));
-        var assignResult = await assignHandler.Handle(assignCommand);
-
-        assignResult.WorkOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
-        assignResult.WorkOrder.AssignedDate.ShouldNotBeNull();
-
-        WorkOrder reloaded;
-        await using (var newCtx = TestHost.GetRequiredService<DbContext>())
-        {
-            reloaded = await newCtx.Set<WorkOrder>()
-                .AsNoTracking()
-                .SingleAsync(w => w.Number == number);
-        }
-
-        reloaded.Status.ShouldBe(WorkOrderStatus.Assigned);
-        reloaded.Status.Code.ShouldBe(WorkOrderStatus.Assigned.Code);
-        reloaded.Status.ShouldNotBe(WorkOrderStatus.Cancelled);
-        reloaded.AssignedDate.ShouldNotBeNull();
-        reloaded.AssignedDate.ShouldBe(TestHost.TestTime.DateTime);
-        reloaded.Assignee.ShouldNotBeNull();
-        reloaded.Assignee!.UserName.ShouldBe(assigneeUserName);
-        reloaded.Creator.ShouldNotBeNull();
-        reloaded.Creator!.UserName.ShouldBe(creatorUserName);
-        reloaded.Number.ShouldBe(number);
-        reloaded.Title.ShouldBe("mow front grass");
-        reloaded.Description.ShouldBe("edge the walk");
-        reloaded.Instructions.ShouldBe("do a good job");
-        reloaded.RoomNumber.ShouldBe("front lawn");
-
-        var bus = TestHost.GetRequiredService<IBus>();
-        var byNumber = await bus.Send(new WorkOrderByNumberQuery(number));
-        byNumber.ShouldNotBeNull();
-        byNumber.Status.ShouldBe(WorkOrderStatus.Assigned);
-        byNumber.AssignedDate.ShouldNotBeNull();
-        byNumber.Assignee!.UserName.ShouldBe(assigneeUserName);
-
-        var getJson = await WorkOrderTools.GetWorkOrder(bus, number);
-        using var doc = JsonDocument.Parse(getJson);
-        var detail = doc.RootElement;
-        detail.GetProperty("Status").GetString().ShouldBe("Assigned");
-        detail.GetProperty("AssignedDate").ValueKind.ShouldNotBe(JsonValueKind.Null);
-        detail.GetProperty("AssigneeUsername").GetString().ShouldBe(assigneeUserName);
+        await ThenAssignedPersistedAsync(number, creator.UserName, assignee.UserName, assignResult);
     }
 
     [Test]
     public async Task ShouldKeepAddPathAssignedDateAndStatusWhenIdEmpty()
     {
-        var number = TestData.Number("P");
+        var currentUser = EmployeeBuilder.Create(TestData.UserName("add_cu")).Build();
+        var assignee = EmployeeBuilder.Create(TestData.UserName("add_as")).Build();
+        var order = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(TestData.Number("P"))
+            .CreatedBy(currentUser).AssignedTo(assignee).Build();
+        await StateCommandHandlerSteps.PersistAsync(currentUser, assignee);
 
-        var o = Faker<WorkOrder>();
-        o.Id = Guid.Empty;
-        o.Number = number;
-        var currentUser = Faker<Employee>();
-        var assignee = Faker<Employee>();
-        o.Creator = currentUser;
-        o.Assignee = assignee;
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(currentUser);
-            context.Add(assignee);
-            await context.SaveChangesAsync();
-        }
+        var result = await StateCommandHandlerSteps.HandleRemotedAsync(
+            new DraftToAssignedCommand(order, currentUser));
 
-        var command = RemotableRequestTests.SimulateRemoteObject(new DraftToAssignedCommand(o, currentUser));
-        var handler = TestHost.GetRequiredService<StateCommandHandler>();
-        var result = await handler.Handle(command);
-
-        await using var fresh = TestHost.GetRequiredService<DbContext>();
-        var order = await fresh.Set<WorkOrder>().AsNoTracking()
-            .SingleAsync(w => w.Id == result.WorkOrder.Id);
-        order.Status.ShouldBe(WorkOrderStatus.Assigned);
-        order.AssignedDate.ShouldBe(TestHost.TestTime.DateTime);
-        order.Assignee.ShouldBe(assignee);
-        order.Creator.ShouldBe(currentUser);
+        await ThenAddPathAssignedAsync(result.WorkOrder.Id, currentUser, assignee);
     }
 
     [Test]
@@ -214,54 +65,143 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
     {
         var inProgressNumber = TestData.Number("P");
         var draftNumber = TestData.Number("P");
+        var creator = EmployeeBuilder.Create(TestData.UserName("near_cu")).Build();
+        var assignee = EmployeeBuilder.Create(TestData.UserName("near_as")).Build();
+        await GivenNearbyOrdersAsync(creator, assignee, inProgressNumber, draftNumber);
 
-        var creator = Faker<Employee>();
-        var assignee = Faker<Employee>();
-        var inProgress = Faker<WorkOrder>();
-        inProgress.Id = Guid.Empty;
-        inProgress.Number = inProgressNumber;
-        inProgress.Status = WorkOrderStatus.InProgress;
-        inProgress.Creator = creator;
-        inProgress.Assignee = assignee;
-        inProgress.AssignedDate = TestHost.TestTime.DateTime;
-        inProgress.Title = "nearby in progress";
+        await StateCommandHandlerSteps.HandleRemotedAsync(
+            new DraftToAssignedCommand(await StateCommandHandlerSteps.LoadByNumberAsync(draftNumber), creator));
 
-        var draft = Faker<WorkOrder>();
-        draft.Id = Guid.Empty;
-        draft.Number = draftNumber;
-        draft.Status = WorkOrderStatus.Draft;
-        draft.Creator = creator;
-        draft.Assignee = assignee;
-        draft.Title = "draft to assign";
+        await ThenNearbyUnchangedAndDraftAssignedAsync(inProgressNumber, draftNumber, assignee.UserName);
+    }
 
-        await using (var context = TestHost.GetRequiredService<DbContext>())
+    private static async Task<Guid> GivenAssignedWithAttachmentAsync(string number, Employee creator)
+    {
+        var assignee = EmployeeBuilder.Create(TestData.UserName("gw")).Build();
+        var order = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(number)
+            .CreatedBy(creator).Assigned(assignee).AssignedAt(TestHost.TestTime.DateTime).Build();
+        await StateCommandHandlerSteps.PersistAsync(creator, assignee, order);
+        var attachmentId = Guid.NewGuid();
+        await PersistAttachmentAsync(attachmentId, order.Id, creator.Id);
+        return attachmentId;
+    }
+
+    private static async Task PersistAttachmentAsync(Guid attachmentId, Guid workOrderId, Guid uploadedById)
+    {
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(new WorkOrderAttachment
         {
-            context.Add(creator);
-            context.Add(assignee);
-            context.Add(inProgress);
-            context.Add(draft);
-            await context.SaveChangesAsync();
-        }
+            Id = attachmentId,
+            WorkOrderId = workOrderId,
+            FileName = "before-cancel.txt",
+            ContentType = "text/plain",
+            FileSize = 12,
+            UploadedById = uploadedById,
+            UploadedDate = TestHost.TestTime.DateTime
+        });
+        await context.SaveChangesAsync();
+    }
 
-        WorkOrder forAssign;
-        await using (var loadCtx = TestHost.GetRequiredService<DbContext>())
-        {
-            forAssign = await loadCtx.Set<WorkOrder>().AsNoTracking()
-                .SingleAsync(w => w.Number == draftNumber);
-        }
+    private static WorkOrder[] GivenLawnDraft(string number, Employee creator, Employee assignee)
+    {
+        var draft = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(number)
+            .WithTitle("mow front grass").WithDescription("edge the walk")
+            .InRoom("front lawn").CreatedBy(creator).AssignedTo(assignee).Build();
+        draft.Instructions = "do a good job";
+        return [draft];
+    }
 
-        var handler = TestHost.GetRequiredService<StateCommandHandler>();
-        var command = RemotableRequestTests.SimulateRemoteObject(
-            new DraftToAssignedCommand(forAssign, creator));
-        await handler.Handle(command);
+    private static async Task<StateCommandResult> WhenAssignExistingDraftAsync(Guid existingId, Employee creator)
+    {
+        var orderForAssign = await StateCommandHandlerSteps.LoadByIdAsync(existingId);
+        orderForAssign.Id.ShouldNotBe(Guid.Empty);
+        orderForAssign.Status.ShouldBe(WorkOrderStatus.Draft);
+        orderForAssign.Assignee.ShouldNotBeNull();
+        return await StateCommandHandlerSteps.HandleRemotedAsync(
+            new DraftToAssignedCommand(orderForAssign, creator));
+    }
 
+    private static async Task GivenNearbyOrdersAsync(
+        Employee creator, Employee assignee, string inProgressNumber, string draftNumber)
+    {
+        var inProgress = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(inProgressNumber)
+            .WithTitle("nearby in progress").CreatedBy(creator).AssignedTo(assignee)
+            .WithStatus(WorkOrderStatus.InProgress).AssignedAt(TestHost.TestTime.DateTime).Build();
+        var draft = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(draftNumber)
+            .WithTitle("draft to assign").CreatedBy(creator).AssignedTo(assignee).Build();
+        await StateCommandHandlerSteps.PersistAsync(creator, assignee, inProgress, draft);
+    }
+
+    private static async Task ThenCancelledPreservingAttachmentAsync(string number, Guid attachmentId)
+    {
+        await using var fresh = TestHost.GetRequiredService<DbContext>();
+        var reloaded = await fresh.Set<WorkOrder>().AsNoTracking().SingleAsync(w => w.Number == number);
+        reloaded.Status.ShouldBe(WorkOrderStatus.Cancelled);
+        reloaded.Status.Code.ShouldBe("CNL");
+        reloaded.AssignedDate.ShouldBeNull();
+        reloaded.Assignee.ShouldBeNull();
+        (await fresh.Set<WorkOrderAttachment>().AnyAsync(a => a.Id == attachmentId)).ShouldBeTrue();
+    }
+
+    private static async Task ThenAssignedPersistedAsync(
+        string number, string creatorUserName, string assigneeUserName, StateCommandResult assignResult)
+    {
+        assignResult.WorkOrder.Status.ShouldBe(WorkOrderStatus.Assigned);
+        assignResult.WorkOrder.AssignedDate.ShouldNotBeNull();
+        ThenLawnFieldsAssigned(await StateCommandHandlerSteps.LoadByNumberAsync(number), number,
+            creatorUserName, assigneeUserName);
+        await ThenBusAndToolsAgreeAsync(number, assigneeUserName);
+    }
+
+    private static void ThenLawnFieldsAssigned(
+        WorkOrder reloaded, string number, string creatorUserName, string assigneeUserName)
+    {
+        reloaded.Status.ShouldBe(WorkOrderStatus.Assigned);
+        reloaded.Status.Code.ShouldBe(WorkOrderStatus.Assigned.Code);
+        reloaded.Status.ShouldNotBe(WorkOrderStatus.Cancelled);
+        reloaded.AssignedDate.ShouldBe(TestHost.TestTime.DateTime);
+        reloaded.Assignee!.UserName.ShouldBe(assigneeUserName);
+        reloaded.Creator!.UserName.ShouldBe(creatorUserName);
+        reloaded.Number.ShouldBe(number);
+        reloaded.Title.ShouldBe("mow front grass");
+        reloaded.Description.ShouldBe("edge the walk");
+        reloaded.Instructions.ShouldBe("do a good job");
+        reloaded.RoomNumber.ShouldBe("front lawn");
+    }
+
+    private static async Task ThenBusAndToolsAgreeAsync(string number, string assigneeUserName)
+    {
+        var bus = TestHost.GetRequiredService<IBus>();
+        var byNumber = await bus.Send(new WorkOrderByNumberQuery(number));
+        byNumber.ShouldNotBeNull();
+        byNumber.Status.ShouldBe(WorkOrderStatus.Assigned);
+        byNumber.AssignedDate.ShouldNotBeNull();
+        byNumber.Assignee!.UserName.ShouldBe(assigneeUserName);
+        using var doc = JsonDocument.Parse(await WorkOrderTools.GetWorkOrder(bus, number));
+        var detail = doc.RootElement;
+        detail.GetProperty("Status").GetString().ShouldBe("Assigned");
+        detail.GetProperty("AssignedDate").ValueKind.ShouldNotBe(JsonValueKind.Null);
+        detail.GetProperty("AssigneeUsername").GetString().ShouldBe(assigneeUserName);
+    }
+
+    private static async Task ThenAddPathAssignedAsync(Guid id, Employee currentUser, Employee assignee)
+    {
+        var order = await StateCommandHandlerSteps.LoadByIdAsync(id);
+        order.Status.ShouldBe(WorkOrderStatus.Assigned);
+        order.AssignedDate.ShouldBe(TestHost.TestTime.DateTime);
+        order.Assignee.ShouldBe(assignee);
+        order.Creator.ShouldBe(currentUser);
+    }
+
+    private static async Task ThenNearbyUnchangedAndDraftAssignedAsync(
+        string inProgressNumber, string draftNumber, string assigneeUserName)
+    {
         await using var fresh = TestHost.GetRequiredService<DbContext>();
         var frozen = await fresh.Set<WorkOrder>().AsNoTracking()
             .SingleAsync(w => w.Number == inProgressNumber);
         frozen.Status.ShouldBe(WorkOrderStatus.InProgress);
         frozen.Title.ShouldBe("nearby in progress");
-        frozen.Assignee!.UserName.ShouldBe(assignee.UserName);
-
+        frozen.Assignee!.UserName.ShouldBe(assigneeUserName);
         var assigned = await fresh.Set<WorkOrder>().AsNoTracking()
             .SingleAsync(w => w.Number == draftNumber);
         assigned.Status.ShouldBe(WorkOrderStatus.Assigned);
