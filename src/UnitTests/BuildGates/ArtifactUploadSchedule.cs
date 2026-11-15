@@ -5,8 +5,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// </summary>
 internal static class ArtifactUploadSchedule
 {
-    private const string StepStart = "      - ";
-
     /// <summary>Problems in <paramref name="workflow"/>, the text of <c>build.yml</c>.</summary>
     public static IReadOnlyList<string> Problems(string workflow)
     {
@@ -82,38 +80,5 @@ internal static class ArtifactUploadSchedule
         return line.Trim()["name:".Length..].Trim();
     }
 
-    private static IEnumerable<string> Steps(string workflow)
-    {
-        var lines = workflow.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
-        var current = new List<string>();
-        foreach (var line in lines)
-        {
-            if (current.Count > 0 && EndsStep(line))
-            {
-                yield return string.Join('\n', current);
-                current.Clear();
-            }
-
-            if (current.Count > 0 || line.StartsWith(StepStart, StringComparison.Ordinal))
-            {
-                current.Add(line);
-            }
-        }
-
-        if (current.Count > 0)
-        {
-            yield return string.Join('\n', current);
-        }
-    }
-
-    private static bool EndsStep(string line)
-    {
-        if (line.Trim().Length == 0)
-        {
-            return false;
-        }
-
-        var indent = line.Length - line.TrimStart(' ').Length;
-        return line.StartsWith(StepStart, StringComparison.Ordinal) || indent < StepStart.Length - 2;
-    }
+    private static IEnumerable<string> Steps(string workflow) => WorkflowYamlSteps.In(workflow);
 }

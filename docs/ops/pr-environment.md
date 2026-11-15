@@ -23,9 +23,9 @@ The check tests the branch-head SHA (push), not the `pull_request` merge ref —
 
 - Workflow `permissions: {}`; jobs opt into least privilege.
 - `lease-and-deploy` and `release-slot` run only when `pool_live=true`. They use `environment: release` and OIDC.
-- Privileged scripts are checked out from the **default branch** into `_trusted` with `persist-credentials: false`. Branch SHA / PR number are data only. Acceptance tests still check out the PR SHA (no OIDC).
+- Privileged scripts are checked out from the **default branch** into `_trusted` with `persist-credentials: false`. Branch SHA / PR number are data only. Acceptance tests check out the PR SHA and must not receive `id-token: write`. Artifact mint/Upload (#1671) use separate `environment: release` jobs with OIDC and default-branch scripts only; shards hand off **ciphertext** only.
 - Mutation steps are also gated on `steps.mutate.outputs.allow == 'true'` (false when the lease is DryRun).
-- No new Octopus API keys or secrets. Video/trace upload stays off this check’s clock (issue #1671).
+- No new Octopus API keys or secrets. Video recording and Upload run only when `vars.POOL_ARTIFACTS_STORAGE_ACCOUNT` is set; the sticky PR comment stays on `pr-environment-artifacts.yml` off this check’s clock.
 
 ## Not required
 

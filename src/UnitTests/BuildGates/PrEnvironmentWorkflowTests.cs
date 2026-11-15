@@ -93,6 +93,20 @@ public class PrEnvironmentWorkflowTests
         job.Step("Checkout pool manager (cmdemo1-system)").ShouldNotContain("ref: master");
     }
 
+    [TestCase("mint-artifact-wrap")]
+    [TestCase("upload-acceptance-artifacts")]
+    public void ArtifactOidcJob_WhenCheckout_UsesTrustedDefaultBranchOnly(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        job.Text.ShouldContain("environment: release");
+        job.Text.ShouldContain("id-token: write");
+        job.Text.ShouldContain("ref: ${{ github.event.repository.default_branch }}");
+        job.Text.ShouldContain("persist-credentials: false");
+        job.Text.ShouldContain("AZURE_CLIENT_ID_ACR_PUSH");
+        job.Text.ShouldContain("azure/login@v3");
+        job.Text.ShouldNotContain("${{ secrets.");
+    }
+
     [Test]
     public void Workflow_WhenReleaseSlot_AlwaysReleasesLeaseSafely()
     {
@@ -103,15 +117,71 @@ public class PrEnvironmentWorkflowTests
     }
 
     [Test]
-    public void Workflow_WhenRead_SucceedsDocsOnlyAndKeepsVideoOffClock()
+    public void Workflow_WhenRead_SucceedsDocsOnlyAndKeepsStickyCommentOffClock()
     {
         var text = WorkflowText();
         text.ShouldContain("Docs-only success");
         text.ShouldContain("detect-code-changes.sh");
         text.ShouldContain("#1671");
         text.ShouldContain("off this check's clock");
+        text.ShouldContain("Sticky PR artifact comment");
         text.ShouldContain("channel: Pull requests");
         text.ShouldContain("require-artifact churchbulletin-nuget-packages-pr");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenPresent_HasNoOidcOrAzureLogin(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        job.Text.ShouldNotContain("id-token: write");
+        job.Text.ShouldNotContain("azure/login");
+        job.Text.ShouldNotContain("environment: release");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenCiphertextHandOff_GatesOnStorageVariable(string jobId)
+    {
+        var gate = Workflow().Job(jobId).Step("Gate ciphertext hand-off");
+        gate.ShouldContain("if: always()");
+        gate.ShouldContain("vars.POOL_ARTIFACTS_STORAGE_ACCOUNT");
+        gate.ShouldContain("::warning::");
+        gate.ShouldContain("ready=false");
+        gate.ShouldContain("ready=true");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenCiphertextHandOff_UploadsOnlyEncryptedBundle(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        job.Step("Encrypt acceptance videos and traces").ShouldContain("-Mode Protect");
+        job.Step("Upload ciphertext acceptance bundle").ShouldContain("pr-acceptance-cipher-");
+        job.Step("Upload ciphertext acceptance bundle").ShouldContain("retention-days: 1");
+        job.Text.ShouldNotContain("generate-sas");
+        job.Text.ShouldNotContain("--account-key");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenRecordingVideo_GatesOnStorageVariable(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        job.Text.ShouldContain("ACCEPTANCE_RECORD_VIDEO");
+        job.Text.ShouldContain("vars.POOL_ARTIFACTS_STORAGE_ACCOUNT != '' && 'true' || 'false'");
+    }
+
+    [Test]
+    public void UploadJob_WhenPresent_UsesTrustedUnwrapAndForbidsSecrets()
+    {
+        var job = Workflow().Job("upload-acceptance-artifacts");
+        job.Step("Unprotect and upload to private storage")
+            .ShouldContain("Invoke-PrAcceptanceArtifactUploadFromWraps.ps1");
+        job.Step("Unprotect and upload to private storage").ShouldContain("AZURE_STORAGE_KEY");
+        job.Step("Unprotect and upload to private storage").ShouldContain("Blocker");
+        job.Text.ShouldNotContain("generate-sas");
+        job.Text.ShouldNotContain("--account-key");
     }
 
     [Test]
