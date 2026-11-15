@@ -51,7 +51,8 @@ public class UiServiceRegistry : ServiceRegistry
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IBus>(provider => new ServerRealtimeBus(
             provider.GetRequiredService<IMediator>(),
-            provider.GetRequiredService<IRealtimeNotificationHub>()));
+            provider.GetRequiredService<IRealtimeNotificationHub>(),
+            provider.GetRequiredService<TimeProvider>()));
     }
 
     private void ScanForHandlersAndHealthChecks() =>

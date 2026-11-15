@@ -296,7 +296,7 @@ public class SlaHealthCardTests
         return ctx;
     }
 
-    private class StubSlaHealthBus(SlaHealth? health = null, Task? pending = null) : Bus(null!)
+    private class StubSlaHealthBus(SlaHealth? health = null, Task? pending = null) : Bus(null!, TimeProvider.System)
     {
         private readonly SlaHealth _health = health ?? new SlaHealth
         {

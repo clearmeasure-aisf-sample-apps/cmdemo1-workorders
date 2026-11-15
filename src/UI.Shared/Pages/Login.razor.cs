@@ -15,6 +15,10 @@ public partial class Login : AppComponentBase
     [Inject] public CustomAuthenticationStateProvider? AuthStateProvider { get; set; }
     [Inject] public NavigationManager? NavigationManager { get; set; }
     [Inject] public IHostEnvironment? HostEnvironment { get; set; }
+    [Inject] public TimeProvider Clock { get; set; } = null!;
+
+    /// <summary>Calendar year on the login footer (machine-local, matching the former DateTime.Now.Year).</summary>
+    private int CopyrightYear => Clock.GetLocalNow().Year;
 
     public readonly LoginModel LoginModelValue = new();
     private string? _errorMessage;

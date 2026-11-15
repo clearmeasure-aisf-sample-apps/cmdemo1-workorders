@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -8,7 +7,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// <summary>
 /// Composable work-order filters shared by the search handlers. Every filter is a small method so
 /// the chain stays readable and each predicate translates on SQL Server, SQLite and in memory.
-/// "Open" means Draft, Assigned or In Progress; "today" is the church's calendar date.
+/// Domain predicates live in <see cref="WorkOrderSpecifications"/>.
 /// </summary>
 internal static class WorkOrderQueryFilters
 {
@@ -35,112 +34,20 @@ internal static class WorkOrderQueryFilters
     }
 
     /// <summary>Open work orders: Draft, Assigned or In Progress.</summary>
-    public static IQueryable<WorkOrder> OpenOnly(IQueryable<WorkOrder> query) => query.Where(IsOpen());
+    public static IQueryable<WorkOrder> OpenOnly(IQueryable<WorkOrder> query) =>
+        query.Where(WorkOrderSpecifications.Open);
 
     /// <summary>Open work orders whose due date is before <paramref name="today"/>.</summary>
     public static IQueryable<WorkOrder> Overdue(IQueryable<WorkOrder> query, DateOnly today) =>
-        query.Where(IsOverdue(today));
+        query.Where(WorkOrderSpecifications.Overdue(today));
 
     /// <summary>Open work orders due from <paramref name="today"/> through the next six days.</summary>
     public static IQueryable<WorkOrder> DueThisWeek(IQueryable<WorkOrder> query, DateOnly today) =>
-        query.Where(IsDueThisWeek(today));
+        query.Where(WorkOrderSpecifications.DueThisWeek(today));
 
     /// <summary>Completed work orders whose completion is within the last <paramref name="days"/> days.</summary>
     public static IQueryable<WorkOrder> CompletedWithin(IQueryable<WorkOrder> query, int days, TimeProvider time) =>
-        query.Where(IsCompletedWithin(days, time));
-
-    /// <summary>Predicate of an open work order: Draft, Assigned or In Progress.</summary>
-    public static Expression<Func<WorkOrder, bool>> IsOpen()
-    {
-        var draft = WorkOrderStatus.Draft;
-        var assigned = WorkOrderStatus.Assigned;
-        var inProgress = WorkOrderStatus.InProgress;
-        return wo => wo.Status == draft || wo.Status == assigned || wo.Status == inProgress;
-    }
-
-    /// <summary>Predicate of an open work order whose due date is before <paramref name="today"/>.</summary>
-    public static Expression<Func<WorkOrder, bool>> IsOverdue(DateOnly today) =>
-        AndAlso(IsOpen(), wo => wo.DueDate < today);
-
-    /// <summary>Predicate of an open work order due from <paramref name="today"/> through the next six days.</summary>
-    private static Expression<Func<WorkOrder, bool>> IsDueThisWeek(DateOnly today)
-    {
-        var lastDay = today.AddDays(6);
-        return AndAlso(IsOpen(), wo => wo.DueDate >= today && wo.DueDate <= lastDay);
-    }
-
-    /// <summary>Predicate of a work order completed within the last <paramref name="days"/> days.</summary>
-    public static Expression<Func<WorkOrder, bool>> IsCompletedWithin(int days, TimeProvider time)
-    {
-        var complete = WorkOrderStatus.Complete;
-        var since = time.GetUtcNow().DateTime.AddDays(-days);
-        return wo => wo.Status == complete && wo.CompletedDate >= since;
-    }
-
-    /// <summary>
-    /// The building a work order is grouped under: trimmed by the database exactly as the <c>Building</c>
-    /// filter trims it; null, empty and blank become "" (the <c>NoBuilding</c> filter).
-    /// </summary>
-    private static readonly Expression<Func<WorkOrder, string>> BuildingKey = wo => (wo.Building ?? "").Trim();
-
-    /// <summary>
-    /// The room a work order is grouped under: trimmed by the database exactly as the <c>Room</c>
-    /// filter trims it; null, empty and blank become "" (the <c>NoRoom</c> filter).
-    /// </summary>
-    private static readonly Expression<Func<WorkOrder, string>> RoomKey = wo => (wo.RoomNumber ?? "").Trim();
-
-    /// <summary>
-    /// Projects a work order to its building and room keys and 1/0 flags for the open, overdue and
-    /// completed-within predicates, built from the same expressions as the filters (no copied predicate).
-    /// </summary>
-    internal static Expression<Func<WorkOrder, WorkOrderCountRow>> CountRow(DateOnly today, TimeProvider time, int completedDays)
-    {
-        var wo = Expression.Parameter(typeof(WorkOrder), "wo");
-        Expression<Func<WorkOrder, string?>> number = o => o.Number;
-        var body = Expression.MemberInit(
-            Expression.New(typeof(WorkOrderCountRow)),
-            Bind(nameof(WorkOrderCountRow.Number), Rebind(number, wo)),
-            Bind(nameof(WorkOrderCountRow.Building), Rebind(BuildingKey, wo)),
-            Bind(nameof(WorkOrderCountRow.Room), Rebind(RoomKey, wo)),
-            Bind(nameof(WorkOrderCountRow.Open), OneOrZero(Rebind(IsOpen(), wo))),
-            Bind(nameof(WorkOrderCountRow.Overdue), OneOrZero(Rebind(IsOverdue(today), wo))),
-            Bind(nameof(WorkOrderCountRow.Completed), OneOrZero(Rebind(IsCompletedWithin(completedDays, time), wo))));
-        return Expression.Lambda<Func<WorkOrder, WorkOrderCountRow>>(body, wo);
-    }
-
-    /// <summary>
-    /// Projects an assigned work order to its assignee and 1/0 flags for the Teams &amp; Vendors load
-    /// counts, using <see cref="IsOpen"/>, in-progress, <see cref="IsOverdue"/> and
-    /// <see cref="IsCompletedWithin"/>. The caller drops work orders with no assignee.
-    /// </summary>
-    internal static Expression<Func<WorkOrder, AssigneeLoadFlag>> AssigneeLoadFlags(
-        DateOnly today, TimeProvider time, int completedDays)
-    {
-        var wo = Expression.Parameter(typeof(WorkOrder), "wo");
-        var inProgress = WorkOrderStatus.InProgress;
-        Expression<Func<WorkOrder, Guid>> assigneeId = order => order.Assignee!.Id;
-        Expression<Func<WorkOrder, bool>> isInProgress = order => order.Status == inProgress;
-        var body = Expression.MemberInit(
-            Expression.New(typeof(AssigneeLoadFlag)),
-            BindFlag(nameof(AssigneeLoadFlag.AssigneeId), Rebind(assigneeId, wo)),
-            BindFlag(nameof(AssigneeLoadFlag.Open), OneOrZero(Rebind(IsOpen(), wo))),
-            BindFlag(nameof(AssigneeLoadFlag.InProgress), OneOrZero(Rebind(isInProgress, wo))),
-            BindFlag(nameof(AssigneeLoadFlag.Overdue), OneOrZero(Rebind(IsOverdue(today), wo))),
-            BindFlag(nameof(AssigneeLoadFlag.Completed), OneOrZero(Rebind(IsCompletedWithin(completedDays, time), wo))));
-        return Expression.Lambda<Func<WorkOrder, AssigneeLoadFlag>>(body, wo);
-    }
-
-    private static MemberAssignment Bind(string member, Expression value) =>
-        Expression.Bind(typeof(WorkOrderCountRow).GetProperty(member)!, value);
-
-    private static MemberAssignment BindFlag(string member, Expression value) =>
-        Expression.Bind(typeof(AssigneeLoadFlag).GetProperty(member)!, value);
-
-    private static ConditionalExpression OneOrZero(Expression predicate) =>
-        Expression.Condition(predicate, Expression.Constant(1), Expression.Constant(0));
-
-    private static Expression Rebind<T>(Expression<Func<WorkOrder, T>> expression, ParameterExpression parameter) =>
-        new ParameterReplacer(expression.Parameters[0], parameter).Visit(expression.Body);
+        query.Where(WorkOrderSpecifications.CompletedWithin(days, time));
 
     private static IQueryable<WorkOrder> ApplyBasics(
         IQueryable<WorkOrder> query,
@@ -221,70 +128,6 @@ internal static class WorkOrderQueryFilters
         }
 
         var q = searchText.Trim().ToLower();
-        return query.Where(OrElse(NumberTitleOrRoomContains(q), CreatorOrAssigneeNameContains(q)));
+        return query.Where(WorkOrderSearchText.Matches(q));
     }
-
-    private static Expression<Func<WorkOrder, bool>> NumberTitleOrRoomContains(string q) =>
-        wo => (wo.Number != null && wo.Number.ToLower().Contains(q)) ||
-              (wo.Title != null && wo.Title.ToLower().Contains(q)) ||
-              (wo.RoomNumber != null && wo.RoomNumber.ToLower().Contains(q));
-
-    private static Expression<Func<WorkOrder, bool>> CreatorOrAssigneeNameContains(string q) =>
-        wo => (wo.Creator != null && (wo.Creator.FirstName.ToLower().Contains(q) || wo.Creator.LastName.ToLower().Contains(q))) ||
-              (wo.Assignee != null && (wo.Assignee.FirstName.ToLower().Contains(q) || wo.Assignee.LastName.ToLower().Contains(q)));
-
-    private static Expression<Func<WorkOrder, bool>> OrElse(
-        Expression<Func<WorkOrder, bool>> left,
-        Expression<Func<WorkOrder, bool>> right) =>
-        Combine(left, right, Expression.OrElse);
-
-    private static Expression<Func<WorkOrder, bool>> AndAlso(
-        Expression<Func<WorkOrder, bool>> left,
-        Expression<Func<WorkOrder, bool>> right) =>
-        Combine(left, right, Expression.AndAlso);
-
-    private static Expression<Func<WorkOrder, bool>> Combine(
-        Expression<Func<WorkOrder, bool>> left,
-        Expression<Func<WorkOrder, bool>> right,
-        Func<Expression, Expression, BinaryExpression> combine)
-    {
-        var parameter = left.Parameters[0];
-        return Expression.Lambda<Func<WorkOrder, bool>>(combine(left.Body, Rebind(right, parameter)), parameter);
-    }
-
-    private sealed class ParameterReplacer(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
-    {
-        protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : node;
-    }
-}
-
-/// <summary>
-/// One work order reduced to its building and room keys and 1/0 flags, the input of the database-side
-/// grouping of <see cref="BuildingRoomSummaryQueryHandler"/>.
-/// </summary>
-// ReSharper disable PropertyCanBeMadeInitOnly.Global -- bound by an expression-tree MemberInit translated by EF Core
-internal sealed class WorkOrderCountRow
-{
-    public string? Number { get; set; }
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- setter required: assigned by Expression.Bind in CountRow
-    public string Building { get; set; } = "";
-    // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- setter required: assigned by Expression.Bind in CountRow
-    public string Room { get; set; } = "";
-    public int Open { get; set; }
-    public int Overdue { get; set; }
-    public int Completed { get; set; }
-}
-
-/// <summary>
-/// One assigned work order reduced to its assignee and 1/0 load flags, the input of the grouping in
-/// <see cref="EmployeeWorkLoadSummaryQueryHandler"/>.
-/// </summary>
-// ReSharper disable PropertyCanBeMadeInitOnly.Global -- bound by an expression-tree MemberInit translated by EF Core
-internal sealed class AssigneeLoadFlag
-{
-    public Guid AssigneeId { get; set; }
-    public int Open { get; set; }
-    public int InProgress { get; set; }
-    public int Overdue { get; set; }
-    public int Completed { get; set; }
 }

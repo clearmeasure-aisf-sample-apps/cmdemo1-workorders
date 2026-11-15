@@ -16,6 +16,8 @@ public partial class WorkOrderSearchTable
 
     [Inject] private IJSRuntime Js { get; set; } = null!;
 
+    [Inject] private TimeProvider Clock { get; set; } = null!;
+
     /// <summary>The rows of the current page.</summary>
     [Parameter, EditorRequired] public WorkOrderSearchResultRow[] Rows { get; set; } = [];
 
@@ -43,7 +45,7 @@ public partial class WorkOrderSearchTable
     private string RowClass(WorkOrderSearchResultRow row)
     {
         var classes = new List<string>();
-        AddClassIf(classes, row.WorkOrder.IsOverdue(), "overdue-row");
+        AddClassIf(classes, row.WorkOrder.IsOverdue(Clock), "overdue-row");
         AddClassIf(classes, Selection.IsSelected(row.Number), "row-selected");
         return string.Join(" ", classes);
     }

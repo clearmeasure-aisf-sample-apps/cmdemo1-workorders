@@ -41,9 +41,7 @@ public class NotificationsPanelQueryHandler(DataContext context, TimeProvider ti
         var today = ChurchTimeZone.Today(time);
         var query = context.Set<WorkOrder>()
             .Where(wo => wo.Assignee == employee)
-            .Where(wo => wo.Status == WorkOrderStatus.Draft ||
-                        wo.Status == WorkOrderStatus.Assigned ||
-                        wo.Status == WorkOrderStatus.InProgress)
+            .Where(WorkOrderSpecifications.Open)
             .Where(wo => wo.DueDate <= today)
             .OrderByDescending(wo => wo.DueDate)
             .ThenByDescending(wo => wo.CreatedDate);

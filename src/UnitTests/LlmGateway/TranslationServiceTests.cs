@@ -91,7 +91,7 @@ public class TranslationServiceTests
         result.ShouldBe("Hello");
     }
 
-    private class StubBus(bool available) : Bus(null!)
+    private class StubBus(bool available) : Bus(null!, TimeProvider.System)
     {
         public int ChatClientConfigQueryCount { get; private set; }
 

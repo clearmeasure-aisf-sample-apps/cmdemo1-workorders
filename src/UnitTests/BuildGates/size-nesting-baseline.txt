@@ -188,7 +188,6 @@ method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs Notificatio
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderNewlyAssignedWorkOrders()
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderWorkOrderAsLink_ToManageRoute()
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderWorkOrderCards_WhenOverdueAndDueTodayHasItems()
-method src/UnitTests/UI.Shared/Pages/LoginPageTests.cs LoginPageTests.Should_LoginAsTlovejoy_WhenLovejoyClickedBeforeEmployeesLoaded()
 method src/UnitTests/UI.Shared/Pages/StubBus.cs StubBus.Send<1>(IRequest<TResponse>)
 method src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs StubBusTeamsAndVendors.Send<1>(IRequest<TResponse>)
 method src/UnitTests/UI.Shared/Pages/WorkOrderManageCopyButtonTests.cs WorkOrderManageCopyButtonTests.CopyWorkOrderNumberAsync_ShouldExecuteSuccessfully_WhenClickingCopyButton()

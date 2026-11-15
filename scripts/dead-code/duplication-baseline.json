@@ -1,5 +1,5 @@
 {
   "minLines": 8,
-  "maxDuplicatedLines": 7945,
-  "note": "Ratchet ceiling for normalized 8-line clones under src, excluding Generated, bin, and obj. May only decrease. #1540. 7945 is the measured count after the build-gate code moved onto RepositoryCheckout, KeyRatchet, ExternalCommand and WorkflowFile (#1555)."
+  "maxDuplicatedLines": 7569,
+  "note": "Ratchet ceiling for normalized 8-line clones under src, excluding Generated, bin, and obj. May only decrease. #1540. 7569 after #1806 LoginPageTests CreateContext extract and WorkOrderSpecifications consolidation."
 }

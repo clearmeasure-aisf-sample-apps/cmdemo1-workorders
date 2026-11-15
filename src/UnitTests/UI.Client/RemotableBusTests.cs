@@ -17,7 +17,7 @@ public class RemotableBusTests
         var stubGateway = new StubPublisherGateway();
         var expectedResponse = "Remote test";
         stubGateway.SetResponse(expectedResponse);
-        var bus = new RemotableBus(stubMediator, stubGateway);
+        var bus = new RemotableBus(stubMediator, stubGateway, TimeProvider.System);
         var request = new TestRemotableRequest();
 
         var result = bus.Send(request).Result;
@@ -34,7 +34,7 @@ public class RemotableBusTests
         var stubGateway = new StubPublisherGateway();
         var expectedResponse = "mediator response";
         stubMediator.SetResponse(expectedResponse);
-        var bus = new RemotableBus(stubMediator, stubGateway);
+        var bus = new RemotableBus(stubMediator, stubGateway, TimeProvider.System);
         var request = new NonRemotableTestRequest();
 
         var result = bus.Send(request).Result;
@@ -51,7 +51,7 @@ public class RemotableBusTests
         var stubGateway = new StubPublisherGateway();
         var expectedResponse = "object response";
         stubMediator.SetObjectResponse(expectedResponse);
-        var bus = new RemotableBus(stubMediator, stubGateway);
+        var bus = new RemotableBus(stubMediator, stubGateway, TimeProvider.System);
         var request = new TestCommand();
 
         var result = bus.Send(request).Result;
@@ -65,7 +65,7 @@ public class RemotableBusTests
     {
         var stubMediator = new StubMediator();
         var stubGateway = new StubPublisherGateway();
-        var bus = new RemotableBus(stubMediator, stubGateway);
+        var bus = new RemotableBus(stubMediator, stubGateway, TimeProvider.System);
         var notification = new TestNotification { Message = "test message" };
 
         await bus.Publish(notification);
@@ -80,7 +80,7 @@ public class RemotableBusTests
     {
         var stubMediator = new StubMediator();
         var stubGateway = new StubPublisherGateway();
-        var bus = new RemotableBus(stubMediator, stubGateway);
+        var bus = new RemotableBus(stubMediator, stubGateway, TimeProvider.System);
         var remotableEvent = new TestRemotableEvent { Message = "remote event" };
 
         await bus.Publish(remotableEvent);
@@ -96,7 +96,7 @@ public class RemotableBusTests
         var stubMediator = new StubMediator();
         var stubGateway = new StubPublisherGateway();
         stubGateway.SetResponse<object>(null);
-        var bus = new RemotableBus(stubMediator, stubGateway);
+        var bus = new RemotableBus(stubMediator, stubGateway, TimeProvider.System);
         var request = new ForecastQuery();
 
         Should.Throw<Exception>(() => bus.Send(request).Result);

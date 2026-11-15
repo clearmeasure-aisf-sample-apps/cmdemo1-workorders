@@ -92,9 +92,9 @@ public class WorkOrderManageModel : IValidatableObject
     public DateOnly? OriginalDueDate { get; private init; }
 
     /// <summary>
-    /// Church calendar day the form validates against. The system clock is used when unset.
+    /// Church calendar day the form validates against. Always set by <see cref="For"/>; required for past-due checks.
     /// </summary>
-    private DateOnly? ChurchToday { get; init; }
+    private DateOnly ChurchToday { get; init; }
 
     /// <summary>
     /// Display text for the due date in the client culture's short-date pattern, when set.
@@ -141,8 +141,7 @@ public class WorkOrderManageModel : IValidatableObject
                 [nameof(RoomNumber)]);
         }
 
-        var today = ChurchToday ?? ChurchTimeZone.Today(TimeProvider.System);
-        if (WorkOrder.IsNewlySetPastDueDate(DueDateInput, OriginalDueDate, today))
+        if (WorkOrder.IsNewlySetPastDueDate(DueDateInput, OriginalDueDate, ChurchToday))
         {
             yield return new ValidationResult(
                 WorkOrder.DueDateInThePastMessage,

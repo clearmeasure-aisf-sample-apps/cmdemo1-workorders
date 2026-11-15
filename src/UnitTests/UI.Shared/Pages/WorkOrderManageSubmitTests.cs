@@ -326,7 +326,7 @@ public class WorkOrderManageSubmitTests
         ctx.Services.AddSpeechRecognition();
     }
 
-    private sealed class StubSubmitBus(WorkOrder? existing = null, Task? commandGate = null) : Bus(null!)
+    private sealed class StubSubmitBus(WorkOrder? existing = null, Task? commandGate = null) : Bus(null!, TimeProvider.System)
     {
         public object? LastCommand { get; private set; }
         public int CommandCount { get; private set; }

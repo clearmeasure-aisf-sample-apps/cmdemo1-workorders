@@ -31,7 +31,7 @@ public class McpServiceRegistry : ServiceRegistry
             cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
         this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DataContext>());
-        this.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
+        this.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>(), provider.GetRequiredService<TimeProvider>()));
     }
 
     private void AddApplicationServices()

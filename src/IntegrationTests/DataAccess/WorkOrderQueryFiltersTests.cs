@@ -151,13 +151,13 @@ public class WorkOrderQueryFiltersTests
             new WorkOrder { Number = "6", Status = WorkOrderStatus.Cancelled, DueDate = today.AddDays(-9) }
         }.AsQueryable();
 
-        Numbers(orders.Where(WorkOrderQueryFilters.IsOpen())).ShouldBe(Numbers(WorkOrderQueryFilters.OpenOnly(orders)));
-        Numbers(orders.Where(WorkOrderQueryFilters.IsOpen())).ShouldBe(["1", "2", "3"]);
-        Numbers(orders.Where(WorkOrderQueryFilters.IsOverdue(today))).ShouldBe(Numbers(WorkOrderQueryFilters.Overdue(orders, today)));
-        Numbers(orders.Where(WorkOrderQueryFilters.IsOverdue(today))).ShouldBe(["1"]);
-        Numbers(orders.Where(WorkOrderQueryFilters.IsCompletedWithin(30, lateEveningUtc)))
+        Numbers(orders.Where(WorkOrderSpecifications.Open)).ShouldBe(Numbers(WorkOrderQueryFilters.OpenOnly(orders)));
+        Numbers(orders.Where(WorkOrderSpecifications.Open)).ShouldBe(["1", "2", "3"]);
+        Numbers(orders.Where(WorkOrderSpecifications.Overdue(today))).ShouldBe(Numbers(WorkOrderQueryFilters.Overdue(orders, today)));
+        Numbers(orders.Where(WorkOrderSpecifications.Overdue(today))).ShouldBe(["1"]);
+        Numbers(orders.Where(WorkOrderSpecifications.CompletedWithin(30, lateEveningUtc)))
             .ShouldBe(Numbers(WorkOrderQueryFilters.CompletedWithin(orders, 30, lateEveningUtc)));
-        Numbers(orders.Where(WorkOrderQueryFilters.IsCompletedWithin(30, lateEveningUtc))).ShouldBe(["4"]);
+        Numbers(orders.Where(WorkOrderSpecifications.CompletedWithin(30, lateEveningUtc))).ShouldBe(["4"]);
     }
 
     [Test]
@@ -172,7 +172,7 @@ public class WorkOrderQueryFiltersTests
             new WorkOrder { Number = "3", Building = "", RoomNumber = null, Status = WorkOrderStatus.Cancelled, DueDate = today.AddDays(-1) }
         }.AsQueryable();
 
-        var rows = orders.Select(WorkOrderQueryFilters.CountRow(today, Clock, 30)).ToArray();
+        var rows = orders.Select(WorkOrderProjection.CountRow(today, Clock, 30)).ToArray();
 
         rows.Select(r => (r.Number, r.Building, r.Room, r.Open, r.Overdue, r.Completed)).ShouldBe(
         [

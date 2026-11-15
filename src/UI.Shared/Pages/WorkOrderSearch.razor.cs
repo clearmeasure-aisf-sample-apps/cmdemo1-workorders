@@ -31,7 +31,7 @@ public partial class WorkOrderSearch : AppComponentBase
     private int _searchVersion;
     private bool _showPriorityBadges;
 
-    [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
+    [Inject] public TimeProvider Clock { get; set; } = null!;
     [Inject] private IFeatureFlags FeatureFlags { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
     [Inject] private WorkOrderSearchState SearchState { get; set; } = null!;

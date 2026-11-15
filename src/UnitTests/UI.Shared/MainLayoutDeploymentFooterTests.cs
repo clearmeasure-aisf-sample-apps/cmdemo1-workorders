@@ -144,6 +144,7 @@ public class MainLayoutDeploymentFooterTests
         ctx.Services.AddSingleton<IFeatureFlags>(new StubFeatureFlags());
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();
+        ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton(new CustomAuthenticationStateProvider(new StubUserSessionStore()));
         var handler = new StubEnvironmentStatusHandler(
             simulateHttpError ? null : new EnvironmentStatusStub(

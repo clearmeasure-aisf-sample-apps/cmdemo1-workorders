@@ -43,7 +43,7 @@ public class WorkOrderPrintAttachmentsTests
         heading.TextContent.ShouldBe("Attachments");
     }
 
-    private class StubBus(WorkOrder? result, WorkOrderAttachment[]? attachments = null) : Bus(null!)
+    private class StubBus(WorkOrder? result, WorkOrderAttachment[]? attachments = null) : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
