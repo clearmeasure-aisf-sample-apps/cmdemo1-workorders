@@ -149,6 +149,14 @@ internal static class UiSharedConventionRules
             return source;
         }
 
+        var blocks = CollectRazorCodeBlocks(source);
+        return blocks.Count == 0
+            ? source
+            : "namespace RazorCodeScan { class Code { " + string.Join("\n", blocks) + " } }";
+    }
+
+    private static List<string> CollectRazorCodeBlocks(string source)
+    {
         var blocks = new List<string>();
         var index = 0;
         while (true)
@@ -156,31 +164,24 @@ internal static class UiSharedConventionRules
             var at = source.IndexOf("@code", index, StringComparison.Ordinal);
             if (at < 0)
             {
-                break;
+                return blocks;
             }
 
             var open = source.IndexOf('{', at);
             if (open < 0)
             {
-                break;
+                return blocks;
             }
 
             var close = MatchingBrace(source, open);
             if (close < 0)
             {
-                break;
+                return blocks;
             }
 
             blocks.Add(source[(open + 1)..close]);
             index = close + 1;
         }
-
-        if (blocks.Count == 0)
-        {
-            return source;
-        }
-
-        return "namespace RazorCodeScan { class Code { " + string.Join("\n", blocks) + " } }";
     }
 
     private static int MatchingBrace(string text, int openIndex)

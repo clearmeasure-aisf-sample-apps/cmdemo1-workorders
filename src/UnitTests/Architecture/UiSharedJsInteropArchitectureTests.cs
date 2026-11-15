@@ -39,6 +39,23 @@ public class UiSharedJsInteropArchitectureTests
     }
 
     [Test]
+    public void JsModuleScriptAllowList_WhenFiveScriptClasses_IsExact()
+    {
+        UiSharedConventionScan.IsJsModuleScriptAllowListed(
+            "src/UI.Shared/Components/ClipboardScript.cs").ShouldBeTrue();
+        UiSharedConventionScan.IsJsModuleScriptAllowListed(
+            "src/UI.Shared/Components/MainLayoutNavScript.cs").ShouldBeTrue();
+        UiSharedConventionScan.IsJsModuleScriptAllowListed(
+            "src/UI.Shared/Components/NotificationsPanelScript.cs").ShouldBeTrue();
+        UiSharedConventionScan.IsJsModuleScriptAllowListed(
+            "src/UI.Shared/Components/Search/SearchPageScript.cs").ShouldBeTrue();
+        UiSharedConventionScan.IsJsModuleScriptAllowListed(
+            "src/UI.Shared/Services/ThemeScript.cs").ShouldBeTrue();
+        UiSharedConventionScan.IsJsModuleScriptAllowListed(
+            "src/UI.Shared/Components/FooScript.cs").ShouldBeFalse();
+    }
+
+    [Test]
     public void EmptyCatchLineNumbers_WhenSampleHasEmptyCatch_ReportsTheLine()
     {
         UiSharedConventionRules.EmptyCatchLineNumbers("""

@@ -152,20 +152,26 @@ internal static class UiSharedConventionScan
     }
 
     /// <summary>
-    /// JS-module script classes that may empty-catch circuit disconnect: each owns one
-    /// <c>IJSObjectReference</c> module import.
+    /// JS-module script classes that may empty-catch circuit disconnect (path → why).
+    /// A random <c>*Script.cs</c> file is not exempt.
     /// </summary>
-    private static readonly HashSet<string> JsModuleScriptAllowList = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, string> JsModuleScriptAllowList = new(StringComparer.OrdinalIgnoreCase)
     {
-        "src/UI.Shared/Components/Search/SearchPageScript.cs",
-        "src/UI.Shared/Components/MainLayoutNavScript.cs",
-        "src/UI.Shared/Components/NotificationsPanelScript.cs",
-        "src/UI.Shared/Services/ThemeScript.cs",
-        "src/UI.Shared/Components/ClipboardScript.cs",
+        ["src/UI.Shared/Components/Search/SearchPageScript.cs"] =
+            "Owns searchExport.js CSV/focus/indeterminate and dispose on disconnect.",
+        ["src/UI.Shared/Components/MainLayoutNavScript.cs"] =
+            "Owns mainLayoutNav.js nav/search init, focus, and dispose on disconnect.",
+        ["src/UI.Shared/Components/NotificationsPanelScript.cs"] =
+            "Owns notificationsPanel.js escape-handler lifecycle and dispose on disconnect.",
+        ["src/UI.Shared/Services/ThemeScript.cs"] =
+            "Owns theme.js get/set preference and dispose on disconnect.",
+        ["src/UI.Shared/Components/ClipboardScript.cs"] =
+            "Owns clipboard.js copy and dispose on disconnect.",
     };
 
-    private static bool IsJsModuleScriptAllowListed(string relative) =>
-        JsModuleScriptAllowList.Contains(relative.Replace('\\', '/'));
+    /// <summary>True when <paramref name="relative"/> is one of the five module script classes.</summary>
+    internal static bool IsJsModuleScriptAllowListed(string relative) =>
+        JsModuleScriptAllowList.ContainsKey(relative.Replace('\\', '/'));
 
     private static void CollectAuthProviderViolation(
         RepositoryCheckout checkout, string sourceFile, List<string> violations)
