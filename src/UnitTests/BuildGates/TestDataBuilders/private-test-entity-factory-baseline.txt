@@ -1,13 +1,6 @@
 # Private test-fixture methods that return WorkOrder, Employee, or arrays of those types.
 # Replace with builders; baselines only shrink.
 
-src/IntegrationTests/DataAccess/Handlers/BuildingRoomSummaryQueryHandlerTests.cs :: BuildingRoomSummaryQueryHandlerTests.BlankAndGymOrders
-src/IntegrationTests/DataAccess/Handlers/BuildingRoomSummaryQueryHandlerTests.cs :: BuildingRoomSummaryQueryHandlerTests.HallOrders
-src/IntegrationTests/DataAccess/Handlers/EmployeeWorkLoadQueryHandlerTests.cs :: EmployeeWorkLoadQueryHandlerTests.WorkloadOrders
-src/IntegrationTests/DataAccess/Handlers/StateCommandHandlerForSaveTests.cs :: StateCommandHandlerForSaveTests.DraftWithNumber
-src/IntegrationTests/DataAccess/Handlers/StateCommandHandlerSaveThenAssignPersistenceTests.cs :: StateCommandHandlerSaveThenAssignPersistenceTests.GivenLawnDraft
-src/IntegrationTests/DataAccess/Handlers/WorkOrderReportsQueryHandlerTests.cs :: WorkOrderReportsQueryHandlerTests.CompletedWeekOrders
-src/IntegrationTests/DataAccess/SlaHealthQueryHandlerTests.cs :: SlaHealthQueryHandlerTests.GivenWindowOrders
 src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs :: McpWorkOrderToolTests.CreateWorkOrder
 src/UnitTests/Core/Model/StateCommands/RemoveAttachmentCommandTests.cs :: RemoveAttachmentCommandTests.NewWorkOrder
 src/UnitTests/Core/Model/StateCommands/WaitingOnVendorToInProgressCommandTests.cs :: WaitingOnVendorToInProgressCommandTests.WaitingOrder

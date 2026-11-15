@@ -124,8 +124,10 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
         var currentUser = EmployeeBuilder.Create(TestData.UserName("save_dup"))
             .WithId(Guid.NewGuid()).Build();
         await StateCommandHandlerSteps.PersistAsync(currentUser);
-        var first = DraftWithNumber(duplicateNumber, currentUser)[0];
-        var second = DraftWithNumber(duplicateNumber, currentUser)[0];
+        var first = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(duplicateNumber)
+            .CreatedBy(currentUser).Build();
+        var second = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(duplicateNumber)
+            .CreatedBy(currentUser).Build();
 
         await StateCommandHandlerSteps.HandleRemotedAsync(new SaveDraftCommand(first, currentUser));
         var exception = await Should.ThrowAsync<InvalidOperationException>(() =>
@@ -133,9 +135,6 @@ public class StateCommandHandlerForSaveTests : IntegratedTestBase
 
         await ThenOnlyOneWithNumberAsync(duplicateNumber, exception);
     }
-
-    private static WorkOrder[] DraftWithNumber(string number, Employee creator) =>
-        [WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(number).CreatedBy(creator).Build()];
 
     private static async Task AssignSelfFromDbAsync(WorkOrder workOrder, Guid employeeId)
     {

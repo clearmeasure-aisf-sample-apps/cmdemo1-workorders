@@ -37,7 +37,10 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
         var assignee = EmployeeBuilder.Create(TestData.UserName("gw")).Build();
         await StateCommandHandlerSteps.PersistAsync(creator, assignee);
         var number = TestData.Number("P");
-        var draft = GivenLawnDraft(number, creator, assignee)[0];
+        var draft = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(number)
+            .WithTitle("mow front grass").WithDescription("edge the walk")
+            .InRoom("front lawn").CreatedBy(creator).AssignedTo(assignee).Build();
+        draft.Instructions = "do a good job";
 
         var saveResult = await StateCommandHandlerSteps.HandleRemotedAsync(new SaveDraftCommand(draft, creator));
         var assignResult = await WhenAssignExistingDraftAsync(saveResult.WorkOrder.Id, creator);
@@ -100,15 +103,6 @@ public class StateCommandHandlerSaveThenAssignPersistenceTests : IntegratedTestB
             UploadedDate = TestHost.TestTime.DateTime
         });
         await context.SaveChangesAsync();
-    }
-
-    private static WorkOrder[] GivenLawnDraft(string number, Employee creator, Employee assignee)
-    {
-        var draft = WorkOrderBuilder.Create().WithId(Guid.Empty).WithNumber(number)
-            .WithTitle("mow front grass").WithDescription("edge the walk")
-            .InRoom("front lawn").CreatedBy(creator).AssignedTo(assignee).Build();
-        draft.Instructions = "do a good job";
-        return [draft];
     }
 
     private static async Task<StateCommandResult> WhenAssignExistingDraftAsync(Guid existingId, Employee creator)

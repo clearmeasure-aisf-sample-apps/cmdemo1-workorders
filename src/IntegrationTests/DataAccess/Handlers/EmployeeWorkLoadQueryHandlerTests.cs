@@ -30,23 +30,9 @@ public class EmployeeWorkLoadQueryHandlerTests
             .WithFirstName("Wor").WithLastName("Ker").WithEmail("worker@test.com").Build();
         var idle = EmployeeBuilder.Create(TestData.UserName("ewl_idle"))
             .WithFirstName("Id").WithLastName("Le").WithEmail("idle@test.com").Build();
-        await PersistAsync(creator, worker, idle, WorkloadOrders(creator, worker, today));
+        await PersistAsync(creator, worker, idle, EmployeeWorkLoadSteps.BuildWorkloadOrders(creator, worker, today));
         return [worker.UserName, idle.UserName];
     }
-
-    private static WorkOrder[] WorkloadOrders(Employee creator, Employee worker, DateOnly today) =>
-    [
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).AssignedTo(worker).DueOn(today.AddDays(5)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).AssignedTo(worker).DueOn(today.AddDays(-3)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).AssignedTo(worker).DueOn(today.AddDays(-1)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).AssignedTo(worker).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).AssignedTo(worker)
-            .DueOn(today.AddDays(-10)).CompletedAt(DateTime.UtcNow.AddDays(-5)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).AssignedTo(worker)
-            .DueOn(today.AddDays(-90)).CompletedAt(DateTime.UtcNow.AddDays(-60)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).AssignedTo(worker).DueOn(today.AddDays(-2)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).DueOn(today.AddDays(-2)).Build()
-    ];
 
     private static async Task PersistAsync(
         Employee creator, Employee worker, Employee idle, WorkOrder[] orders)

@@ -168,7 +168,7 @@ public class SlaHealthQueryHandlerTests
         var userName = TestData.UserName("sla");
         var creator = EmployeeBuilder.Create(userName)
             .WithFirstName("Test").WithLastName("User").WithEmail(TestData.Email(userName)).Build();
-        var orders = GivenWindowOrders(creator, today, window.Start, window.Completed);
+        var orders = SlaHealthSteps.BuildWindowOrders(creator, today, window.Start, window.Completed);
 
         await using var context = new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
         context.Add(creator);
@@ -202,16 +202,6 @@ public class SlaHealthQueryHandlerTests
         var currentMonthEnd = currentMonthStart.AddMonths(1).AddDays(-1);
         var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonthStart, currentMonthEnd);
         return (windowStart, windowEnd, windowStart.AddHours(1));
-    }
-
-    private static WorkOrder[] GivenWindowOrders(Employee creator, DateOnly today, DateTime windowStart, DateTime completed)
-    {
-        var inWindow = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
-            .WithNumber(TestData.Number()).DueOn(today).CompletedAt(completed).Build();
-        var outside = Enumerable.Range(0, 12).Select(index => WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
-            .WithNumber(TestData.Number()).DueOn(today.AddYears(-3))
-            .CompletedAt(windowStart.AddYears(-2).AddDays(index)).Build()).ToArray();
-        return [inWindow, ..outside];
     }
 
     private static void ThenOneWindowQuery(

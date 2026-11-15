@@ -197,34 +197,9 @@ public class WorkOrderReportsQueryHandlerTests
         var creator = EmployeeBuilder.Create(userName)
             .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
         // One completion in each of the last 8 weeks; the two at day -56 fall before the first week shown
-        await WorkOrderQuerySteps.SaveOrdersAsync(creator, CompletedWeekOrders(creator, clock.GetUtcNow().UtcDateTime));
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderReportsSteps.BuildCompletedWeekOrders(creator, clock.GetUtcNow().UtcDateTime, Now, Today));
     }
-
-    private static WorkOrder[] CompletedWeekOrders(Employee creator, DateTime now) =>
-    [
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-56)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-56)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-49)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-42)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-35)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-28)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-21)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-14)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now.AddDays(-7)).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
-            .CompletedAt(now).Build(),
-        WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today).Build()
-    ];
-
 
     private static async Task GivenAverageDaysAsync(TimeProvider clock)
     {

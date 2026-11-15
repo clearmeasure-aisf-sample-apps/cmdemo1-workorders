@@ -176,54 +176,11 @@ public class BuildingRoomSummaryQueryHandlerTests
         var userName = TestData.UserName(prefix);
         var creator = EmployeeBuilder.Create(userName)
             .WithFirstName("Room").WithLastName("Summary").WithEmail(TestData.Email(userName)).Build();
-        var orders = HallOrders(creator, hall).Concat(BlankAndGymOrders(creator, gym)).ToArray();
+        var orders = BuildingRoomSummarySteps.BuildHallOrders(creator, hall, Now, ChurchToday)
+            .Concat(BuildingRoomSummarySteps.BuildBlankAndGymOrders(creator, gym, Now, ChurchToday))
+            .ToArray();
         await WorkOrderQuerySteps.SaveOrdersAsync(creator, orders);
         return new SeededVariants(tag, gym, orders.Count(o => !string.IsNullOrWhiteSpace(o.Building)));
-    }
-
-    private static WorkOrder[] HallOrders(Employee creator, string hall)
-    {
-        var now = Now.DateTime;
-        var created = Now.DateTime.AddDays(-90);
-        return
-        [
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).InBuilding(hall).InRoom("101")
-                .CreatedAt(created).DueOn(ChurchToday.AddDays(-1)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).InBuilding($" {hall.ToUpperInvariant()} ").InRoom("101 ")
-                .CreatedAt(created).DueOn(ChurchToday).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding(hall.ToLowerInvariant()).InRoom("102")
-                .CreatedAt(created).CompletedAt(now.AddDays(-30)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding(hall.ToLowerInvariant()).InRoom("102")
-                .CreatedAt(created).CompletedAt(now.AddDays(-31)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).InBuilding(hall).InRoom("101")
-                .CreatedAt(created).Build()
-        ];
-    }
-
-    private static WorkOrder[] BlankAndGymOrders(Employee creator, string gym)
-    {
-        var now = Now.DateTime;
-        var created = Now.DateTime.AddDays(-90);
-        return
-        [
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled)
-                .CreatedAt(created).DueOn(ChurchToday.AddDays(-12)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding("").InRoom("")
-                .CreatedAt(created).CompletedAt(now.AddDays(-60)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).InBuilding("   ").InRoom("  ")
-                .CreatedAt(created).DueOn(ChurchToday.AddDays(-12)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).InRoom("201").CreatedAt(created).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding("").InRoom("201")
-                .CreatedAt(created).CompletedAt(now.AddDays(-2)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).InBuilding("   ").InRoom(" 201")
-                .CreatedAt(created).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).InBuilding(gym)
-                .CreatedAt(created).DueOn(ChurchToday.AddDays(-3)).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).InBuilding(gym).InRoom("  ")
-                .CreatedAt(created).Build(),
-            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding($" {gym}").InRoom("")
-                .CreatedAt(created).CompletedAt(now.AddDays(-1)).Build()
-        ];
     }
 
     private static async Task GivenBoundaryOrdersAsync(string boundary, string annex)
