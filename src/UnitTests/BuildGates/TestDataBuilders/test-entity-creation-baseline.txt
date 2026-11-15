@@ -19,8 +19,6 @@ Employee src/IntegrationTests/DataAccess/EmployeeQueryHandlerTests.cs#9
 Employee src/IntegrationTests/DataAccess/Handlers/CreateDatedWorkOrdersHandlerTests.cs#1
 Employee src/IntegrationTests/DataAccess/Handlers/CreateDatedWorkOrdersHandlerTests.cs#2
 Employee src/IntegrationTests/DataAccess/Handlers/ReformatWorkOrderCommandHandlerTests.cs#1
-Employee src/IntegrationTests/DataAccess/Handlers/SavedSearchViewHandlerTests.cs#1
-Employee src/IntegrationTests/DataAccess/Handlers/TeamQueryHandlerTests.cs#1
 Employee src/IntegrationTests/DataAccess/Handlers/WorkOrderBuildingsQueryHandlerTests.cs#1
 Employee src/IntegrationTests/DataAccess/Handlers/WorkOrderCountByStatusQueryHandlerTests.cs#1
 Employee src/IntegrationTests/DataAccess/Mappings/EmployeeMappingTests.cs#1
@@ -28,9 +26,6 @@ Employee src/IntegrationTests/DataAccess/Mappings/EmployeeMappingTests.cs#2
 Employee src/IntegrationTests/DataAccess/Mappings/EmployeeMappingTests.cs#3
 Employee src/IntegrationTests/DataAccess/Mappings/EmployeeMappingTests.cs#4
 Employee src/IntegrationTests/DataAccess/Mappings/EmployeeMappingTests.cs#5
-Employee src/IntegrationTests/DataAccess/QueryBudgetTests.cs#1
-Employee src/IntegrationTests/DataAccess/WorkOrderAttachmentHandlerTests.cs#1
-Employee src/IntegrationTests/DataAccess/WorkOrderAttachmentHandlerTests.cs#2
 Employee src/IntegrationTests/DataAccess/WorkOrderQueryFiltersTests.cs#1
 Employee src/IntegrationTests/DataAccess/WorkOrderQueryFiltersTests.cs#2
 Employee src/IntegrationTests/DataAccess/WorkOrderQueryFiltersTests.cs#3
@@ -165,7 +160,6 @@ Employee src/UnitTests/Core/Validation/SaveDraftCommandValidatorTests.cs#9
 Employee src/UnitTests/DataAccess/Handlers/WorkOrderProjectionTests.cs#1
 Employee src/UnitTests/LlmGateway/WorkOrderToolTests.cs#1
 Employee src/UnitTests/LlmGateway/WorkOrderToolTests.cs#2
-Employee src/UnitTests/McpServer/WorkOrderToolsBlankNumberTests.cs#1
 Employee src/UnitTests/UI.Api/WorkOrdersBulkImportControllerTests.cs#1
 Employee src/UnitTests/UI.Api/WorkOrdersBulkImportControllerTests.cs#2
 Employee src/UnitTests/UI.Api/WorkOrdersBulkImportControllerTests.cs#3
@@ -179,8 +173,6 @@ Employee src/UnitTests/UI.Shared/Components/MyWorkOrdersTests.cs#1
 Employee src/UnitTests/UI.Shared/Components/MyWorkOrdersTests.cs#2
 Employee src/UnitTests/UI.Shared/Components/MyWorkOrdersTests.cs#3
 Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#1
-Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#10
-Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#11
 Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#2
 Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#3
 Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#4
@@ -188,7 +180,6 @@ Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#5
 Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#6
 Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#7
 Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#8
-Employee src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs#9
 Employee src/UnitTests/UI.Shared/Components/Teams/TeamCardsTests.cs#1
 Employee src/UnitTests/UI.Shared/Components/Teams/TeamCardsTests.cs#2
 Employee src/UnitTests/UI.Shared/Components/WorkOrderChatAutocompleteTests.cs#1
@@ -307,9 +298,6 @@ WorkOrder src/IntegrationTests/DataAccess/QueryBudgetTests.cs#1
 WorkOrder src/IntegrationTests/DataAccess/QueryBudgetTests.cs#2
 WorkOrder src/IntegrationTests/DataAccess/QueryBudgetTests.cs#3
 WorkOrder src/IntegrationTests/DataAccess/QueryBudgetTests.cs#4
-WorkOrder src/IntegrationTests/DataAccess/WorkOrderAttachmentHandlerTests.cs#1
-WorkOrder src/IntegrationTests/DataAccess/WorkOrderAttachmentHandlerTests.cs#2
-WorkOrder src/IntegrationTests/DataAccess/WorkOrderAttachmentHandlerTests.cs#3
 WorkOrder src/IntegrationTests/DataAccess/WorkOrderQueryFiltersTests.cs#1
 WorkOrder src/IntegrationTests/DataAccess/WorkOrderQueryFiltersTests.cs#10
 WorkOrder src/IntegrationTests/DataAccess/WorkOrderQueryFiltersTests.cs#11

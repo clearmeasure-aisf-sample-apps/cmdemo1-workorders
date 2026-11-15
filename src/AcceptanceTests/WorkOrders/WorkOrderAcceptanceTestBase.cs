@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.WorkOrders;
 
@@ -36,17 +37,16 @@ public abstract class WorkOrderAcceptanceTestBase : AcceptanceTestBase
         Employee creator,
         WorkOrderStatus status,
         WorkOrderSeedSpec spec) =>
-        new()
-        {
-            Id = created.Id,
-            Number = created.Number,
-            Title = created.Title,
-            Description = created.Description,
-            RoomNumber = created.RoomNumber,
-            Creator = creator,
-            Assignee = spec.Assignee,
-            Status = status,
-            Priority = spec.Priority,
-            DueDate = spec.DueDate
-        };
+        WorkOrderBuilder.Create()
+            .WithId(created.Id)
+            .WithNumber(created.Number)
+            .WithTitle(created.Title)
+            .WithDescription(created.Description)
+            .InRoom(created.RoomNumber)
+            .CreatedBy(creator)
+            .AssignedTo(spec.Assignee)
+            .WithStatus(status)
+            .WithPriority(spec.Priority)
+            .DueOn(spec.DueDate)
+            .Build();
 }

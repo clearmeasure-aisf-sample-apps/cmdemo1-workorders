@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.DataAccess.Handlers;
@@ -8,8 +9,20 @@ namespace ClearMeasure.Bootcamp.UnitTests.DataAccess.Handlers;
 public class UserWorkOrdersTests
 {
     private static readonly DateOnly Today = new(2026, 11, 9);
-    private static readonly Employee Me = new("jsmith", "Jane", "Smith", "jane@example.com") { Id = Guid.NewGuid() };
-    private static readonly Employee Other = new("bwayne", "Bruce", "Wayne", "bruce@example.com") { Id = Guid.NewGuid() };
+
+    private static readonly Employee Me = EmployeeBuilder.Create("jsmith")
+        .WithFirstName("Jane")
+        .WithLastName("Smith")
+        .WithEmail("jane@example.com")
+        .WithId(Guid.NewGuid())
+        .Build();
+
+    private static readonly Employee Other = EmployeeBuilder.Create("bwayne")
+        .WithFirstName("Bruce")
+        .WithLastName("Wayne")
+        .WithEmail("bruce@example.com")
+        .WithId(Guid.NewGuid())
+        .Build();
 
     [Test]
     public void ShouldSliceTheWorkOrdersOfOneEmployee_WhenAssignedOrCreated()

@@ -59,8 +59,9 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task WorkOrderAttachmentsQuery_ShouldReturnAttachmentsForWorkOrder()
     {
-        var uploader = new Employee(TestData.UserName("uploader"), "Attachment", "Uploader", "uploader@example.com");
-        var workOrder = new WorkOrder { Number = TestData.Number("A"), Creator = uploader };
+        var uploader = EmployeeBuilder.Create(TestData.UserName("uploader"))
+            .WithFirstName("Attachment").WithLastName("Uploader").WithEmail("uploader@example.com").Build();
+        var workOrder = WorkOrderBuilder.Create().WithNumber(TestData.Number("A")).CreatedBy(uploader).Build();
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -83,8 +84,9 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task WorkOrderAttachmentsQuery_ShouldReturnEmptyForWorkOrderWithNoAttachments()
     {
-        var creator = new Employee(TestData.UserName("uploader"), "Attachment", "Uploader", "uploader@example.com");
-        var workOrder = new WorkOrder { Number = TestData.Number("A"), Creator = creator };
+        var creator = EmployeeBuilder.Create(TestData.UserName("uploader"))
+            .WithFirstName("Attachment").WithLastName("Uploader").WithEmail("uploader@example.com").Build();
+        var workOrder = WorkOrderBuilder.Create().WithNumber(TestData.Number("A")).CreatedBy(creator).Build();
 
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -102,7 +104,7 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task RemoveAttachmentCommand_ShouldDeleteAttachment()
     {
-        var creator = NewEmployee("creator");
+        var creator = EmployeeBuilder.Create(TestData.UserName("creator")).WithFirstName("Attachment").WithLastName("creator").WithEmail("creator@example.com").Build();
         var workOrder = await SeedWorkOrder(creator, WorkOrderStatus.Draft);
         var bus = TestHost.GetRequiredService<IBus>();
         var attachment = await bus.Send(
@@ -118,8 +120,8 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task RemoveAttachmentCommand_ByAssignee_ShouldDeleteAttachment()
     {
-        var creator = NewEmployee("creator");
-        var assignee = NewEmployee("assignee");
+        var creator = EmployeeBuilder.Create(TestData.UserName("creator")).WithFirstName("Attachment").WithLastName("creator").WithEmail("creator@example.com").Build();
+        var assignee = EmployeeBuilder.Create(TestData.UserName("assignee")).WithFirstName("Attachment").WithLastName("assignee").WithEmail("assignee@example.com").Build();
         var workOrder = await SeedWorkOrder(creator, WorkOrderStatus.InProgress, assignee);
         var bus = TestHost.GetRequiredService<IBus>();
         var attachment = await bus.Send(
@@ -134,7 +136,7 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task RemoveAttachmentCommand_ShouldLeaveOtherAttachmentsUntouched()
     {
-        var creator = NewEmployee("creator");
+        var creator = EmployeeBuilder.Create(TestData.UserName("creator")).WithFirstName("Attachment").WithLastName("creator").WithEmail("creator@example.com").Build();
         var workOrder = await SeedWorkOrder(creator, WorkOrderStatus.Assigned);
         var bus = TestHost.GetRequiredService<IBus>();
         var first = await bus.Send(new AddAttachmentMetadataCommand(workOrder, creator, "a.jpg", "image/jpeg", 100));
@@ -153,7 +155,7 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task RemoveAttachmentCommand_WrongWorkOrder_ShouldBeRejected()
     {
-        var creator = NewEmployee("creator");
+        var creator = EmployeeBuilder.Create(TestData.UserName("creator")).WithFirstName("Attachment").WithLastName("creator").WithEmail("creator@example.com").Build();
         var workOrderA = await SeedWorkOrder(creator, WorkOrderStatus.Draft);
         var workOrderB = await SeedWorkOrder(creator, WorkOrderStatus.Draft, saveCreator: false);
         var bus = TestHost.GetRequiredService<IBus>();
@@ -171,7 +173,7 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task RemoveAttachmentCommand_MissingAttachment_ShouldBeRejected()
     {
-        var creator = NewEmployee("creator");
+        var creator = EmployeeBuilder.Create(TestData.UserName("creator")).WithFirstName("Attachment").WithLastName("creator").WithEmail("creator@example.com").Build();
         var workOrder = await SeedWorkOrder(creator, WorkOrderStatus.Draft);
         var bus = TestHost.GetRequiredService<IBus>();
 
@@ -184,8 +186,8 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task RemoveAttachmentCommand_NonOwner_ShouldBeRejected()
     {
-        var creator = NewEmployee("creator");
-        var stranger = NewEmployee("stranger");
+        var creator = EmployeeBuilder.Create(TestData.UserName("creator")).WithFirstName("Attachment").WithLastName("creator").WithEmail("creator@example.com").Build();
+        var stranger = EmployeeBuilder.Create(TestData.UserName("stranger")).WithFirstName("Attachment").WithLastName("stranger").WithEmail("stranger@example.com").Build();
         var workOrder = await SeedWorkOrder(creator, WorkOrderStatus.Draft);
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
@@ -207,7 +209,7 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
     [Test]
     public async Task RemoveAttachmentCommand_CompleteWorkOrder_ShouldBeRejected()
     {
-        var creator = NewEmployee("creator");
+        var creator = EmployeeBuilder.Create(TestData.UserName("creator")).WithFirstName("Attachment").WithLastName("creator").WithEmail("creator@example.com").Build();
         var workOrder = await SeedWorkOrder(creator, WorkOrderStatus.Complete);
         var bus = TestHost.GetRequiredService<IBus>();
         var attachment = await bus.Send(
@@ -220,23 +222,25 @@ public class WorkOrderAttachmentHandlerTests : IntegratedTestBase
         (await bus.Send(new WorkOrderAttachmentsQuery(workOrder.Id))).Length.ShouldBe(1);
     }
 
-    private static Employee NewEmployee(string prefix) =>
-        new(TestData.UserName(prefix), "Attachment", prefix, $"{prefix}@example.com");
 
     private static async Task<WorkOrder> SeedWorkOrder(Employee creator, WorkOrderStatus status,
         Employee? assignee = null, bool saveCreator = true)
     {
-        var workOrder = new WorkOrder
+        var builder = WorkOrderBuilder.Create()
+            .WithNumber(TestData.Number("A"))
+            .CreatedBy(creator)
+            .WithStatus(status);
+        if (assignee is not null)
         {
-            Number = TestData.Number("A"),
-            Creator = creator,
-            Assignee = assignee,
-            Status = status
-        };
+            builder = builder.AssignedTo(assignee);
+        }
+
+        var workOrder = builder.Build();
 
         await using var context = TestHost.GetRequiredService<DbContext>();
         if (saveCreator) context.Add(creator);
         else context.Attach(creator);
+        if (assignee is not null) context.Add(assignee);
         context.Add(workOrder);
         await context.SaveChangesAsync();
         return workOrder;

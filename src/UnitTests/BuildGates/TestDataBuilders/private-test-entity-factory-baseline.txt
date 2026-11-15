@@ -1,9 +1,5 @@
 # Private test-fixture methods that return WorkOrder or Employee. Replace with builders;
 # baselines only shrink.
-src/IntegrationTests/DataAccess/Handlers/SavedSearchViewHandlerTests.cs :: SavedSearchViewHandlerTests.NewEmployee
-src/IntegrationTests/DataAccess/Handlers/TeamQueryHandlerTests.cs :: TeamQueryHandlerTests.NewEmployee
-src/IntegrationTests/DataAccess/QueryBudgetTests.cs :: QueryBudgetTests.NewEmployee
-src/IntegrationTests/DataAccess/WorkOrderAttachmentHandlerTests.cs :: WorkOrderAttachmentHandlerTests.NewEmployee
 src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs :: McpWorkOrderToolTests.CreateWorkOrder
 src/UnitTests/Core/Model/StateCommands/RemoveAttachmentCommandTests.cs :: RemoveAttachmentCommandTests.NewWorkOrder
 src/UnitTests/Core/Model/StateCommands/WaitingOnVendorToInProgressCommandTests.cs :: WaitingOnVendorToInProgressCommandTests.WaitingOrder

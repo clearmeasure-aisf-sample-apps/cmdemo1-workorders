@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.McpServer.Tools;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
 using Shouldly;
 
@@ -57,13 +58,17 @@ public class WorkOrderToolsBlankNumberTests
 
     private sealed class StubRecordingBus : IBus
     {
-        private readonly WorkOrder _workOrder = new()
-        {
-            Number = "WO-001",
-            Title = "Lawn",
-            Status = WorkOrderStatus.Draft,
-            Creator = new Employee("creator1", "Creator", "One", "c@example.com")
-        };
+        private readonly WorkOrder _workOrder = WorkOrderBuilder.Create()
+            .WithNumber("WO-001")
+            .WithTitle("Lawn")
+            .WithStatus(WorkOrderStatus.Draft)
+            .CreatedBy(EmployeeBuilder.Create("creator1")
+                .WithFirstName("Creator")
+                .WithLastName("One")
+                .WithEmail("c@example.com")
+                .Build())
+            .Build();
+
 
         public List<object> Sent { get; } = [];
 

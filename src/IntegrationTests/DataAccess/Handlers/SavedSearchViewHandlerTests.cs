@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -17,17 +18,13 @@ public class SavedSearchViewHandlerTests
     [SetUp]
     public async Task SetUp()
     {
-        _owner = NewEmployee("svowner", "Owner");
-        _other = NewEmployee("svother", "Other");
+        _owner = EmployeeBuilder.Create(TestData.UserName("svowner"))
+            .WithFirstName("Saved").WithLastName("Owner").Build();
+        _other = EmployeeBuilder.Create(TestData.UserName("svother"))
+            .WithFirstName("Saved").WithLastName("Other").Build();
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.AddRange(_owner, _other);
         await context.SaveChangesAsync();
-    }
-
-    private static Employee NewEmployee(string prefix, string lastName)
-    {
-        var userName = TestData.UserName(prefix);
-        return new Employee(userName, "Saved", lastName, TestData.Email(userName));
     }
 
     private static SavedSearchViewHandler NewHandler() =>
