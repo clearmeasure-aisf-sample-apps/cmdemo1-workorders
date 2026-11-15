@@ -31,6 +31,33 @@ public class TestEntityCreationScannerTests
     }
 
     [Test]
+    public void ShouldCountTargetTypedCreations_WhenDeclaredTypeIsWorkOrderOrEmployee()
+    {
+        const string code =
+            """
+            using ClearMeasure.Bootcamp.Core.Model;
+            public class SampleTests
+            {
+                [Test]
+                public void ShouldArrange()
+                {
+                    WorkOrder order = new() { Title = "t" };
+                    Employee employee = new("a", "b", "c", "d");
+                }
+                private WorkOrder Seed() => new() { Title = "seed" };
+            }
+            """;
+
+        var keys = TestEntityCreationScanner.ScanFile("src/UnitTests/SampleTests.cs", code);
+
+        keys.ShouldBe([
+            "Employee src/UnitTests/SampleTests.cs#1",
+            "WorkOrder src/UnitTests/SampleTests.cs#1",
+            "WorkOrder src/UnitTests/SampleTests.cs#2"
+        ]);
+    }
+
+    [Test]
     public void ShouldIgnoreCreations_InsideBuilderTypes()
     {
         const string code =

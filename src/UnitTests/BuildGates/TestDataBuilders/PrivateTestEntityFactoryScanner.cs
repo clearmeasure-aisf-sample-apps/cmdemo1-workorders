@@ -11,8 +11,14 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates.TestDataBuilders;
 /// </summary>
 internal static class PrivateTestEntityFactoryScanner
 {
-    private static readonly string[] SupportSuffixes = ["Mother", "Builder", "Steps"];
+    private static readonly string[] SupportSuffixes = ["Mother", "Builder"];
     private static readonly string[] EntityNames = ["WorkOrder", "Employee"];
+    private static readonly SyntaxKind[] AccessModifiers =
+    [
+        SyntaxKind.PublicKeyword,
+        SyntaxKind.ProtectedKeyword,
+        SyntaxKind.InternalKeyword
+    ];
 
     /// <summary>Sorted factory keys for the hand-written test sources of <paramref name="checkout"/>.</summary>
     public static IReadOnlyList<string> ScanRepository(RepositoryCheckout checkout)
@@ -66,8 +72,13 @@ internal static class PrivateTestEntityFactoryScanner
         type.Identifier.Text.Equals("ObjectMother", StringComparison.Ordinal)
         || SupportSuffixes.Any(suffix => type.Identifier.Text.EndsWith(suffix, StringComparison.Ordinal));
 
+    /// <summary>
+    /// True when the method is private: the <c>private</c> keyword, or no access modifier
+    /// (class members default to private).
+    /// </summary>
     private static bool IsPrivate(MethodDeclarationSyntax method) =>
-        method.Modifiers.Any(SyntaxKind.PrivateKeyword);
+        method.Modifiers.Any(SyntaxKind.PrivateKeyword)
+        || !method.Modifiers.Any(modifier => AccessModifiers.Contains(modifier.Kind()));
 
     private static bool ReturnsEntity(MethodDeclarationSyntax method)
     {

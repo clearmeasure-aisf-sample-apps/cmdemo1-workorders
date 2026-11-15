@@ -30,6 +30,26 @@ public class PrivateTestEntityFactoryScannerTests
     }
 
     [Test]
+    public void ShouldFlagDefaultPrivateFactory_WhenAccessModifierIsOmitted()
+    {
+        const string code =
+            """
+            using ClearMeasure.Bootcamp.Core.Model;
+            [TestFixture]
+            public class SampleTests
+            {
+                [Test]
+                public void ShouldArrange() { }
+                static WorkOrder ImplicitPrivateOrder() => new WorkOrder();
+            }
+            """;
+
+        var keys = PrivateTestEntityFactoryScanner.ScanFile("src/UnitTests/SampleTests.cs", code);
+
+        keys.ShouldBe(["src/UnitTests/SampleTests.cs :: SampleTests.ImplicitPrivateOrder"]);
+    }
+
+    [Test]
     public void ShouldIgnorePrivateHelpers_OnBuilders()
     {
         const string code =
