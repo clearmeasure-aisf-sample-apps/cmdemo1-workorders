@@ -1,4 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Toolbelt.Blazor.SpeechSynthesis;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -7,8 +9,13 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
 /// Reads a work-order field aloud in the user's language: translated first, then spoken with a voice of that
 /// language when the browser has one. Speech synthesis may be missing; reading aloud then does nothing.
 /// </summary>
-internal sealed class WorkOrderReadAloud(ITranslationService? translationService, SpeechSynthesis? speechSynthesis)
+internal sealed class WorkOrderReadAloud(
+    ITranslationService? translationService,
+    SpeechSynthesis? speechSynthesis,
+    ILogger? logger = null)
 {
+    private readonly ILogger _logger = logger ?? NullLogger.Instance;
+
     public async Task SpeakAsync(string? text, string language)
     {
         if (string.IsNullOrEmpty(text) || speechSynthesis == null || translationService == null)
@@ -22,9 +29,9 @@ internal sealed class WorkOrderReadAloud(ITranslationService? translationService
             var voices = await speechSynthesis.GetVoicesAsync();
             await speechSynthesis.SpeakAsync(CreateUtterance(translatedText, language, voices));
         }
-        catch
+        catch (Exception ex)
         {
-            // Speech synthesis may not be available in all environments
+            _logger.LogWarning(ex, "Speech synthesis failed; read-aloud is skipped.");
         }
     }
 

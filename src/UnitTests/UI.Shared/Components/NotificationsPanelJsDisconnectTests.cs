@@ -1,7 +1,7 @@
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
-using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.JsModules;
+using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Shouldly;

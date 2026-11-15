@@ -1,6 +1,7 @@
 @implements Palermo.BlazorMvc.IListener<WorkOrderChangedEvent>
 @using ClearMeasure.Bootcamp.Core.Queries
 @using ClearMeasure.Bootcamp.UI.Shared.Pages
+@using Microsoft.Extensions.Logging
 @inherits AppComponentBase
 
 <div class="sla-health-card @CardStateClass" data-testid="@Elements.SlaHealthCard">
@@ -68,9 +69,10 @@
         {
             _health = await Bus.Send(new SlaHealthQuery());
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Sidebar card is non-critical: never let a failed metrics query break the app shell.
+            Logger.LogWarning(ex, "SLA health metrics could not be loaded; card shows empty state.");
             _health = new SlaHealth();
         }
         _trendText = SlaHealth.TrendText(_health?.CurrentMonthPercentage, _health?.LastMonthPercentage);

@@ -23,6 +23,7 @@ public class LogoutTests
     public async Task ShouldDisplayWelcomeMessageWithUsername()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -43,6 +44,7 @@ public class LogoutTests
     public async Task ShouldDisplayFullNameWithMiddleName_WhenCurrentUserHasMiddleName()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -63,6 +65,7 @@ public class LogoutTests
     public async Task ShouldDisplayUsername_WhenCurrentUserHasNoMiddleName()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -83,6 +86,7 @@ public class LogoutTests
     public async Task ShouldDisplayUsername_WhenUserLookupFails()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -102,6 +106,7 @@ public class LogoutTests
     public async Task ShouldDisplayLogoutButton()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -126,6 +131,7 @@ public class LogoutTests
     public async Task ShouldShowSignOutTooltipOnLogoutButton()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -145,6 +151,7 @@ public class LogoutTests
     public async Task ShouldNotifyEventBusWithUserLoggedOutEventOnClick()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -168,6 +175,7 @@ public class LogoutTests
     public async Task ShouldNavigateToLoginPageOnClick()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
@@ -190,6 +198,7 @@ public class LogoutTests
     public async Task ShouldPerformAllLogoutActionsInCorrectOrder()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var spyEventBus = new SpyUiBus();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
@@ -260,6 +269,7 @@ public class LogoutTests
     private static BunitContext CreateMenuContext()
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         authProvider.Login("tlovejoy").GetAwaiter().GetResult();
         var employee = new Employee("tlovejoy", "Timothy", "Lovejoy Jr", "tlovejoy@example.com");
@@ -280,6 +290,7 @@ public class LogoutTests
     public async Task ShouldNotNavigate_WhenLogoutFailsClosed()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var store = new StubUserSessionStore { KeepUsernameOnClear = true };
         var authProvider = new CustomAuthenticationStateProvider(store);

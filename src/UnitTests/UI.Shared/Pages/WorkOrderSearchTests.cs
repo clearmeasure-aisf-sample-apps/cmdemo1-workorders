@@ -29,6 +29,7 @@ public class WorkOrderSearchTests
         StubFeatureFlags? featureFlags = null)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         var theBus = bus ?? new StubBus();
         var uiBus = new StubUiBus();

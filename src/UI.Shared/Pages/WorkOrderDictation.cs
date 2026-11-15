@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
 using Toolbelt.Blazor.SpeechRecognition;
 
@@ -13,12 +15,18 @@ internal sealed class WorkOrderDictation : IAsyncDisposable
     private readonly SpeechRecognition? _recognition;
     private readonly Action<DictationTarget, string> _onTranscript;
     private readonly Func<Task> _onChanged;
+    private readonly ILogger _logger;
 
-    public WorkOrderDictation(SpeechRecognition? recognition, Action<DictationTarget, string> onTranscript, Func<Task> onChanged)
+    public WorkOrderDictation(
+        SpeechRecognition? recognition,
+        Action<DictationTarget, string> onTranscript,
+        Func<Task> onChanged,
+        ILogger? logger = null)
     {
         _recognition = recognition;
         _onTranscript = onTranscript;
         _onChanged = onChanged;
+        _logger = logger ?? NullLogger.Instance;
         if (recognition != null)
         {
             recognition.Result += OnResult;
@@ -72,8 +80,9 @@ internal sealed class WorkOrderDictation : IAsyncDisposable
 
             await _recognition.DisposeAsync();
         }
-        catch (JSDisconnectedException)
+        catch (JSDisconnectedException ex)
         {
+            _logger.LogWarning(ex, "Speech recognition dispose skipped; circuit disconnected.");
         }
     }
 
@@ -84,9 +93,9 @@ internal sealed class WorkOrderDictation : IAsyncDisposable
         {
             await _recognition!.StopAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            // Speech recognition may not be available in all environments
+            _logger.LogWarning(ex, "Speech recognition stop failed; dictation stays idle.");
         }
     }
 
@@ -100,9 +109,9 @@ internal sealed class WorkOrderDictation : IAsyncDisposable
         {
             await _recognition.StartAsync();
         }
-        catch
+        catch (Exception ex)
         {
-            // Speech recognition may not be available in all environments
+            _logger.LogWarning(ex, "Speech recognition start failed; dictation stays idle.");
             Target = DictationTarget.None;
         }
     }

@@ -81,6 +81,79 @@ internal static class UiSharedConventionScan
         return violations;
     }
 
+    /// <summary>
+    /// Empty <c>catch</c> blocks in UI.Shared production sources outside JS-module script classes
+    /// (allow-list: files named <c>*Script.cs</c>, which own circuit-disconnect tolerance).
+    /// </summary>
+    internal static IReadOnlyList<string> EmptyCatchViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!IsUiSharedProduction(relative) || IsJsModuleScriptClass(relative))
+            {
+                continue;
+            }
+
+            foreach (var line in UiSharedConventionRules.EmptyCatchLineNumbers(File.ReadAllText(sourceFile)))
+            {
+                violations.Add($"{relative}:{line}");
+            }
+        }
+
+        return violations;
+    }
+
+    /// <summary><c>IJSObjectReference</c> usage in UI.Shared <c>.razor.cs</c> code-behinds.</summary>
+    internal static IReadOnlyList<string> RazorCodeBehindIjsObjectReferenceViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!IsUiSharedProduction(relative) ||
+                !relative.EndsWith(".razor.cs", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (UiSharedConventionRules.UsesIjsObjectReference(File.ReadAllText(sourceFile)))
+            {
+                violations.Add(relative);
+            }
+        }
+
+        return violations;
+    }
+
+    /// <summary>
+    /// <c>catch (Exception)</c> blocks in UI.Shared that do not log via <c>ILogger</c> extension methods.
+    /// </summary>
+    internal static IReadOnlyList<string> CatchExceptionWithoutLogViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!IsUiSharedProduction(relative))
+            {
+                continue;
+            }
+
+            foreach (var line in UiSharedConventionRules.CatchExceptionWithoutLogLineNumbers(
+                         File.ReadAllText(sourceFile)))
+            {
+                violations.Add($"{relative}:{line}");
+            }
+        }
+
+        return violations;
+    }
+
+    private static bool IsJsModuleScriptClass(string relative) =>
+        relative.EndsWith("Script.cs", StringComparison.OrdinalIgnoreCase);
+
     private static void CollectAuthProviderViolation(
         RepositoryCheckout checkout, string sourceFile, List<string> violations)
     {

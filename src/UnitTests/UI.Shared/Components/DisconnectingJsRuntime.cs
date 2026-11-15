@@ -1,6 +1,6 @@
 using Microsoft.JSInterop;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.JsModules;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 
 /// <summary>
 /// Test double that throws <see cref="JSDisconnectedException"/> on module import or on dispose of a loaded module.

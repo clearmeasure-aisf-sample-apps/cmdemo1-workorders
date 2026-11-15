@@ -7,7 +7,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.Search;
 [TestFixture]
 public class SearchPageScriptTests
 {
-    private const string ModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js";
+    private const string ModulePath = SearchPageScript.ModulePath;
 
     [Test]
     public async Task ShouldHandTheFileNameAndCsvToTheScript_WhenDownloading()

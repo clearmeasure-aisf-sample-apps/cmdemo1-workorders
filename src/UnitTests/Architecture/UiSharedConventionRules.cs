@@ -70,6 +70,94 @@ internal static class UiSharedConventionRules
     }
 
     /// <summary>
+    /// Line numbers of empty <c>catch</c> blocks (no statements; comments do not count).
+    /// </summary>
+    internal static IReadOnlyList<int> EmptyCatchLineNumbers(string source)
+    {
+        var lines = new List<int>();
+        var root = ArchitectureRules.Parse(source);
+        foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
+        {
+            if (clause.Block.Statements.Count == 0)
+            {
+                lines.Add(clause.GetLocation().GetLineSpan().StartLinePosition.Line + 1);
+            }
+        }
+
+        return lines;
+    }
+
+    /// <summary>True when the source mentions <c>IJSObjectReference</c> as a type name.</summary>
+    internal static bool UsesIjsObjectReference(string source)
+    {
+        var root = ArchitectureRules.Parse(source);
+        foreach (var node in root.DescendantNodes())
+        {
+            if (node is IdentifierNameSyntax { Identifier.ValueText: "IJSObjectReference" })
+            {
+                return true;
+            }
+
+            if (node is QualifiedNameSyntax qualified && SimpleTypeName(qualified.Right) == "IJSObjectReference")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// True when <c>catch (Exception</c> (or <c>System.Exception</c>) has no <c>LogWarning</c> /
+    /// <c>LogError</c> / <c>LogCritical</c> call in its block.
+    /// </summary>
+    internal static IReadOnlyList<int> CatchExceptionWithoutLogLineNumbers(string source)
+    {
+        var lines = new List<int>();
+        var root = ArchitectureRules.Parse(source);
+        foreach (var clause in root.DescendantNodes().OfType<CatchClauseSyntax>())
+        {
+            if (!IsExceptionCatch(clause) || CatchBlockLogs(clause.Block))
+            {
+                continue;
+            }
+
+            lines.Add(clause.GetLocation().GetLineSpan().StartLinePosition.Line + 1);
+        }
+
+        return lines;
+    }
+
+    private static bool IsExceptionCatch(CatchClauseSyntax clause)
+    {
+        if (clause.Declaration?.Type is null)
+        {
+            return false;
+        }
+
+        return SimpleTypeName(UnwrapNullable(clause.Declaration.Type)) == "Exception";
+    }
+
+    private static bool CatchBlockLogs(BlockSyntax block)
+    {
+        foreach (var invocation in block.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var name = invocation.Expression switch
+            {
+                MemberAccessExpressionSyntax member => member.Name.Identifier.ValueText,
+                IdentifierNameSyntax id => id.Identifier.ValueText,
+                _ => ""
+            };
+            if (name is "LogWarning" or "LogError" or "LogCritical" or "LogInformation" or "LogDebug")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Names of <c>[Inject]</c> properties, constructor / primary-constructor parameters, and
     /// <c>@inject</c> members typed as <c>HttpClient</c>.
     /// </summary>

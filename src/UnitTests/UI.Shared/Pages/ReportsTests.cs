@@ -175,7 +175,8 @@ public class ReportsTests
     public async Task Reports_ExportButton_ShouldInvokeCsvDownloadModule()
     {
         await using var ctx = CreateContext();
-        var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/searchExport.js");
+        var module = ctx.JSInterop.SetupModule(
+            ClearMeasure.Bootcamp.UI.Shared.Components.Search.SearchPageScript.ModulePath);
         module.SetupVoid("downloadCsv", _ => true).SetVoidResult();
         var component = ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<Reports>());
 
@@ -271,6 +272,7 @@ public class ReportsTests
     private static BunitContext CreateContext()
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.Services.AddSingleton<IBus>(new StubBus());
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);

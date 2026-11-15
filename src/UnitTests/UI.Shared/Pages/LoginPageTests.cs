@@ -611,6 +611,7 @@ public class LoginPageTests
         string environmentName = "Testing")
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         auth = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         ctx.Services.AddSingleton(auth);
         ctx.Services.AddSingleton<AuthenticationStateProvider>(auth);

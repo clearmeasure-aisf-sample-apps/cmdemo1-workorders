@@ -57,6 +57,7 @@ public class SignedInUserCharacterizationTests
     public async Task Logout_ShouldShowSessionUserName_WhenEmployeeLookupFails()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new StubBus());
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson")
@@ -74,6 +75,7 @@ public class SignedInUserCharacterizationTests
     public async Task Logout_ShouldNavigateAndNotify_WhenSignedOutThroughSession()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         var spy = new SpyUiBus();
         var signedOut = false;
         ctx.Services.AddSingleton<IUiBus>(spy);
@@ -133,6 +135,7 @@ public class SignedInUserCharacterizationTests
     public async Task Login_ShouldSignInThroughUserSession()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         var auth = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         var session = new StubUserSession { OnSignIn = auth.Login };
         ctx.Services.AddSingleton(auth);
@@ -189,6 +192,7 @@ public class SignedInUserCharacterizationTests
     private static BunitContext CreateIndexContext(Employee? user)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new StubBus());
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(user));
@@ -204,6 +208,7 @@ public class SignedInUserCharacterizationTests
     private static BunitContext CreateSearchContext(StubUserSession session)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         var bus = new StubBus();
         var uiBus = new StubUiBus();
@@ -220,6 +225,7 @@ public class SignedInUserCharacterizationTests
     private static BunitContext CreateLayoutContext(StubUserSession session, IBus bus)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         ctx.AddAuthorization().SetAuthorized(session.UserName ?? "anon");
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
@@ -242,6 +248,7 @@ public class SignedInUserCharacterizationTests
     private static BunitContext CreateChatContext(StubUserSession session, IBus bus)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.JSInterop.SetupVoid("scrollToBottom", _ => true).SetVoidResult();
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(bus);
