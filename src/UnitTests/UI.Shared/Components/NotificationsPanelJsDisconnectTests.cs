@@ -28,7 +28,7 @@ public class NotificationsPanelJsDisconnectTests
     [Test]
     public async Task ShouldSurvive_WhenModuleDisposeDisconnects()
     {
-        await using var ctx = new BunitContext();
+        var ctx = new BunitContext();
         ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton<IJSRuntime>(new DisconnectingJsRuntime(failDispose: true));
         ctx.Render<NotificationsPanel>(p => p

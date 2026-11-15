@@ -10,6 +10,7 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
     private readonly bool _failImport;
     private readonly bool _failDispose;
 
+    // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
     public DisconnectingJsRuntime(bool failImport = false, bool failDispose = false)
     {
         _failImport = failImport;
@@ -33,12 +34,17 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
         object?[]? args) =>
         InvokeAsync<TValue>(identifier, args);
 
-    private sealed class DisconnectingModule(bool failDispose) : IJSObjectReference
+    private sealed class DisconnectingModule : IJSObjectReference
     {
+        private readonly bool _failDispose;
+
+        // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
+        public DisconnectingModule(bool failDispose) => _failDispose = failDispose;
+
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (typeof(TValue) == typeof(IJSObjectReference))
-                return ValueTask.FromResult((TValue)(object)new DisconnectingModule(failDispose));
+                return ValueTask.FromResult((TValue)(object)new DisconnectingModule(_failDispose));
 
             return ValueTask.FromResult(default(TValue)!);
         }
@@ -49,7 +55,7 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
 
         public ValueTask DisposeAsync()
         {
-            if (failDispose)
+            if (_failDispose)
                 throw new JSDisconnectedException("circuit disconnected");
             return ValueTask.CompletedTask;
         }

@@ -26,7 +26,7 @@ public class GlobalSearchBoxJsDisconnectTests
     [Test]
     public async Task ShouldSurvive_WhenModuleDisposeDisconnects()
     {
-        await using var ctx = CreateContext(new DisconnectingJsRuntime(failDispose: true));
+        var ctx = CreateContext(new DisconnectingJsRuntime(failDispose: true));
         ctx.Render<GlobalSearchBox>();
 
         await Should.NotThrowAsync(async () => await ctx.DisposeAsync());
