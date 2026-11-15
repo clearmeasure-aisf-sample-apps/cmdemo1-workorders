@@ -69,6 +69,40 @@ public class WorkOrderFieldMessageArchitectureTests
         violations.ShouldBeEmpty();
     }
 
+    [Test]
+    public void ShouldFlagInterpolatedCannotExceed_WhenOutsideCoreInMcpServer()
+    {
+        var violations = WorkOrderFieldMessageRules.Violations(
+            "src/McpServer/Tools/Arguments/Sample.cs",
+            """
+            namespace Sample;
+            public static class Sample
+            {
+                public static string Message(int max) => $"Building cannot exceed {max} characters.";
+            }
+            """);
+
+        violations.ShouldContain(v => v.Contains("cannot exceed", StringComparison.Ordinal));
+    }
+
+    [Test]
+    public void ShouldFlagInterpolatedStringLengthErrorMessage_WhenOutsideCore()
+    {
+        var violations = WorkOrderFieldMessageRules.Violations(
+            "src/UI.Shared/Models/Sample.cs",
+            """
+            using System.ComponentModel.DataAnnotations;
+            namespace Sample;
+            public class Sample
+            {
+                [StringLength(10, ErrorMessage = $"Title cannot exceed {10} characters.")]
+                public string? Title { get; set; }
+            }
+            """);
+
+        violations.ShouldContain(v => v.Contains("hard-coded ErrorMessage", StringComparison.Ordinal));
+    }
+
     private static IReadOnlyList<string> Scan(RepositoryCheckout checkout)
     {
         var violations = new List<string>();
