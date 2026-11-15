@@ -6,7 +6,7 @@ using MediatR;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
-public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
+public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!, TimeProvider.System)
 {
     public int SendCallCount { get; private set; }
 

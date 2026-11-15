@@ -1,0 +1,6 @@
+P:System.DateTime.Now;UI.Shared reads the clock through an injected TimeProvider so time is testable
+P:System.DateTime.UtcNow;UI.Shared reads the clock through an injected TimeProvider so time is testable
+P:System.DateTime.Today;UI.Shared reads the clock through an injected TimeProvider so time is testable
+P:System.DateTimeOffset.Now;UI.Shared reads the clock through an injected TimeProvider so time is testable
+P:System.DateTimeOffset.UtcNow;UI.Shared reads the clock through an injected TimeProvider so time is testable
+P:System.TimeProvider.System;UI.Shared reads the clock through an injected TimeProvider; composition roots register System outside UI.Shared

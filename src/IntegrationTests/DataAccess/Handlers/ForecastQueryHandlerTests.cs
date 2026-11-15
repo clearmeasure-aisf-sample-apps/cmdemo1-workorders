@@ -10,15 +10,17 @@ public class ForecastQueryHandlerTests
     [Test]
     public async Task Handle_ShouldReturnFiveForecasts_WithRequiredFields()
     {
-        var handler = new ForecastQueryHandler();
+        var clock = TimeProvider.System;
+        var handler = new ForecastQueryHandler(clock);
 
         var forecasts = await handler.Handle(new ForecastQuery(), CancellationToken.None);
 
         forecasts.ShouldNotBeNull();
         forecasts.Length.ShouldBe(5);
+        var today = clock.GetUtcNow().DateTime.Date;
         foreach (var forecast in forecasts)
         {
-            forecast.Date.ShouldBeGreaterThan(DateTime.Now.Date);
+            forecast.Date.ShouldBeGreaterThan(today);
             forecast.Summary.ShouldNotBeNullOrWhiteSpace();
             forecast.TemperatureC.ShouldBeInRange(-20, 54);
         }

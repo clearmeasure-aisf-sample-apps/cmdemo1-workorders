@@ -137,7 +137,7 @@ public class WorkOrderPrintTests
         c.Find(Id(WorkOrderPrint.Elements.NotFound)).TextContent.ShouldBe("Work order not found");
     }
 
-    private class ThrowingBus() : Bus(null!)
+    private class ThrowingBus() : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
@@ -145,7 +145,7 @@ public class WorkOrderPrintTests
             throw new InvalidOperationException();
     }
 
-    private class StubBus(WorkOrder? result, WorkOrderAttachment[]? attachments = null) : Bus(null!)
+    private class StubBus(WorkOrder? result, WorkOrderAttachment[]? attachments = null) : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

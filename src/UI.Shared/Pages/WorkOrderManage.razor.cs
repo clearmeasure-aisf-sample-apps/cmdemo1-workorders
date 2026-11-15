@@ -30,7 +30,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     [Inject] public ITranslationService? TranslationService { get; set; }
     [Inject] public SpeechSynthesis? SpeechSynthesis { get; set; }
     [Inject] public SpeechRecognition? SpeechRecognition { get; set; }
-    [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
+    [Inject] public TimeProvider Clock { get; set; } = null!;
 
     private DueDateUrgency CurrentDueDateUrgency =>
         _workOrder == null

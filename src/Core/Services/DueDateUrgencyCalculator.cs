@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Queries;
 
 namespace ClearMeasure.Bootcamp.Core.Services;
 
@@ -27,7 +28,7 @@ public static class DueDateUrgencyCalculator
         ArgumentNullException.ThrowIfNull(status);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
-        if (dueDate is not { } due || !IsOpen(status))
+        if (dueDate is not { } due || !WorkOrderSpecifications.IsOpen(new WorkOrder { Status = status }))
         {
             return DueDateUrgency.None;
         }
@@ -73,9 +74,4 @@ public static class DueDateUrgencyCalculator
             DueDateUrgency.DueToday => "Due Today",
             _ => dueDate.HasValue ? "On Track" : null
         };
-
-    private static bool IsOpen(WorkOrderStatus status) =>
-        status == WorkOrderStatus.Draft
-        || status == WorkOrderStatus.Assigned
-        || status == WorkOrderStatus.InProgress;
 }

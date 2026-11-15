@@ -16,7 +16,7 @@ public class SaveDraftCommandValidatorTests
     [SetUp]
     public void SetUp()
     {
-        _validator = new SaveDraftCommandValidator();
+        _validator = new SaveDraftCommandValidator(TimeProvider.System);
     }
 
     [Test]

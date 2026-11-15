@@ -141,8 +141,8 @@ public class WorkOrderManageModel : IValidatableObject
                 [nameof(RoomNumber)]);
         }
 
-        var today = ChurchToday ?? ChurchTimeZone.Today(TimeProvider.System);
-        if (WorkOrder.IsNewlySetPastDueDate(DueDateInput, OriginalDueDate, today))
+        if (ChurchToday is { } today &&
+            WorkOrder.IsNewlySetPastDueDate(DueDateInput, OriginalDueDate, today))
         {
             yield return new ValidationResult(
                 WorkOrder.DueDateInThePastMessage,

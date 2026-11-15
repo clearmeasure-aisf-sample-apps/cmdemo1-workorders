@@ -241,4 +241,56 @@ internal static partial class ArchitectureRules
 
         return name.ToString();
     }
+
+    /// <summary>
+    /// Method and property names whose declared return type is <c>Expression&lt;Func&lt;WorkOrder, bool&gt;&gt;</c>.
+    /// Work-order bool predicates belong in Core <c>WorkOrderSpecifications</c>.
+    /// </summary>
+    internal static IReadOnlyList<string> WorkOrderBoolExpressionMembers(string source) =>
+        WorkOrderBoolExpressionMembers(Parse(source));
+
+    /// <summary>
+    /// Method and property names whose declared return type is <c>Expression&lt;Func&lt;WorkOrder, bool&gt;&gt;</c>.
+    /// </summary>
+    internal static IReadOnlyList<string> WorkOrderBoolExpressionMembers(CompilationUnitSyntax root)
+    {
+        var names = new List<string>();
+        foreach (var member in root.DescendantNodes())
+        {
+            if (member is MethodDeclarationSyntax method && IsWorkOrderBoolExpression(method.ReturnType))
+            {
+                names.Add(method.Identifier.ValueText);
+            }
+            else if (member is PropertyDeclarationSyntax property && IsWorkOrderBoolExpression(property.Type))
+            {
+                names.Add(property.Identifier.ValueText);
+            }
+        }
+
+        return SortedDistinct(names);
+    }
+
+    private static bool IsWorkOrderBoolExpression(TypeSyntax type)
+    {
+        if (type is not GenericNameSyntax { Identifier.ValueText: "Expression", TypeArgumentList.Arguments.Count: 1 } expression)
+        {
+            return false;
+        }
+
+        if (expression.TypeArgumentList.Arguments[0] is not GenericNameSyntax
+            {
+                Identifier.ValueText: "Func", TypeArgumentList.Arguments.Count: 2
+            } func)
+        {
+            return false;
+        }
+
+        var workOrder = SimpleTypeName(func.TypeArgumentList.Arguments[0]);
+        return workOrder is "WorkOrder" && IsBoolType(func.TypeArgumentList.Arguments[1]);
+    }
+
+    private static bool IsBoolType(TypeSyntax type) =>
+        type is PredefinedTypeSyntax predefined
+            ? predefined.Keyword.IsKind(SyntaxKind.BoolKeyword)
+            : SimpleTypeName(type) is "Boolean";
 }

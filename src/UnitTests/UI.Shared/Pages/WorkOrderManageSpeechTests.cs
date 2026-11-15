@@ -207,7 +207,7 @@ public class WorkOrderManageSpeechTests
         translationService.LastText.ShouldBeNull();
     }
 
-    private class StubBus() : Bus(null!)
+    private class StubBus() : Bus(null!, TimeProvider.System)
     {
         public override Task Publish(INotification notification) => Task.CompletedTask;
 

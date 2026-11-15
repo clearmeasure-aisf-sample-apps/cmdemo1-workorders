@@ -148,7 +148,7 @@ public class FeatureFlagBehaviorTests
     public async Task Send_Should_DenyGatedRequestThroughMediatorPipeline_When_FlagIsOff()
     {
         await using var provider = BuildPipeline(new StubFeatureFlagEvaluator());
-        var bus = new Bus(provider.GetRequiredService<IMediator>());
+        var bus = new Bus(provider.GetRequiredService<IMediator>(), provider.GetRequiredService<TimeProvider>());
 
         await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new GatedProbeRequest()));
         (await bus.Send(new OpenProbeRequest())).ShouldBe(nameof(OpenProbeRequest));
@@ -159,7 +159,7 @@ public class FeatureFlagBehaviorTests
     {
         await using var provider = BuildPipeline(
             new StubFeatureFlagEvaluator { [FeatureFlagNames.VendorManagement] = true });
-        var bus = new Bus(provider.GetRequiredService<IMediator>());
+        var bus = new Bus(provider.GetRequiredService<IMediator>(), provider.GetRequiredService<TimeProvider>());
 
         (await bus.Send(new GatedProbeRequest())).ShouldBe(nameof(GatedProbeRequest));
         (await bus.Send((object)new GatedProbeRequest())).ShouldBe(nameof(GatedProbeRequest));
@@ -168,6 +168,7 @@ public class FeatureFlagBehaviorTests
     private static ServiceProvider BuildPipeline(IFeatureFlagEvaluator evaluator)
     {
         var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssemblyContaining<IBus>();

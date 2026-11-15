@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -20,6 +21,9 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
 
     [Inject]
     private IJSRuntime Js { get; set; } = null!;
+
+    [Inject]
+    private TimeProvider Clock { get; set; } = null!;
 
     private DotNetObjectReference<NotificationsPanel>? _dotNetRef;
     private IJSObjectReference? _jsModule;
@@ -76,12 +80,12 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
         _dotNetRef?.Dispose();
     }
 
-    private static string GetDueUrgency(WorkOrder order)
+    private string GetDueUrgency(WorkOrder order)
     {
         if (order.DueDate == null)
             return "none";
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = ChurchTimeZone.Today(Clock);
         if (order.DueDate < today)
             return "overdue";
         if (order.DueDate == today)
@@ -89,18 +93,18 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
         return "upcoming";
     }
 
-    private static string GetDueDateText(DateOnly? dueDate)
+    private string GetDueDateText(DateOnly? dueDate)
     {
         if (dueDate == null)
             return "No due date";
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = ChurchTimeZone.Today(Clock);
         if (dueDate == today)
             return "Due today";
         if (dueDate < today)
             return "Overdue";
 
-        var daysUntil = (dueDate.Value.DayNumber - today.DayNumber);
+        var daysUntil = dueDate.Value.DayNumber - today.DayNumber;
         if (daysUntil == 1)
             return "Due tomorrow";
 

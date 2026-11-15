@@ -37,6 +37,12 @@
 		<ProjectReference Include="..\Core\Core.csproj" />
 	</ItemGroup>
 
+  <!-- RS0030: DataAccess reads the clock through TimeProvider, never the system clock. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="NServiceBus" />
   </ItemGroup>

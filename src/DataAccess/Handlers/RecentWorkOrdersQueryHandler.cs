@@ -30,17 +30,17 @@ public class RecentWorkOrdersQueryHandler(DataContext context) : IRequestHandler
     }
 
     private Task<List<WorkOrder>> LatestBy(Expression<Func<WorkOrder, DateTime?>> date, int count,
-        CancellationToken cancellationToken) =>
-        context.Set<WorkOrder>()
+        CancellationToken cancellationToken)
+    {
+        var hasDate = Expression.Lambda<Func<WorkOrder, bool>>(
+            Expression.NotEqual(date.Body, Expression.Constant(null, typeof(DateTime?))),
+            date.Parameters);
+        return context.Set<WorkOrder>()
             .AsNoTracking()
-            .Where(NotNull(date))
+            .Where(hasDate)
             .OrderByDescending(date)
             .ThenBy(wo => wo.Number)
             .Take(count)
             .ToListAsync(cancellationToken);
-
-    private static Expression<Func<WorkOrder, bool>> NotNull(Expression<Func<WorkOrder, DateTime?>> date) =>
-        Expression.Lambda<Func<WorkOrder, bool>>(
-            Expression.NotEqual(date.Body, Expression.Constant(null, typeof(DateTime?))),
-            date.Parameters);
+    }
 }

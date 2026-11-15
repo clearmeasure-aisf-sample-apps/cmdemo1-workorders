@@ -12,11 +12,13 @@ public class Bus : IBus
     private static readonly ActivitySource ActivitySource = new("ChurchBulletin.Application.Bus", "1.0.0");
 
     private readonly IMediator _mediator;
+    private readonly TimeProvider _timeProvider;
 
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
-    public Bus(IMediator mediator)
+    public Bus(IMediator mediator, TimeProvider timeProvider)
     {
         _mediator = mediator;
+        _timeProvider = timeProvider;
     }
 
     public virtual async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
@@ -66,11 +68,11 @@ public class Bus : IBus
         }
     }
 
-    private static void ValidateRequest(object request)
+    private void ValidateRequest(object request)
     {
         if (request is SaveDraftCommand saveDraft)
         {
-            new SaveDraftCommandValidator().ValidateAndThrow(saveDraft);
+            new SaveDraftCommandValidator(_timeProvider).ValidateAndThrow(saveDraft);
         }
 
         if (request is InProgressToAssignedCommand shelve)

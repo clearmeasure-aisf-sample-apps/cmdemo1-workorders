@@ -7,42 +7,40 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
+/// <summary>
+/// Load counts for one employee, using the same SQL-side flag projection as
+/// <see cref="EmployeeWorkLoadSummaryQueryHandler"/>.
+/// </summary>
 public class EmployeeWorkLoadQueryHandler(DataContext context, TimeProvider timeProvider)
     : IRequestHandler<EmployeeWorkLoadQuery, EmployeeWorkLoad>
 {
+    private const int CompletedWindowDays = 30;
+
     public async Task<EmployeeWorkLoad> Handle(EmployeeWorkLoadQuery request, CancellationToken cancellationToken = default)
     {
         var employee = await context.Set<Employee>()
             .SingleAsync(emp => emp.UserName == request.EmployeeUserName, cancellationToken);
 
-        var workOrders = await context.Set<WorkOrder>()
-            .Where(wo => wo.Assignee != null && wo.Assignee.Id == employee.Id)
-            .ToListAsync(cancellationToken);
-
         var today = ChurchTimeZone.Today(timeProvider);
-        var thirtyDaysAgo = timeProvider.GetUtcNow().DateTime.AddDays(-30);
+        var totals = await context.Set<WorkOrder>()
+            .Where(wo => wo.Assignee != null && wo.Assignee.Id == employee.Id)
+            .Select(WorkOrderProjection.AssigneeLoadFlags(today, timeProvider, CompletedWindowDays))
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                Open = group.Sum(flag => flag.Open),
+                InProgress = group.Sum(flag => flag.InProgress),
+                Overdue = group.Sum(flag => flag.Overdue),
+                Completed = group.Sum(flag => flag.Completed)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
-        var open = workOrders.Where(IsOpen).ToList();
-        var load = new EmployeeWorkLoad
+        return new EmployeeWorkLoad
         {
-            AssignedAndOpen = open.Count,
-            InProgress = open.Count(wo => wo.Status == WorkOrderStatus.InProgress),
-            Overdue = open.Count(wo => wo.DueDate < today),
-            CompletedLast30Days = workOrders.Count(wo => IsCompletedSince(wo, thirtyDaysAgo))
+            AssignedAndOpen = totals?.Open ?? 0,
+            InProgress = totals?.InProgress ?? 0,
+            Overdue = totals?.Overdue ?? 0,
+            CompletedLast30Days = totals?.Completed ?? 0
         };
-
-        return load;
-    }
-
-    private static bool IsOpen(WorkOrder workOrder)
-    {
-        return workOrder.Status == WorkOrderStatus.Draft ||
-               workOrder.Status == WorkOrderStatus.Assigned ||
-               workOrder.Status == WorkOrderStatus.InProgress;
-    }
-
-    private static bool IsCompletedSince(WorkOrder workOrder, DateTime since)
-    {
-        return workOrder.Status == WorkOrderStatus.Complete && workOrder.CompletedDate >= since;
     }
 }

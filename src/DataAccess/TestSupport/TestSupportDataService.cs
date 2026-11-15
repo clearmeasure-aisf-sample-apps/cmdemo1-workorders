@@ -11,7 +11,8 @@ namespace ClearMeasure.Bootcamp.DataAccess.TestSupport;
 /// </summary>
 public sealed class TestSupportDataService(
     DataContext context,
-    IWorkOrderNumberGenerator numberGenerator)
+    IWorkOrderNumberGenerator numberGenerator,
+    TimeProvider timeProvider)
 {
     private const string UserNamePrefix = "test_";
 
@@ -105,7 +106,7 @@ public sealed class TestSupportDataService(
         Employee? assignee)
     {
         var status = ResolveStatus(request.StatusKey);
-        var now = DateTime.UtcNow;
+        var now = timeProvider.GetUtcNow().DateTime;
         var createdDate = ResolveDateTime(request.CreatedDate) ?? now;
         var workOrder = new WorkOrder
         {
