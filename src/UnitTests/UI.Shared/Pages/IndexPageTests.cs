@@ -211,6 +211,16 @@ public class IndexPageTests
         component.FindAll($"{TestId(IndexPage.Elements.RecentActivity)} li").Count.ShouldBe(0);
     }
 
+    [Test]
+    public async Task ShouldAnnounceEmptyRecentActivityWithRoleStatus()
+    {
+        await using var ctx = CreateContext(new StubBus(), User(true));
+
+        var component = ctx.Render<IndexPage>();
+
+        component.Find(TestId(IndexPage.Elements.RecentActivityEmpty)).GetAttribute("role").ShouldBe("status");
+    }
+
     [TestCase(true)]
     [TestCase(false)]
     public async Task ShouldShowNewRequest_OnlyWhenUserCanCreate(bool canCreate)
