@@ -35,6 +35,7 @@
                 <InputText @bind-Value="_prompt"
                     @onkeydown="OnKeyDownAsync"
                     id="work-order-chat-input"
+                    autocomplete="off"
                     data-testid="@nameof(Elements.ChatInput)"
                     class="form-control chat-input"
                     placeholder="Ask the AI assistant about this work order..."/>
