@@ -14,7 +14,7 @@ public partial class NavRailToggle
 
     protected override void OnAfterRender(bool firstRender)
     {
-        Rail.ToggleButtonRef = _buttonRef;
+        Rail.BindToggleButton(_buttonRef);
     }
 
     private Task OnToggleAsync() => Rail.ToggleAsync();

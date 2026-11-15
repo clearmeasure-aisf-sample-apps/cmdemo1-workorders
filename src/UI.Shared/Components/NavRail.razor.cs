@@ -29,9 +29,9 @@ public partial class NavRail : IAsyncDisposable
     private bool _viewportSynced;
     private bool _navVisible = true;
 
-    internal string AppContainerClass => NavRailCss.AppContainerClass(_isNarrowViewport, _navVisible);
+    private string AppContainerClass => NavRailCss.AppContainerClass(_isNarrowViewport, _navVisible);
 
-    internal string SidebarClass => NavRailCss.SidebarClass(_isNarrowViewport, _navVisible);
+    private string SidebarClass => NavRailCss.SidebarClass(_isNarrowViewport, _navVisible);
 
     internal string NavToggleTitle =>
         _navVisible ? "Hide navigation panel" : "Show navigation panel";
@@ -40,11 +40,7 @@ public partial class NavRail : IAsyncDisposable
 
     internal bool IsNavVisible => _navVisible;
 
-    internal ElementReference ToggleButtonRef
-    {
-        get => _navToggleButtonRef;
-        set => _navToggleButtonRef = value;
-    }
+    internal void BindToggleButton(ElementReference button) => _navToggleButtonRef = button;
 
     [JSInvokable]
     public Task OnViewportChanged(bool isNarrow)

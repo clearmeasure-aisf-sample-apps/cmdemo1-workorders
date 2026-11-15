@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -11,7 +12,7 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     public bool IsOpen { get; set; }
 
     [Parameter]
-    public ClearMeasure.Bootcamp.Core.Queries.NotificationsSummary? Data { get; set; }
+    public NotificationsSummary? Data { get; set; }
 
     [Parameter]
     public ElementReference BellButtonRef { get; set; }

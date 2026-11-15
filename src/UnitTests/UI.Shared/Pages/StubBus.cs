@@ -201,9 +201,9 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
         throw new NotImplementedException();
     }
 
-    public DeploymentIdentity? Deployment { get; set; }
+    public DeploymentIdentity? Deployment { get; init; }
 
-    public NotificationsSummary? Notifications { get; set; }
+    public NotificationsSummary? Notifications { get; }
 
     private static Func<WorkOrder[]> WorkOrderSpecificationQueryResponse => () =>
     [
