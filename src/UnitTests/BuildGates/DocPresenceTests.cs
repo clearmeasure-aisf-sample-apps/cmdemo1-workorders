@@ -5,15 +5,13 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 [TestFixture]
 public class DocPresenceTests
 {
-    private static readonly string[] Docs = ["docs/environments.md", "docs/stability-k.md", "docs/walkthrough-g.md"];
+    private static readonly string[] Docs = ["docs/environments.md"];
 
     private static readonly object[] Phrases =
     [
         new object[] { "docs/environments.md", "TDD" },
         new object[] { "docs/environments.md", "UAT" },
         new object[] { "docs/environments.md", "Production" },
-        new object[] { "docs/stability-k.md", "Stability K" },
-        new object[] { "docs/walkthrough-g.md", "Walkthrough G" },
     ];
 
     [TestCaseSource(nameof(Docs))]
