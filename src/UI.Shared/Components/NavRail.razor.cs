@@ -40,6 +40,12 @@ public partial class NavRail : IAsyncDisposable
 
     internal bool IsNavVisible => _navVisible;
 
+    /// <summary>
+    /// Raised when rail visibility or viewport state changes so cascaded chrome can re-render.
+    /// </summary>
+    // ReSharper disable once EventNeverSubscribedTo.Global -- Toggle subscribes at runtime
+    internal event Action? Changed;
+
     internal void BindToggleButton(ElementReference button) => _navToggleButtonRef = button;
 
     [JSInvokable]
@@ -53,7 +59,7 @@ public partial class NavRail : IAsyncDisposable
         }
 
         _isNarrowViewport = isNarrow;
-        StateHasChanged();
+        NotifyChanged();
         return Task.CompletedTask;
     }
 
@@ -81,7 +87,7 @@ public partial class NavRail : IAsyncDisposable
     {
         var wasVisible = _navVisible;
         _navVisible = !wasVisible;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(NotifyChanged);
 
         if (_isNarrowViewport && wasVisible)
         {
@@ -94,6 +100,12 @@ public partial class NavRail : IAsyncDisposable
             {
             }
         }
+    }
+
+    private void NotifyChanged()
+    {
+        Changed?.Invoke();
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()

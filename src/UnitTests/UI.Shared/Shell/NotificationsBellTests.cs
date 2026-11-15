@@ -100,6 +100,22 @@ public class NotificationsBellTests
     }
 
     [Test]
+    public async Task NotificationsBadge_ShouldRender_WhenQueryRespondsAsynchronously()
+    {
+        WorkOrder[] orders =
+        [
+            new() { Number = "WO-1", Title = "A", Status = WorkOrderStatus.Assigned },
+            new() { Number = "WO-2", Title = "B", Status = WorkOrderStatus.InProgress }
+        ];
+        var bus = new NotificationsStubBus(new NotificationsSummary(orders, [], []), delayMilliseconds: 100);
+        await using var ctx = ShellLayoutContext.Create(authenticateAsUser: "hsimpson", bus: bus);
+        var layout = RenderLayout(ctx);
+
+        await layout.WaitForAssertionAsync(() =>
+            layout.Find($"[data-testid='{nameof(MainLayout.Elements.NotificationsBadge)}']").TextContent.Trim().ShouldBe("2"));
+    }
+
+    [Test]
     public async Task NotificationsBell_ShouldNotOpenPanel_WhenUserNameIsMissing()
     {
         var bus = new NotificationsStubBus(new NotificationsSummary([], [], []));

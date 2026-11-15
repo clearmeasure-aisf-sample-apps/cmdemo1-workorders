@@ -1,4 +1,6 @@
+using System.Net.Http;
 using System.Reflection;
+using System.Text.Json;
 using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.AspNetCore.Components;
 
@@ -31,7 +33,7 @@ public partial class AppFooter
         {
             _deployment = await Bus.Send(new DeploymentIdentityQuery());
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is HttpRequestException or JsonException)
         {
             _deployment = DeploymentIdentity.Unreported;
         }

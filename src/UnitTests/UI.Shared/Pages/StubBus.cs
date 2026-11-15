@@ -195,15 +195,13 @@ public class StubBus(WorkOrder[]? workOrderResults = null) : Bus(null!)
 
         if (request is NotificationsPanelQuery)
         {
-            return Task.FromResult<TResponse>((TResponse)(object)(Notifications ?? new NotificationsSummary([], [], [])));
+            return Task.FromResult<TResponse>((TResponse)(object)new NotificationsSummary([], [], []));
         }
 
         throw new NotImplementedException();
     }
 
     public DeploymentIdentity? Deployment { get; init; }
-
-    public NotificationsSummary? Notifications { get; }
 
     private static Func<WorkOrder[]> WorkOrderSpecificationQueryResponse => () =>
     [

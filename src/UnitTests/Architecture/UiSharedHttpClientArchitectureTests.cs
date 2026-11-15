@@ -30,12 +30,46 @@ public class UiSharedHttpClientArchitectureTests
     }
 
     [Test]
+    public void HttpClientInjections_WhenSampleConstructorTakesHttpClient_ReportsTheParameter()
+    {
+        UiSharedConventionRules.HttpClientInjections("""
+            namespace Sample;
+            public class Service {
+              public Service(HttpClient http) { }
+            }
+            """).ShouldBe(["http"]);
+    }
+
+    [Test]
+    public void HttpClientInjections_WhenSamplePrimaryConstructorTakesHttpClient_ReportsTheParameter()
+    {
+        UiSharedConventionRules.HttpClientInjections("""
+            namespace Sample;
+            public class Service(HttpClient http) { }
+            """).ShouldBe(["http"]);
+    }
+
+    [Test]
     public void HttpClientConstructions_WhenSampleNewsHttpClient_ReportsTheType()
     {
         UiSharedConventionRules.HttpClientConstructions("""
             namespace Sample;
             public class Model {
               public static HttpClient Create() => new HttpClient();
+            }
+            """).ShouldContain("HttpClient");
+    }
+
+    [Test]
+    public void HttpClientConstructions_WhenSampleUsesTargetTypedNew_ReportsTheType()
+    {
+        UiSharedConventionRules.HttpClientConstructions("""
+            namespace Sample;
+            public class Model {
+              public static HttpClient Create() {
+                HttpClient c = new();
+                return c;
+              }
             }
             """).ShouldContain("HttpClient");
     }

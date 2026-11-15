@@ -69,7 +69,10 @@ internal static class UiSharedConventionRules
         return false;
     }
 
-    /// <summary>Names of <c>[Inject]</c> properties typed as <c>HttpClient</c>.</summary>
+    /// <summary>
+    /// Names of <c>[Inject]</c> properties, constructor / primary-constructor parameters, and
+    /// <c>@inject</c> members typed as <c>HttpClient</c>.
+    /// </summary>
     internal static IReadOnlyList<string> HttpClientInjections(string source)
     {
         var names = new List<string>();
@@ -82,6 +85,16 @@ internal static class UiSharedConventionRules
             }
         }
 
+        foreach (var parameter in root.DescendantNodes().OfType<ParameterSyntax>())
+        {
+            if (parameter.Type != null &&
+                IsConstructorOrTypeParameter(parameter) &&
+                IsHttpClientType(UnwrapNullable(parameter.Type)))
+            {
+                names.Add(parameter.Identifier.ValueText);
+            }
+        }
+
         foreach (var line in source.Split('\n'))
         {
             CollectRazorHttpClientInject(line.Trim(), names);
@@ -90,7 +103,9 @@ internal static class UiSharedConventionRules
         return Sorted(names);
     }
 
-    /// <summary>Type names from <c>new HttpClient</c> (or qualified) constructions.</summary>
+    /// <summary>
+    /// Type names from <c>new HttpClient</c> (or qualified) and target-typed <c>HttpClient c = new();</c>.
+    /// </summary>
     internal static IReadOnlyList<string> HttpClientConstructions(string source)
     {
         var names = new List<string>();
@@ -103,7 +118,26 @@ internal static class UiSharedConventionRules
             }
         }
 
+        foreach (var creation in root.DescendantNodes().OfType<ImplicitObjectCreationExpressionSyntax>())
+        {
+            if (IsHttpClientTargetTypedCreation(creation))
+            {
+                names.Add("HttpClient");
+            }
+        }
+
         return Sorted(names);
+    }
+
+    private static bool IsHttpClientTargetTypedCreation(ImplicitObjectCreationExpressionSyntax creation)
+    {
+        if (creation.Parent is not EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax declarator })
+        {
+            return false;
+        }
+
+        return declarator.Parent is VariableDeclarationSyntax declaration &&
+               IsHttpClientType(UnwrapNullable(declaration.Type));
     }
 
     private static void CollectRazorHttpClientInject(string trimmed, List<string> names)

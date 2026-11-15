@@ -12,10 +12,23 @@ public partial class NavRailToggle
 
     private ElementReference _buttonRef;
 
+    protected override void OnInitialized()
+    {
+        Rail.Changed += OnRailChanged;
+    }
+
     protected override void OnAfterRender(bool firstRender)
     {
         Rail.BindToggleButton(_buttonRef);
     }
 
+    private void OnRailChanged() => InvokeAsync(StateHasChanged);
+
     private Task OnToggleAsync() => Rail.ToggleAsync();
+
+    public override void Dispose()
+    {
+        Rail.Changed -= OnRailChanged;
+        base.Dispose();
+    }
 }

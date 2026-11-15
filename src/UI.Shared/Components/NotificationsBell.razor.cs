@@ -44,6 +44,7 @@ public partial class NotificationsBell
         Navigation.LocationChanged += OnLocationChanged;
         UserSession.AuthenticationStateChanged += OnUserSessionChanged;
         await LoadAsync();
+        NotifyChanged();
     }
 
     internal async Task OpenPanelAsync()
