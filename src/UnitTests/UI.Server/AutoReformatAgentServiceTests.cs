@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Shouldly;
+using ReformatResult = ClearMeasure.Bootcamp.UI.Server.WorkOrderReformatAgent.ReformatResult;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 
@@ -49,7 +50,7 @@ public class AutoReformatAgentServiceTests
     {
         var workOrder = DraftWorkOrder("WO-10", "old title", "old description");
         var bus = new StubRecordingBus([workOrder]);
-        var service = CreateService(bus, new StubReformatAgent(new WorkOrderReformatAgent.ReformatResult("New Title", "New description.")));
+        var service = CreateService(bus, new StubReformatAgent(new ReformatResult("New Title", "New description.")));
 
         await service.ReformatWorkOrdersAsync();
 
@@ -181,11 +182,9 @@ public class AutoReformatAgentServiceTests
     }
 
     private sealed class StubReformatAgent(
-        WorkOrderReformatAgent.ReformatResult? result = null,
+        ReformatResult? result = null,
         Exception? exception = null)
-        : WorkOrderReformatAgent(
-            new ChatClientFactory(new StubUnavailableBus()),
-            NullLogger<WorkOrderReformatAgent>.Instance)
+        : WorkOrderReformatAgent(new ChatClientFactory(new StubUnavailableBus()), NullLogger<WorkOrderReformatAgent>.Instance)
     {
         public override Task<ReformatResult?> ReformatWorkOrderAsync(WorkOrder workOrder)
         {

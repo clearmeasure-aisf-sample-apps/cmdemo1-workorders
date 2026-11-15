@@ -26,7 +26,7 @@ public class AutoReformatAgentService : BackgroundService
         TimeProvider timeProvider)
     {
         _scopeFactory = scopeFactory;
-        _logger = loggerFactory.CreateLogger(nameof(AutoReformatAgentService));
+        _logger = loggerFactory.CreateLogger<AutoReformatAgentService>();
         _options = options.Value;
         _timeProvider = timeProvider;
     }
