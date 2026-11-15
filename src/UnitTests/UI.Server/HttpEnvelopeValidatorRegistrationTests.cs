@@ -1,7 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
-using ClearMeasure.Bootcamp.UnitTests.HttpEnvelope;
 using FluentValidation;
 using Lamar;
 using Shouldly;

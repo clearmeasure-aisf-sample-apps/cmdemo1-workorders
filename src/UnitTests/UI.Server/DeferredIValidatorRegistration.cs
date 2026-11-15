@@ -4,7 +4,7 @@ using FluentValidation;
 using Lamar;
 using Shouldly;
 
-namespace ClearMeasure.Bootcamp.UnitTests.HttpEnvelope;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 
 /// <summary>Shared assert for UI and MCP: deferred creates are not unkeyed <see cref="IValidator{T}"/>.</summary>
 internal static class DeferredIValidatorRegistration
