@@ -52,7 +52,7 @@
                     }
                     else
                     {
-                        <ol class="activity-list">
+                        <ol class="activity-list" aria-label="Recently updated work orders">
                             @foreach (var order in _recent)
                             {
                                 <li class="activity-item" data-testid="@(nameof(Elements.RecentActivityItem) + order.Number)">
