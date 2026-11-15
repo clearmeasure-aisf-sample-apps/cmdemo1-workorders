@@ -1,8 +1,9 @@
 @page "/ai-agent"
 @inherits AppComponentBase
 @using ClearMeasure.Bootcamp.Core.Queries
+@using Microsoft.Extensions.Logging
 @using Microsoft.JSInterop
-@inject CustomAuthenticationStateProvider AuthStateProvider
+@inject IUserSession UserSession
 @inject IJSRuntime Js
 
 <PageTitle>AI Agent - .NET Conf Work Orders</PageTitle>
@@ -81,8 +82,14 @@
             {
                 await Js.InvokeVoidAsync("scrollToBottom", _chatHistoryRef);
             }
-            catch (JSDisconnectedException) { }
-            catch (JSException) { }
+            catch (JSDisconnectedException ex)
+            {
+                Logger.LogWarning(ex, "Chat history scroll skipped; circuit disconnected.");
+            }
+            catch (JSException ex)
+            {
+                Logger.LogWarning(ex, "Chat history scroll skipped; browser script failed.");
+            }
         }
     }
 
@@ -100,8 +107,7 @@
 
         try
         {
-            var username = AuthStateProvider.GetUsername() ?? "anonymous";
-            var currentUserName = username;
+            var currentUserName = await UserSession.GetCurrentUserNameAsync() ?? "anonymous";
             var chatHistory = _chatMessages
                 .Where(m => m != _chatMessages.Last())
                 .Select(m => new ChatHistoryMessage(m.IsUser ? "user" : "assistant", m.Content))
@@ -116,6 +122,7 @@
         }
         catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Application chat request failed.");
             _chatMessages.Add(new ChatMessage { Content = $"Error: {ex.Message}", IsUser = false });
         }
         finally

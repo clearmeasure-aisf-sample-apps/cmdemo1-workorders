@@ -241,4 +241,139 @@ internal static partial class ArchitectureRules
 
         return name.ToString();
     }
+
+    /// <summary>
+    /// Method and property names whose declared return type is <c>Expression&lt;Func&lt;WorkOrder, bool&gt;&gt;</c>.
+    /// Work-order bool predicates belong in Core <c>WorkOrderSpecifications</c>.
+    /// </summary>
+    internal static IReadOnlyList<string> WorkOrderBoolExpressionMembers(string source) =>
+        WorkOrderBoolExpressionMembers(Parse(source));
+
+    /// <summary>
+    /// Method and property names whose declared return type is <c>Expression&lt;Func&lt;WorkOrder, bool&gt;&gt;</c>.
+    /// </summary>
+    private static IReadOnlyList<string> WorkOrderBoolExpressionMembers(CompilationUnitSyntax root)
+    {
+        var names = new List<string>();
+        foreach (var member in root.DescendantNodes())
+        {
+            if (member is MethodDeclarationSyntax method && IsWorkOrderBoolExpression(method.ReturnType))
+            {
+                names.Add(method.Identifier.ValueText);
+            }
+            else if (member is PropertyDeclarationSyntax property && IsWorkOrderBoolExpression(property.Type))
+            {
+                names.Add(property.Identifier.ValueText);
+            }
+        }
+
+        return SortedDistinct(names);
+    }
+
+    private static bool IsWorkOrderBoolExpression(TypeSyntax type)
+    {
+        if (type is not GenericNameSyntax { Identifier.ValueText: "Expression", TypeArgumentList.Arguments.Count: 1 } expression)
+        {
+            return false;
+        }
+
+        if (expression.TypeArgumentList.Arguments[0] is not GenericNameSyntax
+            {
+                Identifier.ValueText: "Func", TypeArgumentList.Arguments.Count: 2
+            } func)
+        {
+            return false;
+        }
+
+        var workOrder = SimpleTypeName(func.TypeArgumentList.Arguments[0]);
+        return workOrder is "WorkOrder" && IsBoolType(func.TypeArgumentList.Arguments[1]);
+    }
+
+    private static bool IsBoolType(TypeSyntax type) =>
+        type is PredefinedTypeSyntax predefined
+            ? predefined.Keyword.IsKind(SyntaxKind.BoolKeyword)
+            : SimpleTypeName(type) is "Boolean";
+
+    /// <summary>
+    /// True when the source references <c>DbContext</c> or <c>DataContext</c> as a type name
+    /// (identifier, typeof, generic type argument, or using of EntityFrameworkCore).
+    /// </summary>
+    internal static bool ReferencesDbContext(string source) =>
+        ReferencesDbContext(Parse(source));
+
+    /// <summary>
+    /// True when the parsed tree references a persistence context type or EF Core namespace.
+    /// </summary>
+    private static bool ReferencesDbContext(CompilationUnitSyntax root)
+    {
+        foreach (var usingDirective in root.Usings)
+        {
+            if (usingDirective.Name?.ToString().Contains("EntityFrameworkCore", StringComparison.Ordinal) == true)
+            {
+                return true;
+            }
+        }
+
+        foreach (var identifier in root.DescendantNodes().OfType<IdentifierNameSyntax>())
+        {
+            var name = identifier.Identifier.ValueText;
+            if (name is "DbContext" or "DataContext")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Constructor declarations that invoke <c>CreateScope()</c> (scope leak smell).
+    /// </summary>
+    internal static IReadOnlyList<string> ConstructorsCallingCreateScope(string source) =>
+        ConstructorsCallingCreateScope(Parse(source));
+
+    /// <summary>
+    /// Constructor declarations that invoke <c>CreateScope()</c>.
+    /// </summary>
+    private static IReadOnlyList<string> ConstructorsCallingCreateScope(CompilationUnitSyntax root)
+    {
+        var names = new List<string>();
+        foreach (var ctor in root.DescendantNodes().OfType<ConstructorDeclarationSyntax>())
+        {
+            if (ctor.Body is null && ctor.ExpressionBody is null)
+            {
+                continue;
+            }
+
+            if (CallsCreateScope(ctor))
+            {
+                names.Add(ctor.Identifier.ValueText);
+            }
+        }
+
+        return SortedDistinct(names);
+    }
+
+    private static bool CallsCreateScope(ConstructorDeclarationSyntax ctor)
+    {
+        foreach (var invocation in ctor.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            if (IsCreateScopeCall(invocation))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsCreateScopeCall(InvocationExpressionSyntax invocation)
+    {
+        return invocation.Expression switch
+        {
+            IdentifierNameSyntax { Identifier.ValueText: "CreateScope" } => true,
+            MemberAccessExpressionSyntax { Name.Identifier.ValueText: "CreateScope" } => true,
+            _ => false
+        };
+    }
 }

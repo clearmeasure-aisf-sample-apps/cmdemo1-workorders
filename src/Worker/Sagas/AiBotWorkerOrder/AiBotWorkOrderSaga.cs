@@ -1,7 +1,7 @@
 ﻿using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.LlmGateway;
 using Microsoft.Extensions.AI;
 using Worker.Sagas.AiBotWorkerOrder.Commands;
@@ -61,7 +61,7 @@ public class AiBotWorkOrderSaga(IBus bus, ChatClientFactory chatClientFactory) :
         var chatResponse = await chatClient.GetResponseAsync(chatMessages, cancellationToken: context.CancellationToken);
 
         var combinedDescription = $"{Data.WorkOrder.Description}{Environment.NewLine}{Environment.NewLine}AI Bot: {chatResponse.Messages.Last()}";
-        Data.WorkOrder.Description = WorkOrderStringUtility.TruncateDescription(combinedDescription);
+        Data.WorkOrder.Description = WorkOrder.TruncateDescription(combinedDescription);
 
         var updatedEvent = new AiBotUpdatedWorkerOrderEvent(Data.SagaId);
         await context.Publish(updatedEvent);

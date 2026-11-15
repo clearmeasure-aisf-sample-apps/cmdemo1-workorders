@@ -23,6 +23,11 @@ public class EmployeeTools
         IBus bus,
         [Description("The employee's username")] string username)
     {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return $"No employee found with username '{username}'.";
+        }
+
         try
         {
             var employee = await bus.Send(new EmployeeByUserNameQuery(username));

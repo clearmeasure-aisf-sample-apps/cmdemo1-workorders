@@ -3,9 +3,12 @@ using MediatR;
 
 namespace ClearMeasure.Bootcamp.Core.Queries;
 
-public record NotificationsPanelQuery(string? UserName) : IRequest<NotificationsPanel>, IRemotableRequest;
+public record NotificationsPanelQuery(string? UserName) : IRequest<NotificationsSummary>, IRemotableRequest;
 
-public record NotificationsPanel(
+/// <summary>
+/// Notification lists for the shell bell panel (overdue, newly assigned, created-by-me changes).
+/// </summary>
+public record NotificationsSummary(
     WorkOrder[] OverdueAndDueToday,
     WorkOrder[] NewlyAssignedLast7Days,
     WorkOrder[] CreatedByMeStatusChangedLast7Days);

@@ -291,11 +291,185 @@ public class ArchitectureRulesTests
         ShouldMatchBaseline(mismatches, "namespace-folder-mismatches.txt");
     }
 
+    [Test]
+    public void WorkOrderBoolExpressionMembers_WhenDeclaredOutsideCore_AreAbsent()
+    {
+        var violations = WorkOrderBoolExpressionsOutsideCore(RepositoryCheckout.Current);
+
+        violations.ShouldBeEmpty(
+            "Expression<Func<WorkOrder, bool>> predicates belong in Core WorkOrderSpecifications. Found: " +
+            string.Join(", ", violations));
+    }
+
+    [Test]
+    public void WorkOrderBoolExpressionMembers_WhenSampleDeclaresPredicate_ReportsTheMember()
+    {
+        ArchitectureRules.WorkOrderBoolExpressionMembers("""
+            using System;
+            using System.Linq.Expressions;
+            using ClearMeasure.Bootcamp.Core.Model;
+
+            namespace Sample;
+
+            public static class Filters
+            {
+                public static Expression<Func<WorkOrder, bool>> IsOpen() => wo => true;
+            }
+            """).ShouldBe(["IsOpen"]);
+    }
+
+    [Test]
+    public void ReferencesDbContext_WhenSampleUsesDbContext_IsTrue()
+    {
+        ArchitectureRules.ReferencesDbContext("""
+            using Microsoft.EntityFrameworkCore;
+            namespace Sample;
+            public class Page {
+              public void Run(System.IServiceProvider sp) {
+                var db = sp.GetService(typeof(DbContext));
+              }
+            }
+            """).ShouldBeTrue();
+    }
+
+    [Test]
+    public void ReferencesDbContext_WhenSampleHasNoPersistence_IsFalse()
+    {
+        ArchitectureRules.ReferencesDbContext("""
+            namespace Sample;
+            public class Page { public string Title { get; set; } = ""; }
+            """).ShouldBeFalse();
+    }
+
+    [Test]
+    public void UiServerDbContextReferences_WhenMasterIsScanned_OnlyAllowListedCompositionFiles()
+    {
+        var violations = UiServerDbContextOutsideAllowList(RepositoryCheckout.Current);
+        violations.ShouldBeEmpty(
+            "UI.Server may reference DbContext only in composition files. Found: " +
+            string.Join(", ", violations));
+    }
+
+    [Test]
+    public void ConstructorsCallingCreateScope_WhenSampleConstructorCallsIt_ReportsTheType()
+    {
+        ArchitectureRules.ConstructorsCallingCreateScope("""
+            namespace Sample;
+            public class Job {
+              public Job(System.IServiceProvider sp) {
+                var scope = sp.CreateScope();
+              }
+            }
+            """).ShouldBe(["Job"]);
+    }
+
+    [Test]
+    public void ConstructorsCallingCreateScope_WhenCreateScopeIsInAMethod_IsEmpty()
+    {
+        ArchitectureRules.ConstructorsCallingCreateScope("""
+            namespace Sample;
+            public class Job {
+              public Job() { }
+              public void Run(System.IServiceProvider sp) {
+                using var scope = sp.CreateScope();
+              }
+            }
+            """).ShouldBeEmpty();
+    }
+
+    [Test]
+    public void ConstructorsCallingCreateScope_WhenMasterProductionSourcesAreScanned_IsEmpty()
+    {
+        var violations = CreateScopeInConstructorViolations(RepositoryCheckout.Current);
+        violations.ShouldBeEmpty(
+            "CreateScope() must not run in a constructor. Found: " + string.Join(", ", violations));
+    }
+
     private static void ShouldMatchBaseline(IReadOnlyList<string> actual, string baselineFile)
     {
         var comparison = SolutionArchitectureScan.ReadBaseline(RepositoryCheckout.Current, baselineFile).Compare(actual);
         comparison.IsClean.ShouldBeTrue(comparison.Report(baselineFile));
     }
+
+    private static readonly HashSet<string> UiServerDbContextAllowList = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "src/UI/Server/UIServiceRegistry.cs",
+        "src/UI/Server/TestingDatabaseStartupFilter.cs",
+    };
+
+    private static IReadOnlyList<string> WorkOrderBoolExpressionsOutsideCore(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (IsTestOrCorePath(relative))
+            {
+                continue;
+            }
+
+            foreach (var member in ArchitectureRules.WorkOrderBoolExpressionMembers(File.ReadAllText(sourceFile)))
+            {
+                violations.Add($"{relative}:{member}");
+            }
+        }
+
+        return violations;
+    }
+
+    private static IReadOnlyList<string> UiServerDbContextOutsideAllowList(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (!relative.StartsWith("src/UI/Server/", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (UiServerDbContextAllowList.Contains(relative))
+            {
+                continue;
+            }
+
+            if (ArchitectureRules.ReferencesDbContext(File.ReadAllText(sourceFile)))
+            {
+                violations.Add(relative);
+            }
+        }
+
+        return violations;
+    }
+
+    private static IReadOnlyList<string> CreateScopeInConstructorViolations(RepositoryCheckout checkout)
+    {
+        var violations = new List<string>();
+        foreach (var sourceFile in checkout.SourceFiles(".cs"))
+        {
+            var relative = checkout.Relative(sourceFile);
+            if (IsTestPath(relative))
+            {
+                continue;
+            }
+
+            foreach (var ctor in ArchitectureRules.ConstructorsCallingCreateScope(File.ReadAllText(sourceFile)))
+            {
+                violations.Add($"{relative}:{ctor}");
+            }
+        }
+
+        return violations;
+    }
+
+    private static bool IsTestOrCorePath(string relative) =>
+        relative.StartsWith("src/Core/", StringComparison.OrdinalIgnoreCase) ||
+        IsTestPath(relative);
+
+    private static bool IsTestPath(string relative) =>
+        relative.Contains("/UnitTests/", StringComparison.OrdinalIgnoreCase) ||
+        relative.Contains("/IntegrationTests/", StringComparison.OrdinalIgnoreCase) ||
+        relative.Contains("/AcceptanceTests/", StringComparison.OrdinalIgnoreCase);
 
     private static SolutionArchitectureScan.Result ScanMaster()
     {

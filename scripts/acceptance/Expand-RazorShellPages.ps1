@@ -108,12 +108,27 @@ function Get-RazorShellPageExpansion {
         $expansion[$layoutPath] = @($pagesByLayout[$layoutPath] | Sort-Object)
     }
 
+    function Test-LayoutUsesNavMenu {
+        param([string]$LayoutRelative)
+        $layoutAbsolute = Join-Path $RepoRoot $LayoutRelative
+        if (-not (Test-Path -LiteralPath $layoutAbsolute)) { return $false }
+        $layoutText = Get-Content -LiteralPath $layoutAbsolute -Raw
+        if (Test-TagUsed -Text $layoutText -Stem 'NavMenu') { return $true }
+        foreach ($match in [regex]::Matches($layoutText, '<(?<name>[A-Z][A-Za-z0-9]*)([\s/>]|$)')) {
+            $childStem = $match.Groups['name'].Value
+            $childPath = Resolve-LayoutPath -LayoutName $childStem
+            if ([string]::IsNullOrWhiteSpace($childPath)) { continue }
+            $childAbsolute = Join-Path $RepoRoot $childPath
+            if (-not (Test-Path -LiteralPath $childAbsolute)) { continue }
+            $childText = Get-Content -LiteralPath $childAbsolute -Raw
+            if (Test-TagUsed -Text $childText -Stem 'NavMenu') { return $true }
+        }
+        return $false
+    }
+
     $navPages = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     foreach ($layoutPath in $pagesByLayout.Keys) {
-        $layoutAbsolute = Join-Path $RepoRoot $layoutPath
-        if (-not (Test-Path -LiteralPath $layoutAbsolute)) { continue }
-        $layoutText = Get-Content -LiteralPath $layoutAbsolute -Raw
-        if (-not (Test-TagUsed -Text $layoutText -Stem 'NavMenu')) { continue }
+        if (-not (Test-LayoutUsesNavMenu -LayoutRelative $layoutPath)) { continue }
         foreach ($page in $pagesByLayout[$layoutPath]) {
             [void]$navPages.Add($page)
         }

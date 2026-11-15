@@ -23,12 +23,13 @@ public class LogoutTests
     public async Task ShouldDisplayWelcomeMessageWithUsername()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -43,13 +44,14 @@ public class LogoutTests
     public async Task ShouldDisplayFullNameWithMiddleName_WhenCurrentUserHasMiddleName()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
         var employee = new Employee("hsimpson", "Homer", "Simpson", "homer@example.com") { MiddleName = "Jay" };
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee) { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -63,13 +65,14 @@ public class LogoutTests
     public async Task ShouldDisplayUsername_WhenCurrentUserHasNoMiddleName()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
         var employee = new Employee("hsimpson", "Homer", "Simpson", "homer@example.com");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee) { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -83,12 +86,13 @@ public class LogoutTests
     public async Task ShouldDisplayUsername_WhenUserLookupFails()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubFailingUserSession());
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { GetCurrentUserFault = new InvalidOperationException("lookup failed"), OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -102,12 +106,13 @@ public class LogoutTests
     public async Task ShouldDisplayLogoutButton()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -126,12 +131,13 @@ public class LogoutTests
     public async Task ShouldShowSignOutTooltipOnLogoutButton()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -145,13 +151,14 @@ public class LogoutTests
     public async Task ShouldNotifyEventBusWithUserLoggedOutEventOnClick()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
         var spyEventBus = new SpyUiBus();
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -168,12 +175,13 @@ public class LogoutTests
     public async Task ShouldNavigateToLoginPageOnClick()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -190,13 +198,14 @@ public class LogoutTests
     public async Task ShouldPerformAllLogoutActionsInCorrectOrder()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var spyEventBus = new SpyUiBus();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -260,6 +269,7 @@ public class LogoutTests
     private static BunitContext CreateMenuContext()
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         authProvider.Login("tlovejoy").GetAwaiter().GetResult();
         var employee = new Employee("tlovejoy", "Timothy", "Lovejoy Jr", "tlovejoy@example.com");
@@ -267,7 +277,7 @@ public class LogoutTests
         employee.AddRole(new Role("Pastor", true, false));
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(employee) { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
         return ctx;
@@ -280,6 +290,7 @@ public class LogoutTests
     public async Task ShouldNotNavigate_WhenLogoutFailsClosed()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddLogging();
 
         var store = new StubUserSessionStore { KeepUsernameOnClear = true };
         var authProvider = new CustomAuthenticationStateProvider(store);
@@ -287,7 +298,7 @@ public class LogoutTests
         var spyEventBus = new SpyUiBus();
 
         ctx.Services.AddSingleton(authProvider);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(null));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(userName: "hsimpson") { OnSignOut = authProvider.Logout });
         ctx.Services.AddSingleton<IUiBus>(spyEventBus);
         ctx.Services.AddSingleton<IBus>(new Bus(null!));
 
@@ -302,22 +313,6 @@ public class LogoutTests
         authProvider.GetUsername().ShouldBe("tlovejoy");
         spyEventBus.NotifyWasCalled.ShouldBeFalse();
         navigationManager.Uri.ShouldBe(uriBefore);
-    }
-}
-
-public class StubUserSession(Employee? currentUser) : IUserSession
-{
-    public Task<Employee?> GetCurrentUserAsync()
-    {
-        return Task.FromResult(currentUser);
-    }
-}
-
-public class StubFailingUserSession : IUserSession
-{
-    public Task<Employee?> GetCurrentUserAsync()
-    {
-        throw new InvalidOperationException("lookup failed");
     }
 }
 

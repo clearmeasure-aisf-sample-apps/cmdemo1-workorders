@@ -7,7 +7,6 @@ using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -18,12 +17,12 @@ public partial class WorkOrderSearch : AppComponentBase
 {
     private bool _assignedToMe;
     private Employee? _currentUser;
+    private string? _signedInUserName;
     private WorkOrderSearchResultRow[] _rawResults = [];
     private readonly WorkOrderRowSelection _selection = new();
     private string? _bulkOutcome;
     private SearchPageScript? _script;
     private bool _canCreate;
-    private string? _currentUserName;
     private WorkOrderSearchTable? _table;
     private WorkOrderSearchSummary? _summary;
     private WorkOrderSearchUrlState _state = WorkOrderSearchUrlState.Default;
@@ -31,9 +30,8 @@ public partial class WorkOrderSearch : AppComponentBase
     private int _searchVersion;
     private bool _showPriorityBadges;
 
-    [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
+    [Inject] public TimeProvider Clock { get; set; } = null!;
     [Inject] private IFeatureFlags FeatureFlags { get; set; } = null!;
-    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
     [Inject] private WorkOrderSearchState SearchState { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Inject] private IUserSession UserSession { get; set; } = null!;
@@ -79,7 +77,7 @@ public partial class WorkOrderSearch : AppComponentBase
         {
             BuildingOptions = (await Bus.Send(new WorkOrderBuildingsQuery())).ToList();
         }
-        _currentUserName = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity?.Name;
+        _signedInUserName = await UserSession.GetCurrentUserNameAsync();
         _currentUser = await UserSession.GetCurrentUserAsync();
         _canCreate = _currentUser?.CanCreateWorkOrder() == true;
         await LoadSummaryAsync();
@@ -133,7 +131,7 @@ public partial class WorkOrderSearch : AppComponentBase
         _selection.Clear();
         _table?.CloseRowMenu();
         _assignedToMe = state.AssignedToMe;
-        Model.Filters.Show(state, _currentUserName);
+        Model.Filters.Show(state, _signedInUserName);
         EnsureSelectedBuildingIsListed();
         await SearchWorkOrders();
     }
@@ -186,7 +184,7 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private async Task LoadSummaryAsync()
     {
-        _summary = await Bus.Send(new WorkOrderSearchSummaryQuery(_currentUserName));
+        _summary = await Bus.Send(new WorkOrderSearchSummaryQuery(_signedInUserName));
     }
 
     private string EmployeeName(string userName) =>

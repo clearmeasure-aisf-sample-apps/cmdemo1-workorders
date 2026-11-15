@@ -1,5 +1,5 @@
-using System.Reflection;
 using System.Text.Json;
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Messaging;
 using FluentValidation;
 using FluentValidation.Results;
@@ -7,8 +7,9 @@ using FluentValidation.Results;
 namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 
 /// <summary>
-/// Validates the request a <see cref="WebServiceMessage"/> carries with the FluentValidation validator registered for
-/// its runtime type. A payload that cannot be read, or has no validator, is a bad request.
+/// Validates the request a <see cref="WebServiceMessage"/> carries. The HTTP allow-list is the explicit
+/// <see cref="IRemotableRequest"/> / <see cref="IRemotableEvent"/> markers; when a FluentValidation
+/// <see cref="IValidator"/> is registered for the payload type it runs via the non-generic API.
 /// </summary>
 internal static class WebServiceMessagePayloadValidator
 {
@@ -50,34 +51,32 @@ internal static class WebServiceMessagePayloadValidator
         IServiceProvider services,
         CancellationToken cancellationToken)
     {
-        var validatorInterface = typeof(IValidator<>).MakeGenericType(payload.GetType());
-        if (services.GetService(validatorInterface) is not { } validator)
+        if (payload is not IRemotableRequest and not IRemotableEvent)
         {
-            return PayloadValidationResult.BadRequest($"No validator registered for type {payload.GetType().FullName}.");
+            return PayloadValidationResult.BadRequest(
+                $"Type {payload.GetType().FullName} is not a remotable request or event.");
         }
 
-        var validateMethod = validatorInterface.GetMethod("ValidateAsync", [payload.GetType(), typeof(CancellationToken)]);
-        if (validateMethod is null)
+        var validator = ResolveValidator(payload, services);
+        if (validator is null)
         {
-            return PayloadValidationResult.BadRequest("Validation configuration error.");
+            return PayloadValidationResult.Valid;
         }
 
-        var validationResult = await InvokeAsync(validateMethod, validator, payload, cancellationToken);
-        return validationResult.IsValid
+        var result = await validator.ValidateAsync(new ValidationContext<object>(payload), cancellationToken);
+        return result.IsValid
             ? PayloadValidationResult.Valid
-            : new PayloadValidationResult(false, validationResult.Errors, null);
+            : new PayloadValidationResult(false, result.Errors, null);
     }
 
-    /// <summary>Calls <c>IValidator&lt;T&gt;.ValidateAsync</c> for a payload whose type is known only at run time.</summary>
-    private static async Task<ValidationResult> InvokeAsync(
-        MethodInfo validateMethod,
-        object validator,
-        object payload,
-        CancellationToken cancellationToken)
+    private static IValidator? ResolveValidator(object payload, IServiceProvider services)
     {
-        var validateTask = (Task)validateMethod.Invoke(validator, [payload, cancellationToken])!;
-        await validateTask.ConfigureAwait(false);
-        var resultProperty = validateTask.GetType().GetProperty(nameof(Task<>.Result))!;
-        return (ValidationResult)resultProperty.GetValue(validateTask)!;
+        var validatorType = typeof(IValidator<>).MakeGenericType(payload.GetType());
+        if (services.GetService(validatorType) is IValidator fromDi)
+        {
+            return fromDi;
+        }
+
+        return HttpEnvelopeFluentValidators.Resolve(payload, services);
     }
 }

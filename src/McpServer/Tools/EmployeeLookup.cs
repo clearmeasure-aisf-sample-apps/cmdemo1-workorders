@@ -12,6 +12,11 @@ internal static class EmployeeLookup
 {
     public static async Task<Employee?> FindAsync(IBus bus, string username)
     {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return null;
+        }
+
         try
         {
             return await bus.Send(new EmployeeByUserNameQuery(username));

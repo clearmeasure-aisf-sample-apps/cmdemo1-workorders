@@ -4,7 +4,6 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 using Palermo.BlazorMvc;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -25,12 +24,11 @@ public partial class Index : AppComponentBase, IListener<WorkOrderChangedEvent>
     private Dictionary<string, int>? _statusCounts;
     private WorkOrder[] _recent = [];
 
-    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
     [Inject] private IUserSession UserSession { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        _userName = (await AuthStateProvider.GetAuthenticationStateAsync()).User.Identity?.Name;
+        _userName = await UserSession.GetCurrentUserNameAsync();
         if (_userName == null)
         {
             return;

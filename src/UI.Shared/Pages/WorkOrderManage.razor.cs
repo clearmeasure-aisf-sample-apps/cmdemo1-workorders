@@ -20,17 +20,19 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private WorkOrderStatusChange[] _statusHistory = [];
     private bool _canRemoveAttachments;
     private string? _shelveReasonError;
-    private string _currentUserName = string.Empty;
+    private Employee? _currentUser;
+    private readonly StateCommandList _stateCommands = new();
     private string _preferredLanguage = "en-US";
     private WorkOrderDictation? _dictation;
     private bool _isSubmitting;
-    [Inject] public IWorkOrderBuilder? WorkOrderBuilder { get; set; }
-    [Inject] public IUserSession? UserSession { get; set; }
-    [Inject] private NavigationManager? NavigationManager { get; set; }
-    [Inject] public ITranslationService? TranslationService { get; set; }
-    [Inject] public SpeechSynthesis? SpeechSynthesis { get; set; }
-    [Inject] public SpeechRecognition? SpeechRecognition { get; set; }
-    [Inject] public TimeProvider Clock { get; set; } = TimeProvider.System;
+
+    [Inject] public IWorkOrderBuilder WorkOrderBuilder { get; set; } = null!;
+    [Inject] public IUserSession UserSession { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] public ITranslationService TranslationService { get; set; } = null!;
+    [Inject] public SpeechSynthesis SpeechSynthesis { get; set; } = null!;
+    [Inject] public SpeechRecognition SpeechRecognition { get; set; } = null!;
+    [Inject] public TimeProvider Clock { get; set; } = null!;
 
     private DueDateUrgency CurrentDueDateUrgency =>
         _workOrder == null
@@ -57,11 +59,13 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     [Parameter] public string? Id { get; set; }
 
     [SupplyParameterFromQuery] public string? Mode { get; set; }
-    private EditMode CurrentMode => Mode?.ToLower() == "edit" ? EditMode.Edit : EditMode.New;
+    private EditMode CurrentMode =>
+        string.Equals(Mode, "edit", StringComparison.OrdinalIgnoreCase) ? EditMode.Edit : EditMode.New;
 
     protected override async Task OnInitializedAsync()
     {
-        _dictation = new WorkOrderDictation(SpeechRecognition, AppendDictation, () => InvokeAsync(StateHasChanged));
+        _dictation = new WorkOrderDictation(SpeechRecognition, AppendDictation, () => InvokeAsync(StateHasChanged),
+            Logger);
         await LoadUserOptions();
         await LoadWorkOrder();
     }
@@ -84,16 +88,15 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     private async Task LoadWorkOrder()
     {
-        var currentUser = (await UserSession!.GetCurrentUserAsync())!;
-        _preferredLanguage = currentUser.PreferredLanguage;
-        _currentUserName = currentUser.UserName;
-        var workOrder = await FindOrCreateWorkOrderAsync(CurrentMode, Id, currentUser);
+        _currentUser = (await UserSession.GetCurrentUserAsync())!;
+        _preferredLanguage = _currentUser.PreferredLanguage;
+        var workOrder = await FindOrCreateWorkOrderAsync(CurrentMode, Id, _currentUser);
 
         Model = WorkOrderManageModel.For(CurrentMode, workOrder, Clock);
-        CommandButtons = new WorkOrderCommandButtons(new StateCommandList().GetValidStateCommands(workOrder, currentUser));
+        CommandButtons = new WorkOrderCommandButtons(_stateCommands.GetValidStateCommands(workOrder, _currentUser));
         Model.IsReadOnly = !CommandButtons.Any;
         _workOrder = workOrder;
-        await LoadAttachmentsAndHistoryAsync(workOrder, currentUser);
+        await LoadAttachmentsAndHistoryAsync(workOrder, _currentUser);
     }
 
     /// <summary>A new draft by <paramref name="currentUser"/> (numbered <paramref name="number"/> when given), or the saved work order.</summary>
@@ -104,7 +107,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
             return (await Bus.Send(new WorkOrderByNumberQuery(number!)))!;
         }
 
-        var workOrder = WorkOrderBuilder!.CreateNewWorkOrder(currentUser);
+        var workOrder = WorkOrderBuilder.CreateNewWorkOrder(currentUser);
         if (!string.IsNullOrEmpty(number))
         {
             workOrder.Number = number;
@@ -156,7 +159,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
     private async Task SubmitAsync()
     {
-        var currentUser = (await UserSession!.GetCurrentUserAsync())!;
+        var currentUser = _currentUser!;
         var workOrder = await FindOrCreateWorkOrderAsync(Model.Mode, Model.WorkOrderNumber, currentUser);
         var assignee = Model.AssignedToUserName == null
             ? null
@@ -169,7 +172,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     private IStateCommand? CommandFor(WorkOrder workOrder, Employee currentUser)
     {
         var command = CommandWithShelveReason(SaveDraftCommand.WithPreviousRoomNumber(
-            new StateCommandList().GetMatchingCommand(workOrder, currentUser, SelectedCommand!),
+            _stateCommands.GetMatchingCommand(workOrder, currentUser, SelectedCommand!),
             Model.OriginalRoomNumber));
         return command is SaveDraftCommand saveDraft ? saveDraft with { PreviousDueDate = Model.OriginalDueDate } : command;
     }
@@ -214,10 +217,10 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
 
         var result = await Bus.Send(command);
         EventBus.Notify(new WorkOrderChangedEvent(result));
-        NavigationManager!.NavigateTo("/workorder/search");
+        NavigationManager.NavigateTo("/workorder/search");
     }
 
-    private WorkOrderReadAloud ReadAloud => new(TranslationService, SpeechSynthesis);
+    private WorkOrderReadAloud ReadAloud => new(TranslationService, SpeechSynthesis, Logger);
 
     private Task SpeakTitleAsync() => ReadAloud.SpeakAsync(Model.Title, _preferredLanguage);
 

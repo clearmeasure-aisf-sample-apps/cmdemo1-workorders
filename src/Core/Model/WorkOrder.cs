@@ -1,5 +1,6 @@
 // ReSharper disable PropertyCanBeMadeInitOnly.Global -- Qodana P5 (#9440): NHibernate proxy / System.Text.Json set-by-convention requires mutable setters
 
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 
 namespace ClearMeasure.Bootcamp.Core.Model;
@@ -130,6 +131,24 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// </summary>
     public bool IsWaitingOnVendor => Status == WorkOrderStatus.InProgress && WaitingOnVendorSince != null;
 
+    /// <summary>
+    /// Sets title and description from an AI reformat, truncating the description to
+    /// <see cref="DescriptionMaxLength"/>.
+    /// </summary>
+    public void ApplyReformat(string title, string description)
+    {
+        Title = title;
+        Description = TruncateDescription(description);
+    }
+
+    /// <summary>
+    /// Truncates <paramref name="description"/> to <see cref="DescriptionMaxLength"/>.
+    /// </summary>
+    public static string TruncateDescription(string description) =>
+        description.Length <= DescriptionMaxLength
+            ? description
+            : description[..DescriptionMaxLength];
+
     private string GetTruncatedString(string? value)
     {
         if (value == null)
@@ -193,20 +212,21 @@ public class WorkOrder : EntityBase<WorkOrder>
     /// Returns the urgency classification for this work order's due date relative to today
     /// in America/Chicago.
     /// </summary>
-    public DueDateUrgency GetDueDateUrgency() =>
-        DueDateUrgencyCalculator.Calculate(this, TimeProvider.System);
+    public DueDateUrgency GetDueDateUrgency(TimeProvider timeProvider) =>
+        DueDateUrgencyCalculator.Calculate(this, timeProvider);
 
     /// <summary>
-    /// Returns <c>true</c> unless the status is Complete or Cancelled.
+    /// Returns <c>true</c> when the status is Draft, Assigned or In Progress
+    /// (<see cref="WorkOrderSpecifications.Open"/>).
     /// </summary>
-    public bool IsOpen() =>
-        Status != WorkOrderStatus.Complete && Status != WorkOrderStatus.Cancelled;
+    public bool IsOpen() => WorkOrderSpecifications.IsOpen(this);
 
     /// <summary>
     /// Returns <c>true</c> when this work order's due date has passed and the work order
     /// is still open.
     /// </summary>
-    public bool IsOverdue() => GetDueDateUrgency() == DueDateUrgency.Overdue;
+    public bool IsOverdue(TimeProvider timeProvider) =>
+        GetDueDateUrgency(timeProvider) == DueDateUrgency.Overdue;
 
     public ICollection<WorkOrderAttachment> Attachments { get; set; } = new List<WorkOrderAttachment>();
 }

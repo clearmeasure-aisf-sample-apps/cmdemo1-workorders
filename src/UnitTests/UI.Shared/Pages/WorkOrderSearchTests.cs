@@ -29,11 +29,12 @@ public class WorkOrderSearchTests
         StubFeatureFlags? featureFlags = null)
     {
         var ctx = new BunitContext();
+        ctx.Services.AddLogging();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         var theBus = bus ?? new StubBus();
         var uiBus = new StubUiBus();
         ctx.Services.AddSingleton(theBus);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(currentUser));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(currentUser, loggedInAs));
         ctx.Services.AddSingleton<IUiBus>(uiBus);
         ctx.Services.AddSingleton(new WorkOrderBulkActionService(theBus, uiBus));
         ctx.Services.AddSingleton(TimeProvider.System);

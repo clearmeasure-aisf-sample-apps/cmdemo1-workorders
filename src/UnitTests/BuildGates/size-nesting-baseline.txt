@@ -10,7 +10,6 @@ file src/IntegrationTests/DataAccess/WorkOrderSpecificationHandlerTests.cs
 file src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs
 file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
 file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
-file src/UnitTests/UI.Shared/MainLayoutTests.cs
 file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs
 file src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs
 file src/UnitTests/UI.Shared/Pages/WorkOrderSearchTests.cs
@@ -171,7 +170,6 @@ method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.Sh
 method src/UnitTests/Api/RateLimitedApiWebApplicationFactory.cs RateLimitedApiWebApplicationFactory.ConfigureWebHost(IWebHostBuilder)
 method src/UnitTests/Core/Handlers/EmployeeWorkLoadSummaryQueryHandlerTests.cs EmployeeWorkLoadSummaryQueryHandlerTests.ShouldCountEveryAssignableEmployee_InOneSqlCommand()
 method src/UnitTests/Core/Queries/RemotableRequestTests.cs RemotableRequestTests.ShouldRoundTripEmployeeWorkLoadSummaryQueryAndResult()
-method src/UnitTests/Core/Validation/RemotableRequestValidatorCoverageTests.cs RemotableRequestValidatorCoverageTests.ShouldHaveValidatorForEveryRemotableRequestInCore()
 method src/UnitTests/Database/DatabaseConsoleTests.cs RebuildDatabaseCommandTests.ExecuteInternal_WhenConnectionUnreachable_ReturnsFailureCode()
 method src/UnitTests/Database/DatabaseConsoleTests.cs UpdateDatabaseCommandTests.ExecuteInternal_WhenConnectionUnreachable_ReturnsFailureCode()
 method src/UnitTests/ServiceDefaults/ServiceDefaultsTelemetryTests.cs LocalTelemetryFileWriterTests.ExecuteAsync_ShouldCreateLogFiles_ThenCancelCleanly()
@@ -188,7 +186,6 @@ method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs Notificatio
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderNewlyAssignedWorkOrders()
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderWorkOrderAsLink_ToManageRoute()
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderWorkOrderCards_WhenOverdueAndDueTodayHasItems()
-method src/UnitTests/UI.Shared/Pages/LoginPageTests.cs LoginPageTests.Should_LoginAsTlovejoy_WhenLovejoyClickedBeforeEmployeesLoaded()
 method src/UnitTests/UI.Shared/Pages/StubBus.cs StubBus.Send<1>(IRequest<TResponse>)
 method src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs StubBusTeamsAndVendors.Send<1>(IRequest<TResponse>)
 method src/UnitTests/UI.Shared/Pages/WorkOrderManageCopyButtonTests.cs WorkOrderManageCopyButtonTests.CopyWorkOrderNumberAsync_ShouldExecuteSuccessfully_WhenClickingCopyButton()

@@ -1,5 +1,6 @@
 ﻿@inherits AppComponentBase
 @using ClearMeasure.Bootcamp.LlmGateway
+@using Microsoft.Extensions.Logging
 @implements Palermo.BlazorMvc.IListener<WorkOrderSelectedEvent>
 
 @if (_currentWorkOrder != null && _currentWorkOrder.Assignee != null)
@@ -85,6 +86,7 @@
         }
         catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Work-order chat request failed.");
             _chatMessages.Add(new ChatMessage { Content = $"Error: {ex.Message}", IsUser = false });
         }
         finally

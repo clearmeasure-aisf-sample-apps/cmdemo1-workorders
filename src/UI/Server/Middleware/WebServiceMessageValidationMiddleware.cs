@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 
 /// <summary>
 /// Validates a Blazor WASM single-API POST before MVC: the body must be a <see cref="WebServiceMessage"/>, the
-/// envelope must pass its validator, and the request it carries must pass the validator of its type.
+/// envelope must pass its validator, and the payload must be remotable (and pass its validator when one exists).
 /// </summary>
 public sealed class WebServiceMessageValidationMiddleware(
     RequestDelegate next,

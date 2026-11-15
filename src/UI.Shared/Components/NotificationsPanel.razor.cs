@@ -1,4 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -10,7 +12,7 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     public bool IsOpen { get; set; }
 
     [Parameter]
-    public global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel? Data { get; set; }
+    public NotificationsSummary? Data { get; set; }
 
     [Parameter]
     public ElementReference BellButtonRef { get; set; }
@@ -21,23 +23,19 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     [Inject]
     private IJSRuntime Js { get; set; } = null!;
 
+    [Inject]
+    private TimeProvider Clock { get; set; } = null!;
+
     private DotNetObjectReference<NotificationsPanel>? _dotNetRef;
-    private IJSObjectReference? _jsModule;
+    private NotificationsPanelScript? _script;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (IsOpen && _dotNetRef == null)
         {
-            try
-            {
-                _jsModule ??= await Js.InvokeAsync<IJSObjectReference>("import",
-                    "./_content/ClearMeasure.Bootcamp.UI.Shared/js/notificationsPanel.js");
-                _dotNetRef = DotNetObjectReference.Create(this);
-                await _jsModule.InvokeVoidAsync("setupEscapeHandler", _dotNetRef);
-            }
-            catch (JSDisconnectedException)
-            {
-            }
+            _script ??= new NotificationsPanelScript(Js);
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await _script.SetupEscapeHandlerAsync(_dotNetRef);
         }
     }
 
@@ -50,38 +48,23 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     private async Task CloseAsync()
     {
         await OnClose.InvokeAsync();
-        try
-        {
-            await BellButtonRef.FocusAsync();
-        }
-        catch (InvalidOperationException)
-        {
-        }
+        await (_script ??= new NotificationsPanelScript(Js)).FocusAsync(BellButtonRef);
     }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
-        try
-        {
-            if (_jsModule is not null)
-            {
-                await _jsModule.InvokeVoidAsync("cleanupEscapeHandler");
-                await _jsModule.DisposeAsync();
-            }
-        }
-        catch (JSDisconnectedException)
-        {
-        }
+        if (_script is not null)
+            await _script.DisposeAsync();
 
         _dotNetRef?.Dispose();
     }
 
-    private static string GetDueUrgency(WorkOrder order)
+    private string GetDueUrgency(WorkOrder order)
     {
         if (order.DueDate == null)
             return "none";
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = ChurchTimeZone.Today(Clock);
         if (order.DueDate < today)
             return "overdue";
         if (order.DueDate == today)
@@ -89,18 +72,18 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
         return "upcoming";
     }
 
-    private static string GetDueDateText(DateOnly? dueDate)
+    private string GetDueDateText(DateOnly? dueDate)
     {
         if (dueDate == null)
             return "No due date";
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = ChurchTimeZone.Today(Clock);
         if (dueDate == today)
             return "Due today";
         if (dueDate < today)
             return "Overdue";
 
-        var daysUntil = (dueDate.Value.DayNumber - today.DayNumber);
+        var daysUntil = dueDate.Value.DayNumber - today.DayNumber;
         if (daysUntil == 1)
             return "Due tomorrow";
 

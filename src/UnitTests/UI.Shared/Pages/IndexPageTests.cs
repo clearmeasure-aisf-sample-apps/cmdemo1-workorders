@@ -4,13 +4,13 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
-using StubUserSession = ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components.StubUserSession;
 using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
@@ -23,7 +23,7 @@ public class IndexPageTests
         var ctx = new BunitContext();
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton<IBus>(bus);
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(user));
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(signedIn ? user : null));
         var auth = ctx.AddAuthorization();
         if (signedIn)
         {
@@ -156,6 +156,23 @@ public class IndexPageTests
         component.Find($"{TestId(IndexPage.Elements.RecentActivityItem, "DEF5678")} .activity-meta").TextContent
             .ShouldBe("Created Oct 2, 2026 · Draft");
         component.FindAll(TestId(IndexPage.Elements.RecentActivityEmpty)).Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ShouldNameRecentActivityListForScreenReaders()
+    {
+        var order = new WorkOrder
+        {
+            Number = "ABC1234", Title = "Fix the organ", Status = WorkOrderStatus.Draft,
+            CreatedDate = new DateTime(2026, 10, 2, 18, 0, 0)
+        };
+        var bus = new StubBus { RecentWorkOrders = [order] };
+        await using var ctx = CreateContext(bus, User(true));
+
+        var component = ctx.Render<IndexPage>();
+
+        component.Find("ol.activity-list").GetAttribute("aria-label")
+            .ShouldBe("Recently updated work orders");
     }
 
     [TestCase("Fix the organ", "WO-ABC1234: Fix the organ")]

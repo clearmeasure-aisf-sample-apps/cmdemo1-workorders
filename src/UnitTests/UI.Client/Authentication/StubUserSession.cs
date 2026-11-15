@@ -1,0 +1,93 @@
+using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services;
+
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
+
+/// <summary>
+/// Shared fake <see cref="IUserSession"/> for page and component tests.
+/// </summary>
+public class StubUserSession : IUserSession
+{
+    private Employee? _currentUser;
+
+    /// <summary>
+    /// Creates a stub with an optional employee and user name (defaults to the employee's user name).
+    /// </summary>
+    public StubUserSession(Employee? currentUser = null, string? userName = null)
+    {
+        _currentUser = currentUser;
+        UserName = userName ?? currentUser?.UserName;
+    }
+
+    /// <inheritdoc />
+    public event Action? AuthenticationStateChanged;
+
+    /// <summary>User name returned by <see cref="GetCurrentUserNameAsync"/>.</summary>
+    public string? UserName { get; set; }
+
+    /// <summary>Optional side effect when <see cref="SignInAsync"/> runs (for example auth-provider login).</summary>
+    public Func<string, Task>? OnSignIn { get; init; }
+
+    /// <summary>Optional side effect when <see cref="SignOutAsync"/> runs.</summary>
+    public Func<Task>? OnSignOut { get; init; }
+
+    /// <summary>When set, <see cref="GetCurrentUserAsync"/> throws this exception.</summary>
+    public Exception? GetCurrentUserFault { get; init; }
+
+    /// <summary>How many times <see cref="GetCurrentUserAsync"/> has been called.</summary>
+    public int GetCurrentUserCallCount { get; private set; }
+
+    /// <summary>How many times <see cref="GetCurrentUserNameAsync"/> has been called.</summary>
+    public int GetCurrentUserNameCallCount { get; private set; }
+
+    /// <summary>User names passed to <see cref="SignInAsync"/>.</summary>
+    public List<string> SignInUserNames { get; } = [];
+
+    /// <inheritdoc />
+    public Task<string?> GetCurrentUserNameAsync()
+    {
+        GetCurrentUserNameCallCount++;
+        return Task.FromResult(UserName);
+    }
+
+    /// <inheritdoc />
+    public Task<Employee?> GetCurrentUserAsync()
+    {
+        GetCurrentUserCallCount++;
+        if (GetCurrentUserFault != null)
+        {
+            throw GetCurrentUserFault;
+        }
+
+        return Task.FromResult(_currentUser);
+    }
+
+    /// <inheritdoc />
+    public async Task SignInAsync(string username)
+    {
+        SignInUserNames.Add(username);
+        UserName = username;
+        if (OnSignIn != null)
+        {
+            await OnSignIn(username);
+        }
+
+        RaiseAuthenticationStateChanged();
+    }
+
+    /// <inheritdoc />
+    public async Task SignOutAsync()
+    {
+        UserName = null;
+        _currentUser = null;
+        if (OnSignOut != null)
+        {
+            await OnSignOut();
+        }
+
+        RaiseAuthenticationStateChanged();
+    }
+
+    /// <summary>Raises <see cref="AuthenticationStateChanged"/> for tests that simulate sign-in mid-render.</summary>
+    public void RaiseAuthenticationStateChanged() => AuthenticationStateChanged?.Invoke();
+}

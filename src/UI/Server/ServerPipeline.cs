@@ -79,6 +79,7 @@ public static class ServerPipeline
             context => ApiRateLimitingExtensions.ShouldApplyToPath(context.Request.Path),
             branch => branch.UseRequestTimeouts());
         app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
+        app.UseMiddleware<DiagnosticEndpointAccessMiddleware>();
         app.UseTestSupport();
         app.UseMachineClientStatusCodeProblemDetails();
         if (app.Services.IsServerCorsActive())

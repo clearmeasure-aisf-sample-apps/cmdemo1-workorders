@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.Services;
 using Bunit;
 using System.ComponentModel.DataAnnotations;
 using ClearMeasure.Bootcamp.Core;
@@ -48,14 +49,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplayDropdownWithEmployees()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -74,14 +68,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplayUppercaseLabelsInLoginDropdown_ForMixedAndAllCapsNames()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -99,14 +86,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldLoginWithSelectedEmployee()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext(out var provider);
 
         var component = ctx.Render<Login>();
 
@@ -123,14 +103,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplayWelcomeToTheChurchPortalHeading()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -141,14 +114,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplayKalahariChurchSubtitle()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -159,14 +125,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_ShowLovejoyShortcut_WithoutDropdownSelection()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext(out var provider);
 
         var component = ctx.Render<Login>();
 
@@ -179,14 +138,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_LoginAsTlovejoy_WhenLovejoyShortcutClicked()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext(out var provider);
 
         var component = ctx.Render<Login>();
 
@@ -200,15 +152,8 @@ public class LoginPageTests
     [Test]
     public async Task Should_LoginAsTlovejoy_WhenLovejoyClickedBeforeEmployeesLoaded()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         var gatedBus = new GatedEmployeeStubBus();
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(gatedBus);
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext(out var provider, gatedBus);
         var component = ctx.Render<Login>();
 
         component.FindAll("option")
@@ -232,14 +177,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_KeepDropdownLoginUnchanged_WhenLovejoyShortcutPresent()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext(out var provider);
 
         var component = ctx.Render<Login>();
 
@@ -258,14 +196,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldHaveAutofocusOnMemberDropdown()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -276,14 +207,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplaySignInHeading()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -294,14 +218,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplayLockIconInSignInHeading()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -313,14 +230,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplayLoginHint_WithExactText()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -334,14 +244,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldRenderTooltipWithExactTitleOnLoginHeading()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -352,14 +255,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_ShowHelperTextUnderMemberDropdown()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -371,14 +267,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_DescribeUserSelect_WithNotListedHint()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -392,14 +281,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderForgotLoginLink_WithCorrectText()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -410,14 +292,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderForgotLoginLink_WithCorrectHref()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -428,14 +303,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderForgotLoginLink_InsideSmallTag()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -446,14 +314,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderOfficePhoneLink_WithCorrectText()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -464,14 +325,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderOfficePhoneLink_WithCorrectHref()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -482,14 +336,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderOfficePhoneLink_InsideSmallTag()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -500,14 +347,7 @@ public class LoginPageTests
     [Test]
     public async Task ShouldDisplayCurrentYearFooter()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -515,20 +355,13 @@ public class LoginPageTests
             .First(d => d.QuerySelector("small.text-muted")?.TextContent
                 .Contains("Kalahari Church") == true);
         footerDiv.QuerySelector("small.text-muted")!.TextContent
-            .ShouldBe("Kalahari Church · " + DateTime.Now.Year);
+            .ShouldBe("Kalahari Church · " + TimeProvider.System.GetLocalNow().Year);
     }
 
     [Test]
     public async Task EnterThePortalButton_ShouldHaveFullWidthClass()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -539,14 +372,7 @@ public class LoginPageTests
     [Test]
     public async Task EnterThePortalButton_ShouldPreserveBtnPrimaryClass()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -557,14 +383,7 @@ public class LoginPageTests
     [Test]
     public async Task EnterThePortalButton_ShouldPreserveSubmitType()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -575,14 +394,7 @@ public class LoginPageTests
     [Test]
     public async Task EnterThePortalButton_ShouldPreserveButtonText()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -593,14 +405,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderRememberMySelectionCheckbox()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -611,14 +416,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderRememberMySelectionCheckbox_UncheckedByDefault()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -629,14 +427,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_AssociateRememberMySelectionLabel_ViaForId()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -648,14 +439,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderNeedHelpLink_WithCorrectText()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -671,14 +455,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderNeedHelpLink_WithTargetBlank()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -689,14 +466,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_RenderNeedHelpLink_WithRelNoopener()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -707,14 +477,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_ShowVersionLabel_WithVersionPrefix()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -727,14 +490,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_ShowVersionLabel_WithNonEmptyVersionString()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -750,14 +506,7 @@ public class LoginPageTests
     [Test]
     public async Task EnterThePortalButton_ShouldBeDisabled_OnInitialRender()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -768,14 +517,7 @@ public class LoginPageTests
     [Test]
     public async Task EnterThePortalButton_ShouldBeEnabled_AfterMemberSelected()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -789,14 +531,7 @@ public class LoginPageTests
     [Test]
     public async Task WelcomeMessage_ShouldBeAbsent_OnInitialRender()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -806,14 +541,7 @@ public class LoginPageTests
     [Test]
     public async Task WelcomeMessage_ShouldShowFullName_WhenMemberSelected()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -828,14 +556,7 @@ public class LoginPageTests
     [Test]
     public async Task WelcomeMessage_ShouldIncludeMiddleName_WhenSelectedEmployeeHasOne()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBusWithMiddleNameEmployee());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext(new StubBusWithMiddleNameEmployee());
 
         var component = ctx.Render<Login>();
 
@@ -849,14 +570,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_AnnounceErrorMessage_WithRoleAlert()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new FailingEmployeeStubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext(new FailingEmployeeStubBus());
 
         var component = ctx.Render<Login>();
 
@@ -867,14 +581,7 @@ public class LoginPageTests
     [Test]
     public async Task Should_ShowVersionLabel_WithEnvironmentSegment()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment("Testing"));
+        await using var ctx = CreateContext();
 
         var component = ctx.Render<Login>();
 
@@ -886,20 +593,34 @@ public class LoginPageTests
     [Test]
     public async Task Should_ShowVersionLabel_WithFallback_WhenEnvironmentNameIsBlank()
     {
-        await using var ctx = new BunitContext();
-
-        var provider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        ctx.Services.AddSingleton(provider);
-        ctx.Services.AddSingleton<AuthenticationStateProvider>(provider);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
-        ctx.Services.AddSingleton<IBus>(new StubBus());
-        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment(""));
+        await using var ctx = CreateContext(environmentName: "");
 
         var component = ctx.Render<Login>();
 
         var versionLabel = component.FindAll("small.text-muted")
             .First(s => s.TextContent.StartsWith("Version "));
         versionLabel.TextContent.ShouldContain("Environment unknown");
+    }
+
+    private static BunitContext CreateContext(IBus? bus = null, string environmentName = "Testing") =>
+        CreateContext(out _, bus, environmentName);
+
+    private static BunitContext CreateContext(
+        out CustomAuthenticationStateProvider auth,
+        IBus? bus = null,
+        string environmentName = "Testing")
+    {
+        var ctx = new BunitContext();
+        ctx.Services.AddLogging();
+        auth = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        ctx.Services.AddSingleton(auth);
+        ctx.Services.AddSingleton<AuthenticationStateProvider>(auth);
+        ctx.Services.AddSingleton<IUserSession>(new StubUserSession { OnSignIn = auth.Login });
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        ctx.Services.AddSingleton(bus ?? new StubBus());
+        ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment(environmentName));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        return ctx;
     }
 
     private sealed class FakeHostEnvironment(string environmentName) : IHostEnvironment

@@ -33,14 +33,14 @@ else
         <dt>Description</dt><dd data-testid="@Elements.Description">@Or(_workOrder.Description)</dd>
         <dt>Instructions</dt><dd data-testid="@Elements.Instructions">@Or(_workOrder.Instructions)</dd>
     </dl>
-    <h2>Attachments</h2>
+    <h2 id="print-attachments-heading">Attachments</h2>
     @if (_attachments.Length == 0)
     {
         <p data-testid="@Elements.AttachmentsNone">None</p>
     }
     else
     {
-        <ul data-testid="@Elements.Attachments">
+        <ul data-testid="@Elements.Attachments" aria-labelledby="print-attachments-heading">
             @foreach (var attachment in _attachments)
             {
                 <li data-testid="@Elements.AttachmentFileName">@attachment.FileName</li>

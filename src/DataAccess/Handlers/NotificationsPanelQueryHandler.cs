@@ -8,15 +8,15 @@ using Microsoft.EntityFrameworkCore;
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
 public class NotificationsPanelQueryHandler(DataContext context, TimeProvider time)
-    : IRequestHandler<NotificationsPanelQuery, NotificationsPanel>
+    : IRequestHandler<NotificationsPanelQuery, NotificationsSummary>
 {
-    public async Task<NotificationsPanel> Handle(
+    public async Task<NotificationsSummary> Handle(
         NotificationsPanelQuery request,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.UserName))
         {
-            return new NotificationsPanel([], [], []);
+            return new NotificationsSummary([], [], []);
         }
 
         var employee = await context.Set<Employee>()
@@ -24,14 +24,14 @@ public class NotificationsPanelQueryHandler(DataContext context, TimeProvider ti
 
         if (employee == null)
         {
-            return new NotificationsPanel([], [], []);
+            return new NotificationsSummary([], [], []);
         }
 
         var overdue = await GetOverdueAndDueTodayAsync(employee, cancellationToken);
         var newlyAssigned = await GetNewlyAssignedLast7DaysAsync(employee, cancellationToken);
         var createdByMeChanged = await GetCreatedByMeStatusChangedLast7DaysAsync(employee, cancellationToken);
 
-        return new NotificationsPanel(overdue, newlyAssigned, createdByMeChanged);
+        return new NotificationsSummary(overdue, newlyAssigned, createdByMeChanged);
     }
 
     private async Task<WorkOrder[]> GetOverdueAndDueTodayAsync(
@@ -41,9 +41,7 @@ public class NotificationsPanelQueryHandler(DataContext context, TimeProvider ti
         var today = ChurchTimeZone.Today(time);
         var query = context.Set<WorkOrder>()
             .Where(wo => wo.Assignee == employee)
-            .Where(wo => wo.Status == WorkOrderStatus.Draft ||
-                        wo.Status == WorkOrderStatus.Assigned ||
-                        wo.Status == WorkOrderStatus.InProgress)
+            .Where(WorkOrderSpecifications.Open)
             .Where(wo => wo.DueDate <= today)
             .OrderByDescending(wo => wo.DueDate)
             .ThenByDescending(wo => wo.CreatedDate);

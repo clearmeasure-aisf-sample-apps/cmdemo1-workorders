@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bunit;
+using Microsoft.Extensions.DependencyInjection;
 using ClearMeasure.Bootcamp.UI.Shared;
 using Shouldly;
 
@@ -12,6 +13,7 @@ public class PrintLayoutTests
     public async Task ShouldRenderCopyrightFooter_WithCurrentYearAndClearMeasureLink()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddSingleton(TimeProvider.System);
 
         var cut = ctx.Render<PrintLayout>();
 
@@ -38,6 +40,7 @@ public class PrintLayoutTests
     public async Task ShouldRenderCompanyLink_WithVisuallyHiddenNewTabText()
     {
         await using var ctx = new BunitContext();
+        ctx.Services.AddSingleton(TimeProvider.System);
 
         var cut = ctx.Render<PrintLayout>();
 

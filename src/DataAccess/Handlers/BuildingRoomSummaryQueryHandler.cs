@@ -54,7 +54,7 @@ public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider t
     internal IQueryable<RoomCount> CountsQuery()
     {
         var rows = context.Set<WorkOrder>().AsNoTracking()
-            .Select(WorkOrderQueryFilters.CountRow(ChurchTimeZone.Today(time), time, CompletedWindowDays));
+            .Select(WorkOrderProjection.CountRow(ChurchTimeZone.Today(time), time, CompletedWindowDays));
         var buildings = rows
             .GroupBy(r => r.Building)
             .Select(g => new { g.Key, Anchor = g.Min(r => r.Number) });

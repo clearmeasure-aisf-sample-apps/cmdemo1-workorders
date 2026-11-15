@@ -75,7 +75,7 @@ public class BuildFactsProviderTests
         using var document = JsonDocument.Parse(provider.Json);
 
         document.RootElement.GetProperty("version").GetString().ShouldBe("1.0.0");
-        logger.Warnings.ShouldHaveSingleItem().ShouldContain(BuildFactsProvider.FileName);
+        logger.MessagesAt(LogLevel.Warning).ShouldHaveSingleItem().ShouldContain(BuildFactsProvider.FileName);
     }
 
     [Test]
@@ -86,12 +86,21 @@ public class BuildFactsProviderTests
 
         provider.Json.ShouldNotBeNullOrEmpty();
 
-        logger.Warnings.ShouldBeEmpty();
+        logger.MessagesAt(LogLevel.Warning).ShouldBeEmpty();
     }
 
-    private sealed class StubLogger : ILogger
+    /// <summary>
+    /// Shared test logger for UI.Server characterization tests. Kept under this name so the
+    /// size-gate baseline entry for <c>ILogger.Log</c> stays a shrink-only line.
+    /// </summary>
+    public sealed class StubLogger : ILogger
     {
-        public List<string> Warnings { get; } = [];
+        private readonly List<(LogLevel Level, string Message, Exception? Exception)> _entries = [];
+
+        public int ErrorCount => _entries.Count(entry => entry.Level == LogLevel.Error);
+
+        public IReadOnlyList<string> MessagesAt(LogLevel level) =>
+            _entries.Where(entry => entry.Level == level).Select(entry => entry.Message).ToList();
 
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
@@ -104,10 +113,7 @@ public class BuildFactsProviderTests
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
-            if (logLevel == LogLevel.Warning)
-            {
-                Warnings.Add(formatter(state, exception));
-            }
+            _entries.Add((logLevel, formatter(state, exception), exception));
         }
     }
 }

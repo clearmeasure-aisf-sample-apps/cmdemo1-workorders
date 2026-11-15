@@ -1,13 +1,12 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using MediatR;
-using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components.Authorization;
 using Shouldly;
-using Bunit;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Client;
@@ -18,12 +17,8 @@ public class UserSessionTests
     [Test]
     public async Task GetCurrentUserAsync_ShouldReturnNull_WhenUsernameEmpty()
     {
-        await using var ctx = new BunitContext();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
-        var session = new UserSession(
-            new StubEmployeeBus(null),
-            authProvider,
-            ctx.Services.GetRequiredService<NavigationManager>());
+        var session = new UserSession(new StubEmployeeBus(), authProvider);
 
         var user = await session.GetCurrentUserAsync();
 
@@ -31,20 +26,26 @@ public class UserSessionTests
     }
 
     [Test]
+    public async Task GetCurrentUserNameAsync_ShouldPreferPreferredUsernameClaim()
+    {
+        var store = new StubUserSessionStore();
+        var authProvider = new CustomAuthenticationStateProvider(store);
+        await authProvider.Login("from-name-claim");
+        var session = new UserSession(new StubEmployeeBus(), authProvider);
+
+        var userName = await session.GetCurrentUserNameAsync();
+
+        userName.ShouldBe("from-name-claim");
+    }
+
+    [Test]
     public async Task GetCurrentUserAsync_ShouldReturnEmployee_WhenValid()
     {
-        await using var ctx = new BunitContext();
-        var employee = new Employee("hsimpson", "Homer", "Simpson", "homer@example.com")
-        {
-            Id = Guid.NewGuid()
-        };
+        var employee = Homer();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
         var stubBus = new StubEmployeeBus(employee);
-        var session = new UserSession(
-            stubBus,
-            authProvider,
-            ctx.Services.GetRequiredService<NavigationManager>());
+        var session = new UserSession(stubBus, authProvider);
 
         var user = await session.GetCurrentUserAsync();
 
@@ -55,9 +56,22 @@ public class UserSessionTests
     }
 
     [Test]
+    public async Task GetCurrentUserAsync_ShouldCacheEmployee_ForSameCircuit()
+    {
+        var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        await authProvider.Login("hsimpson");
+        var stubBus = new StubEmployeeBus(Homer());
+        var session = new UserSession(stubBus, authProvider);
+
+        await session.GetCurrentUserAsync();
+        await session.GetCurrentUserAsync();
+
+        stubBus.QueryCount.ShouldBe(1);
+    }
+
+    [Test]
     public async Task GetCurrentUserAsync_ShouldRestoreStoredUsername_BeforeQueryingEmployee()
     {
-        await using var ctx = new BunitContext();
         var employee = new Employee("tlovejoy", "Timothy", "Lovejoy", "lovejoy@example.com")
         {
             Id = Guid.NewGuid()
@@ -65,10 +79,7 @@ public class UserSessionTests
         var store = new StubUserSessionStore { Username = "tlovejoy" };
         var authProvider = new CustomAuthenticationStateProvider(store);
         var stubBus = new StubEmployeeBus(employee);
-        var session = new UserSession(
-            stubBus,
-            authProvider,
-            ctx.Services.GetRequiredService<NavigationManager>());
+        var session = new UserSession(stubBus, authProvider);
 
         var user = await session.GetCurrentUserAsync();
 
@@ -77,50 +88,190 @@ public class UserSessionTests
     }
 
     [Test]
-    public async Task GetCurrentUserAsync_ShouldThrow_WhenEmployeeMissing()
+    public async Task GetCurrentUserAsync_ShouldThrowInvalidEmployeeLogin_WhenEmployeeMissing()
     {
-        await using var ctx = new BunitContext();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("unknown");
-        var session = new UserSession(
-            new StubEmployeeBus(null),
-            authProvider,
-            ctx.Services.GetRequiredService<NavigationManager>());
+        var session = new UserSession(new StubEmployeeBus(), authProvider);
 
-        var ex = await Should.ThrowAsync<Exception>(session.GetCurrentUserAsync);
+        var ex = await Should.ThrowAsync<InvalidEmployeeLoginException>(session.GetCurrentUserAsync);
 
         ex.Message.ShouldContain("doesn't exist");
     }
 
     [Test]
-    public async Task LogOut_ShouldClearAuth_AndNavigateToLogin()
+    public async Task SignOutAsync_ShouldClearCachedNameAndEmployee()
     {
-        await using var ctx = new BunitContext();
         var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         await authProvider.Login("hsimpson");
-        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
-        var session = new UserSession(new StubEmployeeBus(null), authProvider, navigationManager);
+        var stubBus = new StubEmployeeBus(Homer());
+        var session = new UserSession(stubBus, authProvider);
+        (await session.GetCurrentUserNameAsync()).ShouldBe("hsimpson");
+        (await session.GetCurrentUserAsync())!.UserName.ShouldBe("hsimpson");
 
-        await session.LogOut();
+        await session.SignOutAsync();
+
+        (await session.GetCurrentUserNameAsync()).ShouldBeNull();
+        (await session.GetCurrentUserAsync()).ShouldBeNull();
+        stubBus.QueryCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task SignInAsync_ShouldReplaceCachedNameAndEmployee_WhenDifferentUserSignsIn()
+    {
+        var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        var stubBus = new StubEmployeeBus(Homer(), Lovejoy());
+        var session = new UserSession(stubBus, authProvider);
+        await session.SignInAsync("hsimpson");
+        (await session.GetCurrentUserNameAsync()).ShouldBe("hsimpson");
+        (await session.GetCurrentUserAsync())!.UserName.ShouldBe("hsimpson");
+
+        await session.SignInAsync("tlovejoy");
+
+        (await session.GetCurrentUserNameAsync()).ShouldBe("tlovejoy");
+        (await session.GetCurrentUserAsync())!.UserName.ShouldBe("tlovejoy");
+        stubBus.QueryCount.ShouldBe(2);
+        stubBus.LastQueriedUsername.ShouldBe("tlovejoy");
+    }
+
+    [Test]
+    public async Task GetCurrentUserNameAsync_ShouldNotRepopulateCache_WhenAuthChangesDuringLookup()
+    {
+        var authProvider = new GatedAuthProvider(new StubUserSessionStore());
+        await authProvider.Login("hsimpson");
+        var session = new UserSession(new StubEmployeeBus(), authProvider);
+        authProvider.AfterReadGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var inflight = session.GetCurrentUserNameAsync();
+        await WaitUntilWaiting(authProvider);
+
+        await session.SignOutAsync();
+        authProvider.AfterReadGate.TrySetResult();
+        await inflight;
+
+        (await session.GetCurrentUserNameAsync()).ShouldBeNull();
+    }
+
+    [Test]
+    public async Task GetCurrentUserAsync_ShouldNotRepopulateCache_WhenAuthChangesDuringLookup()
+    {
+        var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        await authProvider.Login("hsimpson");
+        var stubBus = new StubEmployeeBus(Homer())
+        {
+            SendGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously)
+        };
+        var session = new UserSession(stubBus, authProvider);
+        var inflight = session.GetCurrentUserAsync();
+        await WaitUntilWaiting(stubBus);
+
+        await session.SignOutAsync();
+        stubBus.SendGate.TrySetResult();
+        (await inflight)!.UserName.ShouldBe("hsimpson");
+
+        (await session.GetCurrentUserNameAsync()).ShouldBeNull();
+        (await session.GetCurrentUserAsync()).ShouldBeNull();
+        stubBus.QueryCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task SignOutAsync_ShouldClearAuth()
+    {
+        var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        await authProvider.Login("hsimpson");
+        var session = new UserSession(new StubEmployeeBus(), authProvider);
+
+        await session.SignOutAsync();
 
         var authState = await authProvider.GetAuthenticationStateAsync();
         authState.User.Identity!.IsAuthenticated.ShouldBeFalse();
-        navigationManager.Uri.ShouldEndWith("/login");
     }
 
-    private sealed class StubEmployeeBus(Employee? employee) : IBus
+    [Test]
+    public async Task SignInAsync_ShouldAuthenticateAndRaiseChanged()
     {
-        public string? LastQueriedUsername { get; private set; }
+        var authProvider = new CustomAuthenticationStateProvider(new StubUserSessionStore());
+        var session = new UserSession(new StubEmployeeBus(), authProvider);
+        var raised = false;
+        session.AuthenticationStateChanged += () => raised = true;
 
-        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        await session.SignInAsync("hsimpson");
+
+        authProvider.IsAuthenticated().ShouldBeTrue();
+        authProvider.GetUsername().ShouldBe("hsimpson");
+        raised.ShouldBeTrue();
+    }
+
+    private static Employee Homer() =>
+        new("hsimpson", "Homer", "Simpson", "homer@example.com") { Id = Guid.Parse("11111111-1111-1111-1111-111111111111") };
+
+    private static Employee Lovejoy() =>
+        new("tlovejoy", "Timothy", "Lovejoy", "lovejoy@example.com") { Id = Guid.Parse("22222222-2222-2222-2222-222222222222") };
+
+    private static async Task WaitUntilWaiting(GatedAuthProvider authProvider)
+    {
+        while (authProvider.WaitingCount == 0)
         {
-            if (request is EmployeeByUserNameQuery query)
+            await Task.Yield();
+        }
+    }
+
+    private static async Task WaitUntilWaiting(StubEmployeeBus stubBus)
+    {
+        while (stubBus.WaitingCount == 0)
+        {
+            await Task.Yield();
+        }
+    }
+
+    private sealed class GatedAuthProvider(IUserSessionStore store) : CustomAuthenticationStateProvider(store)
+    {
+        public TaskCompletionSource? AfterReadGate { get; set; }
+        public int WaitingCount { get; private set; }
+
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        {
+            var state = await base.GetAuthenticationStateAsync();
+            var gate = AfterReadGate;
+            if (gate == null)
             {
-                LastQueriedUsername = query.Username;
-                return Task.FromResult((TResponse)(object)employee!);
+                return state;
             }
 
-            throw new NotSupportedException(request.GetType().Name);
+            WaitingCount++;
+            await gate.Task;
+            return state;
+        }
+    }
+
+    private sealed class StubEmployeeBus(params Employee?[] employees) : IBus
+    {
+        private readonly Dictionary<string, Employee?> _byUserName = employees
+            .Where(e => e != null)
+            .ToDictionary(e => e!.UserName, e => e, StringComparer.OrdinalIgnoreCase);
+
+        public string? LastQueriedUsername { get; private set; }
+        public int QueryCount { get; private set; }
+        public TaskCompletionSource? SendGate { get; init; }
+        public int WaitingCount { get; private set; }
+
+        public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        {
+            if (request is not EmployeeByUserNameQuery query)
+            {
+                throw new NotSupportedException(request.GetType().Name);
+            }
+
+            QueryCount++;
+            LastQueriedUsername = query.Username;
+            var gate = SendGate;
+            if (gate != null)
+            {
+                WaitingCount++;
+                await gate.Task;
+            }
+
+            _byUserName.TryGetValue(query.Username, out var employee);
+            return (TResponse)(object)employee!;
         }
 
         public Task<object?> Send(object request) => throw new NotSupportedException();

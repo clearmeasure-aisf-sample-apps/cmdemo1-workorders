@@ -2,7 +2,6 @@
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Validation;
-using ClearMeasure.Bootcamp.UI.Server.Validation;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.DataAccess;
 using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
@@ -16,6 +15,7 @@ using FluentValidation;
 using Lamar;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using FunJeffreyCustomEventHealthCheck = ClearMeasure.Bootcamp.UI.Shared.FunJeffreyCustomEventHealthCheck;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
@@ -25,19 +25,22 @@ public class UiServiceRegistry : ServiceRegistry
     public UiServiceRegistry()
     {
         this.AddSingleton<IStartupFilter, TestingDatabaseStartupFilter>();
-        this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>();
-        this.AddValidatorsFromAssemblyContaining<EmployeeGetAllQueryValidator>();
+        this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>(
+            filter: result => !HttpEnvelopeValidationDeferral.IsDeferredValidator(result.ValidatorType));
+        this.AddSingleton<Middleware.HttpEnvelopeValidatorSet>();
         this.AddScoped<DbContext, DataContext>();
         AddRealtimeBus();
         this.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();
         this.AddTransient<WorkOrderReformatAgent>();
+        this.AddSingleton<IOptions<AutoReformatOptions>>(sp =>
+            Options.Create(new AutoReformatOptions(sp.GetRequiredService<IConfiguration>())));
         this.AddHostedService<AutoReformatAgentService>();
         ScanForHandlersAndHealthChecks();
         this.AddScoped<DatabaseMigrationVersionReader>();
         AddHealthReporting();
     }
 
-    /// <summary>MediatR with the feature-flag behavior, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
+    /// <summary>MediatR with validation and feature-flag behaviors, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
     private void AddRealtimeBus()
     {
         this.AddSingleton<RealtimeNotificationHub>();
@@ -46,6 +49,7 @@ public class UiServiceRegistry : ServiceRegistry
         {
             cfg.RegisterServicesFromAssemblyContaining<UiServiceRegistry>();
             cfg.RegisterServicesFromAssemblyContaining<HealthCheck>();
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();

@@ -8,7 +8,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 [TestFixture]
 public class CopyWorkOrderNumberButtonTests
 {
-    private const string ClipboardModule = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/clipboard.js";
+    private const string ClipboardModule = ClipboardScript.ModulePath;
 
     [Test]
     public async Task ShouldCopyTheNumberAndSayCopied_WhenClicked()

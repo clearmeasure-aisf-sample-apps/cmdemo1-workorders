@@ -194,7 +194,7 @@
             }
 
             <WorkOrderAttachmentList Attachments="_attachments" CanRemove="_canRemoveAttachments"
-                                     WorkOrderId="@(_workOrder?.Id ?? Guid.Empty)" CurrentUserName="@_currentUserName"
+                                     WorkOrderId="@(_workOrder?.Id ?? Guid.Empty)" CurrentUserName="@(_currentUser?.UserName ?? "")"
                                      AttachmentsChanged="ReloadAttachmentsAsync" />
 
             <WorkOrderStatusHistory Changes="_statusHistory" />

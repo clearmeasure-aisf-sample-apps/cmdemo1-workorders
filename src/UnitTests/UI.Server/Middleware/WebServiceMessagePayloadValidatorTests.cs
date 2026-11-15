@@ -1,5 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Messaging;
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,14 +36,53 @@ public class WebServiceMessagePayloadValidatorTests
     }
 
     [Test]
-    public async Task ShouldBeABadRequest_WhenNoValidatorIsRegisteredForThePayload()
+    public async Task ShouldPass_WhenARemotablePayloadHasNoValidator()
     {
         var services = new ServiceCollection().BuildServiceProvider();
 
         var result = await WebServiceMessagePayloadValidator.ValidateAsync(
             new WebServiceMessage(new WorkOrderByNumberQuery("WO-1")), services, CancellationToken.None);
 
-        result.BadRequestDetail.ShouldBe($"No validator registered for type {typeof(WorkOrderByNumberQuery).FullName}.");
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task ShouldBeABadRequest_WhenThePayloadIsNotRemotable()
+    {
+        var services = new ServiceCollection().BuildServiceProvider();
+
+        var result = await WebServiceMessagePayloadValidator.ValidateAsync(
+            new WebServiceMessage(new NotRemotablePayload()), services, CancellationToken.None);
+
+        result.BadRequestDetail.ShouldBe(
+            $"Type {typeof(NotRemotablePayload).FullName} is not a remotable request or event.");
+    }
+
+    [Test]
+    public async Task ShouldBeABadRequest_WhenChatClientConfigQueryIsPosted()
+    {
+        var result = await WebServiceMessagePayloadValidator.ValidateAsync(
+            new WebServiceMessage(new ChatClientConfigQuery()),
+            new ServiceCollection().BuildServiceProvider(),
+            CancellationToken.None);
+
+        result.IsValid.ShouldBeFalse();
+        result.BadRequestDetail.ShouldBe(
+            $"Type {typeof(ChatClientConfigQuery).FullName} is not a remotable request or event.");
+    }
+
+    [Test]
+    public async Task ShouldBeABadRequest_WhenWorkOrderChatQueryIsPosted()
+    {
+        var workOrder = new WorkOrder { Title = "T", Creator = new Employee() };
+        var result = await WebServiceMessagePayloadValidator.ValidateAsync(
+            new WebServiceMessage(new WorkOrderChatQuery("hi", workOrder)),
+            new ServiceCollection().BuildServiceProvider(),
+            CancellationToken.None);
+
+        result.IsValid.ShouldBeFalse();
+        result.BadRequestDetail.ShouldBe(
+            $"Type {typeof(WorkOrderChatQuery).FullName} is not a remotable request or event.");
     }
 
     [Test]
@@ -62,4 +103,6 @@ public class WebServiceMessagePayloadValidatorTests
     {
         public WorkOrderByNumberQueryRule() => RuleFor(query => query.Number).NotEmpty();
     }
+
+    private sealed class NotRemotablePayload;
 }

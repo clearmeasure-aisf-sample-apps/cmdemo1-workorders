@@ -20,12 +20,28 @@
     <PackageReference Include="MediatR" />
     <PackageReference Include="Toolbelt.Blazor.SpeechRecognition" />
     <PackageReference Include="Toolbelt.Blazor.SpeechSynthesis" />
+  </ItemGroup>
 
+  <!-- RS0030: UI.Shared reads the clock through TimeProvider, never the system clock. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\LlmGateway\LlmGateway.csproj" />
+  </ItemGroup>
+
+  <!-- Shell components share MainLayout styles so extraction does not change visuals. -->
+  <ItemGroup>
+    <None Update="MainLayout.razor.css" CssScope="b-appshell" />
+    <None Update="Components/NavRail.razor.css" CssScope="b-appshell" />
+    <None Update="Components/NavRailToggle.razor.css" CssScope="b-appshell" />
+    <None Update="Components/NotificationsBell.razor.css" CssScope="b-appshell" />
+    <None Update="Components/NotificationsBellToggle.razor.css" CssScope="b-appshell" />
+    <None Update="Components/NotificationsBellPanel.razor.css" CssScope="b-appshell" />
+    <None Update="Components/AppFooter.razor.css" CssScope="b-appshell" />
   </ItemGroup>
 
 </Project>

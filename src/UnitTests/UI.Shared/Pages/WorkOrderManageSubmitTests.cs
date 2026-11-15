@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
@@ -57,6 +58,34 @@ public class WorkOrderManageSubmitTests
             bus.LastCommand.ShouldBeOfType<SaveDraftCommand>().PreviousRoomNumber.ShouldBeNull();
             navigationManager.Uri.ShouldContain("/workorder/search");
         });
+    }
+
+    [Test]
+    public async Task Submit_ShouldReuseLoadedEmployee_WithoutSecondEmployeeLookup()
+    {
+        var user = new Employee("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+        user.AddRole(new Role("creator", true, false));
+        var session = new StubUserSession(user);
+        var bus = new StubSubmitBus();
+        await using var ctx = new BunitContext();
+        RegisterServices(ctx, bus, user, session);
+        var navigationManager = ctx.Services.GetRequiredService<NavigationManager>();
+        navigationManager.NavigateTo(navigationManager.GetUriWithQueryParameter("Mode", "New"));
+
+        var component = ctx.Render<WorkOrderManage>();
+        await component.WaitForAssertionAsync(() =>
+            component.Find($"[data-testid='{WorkOrderManage.Elements.Title}']").ShouldNotBeNull());
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Title}']")
+            .ChangeAsync(new() { Value = "Title" });
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.Description}']")
+            .ChangeAsync(new() { Value = "Desc" });
+        var callsAfterLoad = session.GetCurrentUserCallCount;
+
+        await component.Find($"[data-testid='{WorkOrderManage.Elements.CommandButton}Save']").ClickAsync(new());
+
+        await component.WaitForAssertionAsync(() => bus.LastCommand.ShouldNotBeNull());
+        session.GetCurrentUserCallCount.ShouldBe(callsAfterLoad);
+        bus.EmployeeByUserNameHits.ShouldBe(0);
     }
 
     [Test]
@@ -314,13 +343,15 @@ public class WorkOrderManageSubmitTests
             Assignee = user
         };
 
-    private static void RegisterServices(BunitContext ctx, IBus bus, Employee user)
+    private static void RegisterServices(
+        BunitContext ctx, IBus bus, Employee user, IUserSession? session = null)
     {
         ctx.Services.AddSingleton(bus);
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);
         ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder(user));
-        ctx.Services.AddSingleton<IUserSession>(new StubUserSession(user));
+        IUserSession userSession = session ?? new StubUserSession(user);
+        ctx.Services.AddSingleton(userSession);
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());
         ctx.Services.AddSpeechSynthesis();
         ctx.Services.AddSpeechRecognition();
@@ -331,6 +362,7 @@ public class WorkOrderManageSubmitTests
         public object? LastCommand { get; private set; }
         public int CommandCount { get; private set; }
         public int WorkOrderByNumberHits { get; private set; }
+        public int EmployeeByUserNameHits { get; private set; }
 
         public override Task Publish(INotification notification) => Task.CompletedTask;
 
@@ -354,6 +386,7 @@ public class WorkOrderManageSubmitTests
 
             if (request is EmployeeByUserNameQuery byUser)
             {
+                EmployeeByUserNameHits++;
                 if (existing?.Assignee?.UserName == byUser.Username)
                 {
                     return Task.FromResult((TResponse)(object)existing.Assignee);
@@ -376,15 +409,6 @@ public class WorkOrderManageSubmitTests
                 var result = new StateCommandResult(wo);
                 return RespondAfterGate((TResponse)(object)result);
             }
-
-            if (request is WorkOrderStatusHistoryQuery)
-
-            {
-
-                return Task.FromResult<TResponse>((TResponse)(object)Array.Empty<WorkOrderStatusChange>());
-
-            }
-
 
             throw new NotImplementedException(request.GetType().Name);
         }
@@ -414,11 +438,6 @@ public class WorkOrderManageSubmitTests
                 Description = ""
             };
         }
-    }
-
-    private sealed class StubUserSession(Employee user) : IUserSession
-    {
-        public Task<Employee?> GetCurrentUserAsync() => Task.FromResult<Employee?>(user);
     }
 
     private sealed class StubTranslationService : ITranslationService

@@ -1,8 +1,10 @@
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
@@ -10,20 +12,27 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 [TestFixture]
 public class NotificationsPanelTests
 {
-    private static void SetupJsInterop(BunitContext ctx)
+    private static void SetupClockAndJs(BunitContext ctx)
     {
-        var module = ctx.JSInterop.SetupModule("./_content/ClearMeasure.Bootcamp.UI.Shared/js/notificationsPanel.js");
+        ctx.Services.AddSingleton(TimeProvider.System);
+        var module = ctx.JSInterop.SetupModule(NotificationsPanelScript.ModulePath);
         module.SetupVoid("setupEscapeHandler", _ => true);
     }
+
+    private static void SetupClock(BunitContext ctx) =>
+        ctx.Services.AddSingleton(TimeProvider.System);
+
+    private static DateOnly ChurchToday => ChurchTimeZone.Today(TimeProvider.System);
 
     [Test]
     public void ShouldNotRenderPanel_WhenIsOpenIsFalse()
     {
         using var ctx = new BunitContext();
+        SetupClock(ctx);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, false)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+            .Add(c => c.Data, new NotificationsSummary([], [], [])));
 
         component.Markup.ShouldNotContain("notifications-panel");
     }
@@ -32,11 +41,11 @@ public class NotificationsPanelTests
     public void ShouldRenderPanel_WhenIsOpenIsTrue()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+            .Add(c => c.Data, new NotificationsSummary([], [], [])));
 
         component.Markup.ShouldContain("class=\"notifications-panel\"");
     }
@@ -45,11 +54,11 @@ public class NotificationsPanelTests
     public void ShouldExposeRegionAndAccessibleName_WhenOpen()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+            .Add(c => c.Data, new NotificationsSummary([], [], [])));
 
         var panel = component.Find(".notifications-panel");
         panel.GetAttribute("role").ShouldBe("region");
@@ -60,11 +69,11 @@ public class NotificationsPanelTests
     public void ShouldRenderAllThreeSections_WhenOpen()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+            .Add(c => c.Data, new NotificationsSummary([], [], [])));
 
         component.Markup.ShouldContain("Overdue & Due Today");
         component.Markup.ShouldContain("Newly Assigned (Last 7 Days)");
@@ -75,11 +84,11 @@ public class NotificationsPanelTests
     public void ShouldRenderEmptyMessage_WhenOverdueAndDueTodayIsEmpty()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+            .Add(c => c.Data, new NotificationsSummary([], [], [])));
 
         component.Markup.ShouldContain("No overdue or due-today work orders");
     }
@@ -88,11 +97,11 @@ public class NotificationsPanelTests
     public void ShouldNotRenderListRoles_WhenAllSectionsAreEmpty()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+            .Add(c => c.Data, new NotificationsSummary([], [], [])));
 
         component.FindAll("[role=list]").Count.ShouldBe(0);
         component.FindAll("[role=listitem]").Count.ShouldBe(0);
@@ -105,12 +114,12 @@ public class NotificationsPanelTests
     public void ShouldAnnounceCardsAsLists_WhenSectionsHaveItems()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
+        SetupClockAndJs(ctx);
+        var data = new NotificationsSummary(
             [BuildAssignedOrder("WO-001"), BuildAssignedOrder("WO-002")],
             [BuildAssignedOrder("WO-003")],
             [BuildAssignedOrder("WO-004"), BuildAssignedOrder("WO-005"), BuildAssignedOrder("WO-006")]);
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
         var lists = component.FindAll(".cards-container[role=list]");
@@ -128,7 +137,7 @@ public class NotificationsPanelTests
         Creator = new Employee("test_user", "Test", "User", "test@example.com"),
         Assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com"),
         Status = WorkOrderStatus.Assigned,
-        DueDate = DateOnly.FromDateTime(DateTime.Today)
+        DueDate = ChurchToday
     };
 
     private static void AssertListWrapsCards(AngleSharp.Dom.IElement list, int expectedCount)
@@ -142,7 +151,7 @@ public class NotificationsPanelTests
     public void ShouldRenderWorkOrderCards_WhenOverdueAndDueTodayHasItems()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
         var creator = new Employee("test_user", "Test", "User", "test@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -154,15 +163,15 @@ public class NotificationsPanelTests
             Creator = creator,
             Assignee = assignee,
             Status = WorkOrderStatus.Assigned,
-            DueDate = DateOnly.FromDateTime(DateTime.Today)
+            DueDate = ChurchToday
         };
 
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
+        var data = new NotificationsSummary(
             [workOrder],
             [],
             []);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
 
@@ -175,7 +184,7 @@ public class NotificationsPanelTests
     public void ShouldRenderWorkOrderAsLink_ToManageRoute()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
         var creator = new Employee("test_user", "Test", "User", "test@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -187,15 +196,15 @@ public class NotificationsPanelTests
             Creator = creator,
             Assignee = assignee,
             Status = WorkOrderStatus.Assigned,
-            DueDate = DateOnly.FromDateTime(DateTime.Today)
+            DueDate = ChurchToday
         };
 
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
+        var data = new NotificationsSummary(
             [workOrder],
             [],
             []);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
 
@@ -207,7 +216,7 @@ public class NotificationsPanelTests
     public void ShouldRenderNewlyAssignedWorkOrders()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
         var creator = new Employee("test_user", "Test", "User", "test@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -222,12 +231,12 @@ public class NotificationsPanelTests
             AssignedDate = DateTime.UtcNow.AddDays(-2)
         };
 
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
+        var data = new NotificationsSummary(
             [],
             [workOrder],
             []);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
 
@@ -239,7 +248,7 @@ public class NotificationsPanelTests
     public void ShouldRenderCreatedByMeStatusChangedWorkOrders()
     {
         using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
 
         var creator = new Employee("creator_user", "Creator", "User", "creator@example.com");
         var assignee = new Employee("assigned_user", "Assigned", "User", "assigned@example.com");
@@ -254,12 +263,12 @@ public class NotificationsPanelTests
             AssignedDate = DateTime.UtcNow.AddDays(-1)
         };
 
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel(
+        var data = new NotificationsSummary(
             [],
             [],
             [workOrder]);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
 
@@ -284,11 +293,12 @@ public class NotificationsPanelTests
     public void ShouldRenderDueUrgencyAndText(int offsetDays, string urgency, string text)
     {
         using var ctx = new BunitContext();
+        SetupClock(ctx);
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-        var due = DateOnly.FromDateTime(DateTime.Today).AddDays(offsetDays);
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([BuildOrder(due)], [], []);
+        var due = ChurchToday.AddDays(offsetDays);
+        var data = new NotificationsSummary([BuildOrder(due)], [], []);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
 
@@ -301,11 +311,12 @@ public class NotificationsPanelTests
     public void ShouldRenderMonthDay_WhenDueMoreThanOneDayAway()
     {
         using var ctx = new BunitContext();
+        SetupClock(ctx);
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-        var due = DateOnly.FromDateTime(DateTime.Today).AddDays(5);
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([BuildOrder(due)], [], []);
+        var due = ChurchToday.AddDays(5);
+        var data = new NotificationsSummary([BuildOrder(due)], [], []);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
 
@@ -318,10 +329,11 @@ public class NotificationsPanelTests
     public void ShouldRenderNoDueDate_WhenDueDateIsNull()
     {
         using var ctx = new BunitContext();
+        SetupClock(ctx);
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-        var data = new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([BuildOrder(null)], [], []);
+        var data = new NotificationsSummary([BuildOrder(null)], [], []);
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
             .Add(c => c.Data, data));
 
@@ -334,11 +346,12 @@ public class NotificationsPanelTests
     public async Task HandleEscapeKey_ShouldInvokeOnClose()
     {
         await using var ctx = new BunitContext();
+        SetupClock(ctx);
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         var closed = 0;
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], []))
+            .Add(c => c.Data, new NotificationsSummary([], [], []))
             .Add(c => c.OnClose, EventCallback.Factory.Create(this, () => closed++)));
 
         await component.InvokeAsync(() => component.Instance.HandleEscapeKey());
@@ -350,10 +363,11 @@ public class NotificationsPanelTests
     public async Task Dispose_ShouldCleanUpEscapeHandler_AfterOpening()
     {
         var ctx = new BunitContext();
+        SetupClock(ctx);
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [], [])));
+            .Add(c => c.Data, new NotificationsSummary([], [], [])));
         await component.WaitForAssertionAsync(() => ctx.JSInterop.Invocations.Any(i => i.Identifier == "setupEscapeHandler").ShouldBeTrue());
 
         await ctx.DisposeAsync();
@@ -365,13 +379,13 @@ public class NotificationsPanelTests
     public async Task ShouldInvokeOnClose_WhenEntryIsClicked()
     {
         await using var ctx = new BunitContext();
-        SetupJsInterop(ctx);
+        SetupClockAndJs(ctx);
         var closed = false;
         var workOrder = new WorkOrder { Number = "WO-1", Title = "Fix", Status = WorkOrderStatus.Assigned };
 
-        var component = ctx.Render<global::ClearMeasure.Bootcamp.UI.Shared.Components.NotificationsPanel>(p => p
+        var component = ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)
-            .Add(c => c.Data, new global::ClearMeasure.Bootcamp.Core.Queries.NotificationsPanel([], [workOrder], []))
+            .Add(c => c.Data, new NotificationsSummary([], [workOrder], []))
             .Add(c => c.OnClose, () => closed = true));
 
         await component.Find(".notification-card").ClickAsync(new());

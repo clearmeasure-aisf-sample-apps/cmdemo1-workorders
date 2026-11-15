@@ -1,8 +1,5 @@
 using System.Diagnostics;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Model.StateCommands;
-using ClearMeasure.Bootcamp.Core.Validation;
-using FluentValidation;
 using MediatR;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
@@ -25,7 +22,6 @@ public class Bus : IBus
 
         try
         {
-            ValidateRequest(request);
             return await _mediator.Send(request);
         }
         catch (Exception ex)
@@ -41,7 +37,6 @@ public class Bus : IBus
 
         try
         {
-            ValidateRequest(request);
             return await _mediator.Send(request);
         }
         catch (Exception ex)
@@ -63,19 +58,6 @@ public class Bus : IBus
         {
             SetActivityError(activity, ex);
             throw;
-        }
-    }
-
-    private static void ValidateRequest(object request)
-    {
-        if (request is SaveDraftCommand saveDraft)
-        {
-            new SaveDraftCommandValidator().ValidateAndThrow(saveDraft);
-        }
-
-        if (request is InProgressToAssignedCommand shelve)
-        {
-            new InProgressToAssignedCommandValidator().ValidateAndThrow(shelve);
         }
     }
 
