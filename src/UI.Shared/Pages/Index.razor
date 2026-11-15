@@ -48,7 +48,7 @@
                     <h2 id="recent-activity-heading" class="recent-activity-title">Recent activity</h2>
                     @if (_recent.Length == 0)
                     {
-                        <p class="recent-activity-empty" data-testid="@nameof(Elements.RecentActivityEmpty)">No work order activity yet.</p>
+                        <p class="recent-activity-empty" role="status" data-testid="@nameof(Elements.RecentActivityEmpty)">No work order activity yet.</p>
                     }
                     else
                     {
