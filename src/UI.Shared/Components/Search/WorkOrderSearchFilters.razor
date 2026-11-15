@@ -67,7 +67,7 @@
 
             <div class="filter-group">
                 <label class="filter-label" for="@WorkOrderSearch.Elements.RoomInput">Room</label>
-                <InputText id="@WorkOrderSearch.Elements.RoomInput" @bind-Value="Filters.Room" @bind-Value:after="Changed" class="@RoomInputClass(Filters.Room)" maxlength="@WorkOrder.RoomNumberMaxLength" />
+                <InputText id="@WorkOrderSearch.Elements.RoomInput" autocomplete="off" @bind-Value="Filters.Room" @bind-Value:after="Changed" class="@RoomInputClass(Filters.Room)" maxlength="@WorkOrder.RoomNumberMaxLength" />
             </div>
         </div>
     </EditForm>
