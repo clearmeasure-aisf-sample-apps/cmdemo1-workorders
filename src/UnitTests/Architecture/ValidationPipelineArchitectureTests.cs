@@ -84,6 +84,23 @@ public class ValidationPipelineArchitectureTests
         source.ShouldNotContain("HttpEnvelopeFluentValidators");
     }
 
+    [Test]
+    public void ShouldResolveDeferredValidatorsFromDi_WhenHttpEnvelopeHandOffHasNoNewValidators()
+    {
+        var resolver = RepositoryCheckout.Current.ReadText(
+            "src/UI/Server/Middleware/HttpEnvelopeFluentValidators.cs");
+        var set = RepositoryCheckout.Current.ReadText(
+            "src/UI/Server/Middleware/HttpEnvelopeValidatorSet.cs");
+
+        resolver.ShouldContain("HttpEnvelopeValidatorSet");
+        resolver.ShouldNotContain("new CreateVendorCommandValidator");
+        set.ShouldContain("HttpEnvelopeValidationDeferral");
+        set.ShouldContain("ActivatorUtilities.CreateInstance");
+        set.ShouldNotContain("new CreateVendorCommandValidator");
+        set.ShouldNotContain("new CreateTeamCommandValidator");
+        set.ShouldNotContain("new CreateDatedWorkOrdersCommandValidator");
+    }
+
     private static IReadOnlyList<string> EmptyAbstractValidators(RepositoryCheckout checkout)
     {
         var empty = new List<string>();
@@ -130,8 +147,7 @@ public class ValidationPipelineArchitectureTests
         {
             var relative = checkout.Relative(file);
             if (!IsProductionSource(relative)
-                || relative.EndsWith("/ValidationBehavior.cs", StringComparison.Ordinal)
-                || relative.EndsWith("/HttpEnvelopeFluentValidators.cs", StringComparison.Ordinal))
+                || relative.EndsWith("/ValidationBehavior.cs", StringComparison.Ordinal))
             {
                 continue;
             }

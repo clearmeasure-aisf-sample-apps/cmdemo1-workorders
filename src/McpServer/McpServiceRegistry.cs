@@ -51,9 +51,7 @@ public class McpServiceRegistry : ServiceRegistry
             scanner.AssemblyContainingType<IBus>();
             scanner.AssemblyContainingType<DataContext>();
             scanner.AssemblyContainingType<WebServiceMessageValidator>();
-            scanner.ExcludeType<CreateVendorCommandValidator>();
-            scanner.ExcludeType<CreateTeamCommandValidator>();
-            scanner.ExcludeType<CreateDatedWorkOrdersCommandValidator>();
+            scanner.Exclude(HttpEnvelopeValidationDeferral.IsDeferredValidator);
             scanner.ConnectImplementationsToTypesClosing(typeof(IRequestHandler<,>));
             scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
             scanner.ConnectImplementationsToTypesClosing(typeof(IValidator<>));
