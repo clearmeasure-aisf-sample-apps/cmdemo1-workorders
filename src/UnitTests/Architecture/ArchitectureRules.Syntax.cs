@@ -304,7 +304,7 @@ internal static partial class ArchitectureRules
     /// <summary>
     /// True when the parsed tree references a persistence context type or EF Core namespace.
     /// </summary>
-    internal static bool ReferencesDbContext(CompilationUnitSyntax root)
+    private static bool ReferencesDbContext(CompilationUnitSyntax root)
     {
         foreach (var usingDirective in root.Usings)
         {
@@ -335,7 +335,7 @@ internal static partial class ArchitectureRules
     /// <summary>
     /// Constructor declarations that invoke <c>CreateScope()</c>.
     /// </summary>
-    internal static IReadOnlyList<string> ConstructorsCallingCreateScope(CompilationUnitSyntax root)
+    private static IReadOnlyList<string> ConstructorsCallingCreateScope(CompilationUnitSyntax root)
     {
         var names = new List<string>();
         foreach (var ctor in root.DescendantNodes().OfType<ConstructorDeclarationSyntax>())

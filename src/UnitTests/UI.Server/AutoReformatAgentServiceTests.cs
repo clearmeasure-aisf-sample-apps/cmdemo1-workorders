@@ -74,7 +74,7 @@ public class AutoReformatAgentServiceTests
     [Test]
     public async Task ReformatWorkOrdersAsync_SavesNothingAndLogsOnce_WhenAgentThrows()
     {
-        var workOrder = DraftWorkOrder("WO-12", "t", "d");
+        var workOrder = DraftWorkOrder("WO-12");
         var bus = new StubRecordingBus([workOrder]);
         var logger = new BuildFactsProviderTests.StubLogger();
         var service = CreateService(
@@ -180,21 +180,20 @@ public class AutoReformatAgentServiceTests
         }
     }
 
+    // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
     private sealed class StubReformatAgent : WorkOrderReformatAgent
     {
-        private readonly WorkOrderReformatAgent.ReformatResult? _result;
+        private readonly ReformatResult? _result;
         private readonly Exception? _exception;
 
-        public StubReformatAgent(
-            WorkOrderReformatAgent.ReformatResult? result = null,
-            Exception? exception = null)
+        public StubReformatAgent(ReformatResult? result = null, Exception? exception = null)
             : base(new ChatClientFactory(new StubUnavailableBus()), NullLogger<WorkOrderReformatAgent>.Instance)
         {
             _result = result;
             _exception = exception;
         }
 
-        public override Task<WorkOrderReformatAgent.ReformatResult?> ReformatWorkOrderAsync(WorkOrder workOrder)
+        public override Task<ReformatResult?> ReformatWorkOrderAsync(WorkOrder workOrder)
         {
             if (_exception is not null)
             {
