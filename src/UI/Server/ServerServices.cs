@@ -14,6 +14,7 @@ using ClearMeasure.Bootcamp.UI.Server.Testing;
 using ClearMeasure.Bootcamp.UI.Server.TestSupport;
 using ChurchBulletin.ServiceDefaults;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Options;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
@@ -55,7 +56,8 @@ public static class ServerServices
         builder.Services.AddMemoryCache();
         builder.Services.AddGrpc();
         builder.Services.Configure<LlmHealthCheckOptions>(builder.Configuration.GetSection("LlmHealthCheck"));
-        builder.Services.AddAutoReformatOptions(builder.Configuration);
+        builder.Services.AddSingleton<IOptions<AutoReformatOptions>>(_ =>
+            Options.Create(new AutoReformatOptions(builder.Configuration)));
     }
 
     /// <summary>Idempotency, rate limits, timeouts, API keys, body buffering, decompression and CORS.</summary>

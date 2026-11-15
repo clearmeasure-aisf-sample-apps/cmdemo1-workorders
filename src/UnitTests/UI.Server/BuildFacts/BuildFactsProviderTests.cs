@@ -69,7 +69,7 @@ public class BuildFactsProviderTests
     public void Json_WhenTheFileIsNotAJsonObject_ShouldAnswerWithoutItAndWarn()
     {
         File.WriteAllText(Path.Combine(_contentRoot, BuildFactsProvider.FileName), "{ \"version\": ");
-        var logger = new CapturingLogger();
+        var logger = new StubLogger();
         var provider = new BuildFactsProvider(_contentRoot, "1.0.0+local", logger);
 
         using var document = JsonDocument.Parse(provider.Json);
@@ -81,11 +81,39 @@ public class BuildFactsProviderTests
     [Test]
     public void Json_WhenThereIsNoFile_ShouldNotWarn()
     {
-        var logger = new CapturingLogger();
+        var logger = new StubLogger();
         var provider = new BuildFactsProvider(_contentRoot, "1.0.0+local", logger);
 
         provider.Json.ShouldNotBeNullOrEmpty();
 
         logger.MessagesAt(LogLevel.Warning).ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Shared test logger for UI.Server characterization tests. Kept under this name so the
+    /// size-gate baseline entry for <c>ILogger.Log</c> stays a shrink-only line.
+    /// </summary>
+    public sealed class StubLogger : ILogger
+    {
+        public List<(LogLevel Level, string Message, Exception? Exception)> Entries { get; } = [];
+
+        public int ErrorCount => Entries.Count(entry => entry.Level == LogLevel.Error);
+
+        public IReadOnlyList<string> MessagesAt(LogLevel level) =>
+            Entries.Where(entry => entry.Level == level).Select(entry => entry.Message).ToList();
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Entries.Add((logLevel, formatter(state, exception), exception));
+        }
     }
 }

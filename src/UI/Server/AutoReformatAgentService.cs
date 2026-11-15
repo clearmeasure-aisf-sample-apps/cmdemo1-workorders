@@ -14,19 +14,19 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 public class AutoReformatAgentService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<AutoReformatAgentService> _logger;
+    private readonly ILogger _logger;
     private readonly AutoReformatOptions _options;
     private readonly TimeProvider _timeProvider;
 
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
     public AutoReformatAgentService(
         IServiceScopeFactory scopeFactory,
-        ILogger<AutoReformatAgentService> logger,
+        ILoggerFactory loggerFactory,
         IOptions<AutoReformatOptions> options,
         TimeProvider timeProvider)
     {
         _scopeFactory = scopeFactory;
-        _logger = logger;
+        _logger = loggerFactory.CreateLogger(nameof(AutoReformatAgentService));
         _options = options.Value;
         _timeProvider = timeProvider;
     }

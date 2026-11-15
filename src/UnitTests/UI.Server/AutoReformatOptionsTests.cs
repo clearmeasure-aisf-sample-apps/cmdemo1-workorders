@@ -1,7 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Server;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -10,15 +8,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 public class AutoReformatOptionsTests
 {
     [Test]
-    public void AddAutoReformatOptions_SetsDisabled_WhenFlatKeyIsTrue()
+    public void Constructor_SetsDisabled_WhenFlatKeyIsTrue()
     {
         var configuration = ConfigurationWith(
             (AutoReformatOptions.DisableConfigurationKey, "true"));
-        var services = new ServiceCollection();
-        services.AddAutoReformatOptions(configuration);
-        var provider = services.BuildServiceProvider();
 
-        var options = provider.GetRequiredService<IOptions<AutoReformatOptions>>().Value;
+        var options = new AutoReformatOptions(configuration);
 
         options.Disabled.ShouldBeTrue();
         options.PollInterval.ShouldBe(TimeSpan.FromSeconds(5));
@@ -26,16 +21,13 @@ public class AutoReformatOptionsTests
     }
 
     [Test]
-    public void AddAutoReformatOptions_BindsSectionDelays()
+    public void Constructor_BindsSectionDelays()
     {
         var configuration = ConfigurationWith(
             ($"{AutoReformatOptions.SectionName}:PollIntervalSeconds", "7"),
             ($"{AutoReformatOptions.SectionName}:ErrorRetryDelaySeconds", "42"));
-        var services = new ServiceCollection();
-        services.AddAutoReformatOptions(configuration);
-        var provider = services.BuildServiceProvider();
 
-        var options = provider.GetRequiredService<IOptions<AutoReformatOptions>>().Value;
+        var options = new AutoReformatOptions(configuration);
 
         options.PollInterval.ShouldBe(TimeSpan.FromSeconds(7));
         options.ErrorRetryDelay.ShouldBe(TimeSpan.FromSeconds(42));

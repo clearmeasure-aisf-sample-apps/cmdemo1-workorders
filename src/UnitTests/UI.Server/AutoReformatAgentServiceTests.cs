@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Server;
+using ClearMeasure.Bootcamp.UnitTests.UI.Server.BuildFacts;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,7 +76,7 @@ public class AutoReformatAgentServiceTests
     {
         var workOrder = DraftWorkOrder("WO-12", "t", "d");
         var bus = new StubRecordingBus([workOrder]);
-        var logger = new CapturingLogger<AutoReformatAgentService>();
+        var logger = new BuildFactsProviderTests.StubLogger();
         var service = CreateService(
             bus,
             new StubReformatAgent(exception: new InvalidOperationException("model-failed")),
@@ -84,8 +85,8 @@ public class AutoReformatAgentServiceTests
         await service.ReformatWorkOrdersAsync();
 
         bus.LastCommand.ShouldBeNull();
-        logger.Inner.ErrorCount.ShouldBe(1);
-        logger.Inner.MessagesAt(LogLevel.Error).ShouldHaveSingleItem().ShouldContain("WO-12");
+        logger.ErrorCount.ShouldBe(1);
+        logger.MessagesAt(LogLevel.Error).ShouldHaveSingleItem().ShouldContain("WO-12");
     }
 
     [Test]
@@ -135,7 +136,7 @@ public class AutoReformatAgentServiceTests
     private static AutoReformatAgentService CreateService(
         IBus bus,
         WorkOrderReformatAgent agent,
-        ILogger<AutoReformatAgentService>? logger = null,
+        ILogger? logger = null,
         AutoReformatOptions? options = null)
     {
         var services = new ServiceCollection();
@@ -144,7 +145,7 @@ public class AutoReformatAgentServiceTests
         var provider = services.BuildServiceProvider();
         return new AutoReformatAgentService(
             provider.GetRequiredService<IServiceScopeFactory>(),
-            logger ?? NullLogger<AutoReformatAgentService>.Instance,
+            new SingleLoggerFactory(logger ?? NullLogger.Instance),
             Options.Create(options ?? new AutoReformatOptions()),
             TimeProvider.System);
     }
@@ -165,6 +166,19 @@ public class AutoReformatAgentServiceTests
             Title = title,
             Description = description
         };
+
+    private sealed class SingleLoggerFactory(ILogger logger) : ILoggerFactory
+    {
+        public void AddProvider(ILoggerProvider provider)
+        {
+        }
+
+        public ILogger CreateLogger(string categoryName) => logger;
+
+        public void Dispose()
+        {
+        }
+    }
 
     private sealed class StubReformatAgent : WorkOrderReformatAgent
     {
