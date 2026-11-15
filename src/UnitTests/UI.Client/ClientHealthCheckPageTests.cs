@@ -94,6 +94,20 @@ public class ClientHealthCheckPageTests
     }
 
     [Test]
+    public async Task DetailedClientHealthCheck_EntryList_IsNamedForScreenReaders()
+    {
+        await using var ctx = CreateContextWithHealthChecks();
+
+        var component = ctx.Render<DetailedClientHealthCheck>();
+
+        await component.WaitForAssertionAsync(() =>
+        {
+            component.Find($"[data-testid='{DetailedClientHealthCheck.Elements.Status}']").ShouldNotBeNull();
+        });
+        component.Find("ul").GetAttribute("aria-label").ShouldBe("Detailed health check entries");
+    }
+
+    [Test]
     public async Task DetailedClientHealthCheck_WhileLoading_AnnouncesStatusToScreenReaders()
     {
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

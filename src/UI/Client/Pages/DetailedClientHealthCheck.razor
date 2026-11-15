@@ -63,7 +63,7 @@ else
     </p>
     <p><strong>Total Duration:</strong> @_report.TotalDuration.TotalMilliseconds.ToString("F2") ms</p>
 
-    <ul>
+    <ul aria-label="Detailed health check entries">
         @foreach (var entry in _report.Entries.OrderBy(e => e.Key))
         {
             <li>
