@@ -67,7 +67,8 @@ jobs:
           INPUT_PR: ${{ inputs.pull_request_number }}
           INPUT_RUN: ${{ inputs.run_id }}
           WR_ID: ${{ github.event.workflow_run.id }}
-          # head_sha is data only (find the PR); never used as a checkout ref.
+          # Prefer the workflow_run payload; head_sha is data only (never a checkout ref).
+          EVENT_PR: ${{ github.event.workflow_run.pull_requests[0].number }}
           WR_SHA: ${{ github.event.workflow_run.head_sha }}
           WR_REPO: ${{ github.repository }}
           WR_URL: ${{ github.event.workflow_run.html_url }}
@@ -79,9 +80,17 @@ jobs:
             echo "run_url=${GITHUB_SERVER_URL}/${WR_REPO}/actions/runs/${INPUT_RUN:-$GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          pr=$(gh api "repos/${WR_REPO}/actions/runs/${WR_ID}/pull-requests" --jq '.[0].number // empty')
+          # 1) Event payload (no API). 2) commits/{sha}/pulls with explicit error handling
+          # under bash -e (if cmd; then … does not abort). Never actions/runs/.../pull-requests
+          # (404 aborts before fallback). Do not soften this step with a continue flag.
+          pr="${EVENT_PR:-}"
           if [ -z "$pr" ]; then
-            pr=$(gh api "repos/${WR_REPO}/commits/${WR_SHA}/pulls" --jq '.[0].number // empty')
+            if pr=$(gh api "repos/${WR_REPO}/commits/${WR_SHA}/pulls" --jq '.[0].number // empty'); then
+              :
+            else
+              echo "Notice: commits/${WR_SHA}/pulls lookup failed; treating as no PR."
+              pr=""
+            fi
           fi
           if [ -z "$pr" ]; then
             echo "No pull request for run ${WR_ID}; skipping sticky comment."

@@ -60,6 +60,23 @@ function Test-PrEnvironmentArtifactsWorkflowYaml {
     Assert-True ($Yaml -match '(?m)^\s*id-token:\s*write') 'Job must declare id-token: write for OIDC.'
     Assert-True ($Yaml -match '(?m)^\s*pull-requests:\s*write') 'Job must declare pull-requests: write for sticky comment.'
     Assert-True ($Yaml -match '(?m)^permissions:\s*\{\s*\}') 'Workflow-level permissions must be empty (least privilege).'
+
+    Assert-PrLookupOrder -Yaml $Yaml
+}
+
+function Assert-PrLookupOrder {
+    param([Parameter(Mandatory = $true)][string]$Yaml)
+
+    $eventPr = $Yaml.IndexOf('github.event.workflow_run.pull_requests[0].number')
+    $commitPulls = $Yaml.IndexOf('commits/${WR_SHA}/pulls')
+    Assert-True ($eventPr -ge 0) 'Must take PR number from workflow_run.pull_requests[0].number.'
+    Assert-True ($commitPulls -gt $eventPr) 'Must fall back to commits/{head_sha}/pulls after the event payload.'
+    Assert-True ($Yaml -notmatch 'actions/runs/\$\{WR_ID\}/pull-requests') `
+        'Must not call actions/runs/.../pull-requests (404 aborts under bash -e).'
+    Assert-True ($Yaml -match 'if pr=\$\(gh api "repos/\$\{WR_REPO\}/commits/\$\{WR_SHA\}/pulls"') `
+        'Commit pulls fallback must use if-command form so bash -e does not abort on API errors.'
+    Assert-True ($Yaml -match 'skip=true') 'Must set skip=true when no PR is found.'
+    Assert-True ($Yaml -notmatch '(?m)^\s*continue-on-error:\s*true') 'Must not use continue-on-error.'
 }
 
 if ($SelfTest) {
@@ -76,6 +93,23 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      - name: Resolve PR number and run metadata
+        env:
+          EVENT_PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+          WR_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          pr="${EVENT_PR:-}"
+          if [ -z "$pr" ]; then
+            if pr=$(gh api "repos/${WR_REPO}/commits/${WR_SHA}/pulls" --jq '.[0].number // empty'); then
+              :
+            else
+              pr=""
+            fi
+          fi
+          if [ -z "$pr" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
       - run: pwsh -NoProfile -File scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1
 '@
     Test-PrEnvironmentArtifactsWorkflowYaml -Yaml $good
@@ -84,6 +118,11 @@ jobs:
     $failed = $false
     try { Test-PrEnvironmentArtifactsWorkflowYaml -Yaml $bad } catch { $failed = $true }
     Assert-True $failed 'SelfTest must reject head_sha checkout'
+
+    $badLookup = $good -replace 'github\.event\.workflow_run\.pull_requests\[0\]\.number', 'missing.event.pr'
+    $lookupFailed = $false
+    try { Test-PrEnvironmentArtifactsWorkflowYaml -Yaml $badLookup } catch { $lookupFailed = $true }
+    Assert-True $lookupFailed 'SelfTest must reject missing event PR lookup'
 
     Write-Host 'Test-PrEnvironmentArtifactsWorkflow.ps1 self-test passed'
     exit 0
