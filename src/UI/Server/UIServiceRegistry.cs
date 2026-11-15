@@ -16,6 +16,7 @@ using FluentValidation;
 using Lamar;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using FunJeffreyCustomEventHealthCheck = ClearMeasure.Bootcamp.UI.Shared.FunJeffreyCustomEventHealthCheck;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
@@ -31,6 +32,8 @@ public class UiServiceRegistry : ServiceRegistry
         AddRealtimeBus();
         this.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();
         this.AddTransient<WorkOrderReformatAgent>();
+        this.AddSingleton<IOptions<AutoReformatOptions>>(sp =>
+            Options.Create(new AutoReformatOptions(sp.GetRequiredService<IConfiguration>())));
         this.AddHostedService<AutoReformatAgentService>();
         ScanForHandlersAndHealthChecks();
         this.AddScoped<DatabaseMigrationVersionReader>();
