@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.BuildGates;
 using FluentValidation;
@@ -11,8 +12,9 @@ namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
 
 /// <summary>
 /// Deterministic gates for the single MediatR validation pipeline (#1804): no empty
-/// <see cref="AbstractValidator{T}"/> markers, HTTP allow-list is remotable markers, and
-/// production code does not <c>new</c> validators outside the pipeline.
+/// <see cref="AbstractValidator{T}"/> markers, HTTP allow-list is remotable markers matching
+/// master's set (LLM config/chat queries are not remotable), and production code does not
+/// <c>new</c> a FluentValidation <see cref="AbstractValidator{T}"/> outside the pipeline.
 /// </summary>
 [TestFixture]
 public class ValidationPipelineArchitectureTests
@@ -40,12 +42,20 @@ public class ValidationPipelineArchitectureTests
     }
 
     [Test]
-    public void ShouldNotNewValidatorsOutsideValidationBehavior_WhenProductionSourcesAreScanned()
+    public void ShouldKeepLlmQueriesServerOnly_WhenHttpAllowListMatchesMaster()
+    {
+        typeof(IRemotableRequest).IsAssignableFrom(typeof(ChatClientConfigQuery)).ShouldBeFalse();
+        typeof(IRemotableRequest).IsAssignableFrom(typeof(WorkOrderChatQuery)).ShouldBeFalse();
+    }
+
+    [Test]
+    public void ShouldNotNewAbstractValidatorsOutsideValidationBehavior_WhenProductionSourcesAreScanned()
     {
         var offenders = ProductionValidatorNews(RepositoryCheckout.Current);
 
         offenders.ShouldBeEmpty(
-            "Production new *Validator outside ValidationBehavior: " + string.Join(", ", offenders));
+            "Production new AbstractValidator outside ValidationBehavior: "
+            + string.Join(", ", offenders));
     }
 
     [Test]
@@ -61,9 +71,7 @@ public class ValidationPipelineArchitectureTests
         foreach (var file in checkout.SourceFiles(".cs"))
         {
             var relative = checkout.Relative(file);
-            if (relative.StartsWith("src/UnitTests/", StringComparison.Ordinal)
-                || relative.StartsWith("src/IntegrationTests/", StringComparison.Ordinal)
-                || relative.StartsWith("src/AcceptanceTests/", StringComparison.Ordinal))
+            if (IsTestSource(relative))
             {
                 continue;
             }
@@ -96,6 +104,7 @@ public class ValidationPipelineArchitectureTests
 
     internal static IReadOnlyList<string> ProductionValidatorNews(RepositoryCheckout checkout)
     {
+        var abstractValidators = AbstractValidatorTypeNames(checkout);
         var offenders = new List<string>();
         foreach (var file in checkout.SourceFiles(".cs"))
         {
@@ -108,23 +117,53 @@ public class ValidationPipelineArchitectureTests
             var root = CSharpSyntaxTree.ParseText(File.ReadAllText(file)).GetCompilationUnitRoot();
             foreach (var creation in root.DescendantNodes().OfType<ObjectCreationExpressionSyntax>())
             {
-                var typeName = creation.Type.ToString();
-                if (typeName.EndsWith("Validator", StringComparison.Ordinal)
-                    && !typeName.Contains("ChatClientConfigValidator", StringComparison.Ordinal))
+                if (!abstractValidators.Contains(SimpleTypeName(creation.Type)))
                 {
-                    offenders.Add($"{relative}:{creation.GetLocation().GetLineSpan().StartLinePosition.Line + 1}");
+                    continue;
                 }
+
+                offenders.Add($"{relative}:{creation.GetLocation().GetLineSpan().StartLinePosition.Line + 1}");
             }
         }
 
         return offenders;
     }
 
+    private static HashSet<string> AbstractValidatorTypeNames(RepositoryCheckout checkout)
+    {
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var file in checkout.SourceFiles(".cs"))
+        {
+            if (IsTestSource(checkout.Relative(file)))
+            {
+                continue;
+            }
+
+            var root = CSharpSyntaxTree.ParseText(File.ReadAllText(file)).GetCompilationUnitRoot();
+            foreach (var type in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
+            {
+                if (DerivesFromAbstractValidator(type))
+                {
+                    names.Add(type.Identifier.ValueText);
+                }
+            }
+        }
+
+        return names;
+    }
+
+    private static string SimpleTypeName(TypeSyntax type) =>
+        type is IdentifierNameSyntax id ? id.Identifier.ValueText
+        : type is QualifiedNameSyntax q ? q.Right.Identifier.ValueText
+        : type.ToString();
+
+    private static bool IsTestSource(string relative) =>
+        relative.StartsWith("src/UnitTests/", StringComparison.Ordinal)
+        || relative.StartsWith("src/IntegrationTests/", StringComparison.Ordinal)
+        || relative.StartsWith("src/AcceptanceTests/", StringComparison.Ordinal);
+
     private static bool IsProductionSource(string relative) =>
-        relative.StartsWith("src/", StringComparison.Ordinal)
-        && !relative.StartsWith("src/UnitTests/", StringComparison.Ordinal)
-        && !relative.StartsWith("src/IntegrationTests/", StringComparison.Ordinal)
-        && !relative.StartsWith("src/AcceptanceTests/", StringComparison.Ordinal);
+        relative.StartsWith("src/", StringComparison.Ordinal) && !IsTestSource(relative);
 
     private static bool DerivesFromAbstractValidator(TypeDeclarationSyntax type)
     {

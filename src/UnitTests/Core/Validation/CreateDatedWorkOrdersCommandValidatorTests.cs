@@ -39,27 +39,17 @@ public class CreateDatedWorkOrdersCommandValidatorTests
     }
 
     [Test]
-    public void ShouldFail_WhenDueDatesIsEmpty()
+    public void ShouldPass_WhenDueDatesIsEmpty_BatchSizeStaysInTheHandler()
     {
         var command = new CreateDatedWorkOrdersCommand("tlovejoy", "gwillie", "Mow", "Mow the lawn", []);
 
         var result = _validator.TestValidate(command);
 
-        result.ShouldHaveValidationErrorFor(x => x.DueDates);
+        result.IsValid.ShouldBeTrue();
     }
 
     [Test]
-    public void ShouldFail_WhenDueDatesIsNull()
-    {
-        var command = new CreateDatedWorkOrdersCommand("tlovejoy", "gwillie", "Mow", "Mow the lawn", null!);
-
-        var result = _validator.TestValidate(command);
-
-        result.ShouldHaveValidationErrorFor(x => x.DueDates);
-    }
-
-    [Test]
-    public void ShouldFail_WhenDueDatesExceedsMaximumBatchSize()
+    public void ShouldPass_WhenDueDatesExceedsMaximumBatchSize_BatchSizeStaysInTheHandler()
     {
         var dueDates = Enumerable.Range(0, CreateDatedWorkOrdersCommand.MaximumBatchSize + 1)
             .Select(offset => new DateOnly(2026, 9, 19).AddDays(offset))
@@ -68,6 +58,6 @@ public class CreateDatedWorkOrdersCommandValidatorTests
 
         var result = _validator.TestValidate(command);
 
-        result.ShouldHaveValidationErrorFor(x => x.DueDates);
+        result.IsValid.ShouldBeTrue();
     }
 }

@@ -3,7 +3,6 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
-using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -160,43 +159,47 @@ public class CreateDatedWorkOrdersHandlerTests
     }
 
     [Test]
-    public async Task Send_WhenDueDatesEmpty_ThrowsValidationException()
+    public async Task Handle_WhenDueDatesEmpty_CreatesZero()
     {
         var creatorUserName = TestData.UserName("tl");
         var assigneeUserName = TestData.UserName("gw");
+
         var bus = TestHost.GetRequiredService<IBus>();
+        var result = await bus.Send(new CreateDatedWorkOrdersCommand(
+            creatorUserName,
+            assigneeUserName,
+            "Mow the grass",
+            "Weekly Saturday mow",
+            []));
 
-        var ex = await Should.ThrowAsync<ValidationException>(() => bus.Send(
-            new CreateDatedWorkOrdersCommand(
-                creatorUserName,
-                assigneeUserName,
-                "Mow the grass",
-                "Weekly Saturday mow",
-                [])));
-
-        ex.Errors.ShouldContain(failure => failure.PropertyName == "DueDates");
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldContain("At least one due date");
+        result.WorkOrders.Count.ShouldBe(0);
     }
 
     [Test]
-    public async Task Send_WhenBatchExceedsLimit_ThrowsValidationException()
+    public async Task Handle_WhenBatchExceedsLimit_CreatesZero()
     {
         var creatorUserName = TestData.UserName("tl");
         var assigneeUserName = TestData.UserName("gw");
+
         var dueDates = Enumerable.Range(0, CreateDatedWorkOrdersCommand.MaximumBatchSize + 1)
             .Select(i => new DateOnly(2026, 8, 29).AddDays(i))
             .ToList();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        var ex = await Should.ThrowAsync<ValidationException>(() => bus.Send(
-            new CreateDatedWorkOrdersCommand(
-                creatorUserName,
-                assigneeUserName,
-                "Mow the grass",
-                "Weekly Saturday mow",
-                dueDates)));
+        var result = await bus.Send(new CreateDatedWorkOrdersCommand(
+            creatorUserName,
+            assigneeUserName,
+            "Mow the grass",
+            "Weekly Saturday mow",
+            dueDates));
 
-        ex.Errors.ShouldContain(failure =>
-            failure.ErrorMessage == $"At most {CreateDatedWorkOrdersCommand.MaximumBatchSize} due dates are allowed.");
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldContain("cannot exceed 10");
+        result.WorkOrders.Count.ShouldBe(0);
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        (await context.Set<WorkOrder>().CountAsync(w => w.Creator!.UserName == creatorUserName || w.Assignee!.UserName == assigneeUserName)).ShouldBe(0);
     }
 
     [Test]

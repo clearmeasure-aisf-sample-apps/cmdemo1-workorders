@@ -7,8 +7,9 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// Validator for <see cref="CreateDatedWorkOrdersCommand"/> so the remotable command is accepted by
-/// the single-API validation middleware.
+/// Validator for <see cref="CreateDatedWorkOrdersCommand"/>: creator, assignee, title and description
+/// are required. Due-date batch size is enforced in the handler so in-process callers keep a Failed
+/// result instead of <c>ValidationException</c>.
 /// </summary>
 public sealed class CreateDatedWorkOrdersCommandValidator : AbstractValidator<CreateDatedWorkOrdersCommand>
 {
@@ -21,10 +22,7 @@ public sealed class CreateDatedWorkOrdersCommandValidator : AbstractValidator<Cr
             .NotEmpty()
             .MaximumLength(WorkOrder.DescriptionMaxLength)
             .WithMessage($"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.");
-        RuleFor(x => x.DueDates)
-            .Cascade(CascadeMode.Stop)
-            .NotEmpty()
-            .Must(dates => dates.Count <= CreateDatedWorkOrdersCommand.MaximumBatchSize)
-            .WithMessage($"At most {CreateDatedWorkOrdersCommand.MaximumBatchSize} due dates are allowed.");
+        // Due-date batch size stays in CreateDatedWorkOrdersHandler.BatchSizeFailure so in-process
+        // IBus callers keep today's Failed result instead of ValidationException (#1804).
     }
 }
