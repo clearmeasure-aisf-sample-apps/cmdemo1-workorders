@@ -114,11 +114,7 @@ public class DiagnosticsEndpointIntegrationTests
         var flags = await ReadFlagMapAsync(_client!, "/api/features/flags");
         var diagnostics = await ReadDiagnosticsFlagsAsync(_client!, "/api/diagnostics");
 
-        diagnostics.Count.ShouldBe(flags.Count);
-        foreach (var (name, enabled) in flags)
-        {
-            diagnostics[name].ShouldBe(enabled);
-        }
+        diagnostics.ShouldBe(flags);
     }
 
     [Test]
@@ -199,7 +195,49 @@ public class DiagnosticsEndpointIntegrationTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var legacyResponse = await _client.PostAsync("/_diagnostics/reset-db-connections", null);
-        legacyResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        legacyResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [TestCase("/_lamar/services")]
+    [TestCase("/_lamar/scanning")]
+    public async Task Should_RejectAnonymousLamar_When_TestingEnvironmentWithoutApiKey(string path)
+    {
+        var response = await _client!.GetAsync(path);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Test]
+    public async Task Should_RejectAnonymousReset_When_TestingEnvironmentWithoutApiKey()
+    {
+        var response = await _client!.PostAsync("/_diagnostics/reset-db-connections", null);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [TestCase("/_lamar/services")]
+    [TestCase("/_lamar/scanning")]
+    public async Task Should_AllowAuthorizedLamar_When_ApiKeyEnabled(string path)
+    {
+        await using var factory = new DiagnosticsApiKeyProtectedWebApplicationFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(
+            ApiKeyConstants.HeaderName,
+            ApiKeyProtectedWebApplicationFactory.TestApiKey);
+
+        var response = await client.GetAsync(path);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Test]
+    public async Task Should_AllowAuthorizedReset_When_ApiKeyEnabled()
+    {
+        await using var factory = new DiagnosticsApiKeyProtectedWebApplicationFactory();
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(
+            ApiKeyConstants.HeaderName,
+            ApiKeyProtectedWebApplicationFactory.TestApiKey);
+
+        var response = await client.PostAsync("/_diagnostics/reset-db-connections", null);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Test]
