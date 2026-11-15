@@ -65,7 +65,7 @@ public class ValidationPipelineArchitectureTests
         typeof(ValidationBehavior<,>).Assembly.ShouldBe(typeof(Bus).Assembly);
     }
 
-    internal static IReadOnlyList<string> EmptyAbstractValidators(RepositoryCheckout checkout)
+    private static IReadOnlyList<string> EmptyAbstractValidators(RepositoryCheckout checkout)
     {
         var empty = new List<string>();
         foreach (var file in checkout.SourceFiles(".cs"))
@@ -85,6 +85,7 @@ public class ValidationPipelineArchitectureTests
         return empty;
     }
 
+    // ReSharper disable once MemberCanBePrivate.Global -- exercised by ValidationPipelineArchitectureRulesTests
     internal static IReadOnlyList<string> EmptyAbstractValidatorNames(string source)
     {
         var root = CSharpSyntaxTree.ParseText(source).GetCompilationUnitRoot();
@@ -102,7 +103,7 @@ public class ValidationPipelineArchitectureTests
         return names;
     }
 
-    internal static IReadOnlyList<string> ProductionValidatorNews(RepositoryCheckout checkout)
+    private static IReadOnlyList<string> ProductionValidatorNews(RepositoryCheckout checkout)
     {
         var abstractValidators = AbstractValidatorTypeNames(checkout);
         var offenders = new List<string>();
