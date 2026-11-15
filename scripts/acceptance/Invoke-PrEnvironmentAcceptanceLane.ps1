@@ -10,7 +10,7 @@
   Serial: TestCategory==SerialLane with a single worker. Call this only after every
   parallel shard on the same slot has finished — never beside the parallel lane.
 
-  Does not edit .github/workflows/ (see issue #1664). Does not loosen gates.
+  Wired by .github/workflows/pr-environment.yml (issue #1664). Does not loosen gates.
   Sets StartLocalServer=false so ServerFixture skips ZDataLoader and the sweep.
 
 .PARAMETER Lane
