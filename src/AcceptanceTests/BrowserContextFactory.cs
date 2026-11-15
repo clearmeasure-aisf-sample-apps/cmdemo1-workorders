@@ -11,7 +11,7 @@ public static class BrowserContextFactory
         string applicationBaseUrl,
         string? storageStatePath)
     {
-        var browserContext = await browser.NewContextAsync(new BrowserNewContextOptions
+        var options = new BrowserNewContextOptions
         {
             BaseURL = applicationBaseUrl,
             Locale = "en-US",
@@ -19,7 +19,10 @@ public static class BrowserContextFactory
             Permissions = ["clipboard-read", "clipboard-write"],
             ViewportSize = new ViewportSize { Width = 800, Height = 600 },
             StorageStatePath = storageStatePath
-        });
+        };
+        AcceptanceVideoRecording.ApplyTo(options);
+
+        var browserContext = await browser.NewContextAsync(options);
         browserContext.SetDefaultTimeout(60_000);
         await StartTracingAsync(browserContext);
         return browserContext;
