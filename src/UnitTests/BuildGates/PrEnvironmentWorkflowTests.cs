@@ -55,30 +55,42 @@ public class PrEnvironmentWorkflowTests
     }
 
     [Test]
-    public void LeaseAndDeploy_WhenDryRun_GatesEveryAzureAndOctopusMutation()
+    public void LeaseAndDeploy_WhenRead_DeclaresDryRunMutationGate()
     {
         var lease = Workflow().Job("lease-and-deploy");
         lease.Text.ShouldContain("Gate Azure and Octopus mutations on non-DryRun lease");
         lease.Text.ShouldContain("dry_run");
-        foreach (var step in MutationStepNames())
-        {
-            lease.Step(step).ShouldContain("steps.mutate.outputs.allow == 'true'");
-        }
     }
 
-    [Test]
-    public void PrivilegedJobs_WhenCheckout_UseTrustedRefWithPersistCredentialsFalse()
+    [TestCase("Sign in to Octopus")]
+    [TestCase("Cancel superseded Octopus tasks for this PR")]
+    [TestCase("Wait for Publish image with packages on this SHA")]
+    [TestCase("Download publish-only packages")]
+    [TestCase("Parse package version")]
+    [TestCase("Sign in to Azure for ACR")]
+    [TestCase("Retag publish image as the Octopus release number")]
+    [TestCase("Push Database package to Octopus")]
+    [TestCase("Create Pull requests channel release")]
+    [TestCase("Deploy release to pool slot")]
+    [TestCase("Record Octopus server task id")]
+    [TestCase("Resolve slot application URL")]
+    public void LeaseAndDeploy_WhenDryRun_GatesMutationStep(string stepName)
     {
-        foreach (var jobId in new[] { "lease-and-deploy", "release-slot" })
-        {
-            var job = Workflow().Job(jobId);
-            job.Text.ShouldContain("ref: ${{ github.event.repository.default_branch }}");
-            job.Text.ShouldContain("path: _trusted");
-            job.Text.ShouldContain("persist-credentials: false");
-            job.Text.ShouldNotContain("bash .github/scripts/");
-            job.Step("Checkout pool manager (cmdemo1-system)").ShouldContain("ref: main");
-            job.Step("Checkout pool manager (cmdemo1-system)").ShouldNotContain("ref: master");
-        }
+        Workflow().Job("lease-and-deploy").Step(stepName)
+            .ShouldContain("steps.mutate.outputs.allow == 'true'");
+    }
+
+    [TestCase("lease-and-deploy")]
+    [TestCase("release-slot")]
+    public void PrivilegedJob_WhenCheckout_UsesTrustedRefWithPersistCredentialsFalse(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        job.Text.ShouldContain("ref: ${{ github.event.repository.default_branch }}");
+        job.Text.ShouldContain("path: _trusted");
+        job.Text.ShouldContain("persist-credentials: false");
+        job.Text.ShouldNotContain("bash .github/scripts/");
+        job.Step("Checkout pool manager (cmdemo1-system)").ShouldContain("ref: main");
+        job.Step("Checkout pool manager (cmdemo1-system)").ShouldNotContain("ref: master");
     }
 
     [Test]
@@ -118,21 +130,5 @@ public class PrEnvironmentWorkflowTests
         root.ReadText(".github/scripts/wait-for-workflow-run.sh").ShouldContain("require-artifact");
         root.ReadText("scripts/pool/Release-PrEnvironmentLease.ps1").ShouldContain("No slot leased");
         root.ReadText("docs/ops/pr-environment.md").ShouldContain("shadow mode");
-    }
-
-    private static IEnumerable<string> MutationStepNames()
-    {
-        yield return "Sign in to Octopus";
-        yield return "Cancel superseded Octopus tasks for this PR";
-        yield return "Wait for Publish image with packages on this SHA";
-        yield return "Download publish-only packages";
-        yield return "Parse package version";
-        yield return "Sign in to Azure for ACR";
-        yield return "Retag publish image as the Octopus release number";
-        yield return "Push Database package to Octopus";
-        yield return "Create Pull requests channel release";
-        yield return "Deploy release to pool slot";
-        yield return "Record Octopus server task id";
-        yield return "Resolve slot application URL";
     }
 }
