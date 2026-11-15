@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Validation;
 using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 
