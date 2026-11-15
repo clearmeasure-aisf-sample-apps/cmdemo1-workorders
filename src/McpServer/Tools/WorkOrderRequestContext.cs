@@ -37,6 +37,6 @@ internal sealed record WorkOrderRequestContext(WorkOrder WorkOrder, Employee Exe
         string workOrderNumber,
         string executingUsername) =>
         string.IsNullOrWhiteSpace(workOrderNumber)
-            ? Task.FromResult<(WorkOrderRequestContext?, string?)>((null, "Work order number is required."))
+            ? Task.FromResult<(WorkOrderRequestContext?, string?)>((null, WorkOrderFieldRules.WorkOrderNumberRequired))
             : LoadAsync(bus, workOrderNumber, executingUsername);
 }

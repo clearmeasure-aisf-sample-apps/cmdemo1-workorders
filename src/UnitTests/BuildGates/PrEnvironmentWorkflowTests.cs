@@ -201,4 +201,17 @@ public class PrEnvironmentWorkflowTests
         root.ReadText("scripts/pool/Release-PrEnvironmentLease.ps1").ShouldContain("No slot leased");
         root.ReadText("docs/ops/pr-environment.md").ShouldContain("shadow mode");
     }
+
+    [Test]
+    public void ArtifactsWorkflow_WhenPresent_ResolvesPrWithoutBrokenRunsPullRequestsApi()
+    {
+        var artifacts = WorkflowFile.Read(RepositoryCheckout.Current, "pr-environment-artifacts.yml");
+        var resolve = artifacts.Job("sticky-comment").Step("Resolve PR number and run metadata");
+
+        resolve.ShouldContain("EVENT_PR: ${{ github.event.workflow_run.pull_requests[0].number }}");
+        resolve.ShouldContain("repos/${WR_REPO}/commits/${WR_SHA}/pulls");
+        resolve.ShouldContain("skip=true");
+        resolve.ShouldNotContain("actions/runs/${WR_ID}/pull-requests");
+        artifacts.Text.ShouldNotContain("continue-on-error:");
+    }
 }

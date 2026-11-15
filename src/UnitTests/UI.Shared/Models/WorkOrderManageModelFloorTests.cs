@@ -50,7 +50,7 @@ public class WorkOrderManageModelFloorTests
         var results = Validate(model);
 
         results.Single(r => r.MemberNames.Contains(nameof(WorkOrderManageModel.Floor)))
-            .ErrorMessage.ShouldBe("Floor cannot exceed 20 characters.");
+            .ErrorMessage.ShouldBe(WorkOrderFieldRules.FloorCannotExceed);
     }
 
     private static WorkOrderManageModel ValidModel()

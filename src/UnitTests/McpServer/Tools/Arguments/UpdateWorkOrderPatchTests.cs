@@ -73,7 +73,7 @@ public class UpdateWorkOrderPatchTests
 
         var error = patch.ErrorFor(draft, creator);
 
-        error.ShouldBe("Building cannot exceed 100 characters.");
+        error.ShouldBe(WorkOrderFieldRules.BuildingCannotExceed);
     }
 
     [Test]

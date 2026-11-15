@@ -19,7 +19,7 @@ public class WorkOrderToolsSaveTitleLengthTests
         var result = await WorkOrderTools.SaveWorkOrder(bus, "WO-001", "creator1",
             title: new string('T', WorkOrder.TitleMaxLength + 1));
 
-        result.ShouldBe("Title cannot exceed 600 characters.");
+        result.ShouldBe(WorkOrderFieldRules.TitleCannotExceed);
         bus.SavedCommands.ShouldBeEmpty();
     }
 

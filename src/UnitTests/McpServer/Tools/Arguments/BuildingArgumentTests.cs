@@ -39,6 +39,6 @@ public class BuildingArgumentTests
         var building = BuildingArgument.Parse(name);
 
         building.Value.ShouldBeNull();
-        building.Error.ShouldBe("Building cannot exceed 100 characters.");
+        building.Error.ShouldBe(WorkOrderFieldRules.BuildingCannotExceed);
     }
 }

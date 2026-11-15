@@ -19,7 +19,7 @@ public class WorkOrderToolsSaveDescriptionLengthTests
         var result = await WorkOrderTools.SaveWorkOrder(bus, "WO-001", "creator1",
             description: new string('D', WorkOrder.DescriptionMaxLength + 1));
 
-        result.ShouldBe("Description cannot exceed 4000 characters.");
+        result.ShouldBe(WorkOrderFieldRules.DescriptionCannotExceed);
         bus.SavedCommands.ShouldBeEmpty();
     }
 

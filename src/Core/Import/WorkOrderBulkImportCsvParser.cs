@@ -100,12 +100,8 @@ public static class WorkOrderBulkImportCsvParser
         text != null && parsed == null ? $"DueDate '{text}' is not a valid date (expected yyyy-MM-dd)." : null;
 
     private static string? BuildingError(string? building) =>
-        building is { Length: > WorkOrder.BuildingMaxLength }
-            ? $"Building must be at most {WorkOrder.BuildingMaxLength} characters."
-            : null;
+        WorkOrderFieldRules.BuildingCsvLengthError(building);
 
     private static string? DescriptionError(string? description) =>
-        description is { Length: > WorkOrder.DescriptionMaxLength }
-            ? $"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters."
-            : null;
+        WorkOrderFieldRules.DescriptionLengthError(description);
 }
