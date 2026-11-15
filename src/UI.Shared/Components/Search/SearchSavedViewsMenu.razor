@@ -38,7 +38,7 @@
     {
         <form class="save-view-form" aria-label="Save current view" @onsubmit="HandleSave" @onsubmit:preventDefault>
             <label for="saved-view-name" class="form-label">View name</label>
-            <input id="saved-view-name" type="text" class="form-control" maxlength="100"
+            <input id="saved-view-name" type="text" autocomplete="off" class="form-control" maxlength="100"
                    data-testid="@WorkOrderSearch.Elements.SavedViewNameInput" @ref="_nameInput" @bind="_newName" @bind:event="oninput" />
             @if (_saveError is not null)
             {
