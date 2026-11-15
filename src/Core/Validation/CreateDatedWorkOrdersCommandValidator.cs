@@ -20,7 +20,7 @@ public sealed class CreateDatedWorkOrdersCommandValidator : AbstractValidator<Cr
         RuleFor(x => x.Description)
             .NotEmpty()
             .MaximumLength(WorkOrder.DescriptionMaxLength)
-            .WithMessage($"Description cannot exceed {WorkOrder.DescriptionMaxLength} characters.");
+            .WithMessage(WorkOrderFieldRules.DescriptionCannotExceed);
         RuleFor(x => x.DueDates)
             .Cascade(CascadeMode.Stop)
             .NotEmpty()

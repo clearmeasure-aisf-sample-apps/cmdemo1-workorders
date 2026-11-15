@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using FluentValidation;
 
@@ -14,8 +15,8 @@ public sealed class InProgressToAssignedCommandValidator : AbstractValidator<InP
     {
         RuleFor(command => command.Reason)
             .NotEmpty()
-            .WithMessage("A reason is required to shelve a work order.")
+            .WithMessage(WorkOrderFieldRules.ShelveReasonRequired)
             .MaximumLength(InProgressToAssignedCommand.ReasonMaxLength)
-            .WithMessage($"Reason cannot exceed {InProgressToAssignedCommand.ReasonMaxLength} characters.");
+            .WithMessage(WorkOrderFieldRules.ReasonCannotExceed);
     }
 }

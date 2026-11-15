@@ -3,8 +3,8 @@ using ClearMeasure.Bootcamp.Core.Model;
 namespace ClearMeasure.Bootcamp.McpServer.Tools.Arguments;
 
 /// <summary>
-/// A building name given to an MCP tool: trimmed, at most <see cref="WorkOrder.BuildingMaxLength"/> characters.
-/// Blank means no building.
+/// A building name given to an MCP tool: trimmed. Blank means no building. Length is checked by
+/// <see cref="WorkOrderFieldRules"/> (and by SaveDraft on the bus).
 /// </summary>
 internal readonly record struct BuildingArgument(string? Value, string? Error)
 {
@@ -16,8 +16,8 @@ internal readonly record struct BuildingArgument(string? Value, string? Error)
         }
 
         var trimmed = text.Trim();
-        return trimmed.Length > WorkOrder.BuildingMaxLength
-            ? new BuildingArgument(null, $"Building cannot exceed {WorkOrder.BuildingMaxLength} characters.")
+        return WorkOrderFieldRules.BuildingLengthError(trimmed) is { } error
+            ? new BuildingArgument(null, error)
             : new BuildingArgument(trimmed, null);
     }
 }
