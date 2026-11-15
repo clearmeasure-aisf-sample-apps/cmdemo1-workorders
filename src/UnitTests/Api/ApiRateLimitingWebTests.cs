@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
+using Microsoft.AspNetCore.Hosting;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Api;
@@ -142,7 +143,8 @@ public class ApiRateLimitingWebTests
     [Test]
     public async Task RateLimiting_DiagnosticRoute_NotLimited()
     {
-        await using var factory = new TunableApiRateLimitWebApplicationFactory(StrictLimitSettings(1));
+        await using var factory = new TunableApiRateLimitWebApplicationFactory(StrictLimitSettings(1))
+            .WithWebHostBuilder(builder => builder.UseEnvironment("Development"));
         using var client = factory.CreateClient();
         (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
