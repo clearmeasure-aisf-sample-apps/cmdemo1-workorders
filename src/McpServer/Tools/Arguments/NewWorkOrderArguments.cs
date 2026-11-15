@@ -51,9 +51,6 @@ internal sealed record NewWorkOrderArguments
     public static string? DescriptionError(string? description) =>
         WorkOrderFieldRules.DescriptionRequiredOrLengthError(description);
 
-    public static string? DescriptionLengthError(string? description) =>
-        WorkOrderFieldRules.DescriptionLengthError(description);
-
     private string? DueDateError() =>
         DatedWorkOrderScheduling.TryParseOptionalDueDate(DueDate, out _, out var error) ? null : error;
 }

@@ -75,7 +75,7 @@ public static class WorkOrderFieldRules
         "Reason for shelving (required for Shelve and InProgressToAssignedCommand, at most 200 characters)";
 
     /// <summary>True when <paramref name="value"/> is longer than <paramref name="maxLength"/>.</summary>
-    public static bool Exceeds(string? value, int maxLength) =>
+    private static bool Exceeds(string? value, int maxLength) =>
         value is { Length: var length } && length > maxLength;
 
     /// <summary>Title length error, or null when within <see cref="WorkOrder.TitleMaxLength"/>.</summary>

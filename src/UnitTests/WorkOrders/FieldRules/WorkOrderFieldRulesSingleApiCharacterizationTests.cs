@@ -30,7 +30,8 @@ public class WorkOrderFieldRulesSingleApiCharacterizationTests
             new WebServiceMessage(command), services, CancellationToken.None);
         var context = new DefaultHttpContext { Response = { Body = new MemoryStream() } };
 
-        await ProblemDetailsWriter.WriteValidationProblemAsync(context, validation.Errors!);
+        validation.IsValid.ShouldBeFalse();
+        await ProblemDetailsWriter.WriteValidationProblemAsync(context, validation.Errors);
 
         using var problem = JsonDocument.Parse(((MemoryStream)context.Response.Body).ToArray());
         context.Response.StatusCode.ShouldBe(400);
