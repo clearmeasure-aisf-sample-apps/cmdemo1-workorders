@@ -75,14 +75,17 @@ public class ThemePreferenceServiceTests
             throw new JSDisconnectedException("circuit disconnected");
     }
 
-    private sealed class StubThemeJsRuntime : IJSRuntime
+    private sealed class StubThemeJsRuntime : IJSRuntime, IJsInteropDouble
     {
         public string InitialTheme { get; init; } = "light";
         public bool ThrowOnDispose { get; init; }
         public int SetThemeCalls { get; private set; }
         public bool? LastSetThemeArg { get; private set; }
 
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+        ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && typeof(TValue) == typeof(IJSObjectReference))
             {
@@ -95,9 +98,9 @@ public class ThemePreferenceServiceTests
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-            InvokeAsync<TValue>(identifier, args);
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
 
-        private sealed class StubThemeModule : IJSObjectReference
+        private sealed class StubThemeModule : IJSObjectReference, IJsInteropDouble
         {
             private readonly StubThemeJsRuntime _parent;
             private string _theme;
@@ -109,7 +112,10 @@ public class ThemePreferenceServiceTests
                 _parent = parent;
             }
 
-            public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+            public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+                JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+            ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
             {
                 if (identifier == "getTheme" && typeof(TValue) == typeof(string))
                     return ValueTask.FromResult((TValue)(object)_theme);
@@ -133,7 +139,7 @@ public class ThemePreferenceServiceTests
 
             public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
                 object?[]? args) =>
-                InvokeAsync<TValue>(identifier, args);
+                JsInteropDouble.Answer<TValue>(this, identifier, args);
 
             public ValueTask DisposeAsync()
             {

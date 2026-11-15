@@ -268,7 +268,7 @@ Stop the background process or use a different port. Acceptance tests start thei
 If browser installation fails:
 
 ```powershell
-pwsh src/AcceptanceTests/bin/Release/net10.0/playwright.ps1 install chromium --with-deps
+pwsh src/AcceptanceTests/bin/Release/net11.0/playwright.ps1 install chromium --with-deps
 ```
 
 ### Timeout or Flaky Tests

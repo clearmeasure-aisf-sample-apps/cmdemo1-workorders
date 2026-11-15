@@ -9,13 +9,17 @@ public sealed class ClipboardScript(IJSRuntime js) : IAsyncDisposable
 {
     public const string ModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/clipboard.js";
 
-    private IJSObjectReference? _module;
+    private readonly LazyJsModule _module = new(js, ModulePath);
 
     public async Task<bool> CopyToClipboardAsync(string text)
     {
         try
         {
-            await (await ModuleAsync()).InvokeAsync<object>("copyToClipboard", text);
+            var module = await _module.GetAsync();
+            if (module is null)
+                return false;
+
+            await module.InvokeVoidAsync("copyToClipboard", text);
             return true;
         }
         catch (JSDisconnectedException)
@@ -30,23 +34,5 @@ public sealed class ClipboardScript(IJSRuntime js) : IAsyncDisposable
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_module is null)
-            return;
-
-        try
-        {
-            await _module.DisposeAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // Circuit gone during teardown; module dispose is best-effort.
-        }
-
-        _module = null;
-    }
-
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+    public ValueTask DisposeAsync() => _module.DisposeAsync();
 }

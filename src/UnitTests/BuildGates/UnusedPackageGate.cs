@@ -329,7 +329,7 @@ public static class UnusedPackageGate
         var tfm = Property(document, "TargetFramework");
         if (string.IsNullOrWhiteSpace(tfm))
         {
-            tfm = "net10.0";
+            tfm = "net11.0";
         }
 
         return Path.Combine(directory, "bin", configuration, tfm, assembly + ".dll");

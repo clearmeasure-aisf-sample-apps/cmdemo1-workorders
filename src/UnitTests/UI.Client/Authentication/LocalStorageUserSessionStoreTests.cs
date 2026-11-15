@@ -62,7 +62,7 @@ public class LocalStorageUserSessionStoreTests
         ex.InnerException.ShouldBe(jsException);
     }
 
-    private sealed class StubLocalStorageJsRuntime : IJSRuntime
+    private sealed class StubLocalStorageJsRuntime : IJSRuntime, IJsInteropDouble
     {
         private string? _value;
 
@@ -73,10 +73,13 @@ public class LocalStorageUserSessionStoreTests
         public int GetItemCalls { get; private set; }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
-            InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
-            object?[]? args)
+            object?[]? args) =>
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+        ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
         {
             switch (identifier)
             {

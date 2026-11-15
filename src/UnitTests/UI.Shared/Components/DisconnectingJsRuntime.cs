@@ -5,7 +5,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 /// <summary>
 /// Test double that throws <see cref="JSDisconnectedException"/> on module import or on dispose of a loaded module.
 /// </summary>
-internal sealed class DisconnectingJsRuntime : IJSRuntime
+internal sealed class DisconnectingJsRuntime : IJSRuntime, IJsInteropDouble
 {
     private readonly bool _failImport;
     private readonly bool _failDispose;
@@ -17,7 +17,10 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
         _failDispose = failDispose;
     }
 
-    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+        JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+    ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
     {
         if (identifier == "import")
         {
@@ -32,16 +35,19 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
 
     public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
         object?[]? args) =>
-        InvokeAsync<TValue>(identifier, args);
+        JsInteropDouble.Answer<TValue>(this, identifier, args);
 
-    private sealed class DisconnectingModule : IJSObjectReference
+    private sealed class DisconnectingModule : IJSObjectReference, IJsInteropDouble
     {
         private readonly bool _failDispose;
 
         // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
         public DisconnectingModule(bool failDispose) => _failDispose = failDispose;
 
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+        ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
         {
             if (typeof(TValue) == typeof(IJSObjectReference))
                 return ValueTask.FromResult((TValue)(object)new DisconnectingModule(_failDispose));
@@ -51,7 +57,7 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-            InvokeAsync<TValue>(identifier, args);
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
 
         public ValueTask DisposeAsync()
         {

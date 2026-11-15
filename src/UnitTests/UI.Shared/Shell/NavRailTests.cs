@@ -208,11 +208,14 @@ public class NavRailTests
         bool isNarrow) =>
         layout.InvokeAsync(() => rail.Instance.OnViewportChanged(isNarrow));
 
-    private sealed class PendingImportJsRuntime : IJSRuntime
+    private sealed class PendingImportJsRuntime : IJSRuntime, IJsInteropDouble
     {
         public TaskCompletionSource<IJSObjectReference> Import { get; } = new();
 
-        public async ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+        async ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && args?[0] is string path && path.EndsWith("mainLayoutNav.js"))
                 return (TValue)await Import.Task;
@@ -222,21 +225,24 @@ public class NavRailTests
         }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
-            object?[]? args) => InvokeAsync<TValue>(identifier, args);
+            object?[]? args) => JsInteropDouble.Answer<TValue>(this, identifier, args);
     }
 
-    private sealed class RecordingJsModule : IJSObjectReference
+    private sealed class RecordingJsModule : IJSObjectReference, IJsInteropDouble
     {
         public List<string> Identifiers { get; } = [];
 
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+        ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
         {
             Identifiers.Add(identifier);
             return ValueTask.FromResult(default(TValue)!);
         }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
-            object?[]? args) => InvokeAsync<TValue>(identifier, args);
+            object?[]? args) => JsInteropDouble.Answer<TValue>(this, identifier, args);
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }

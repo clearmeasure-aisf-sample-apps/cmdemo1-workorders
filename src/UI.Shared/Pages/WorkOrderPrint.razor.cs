@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -43,7 +44,18 @@ public partial class WorkOrderPrint : AppComponentBase
         }
     }
 
-    private async Task PrintAsync() => await Js.InvokeVoidAsync("window.print");
+    /// <summary>Opens the browser's print dialog. A circuit that is gone has no browser to print from.</summary>
+    private async Task PrintAsync()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("window.print");
+        }
+        catch (JSDisconnectedException ex)
+        {
+            Logger.LogWarning(ex, "Print for work order {Number} skipped: the browser circuit is gone.", Number);
+        }
+    }
 
     private static string Or(string? value) => string.IsNullOrWhiteSpace(value) ? "None" : value;
 

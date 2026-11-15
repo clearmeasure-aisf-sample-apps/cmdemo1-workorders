@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
@@ -234,6 +235,11 @@ public class UserSessionTests
         }
     }
 
+    /// <summary>
+    /// Answers with the user signed in at read time, then holds the answer until <see cref="AfterReadGate"/> opens,
+    /// so a sign-out can land while a lookup is in flight. It answers from its own state, so there is no
+    /// <c>AuthenticationStateChanged</c> it could miss.
+    /// </summary>
     private sealed class GatedAuthProvider(IUserSessionStore store) : CustomAuthenticationStateProvider(store)
     {
         public TaskCompletionSource? AfterReadGate { get; set; }
@@ -241,7 +247,7 @@ public class UserSessionTests
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var state = await base.GetAuthenticationStateAsync();
+            var state = new AuthenticationState(SignedInPrincipal());
             var gate = AfterReadGate;
             if (gate == null)
             {
@@ -252,6 +258,11 @@ public class UserSessionTests
             await gate.Task;
             return state;
         }
+
+        private ClaimsPrincipal SignedInPrincipal() =>
+            IsAuthenticated()
+                ? new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, GetUsername()!)], "Test"))
+                : new ClaimsPrincipal(new ClaimsIdentity());
     }
 
     private sealed class StubEmployeeBus(params Employee?[] employees) : IBus

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Work Order management system. .NET 10.0, Onion Architecture, Blazor WebAssembly + Server UI, EF Core 10, SQL Server, MediatR for CQRS, Lamar DI, deployed to Azure Container Apps.
+Work Order management system. .NET 11.0, Onion Architecture, Blazor WebAssembly + Server UI, EF Core 11, SQL Server, MediatR for CQRS, Lamar DI, deployed to Azure Container Apps.
 
 **Solution:** `src/ChurchBulletin.sln`
 
@@ -27,7 +27,7 @@ dotnet test src/UnitTests --configuration Release --filter "FullyQualifiedName~T
 dotnet test src/IntegrationTests --configuration Release
 
 # Acceptance tests (Playwright — install browsers first)
-pwsh src/AcceptanceTests/bin/Debug/net10.0/playwright.ps1 install
+pwsh src/AcceptanceTests/bin/Debug/net11.0/playwright.ps1 install
 dotnet test src/AcceptanceTests --configuration Debug
 
 # Single acceptance test
