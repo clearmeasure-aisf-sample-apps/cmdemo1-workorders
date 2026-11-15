@@ -158,6 +158,23 @@ public class IndexPageTests
         component.FindAll(TestId(IndexPage.Elements.RecentActivityEmpty)).Count.ShouldBe(0);
     }
 
+    [Test]
+    public async Task ShouldNameRecentActivityListForScreenReaders()
+    {
+        var order = new WorkOrder
+        {
+            Number = "ABC1234", Title = "Fix the organ", Status = WorkOrderStatus.Draft,
+            CreatedDate = new DateTime(2026, 10, 2, 18, 0, 0)
+        };
+        var bus = new StubBus { RecentWorkOrders = [order] };
+        await using var ctx = CreateContext(bus, User(true));
+
+        var component = ctx.Render<IndexPage>();
+
+        component.Find("ol.activity-list").GetAttribute("aria-label")
+            .ShouldBe("Recently updated work orders");
+    }
+
     [TestCase("Fix the organ", "WO-ABC1234: Fix the organ")]
     [TestCase(null, "WO-ABC1234")]
     [TestCase("", "WO-ABC1234")]
