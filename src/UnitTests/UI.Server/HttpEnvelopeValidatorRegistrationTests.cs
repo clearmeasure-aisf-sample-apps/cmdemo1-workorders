@@ -15,11 +15,7 @@ public class HttpEnvelopeValidatorRegistrationTests
     [Test]
     public void ShouldNotRegisterDeferredValidatorsAsIValidator_WhenUiServiceRegistryIsBuilt()
     {
-        using var container = new Container(registry =>
-        {
-            registry.For<TimeProvider>().Use(TimeProvider.System);
-            registry.IncludeRegistry<UiServiceRegistry>();
-        });
+        using var container = BuildUiContainer();
 
         container.TryGetInstance<IValidator<CreateVendorCommand>>().ShouldBeNull();
         container.TryGetInstance<IValidator<CreateTeamCommand>>().ShouldBeNull();
@@ -30,11 +26,7 @@ public class HttpEnvelopeValidatorRegistrationTests
     [Test]
     public void ShouldResolveHttpEnvelopeValidatorSet_WhenUiServiceRegistryIsBuilt()
     {
-        using var container = new Container(registry =>
-        {
-            registry.For<TimeProvider>().Use(TimeProvider.System);
-            registry.IncludeRegistry<UiServiceRegistry>();
-        });
+        using var container = BuildUiContainer();
 
         var set = container.GetInstance<HttpEnvelopeValidatorSet>();
         set.For(new CreateVendorCommand("", null, null, null, null))
@@ -44,4 +36,11 @@ public class HttpEnvelopeValidatorRegistrationTests
         set.For(new CreateDatedWorkOrdersCommand("a", "b", "t", "d", []))
             .ShouldBeOfType<CreateDatedWorkOrdersCommandValidator>();
     }
+
+    private static Container BuildUiContainer() =>
+        new(registry =>
+        {
+            registry.For<TimeProvider>().Use(TimeProvider.System);
+            registry.IncludeRegistry<UiServiceRegistry>();
+        });
 }

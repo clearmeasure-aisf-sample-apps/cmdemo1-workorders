@@ -2,8 +2,8 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.Middleware;
 
