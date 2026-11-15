@@ -94,14 +94,6 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
         return string.IsNullOrWhiteSpace(LastName) ? FirstName : $"{LastName}, {FirstName}";
     }
 
-    /// <summary>
-    /// Returns the uppercase initials of this employee's first and last names.
-    /// </summary>
-    public string GetInitials()
-    {
-        return $"{GetInitial(FirstName)}{GetInitial(LastName)}";
-    }
-
     public override string ToString()
     {
         return GetFullName();
@@ -114,27 +106,8 @@ public class Employee : EntityBase<Employee>, IComparable<Employee>
     /// </summary>
     public bool CanFulfillWorkOrder() => Roles.Any(role => role.CanFulfillWorkOrder);
 
-    /// <summary>
-    /// Returns true when any role's name equals <paramref name="roleName"/>, ignoring case.
-    /// Returns false when <paramref name="roleName"/> is null or empty.
-    /// </summary>
-    public bool HasRole(string? roleName)
-    {
-        if (string.IsNullOrEmpty(roleName))
-        {
-            return false;
-        }
-
-        return Roles.Any(role => string.Equals(role.Name, roleName, StringComparison.OrdinalIgnoreCase));
-    }
-
     public void AddRole(Role role)
     {
         Roles.Add(role);
-    }
-
-    private static string GetInitial(string? name)
-    {
-        return string.IsNullOrWhiteSpace(name) ? string.Empty : char.ToUpperInvariant(name.Trim()[0]).ToString();
     }
 }
