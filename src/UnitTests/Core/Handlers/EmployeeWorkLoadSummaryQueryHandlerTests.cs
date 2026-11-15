@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -46,114 +47,134 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
     {
         var today = ChurchTimeZone.Today(_clock);
         var since = _clock.GetUtcNow().DateTime.AddDays(-30);
-        var creator = Employee("creator", "Cre", "Ator", fulfill: false, "Creator");
-        var worker = Employee("worker", "Wor", "Ker", fulfill: true, "Worker", "Lead");
-        worker.MiddleName = "Mid";
-        var idle = Employee("idle", "Id", "Le", fulfill: true, "Worker");
-        var other = Employee("other", "Ot", "Her", fulfill: true, "Worker");
-        _context.AddRange(creator, worker, idle, other);
-        _context.Add(Order("WO-1", creator, worker, WorkOrderStatus.Draft, today.AddDays(5)));
-        _context.Add(Order("WO-2", creator, worker, WorkOrderStatus.Assigned, today.AddDays(-3)));
-        _context.Add(Order("WO-3", creator, worker, WorkOrderStatus.InProgress, today.AddDays(-1)));
-        _context.Add(Order("WO-4", creator, worker, WorkOrderStatus.InProgress, null));
-        _context.Add(Order("WO-5", creator, worker, WorkOrderStatus.Complete, today.AddDays(-10), since.AddDays(1)));
-        _context.Add(Order("WO-6", creator, worker, WorkOrderStatus.Complete, today.AddDays(-90), since.AddSeconds(-1)));
-        _context.Add(Order("WO-7", creator, worker, WorkOrderStatus.Cancelled, today.AddDays(-2)));
-        _context.Add(Order("WO-8", creator, worker, WorkOrderStatus.Draft, today));
-        _context.Add(Order("WO-9", creator, worker, WorkOrderStatus.Complete, today, since));
-        _context.Add(Order("WO-10", creator, null, WorkOrderStatus.Assigned, today.AddDays(-2)));
-        _context.Add(Order("WO-11", creator, creator, WorkOrderStatus.Assigned, today.AddDays(-4)));
-        _context.Add(Order("WO-12", creator, other, WorkOrderStatus.InProgress, today.AddDays(-1)));
-        await _context.SaveChangesAsync();
+        await GivenAssignableWorkloadAsync(today, since);
 
         _context.Commands.Reset();
-        var handler = new EmployeeWorkLoadSummaryQueryHandler(_context, _clock);
-        var summaries = await handler.Handle(new EmployeeWorkLoadSummaryQuery());
+        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(_context, _clock)
+            .Handle(new EmployeeWorkLoadSummaryQuery());
 
-        _context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, _context.Commands.Texts));
-        _context.Commands.OtherCommands.ShouldBe(0);
-        var sql = _context.Commands.Texts.Single();
-sql.ShouldContain("GROUP BY");
-        sql.ShouldContain("SUM(");
-
-            summaries.Select(summary => summary.Employee.UserName).ShouldBe(["other", "worker", "idle"]);
-        var workerSummary = summaries.Single(summary => summary.Employee.UserName == "worker");
-        workerSummary.Employee.GetFullName().ShouldBe("Wor Mid Ker");
-        workerSummary.Employee.Roles.Select(role => role.Name).ShouldBe(["Lead", "Worker"], ignoreOrder: true);
-        workerSummary.Employee.CanFulfillWorkOrder().ShouldBeTrue();
-        workerSummary.Load.AssignedAndOpen.ShouldBe(5);
-        workerSummary.Load.InProgress.ShouldBe(2);
-        workerSummary.Load.Overdue.ShouldBe(2);
-        workerSummary.Load.CompletedLast30Days.ShouldBe(2);
-
-        var idleSummary = summaries.Single(summary => summary.Employee.UserName == "idle");
-        idleSummary.Load.AssignedAndOpen.ShouldBe(0);
-        idleSummary.Load.InProgress.ShouldBe(0);
-        idleSummary.Load.Overdue.ShouldBe(0);
-        idleSummary.Load.CompletedLast30Days.ShouldBe(0);
-
-        var otherSummary = summaries.Single(summary => summary.Employee.UserName == "other");
-        otherSummary.Load.AssignedAndOpen.ShouldBe(1);
-        otherSummary.Load.InProgress.ShouldBe(1);
-        otherSummary.Load.Overdue.ShouldBe(1);
-        otherSummary.Load.CompletedLast30Days.ShouldBe(0);
-
-        var perEmployee = new EmployeeWorkLoadQueryHandler(_context, _clock);
-        foreach (var summary in summaries)
-        {
-            var load = await perEmployee.Handle(new EmployeeWorkLoadQuery(summary.Employee.UserName));
-            summary.Load.AssignedAndOpen.ShouldBe(load.AssignedAndOpen);
-            summary.Load.InProgress.ShouldBe(load.InProgress);
-            summary.Load.Overdue.ShouldBe(load.Overdue);
-            summary.Load.CompletedLast30Days.ShouldBe(load.CompletedLast30Days);
-        }
+        ThenOneGroupedSql(_context.Commands);
+        ThenSummariesMatch(summaries);
     }
 
     [Test]
     public void ShouldTranslateToOneGroupedStatement_OnSqlServerAndSqlite()
     {
-        string[] connectionStrings =
-        [
-            "Server=localhost;Database=TranslationOnly;Integrated Security=false;TrustServerCertificate=true",
-            "Data Source=:memory:"
-        ];
+        AssertGroupedSql(
+            "Server=localhost;Database=TranslationOnly;Integrated Security=false;TrustServerCertificate=true");
+        AssertGroupedSql("Data Source=:memory:");
+    }
 
-        foreach (var connectionString in connectionStrings)
-        {
-            using var context = new DataContext(new FileDbConfig(connectionString));
-            var sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock ?? new FixedClock(Now))
-                .SummaryQuery()
-                .ToQueryString();
+    private async Task GivenAssignableWorkloadAsync(DateOnly today, DateTime since)
+    {
+        var creator = EmployeeBuilder.Create("creator").WithFirstName("Cre").WithLastName("Ator")
+            .WithEmail("creator@example.test").WithRole("Creator", canCreate: false, canFulfill: false).Build();
+        var worker = EmployeeBuilder.Create("worker").WithFirstName("Wor").WithLastName("Ker")
+            .WithMiddleName("Mid").WithEmail("worker@example.test")
+            .WithRole("Worker", canCreate: false, canFulfill: true)
+            .WithRole("Lead", canCreate: false, canFulfill: true).Build();
+        var idle = EmployeeBuilder.Create("idle").WithFirstName("Id").WithLastName("Le")
+            .WithEmail("idle@example.test").WithRole("Worker", canCreate: false, canFulfill: true).Build();
+        var other = EmployeeBuilder.Create("other").WithFirstName("Ot").WithLastName("Her")
+            .WithEmail("other@example.test").WithRole("Worker", canCreate: false, canFulfill: true).Build();
+        _context.AddRange(creator, worker, idle, other);
+        _context.AddRange(AssignableOrders(new People(creator, worker, other), today, since));
+        await _context.SaveChangesAsync();
+    }
 
-            TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
-sql.ShouldContain("GROUP BY");
+    private sealed record People(Employee Creator, Employee Worker, Employee Other);
+
+    private static WorkOrder[] AssignableOrders(People people, DateOnly today, DateTime since) =>
+    [
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Draft).WithNumber("WO-1").AssignedTo(people.Worker)
+            .DueOn(today.AddDays(5)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Assigned).WithNumber("WO-2").AssignedTo(people.Worker)
+            .DueOn(today.AddDays(-3)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.InProgress).WithNumber("WO-3").AssignedTo(people.Worker)
+            .DueOn(today.AddDays(-1)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.InProgress).WithNumber("WO-4").AssignedTo(people.Worker).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Complete).WithNumber("WO-5").AssignedTo(people.Worker)
+            .DueOn(today.AddDays(-10)).CompletedAt(since.AddDays(1)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Complete).WithNumber("WO-6").AssignedTo(people.Worker)
+            .DueOn(today.AddDays(-90)).CompletedAt(since.AddSeconds(-1)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Cancelled).WithNumber("WO-7").AssignedTo(people.Worker)
+            .DueOn(today.AddDays(-2)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Draft).WithNumber("WO-8").AssignedTo(people.Worker)
+            .DueOn(today).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Complete).WithNumber("WO-9").AssignedTo(people.Worker)
+            .DueOn(today).CompletedAt(since).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Assigned).WithNumber("WO-10").DueOn(today.AddDays(-2)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.Assigned).WithNumber("WO-11").AssignedTo(people.Creator)
+            .DueOn(today.AddDays(-4)).Build(),
+        WorkOrderBuilder.For(people.Creator, WorkOrderStatus.InProgress).WithNumber("WO-12").AssignedTo(people.Other)
+            .DueOn(today.AddDays(-1)).Build()
+    ];
+
+    private static void ThenOneGroupedSql(CommandCounter commands)
+    {
+        commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, commands.Texts));
+        commands.OtherCommands.ShouldBe(0);
+        var sql = commands.Texts.Single();
+        sql.ShouldContain("GROUP BY");
         sql.ShouldContain("SUM(");
-        }
     }
 
-    private static Employee Employee(string userName, string first, string last, bool fulfill, params string[] roleNames)
+    private void ThenSummariesMatch(EmployeeWorkLoadSummary[] summaries)
     {
-        var employee = new Employee(userName, first, last, $"{userName}@example.test");
-        foreach (var roleName in roleNames)
-        {
-            employee.AddRole(new Role(roleName, canCreate: false, canFulfill: fulfill));
-        }
+        summaries.Select(summary => summary.Employee.UserName).ShouldBe(["other", "worker", "idle"]);
+        var workerSummary = summaries.Single(summary => summary.Employee.UserName == "worker");
+        workerSummary.Employee.GetFullName().ShouldBe("Wor Mid Ker");
+        workerSummary.Employee.Roles.Select(role => role.Name).ShouldBe(["Lead", "Worker"], ignoreOrder: true);
+        workerSummary.Employee.CanFulfillWorkOrder().ShouldBeTrue();
+        ThenLoadIs(workerSummary.Load, Expected(5, 2, 2, 2));
 
-        return employee;
+        var idleSummary = summaries.Single(summary => summary.Employee.UserName == "idle");
+        ThenLoadIs(idleSummary.Load, Expected(0, 0, 0, 0));
+
+        var otherSummary = summaries.Single(summary => summary.Employee.UserName == "other");
+        ThenLoadIs(otherSummary.Load, Expected(1, 1, 1, 0));
+        ThenMatchesPerEmployee(summaries);
     }
 
-    private static WorkOrder Order(string number, Employee creator, Employee? assignee, WorkOrderStatus status,
-        DateOnly? dueDate, DateTime? completedDate = null)
-    {
-        return new WorkOrder
+    private static EmployeeWorkLoad Expected(
+        int assignedAndOpen, int inProgress, int overdue, int completedLast30Days) =>
+        new()
         {
-            Number = number,
-            Creator = creator,
-            Assignee = assignee,
-            Status = status,
-            DueDate = dueDate,
-            CompletedDate = completedDate
+            AssignedAndOpen = assignedAndOpen,
+            InProgress = inProgress,
+            Overdue = overdue,
+            CompletedLast30Days = completedLast30Days
         };
+
+    private static void ThenLoadIs(EmployeeWorkLoad load, EmployeeWorkLoad expected)
+    {
+        load.AssignedAndOpen.ShouldBe(expected.AssignedAndOpen);
+        load.InProgress.ShouldBe(expected.InProgress);
+        load.Overdue.ShouldBe(expected.Overdue);
+        load.CompletedLast30Days.ShouldBe(expected.CompletedLast30Days);
+    }
+
+    private void ThenMatchesPerEmployee(EmployeeWorkLoadSummary[] summaries)
+    {
+        var perEmployee = new EmployeeWorkLoadQueryHandler(_context, _clock);
+        foreach (var summary in summaries)
+        {
+            var load = perEmployee.Handle(new EmployeeWorkLoadQuery(summary.Employee.UserName))
+                .GetAwaiter().GetResult();
+            ThenLoadIs(summary.Load, load);
+        }
+    }
+
+    private void AssertGroupedSql(string connectionString)
+    {
+        using var context = new DataContext(new FileDbConfig(connectionString));
+        var sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock ?? new FixedClock(Now))
+            .SummaryQuery()
+            .ToQueryString();
+
+        TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
+        sql.ShouldContain("GROUP BY");
+        sql.ShouldContain("SUM(");
     }
 
     private sealed class CountingContext(IDatabaseConfiguration configuration) : DataContext(configuration)

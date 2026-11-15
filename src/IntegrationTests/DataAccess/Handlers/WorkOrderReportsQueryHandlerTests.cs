@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using Microsoft.EntityFrameworkCore;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
@@ -17,16 +17,7 @@ public class WorkOrderReportsQueryHandlerTests
     public async Task ShouldCountOpenByStatus()
     {
         var before = await Handle();
-        var creator = NewEmployee("rcreator");
-        var now = Now.DateTime;
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Draft),
-            Order(creator, WorkOrderStatus.Draft),
-            Order(creator, WorkOrderStatus.Assigned),
-            Order(creator, WorkOrderStatus.Assigned),
-            Order(creator, WorkOrderStatus.InProgress),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-5)),
-            Order(creator, WorkOrderStatus.Cancelled));
+        await GivenOpenByStatusAsync();
 
         var data = await Handle();
 
@@ -40,14 +31,7 @@ public class WorkOrderReportsQueryHandlerTests
     public async Task ShouldCountOpenByPriority()
     {
         var before = await Handle();
-        var creator = NewEmployee("pcreator");
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Draft, priority: WorkOrderPriority.High),
-            Order(creator, WorkOrderStatus.Draft, priority: WorkOrderPriority.High),
-            Order(creator, WorkOrderStatus.Assigned, priority: WorkOrderPriority.Medium),
-            Order(creator, WorkOrderStatus.InProgress, priority: WorkOrderPriority.Medium),
-            Order(creator, WorkOrderStatus.Assigned, priority: WorkOrderPriority.Low),
-            Order(creator, WorkOrderStatus.Complete, priority: WorkOrderPriority.High));
+        await GivenOpenByPriorityAsync();
 
         var data = await Handle();
 
@@ -62,14 +46,7 @@ public class WorkOrderReportsQueryHandlerTests
         var tag = TestData.Tag();
         var sanctuary = $"Sanctuary {tag}";
         var kitchen = $"Kitchen {tag}";
-        var creator = NewEmployee("bcreator");
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Draft, building: sanctuary),
-            Order(creator, WorkOrderStatus.Draft, building: sanctuary),
-            Order(creator, WorkOrderStatus.Assigned, building: kitchen),
-            Order(creator, WorkOrderStatus.Assigned, building: sanctuary),
-            Order(creator, WorkOrderStatus.InProgress, building: null),
-            Order(creator, WorkOrderStatus.Complete, building: sanctuary));
+        await GivenOpenByBuildingAsync(sanctuary, kitchen);
 
         var data = await Handle();
 
@@ -82,13 +59,7 @@ public class WorkOrderReportsQueryHandlerTests
     public async Task ShouldCountOverdueNow()
     {
         var before = await Handle();
-        var creator = NewEmployee("ocreator");
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Draft, due: Today.AddDays(-1)),
-            Order(creator, WorkOrderStatus.Assigned, due: Today.AddDays(-5)),
-            Order(creator, WorkOrderStatus.InProgress, due: Today),
-            Order(creator, WorkOrderStatus.InProgress, due: Today.AddDays(1)),
-            Order(creator, WorkOrderStatus.Complete, due: Today.AddDays(-1)));
+        await GivenOverdueAsync();
 
         var data = await Handle();
 
@@ -99,22 +70,7 @@ public class WorkOrderReportsQueryHandlerTests
     public async Task ShouldComputeCompletedPerWeek_Last8Weeks()
     {
         var clock = TestData.FutureClock();
-        var creator = NewEmployee("wcreator");
-        var now = clock.GetUtcNow().UtcDateTime;
-
-        // One completion in each of the last 8 weeks; the two at day -56 fall before the first week shown
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-56)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-56)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-49)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-42)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-35)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-28)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-21)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-14)),
-            Order(creator, WorkOrderStatus.Complete, completed: now.AddDays(-7)),
-            Order(creator, WorkOrderStatus.Complete, completed: now),
-            Order(creator, WorkOrderStatus.Draft));
+        await GivenCompletedPerWeekAsync(clock);
 
         var data = await Handle(clock);
 
@@ -127,13 +83,7 @@ public class WorkOrderReportsQueryHandlerTests
     public async Task ShouldComputeAverageDaysToClose_Last30Days()
     {
         var clock = TestData.FutureClock();
-        var creator = NewEmployee("acreator");
-        var now = clock.GetUtcNow().UtcDateTime;
-
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-10), completed: now.AddDays(-5)),
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-8), completed: now.AddDays(-2)),
-            Order(creator, WorkOrderStatus.Draft));
+        await GivenAverageDaysAsync(clock);
 
         var data = await Handle(clock);
 
@@ -159,17 +109,10 @@ public class WorkOrderReportsQueryHandlerTests
     {
         // Verify that the Reports query uses the same averaging logic as the search page
         var clock = TestData.FutureClock();
-        var creator = NewEmployee("screator");
-        var now = clock.GetUtcNow().UtcDateTime;
-
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-12), completed: now.AddDays(-10)),
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-8), completed: now.AddDays(-3)),
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-4), completed: now.AddDays(-1)));
+        await GivenMatchingAverageAsync(clock);
 
         var reportsHandler = new WorkOrderReportsQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
         var searchHandler = new WorkOrderSearchSummaryQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
-
         var reports = await reportsHandler.Handle(new WorkOrderReportsQuery());
         var search = await searchHandler.Handle(new WorkOrderSearchSummaryQuery(null));
 
@@ -177,6 +120,139 @@ public class WorkOrderReportsQueryHandlerTests
         reports.AverageDaysToClose.ShouldNotBeNull();
         reports.AverageDaysToClose.Value.ShouldBe(10.0 / 3, 0.001);
         reports.AverageDaysToClose.ShouldBe(search.AverageDaysToClose);
+    }
+
+    private static async Task GivenOpenByStatusAsync()
+    {
+        var userName = TestData.UserName("rcreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        var now = Now.DateTime;
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).CreatedAt(Now.DateTime).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).CreatedAt(Now.DateTime).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).CreatedAt(Now.DateTime).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(Now.DateTime).CompletedAt(now.AddDays(-5)).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).CreatedAt(Now.DateTime).DueOn(Today).Build());
+    }
+
+    private static async Task GivenOpenByPriorityAsync()
+    {
+        var userName = TestData.UserName("pcreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today)
+                .WithPriority(WorkOrderPriority.High).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today)
+                .WithPriority(WorkOrderPriority.High).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).CreatedAt(Now.DateTime).DueOn(Today)
+                .WithPriority(WorkOrderPriority.Medium).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).CreatedAt(Now.DateTime).DueOn(Today)
+                .WithPriority(WorkOrderPriority.Medium).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).CreatedAt(Now.DateTime).DueOn(Today)
+                .WithPriority(WorkOrderPriority.Low).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+                .WithPriority(WorkOrderPriority.High).Build());
+    }
+
+    private static async Task GivenOpenByBuildingAsync(string sanctuary, string kitchen)
+    {
+        var userName = TestData.UserName("bcreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today)
+                .InBuilding(sanctuary).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today)
+                .InBuilding(sanctuary).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).CreatedAt(Now.DateTime).DueOn(Today)
+                .InBuilding(kitchen).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).CreatedAt(Now.DateTime).DueOn(Today)
+                .InBuilding(sanctuary).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).CreatedAt(Now.DateTime).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+                .InBuilding(sanctuary).Build());
+    }
+
+    private static async Task GivenOverdueAsync()
+    {
+        var userName = TestData.UserName("ocreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today.AddDays(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).CreatedAt(Now.DateTime).DueOn(Today.AddDays(-5)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).CreatedAt(Now.DateTime).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).CreatedAt(Now.DateTime).DueOn(Today.AddDays(1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today.AddDays(-1)).Build());
+    }
+
+    private static async Task GivenCompletedPerWeekAsync(TimeProvider clock)
+    {
+        var userName = TestData.UserName("wcreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        // One completion in each of the last 8 weeks; the two at day -56 fall before the first week shown
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator, CompletedWeekOrders(creator, clock.GetUtcNow().UtcDateTime));
+    }
+
+    private static WorkOrder[] CompletedWeekOrders(Employee creator, DateTime now) =>
+    [
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-56)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-56)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-49)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-42)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-35)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-28)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-21)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-14)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now.AddDays(-7)).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).CreatedAt(Now.DateTime).DueOn(Today)
+            .CompletedAt(now).Build(),
+        WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today).Build()
+    ];
+
+
+    private static async Task GivenAverageDaysAsync(TimeProvider clock)
+    {
+        var userName = TestData.UserName("acreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        var now = clock.GetUtcNow().UtcDateTime;
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-10)).CompletedAt(now.AddDays(-5)).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-8)).CompletedAt(now.AddDays(-2)).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(Now.DateTime).DueOn(Today).Build());
+    }
+
+    private static async Task GivenMatchingAverageAsync(TimeProvider clock)
+    {
+        var userName = TestData.UserName("screator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Reports").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        var now = clock.GetUtcNow().UtcDateTime;
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-12)).CompletedAt(now.AddDays(-10)).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-8)).CompletedAt(now.AddDays(-3)).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-4)).CompletedAt(now.AddDays(-1)).DueOn(Today).Build());
     }
 
     private static async Task<WorkOrderReportsData> Handle(TimeProvider? clock = null)
@@ -188,37 +264,4 @@ public class WorkOrderReportsQueryHandlerTests
 
     private static int Delta(IReadOnlyDictionary<string, int> before, IReadOnlyDictionary<string, int> after, string key) =>
         after.GetValueOrDefault(key) - before.GetValueOrDefault(key);
-
-    private static Employee NewEmployee(string prefix)
-    {
-        var userName = TestData.UserName(prefix);
-        return new Employee(userName, "Reports", "Tester", TestData.Email(userName));
-    }
-
-    private static WorkOrder Order(Employee creator, WorkOrderStatus status,
-        Employee? assignee = null, DateTime? created = null, DateTime? completed = null, DateOnly? due = null,
-        WorkOrderPriority? priority = null, string? building = null) =>
-        new()
-        {
-            Creator = creator,
-            Assignee = assignee,
-            Number = TestData.Number("R"),
-            Title = $"Reports {creator.UserName}",
-            Status = status,
-            CreatedDate = created ?? Now.DateTime,
-            CompletedDate = completed,
-            DueDate = due ?? Today,
-            Priority = priority ?? WorkOrderPriority.Medium,
-            Building = building
-        };
-
-    private static async Task SaveAsync(Employee creator, params WorkOrder[] orders)
-    {
-        await using var context = TestHost.GetRequiredService<DbContext>();
-        var assignees = orders.Select(o => o.Assignee).OfType<Employee>().Where(e => e != creator).Distinct();
-        context.AttachRange(assignees);
-        context.Add(creator);
-        context.AddRange(orders.Cast<object>());
-        await context.SaveChangesAsync();
-    }
 }

@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -27,18 +28,7 @@ public class BuildingRoomSummaryQueryHandlerTests
         var buildings = Own(await Handle(), seed.Tag);
 
         buildings.Sum(b => b.Rooms.Sum(r => r.TotalCount)).ShouldBe(seed.InOwnBuildings);
-        foreach (var building in buildings)
-        {
-            foreach (var room in building.Rooms)
-            {
-                var where = $"building '{building.Building}', room '{room.Room}'";
-                room.TotalCount.ShouldBe(await SearchCountAsync(building.Building, room.Room), where);
-                room.OpenCount.ShouldBe(await SearchCountAsync(building.Building, room.Room, q => q.MatchOpenOnly(true)), where);
-                room.OverdueCount.ShouldBe(await SearchCountAsync(building.Building, room.Room, q => q.MatchOverdueOnly(true)), where);
-                room.CompletedLast30Days.ShouldBe(
-                    await SearchCountAsync(building.Building, room.Room, q => q.MatchCompletedWithinDays(30)), where);
-            }
-        }
+        AssertEachRoomMatchesSearch(buildings);
     }
 
     [Test]
@@ -48,25 +38,9 @@ public class BuildingRoomSummaryQueryHandlerTests
 
         var all = await Handle();
 
-        all.Select(b => b.Building).ShouldBeUnique();
-        foreach (var building in all)
-        {
-            building.Rooms.ShouldNotBeEmpty();
-            building.Rooms.Select(r => r.Room).ShouldBeUnique();
-        }
-
+        AssertUniqueBuildingsAndRooms(all);
         var buildings = Own(all, seed.Tag);
-        foreach (var building in buildings)
-        {
-            // A building the database also counts under another returned entry would make this search larger.
-            (await SearchCountAsync(building.Building, null)).ShouldBe(building.Rooms.Sum(r => r.TotalCount),
-                $"building '{building.Building}'");
-            foreach (var room in building.Rooms)
-            {
-                (await SearchCountAsync(building.Building, room.Room)).ShouldBe(room.TotalCount,
-                    $"building '{building.Building}', room '{room.Room}'");
-            }
-        }
+        AssertBuildingTotalsMatchSearch(buildings);
 
         buildings.Sum(b => b.Rooms.Sum(r => r.TotalCount)).ShouldBe(seed.InOwnBuildings);
         var noBuilding = all.Single(b => b.Building == "");
@@ -80,21 +54,13 @@ public class BuildingRoomSummaryQueryHandlerTests
         var tag = TestData.Tag();
         var boundary = $"Boundary {tag}";
         var annex = $"Annex {tag}";
-        var creator = NewEmployee("brbound");
-        var now = Now.DateTime;
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.InProgress, boundary, "1", due: ChurchToday),
-            Order(creator, WorkOrderStatus.Assigned, boundary, "1", due: ChurchToday.AddDays(-1)),
-            Order(creator, WorkOrderStatus.Complete, boundary, "1", completed: now.AddDays(-30)),
-            Order(creator, WorkOrderStatus.Complete, boundary, "1", completed: now.AddDays(-30).AddSeconds(-1)),
-            Order(creator, WorkOrderStatus.Cancelled, annex, "9", due: ChurchToday.AddDays(-5)),
-            Order(creator, WorkOrderStatus.Complete, annex, "9", completed: now.AddDays(-60)));
+        await GivenBoundaryOrdersAsync(boundary, annex);
 
         var buildings = Own(await Handle(), tag);
 
         buildings.Select(b => b.Building).ShouldBe([annex, boundary]);
-        AssertCounts(buildings[1].Rooms.Single(), "1", open: 2, overdue: 1, completed: 1, total: 4);
-        AssertCounts(buildings[0].Rooms.Single(), "9", open: 0, overdue: 0, completed: 0, total: 2);
+        AssertCounts(buildings[1].Rooms.Single(), new ExpectedRoom("1", new RoomCounts(2, 1, 1, 4)));
+        AssertCounts(buildings[0].Rooms.Single(), new ExpectedRoom("9", new RoomCounts(0, 0, 0, 2)));
     }
 
     [Test]
@@ -106,40 +72,95 @@ public class BuildingRoomSummaryQueryHandlerTests
 
         buildings.ShouldNotContain(b => b.Building == unknown);
         buildings.Select(b => b.Building).ShouldBeUnique();
+        AssertUniqueRoomsPerBuilding(buildings);
+    }
+
+    [Test]
+    public void ShouldTranslateToSql_OnSqlServerAndSqlite()
+    {
+        AssertSqlContainsGroupByJoinSum(
+            "Server=localhost;Database=TranslationOnly;Integrated Security=false;TrustServerCertificate=true");
+        AssertSqlContainsGroupByJoinSum("Data Source=:memory:");
+    }
+
+    private static void AssertSqlContainsGroupByJoinSum(string connectionString)
+    {
+        using var context = new DataContext(new StubDatabaseConfiguration(connectionString));
+        var sql = new BuildingRoomSummaryQueryHandler(context, TestData.FixedClock(Now)).CountsQuery().ToQueryString();
+
+        TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
+        sql.ShouldContain("GROUP BY");
+        sql.ShouldContain("JOIN");
+        sql.ShouldContain("SUM(");
+    }
+
+    private static void AssertCounts(RoomSummary room, ExpectedRoom expected)
+    {
+        room.Room.ShouldBe(expected.Name);
+        room.OpenCount.ShouldBe(expected.Counts.Open);
+        room.OverdueCount.ShouldBe(expected.Counts.Overdue);
+        room.CompletedLast30Days.ShouldBe(expected.Counts.Completed);
+        room.TotalCount.ShouldBe(expected.Counts.Total);
+    }
+
+    private sealed record RoomCounts(int Open, int Overdue, int Completed, int Total);
+
+    private sealed record ExpectedRoom(string Name, RoomCounts Counts);
+
+    private static void AssertEachRoomMatchesSearch(BuildingSummary[] buildings)
+    {
+        foreach (var building in buildings)
+        {
+            foreach (var room in building.Rooms)
+            {
+                AssertRoomMatchesSearch(building.Building, room);
+            }
+        }
+    }
+
+    private static void AssertRoomMatchesSearch(string building, RoomSummary room)
+    {
+        var where = $"building '{building}', room '{room.Room}'";
+        room.TotalCount.ShouldBe(SearchCountAsync(building, room.Room).GetAwaiter().GetResult(), where);
+        room.OpenCount.ShouldBe(
+            SearchCountAsync(building, room.Room, q => q.MatchOpenOnly(true)).GetAwaiter().GetResult(), where);
+        room.OverdueCount.ShouldBe(
+            SearchCountAsync(building, room.Room, q => q.MatchOverdueOnly(true)).GetAwaiter().GetResult(), where);
+        room.CompletedLast30Days.ShouldBe(
+            SearchCountAsync(building, room.Room, q => q.MatchCompletedWithinDays(30)).GetAwaiter().GetResult(), where);
+    }
+
+    private static void AssertUniqueBuildingsAndRooms(BuildingSummary[] all)
+    {
+        all.Select(b => b.Building).ShouldBeUnique();
+        foreach (var building in all)
+        {
+            building.Rooms.ShouldNotBeEmpty();
+            building.Rooms.Select(r => r.Room).ShouldBeUnique();
+        }
+    }
+
+    private static void AssertUniqueRoomsPerBuilding(BuildingSummary[] buildings)
+    {
         foreach (var building in buildings)
         {
             building.Rooms.Select(r => r.Room).ShouldBeUnique();
         }
     }
 
-    [Test]
-    public void ShouldTranslateToSql_OnSqlServerAndSqlite()
+    private static void AssertBuildingTotalsMatchSearch(BuildingSummary[] buildings)
     {
-        string[] connectionStrings =
-        [
-            "Server=localhost;Database=TranslationOnly;Integrated Security=false;TrustServerCertificate=true",
-            "Data Source=:memory:"
-        ];
-
-        foreach (var connectionString in connectionStrings)
+        foreach (var building in buildings)
         {
-            using var context = new DataContext(new StubDatabaseConfiguration(connectionString));
-            var sql = new BuildingRoomSummaryQueryHandler(context, TestData.FixedClock(Now)).CountsQuery().ToQueryString();
-
-            TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
-            sql.ShouldContain("GROUP BY");
-            sql.ShouldContain("JOIN");
-            sql.ShouldContain("SUM(");
+            // A building the database also counts under another returned entry would make this search larger.
+            SearchCountAsync(building.Building, null).GetAwaiter().GetResult()
+                .ShouldBe(building.Rooms.Sum(r => r.TotalCount), $"building '{building.Building}'");
+            foreach (var room in building.Rooms)
+            {
+                SearchCountAsync(building.Building, room.Room).GetAwaiter().GetResult()
+                    .ShouldBe(room.TotalCount, $"building '{building.Building}', room '{room.Room}'");
+            }
         }
-    }
-
-    private static void AssertCounts(RoomSummary room, string name, int open, int overdue, int completed, int total)
-    {
-        room.Room.ShouldBe(name);
-        room.OpenCount.ShouldBe(open);
-        room.OverdueCount.ShouldBe(overdue);
-        room.CompletedLast30Days.ShouldBe(completed);
-        room.TotalCount.ShouldBe(total);
     }
 
     /// <summary>
@@ -152,27 +173,79 @@ public class BuildingRoomSummaryQueryHandlerTests
         var tag = TestData.Tag();
         var hall = $"Hall {tag}";
         var gym = $"Gym {tag}";
-        var creator = NewEmployee(prefix);
-        var now = Now.DateTime;
-        WorkOrder[] orders =
-        [
-            Order(creator, WorkOrderStatus.Assigned, hall, "101", due: ChurchToday.AddDays(-1)),
-            Order(creator, WorkOrderStatus.Draft, $" {hall.ToUpperInvariant()} ", "101 ", due: ChurchToday),
-            Order(creator, WorkOrderStatus.Complete, hall.ToLowerInvariant(), "102", completed: now.AddDays(-30)),
-            Order(creator, WorkOrderStatus.Complete, hall.ToLowerInvariant(), "102", completed: now.AddDays(-31)),
-            Order(creator, WorkOrderStatus.InProgress, hall, "101"),
-            Order(creator, WorkOrderStatus.Cancelled, null, null, due: ChurchToday.AddDays(-12)),
-            Order(creator, WorkOrderStatus.Complete, "", "", completed: now.AddDays(-60)),
-            Order(creator, WorkOrderStatus.Assigned, "   ", "  ", due: ChurchToday.AddDays(-12)),
-            Order(creator, WorkOrderStatus.Draft, null, "201"),
-            Order(creator, WorkOrderStatus.Complete, "", "201", completed: now.AddDays(-2)),
-            Order(creator, WorkOrderStatus.InProgress, "   ", " 201"),
-            Order(creator, WorkOrderStatus.InProgress, gym, null, due: ChurchToday.AddDays(-3)),
-            Order(creator, WorkOrderStatus.Cancelled, gym, "  "),
-            Order(creator, WorkOrderStatus.Complete, $" {gym}", "", completed: now.AddDays(-1))
-        ];
-        await SaveAsync(creator, orders);
+        var userName = TestData.UserName(prefix);
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Room").WithLastName("Summary").WithEmail(TestData.Email(userName)).Build();
+        var orders = HallOrders(creator, hall).Concat(BlankAndGymOrders(creator, gym)).ToArray();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator, orders);
         return new SeededVariants(tag, gym, orders.Count(o => !string.IsNullOrWhiteSpace(o.Building)));
+    }
+
+    private static WorkOrder[] HallOrders(Employee creator, string hall)
+    {
+        var now = Now.DateTime;
+        var created = Now.DateTime.AddDays(-90);
+        return
+        [
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).InBuilding(hall).InRoom("101")
+                .CreatedAt(created).DueOn(ChurchToday.AddDays(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).InBuilding($" {hall.ToUpperInvariant()} ").InRoom("101 ")
+                .CreatedAt(created).DueOn(ChurchToday).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding(hall.ToLowerInvariant()).InRoom("102")
+                .CreatedAt(created).CompletedAt(now.AddDays(-30)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding(hall.ToLowerInvariant()).InRoom("102")
+                .CreatedAt(created).CompletedAt(now.AddDays(-31)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).InBuilding(hall).InRoom("101")
+                .CreatedAt(created).Build()
+        ];
+    }
+
+    private static WorkOrder[] BlankAndGymOrders(Employee creator, string gym)
+    {
+        var now = Now.DateTime;
+        var created = Now.DateTime.AddDays(-90);
+        return
+        [
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled)
+                .CreatedAt(created).DueOn(ChurchToday.AddDays(-12)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding("").InRoom("")
+                .CreatedAt(created).CompletedAt(now.AddDays(-60)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).InBuilding("   ").InRoom("  ")
+                .CreatedAt(created).DueOn(ChurchToday.AddDays(-12)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).InRoom("201").CreatedAt(created).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding("").InRoom("201")
+                .CreatedAt(created).CompletedAt(now.AddDays(-2)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).InBuilding("   ").InRoom(" 201")
+                .CreatedAt(created).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).InBuilding(gym)
+                .CreatedAt(created).DueOn(ChurchToday.AddDays(-3)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).InBuilding(gym).InRoom("  ")
+                .CreatedAt(created).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding($" {gym}").InRoom("")
+                .CreatedAt(created).CompletedAt(now.AddDays(-1)).Build()
+        ];
+    }
+
+    private static async Task GivenBoundaryOrdersAsync(string boundary, string annex)
+    {
+        var userName = TestData.UserName("brbound");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Room").WithLastName("Summary").WithEmail(TestData.Email(userName)).Build();
+        var now = Now.DateTime;
+        var created = Now.DateTime.AddDays(-90);
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).InBuilding(boundary).InRoom("1")
+                .CreatedAt(created).DueOn(ChurchToday).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).InBuilding(boundary).InRoom("1")
+                .CreatedAt(created).DueOn(ChurchToday.AddDays(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding(boundary).InRoom("1")
+                .CreatedAt(created).CompletedAt(now.AddDays(-30)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding(boundary).InRoom("1")
+                .CreatedAt(created).CompletedAt(now.AddDays(-30).AddSeconds(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).InBuilding(annex).InRoom("9")
+                .CreatedAt(created).DueOn(ChurchToday.AddDays(-5)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).InBuilding(annex).InRoom("9")
+                .CreatedAt(created).CompletedAt(now.AddDays(-60)).Build());
     }
 
     private sealed record SeededVariants(string Tag, string Gym, int InOwnBuildings);
@@ -180,16 +253,18 @@ public class BuildingRoomSummaryQueryHandlerTests
     private static BuildingSummary[] Own(IEnumerable<BuildingSummary> buildings, string tag) =>
         buildings.Where(b => b.Building.Contains(tag, StringComparison.OrdinalIgnoreCase)).ToArray();
 
-    private static Employee NewEmployee(string prefix)
-    {
-        var userName = TestData.UserName(prefix);
-        return new Employee(userName, "Room", "Summary", TestData.Email(userName));
-    }
-
     private static async Task<int> SearchCountAsync(string building, string? room,
         Action<WorkOrderSpecificationQuery>? flag = null)
     {
         var query = new WorkOrderSpecificationQuery();
+        ApplyBuildingRoom(query, building, room);
+        flag?.Invoke(query);
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TestData.FixedClock(Now));
+        return (await handler.Handle(query)).Length;
+    }
+
+    private static void ApplyBuildingRoom(WorkOrderSpecificationQuery query, string building, string? room)
+    {
         if (building == "")
         {
             query.MatchNoBuilding(true);
@@ -207,10 +282,6 @@ public class BuildingRoomSummaryQueryHandlerTests
         {
             query.MatchRoom(room);
         }
-
-        flag?.Invoke(query);
-        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TestData.FixedClock(Now));
-        return (await handler.Handle(query)).Length;
     }
 
     private static async Task<BuildingSummary[]> Handle()
@@ -218,23 +289,6 @@ public class BuildingRoomSummaryQueryHandlerTests
         var handler = new BuildingRoomSummaryQueryHandler(
             TestHost.GetRequiredService<DataContext>(), TestData.FixedClock(Now));
         return await handler.Handle(new BuildingRoomSummaryQuery());
-    }
-
-    private static WorkOrder Order(Employee creator, WorkOrderStatus status, string? building,
-        string? room, DateTime? completed = null, DateOnly? due = null) =>
-        new()
-        {
-            Creator = creator, Number = TestData.Number("V"), Title = $"Room summary {creator.UserName}", Status = status,
-            Building = building,
-            RoomNumber = room, CreatedDate = Now.DateTime.AddDays(-90), CompletedDate = completed, DueDate = due
-        };
-
-    private static async Task SaveAsync(Employee creator, params WorkOrder[] orders)
-    {
-        await using var context = TestHost.GetRequiredService<DbContext>();
-        context.Add(creator);
-        context.AddRange(orders.Cast<object>());
-        await context.SaveChangesAsync();
     }
 
     private sealed class StubDatabaseConfiguration(string connectionString) : IDatabaseConfiguration
