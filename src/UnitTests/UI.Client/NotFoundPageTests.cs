@@ -92,4 +92,16 @@ public class NotFoundPageTests
         items[1].QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundWorkOrdersLink)}']").ShouldNotBeNull();
         items[2].QuerySelector($"[data-testid='{nameof(NotFound.Elements.NotFoundHomeLink)}']").ShouldNotBeNull();
     }
+
+    [Test]
+    public void Should_RenderCard_AsRegionNamedPageNotFound()
+    {
+        using var ctx = new BunitContext();
+        ctx.Services.AddSingleton<IBus>(new StubBus());
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var component = ctx.Render<NotFound>();
+
+        component.Find("section.not-found-card").GetAttribute("aria-label").ShouldBe("Page not found");
+    }
 }
