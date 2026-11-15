@@ -18,7 +18,7 @@ public static class WorkOrderQuerySteps
         var assignees = orders.Select(order => order.Assignee).OfType<Employee>()
             .Where(employee => employee != creator)
             .Distinct();
-        context.AddRange(assignees);
+        context.AttachRange(assignees);
         context.Add(creator);
         context.AddRange(orders.Cast<object>());
         await context.SaveChangesAsync();
