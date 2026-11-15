@@ -18,6 +18,11 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
+        if (HttpOnlyFluentValidationRequests.AppliesTo(request))
+        {
+            return await next();
+        }
+
         var failures = await CollectFailuresAsync(request, cancellationToken);
         if (failures.Count > 0)
         {

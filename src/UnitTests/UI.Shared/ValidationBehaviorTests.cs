@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.UI.Shared;
 using FluentValidation;
@@ -105,6 +106,25 @@ public class ValidationBehaviorTests
         result.ShouldBe("ok");
     }
 
+    [Test]
+    public async Task Handle_Should_ReachHandler_WhenCreateVendorWouldFailFluentValidation()
+    {
+        var services = new ServiceCollection();
+        services.AddTransient<IValidator<CreateVendorCommand>, CreateVendorCommandValidator>();
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblyContaining<ValidationBehaviorTests>();
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
+        services.AddTransient<IRequestHandler<CreateVendorCommand, CreateVendorResult>, CreateVendorProbeHandler>();
+        var bus = new Bus(services.BuildServiceProvider().GetRequiredService<IMediator>());
+
+        var result = await bus.Send(new CreateVendorCommand("", "HVAC", null, null, null));
+
+        result.Succeeded.ShouldBeTrue();
+        result.Message.ShouldBe("handler-ran");
+    }
+
     private static Bus BusWithValidators(StateCommandResult? response = null)
     {
         var services = new ServiceCollection();
@@ -154,5 +174,11 @@ public class ValidationBehaviorTests
     {
         public Task<string> Handle(OpenProbeRequest request, CancellationToken cancellationToken) =>
             Task.FromResult("ok");
+    }
+
+    private sealed class CreateVendorProbeHandler : IRequestHandler<CreateVendorCommand, CreateVendorResult>
+    {
+        public Task<CreateVendorResult> Handle(CreateVendorCommand request, CancellationToken cancellationToken) =>
+            Task.FromResult(new CreateVendorResult(true, "handler-ran", Guid.Empty));
     }
 }

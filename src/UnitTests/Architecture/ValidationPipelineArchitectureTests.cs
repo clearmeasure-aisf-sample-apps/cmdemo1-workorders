@@ -49,6 +49,12 @@ public class ValidationPipelineArchitectureTests
     }
 
     [Test]
+    public void ShouldMatchMasterAllowList_WhenConcreteRemotableTypesAreListed()
+    {
+        HttpAllowListTypes.ConcreteRemotableTypeNames().ShouldBe(HttpAllowListTypes.MasterNames);
+    }
+
+    [Test]
     public void ShouldNotNewAbstractValidatorsOutsideValidationBehavior_WhenProductionSourcesAreScanned()
     {
         var offenders = ProductionValidatorNews(RepositoryCheckout.Current);

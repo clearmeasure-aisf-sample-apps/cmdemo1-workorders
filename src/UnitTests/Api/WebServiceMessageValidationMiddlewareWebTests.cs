@@ -2,8 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using ClearMeasure.Bootcamp.Core.Messaging;
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Client;
 using Shouldly;
 
@@ -24,6 +26,30 @@ public class WebServiceMessageValidationMiddlewareWebTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         var json = await response.Content.ReadAsStringAsync();
         json.ShouldContain("errors");
+    }
+
+    [Test]
+    public async Task Should_Return400_When_ChatClientConfigQueryIsPosted()
+    {
+        await using var factory = new WebServiceMessageValidationWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var response = await PostSingleApiAsync(client, new WebServiceMessage(new ChatClientConfigQuery()));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Test]
+    public async Task Should_Return400_When_WorkOrderChatQueryIsPosted()
+    {
+        await using var factory = new WebServiceMessageValidationWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var response = await PostSingleApiAsync(
+            client,
+            new WebServiceMessage(new WorkOrderChatQuery("hi", new WorkOrder())));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Test]
