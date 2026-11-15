@@ -305,7 +305,6 @@ public class LogoutTests
     }
 }
 
-
 public class SpyUiBus : IUiBus
 {
     public bool NotifyWasCalled { get; private set; }

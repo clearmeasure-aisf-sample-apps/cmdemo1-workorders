@@ -152,7 +152,6 @@ public class WorkOrderManageEventBusNotifyTests
         }
     }
 
-
     private class StubTranslationService : ITranslationService
     {
         public Task<string> TranslateAsync(string text, string targetLanguageCode)

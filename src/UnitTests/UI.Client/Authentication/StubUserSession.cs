@@ -34,12 +34,26 @@ public class StubUserSession : IUserSession
     /// <summary>When set, <see cref="GetCurrentUserAsync"/> throws this exception.</summary>
     public Exception? GetCurrentUserFault { get; init; }
 
+    /// <summary>How many times <see cref="GetCurrentUserAsync"/> has been called.</summary>
+    public int GetCurrentUserCallCount { get; private set; }
+
+    /// <summary>How many times <see cref="GetCurrentUserNameAsync"/> has been called.</summary>
+    public int GetCurrentUserNameCallCount { get; private set; }
+
+    /// <summary>User names passed to <see cref="SignInAsync"/>.</summary>
+    public List<string> SignInUserNames { get; } = [];
+
     /// <inheritdoc />
-    public Task<string?> GetCurrentUserNameAsync() => Task.FromResult(UserName);
+    public Task<string?> GetCurrentUserNameAsync()
+    {
+        GetCurrentUserNameCallCount++;
+        return Task.FromResult(UserName);
+    }
 
     /// <inheritdoc />
     public Task<Employee?> GetCurrentUserAsync()
     {
+        GetCurrentUserCallCount++;
         if (GetCurrentUserFault != null)
         {
             throw GetCurrentUserFault;
@@ -51,6 +65,7 @@ public class StubUserSession : IUserSession
     /// <inheritdoc />
     public async Task SignInAsync(string username)
     {
+        SignInUserNames.Add(username);
         UserName = username;
         if (OnSignIn != null)
         {

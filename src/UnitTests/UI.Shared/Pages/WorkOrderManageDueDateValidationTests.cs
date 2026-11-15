@@ -221,7 +221,6 @@ public class WorkOrderManageDueDateValidationTests
             };
     }
 
-
     private sealed class StubDueDateTranslationService : ITranslationService
     {
         public Task<string> TranslateAsync(string text, string targetLanguageCode) => Task.FromResult(text);

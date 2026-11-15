@@ -156,7 +156,6 @@ public class MainLayoutDeploymentFooterTests
         return ctx;
     }
 
-
     // ReSharper disable NotAccessedPositionalProperty.Local -- properties consumed via JSON serialization reflection
     private sealed record EnvironmentStatusStub(string Version, string GitSha, string EnvironmentName);
     // ReSharper restore NotAccessedPositionalProperty.Local

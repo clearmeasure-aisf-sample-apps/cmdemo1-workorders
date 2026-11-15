@@ -602,7 +602,6 @@ public class LoginPageTests
         versionLabel.TextContent.ShouldContain("Environment unknown");
     }
 
-
     private static BunitContext CreateContext(IBus? bus = null, string environmentName = "Testing") =>
         CreateContext(out _, bus, environmentName);
 

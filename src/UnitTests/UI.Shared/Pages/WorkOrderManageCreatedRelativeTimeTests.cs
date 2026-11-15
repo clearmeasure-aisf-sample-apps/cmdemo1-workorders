@@ -129,7 +129,6 @@ public class WorkOrderManageCreatedRelativeTimeTests
         };
     }
 
-
     private sealed class StubTranslationService : ITranslationService
     {
         public Task<string> TranslateAsync(string text, string languageCode) => Task.FromResult(text);

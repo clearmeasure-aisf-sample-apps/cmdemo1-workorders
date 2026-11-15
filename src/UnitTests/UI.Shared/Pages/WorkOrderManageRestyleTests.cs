@@ -216,7 +216,6 @@ public class WorkOrderManageRestyleTests
         };
     }
 
-
     private sealed class StubTranslationService : ITranslationService
     {
         public Task<string> TranslateAsync(string text, string targetLanguageCode) => Task.FromResult(text);

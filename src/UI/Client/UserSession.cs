@@ -10,12 +10,14 @@ namespace ClearMeasure.Bootcamp.UI.Client;
 
 /// <summary>
 /// Circuit-scoped signed-in user: claim-fallback user name and cached <see cref="Employee"/>.
-/// Blazor circuits are single-threaded, so the cache needs no lock.
+/// Blazor circuits are single-threaded, so the cache needs no lock; a generation counter
+/// still drops in-flight writes that started before sign-in or sign-out.
 /// </summary>
 public class UserSession : IUserSession
 {
     private readonly IBus _bus;
     private readonly CustomAuthenticationStateProvider _authProvider;
+    private int _generation;
     private string? _cachedUserName;
     private bool _userNameResolved;
     private Employee? _cachedEmployee;
@@ -42,10 +44,16 @@ public class UserSession : IUserSession
             return _cachedUserName;
         }
 
+        var generation = _generation;
         var authState = await _authProvider.GetAuthenticationStateAsync();
-        _cachedUserName = ResolveUserName(authState.User);
-        _userNameResolved = true;
-        return _cachedUserName;
+        var userName = ResolveUserName(authState.User);
+        if (generation == _generation)
+        {
+            _cachedUserName = userName;
+            _userNameResolved = true;
+        }
+
+        return userName;
     }
 
     /// <inheritdoc />
@@ -62,11 +70,16 @@ public class UserSession : IUserSession
             return _cachedEmployee;
         }
 
+        var generation = _generation;
         var currentUser = await _bus.Send(new EmployeeByUserNameQuery(username));
         EnsureEmployeeExists(currentUser);
-        _cachedEmployee = currentUser;
-        _employeeCachedForUserName = username;
-        return _cachedEmployee;
+        if (generation == _generation)
+        {
+            _cachedEmployee = currentUser;
+            _employeeCachedForUserName = username;
+        }
+
+        return currentUser;
     }
 
     /// <inheritdoc />
@@ -77,6 +90,7 @@ public class UserSession : IUserSession
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> _)
     {
+        _generation++;
         _cachedUserName = null;
         _userNameResolved = false;
         _cachedEmployee = null;

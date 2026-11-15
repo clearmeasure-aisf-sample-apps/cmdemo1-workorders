@@ -503,7 +503,6 @@ public class MainLayoutTests
         layout.FindAll(".nav-backdrop").Count.ShouldBe(0);
     }
 
-
     [Test]
     public async Task DarkModeToggle_ShouldRender_WithSunIcon_WhenLightMode()
     {
@@ -583,7 +582,6 @@ public class MainLayoutTests
 
         layout.Find($"[data-testid='{nameof(MainLayout.Elements.DarkModeToggle)}']").ShouldNotBeNull();
     }
-
 
     [Test]
     public async Task NotificationsButton_ShouldNotBeDisabled_WhenUserIsAuthenticated()
@@ -890,7 +888,6 @@ public class MainLayoutTests
         });
         return ctx;
     }
-
 
     // ReSharper disable NotAccessedPositionalProperty.Local -- properties consumed via JSON serialization reflection
     private sealed record EnvironmentStatusStub(string Version, string GitSha, string EnvironmentName);

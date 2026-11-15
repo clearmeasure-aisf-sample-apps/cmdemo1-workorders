@@ -265,7 +265,6 @@ public class WorkOrderManageSpeechTests
         }
     }
 
-
     private class StubTranslationService : ITranslationService
     {
         public string? LastText { get; private set; }
