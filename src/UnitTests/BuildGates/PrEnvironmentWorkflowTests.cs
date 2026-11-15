@@ -93,6 +93,20 @@ public class PrEnvironmentWorkflowTests
         job.Step("Checkout pool manager (cmdemo1-system)").ShouldNotContain("ref: master");
     }
 
+    [TestCase("mint-artifact-wrap")]
+    [TestCase("upload-acceptance-artifacts")]
+    public void ArtifactOidcJob_WhenCheckout_UsesTrustedDefaultBranchOnly(string jobId)
+    {
+        var job = Workflow().Job(jobId);
+        job.Text.ShouldContain("environment: release");
+        job.Text.ShouldContain("id-token: write");
+        job.Text.ShouldContain("ref: ${{ github.event.repository.default_branch }}");
+        job.Text.ShouldContain("persist-credentials: false");
+        job.Text.ShouldContain("AZURE_CLIENT_ID_ACR_PUSH");
+        job.Text.ShouldContain("azure/login@v3");
+        job.Text.ShouldNotContain("${{ secrets.");
+    }
+
     [Test]
     public void Workflow_WhenReleaseSlot_AlwaysReleasesLeaseSafely()
     {
@@ -117,10 +131,19 @@ public class PrEnvironmentWorkflowTests
 
     [TestCase("parallel-shards")]
     [TestCase("serial-lane")]
-    public void ShardJob_WhenArtifactUpload_GatesOnStorageVariable(string jobId)
+    public void ShardJob_WhenPresent_HasNoOidcOrAzureLogin(string jobId)
     {
         var job = Workflow().Job(jobId);
-        var gate = job.Step("Gate private artifact upload");
+        job.Text.ShouldNotContain("id-token: write");
+        job.Text.ShouldNotContain("azure/login");
+        job.Text.ShouldNotContain("environment: release");
+    }
+
+    [TestCase("parallel-shards")]
+    [TestCase("serial-lane")]
+    public void ShardJob_WhenCiphertextHandOff_GatesOnStorageVariable(string jobId)
+    {
+        var gate = Workflow().Job(jobId).Step("Gate ciphertext hand-off");
         gate.ShouldContain("if: always()");
         gate.ShouldContain("vars.POOL_ARTIFACTS_STORAGE_ACCOUNT");
         gate.ShouldContain("::warning::");
@@ -130,40 +153,35 @@ public class PrEnvironmentWorkflowTests
 
     [TestCase("parallel-shards")]
     [TestCase("serial-lane")]
-    public void ShardJob_WhenArtifactUpload_UsesOidcAndTrustedScripts(string jobId)
+    public void ShardJob_WhenCiphertextHandOff_UploadsOnlyEncryptedBundle(string jobId)
     {
         var job = Workflow().Job(jobId);
-        job.Text.ShouldContain("id-token: write");
-        job.Step("Checkout trusted upload scripts")
-            .ShouldContain("ref: ${{ github.event.repository.default_branch }}");
-        job.Step("Checkout trusted upload scripts").ShouldContain("path: _trusted");
-        job.Step("Checkout trusted upload scripts").ShouldContain("persist-credentials: false");
-        job.Step("Azure login for artifact upload").ShouldContain("azure/login@v3");
-        job.Step("Azure login for artifact upload").ShouldContain("AZURE_CLIENT_ID_ACR_PUSH");
-        job.Step("Upload acceptance videos and traces").ShouldContain("-Mode Upload");
-        job.Step("Upload acceptance videos and traces")
-            .ShouldContain("_trusted/scripts/acceptance/Publish-PrAcceptanceArtifacts.ps1");
+        job.Step("Encrypt acceptance videos and traces").ShouldContain("-Mode Protect");
+        job.Step("Upload ciphertext acceptance bundle").ShouldContain("pr-acceptance-cipher-");
+        job.Step("Upload ciphertext acceptance bundle").ShouldContain("retention-days: 1");
+        job.Text.ShouldNotContain("generate-sas");
+        job.Text.ShouldNotContain("--account-key");
     }
 
     [TestCase("parallel-shards")]
     [TestCase("serial-lane")]
-    public void ShardJob_WhenArtifactUpload_ForbidsSecretsAndKeys(string jobId)
+    public void ShardJob_WhenRecordingVideo_GatesOnStorageVariable(string jobId)
     {
-        var upload = Workflow().Job(jobId).Step("Upload acceptance videos and traces");
-        upload.ShouldContain("AZURE_STORAGE_KEY");
-        upload.ShouldContain("AZURE_STORAGE_SAS_TOKEN");
-        upload.ShouldContain("Blocker");
-        upload.ShouldNotContain("${{ secrets.");
-        upload.ShouldNotContain("--account-key");
-        upload.ShouldNotContain("generate-sas");
-        upload.ShouldNotContain("actions/upload-artifact");
+        var job = Workflow().Job(jobId);
+        job.Text.ShouldContain("ACCEPTANCE_RECORD_VIDEO");
+        job.Text.ShouldContain("vars.POOL_ARTIFACTS_STORAGE_ACCOUNT != '' && 'true' || 'false'");
     }
 
-    [TestCase("parallel-shards")]
-    [TestCase("serial-lane")]
-    public void ShardJob_WhenRunningTests_RecordsAcceptanceVideo(string jobId)
+    [Test]
+    public void UploadJob_WhenPresent_UsesTrustedUnwrapAndForbidsSecrets()
     {
-        Workflow().Job(jobId).Text.ShouldContain("ACCEPTANCE_RECORD_VIDEO");
+        var job = Workflow().Job("upload-acceptance-artifacts");
+        job.Step("Unprotect and upload to private storage")
+            .ShouldContain("Invoke-PrAcceptanceArtifactUploadFromWraps.ps1");
+        job.Step("Unprotect and upload to private storage").ShouldContain("AZURE_STORAGE_KEY");
+        job.Step("Unprotect and upload to private storage").ShouldContain("Blocker");
+        job.Text.ShouldNotContain("generate-sas");
+        job.Text.ShouldNotContain("--account-key");
     }
 
     [Test]

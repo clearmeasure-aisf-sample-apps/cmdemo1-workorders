@@ -54,6 +54,18 @@ public class PrAcceptanceArtifactsTests
     }
 
     [Test]
+    public async Task ProtectBundleScript_WhenSelfTestRuns_ExitsZero()
+    {
+        var checkout = RepositoryCheckout.Current;
+        var script = checkout.PathOf("scripts/acceptance/Protect-PrAcceptanceArtifactBundle.ps1");
+
+        var result = await ExternalCommand.Pwsh(script, "-SelfTest").In(checkout.Root).RunAsync();
+
+        result.ExitCode.ShouldBe(0, result.Output);
+        result.Output.ShouldContain("Protect-PrAcceptanceArtifactBundle.Tests.ps1 passed");
+    }
+
+    [Test]
     public async Task WorkflowSecurity_WhenSelfTestRuns_ExitsZero()
     {
         var checkout = RepositoryCheckout.Current;
