@@ -11,12 +11,19 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 public class HttpEnvelopeValidatorRegistrationTests
 {
     [Test]
-    public void ShouldOmitDeferredIValidatorsAndExposeValidatorSet_WhenUiServiceRegistryIsBuilt()
+    public void ShouldOmitDeferredIValidators_WhenUiServiceRegistryIsBuilt()
     {
         using var container = BuildUiContainer();
 
         DeferredIValidatorRegistration.ShouldOmitDeferredCreateCommands(container);
         container.GetInstance<IValidator<SaveDraftCommand>>().ShouldNotBeNull();
+    }
+
+    [Test]
+    public void ShouldExposeHttpEnvelopeValidatorSet_WhenUiServiceRegistryIsBuilt()
+    {
+        using var container = BuildUiContainer();
+
         container.GetInstance<HttpEnvelopeValidatorSet>().ShouldNotBeNull();
     }
 

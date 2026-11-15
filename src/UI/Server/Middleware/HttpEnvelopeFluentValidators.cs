@@ -11,10 +11,6 @@ namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 /// </summary>
 internal static class HttpEnvelopeFluentValidators
 {
-    /// <summary>True when assembly scanning must skip this validator for MediatR <see cref="IValidator{T}"/>.</summary>
-    internal static bool IsDeferredFromMediatR(Type validatorType) =>
-        HttpEnvelopeValidationDeferral.IsDeferredValidator(validatorType);
-
     /// <summary>
     /// Resolves the deferred FluentValidation validator for a payload from DI, when the
     /// request type is on the #1824 deferral list.

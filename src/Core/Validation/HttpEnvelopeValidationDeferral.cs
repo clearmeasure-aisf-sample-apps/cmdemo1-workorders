@@ -11,14 +11,6 @@ namespace ClearMeasure.Bootcamp.Core.Validation;
 /// </summary>
 public static class HttpEnvelopeValidationDeferral
 {
-    /// <summary>Concrete validators that must not register as <c>IValidator&lt;T&gt;</c> for MediatR.</summary>
-    public static IReadOnlyList<Type> ValidatorTypes { get; } =
-    [
-        typeof(CreateVendorCommandValidator),
-        typeof(CreateTeamCommandValidator),
-        typeof(CreateDatedWorkOrdersCommandValidator)
-    ];
-
     /// <summary>Request → concrete validator pairs for the HTTP-envelope host.</summary>
     public static IReadOnlyList<(Type RequestType, Type ValidatorType)> Entries { get; } =
     [
@@ -28,20 +20,16 @@ public static class HttpEnvelopeValidationDeferral
     ];
 
     /// <summary>True when assembly scanning must skip this type for MediatR <c>IValidator&lt;T&gt;</c>.</summary>
-    public static bool IsDeferredValidator(Type validatorType) =>
-        ValidatorTypes.Contains(validatorType);
-
-    /// <summary>Concrete validator type for a request that is deferred to the HTTP envelope, else null.</summary>
-    public static Type? ValidatorTypeForRequest(Type requestType)
+    public static bool IsDeferredValidator(Type validatorType)
     {
-        foreach (var (candidateRequest, validatorType) in Entries)
+        for (var i = 0; i < Entries.Count; i++)
         {
-            if (candidateRequest == requestType)
+            if (Entries[i].ValidatorType == validatorType)
             {
-                return validatorType;
+                return true;
             }
         }
 
-        return null;
+        return false;
     }
 }

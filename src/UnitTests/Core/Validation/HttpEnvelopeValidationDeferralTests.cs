@@ -9,20 +9,33 @@ namespace ClearMeasure.Bootcamp.UnitTests.Core.Validation;
 public class HttpEnvelopeValidationDeferralTests
 {
     [Test]
-    public void ShouldExposeVendorTeamAndDated_WhenCatalogIsRead()
+    public void Entries_ShouldListVendorTeamAndDated_WhenCatalogIsRead()
     {
-        HttpEnvelopeValidationDeferral.ValidatorTypes.ShouldBe(
+        HttpEnvelopeValidationDeferral.Entries.Select(entry => entry.ValidatorType).ShouldBe(
         [
             typeof(CreateVendorCommandValidator),
             typeof(CreateTeamCommandValidator),
             typeof(CreateDatedWorkOrdersCommandValidator)
         ]);
-        HttpEnvelopeValidationDeferral.Entries.Select(entry => entry.ValidatorType)
-            .ShouldBe(HttpEnvelopeValidationDeferral.ValidatorTypes);
-        HttpEnvelopeValidationDeferral.ValidatorTypeForRequest(typeof(CreateVendorCommand))
-            .ShouldBe(typeof(CreateVendorCommandValidator));
-        HttpEnvelopeValidationDeferral.ValidatorTypeForRequest(typeof(SaveDraftCommand)).ShouldBeNull();
-        HttpEnvelopeValidationDeferral.IsDeferredValidator(typeof(CreateTeamCommandValidator)).ShouldBeTrue();
-        HttpEnvelopeValidationDeferral.IsDeferredValidator(typeof(SaveDraftCommandValidator)).ShouldBeFalse();
+        HttpEnvelopeValidationDeferral.Entries.Select(entry => entry.RequestType).ShouldBe(
+        [
+            typeof(CreateVendorCommand),
+            typeof(CreateTeamCommand),
+            typeof(CreateDatedWorkOrdersCommand)
+        ]);
+    }
+
+    [Test]
+    public void IsDeferredValidator_ShouldBeTrue_WhenCreateTeamValidator()
+    {
+        HttpEnvelopeValidationDeferral.IsDeferredValidator(typeof(CreateTeamCommandValidator))
+            .ShouldBeTrue();
+    }
+
+    [Test]
+    public void IsDeferredValidator_ShouldBeFalse_WhenSaveDraftValidator()
+    {
+        HttpEnvelopeValidationDeferral.IsDeferredValidator(typeof(SaveDraftCommandValidator))
+            .ShouldBeFalse();
     }
 }
