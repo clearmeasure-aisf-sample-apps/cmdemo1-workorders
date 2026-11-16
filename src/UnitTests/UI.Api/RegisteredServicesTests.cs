@@ -11,7 +11,7 @@ public class RegisteredServicesTests
     public void Describe_Should_ListLifetimeServiceAndProvider_SortedOrdinally()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<TimeProvider>(TimeProvider.System);
+        services.AddSingleton(TimeProvider.System);
         services.AddScoped<IFormatProvider, System.Globalization.CultureInfo>();
         services.AddKeyedTransient<IComparable, Version>("v");
 

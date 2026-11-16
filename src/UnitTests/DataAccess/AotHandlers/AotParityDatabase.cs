@@ -18,7 +18,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.DataAccess.AotHandlers;
 /// </summary>
 internal sealed class AotParityDatabase : IAsyncDisposable
 {
-    public static readonly DateTimeOffset Now = new(2026, 11, 16, 18, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset Now = new(2026, 11, 16, 18, 0, 0, TimeSpan.Zero);
 
     private readonly string _path = Path.Combine(Path.GetTempPath(), $"aot_parity_{Guid.NewGuid():N}.db");
 
@@ -31,20 +31,20 @@ internal sealed class AotParityDatabase : IAsyncDisposable
 
     public TimeProvider Clock { get; } = FixedUtcClock.At(Now);
 
-    public Employee Creator { get; } = EmployeeBuilder.Create("pcreator").WithFirstName("Pat").WithLastName("Creator")
+    private readonly Employee _creator = EmployeeBuilder.Create("pcreator").WithFirstName("Pat").WithLastName("Creator")
         .WithEmail("pat@example.test").WithRole("Creator", canCreate: true, canFulfill: false).Build();
 
-    public Employee Fulfiller { get; } = EmployeeBuilder.Create("ffixer").WithFirstName("Fran").WithLastName("Fixer")
+    private readonly Employee _fulfiller = EmployeeBuilder.Create("ffixer").WithFirstName("Fran").WithLastName("Fixer")
         .WithEmail("fran@example.test").WithRole("Fulfiller", canCreate: false, canFulfill: true).Build();
 
-    public Employee Idle { get; } = EmployeeBuilder.Create("iidle").WithFirstName("Ida").WithLastName("Idle")
+    private readonly Employee _idle = EmployeeBuilder.Create("iidle").WithFirstName("Ida").WithLastName("Idle")
         .WithEmail("ida@example.test").WithRole("Fulfiller", canCreate: false, canFulfill: true).Build();
 
     public static async Task<AotParityDatabase> SeedAsync()
     {
         var database = new AotParityDatabase();
         await database.Context.Database.EnsureCreatedAsync();
-        database.Context.AddRange(database.Creator, database.Fulfiller, database.Idle);
+        database.Context.AddRange(database._creator, database._fulfiller, database._idle);
         database.Context.Set<WorkOrder>().AddRange(database.WorkOrders().Select(order => order.Build()));
         await database.Context.SaveChangesAsync();
         database.Context.ChangeTracker.Clear();
@@ -66,21 +66,21 @@ internal sealed class AotParityDatabase : IAsyncDisposable
         var today = ChurchTimeZone.Today(Clock);
         var utc = Now.UtcDateTime;
         yield return Order("AAA0001", WorkOrderStatus.Draft).InBuilding("Main").InRoom("101").CreatedAt(utc.AddDays(-9));
-        yield return Order("AAA0002", WorkOrderStatus.Assigned).Assigned(Fulfiller).InBuilding("Main").InRoom("101")
+        yield return Order("AAA0002", WorkOrderStatus.Assigned).Assigned(_fulfiller).InBuilding("Main").InRoom("101")
             .DueOn(today.AddDays(-2)).WithPriority(WorkOrderPriority.High).CreatedAt(utc.AddDays(-8)).AssignedAt(utc.AddDays(-7));
-        yield return Order("AAA0003", WorkOrderStatus.InProgress).Assigned(Fulfiller).InBuilding("Main").InRoom("102")
+        yield return Order("AAA0003", WorkOrderStatus.InProgress).Assigned(_fulfiller).InBuilding("Main").InRoom("102")
             .DueOn(today).CreatedAt(utc.AddDays(-6)).AssignedAt(utc.AddDays(-5));
-        yield return Order("AAA0004", WorkOrderStatus.Complete).Assigned(Fulfiller).InBuilding("Annex").InRoom("1")
+        yield return Order("AAA0004", WorkOrderStatus.Complete).Assigned(_fulfiller).InBuilding("Annex").InRoom("1")
             .DueOn(today.AddDays(-1)).CreatedAt(utc.AddDays(-20)).AssignedAt(utc.AddDays(-19)).CompletedAt(utc.AddDays(-3));
-        yield return Order("AAA0005", WorkOrderStatus.Assigned).Assigned(Fulfiller).InBuilding("Annex")
+        yield return Order("AAA0005", WorkOrderStatus.Assigned).Assigned(_fulfiller).InBuilding("Annex")
             .DueOn(today.AddDays(5)).WithPriority(WorkOrderPriority.Low).CreatedAt(utc.AddDays(-4)).AssignedAt(utc.AddDays(-4));
         yield return Order("AAA0006", WorkOrderStatus.Cancelled).InBuilding(null).CreatedAt(utc.AddDays(-2));
-        yield return Order("AAA0007", WorkOrderStatus.Complete).Assigned(Fulfiller).InBuilding("Main").InRoom("101")
+        yield return Order("AAA0007", WorkOrderStatus.Complete).Assigned(_fulfiller).InBuilding("Main").InRoom("101")
             .CreatedAt(utc.AddDays(-60)).AssignedAt(utc.AddDays(-59)).CompletedAt(utc.AddDays(-45));
     }
 
     private WorkOrderBuilder Order(string number, WorkOrderStatus status) =>
-        WorkOrderBuilder.Create().WithNumber(number).WithTitle($"Work order {number}").CreatedBy(Creator).WithStatus(status);
+        WorkOrderBuilder.Create().WithNumber(number).WithTitle($"Work order {number}").CreatedBy(_creator).WithStatus(status);
 
     private sealed class SqliteFile(string connectionString) : IDatabaseConfiguration
     {

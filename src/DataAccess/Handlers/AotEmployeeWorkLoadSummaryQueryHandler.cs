@@ -1,8 +1,6 @@
-using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Mediator;
-using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 

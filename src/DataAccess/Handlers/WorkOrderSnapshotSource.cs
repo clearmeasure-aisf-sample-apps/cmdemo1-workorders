@@ -11,14 +11,15 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 internal sealed class WorkOrderSnapshotSource(DataContext context, TimeProvider time)
 {
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
     private readonly DataContext _context = context;
-    private readonly TimeProvider _time = time;
 
     public async Task<WorkOrderSnapshot> LoadAsync(CancellationToken cancellationToken)
     {
         var ct = cancellationToken;
         var all = await _context.Set<WorkOrder>().AsNoTracking().ToArrayAsync(ct);
-        return new WorkOrderSnapshot(all, _time);
+        return new WorkOrderSnapshot(all, time);
     }
 
     /// <summary>The employee with <paramref name="userName"/>, compared by the database, or null (also for a blank name).</summary>
