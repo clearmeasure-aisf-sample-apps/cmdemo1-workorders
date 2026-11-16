@@ -127,7 +127,7 @@ public class ValidationPipelineArchitectureTests
     /// Explicit #1824 / HTTP-envelope exemptions: the only production files allowed to construct
     /// deferred FluentValidation types via <c>Activator</c> / <c>ActivatorUtilities</c>.
     /// </summary>
-    internal static IReadOnlyList<string> AllowedValidatorActivatorSites { get; } =
+    private static IReadOnlyList<string> AllowedValidatorActivatorSites { get; } =
     [
         "src/Core/Validation/InProcessCreateCommandShapeValidation.cs",
         "src/UI/Server/Middleware/HttpEnvelopeValidatorSet.cs"
