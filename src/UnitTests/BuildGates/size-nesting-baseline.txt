@@ -6,8 +6,6 @@
 # file lines are today's oversized files. method and parameters lines are
 # members that already exceed a limit. Nesting has no current exceptions.
 # Do not add lines. Delete a line in the same change that fixes a violation.
-file src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs
-file src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs
 file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
 file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs
 file src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs
@@ -60,30 +58,7 @@ method src/IntegrationTests/LlmGateway/ApplicationChatHandlerTests.cs Applicatio
 method src/IntegrationTests/LlmGateway/ApplicationChatHandlerTests.cs ApplicationChatHandlerTests.WaitForWorkOrderAsync(string,Func<WorkOrder,bool>,TimeSpan,CancellationToken)
 method src/IntegrationTests/LlmGateway/WorkOrderChatHandlerTests.cs WorkOrderChatHandlerTests.Handle_WithListEmployeesPrompt_ReturnsEmployeeData()
 method src/IntegrationTests/LlmGateway/WorkOrderChatHandlerTests.cs WorkOrderChatHandlerTests.Handle_WithValidWorkOrder_ReturnsChatResponse()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldChangeTitleAndClearDueDateWhilePreservingOtherFields()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldFailForAssignedWorkOrderWithoutChangingFields()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldFailForCompleteWorkOrderWithoutChangingFields()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldFailForNonCreatorWithoutChangingFields()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldLeaveOmittedFieldsUnchangedWhenOnlyRoomNumberProvided()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldPersistEmptyDescriptionInstructionsAndRoom()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldRejectEmptyTitleWithoutChangingStoredRow()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldRejectWhitespaceTitleAndNotPersistDueDateInSameCall()
-method src/IntegrationTests/McpServer/McpSaveWorkOrderTests.cs McpSaveWorkOrderTests.ShouldTruncateInstructionsTo4000Characters()
-method src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs McpUpdateWorkOrderTests.ShouldLeaveOmittedFieldsUnchanged()
-method src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs McpUpdateWorkOrderTests.ShouldNotChangeCreatedOrCompletedDates()
-method src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs McpUpdateWorkOrderTests.ShouldReturnErrorForBuildingExceedingMaxLength()
-method src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs McpUpdateWorkOrderTests.ShouldReturnErrorForNonCreator()
-method src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs McpUpdateWorkOrderTests.ShouldUpdateBuildingAndRoom()
-method src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs McpUpdateWorkOrderTests.ShouldUpdateDueDate()
-method src/IntegrationTests/McpServer/McpUpdateWorkOrderTests.cs McpUpdateWorkOrderTests.ShouldUpdatePriority()
 method src/IntegrationTests/McpServer/McpVendorToolTests.cs McpVendorToolTests.ShouldListAllVendors()
-method src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs McpWorkOrderToolTests.ShouldExecuteDraftToAssignedThenBeginStatusChanges()
-method src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs McpWorkOrderToolTests.ShouldExecuteInProgressToCompleteCommand()
-method src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs McpWorkOrderToolTests.ShouldExecuteShelveAliasCommand()
-method src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs McpWorkOrderToolTests.ShouldExecuteShelveCommand()
-method src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs McpWorkOrderToolTests.ShouldGetWorkOrderByNumberWithCompleteDetailShape()
-method src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs McpWorkOrderToolTests.ShouldRefuseShelveWithoutReason()
-method src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs McpWorkOrderToolTests.ShouldReturnNotFoundWhenAssigneeMissingForDraftToAssigned()
 method src/IntegrationTests/TestHost.cs TestHost.InProcessToolProvider.GetToolsAsync()
 method src/IntegrationTests/TestHost.cs TestHost.Initialize()
 method src/IntegrationTests/TestSupport/LlmTestAttribute.cs LlmTestAttribute.RetryThenWarnCommand.Execute(TestExecutionContext)
