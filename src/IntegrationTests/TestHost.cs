@@ -1,9 +1,6 @@
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Model.Messages;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using ClearMeasure.Bootcamp.DataAccess.Messaging;
-using ClearMeasure.Bootcamp.IntegrationTests.Handlers;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UI.Server;
@@ -14,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NServiceBus.Features;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests;
 
@@ -94,42 +90,7 @@ public static class TestHost
                 s.AddTransient<IDatabaseConfiguration, TestDatabaseConfiguration>();
                 var stubTimeProvider = new StubTimeProvider(TestTime);
                 s.AddSingleton<TimeProvider>(stubTimeProvider);
-                s.AddScoped<IDistributedBus, DistributedBus>();
                 s.AddTransient<IToolProvider, InProcessToolProvider>();
-            })
-            .UseNServiceBus(context =>
-            {
-                var endpointConfiguration = new EndpointConfiguration("IntegrationTests");
-                endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-                endpointConfiguration.EnableInstallers();
-
-                var connectionString = context.Configuration.GetConnectionString("SqlConnectionString") ?? "";
-                if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
-                {
-                    var learningTransport = endpointConfiguration.UseTransport<LearningTransport>();
-                    learningTransport.Routing()
-                        .RouteToEndpoint(typeof(TracerBulletCommand), "WorkOrderProcessing");
-                    endpointConfiguration.DisableFeature<Sagas>();
-                }
-                else
-                {
-                    var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-                    transport.ConnectionString(connectionString);
-                    transport.DefaultSchema("nServiceBus");
-                    transport.Transactions(TransportTransactionMode.TransactionScope);
-                    transport.Routing()
-                        .RouteToEndpoint(typeof(TracerBulletCommand), "WorkOrderProcessing");
-                }
-
-                var conventions = new MessagingConventions();
-                endpointConfiguration.Conventions().Add(conventions);
-
-                // Worker hosts its own endpoint; scanning Worker.dll here discovers
-                // AiBotWorkOrderSaga without saga persistence and breaks TestHost startup.
-                endpointConfiguration.AssemblyScanner().ExcludeAssemblies("Worker.dll");
-                endpointConfiguration.ExecuteTheseHandlersFirst(typeof(TracerBulletReplyHandler));
-
-                return endpointConfiguration;
             })
             .Build();
 

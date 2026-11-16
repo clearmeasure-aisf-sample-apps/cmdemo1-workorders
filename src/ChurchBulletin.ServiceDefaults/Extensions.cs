@@ -76,13 +76,12 @@ public static class Extensions
             .AddRuntimeInstrumentation()
             .AddMeter("ChurchBulletin.Application");
 
-    /// <summary>The application's own sources, NServiceBus, and the ASP.NET Core, HTTP, SQL and EF Core instrumentation.</summary>
+    /// <summary>The application's own sources and the ASP.NET Core, HTTP, SQL and EF Core instrumentation.</summary>
     private static void AddApplicationTracing(TracerProviderBuilder tracing, string applicationName) =>
         tracing.AddSource(applicationName)
             .AddSource("ChurchBulletin.Application")
             .AddSource("ChurchBulletin.Application.Bus")
             .AddSource("ChurchBulletin.LlmGateway")
-            .AddSource("NServiceBus.Core")
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation(options => options.RecordException = true)
             .AddSqlClientInstrumentation(options => options.RecordException = true)

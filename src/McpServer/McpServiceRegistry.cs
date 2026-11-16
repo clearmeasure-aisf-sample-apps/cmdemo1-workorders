@@ -56,8 +56,6 @@ public static class McpServiceRegistry
             options.PipelineBehaviors = [typeof(ValidationBehavior<,>), typeof(FeatureFlagBehavior<,>)];
         });
         services.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
-        // The MCP server has no NServiceBus endpoint, so domain events published to the distributed bus are dropped.
-        services.AddTransient<IDistributedBus, NullDistributedBus>();
     }
 
     private static void AddApplicationServices(IServiceCollection services)

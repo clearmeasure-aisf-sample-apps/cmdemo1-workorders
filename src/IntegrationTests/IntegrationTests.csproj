@@ -63,7 +63,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Using Include="NServiceBus" />
   </ItemGroup>
 
 	<!-- Coverlet/Cecil cannot instrument Core.dll unless HealthChecks.Abstractions (and siblings) sit beside it. -->

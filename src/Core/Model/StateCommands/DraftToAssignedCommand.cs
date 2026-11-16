@@ -1,5 +1,3 @@
-using ClearMeasure.Bootcamp.Core.Model.Constants;
-using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Services;
 
 namespace ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -29,14 +27,6 @@ public record DraftToAssignedCommand(WorkOrder WorkOrder, Employee CurrentUser)
     {
         WorkOrder.AssignedDate = context.CurrentDateTime;
         base.Execute(context);
-
-        var assignedToAiBot = WorkOrder.Assignee?.Roles
-            .Any(x => x.Name == Roles.Bot) ?? false;
-
-        if (assignedToAiBot)
-        {
-            StateTransitionEvent = new WorkOrderAssignedToBotEvent(WorkOrder.Number ?? string.Empty, WorkOrder.Assignee!.Id);
-        }
     }
 
     protected override bool UserCanExecute(Employee currentUser)

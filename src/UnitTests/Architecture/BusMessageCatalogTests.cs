@@ -22,7 +22,6 @@ public class BusMessageCatalogTests
         typeof(global::ClearMeasure.Bootcamp.DataAccess.Mappings.DataContext).Assembly,
         typeof(global::ClearMeasure.Bootcamp.UI.Server.DatabaseConfiguration).Assembly,
         typeof(global::ClearMeasure.Bootcamp.McpServer.McpServerApplication).Assembly,
-        typeof(global::Worker.WorkOrderEndpoint).Assembly,
     ];
 
     [Test]

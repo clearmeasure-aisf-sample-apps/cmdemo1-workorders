@@ -15,8 +15,6 @@ internal static class WorkOrderFieldMessageRules
     /// </summary>
     private static readonly string[] AllowedIsRequiredFiles =
     [
-        // RemotableBus API URL config for the Worker host — not a work-order field rule
-        "src/Worker/WorkOrderEndpoint.cs",
         // Database CLI required-option messages for server/name/credentials
         "src/Database/Console/DatabaseOptions.cs",
         // Database CLI connection-string builder credential pairing message

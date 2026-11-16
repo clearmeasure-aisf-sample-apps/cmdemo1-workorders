@@ -19,7 +19,6 @@
     <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
     <PackageVersion Include="BlazorMvc" Version="2.1.1" />
     <PackageVersion Include="bunit" Version="2.9.0" />
-    <PackageVersion Include="ClearMeasureLabs.HostedEndpoint.SqlServerTransport" Version="1.0.30" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="coverlet.msbuild" Version="6.0.4" />
     <PackageVersion Include="DbUp" Version="5.0.41" />
@@ -63,8 +62,6 @@
     <PackageVersion Include="ModelContextProtocol" Version="1.0.0" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="1.0.0" />
     <PackageVersion Include="NPlusOne.Analyzers" Version="1.1.0" />
-    <PackageVersion Include="NServiceBus.Extensions.Hosting" Version="3.0.1" />
-    <PackageVersion Include="NServiceBus.Persistence.Sql.TransactionalSession" Version="8.3.0" />
     <PackageVersion Include="NUnit" Version="4.3.2" />
     <PackageVersion Include="NUnit.Analyzers" Version="4.9.2" />
     <PackageVersion Include="NUnit3TestAdapter" Version="5.0.0" />

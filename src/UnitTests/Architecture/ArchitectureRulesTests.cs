@@ -66,15 +66,6 @@ public class ArchitectureRulesTests
         violations.ShouldBeEmpty();
     }
 
-    [Test]
-    public void UiProjectsReferencingDataAccess_WhenWorkerReferencesDataAccess_IsEmpty()
-    {
-        var violations = ArchitectureRules.UiProjectsReferencingDataAccess([
-            ("src/Worker/Worker.csproj", DataAccessProject),
-        ]);
-
-        violations.ShouldBeEmpty();
-    }
 
     [Test]
     public void UiProjectsReferencingDataAccess_WhenMasterIsScanned_MatchesBaseline()

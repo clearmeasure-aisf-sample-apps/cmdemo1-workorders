@@ -1,4 +1,4 @@
-﻿using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -22,7 +22,6 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class StateCommandHandler(
     DbContext dbContext,
     TimeProvider time,
-    IDistributedBus distributedBus,
     ILogger<StateCommandHandler> logger)
     : IRequestHandler<SaveDraftCommand, StateCommandResult>,
         IRequestHandler<DraftToAssignedCommand, StateCommandResult>,
@@ -94,7 +93,6 @@ public class StateCommandHandler(
 
         var result = new StateCommandResult(persisted, request.TransitionVerbPresentTense, debugMessage);
 
-        await distributedBus.PublishAsync(request.StateTransitionEvent, cancellationToken);
         return result;
     }
 

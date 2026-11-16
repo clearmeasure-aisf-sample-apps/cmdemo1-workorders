@@ -12,7 +12,6 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests;
 public class ServerFixture
 {
     private const string ProjectPath = "../../../../UI/Server";
-    private const string WorkerProjectPath = "../../../../Worker";
     private const int WaitTimeoutSeconds = 60;
 
     private static string BuildConfiguration =>
@@ -24,9 +23,6 @@ public class ServerFixture
     public static int SlowMo { get; private set; }
     public static string ApplicationBaseUrl { get; private set; } = string.Empty;
     private Process? _serverProcess;
-    private Process? _workerProcess;
-    private static bool StartWorker { get; set; } = true;
-    public static bool WorkerStarted { get; private set; }
     public static bool SkipScreenshotsForSpeed { get; private set; } = true;
     public static bool HeadlessTestBrowser { get; private set; } = true;
     private static bool DatabaseInitialized { get; set; }
@@ -55,7 +51,6 @@ public class ServerFixture
         var configuration = TestHost.GetRequiredService<IConfiguration>();
         ApplicationBaseUrl = configuration["ApplicationBaseUrl"] ?? throw new InvalidOperationException();
         StartLocalServer = configuration.GetValue<bool>("StartLocalServer");
-        StartWorker = configuration.GetValue("StartWorker", true);
         SkipScreenshotsForSpeed = configuration.GetValue<bool>("SkipScreenshotsForSpeed");
         SlowMo = configuration.GetValue<int>("SlowMo");
         HeadlessTestBrowser = configuration.GetValue<bool>("HeadlessTestBrowser");
@@ -82,7 +77,6 @@ public class ServerFixture
 
         await StartAndWaitForServer();
         await ResetServerDbConnections();
-        await StartAndWaitForWorker();
     }
 
     /// <summary>
@@ -392,102 +386,6 @@ public class ServerFixture
             $"UI.Server did not start in {WaitTimeoutSeconds} seconds. Last exception: {lastException}");
     }
 
-    /// <summary>
-    /// Starts the Worker process (NServiceBus message handler host) alongside the UI.Server.
-    /// Worker requires SqlServerTransport, so it is skipped when using SQLite.
-    /// The Worker's RemotableBus calls back to UI.Server, so UI.Server must be started first.
-    /// </summary>
-    private async Task StartAndWaitForWorker()
-    {
-        var connectionString = GetSqlConnectionString();
-        if (ShouldSkipWorker(IsSqliteConnection(connectionString)))
-        {
-            return;
-        }
-
-        TestContext.Out.WriteLine("Worker: starting...");
-        var config = BuildConfiguration;
-        _workerProcess = CreateDotnetProcess(
-            WorkerProjectPath,
-            $"run --no-build --configuration {config} --no-launch-profile");
-        ConfigureWorkerEnvironment(_workerProcess, connectionString);
-        var readySignal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        AttachWorkerLogging(_workerProcess, readySignal);
-        _workerProcess.Start();
-        _workerProcess.BeginOutputReadLine();
-        _workerProcess.BeginErrorReadLine();
-        await WaitForWorkerReadySignal(readySignal);
-        WorkerStarted = true;
-    }
-
-    private static bool ShouldSkipWorker(bool useSqlite)
-    {
-        if (!StartWorker)
-        {
-            TestContext.Out.WriteLine("Worker: skipped (StartWorker=false).");
-            return true;
-        }
-
-        if (useSqlite)
-        {
-            TestContext.Out.WriteLine("Worker: skipped (SQLite mode — Worker requires SqlServerTransport).");
-            return true;
-        }
-
-        return false;
-    }
-
-    private static void ConfigureWorkerEnvironment(Process process, string connectionString)
-    {
-        process.StartInfo.Environment["ConnectionStrings__SqlConnectionString"] = connectionString;
-        process.StartInfo.Environment["RemotableBus__ApiUrl"] =
-            $"{ApplicationBaseUrl}/api/blazor-wasm-single-api";
-        process.StartInfo.Environment["DOTNET_ENVIRONMENT"] = "Development";
-        process.StartInfo.Environment["DISABLE_AUTO_CANCEL_AGENT"] = "true";
-        process.StartInfo.Environment["AI_OpenAI_ApiKey"] = "";
-        process.StartInfo.Environment["AI_OpenAI_Url"] = "";
-        process.StartInfo.Environment["AI_OpenAI_Model"] = "";
-    }
-
-    private static void AttachWorkerLogging(Process process, TaskCompletionSource<bool> readySignal)
-    {
-        process.OutputDataReceived += (_, e) =>
-        {
-            if (e.Data == null)
-            {
-                return;
-            }
-
-            TestContext.Out.WriteLine($"  [Worker stdout] {e.Data}");
-            if (e.Data.Contains("started", StringComparison.OrdinalIgnoreCase))
-            {
-                readySignal.TrySetResult(true);
-            }
-        };
-        process.ErrorDataReceived += (_, e) =>
-        {
-            if (e.Data != null)
-            {
-                TestContext.Out.WriteLine($"  [Worker stderr] {e.Data}");
-            }
-        };
-    }
-
-    private static async Task WaitForWorkerReadySignal(TaskCompletionSource<bool> readySignal)
-    {
-        var timeout = Task.Delay(TimeSpan.FromSeconds(WaitTimeoutSeconds));
-        var completed = await Task.WhenAny(readySignal.Task, timeout);
-        if (completed == timeout)
-        {
-            TestContext.Out.WriteLine(
-                $"Worker: did not detect startup confirmation within {WaitTimeoutSeconds}s. " +
-                "Proceeding anyway — SqlServerTransport is durable and will deliver queued messages.");
-            return;
-        }
-
-        TestContext.Out.WriteLine("Worker: started successfully.");
-    }
-
     private static string GetSqlConnectionString()
     {
         var configuration = TestHost.GetRequiredService<IConfiguration>();
@@ -569,11 +467,6 @@ public class ServerFixture
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
     {
-        // Stop Worker first (it calls back to UI.Server via RemotableBus)
-        await ProcessCleanupHelper.StopProcessAsync(_workerProcess);
-        try { _workerProcess?.Dispose(); } catch (ObjectDisposedException) { }
-        _workerProcess = null;
-
         await ProcessCleanupHelper.StopServerProcessAsync(_serverProcess, ApplicationBaseUrl);
         try { _serverProcess?.Dispose(); } catch (ObjectDisposedException) { }
         _serverProcess = null;

@@ -9,7 +9,6 @@ using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UI.Shared.Components.Search;
-using Worker;
 using ArchArchitecture = ArchUnitNET.Domain.Architecture;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
@@ -84,7 +83,6 @@ public static class SolutionArchitecture
                 typeof(RemotableBus).Assembly,
                 typeof(ApiRoutes).Assembly,
                 typeof(McpServiceRegistry).Assembly,
-                typeof(WorkOrderEndpoint).Assembly,
                 typeof(DetailedHealthReportProvider).Assembly)
             .Build();
     }

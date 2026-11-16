@@ -51,7 +51,6 @@ public static class ServerServices
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddLiveTelemetry();
         builder.Services.AddBuildFacts();
-        builder.Services.AddScoped<IDistributedBus, DistributedBus>();
         builder.Services.AddMemoryCache();
         builder.Services.AddGrpc();
         builder.Services.Configure<LlmHealthCheckOptions>(builder.Configuration.GetSection("LlmHealthCheck"));

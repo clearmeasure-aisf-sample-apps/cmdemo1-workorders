@@ -16,7 +16,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" />
-    <PackageReference Include="NServiceBus.Persistence.Sql.TransactionalSession" />
     <PackageReference Include="Octopus.OpenFeature" />
     <PackageReference Include="OpenFeature" />
     <!-- Pin transitive SQLitePCLRaw above 2.1.11 to resolve NU1903 (GHSA-2m69-gcr7-jv3q). -->
@@ -42,9 +41,6 @@
     <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="NServiceBus" />
-  </ItemGroup>
 
   <!-- Native AOT (Exp 2): when McpServer is published with -p:McpServerAot=true (PublishAot), EF generates the compiled
        model and precompiled queries for DataContext during that publish (DesignTimeDataContextFactory picks SQL Server).
