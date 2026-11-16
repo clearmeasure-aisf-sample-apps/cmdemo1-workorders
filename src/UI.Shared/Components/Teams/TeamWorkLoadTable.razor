@@ -4,7 +4,7 @@
 
 @if (_rows.Count == 0)
 {
-    <div class="teams-empty-state">
+    <div class="teams-empty-state" role="status" data-testid="@TeamsAndVendors.Elements.WorkloadEmptyState">
         <p>No assignable employees found.</p>
     </div>
 }
