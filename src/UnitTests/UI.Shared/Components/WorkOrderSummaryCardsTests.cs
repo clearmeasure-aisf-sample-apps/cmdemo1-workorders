@@ -38,7 +38,8 @@ public class WorkOrderSummaryCardsTests
         var component = ctx.Render<WorkOrderSummaryCards>();
 
         component.FindAll(".summary-card-value").ShouldAllBe(v => v.TextContent == "–");
-        Text(component, "SummaryCardCompleted").ShouldEndWith("No recent closures");
+        Text(component, "SummaryCardCompleted")
+            .ShouldBe("Completed (30 days) – No recent closures loading Show these work orders");
     }
 
     [Test]
