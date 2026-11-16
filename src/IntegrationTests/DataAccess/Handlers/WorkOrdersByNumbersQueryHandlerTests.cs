@@ -63,8 +63,8 @@ public class WorkOrdersByNumbersQueryHandlerTests
         context.Commands.ReaderCommands.ShouldBe(0);
         var tooMany = Enumerable.Range(0, WorkOrdersByNumbersQuery.MaxNumbers + 1)
             .Select(index => index.ToString()).ToArray();
-        await Should.ThrowAsync<InvalidOperationException>(() =>
-            handler.Handle(new WorkOrdersByNumbersQuery(tooMany)));
+        await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await handler.Handle(new WorkOrdersByNumbersQuery(tooMany)));
         context.Commands.ReaderCommands.ShouldBe(0);
     }
 }

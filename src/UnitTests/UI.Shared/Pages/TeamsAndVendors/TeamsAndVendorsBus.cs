@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.TeamsAndVendors;
 

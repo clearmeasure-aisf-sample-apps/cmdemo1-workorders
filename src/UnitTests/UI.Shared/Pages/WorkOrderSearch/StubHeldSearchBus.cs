@@ -14,7 +14,7 @@ public sealed class StubHeldSearchBus : StubBus
     public List<TaskCompletionSource<WorkOrder[]>> Held { get; } = [];
 
     /// <inheritdoc />
-    public override async Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+    public override async Task<TResponse> Send<TResponse>(Mediator.IRequest<TResponse> request)
     {
         if (request is not WorkOrderSpecificationQuery || !_initialSearchDone)
         {

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MediatR;
+using Mediator;
 using Palermo.BlazorMvc;
 using Shouldly;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;

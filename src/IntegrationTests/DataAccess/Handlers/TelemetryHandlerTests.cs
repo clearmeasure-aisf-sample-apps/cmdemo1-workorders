@@ -87,5 +87,5 @@ public class TelemetryHandlerTests
     }
 
     private static Task WhenUserLogsInAsync(string userName) =>
-        TestHost.GetRequiredService<TelemetryHandler>().Handle(new UserLoggedInEvent(userName), CancellationToken.None);
+        TestHost.GetRequiredService<TelemetryHandler>().Handle(new UserLoggedInEvent(userName), CancellationToken.None).AsTask();
 }

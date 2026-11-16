@@ -22,7 +22,7 @@ public sealed class StubBulkBus : StubBus
     public List<StateCommandBase> Commands { get; } = [];
 
     /// <inheritdoc />
-    public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+    public override Task<TResponse> Send<TResponse>(Mediator.IRequest<TResponse> request)
     {
         if (request is WorkOrdersByNumbersQuery byNumbers)
         {
