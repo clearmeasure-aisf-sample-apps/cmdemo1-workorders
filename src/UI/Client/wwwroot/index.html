@@ -44,7 +44,23 @@
             try { return navigator.language || ""; } catch (e) { return ""; }
         };
     </script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        // Chromium under a POSIX locale (LANG=C) reports navigator.language as "en-US@posix". The .NET 11
+        // WebAssembly runtime rejects that name at start-up (CultureNotSupportedException), so a locale with a
+        // POSIX modifier or charset starts the app in its language tag ("en-US"); other browsers start unchanged.
+        (function () {
+            var options = {};
+            try {
+                var language = navigator.language || "";
+                if (/[@.]/.test(language)) {
+                    var tag = language.split(/[@.]/)[0].replace("_", "-");
+                    options.applicationCulture = /^(|c|posix)$/i.test(tag) ? "en-US" : tag;
+                }
+            } catch (e) { }
+            Blazor.start(options);
+        })();
+    </script>
 </body>
 
 </html>
