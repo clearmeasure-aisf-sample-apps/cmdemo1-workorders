@@ -61,6 +61,11 @@ else
                 {
                     @(" ")<span class="summary-card-note @NoteTone">@Note</span>
                 }
+                @if (Count == null)
+                {
+                    @(" ")<span class="summary-card-loading">loading</span>
+                    @(" ")<span class="summary-card-action">Show these work orders</span>
+                }
             </span>
             <span class="summary-card-icon" aria-hidden="true"><i class="bi @Icon"></i></span>
         </text>;
