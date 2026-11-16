@@ -16,7 +16,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Asp.Versioning.Abstractions" />
-		<PackageReference Include="Lamar.Microsoft.DependencyInjection" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\Core\Core.csproj" />

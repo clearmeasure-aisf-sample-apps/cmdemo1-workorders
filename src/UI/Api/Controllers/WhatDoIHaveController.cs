@@ -1,19 +1,12 @@
-﻿using Lamar;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 
 public class WhatDoIHaveController : ControllerBase
 {
-    [HttpGet("/_lamar/services")]
-    public string Services([FromServices] IContainer container)
+    [HttpGet("/_diagnostics/services")]
+    public string Services([FromServices] RegisteredServices registeredServices)
     {
-        return container.WhatDoIHave();
-    }
-
-    [HttpGet("/_lamar/scanning")]
-    public string Scanning([FromServices] IContainer container)
-    {
-        return container.WhatDidIScan();
+        return registeredServices.Describe();
     }
 }

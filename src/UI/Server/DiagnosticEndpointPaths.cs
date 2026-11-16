@@ -1,8 +1,8 @@
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// Path and environment rules for Lamar and connection-pool diagnostic controllers
-/// (<c>/_lamar</c>, <c>/_diagnostics</c>).
+/// Path and environment rules for the service-registration and connection-pool diagnostic endpoints
+/// (<c>/_diagnostics</c>).
 /// </summary>
 public static class DiagnosticEndpointPaths
 {
@@ -14,8 +14,7 @@ public static class DiagnosticEndpointPaths
             return false;
         }
 
-        return MatchesPrefix(pathValue, "/_lamar")
-               || MatchesPrefix(pathValue, "/_diagnostics");
+        return MatchesPrefix(pathValue, "/_diagnostics");
     }
 
     /// <summary>

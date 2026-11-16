@@ -22,7 +22,7 @@ public class RequestClassifierTests
     [TestCase("/_version")]
     [TestCase("/_telemetry")]
     [TestCase("/_build")]
-    [TestCase("/_lamar/services")]
+    [TestCase("/_diagnostics/services")]
     [TestCase("/health")]
     [TestCase("/HEALTH")]
     [TestCase("/alive")]

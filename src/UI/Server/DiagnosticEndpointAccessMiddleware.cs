@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// Gates <c>/_lamar</c> and <c>/_diagnostics</c>: API key when configured; otherwise only
+/// Gates <c>/_diagnostics</c>: API key when configured; otherwise only
 /// Development/tdd. Other environments receive 404 when no key scheme is active.
 /// </summary>
 public sealed class DiagnosticEndpointAccessMiddleware(RequestDelegate next)

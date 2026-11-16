@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// The services UI.Server registers: the web framework (MVC, API versioning, Razor, Lamar), the request protections
+/// The services UI.Server registers: the web framework (MVC, API versioning, Razor, Microsoft DI), the request protections
 /// in front of the API, response caching and compression, and the embedded MCP server.
 /// </summary>
 public static class ServerServices
@@ -30,6 +30,7 @@ public static class ServerServices
         AddRequestProtections(builder.Services, builder.Configuration);
         AddResponseCaching(builder.Services);
         AddEmbeddedMcpServer(builder.Services);
+        builder.Services.AddSingleton(new RegisteredServices(builder.Services));
     }
 
     private static void AddWebFramework(WebApplicationBuilder builder)
@@ -46,7 +47,7 @@ public static class ServerServices
             options.UnsupportedApiVersionStatusCode = StatusCodes.Status400BadRequest;
         }).AddMvc();
         builder.Services.AddRazorPages();
-        builder.Host.UseLamar(registry => { registry.IncludeRegistry<UiServiceRegistry>(); });
+        builder.Services.AddUiServices();
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddLiveTelemetry();
         builder.Services.AddBuildFacts();

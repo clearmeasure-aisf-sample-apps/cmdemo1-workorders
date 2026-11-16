@@ -25,12 +25,10 @@
     <PackageVersion Include="dbup-sqlserver" Version="6.0.16" />
     <PackageVersion Include="Deque.AxeCore.Playwright" Version="4.14.0" />
     <PackageVersion Include="FluentValidation" Version="11.11.0" />
-    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageVersion Include="Google.Protobuf" Version="3.27.0" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.70.0" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.70.0" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.2" />
-    <PackageVersion Include="Lamar.Microsoft.DependencyInjection" Version="15.0.1" />
     <PackageVersion Include="LinqContraband" Version="5.18.0" />
     <PackageVersion Include="Mediator.Abstractions" Version="3.0.2" />
     <PackageVersion Include="Mediator.SourceGenerator" Version="3.0.2" />

@@ -1,10 +1,10 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
-using Lamar;
 using Mediator;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,41 +12,40 @@ using Palermo.BlazorMvc;
 
 namespace ClearMeasure.Bootcamp.UI.Client;
 
+/// <summary>
+/// Every service the WebAssembly client resolves, named explicitly on Microsoft DI (no convention scanning).
+/// </summary>
 // ReSharper disable once InconsistentNaming -- UI is the product abbreviation in this type name
-public class UIClientServiceRegistry : ServiceRegistry
+public static class UIClientServiceRegistry
 {
-    public UIClientServiceRegistry()
+    /// <summary>Registers authentication, the remotable bus, client services and the client health checks.</summary>
+    public static IServiceCollection AddUiClientServices(this IServiceCollection services)
     {
-        AddAuthentication();
-        AddRemotableBus();
-        AddClientServices();
-        Scan(scanner =>
-        {
-            scanner.WithDefaultConventions();
-            scanner.AssemblyContainingType<UIClientServiceRegistry>();
-            scanner.AssemblyContainingType<IRemotableRequest>();
-            scanner.AssemblyContainingType<CanConnectToLlmServerHealthCheck>();
-        });
-        this.AddHealthChecks().AddCheck<HealthCheckTracer>("UI.Client");
-        this.AddHealthChecks().AddCheck<RemotableBusHealthCheck>("Remotable Bus");
-        this.AddHealthChecks().AddCheck<ServerHealthCheck>("Server health check");
+        AddAuthentication(services);
+        AddRemotableBus(services);
+        AddClientServices(services);
+        services.AddHealthChecks()
+            .AddCheck<HealthCheckTracer>("UI.Client")
+            .AddCheck<RemotableBusHealthCheck>("Remotable Bus")
+            .AddCheck<ServerHealthCheck>("Server health check");
+        return services;
     }
 
-    private void AddAuthentication()
+    private static void AddAuthentication(IServiceCollection services)
     {
-        this.AddSingleton<IUserSessionStore, LocalStorageUserSessionStore>();
-        this.AddScoped<CustomAuthenticationStateProvider>();
-        this.AddScoped<AuthenticationStateProvider>(provider =>
+        services.AddSingleton<IUserSessionStore, LocalStorageUserSessionStore>();
+        services.AddScoped<CustomAuthenticationStateProvider>();
+        services.AddScoped<AuthenticationStateProvider>(provider =>
             provider.GetRequiredService<CustomAuthenticationStateProvider>());
     }
 
     /// <summary>Requests go to the server through the remotable bus; UI events through the MVC bus.</summary>
-    private void AddRemotableBus()
+    private static void AddRemotableBus(IServiceCollection services)
     {
-        this.AddScoped<IUiBus>(_ => new MvcBus(NullLogger<MvcBus>.Instance));
-        this.AddScoped<IUserSession, UserSession>();
+        services.AddScoped<IUiBus>(_ => new MvcBus(NullLogger<MvcBus>.Instance));
+        services.AddScoped<IUserSession, UserSession>();
         // In-browser handlers (the LlmGateway chat handlers); remotable requests skip the mediator and go to the server.
-        this.AddMediator((MediatorOptions options) =>
+        services.AddMediator((MediatorOptions options) =>
         {
             // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.
             options.Namespace = "ClearMeasure.Bootcamp.Generated.UiClientMediator";
@@ -54,19 +53,24 @@ public class UIClientServiceRegistry : ServiceRegistry
             options.ServiceLifetime = ServiceLifetime.Transient;
             options.Assemblies = [typeof(IRemotableRequest), typeof(UIClientServiceRegistry), typeof(CanConnectToLlmServerHealthCheck)];
         });
-        this.AddTransient<IPublisherGateway>(sp =>
+        services.AddTransient<IPublisherGateway>(sp =>
             new PublisherGateway(sp.GetRequiredService<HttpClient>(), sp.GetRequiredService<IConfiguration>()));
-        this.AddTransient<IBus, RemotableBus>();
+        services.AddTransient<IBus, RemotableBus>();
     }
 
-    private void AddClientServices()
+    private static void AddClientServices(IServiceCollection services)
     {
-        this.AddSingleton<ChatClientFactory>();
-        this.AddTransient<WorkOrderTool>();
-        this.AddSingleton<ThemePreferenceService>();
-        this.AddSingleton<WorkOrderSearchState>();
-        this.AddScoped<IFeatureFlags, BusFeatureFlags>();
-        this.AddTransient<WorkOrderBulkActionService>();
-        this.AddSingleton(TimeProvider.System);
+        // Scoped: in the browser one scope lives as long as the app, and the factory uses the scoped bus.
+        services.AddScoped<ChatClientFactory>();
+        services.AddTransient<WorkOrderTool>();
+        services.AddTransient<ITranslationService, TranslationService>();
+        services.AddSingleton<ILlmHealthCheckCache>(_ => new LlmHealthCheckCache());
+        services.AddTransient<IWorkOrderBuilder, WorkOrderBuilder>();
+        services.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();
+        services.AddSingleton<ThemePreferenceService>();
+        services.AddSingleton<WorkOrderSearchState>();
+        services.AddScoped<IFeatureFlags, BusFeatureFlags>();
+        services.AddTransient<WorkOrderBulkActionService>();
+        services.AddSingleton(TimeProvider.System);
     }
 }

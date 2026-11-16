@@ -29,7 +29,7 @@ public static class McpServiceRegistry
         AddDataAccess(services);
         AddBus(services);
         AddApplicationServices(services);
-        AddValidators(services);
+        services.AddRequestValidators();
         return services;
     }
 
@@ -69,8 +69,9 @@ public static class McpServiceRegistry
     /// <summary>
     /// The validators <see cref="ValidationBehavior{TRequest,TResponse}"/> runs for in-process requests. The create
     /// commands in <see cref="HttpEnvelopeValidationDeferral"/> are validated on the HTTP envelope only (#1824).
+    /// UI.Server registers the same set.
     /// </summary>
-    private static void AddValidators(IServiceCollection services)
+    public static IServiceCollection AddRequestValidators(this IServiceCollection services)
     {
         services.AddTransient<IValidator<DeleteSearchViewCommand>, DeleteSearchViewCommandValidator>();
         services.AddTransient<IValidator<EmployeeByUserNameQuery>, EmployeeByUserNameQueryValidator>();
@@ -90,5 +91,6 @@ public static class McpServiceRegistry
         services.AddTransient<IValidator<WorkOrderSearchSummaryQuery>, WorkOrderSearchSummaryQueryValidator>();
         services.AddTransient<IValidator<WorkOrderSpecificationQuery>, WorkOrderSpecificationQueryValidator>();
         services.AddTransient<IValidator<WorkOrderStatusHistoryQuery>, WorkOrderStatusHistoryQueryValidator>();
+        return services;
     }
 }

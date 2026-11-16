@@ -5,7 +5,6 @@ using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UnitTests;
-using Lamar.Microsoft.DependencyInjection;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,7 +46,7 @@ public static class TestHost
     {
         var host = Host.CreateDefaultBuilder()
             .UseEnvironment("Development")
-            .UseLamar(registry => { registry.IncludeRegistry<UiServiceRegistry>(); })
+            .ConfigureServices(services => services.AddUiServices())
             .ConfigureLogging(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Debug))
             .ConfigureAppConfiguration((context, config) =>
             {

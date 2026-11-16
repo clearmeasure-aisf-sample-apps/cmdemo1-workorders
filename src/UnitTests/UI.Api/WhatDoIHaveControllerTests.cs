@@ -1,5 +1,6 @@
+using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
-using Lamar;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
@@ -8,25 +9,22 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 public class WhatDoIHaveControllerTests
 {
     [Test]
-    public void Services_Should_ReturnContainerWhatDoIHaveText()
+    public void Services_Should_ListEachRegistrationWithLifetimeAndProvider()
     {
-        using var container = new Container(_ => { });
+        var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
+        services.AddTransient<IComparer<string>, OrdinalComparer>();
         var controller = new WhatDoIHaveController();
 
-        var result = controller.Services(container);
+        var result = controller.Services(new RegisteredServices(services));
 
-        result.ShouldNotBeNullOrEmpty();
-        result.ShouldContain("Lamar");
+        result.ShouldContain("Singleton System.TimeProvider -> instance of");
+        result.ShouldContain($"Transient System.Collections.Generic.IComparer`1[[System.String");
+        result.ShouldContain($"-> {typeof(OrdinalComparer).FullName}");
     }
 
-    [Test]
-    public void Scanning_Should_ReturnContainerWhatDidIScanText()
+    private sealed class OrdinalComparer : IComparer<string>
     {
-        using var container = new Container(_ => { });
-        var controller = new WhatDoIHaveController();
-
-        var result = controller.Scanning(container);
-
-        result.ShouldNotBeNullOrEmpty();
+        public int Compare(string? x, string? y) => string.CompareOrdinal(x, y);
     }
 }
