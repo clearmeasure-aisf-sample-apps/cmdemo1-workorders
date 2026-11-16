@@ -57,8 +57,7 @@ public class UiServiceRegistry : ServiceRegistry
 
     private static TValidator CreateDeferredValidator<TValidator>(IServiceProvider services)
         where TValidator : class =>
-        (TValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
-            .CreateInstance(services, typeof(TValidator));
+        (TValidator)ActivatorUtilities.CreateInstance(services, typeof(TValidator));
 
     /// <summary>MediatR with validation and feature-flag behaviors, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
     private void AddRealtimeBus()

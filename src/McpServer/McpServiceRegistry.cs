@@ -44,14 +44,12 @@ public class McpServiceRegistry : ServiceRegistry
         this.AddSingleton(TimeProvider.System);
         // Non-IValidator DI handles (#1824) — build deferred validators without registering them as IValidator<T>.
         this.AddSingleton(sp => new CreateVendorCommandShapeRules(
-            (CreateVendorCommandValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
-                .CreateInstance(sp, typeof(CreateVendorCommandValidator))));
+            (CreateVendorCommandValidator)ActivatorUtilities.CreateInstance(sp, typeof(CreateVendorCommandValidator))));
         this.AddSingleton(sp => new CreateTeamCommandShapeRules(
-            (CreateTeamCommandValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
-                .CreateInstance(sp, typeof(CreateTeamCommandValidator))));
+            (CreateTeamCommandValidator)ActivatorUtilities.CreateInstance(sp, typeof(CreateTeamCommandValidator))));
         this.AddSingleton(sp => new CreateDatedWorkOrdersCommandShapeRules(
-            (CreateDatedWorkOrdersCommandValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
-                .CreateInstance(sp, typeof(CreateDatedWorkOrdersCommandValidator))));
+            (CreateDatedWorkOrdersCommandValidator)ActivatorUtilities.CreateInstance(
+                sp, typeof(CreateDatedWorkOrdersCommandValidator))));
     }
 
     private void ScanForHandlers() =>
