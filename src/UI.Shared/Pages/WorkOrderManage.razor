@@ -70,7 +70,7 @@
                 <div class="form-group">
                     <label for="Title" class="form-label">Title <span class="required-indicator">*</span></label>
                     <div class="control-row">
-                        <InputText data-testid="@Elements.Title" id="Title" @bind-Value="Model.Title" class="form-control input-text" maxlength="@WorkOrder.TitleMaxLength" disabled="@Model.IsReadOnly"/>
+                        <InputText data-testid="@Elements.Title" id="Title" autocomplete="off" @bind-Value="Model.Title" class="form-control input-text" maxlength="@WorkOrder.TitleMaxLength" disabled="@Model.IsReadOnly"/>
                         <button type="button" data-testid="@Elements.SpeakTitle" class="btn-app btn-app--secondary btn-app--icon" aria-label="Speak title" title="Speak title" @onclick="SpeakTitleAsync"><i class="bi bi-volume-up" aria-hidden="true"></i></button>
                         @if (!Model.IsReadOnly)
                         {
