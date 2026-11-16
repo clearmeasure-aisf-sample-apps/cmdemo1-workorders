@@ -8,6 +8,7 @@ using ClearMeasure.Bootcamp.UnitTests;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -89,7 +90,7 @@ public static class TestHost
                 s.AddTransient<IDatabaseConfiguration, TestDatabaseConfiguration>();
                 var stubTimeProvider = new StubTimeProvider(TestTime);
                 s.AddSingleton<TimeProvider>(stubTimeProvider);
-                s.AddTransient<IToolProvider, InProcessToolProvider>();
+                s.Replace(ServiceDescriptor.Transient<IToolProvider, InProcessToolProvider>());
             })
             .Build();
 
