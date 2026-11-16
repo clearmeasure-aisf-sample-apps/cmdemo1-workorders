@@ -49,6 +49,13 @@ public static class UserDisplay
         return letters.Length == 0 ? "?" : new string(letters).ToUpperInvariant();
     }
 
-    private static char? FirstLetterOrDigit(string part) =>
-        part.FirstOrDefault(c => char.IsLetterOrDigit(c)) is char c ? char.ToUpperInvariant(c) : null;
+    private static char? FirstLetterOrDigit(string part)
+    {
+        for (int i = 0; i < part.Length; i++)
+        {
+            if (char.IsLetterOrDigit(part[i]))
+                return char.ToUpperInvariant(part[i]);
+        }
+        return null;
+    }
 }
