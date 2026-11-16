@@ -11,7 +11,7 @@ public class VendorsSectionTests
     [Test]
     public async Task TeamsAndVendors_VendorsSection_RenderWhenVendorsExist()
     {
-        var vendor = TeamsAndVendorsSteps.ActiveVendor("Joe's HVAC");
+        var vendor = TeamsAndVendorsSteps.ActiveVendor();
         var bus = new TeamsAndVendorsBus { VendorsToReturn = [vendor] };
         var page = TeamsAndVendorsPageContext.Create().WithBus(bus);
         await using var ctx = page.Build();
@@ -87,7 +87,7 @@ public class VendorsSectionTests
     [Test]
     public async Task TeamsAndVendors_VendorEmail_IsMailtoLink()
     {
-        var vendor = TeamsAndVendorsSteps.VendorWithEmail("test@vendor.com");
+        var vendor = TeamsAndVendorsSteps.VendorWithEmail();
         var bus = new TeamsAndVendorsBus { VendorsToReturn = [vendor] };
         var page = TeamsAndVendorsPageContext.Create().WithBus(bus);
         await using var ctx = page.Build();

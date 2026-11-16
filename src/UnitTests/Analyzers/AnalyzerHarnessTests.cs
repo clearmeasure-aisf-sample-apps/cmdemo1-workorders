@@ -30,9 +30,8 @@ public class AnalyzerHarnessTests
     {
         const string source = "public class Broken { this is not valid csharp }";
 
-        var act = () => AnalyzerHarness.AnalyzeAsync(new PrematureMaterializationAnalyzer(), source);
-
-        await Should.ThrowAsync<InvalidOperationException>(act);
+        await Should.ThrowAsync<InvalidOperationException>(() =>
+            AnalyzerHarness.AnalyzeAsync(new PrematureMaterializationAnalyzer(), source));
     }
 
     [Test]

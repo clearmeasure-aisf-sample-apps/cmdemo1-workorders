@@ -182,7 +182,7 @@ public class BusSendInLoopAnalyzerTests
     [Test]
     public async Task ShouldReportCm0001_When_ISenderReceiverIsNotNamedBus()
     {
-        var source = BusSendInLoopSamples.ISenderReceiverNotNamedBus;
+        var source = BusSendInLoopSamples.SenderReceiverNotNamedBus;
 
         var hits = await Cm0001Async(source);
 

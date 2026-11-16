@@ -11,8 +11,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.TeamsAndVendors;
 /// </summary>
 public sealed class TeamsAndVendorsBus : StubBus
 {
-    private Employee[]? _employees;
-
     /// <summary>Captured <see cref="EmployeeWorkLoadQuery"/> sends.</summary>
     public List<EmployeeWorkLoadQuery> EmployeeWorkLoadQueriesSent { get; } = new();
 
@@ -28,8 +26,8 @@ public sealed class TeamsAndVendorsBus : StubBus
     /// <summary>Assignable employees returned by get-all and summary queries.</summary>
     public Employee[] EmployeesToReturn
     {
-        get => _employees ??= CreateDefaultEmployees();
-        set => _employees = value;
+        get => field ??= CreateDefaultEmployees();
+        set;
     }
 
     /// <summary>Teams returned by <see cref="TeamsQuery"/>.</summary>

@@ -242,7 +242,7 @@ public static class BusSendInLoopSamples
         """;
 
     /// <summary>ISender receiver not named Bus.</summary>
-    public static string ISenderReceiverNotNamedBus => """
+    public static string SenderReceiverNotNamedBus => """
         using System.Threading.Tasks;
         public interface ISender { Task Send(object request); }
         public class H {

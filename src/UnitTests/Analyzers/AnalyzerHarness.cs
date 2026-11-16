@@ -9,7 +9,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.Analyzers;
 /// <summary>
 /// Compiles a C# snippet and runs one <see cref="DiagnosticAnalyzer"/> against it.
 /// </summary>
-public sealed class AnalyzerHarness
+public static class AnalyzerHarness
 {
     /// <summary>
     /// Compiles <paramref name="source"/> and returns diagnostics from <paramref name="analyzer"/>.
