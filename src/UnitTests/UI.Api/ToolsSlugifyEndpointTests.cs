@@ -6,7 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsSlugifyControllerTests
+public class ToolsSlugifyEndpointTests
 {
     [Test]
     public void Post_Should_ReturnSlug_When_NormalText()

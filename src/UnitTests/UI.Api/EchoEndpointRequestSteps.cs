@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
-internal static class EchoControllerRequestSteps
+internal static class EchoEndpointRequestSteps
 {
     public static DefaultHttpContext CreateGetContext()
     {

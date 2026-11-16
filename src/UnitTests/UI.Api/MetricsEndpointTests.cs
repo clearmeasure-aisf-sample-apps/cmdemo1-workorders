@@ -11,7 +11,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 /// Unit coverage for <see cref="MetricsEndpoint"/> (issue #9158 metrics summary contract).
 /// </summary>
 [TestFixture]
-public class MetricsControllerTests
+public class MetricsEndpointTests
 {
     private sealed class StubRequestCounter(long total) : IHttpRequestMetricsCounter
     {
@@ -27,9 +27,9 @@ public class MetricsControllerTests
     [Test]
     public void GetSummary_Should_ReturnJson_WithRequiredFields_When_Called()
     {
-        var controller = CreateController(totalRequests: 7);
+        var endpoint = CreateEndpoint(totalRequests: 7);
 
-        var result = controller.GetSummary();
+        var result = endpoint.GetSummary();
 
         var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
@@ -49,11 +49,11 @@ public class MetricsControllerTests
     [Test]
     public void GetSummary_Should_SetWeakEtag_When_Called()
     {
-        var controller = CreateController(totalRequests: 3);
+        var endpoint = CreateEndpoint(totalRequests: 3);
 
-        controller.GetSummary();
+        endpoint.GetSummary();
 
-        var etag = controller.Response.Headers.ETag.ToString();
+        var etag = endpoint.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
         etag.ShouldStartWith("W/");
     }
@@ -61,17 +61,17 @@ public class MetricsControllerTests
     [Test]
     public void GetSummary_Should_Return304_When_IfNoneMatchIsAny()
     {
-        var controller = CreateController(totalRequests: 3);
-        controller.Request.Headers.IfNoneMatch = "*";
+        var endpoint = CreateEndpoint(totalRequests: 3);
+        endpoint.Request.Headers.IfNoneMatch = "*";
 
-        var result = controller.GetSummary();
+        var result = endpoint.GetSummary();
 
         var status = result.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
-        controller.Response.Headers.ETag.ToString().ShouldNotBeNullOrEmpty();
+        endpoint.Response.Headers.ETag.ToString().ShouldNotBeNullOrEmpty();
     }
 
-    private static MetricsUnderTest CreateController(long totalRequests)
+    private static MetricsUnderTest CreateEndpoint(long totalRequests)
     {
         var clock = new FixedUtcTimeProvider(new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero));
         return new MetricsUnderTest(clock, new StubRequestCounter(totalRequests));

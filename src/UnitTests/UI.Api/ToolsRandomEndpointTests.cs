@@ -8,7 +8,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsRandomControllerTests
+public class ToolsRandomEndpointTests
 {
     private static readonly Regex HexColorRegex = new("^#[0-9A-F]{6}$", RegexOptions.CultureInvariant);
 

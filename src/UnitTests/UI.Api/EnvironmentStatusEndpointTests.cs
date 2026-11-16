@@ -9,14 +9,14 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class EnvironmentStatusControllerTests
+public class EnvironmentStatusEndpointTests
 {
     private const string SecretValue = "unit-test-env-status-secret-value";
 
     [Test]
     public void Get_Should_ReturnJson_WithOsDescriptionProcessorCountClrVersionAndEnvVarNames()
     {
-        var result = CreateController().Get();
+        var result = CreateEndpoint().Get();
 
         var payload = AssertOkPayload(result);
         payload.OsDescription.ShouldBe(RuntimeInformation.OSDescription);
@@ -32,14 +32,14 @@ public class EnvironmentStatusControllerTests
     [Test]
     public void Get_Should_Return304_When_IfNoneMatchMatchesPayloadEtag()
     {
-        var controller = CreateController();
-        var first = controller.Get();
+        var endpoint = CreateEndpoint();
+        var first = endpoint.Get();
         first.ShouldBeContentResult();
-        var etag = controller.Response.Headers.ETag.ToString();
+        var etag = endpoint.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
 
-        controller.Request.Headers.IfNoneMatch = etag;
-        var second = controller.Get();
+        endpoint.Request.Headers.IfNoneMatch = etag;
+        var second = endpoint.Get();
 
         var status = second.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
@@ -50,7 +50,7 @@ public class EnvironmentStatusControllerTests
     {
         using var probe = RedactionProbe.Install(SecretValue);
 
-        var result = CreateController().Get();
+        var result = CreateEndpoint().Get();
         var payload = AssertOkPayload(result);
 
         payload.EnvironmentVariableNames.ShouldContain(EnvironmentStatusEndpoint.RedactionProbeVariableName);
@@ -64,7 +64,7 @@ public class EnvironmentStatusControllerTests
     {
         using var probe = RedactionProbe.Install(SecretValue);
 
-        var result = CreateController().Get();
+        var result = CreateEndpoint().Get();
         var content = result.ShouldBeContentResult();
         content.Content.ShouldNotBeNull();
         content.Content!.ShouldNotContain(SecretValue);
@@ -73,7 +73,7 @@ public class EnvironmentStatusControllerTests
     [Test]
     public void Get_Should_ReturnVersion_WhenAssemblyAttributePresent()
     {
-        var result = CreateController().Get();
+        var result = CreateEndpoint().Get();
 
         var payload = AssertOkPayload(result);
         payload.Version.ShouldNotBeEmpty();
@@ -82,13 +82,13 @@ public class EnvironmentStatusControllerTests
     [Test]
     public void Get_Should_ReturnGitSha_WhenAssemblyMetadataAttributePresent()
     {
-        var result = CreateController().Get();
+        var result = CreateEndpoint().Get();
 
         var payload = AssertOkPayload(result);
         payload.GitSha.ShouldNotBeEmpty();
     }
 
-    private static EndpointUnderTest CreateController() => new(EnvironmentStatusEndpoint.Get);
+    private static EndpointUnderTest CreateEndpoint() => new(EnvironmentStatusEndpoint.Get);
 
     private sealed class EndpointUnderTest(Func<HttpContext, IResult> get)
     {

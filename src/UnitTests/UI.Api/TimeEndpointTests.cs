@@ -9,16 +9,16 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class TimeControllerTests
+public class TimeEndpointTests
 {
     [Test]
     public void Get_Should_ReturnPlainTextIso8601Utc_ForFixedClock()
     {
         var fixedUtc = new DateTime(2026, 3, 30, 12, 0, 0, DateTimeKind.Utc);
         var stubTimeProvider = new StubFixedUtcTimeProvider(fixedUtc);
-        var controller = new TimeUnderTest(stubTimeProvider, new DefaultHttpContext());
+        var endpoint = new TimeUnderTest(stubTimeProvider, new DefaultHttpContext());
 
-        var result = controller.Get();
+        var result = endpoint.Get();
 
         var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(200);
@@ -26,8 +26,8 @@ public class TimeControllerTests
         content.ContentType.ShouldContain("text/plain");
         var expected = new DateTimeOffset(fixedUtc, TimeSpan.Zero).ToString("O", CultureInfo.InvariantCulture);
         content.Content.ShouldBe(expected);
-        controller.Response.Headers[HeaderNames.CacheControl].ToString().ShouldBe("no-store");
-        controller.Response.Headers.ETag.ToString().ShouldNotBeNullOrEmpty();
+        endpoint.Response.Headers[HeaderNames.CacheControl].ToString().ShouldBe("no-store");
+        endpoint.Response.Headers.ETag.ToString().ShouldNotBeNullOrEmpty();
     }
 
     [Test]
@@ -39,13 +39,13 @@ public class TimeControllerTests
         var etag = ConditionalGetEtag.CreateWeakEtagForPlainText(expected);
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.IfNoneMatch = etag.ToString();
-        var controller = new TimeUnderTest(stubTimeProvider, httpContext);
+        var endpoint = new TimeUnderTest(stubTimeProvider, httpContext);
 
-        var result = controller.Get();
+        var result = endpoint.Get();
 
         result.ShouldBeStatusCodeResult().StatusCode.ShouldBe(StatusCodes.Status304NotModified);
-        controller.Response.Headers[HeaderNames.CacheControl].ToString().ShouldBe("no-store");
-        controller.Response.Headers.ETag.ToString().ShouldBe(etag.ToString());
+        endpoint.Response.Headers[HeaderNames.CacheControl].ToString().ShouldBe("no-store");
+        endpoint.Response.Headers.ETag.ToString().ShouldBe(etag.ToString());
     }
 
     private sealed class StubFixedUtcTimeProvider(DateTime utcNow) : TimeProvider

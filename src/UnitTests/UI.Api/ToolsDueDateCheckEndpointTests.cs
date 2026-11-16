@@ -6,12 +6,12 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsDueDateCheckControllerTests
+public class ToolsDueDateCheckEndpointTests
 {
     [Test]
     public void Get_Should_ReturnOverdue_When_DateIsInPast()
     {
-        var result = CreateController().Get("2000-01-01");
+        var result = CreateEndpoint().Get("2000-01-01");
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
@@ -21,7 +21,7 @@ public class ToolsDueDateCheckControllerTests
     [Test]
     public void Get_Should_ReturnNone_When_DateIsInFuture()
     {
-        var result = CreateController().Get("2099-12-31");
+        var result = CreateEndpoint().Get("2099-12-31");
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
@@ -35,9 +35,9 @@ public class ToolsDueDateCheckControllerTests
         var today = new DateOnly(2025, 6, 15);
         var fixedNow = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
         var fixedClock = new FixedTimeProvider(fixedNow);
-        var controller = CreateController(fixedClock);
+        var endpoint = CreateEndpoint(fixedClock);
 
-        var result = controller.Get(today.ToString("yyyy-MM-dd"));
+        var result = endpoint.Get(today.ToString("yyyy-MM-dd"));
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
@@ -47,9 +47,9 @@ public class ToolsDueDateCheckControllerTests
     [Test]
     public void Get_Should_Return400_When_DateMissing()
     {
-        var nullResult = CreateController().Get(null);
-        var emptyResult = CreateController().Get("");
-        var whitespaceResult = CreateController().Get("   ");
+        var nullResult = CreateEndpoint().Get(null);
+        var emptyResult = CreateEndpoint().Get("");
+        var whitespaceResult = CreateEndpoint().Get("   ");
 
         foreach (var result in new[] { nullResult, emptyResult, whitespaceResult })
         {
@@ -62,7 +62,7 @@ public class ToolsDueDateCheckControllerTests
     [Test]
     public void Get_Should_Return400_When_DateInvalidFormat()
     {
-        var result = CreateController().Get("not-a-date");
+        var result = CreateEndpoint().Get("not-a-date");
 
         var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
@@ -73,14 +73,14 @@ public class ToolsDueDateCheckControllerTests
     public void Get_Should_Return400_When_DateWrongFormat()
     {
         // MM/dd/yyyy is wrong format — must be yyyy-MM-dd
-        var result = CreateController().Get("01/15/2025");
+        var result = CreateEndpoint().Get("01/15/2025");
 
         var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
         objectResult.Value.ShouldBeOfType<ProblemDetails>();
     }
 
-    private static DueDateCheckUnderTest CreateController(TimeProvider? timeProvider = null) =>
+    private static DueDateCheckUnderTest CreateEndpoint(TimeProvider? timeProvider = null) =>
         new(timeProvider ?? TimeProvider.System);
 
     private sealed class DueDateCheckUnderTest(TimeProvider timeProvider)

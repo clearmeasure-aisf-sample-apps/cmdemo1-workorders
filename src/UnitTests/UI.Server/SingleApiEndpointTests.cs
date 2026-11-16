@@ -11,7 +11,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 
 [TestFixture]
-public class SingleApiControllerTests
+public class SingleApiEndpointTests
 {
     [Test]
     public async Task Should_Post_ReturnSerializedResponse_ForRemotableRequest()

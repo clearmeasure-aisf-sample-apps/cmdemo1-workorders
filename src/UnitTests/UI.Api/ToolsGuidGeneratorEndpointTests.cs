@@ -6,7 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsGuidGeneratorControllerTests
+public class ToolsGuidGeneratorEndpointTests
 {
     [Test]
     public void Post_Should_ReturnSingleGuidDFormat_When_CountOmitted()

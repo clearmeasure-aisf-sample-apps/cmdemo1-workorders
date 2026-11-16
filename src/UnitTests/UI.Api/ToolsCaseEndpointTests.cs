@@ -9,7 +9,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsCaseControllerTests
+public class ToolsCaseEndpointTests
 {
     [Test]
     public void Post_Should_ReturnUpperText_When_ToIsUpper()

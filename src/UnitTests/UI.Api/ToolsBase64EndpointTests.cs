@@ -6,7 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsBase64ControllerTests
+public class ToolsBase64EndpointTests
 {
     [Test]
     public void Post_Should_ReturnEncodedBase64_When_ModeEncodeOrDefault()

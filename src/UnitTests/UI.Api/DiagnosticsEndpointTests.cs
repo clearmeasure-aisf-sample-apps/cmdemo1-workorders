@@ -14,7 +14,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class DiagnosticsControllerTests
+public class DiagnosticsEndpointTests
 {
     private sealed class StubHostEnvironment(string environmentName) : IHostEnvironment
     {
@@ -49,9 +49,9 @@ public class DiagnosticsControllerTests
     {
         var clock = FixedClock();
         var bus = new StubBus(RuntimeFeatureFlags());
-        var controller = DiagnosticsControllerUnderTest(clock, bus);
+        var endpoint = DiagnosticsEndpointUnderTest(clock, bus);
 
-        var result = await controller.Get();
+        var result = await endpoint.Get();
 
         var payload = ReadDiagnosticsPayload(result);
         payload.Environment.ShouldBe("UnitTestEnv");
@@ -72,7 +72,7 @@ public class DiagnosticsControllerTests
         [FeatureFlagNames.VendorManagement] = true
     };
 
-    private static DiagnosticsUnderTest DiagnosticsControllerUnderTest(TimeProvider clock, StubBus bus) =>
+    private static DiagnosticsUnderTest DiagnosticsEndpointUnderTest(TimeProvider clock, StubBus bus) =>
         new(new StubHostEnvironment("UnitTestEnv"), clock, bus);
 
     private sealed class DiagnosticsUnderTest(IHostEnvironment hostEnvironment, TimeProvider clock, IBus bus)

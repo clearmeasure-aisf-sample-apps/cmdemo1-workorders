@@ -8,7 +8,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class DetailedHealthControllerTests
+public class DetailedHealthEndpointTests
 {
     private sealed class FixedUtcTimeProvider(DateTime utcNow) : TimeProvider
     {
@@ -44,9 +44,9 @@ public class DetailedHealthControllerTests
     public async Task DetailedHealthController_Get_Should_ReturnOkReport()
     {
         var fixedTime = new DateTime(2026, 8, 26, 12, 0, 0, DateTimeKind.Utc);
-        var controller = CreateController(fixedTime);
+        var endpoint = CreateEndpoint(fixedTime);
 
-        var result = await controller.GetDetailed(CancellationToken.None);
+        var result = await endpoint.GetDetailed(CancellationToken.None);
 
         var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
@@ -67,13 +67,13 @@ public class DetailedHealthControllerTests
     public async Task GetDetailed_Should_SetEtagHeader_When_ReportReturned()
     {
         var fixedTime = new DateTime(2026, 8, 19, 12, 0, 0, DateTimeKind.Utc);
-        var controller = CreateController(fixedTime);
+        var endpoint = CreateEndpoint(fixedTime);
 
-        var result = await controller.GetDetailed(CancellationToken.None);
+        var result = await endpoint.GetDetailed(CancellationToken.None);
 
         var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
-        controller.Response.Headers.ETag.ToString().ShouldStartWith("W/\"");
+        endpoint.Response.Headers.ETag.ToString().ShouldStartWith("W/\"");
     }
 
     [Test]
@@ -83,10 +83,10 @@ public class DetailedHealthControllerTests
         var report = FixedReport(fixedTime);
         var etag = ConditionalGetEtag.CreateWeakEtagForJson(DetailedHealthEtagFingerprint.FromReport(report));
 
-        var controller = CreateController(fixedTime);
-        controller.Request.Headers.IfNoneMatch = etag.ToString();
+        var endpoint = CreateEndpoint(fixedTime);
+        endpoint.Request.Headers.IfNoneMatch = etag.ToString();
 
-        var result = await controller.GetDetailed(CancellationToken.None);
+        var result = await endpoint.GetDetailed(CancellationToken.None);
 
         result.ShouldBeStatusCodeResult().StatusCode.ShouldBe(StatusCodes.Status304NotModified);
     }
@@ -95,17 +95,17 @@ public class DetailedHealthControllerTests
     public async Task GetDetailed_Should_Return200_When_IfNoneMatchDiffers()
     {
         var fixedTime = new DateTime(2026, 8, 19, 12, 0, 0, DateTimeKind.Utc);
-        var controller = CreateController(fixedTime);
-        controller.Request.Headers.IfNoneMatch = "W/\"stale-etag\"";
+        var endpoint = CreateEndpoint(fixedTime);
+        endpoint.Request.Headers.IfNoneMatch = "W/\"stale-etag\"";
 
-        var result = await controller.GetDetailed(CancellationToken.None);
+        var result = await endpoint.GetDetailed(CancellationToken.None);
 
         var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
         content.Content.ShouldNotBeNullOrEmpty();
     }
 
-    private static DetailedHealthUnderTest CreateController(DateTime fixedTime) =>
+    private static DetailedHealthUnderTest CreateEndpoint(DateTime fixedTime) =>
         new(new FixedUtcTimeProvider(fixedTime), new StubDetailedHealthReportProvider(FixedReport(fixedTime)));
 
     private sealed class DetailedHealthUnderTest(TimeProvider timeProvider, IDetailedHealthReportProvider reportProvider)

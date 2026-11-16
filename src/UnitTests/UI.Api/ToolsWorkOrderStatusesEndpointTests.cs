@@ -6,7 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsWorkOrderStatusesControllerTests
+public class ToolsWorkOrderStatusesEndpointTests
 {
     [Test]
     public void Get_Should_ReturnAllStatuses_WithExpectedCount()

@@ -12,7 +12,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class FeatureFlagsControllerTests
+public class FeatureFlagsEndpointTests
 {
     private static readonly Dictionary<string, bool> RuntimeFlags = new()
     {
@@ -25,9 +25,9 @@ public class FeatureFlagsControllerTests
     public async Task Get_Should_ReturnQueryFlags_When_Called()
     {
         var bus = new StubBus(RuntimeFlags);
-        var controller = CreateController(bus);
+        var endpoint = CreateEndpoint(bus);
 
-        var result = await controller.Get();
+        var result = await endpoint.Get();
 
         var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
@@ -43,9 +43,9 @@ public class FeatureFlagsControllerTests
     [Test]
     public async Task Get_Should_SerializeFlagKeysAsCatalogNames_When_UsingWebJsonDefaults()
     {
-        var controller = CreateController(new StubBus(RuntimeFlags));
+        var endpoint = CreateEndpoint(new StubBus(RuntimeFlags));
 
-        var result = await controller.Get();
+        var result = await endpoint.Get();
 
         var content = result.ShouldBeContentResult();
         using var doc = JsonDocument.Parse(content.Content!);
@@ -55,7 +55,7 @@ public class FeatureFlagsControllerTests
         }
     }
 
-    private static FeatureFlagsUnderTest CreateController(IBus bus) => new(bus);
+    private static FeatureFlagsUnderTest CreateEndpoint(IBus bus) => new(bus);
 
     private sealed class FeatureFlagsUnderTest(IBus bus)
     {

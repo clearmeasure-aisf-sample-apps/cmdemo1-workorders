@@ -12,15 +12,15 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class VersionControllerTests
+public class VersionEndpointTests
 {
     [Test]
     public void Get_Should_ReturnOk_WithExpectedShape()
     {
         var stubHostEnvironment = new StubHostEnvironment("TestEnvironment");
-        var controller = CreateController(stubHostEnvironment);
+        var endpoint = CreateEndpoint(stubHostEnvironment);
 
-        var result = controller.Get();
+        var result = endpoint.Get();
 
         var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
@@ -53,8 +53,8 @@ public class VersionControllerTests
 #endif
         }
 
-        var controller = CreateController(new StubHostEnvironment("Test"));
-        var result = controller.Get();
+        var endpoint = CreateEndpoint(new StubHostEnvironment("Test"));
+        var result = endpoint.Get();
         var content = result.ShouldBeContentResult();
         var payload = JsonSerializer.Deserialize<VersionMetadataResponse>(
             content.Content!,
@@ -68,20 +68,20 @@ public class VersionControllerTests
     [Test]
     public void Get_Should_Return304_When_IfNoneMatchMatchesPayloadEtag()
     {
-        var controller = CreateController(new StubHostEnvironment("Test"));
-        var first = controller.Get();
+        var endpoint = CreateEndpoint(new StubHostEnvironment("Test"));
+        var first = endpoint.Get();
         first.ShouldBeContentResult();
-        var etag = controller.Response.Headers.ETag.ToString();
+        var etag = endpoint.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
 
-        controller.Request.Headers.IfNoneMatch = etag;
-        var second = controller.Get();
+        endpoint.Request.Headers.IfNoneMatch = etag;
+        var second = endpoint.Get();
 
         var status = second.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
     }
 
-    private static EndpointUnderTest CreateController(IHostEnvironment hostEnvironment) =>
+    private static EndpointUnderTest CreateEndpoint(IHostEnvironment hostEnvironment) =>
         new(context => VersionEndpoint.Get(context, hostEnvironment));
 
     private sealed class EndpointUnderTest(Func<HttpContext, IResult> get)

@@ -9,7 +9,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsWordCountControllerTests
+public class ToolsWordCountEndpointTests
 {
     [Test]
     public void Post_Should_ReturnWordCount_When_TextProvided()

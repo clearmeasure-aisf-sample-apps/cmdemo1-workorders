@@ -6,7 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class PingControllerTests
+public class PingEndpointTests
 {
     [Test]
     public void Get_Should_ReturnPlainTextPong()

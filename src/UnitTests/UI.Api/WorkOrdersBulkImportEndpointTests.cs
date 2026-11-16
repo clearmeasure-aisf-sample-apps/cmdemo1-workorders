@@ -13,13 +13,13 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class WorkOrdersBulkImportControllerTests
+public class WorkOrdersBulkImportEndpointTests
 {
     [Test]
     public async Task ShouldReturnBadRequest_WhenFileMissing()
     {
-        var controller = CreateController(new StubBus());
-        var result = await controller.Post(null!, CancellationToken.None);
+        var endpoint = CreateEndpoint(new StubBus());
+        var result = await endpoint.Post(null!, CancellationToken.None);
 
         var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
@@ -28,14 +28,14 @@ public class WorkOrdersBulkImportControllerTests
     [Test]
     public async Task ShouldReturnBadRequest_WhenFileEmpty()
     {
-        var controller = CreateController(new StubBus());
+        var endpoint = CreateEndpoint(new StubBus());
         var file = new FormFile(new MemoryStream(), 0, 0, "file", "empty.csv")
         {
             Headers = new HeaderDictionary(),
             ContentType = "text/csv"
         };
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
@@ -44,10 +44,10 @@ public class WorkOrdersBulkImportControllerTests
     [Test]
     public async Task ShouldReturnBadRequest_WhenNotCsv()
     {
-        var controller = CreateController(new StubBus());
+        var endpoint = CreateEndpoint(new StubBus());
         var file = CreateFormFile("data", "notes.txt", "text/plain");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
@@ -56,10 +56,10 @@ public class WorkOrdersBulkImportControllerTests
     [Test]
     public async Task ShouldReturnBadRequest_WhenCsvHasNoDataRows()
     {
-        var controller = CreateController(new StubBus());
+        var endpoint = CreateEndpoint(new StubBus());
         var file = CreateFormFile("Title,Description,CreatorUsername\n", "headers-only.csv");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
@@ -68,10 +68,10 @@ public class WorkOrdersBulkImportControllerTests
     [Test]
     public async Task ShouldReturnBadRequest_WhenCsvInvalid()
     {
-        var controller = CreateController(new StubBus());
+        var endpoint = CreateEndpoint(new StubBus());
         var file = CreateFormFile("not,a,valid,header\nx,y,z\n", "bad.csv");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
@@ -82,11 +82,11 @@ public class WorkOrdersBulkImportControllerTests
     {
         var creator = new Employee("u1", "A", "B", "a@b.c");
         var bus = new StubBus { Employee = creator };
-        var controller = CreateController(bus, new StubNumberGenerator { Next = "WO-001" });
+        var endpoint = CreateEndpoint(bus, new StubNumberGenerator { Next = "WO-001" });
 
         var file = CreateFormFile("Title,Description,CreatorUsername\nT1,D1,u1\n");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
@@ -102,11 +102,11 @@ public class WorkOrdersBulkImportControllerTests
     {
         var creator = new Employee("u1", "A", "B", "a@b.c");
         var bus = new StubBus { Employee = creator };
-        var controller = CreateController(bus);
+        var endpoint = CreateEndpoint(bus);
 
         var file = CreateFormFile("Title,Description,CreatorUsername\n,D1,u1\n");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
@@ -119,11 +119,11 @@ public class WorkOrdersBulkImportControllerTests
     public async Task ShouldReturnRowFailure_WhenEmployeeNotFound()
     {
         var bus = new StubBus { Employee = null };
-        var controller = CreateController(bus);
+        var endpoint = CreateEndpoint(bus);
 
         var file = CreateFormFile("Title,Description,CreatorUsername\nT1,D1,nobody\n");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
@@ -136,11 +136,11 @@ public class WorkOrdersBulkImportControllerTests
     {
         var creator = new Employee("u1", "A", "B", "a@b.c");
         var bus = new StubBus { Employee = creator, SaveDraftThrows = new InvalidOperationException("save failed") };
-        var controller = CreateController(bus);
+        var endpoint = CreateEndpoint(bus);
 
         var file = CreateFormFile("Title,Description,CreatorUsername\nT1,D1,u1\n");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
@@ -153,11 +153,11 @@ public class WorkOrdersBulkImportControllerTests
     {
         var creator = new Employee("u1", "A", "B", "a@b.c");
         var bus = new StubBus { Employee = creator };
-        var controller = CreateController(bus, new StubNumberGenerator { Next = "WO-001" });
+        var endpoint = CreateEndpoint(bus, new StubNumberGenerator { Next = "WO-001" });
 
         var file = CreateFormFile("Title,Description,CreatorUsername\nT1,D1,u1\nT2,D2,u1\n");
 
-        var result = await controller.Post(file, CancellationToken.None);
+        var result = await endpoint.Post(file, CancellationToken.None);
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
@@ -174,7 +174,7 @@ public class WorkOrdersBulkImportControllerTests
         WorkOrderBulkImportProcessor.IsCsvFile(CreateFormFile("x", "a.txt", "text/plain")).ShouldBeFalse();
     }
 
-    private static BulkImportUnderTest CreateController(
+    private static BulkImportUnderTest CreateEndpoint(
         StubBus bus,
         StubNumberGenerator? numbers = null) =>
         new(bus, numbers ?? new StubNumberGenerator());

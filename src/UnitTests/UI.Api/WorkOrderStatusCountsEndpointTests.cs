@@ -16,7 +16,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class WorkOrderStatusCountsControllerTests
+public class WorkOrderStatusCountsEndpointTests
 {
     [Test]
     public async Task Get_WhenCalled_ShouldReturnCountsFromWorkOrderCountByStatusQuery()

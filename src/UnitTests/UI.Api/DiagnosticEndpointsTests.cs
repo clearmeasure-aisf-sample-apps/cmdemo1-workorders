@@ -6,7 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class WhatDoIHaveControllerTests
+public class DiagnosticEndpointsTests
 {
     [Test]
     public void Services_Should_ListEachRegistrationWithLifetimeAndProvider()

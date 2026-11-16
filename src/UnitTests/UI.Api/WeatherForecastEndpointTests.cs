@@ -10,14 +10,14 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class WeatherForecastControllerTests
+public class WeatherForecastEndpointTests
 {
     [Test]
     public void Get_Should_ReturnOk_WithFiveForecastsAndEtag()
     {
-        var controller = CreateController();
+        var endpoint = CreateEndpoint();
 
-        var result = controller.Get();
+        var result = endpoint.Get();
 
         var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
@@ -28,22 +28,22 @@ public class WeatherForecastControllerTests
             ConditionalGetEtag.JsonSerializerOptions);
         forecasts.ShouldNotBeNull();
         forecasts.Length.ShouldBe(5);
-        controller.Response.Headers.ETag.ToString().ShouldNotBeNullOrEmpty();
+        endpoint.Response.Headers.ETag.ToString().ShouldNotBeNullOrEmpty();
     }
 
     [Test]
     public void Get_Should_Return304_When_IfNoneMatchIsAny()
     {
-        var controller = CreateController();
-        controller.Request.Headers.IfNoneMatch = "*";
+        var endpoint = CreateEndpoint();
+        endpoint.Request.Headers.IfNoneMatch = "*";
 
-        var result = controller.Get();
+        var result = endpoint.Get();
 
         var status = result.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
     }
 
-    private static EndpointUnderTest CreateController() =>
+    private static EndpointUnderTest CreateEndpoint() =>
         new(context => WeatherForecastEndpoint.Get(context, NullLoggerFactory.Instance));
 
     private sealed class EndpointUnderTest(Func<HttpContext, IResult> get)

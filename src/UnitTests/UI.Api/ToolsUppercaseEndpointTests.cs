@@ -10,7 +10,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class ToolsUppercaseControllerTests
+public class ToolsUppercaseEndpointTests
 {
     [Test]
     public void Post_Should_ReturnUpperCase_When_TextProvided()

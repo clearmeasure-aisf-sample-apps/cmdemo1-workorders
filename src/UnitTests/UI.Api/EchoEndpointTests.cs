@@ -6,7 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 [TestFixture]
-public class EchoControllerTests
+public class EchoEndpointTests
 {
     [Test]
     public void Get_Should_ReflectMethodPathQueryAndHeaders()
