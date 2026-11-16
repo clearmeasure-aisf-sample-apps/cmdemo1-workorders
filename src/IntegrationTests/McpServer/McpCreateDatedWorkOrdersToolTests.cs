@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.McpServer.Tools;
+using ProductionWorkOrderTools = ClearMeasure.Bootcamp.McpServer.Tools.WorkOrderTools;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -24,7 +25,7 @@ public class McpCreateDatedWorkOrdersToolTests
         // Saturday 2026-08-29 noon Chicago → UTC
         var clock = ChicagoNoon(2026, 8, 29);
 
-        var result = await WorkOrderTools.CreateDatedWorkOrders(
+        var result = await ProductionWorkOrderTools.CreateDatedWorkOrders(
             bus,
             clock,
             creatorUserName,
@@ -47,7 +48,7 @@ public class McpCreateDatedWorkOrdersToolTests
         var (creatorUserName, assigneeUserName) = await SeedCreatorAndAssigneeAsync();
         var bus = TestHost.GetRequiredService<IBus>();
 
-        var result = await WorkOrderTools.CreateDatedWorkOrders(
+        var result = await ProductionWorkOrderTools.CreateDatedWorkOrders(
             bus,
             TimeProvider.System,
             creatorUserName,
@@ -71,7 +72,7 @@ public class McpCreateDatedWorkOrdersToolTests
         await context.SaveChangesAsync();
 
         var bus = TestHost.GetRequiredService<IBus>();
-        var result = await WorkOrderTools.CreateDatedWorkOrders(
+        var result = await ProductionWorkOrderTools.CreateDatedWorkOrders(
             bus,
             TimeProvider.System,
             creatorUserName,
