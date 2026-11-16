@@ -141,6 +141,25 @@ public class CreateDatedWorkOrdersHandlerTests
     }
 
     [Test]
+    public async Task Handle_WhenTitleIsBlank_CreatesZero()
+    {
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
+        var bus = TestHost.GetRequiredService<IBus>();
+
+        var result = await bus.Send(new CreateDatedWorkOrdersCommand(
+            creatorUserName,
+            assigneeUserName,
+            "",
+            "Weekly Saturday mow",
+            [new DateOnly(2026, 8, 29)]));
+
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldContain("'Title' must not be empty.");
+        result.WorkOrders.Count.ShouldBe(0);
+    }
+
+    [Test]
     public async Task Handle_WhenCreatorMissing_CreatesZero()
     {
         var assigneeUserName = TestData.UserName("gw");

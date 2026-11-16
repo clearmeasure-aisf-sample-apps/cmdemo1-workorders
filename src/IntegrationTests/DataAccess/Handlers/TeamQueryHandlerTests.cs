@@ -104,6 +104,19 @@ public class TeamQueryHandlerTests
         (await OwnMembershipCount()).ShouldBe(1);
     }
 
+    [Test]
+    public async Task ShouldFailWithoutWriting_WhenTeamNameIsBlank()
+    {
+        var result = await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
+            .Handle(new CreateTeamCommand("", null, [_employees[0].UserName]));
+
+        result.Succeeded.ShouldBeFalse();
+        result.Id.ShouldBeNull();
+        result.Message.ShouldContain("'Name' must not be empty.");
+        (await OwnTeams()).ShouldBeEmpty();
+        (await OwnMembershipCount()).ShouldBe(0);
+    }
+
     private string TeamName(string name) => $"{name} {_tag}";
 
     private async Task<Team[]> OwnTeams()

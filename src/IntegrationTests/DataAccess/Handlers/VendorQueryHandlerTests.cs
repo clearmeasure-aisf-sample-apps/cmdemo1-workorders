@@ -75,6 +75,18 @@ public class VendorQueryHandlerTests
         (await OwnVendors()).Length.ShouldBe(1);
     }
 
+    [Test]
+    public async Task ShouldFailWithoutWriting_WhenVendorNameIsBlank()
+    {
+        var result = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
+            .Handle(new CreateVendorCommand("", "HVAC", null, null, null));
+
+        result.Succeeded.ShouldBeFalse();
+        result.Id.ShouldBeNull();
+        result.Message.ShouldContain("'Name' must not be empty.");
+        (await OwnVendors()).ShouldBeEmpty();
+    }
+
     private string VendorName(string name) => $"{name} {_tag}";
 
     private async Task<Vendor[]> OwnVendors()

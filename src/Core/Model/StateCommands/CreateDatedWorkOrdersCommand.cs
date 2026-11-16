@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.Validation;
 using MediatR;
 
 namespace ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -24,9 +25,10 @@ public record CreateDatedWorkOrdersCommand(
     public const string BatchCannotExceed = "A dated work-order batch cannot exceed 10 dates.";
 
     /// <summary>
-    /// In-process validation (#1824): rules this command breaks before any employees are loaded.
-    /// An empty list means the handler may look up creator and assignee. Callers receive these
-    /// as <see cref="CreateDatedWorkOrdersResult.Failed"/> — never a FluentValidation exception.
+    /// In-process validation (#1824): DueDates empty / over-ten keep master's Failed messages; other
+    /// shape rules use <c>CreateDatedWorkOrdersCommandValidator</c> messages. An empty list means the
+    /// handler may look up creator and assignee. Callers receive these as
+    /// <see cref="CreateDatedWorkOrdersResult.Failed"/> — never a FluentValidation exception.
     /// </summary>
     public IReadOnlyList<string> FindRuleViolations()
     {
@@ -35,7 +37,12 @@ public record CreateDatedWorkOrdersCommand(
             return [AtLeastOneDueDateRequired];
         }
 
-        return DueDates.Count > MaximumBatchSize ? [BatchCannotExceed] : [];
+        if (DueDates.Count > MaximumBatchSize)
+        {
+            return [BatchCannotExceed];
+        }
+
+        return InProcessCreateCommandShapeValidation.ErrorMessages(this);
     }
 }
 

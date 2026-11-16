@@ -1,40 +1,43 @@
 # In-process validation for create commands (#1824)
 
 Follow-up from #1804 decision **(c)**: `CreateDatedWorkOrdersCommand`, `CreateVendorCommand`, and
-`CreateTeamCommand` keep FluentValidation on the HTTP envelope only. This document records the
-deliberate in-process design so students do not confuse the two paths.
+`CreateTeamCommand` keep FluentValidation **off** MediatR `ValidationBehavior`. This document records
+the deliberate in-process design.
 
 ## Decision
 
 | Path | Mechanism | Failure signal |
 | --- | --- | --- |
-| **In-process** (Blazor Server / MCP / Worker via `IBus`) | Each command's `FindRuleViolations` (handler maps the list to a Failed result) | `Create*Result` with `Success`/`Succeeded` false and a message — **not** `ValidationException` |
+| **In-process** (Blazor Server / MCP / Worker via `IBus`) | Each command's `FindRuleViolations` (handlers map the list to a Failed result) | `Create*Result` with `Success`/`Succeeded` false and a message — **not** `ValidationException` |
 | **HTTP** (single API / remoting envelope) | FluentValidation types listed in `HttpEnvelopeValidationDeferral` | HTTP **400** with the same `errors` payload as before #1824 |
 
 `ValidationBehavior` stays pure: it runs every DI-registered `IValidator<T>`. The three create
 validators are **not** registered as MediatR validators; `HttpEnvelopeValidationDeferral` is the
 single catalog the host registries and HTTP resolver share.
 
-## Command seams
+## What `FindRuleViolations` runs
 
-| Command | In-process rules on the command | HTTP shape rules (envelope only) |
+| Command | In-process rules | Same messages as HTTP shape? |
 | --- | --- | --- |
-| `CreateDatedWorkOrdersCommand` | `FindRuleViolations()` — empty DueDates; more than `MaximumBatchSize` (10) | `CreateDatedWorkOrdersCommandValidator` (usernames, title, description, DueDates) |
-| `CreateVendorCommand` | `FindRuleViolations(existingVendorNames)` — duplicate name ignoring case | `CreateVendorCommandValidator` (required name, lengths, email, phone) |
-| `CreateTeamCommand` | `FindRuleViolations(existingTeamNames, knownUserNames)` — duplicate name; unknown members | `CreateTeamCommandValidator` (required name, lengths, member list) |
+| `CreateDatedWorkOrdersCommand` | DueDates empty / over `MaximumBatchSize` (10) with master's Failed messages; then other shape rules via `InProcessCreateCommandShapeValidation` → `CreateDatedWorkOrdersCommandValidator` | DueDates batch messages stay master's in-process wording; username/title/description match the envelope validator |
+| `CreateVendorCommand` | Shape via `CreateVendorCommandValidator`, then duplicate name ignoring case | Yes for shape (validator error messages) |
+| `CreateTeamCommand` | Shape via `CreateTeamCommandValidator`, then duplicate name and unknown members | Yes for shape (validator error messages) |
 
-Handlers call `FindRuleViolations` before writing. MCP tools already branch on `Succeeded` /
-`Success` and only catch `ValidationException` as a safety net for other commands.
+`InProcessCreateCommandShapeValidation` constructs the deferred validator with
+`Activator.CreateInstance` (not MediatR DI, not `new AbstractValidator` in handlers) so production
+architecture gates stay green and HTTP 400 registration is unchanged.
+
+Handlers call `FindRuleViolations` before writing. MCP tools branch on `Succeeded` / `Success`.
 
 ## What must not change
 
-- HTTP 400 responses and FluentValidation messages for the three commands
+- HTTP 400 responses and FluentValidation property/error payloads for the three commands
 - `ValidationBehavior` (no type exception list, no opt-out marker)
 - Registration of the three validators only through `HttpEnvelopeValidatorSet` / envelope resolution
+  (not as MediatR `IValidator<T>`)
 
-## Characterization tests
+## Tests
 
-`src/UnitTests/Core/Validation/InProcessCreateCommandValidationTests.cs` locks the in-process
-Failed-result contract and that blank vendor/team names still reach the handler when the HTTP
-FluentValidators are not registered for MediatR. The overview pointer lives in
-[request-flow.md](../request-flow.md#validation).
+- Unit: `InProcessCreateCommandValidationTests`, `InProcessCreateCommandShapeValidationTests`
+- Integration (real handlers): blank-name Failed results on `VendorQueryHandler` / `TeamQueryHandler`;
+  DueDates empty / over-ten on `CreateDatedWorkOrdersHandler` via `IBus`

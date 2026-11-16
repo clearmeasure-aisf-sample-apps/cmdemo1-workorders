@@ -1,18 +1,14 @@
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Validation;
-using ClearMeasure.Bootcamp.UI.Shared;
-using FluentValidation;
-using MediatR;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Validation;
 
 /// <summary>
-/// Characterization of master in-process create validation (#1824): callers get Failed
-/// results from command/handler seams, not <see cref="ValidationException"/>. HTTP shape
-/// rules stay on the envelope FluentValidators in <see cref="HttpEnvelopeValidationDeferral"/>.
+/// Characterization and design tests for #1824 in-process create validation: Failed results via
+/// <c>FindRuleViolations</c> (shape from deferred FluentValidators + stored-data rules), not
+/// <see cref="FluentValidation.ValidationException"/>. Real handlers are covered by integration tests.
 /// </summary>
 [TestFixture]
 public class InProcessCreateCommandValidationTests
@@ -54,6 +50,19 @@ public class InProcessCreateCommandValidationTests
     }
 
     [Test]
+    public void FindRuleViolations_ShouldReportDatedTitleShape_WhenTitleIsBlankAndDueDatesOk()
+    {
+        var command = new CreateDatedWorkOrdersCommand(
+            "creator",
+            "assignee",
+            "",
+            "Desc",
+            [new DateOnly(2026, 8, 29)]);
+
+        command.FindRuleViolations().ShouldContain("'Title' must not be empty.");
+    }
+
+    [Test]
     public void FindRuleViolations_ShouldReportDuplicateVendor_WhenNameMatchesIgnoringCase()
     {
         var command = new CreateVendorCommand("acme", null, null, null, null);
@@ -64,11 +73,11 @@ public class InProcessCreateCommandValidationTests
     }
 
     [Test]
-    public void FindRuleViolations_ShouldIgnoreVendorFieldShape_WhenNameIsBlank()
+    public void FindRuleViolations_ShouldReportVendorNameShape_WhenNameIsBlank()
     {
         var command = new CreateVendorCommand("  ", null, null, null, null);
 
-        command.FindRuleViolations([]).ShouldBeEmpty();
+        command.FindRuleViolations([]).ShouldContain("'Name' must not be empty.");
     }
 
     [Test]
@@ -82,75 +91,11 @@ public class InProcessCreateCommandValidationTests
     }
 
     [Test]
-    public void FindRuleViolations_ShouldIgnoreTeamFieldShape_WhenNameIsBlank()
+    public void FindRuleViolations_ShouldReportTeamNameShape_WhenNameIsBlank()
     {
         var command = new CreateTeamCommand("", null, []);
 
-        command.FindRuleViolations([], []).ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task Bus_ShouldReturnFailedDatedResult_WhenDueDatesEmptyWithoutValidationException()
-    {
-        var bus = BusWithoutDeferredValidators();
-        var command = new CreateDatedWorkOrdersCommand("a", "b", "t", "d", []);
-
-        var result = await bus.Send(command);
-
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldBe(CreateDatedWorkOrdersCommand.AtLeastOneDueDateRequired);
-        result.WorkOrders.ShouldBeEmpty();
-    }
-
-    [Test]
-    public async Task Bus_ShouldReturnFailedDatedResult_WhenDueDatesExceedTenWithoutValidationException()
-    {
-        var dueDates = Enumerable.Range(0, 11).Select(i => new DateOnly(2026, 1, 1).AddDays(i)).ToList();
-        var bus = BusWithoutDeferredValidators();
-        var command = new CreateDatedWorkOrdersCommand("a", "b", "t", "d", dueDates);
-
-        var result = await bus.Send(command);
-
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldBe(CreateDatedWorkOrdersCommand.BatchCannotExceed);
-    }
-
-    [Test]
-    public async Task Bus_ShouldReturnFailedVendorResult_WhenFindRuleViolationsReportsDuplicate()
-    {
-        var bus = BusWithoutDeferredValidators(existingVendorNames: ["Acme"]);
-        var command = new CreateVendorCommand("acme", "HVAC", null, null, null);
-
-        var result = await bus.Send(command);
-
-        result.Succeeded.ShouldBeFalse();
-        result.Message.ShouldBe("A vendor named 'acme' already exists.");
-        result.Id.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task Bus_ShouldReturnFailedTeamResult_WhenFindRuleViolationsReportsUnknownMember()
-    {
-        var bus = BusWithoutDeferredValidators();
-        var command = new CreateTeamCommand("Grounds", null, ["ghost"]);
-
-        var result = await bus.Send(command);
-
-        result.Succeeded.ShouldBeFalse();
-        result.Message.ShouldBe("No employee with user name 'ghost' exists.");
-        result.Id.ShouldBeNull();
-    }
-
-    [Test]
-    public async Task Bus_ShouldReachVendorHandler_WhenBlankNameWouldFailHttpFluentValidation()
-    {
-        var bus = BusWithoutDeferredValidators();
-        var command = new CreateVendorCommand("", "HVAC", null, null, null);
-
-        var result = await bus.Send(command);
-
-        result.Succeeded.ShouldBeTrue();
-        result.Message.ShouldBe("handler-accepted-blank-name");
+        command.FindRuleViolations([], []).ShouldContain("'Name' must not be empty.");
     }
 
     [Test]
@@ -170,59 +115,12 @@ public class InProcessCreateCommandValidationTests
             .ShouldBeTrue();
     }
 
-    private static Bus BusWithoutDeferredValidators(IReadOnlyList<string>? existingVendorNames = null)
+    [Test]
+    public void ErrorMessages_ShouldMatchHttpFluentValidation_WhenVendorNameIsBlank()
     {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblyContaining<InProcessCreateCommandValidationTests>();
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-        });
-        services.AddTransient<IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>,
-            CharacterizingDatedHandler>();
-        services.AddTransient<IRequestHandler<CreateVendorCommand, CreateVendorResult>>(
-            _ => new CharacterizingVendorHandler(existingVendorNames ?? []));
-        services.AddTransient<IRequestHandler<CreateTeamCommand, CreateTeamResult>, CharacterizingTeamHandler>();
-        return new Bus(services.BuildServiceProvider().GetRequiredService<IMediator>());
-    }
+        var command = new CreateVendorCommand("", "HVAC", null, null, null);
 
-    private sealed class CharacterizingDatedHandler
-        : IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>
-    {
-        public Task<CreateDatedWorkOrdersResult> Handle(
-            CreateDatedWorkOrdersCommand request,
-            CancellationToken cancellationToken)
-        {
-            var violations = request.FindRuleViolations();
-            return Task.FromResult(violations.Count > 0
-                ? CreateDatedWorkOrdersResult.Failed(string.Join(" ", violations))
-                : CreateDatedWorkOrdersResult.Created([]));
-        }
-    }
-
-    private sealed class CharacterizingVendorHandler(IReadOnlyList<string> existingNames)
-        : IRequestHandler<CreateVendorCommand, CreateVendorResult>
-    {
-        public Task<CreateVendorResult> Handle(CreateVendorCommand request, CancellationToken cancellationToken)
-        {
-            var violations = request.FindRuleViolations(existingNames);
-            if (violations.Count > 0)
-            {
-                return Task.FromResult(new CreateVendorResult(false, string.Join(" ", violations), null));
-            }
-
-            return Task.FromResult(new CreateVendorResult(true, "handler-accepted-blank-name", Guid.Empty));
-        }
-    }
-
-    private sealed class CharacterizingTeamHandler : IRequestHandler<CreateTeamCommand, CreateTeamResult>
-    {
-        public Task<CreateTeamResult> Handle(CreateTeamCommand request, CancellationToken cancellationToken)
-        {
-            var violations = request.FindRuleViolations([], []);
-            return Task.FromResult(violations.Count > 0
-                ? new CreateTeamResult(false, string.Join(" ", violations), null)
-                : new CreateTeamResult(true, "created", Guid.Empty));
-        }
+        InProcessCreateCommandShapeValidation.ErrorMessages(command)
+            .ShouldBe(new CreateVendorCommandValidator().Validate(command).Errors.Select(e => e.ErrorMessage));
     }
 }
