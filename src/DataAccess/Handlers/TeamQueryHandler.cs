@@ -13,7 +13,9 @@ public class TeamQueryHandler(DataContext context)
     : IRequestHandler<TeamsQuery, Team[]>,
         IRequestHandler<CreateTeamCommand, CreateTeamResult>
 {
-    private readonly DataContext context = context;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
 
     /// <summary>
     /// Returns every team with its members, ordered by name ignoring case. Sorting happens in memory so
@@ -22,7 +24,7 @@ public class TeamQueryHandler(DataContext context)
     public async ValueTask<Team[]> Handle(TeamsQuery request, CancellationToken cancellationToken = default)
     {
         var ct = cancellationToken;
-        var teams = await context.Set<Team>()
+        var teams = await _context.Set<Team>()
             .Include(t => t.Members)
             .ToListAsync(ct);
 
@@ -37,10 +39,10 @@ public class TeamQueryHandler(DataContext context)
         CancellationToken cancellationToken = default)
     {
         var ct = cancellationToken;
-        var existingNames = await context.Set<Team>()
+        var existingNames = await _context.Set<Team>()
             .Select(t => t.Name)
             .ToListAsync(ct);
-        var employees = await context.Set<Employee>().ToListAsync(ct);
+        var employees = await _context.Set<Employee>().ToListAsync(ct);
 
         var violations = request.FindRuleViolations(existingNames, employees.Select(e => e.UserName));
         if (violations.Count > 0)
@@ -55,8 +57,8 @@ public class TeamQueryHandler(DataContext context)
             team.AddMember(employee);
         }
 
-        context.Add(team);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Add(team);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return new CreateTeamResult(true, $"Team '{team.Name}' created.", team.Id);
     }

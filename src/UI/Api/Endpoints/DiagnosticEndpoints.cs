@@ -14,7 +14,7 @@ public static class DiagnosticEndpoints
         app.MapGet("_diagnostics/services", Services);
     }
 
-    public static IResult ResetDbConnections(IDatabaseConfiguration databaseConfiguration)
+    private static IResult ResetDbConnections(IDatabaseConfiguration databaseConfiguration)
     {
         databaseConfiguration.ResetConnectionPool();
         return TypedResults.Text("Connection pools cleared", "text/plain; charset=utf-8");

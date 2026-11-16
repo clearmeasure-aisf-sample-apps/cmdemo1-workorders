@@ -17,7 +17,7 @@ public class DiagnosticEndpointsTests
         var result = DiagnosticEndpoints.Services(new RegisteredServices(services));
 
         result.ShouldContain("Singleton System.TimeProvider -> instance of");
-        result.ShouldContain($"Transient System.Collections.Generic.IComparer`1[[System.String");
+        result.ShouldContain("Transient System.Collections.Generic.IComparer`1[[System.String");
         result.ShouldContain($"-> {typeof(OrdinalComparer).FullName}");
     }
 

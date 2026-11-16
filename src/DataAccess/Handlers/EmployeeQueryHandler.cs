@@ -10,14 +10,16 @@ public class EmployeeQueryHandler(DataContext context)
     : IRequestHandler<EmployeeByUserNameQuery, Employee>,
         IRequestHandler<EmployeeGetAllQuery, Employee[]>
 {
-    private readonly DataContext context = context;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
 
     public async ValueTask<Employee> Handle(EmployeeByUserNameQuery request,
         CancellationToken cancellationToken = default)
     {
         var userName = request.Username;
         var ct = cancellationToken;
-        var employee = await context.Set<Employee>()
+        var employee = await _context.Set<Employee>()
             .Include("Roles")
             .SingleAsync(emp => emp.UserName == userName, ct);
         return employee;
@@ -33,7 +35,7 @@ public class EmployeeQueryHandler(DataContext context)
         // returns the first skip + take employees and the skip happens here: with both Skip and Take, EF 11's
         // precompiled (Native AOT) query names both SQL parameters @p and the page comes back empty.
         var end = skip + take;
-        var firstEmployees = await context.Set<Employee>()
+        var firstEmployees = await _context.Set<Employee>()
             .AsNoTracking()
             .Include(employee => employee.Roles)
             .OrderBy(employee => employee.LastName)

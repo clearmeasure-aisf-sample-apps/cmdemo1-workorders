@@ -25,7 +25,7 @@ public sealed class FeatureDisabledProblemFilter : IEndpointFilter
     }
 
     /// <summary>The 403 problem naming the feature <paramref name="disabled"/> reports.</summary>
-    public static IResult Problem(FeatureDisabledException disabled, HttpContext httpContext) =>
+    private static IResult Problem(FeatureDisabledException disabled, HttpContext httpContext) =>
         TypedResults.Problem(new ProblemDetails
         {
             Type = ProblemType,

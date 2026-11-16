@@ -10,8 +10,7 @@ public class ErrorPageTests
     [Test]
     public async Task WriteAsync_Should_ShowRequestId_FromTraceIdentifier()
     {
-        var httpContext = new DefaultHttpContext { TraceIdentifier = "trace-8970" };
-        httpContext.Response.Body = new MemoryStream();
+        var httpContext = new DefaultHttpContext { TraceIdentifier = "trace-8970", Response = { Body = new MemoryStream() } };
 
         await ErrorPage.WriteAsync(httpContext);
 

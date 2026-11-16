@@ -12,13 +12,14 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class ReformatWorkOrderCommandHandler(DbContext dbContext)
     : IRequestHandler<ReformatWorkOrderCommand, WorkOrder?>
 {
-    private readonly DataContext dbContext = (DataContext)dbContext;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    private readonly DataContext _dbContext = (DataContext)dbContext;
 
     public async ValueTask<WorkOrder?> Handle(ReformatWorkOrderCommand request, CancellationToken cancellationToken)
     {
         var number = request.Number;
         var ct = cancellationToken;
-        var workOrder = await dbContext.Set<WorkOrder>()
+        var workOrder = await _dbContext.Set<WorkOrder>()
             .SingleOrDefaultAsync(order => order.Number == number, ct);
         if (workOrder is null)
         {
@@ -26,7 +27,7 @@ public class ReformatWorkOrderCommandHandler(DbContext dbContext)
         }
 
         workOrder.ApplyReformat(request.Title, request.Description);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return workOrder;
     }
 }

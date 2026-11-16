@@ -11,10 +11,11 @@ public sealed class RepositoryCheckout
 
     private static readonly Lazy<RepositoryCheckout> CurrentCheckout = new(FindFromTestDirectory);
 
-    private static readonly HashSet<string> SkippedDirectories = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> SkippedDirectories =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "bin", "obj", "Generated", "TestResults", "node_modules",
-    };
+    ];
 
     private static readonly string[] GeneratedSuffixes = [".g.cs", ".designer.cs"];
 

@@ -8,6 +8,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Mappings;
 /// The generated model is provider-specific, so it is generated for SQL Server, the production database.
 /// Nothing connects to this connection string.
 /// </summary>
+// ReSharper disable once UnusedType.Global -- EF's design-time tooling discovers this factory by reflection.
 public class DesignTimeDataContextFactory : IDesignTimeDbContextFactory<DataContext>
 {
     public DataContext CreateDbContext(string[] args) => new(new DesignTimeDatabaseConfiguration());

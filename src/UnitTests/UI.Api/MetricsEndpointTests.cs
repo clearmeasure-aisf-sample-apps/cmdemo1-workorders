@@ -79,7 +79,7 @@ public class MetricsEndpointTests
 
     private sealed class MetricsUnderTest(TimeProvider timeProvider, IHttpRequestMetricsCounter requestCounter)
     {
-        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        private HttpContext HttpContext { get; } = new DefaultHttpContext();
         public HttpRequest Request => HttpContext.Request;
         public HttpResponse Response => HttpContext.Response;
         public IResult GetSummary() => MetricsEndpoint.GetSummary(HttpContext, timeProvider, requestCounter);

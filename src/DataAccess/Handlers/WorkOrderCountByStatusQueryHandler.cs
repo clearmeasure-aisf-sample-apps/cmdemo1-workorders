@@ -14,13 +14,15 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class WorkOrderCountByStatusQueryHandler(DataContext context) :
     IRequestHandler<WorkOrderCountByStatusQuery, Dictionary<string, int>>
 {
-    private readonly DataContext context = context;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
 
     public async ValueTask<Dictionary<string, int>> Handle(WorkOrderCountByStatusQuery request,
         CancellationToken cancellationToken = default)
     {
         var ct = cancellationToken;
-        var grouped = await context.Set<WorkOrder>()
+        var grouped = await _context.Set<WorkOrder>()
             .AsNoTracking()
             .GroupBy(workOrder => workOrder.Status)
             .Select(group => new { Status = group.Key, Count = group.Count() })

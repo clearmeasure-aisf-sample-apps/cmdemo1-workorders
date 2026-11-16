@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.Net.Http.Headers;
 
 // ReSharper disable UnusedMethodReturnValue.Global -- Qodana C6 (#9039): fluent

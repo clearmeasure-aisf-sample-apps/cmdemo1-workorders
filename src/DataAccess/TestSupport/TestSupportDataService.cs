@@ -17,6 +17,7 @@ public sealed class TestSupportDataService(
     private const string UserNamePrefix = "test_";
 
     // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
     private readonly DataContext _context = context;
 
     /// <summary>Creates an employee whose user name carries the request test tag.</summary>

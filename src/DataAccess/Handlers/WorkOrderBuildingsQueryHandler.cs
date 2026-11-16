@@ -12,12 +12,14 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class WorkOrderBuildingsQueryHandler(DataContext context) : IRequestHandler<WorkOrderBuildingsQuery, string[]>
 {
-    private readonly DataContext context = context;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
 
     public async ValueTask<string[]> Handle(WorkOrderBuildingsQuery request, CancellationToken cancellationToken = default)
     {
         var ct = cancellationToken;
-        var buildings = await context.Set<WorkOrder>().AsNoTracking()
+        var buildings = await _context.Set<WorkOrder>().AsNoTracking()
             .Where(wo => wo.Building != null)
             .Select(wo => wo.Building!)
             .Distinct()

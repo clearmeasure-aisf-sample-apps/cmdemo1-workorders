@@ -30,7 +30,9 @@ internal sealed partial class McpJsonContext : JsonSerializerContext
     /// Options for <c>WithTools</c>: the MCP SDK's own contract types plus the tool parameter types above, so the
     /// SDK builds input schemas and binds arguments from generated metadata.
     /// </summary>
-    public static JsonSerializerOptions ToolOptions { get; } = new(McpJsonUtilities.DefaultOptions)
+    /// <remarks>Built on first use: <c>Default</c> is initialized in the generated part, and static initializer order
+    /// across partial files is not defined.</remarks>
+    public static JsonSerializerOptions ToolOptions => field ??= new(McpJsonUtilities.DefaultOptions)
     {
         TypeInfoResolver = JsonTypeInfoResolver.Combine(McpJsonUtilities.DefaultOptions.TypeInfoResolver, Default)
     };

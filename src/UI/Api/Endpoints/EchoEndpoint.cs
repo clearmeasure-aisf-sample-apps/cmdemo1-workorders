@@ -9,13 +9,14 @@ public static class EchoEndpoint
 {
     internal const string RedactedValue = "[REDACTED]";
 
-    private static readonly HashSet<string> SensitiveHeaderNames = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> SensitiveHeaderNames =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "Authorization",
         "X-Api-Key",
         "Cookie",
         "Set-Cookie"
-    };
+    ];
 
     public static void Map(IEndpointRouteBuilder api) => api.MapGet("echo", Get).AllowAnonymous();
 

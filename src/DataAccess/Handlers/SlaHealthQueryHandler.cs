@@ -15,7 +15,9 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRequestHandler<SlaHealthQuery, SlaHealth>
 {
-    private readonly DataContext context = context;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
 
     public async ValueTask<SlaHealth> Handle(SlaHealthQuery request, CancellationToken cancellationToken = default)
     {
@@ -46,7 +48,7 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         var (windowStart, windowEnd) = SlaHealth.CompletionWindow(firstMonth.FirstDay, lastMonth.LastDay);
         var complete = WorkOrderStatus.Complete;
         var ct = cancellationToken;
-        var rows = await context.Set<WorkOrder>()
+        var rows = await _context.Set<WorkOrder>()
             .AsNoTracking()
             .IgnoreAutoIncludes()
             .Where(wo => wo.Status == complete

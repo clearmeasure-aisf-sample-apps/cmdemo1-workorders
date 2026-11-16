@@ -10,11 +10,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 [TestFixture]
 public class DetailedHealthEndpointTests
 {
-    private sealed class FixedUtcTimeProvider(DateTime utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
-    }
-
     private sealed class StubDetailedHealthReportProvider(DetailedHealthReport report) : IDetailedHealthReportProvider
     {
         public Task<DetailedHealthReport> GetReportAsync(CancellationToken cancellationToken = default) =>
@@ -106,14 +101,13 @@ public class DetailedHealthEndpointTests
     }
 
     private static DetailedHealthUnderTest CreateEndpoint(DateTime fixedTime) =>
-        new(new FixedUtcTimeProvider(fixedTime), new StubDetailedHealthReportProvider(FixedReport(fixedTime)));
+        new(new StubDetailedHealthReportProvider(FixedReport(fixedTime)));
 
-    private sealed class DetailedHealthUnderTest(TimeProvider timeProvider, IDetailedHealthReportProvider reportProvider)
+    private sealed class DetailedHealthUnderTest(IDetailedHealthReportProvider reportProvider)
     {
-        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        private HttpContext HttpContext { get; } = new DefaultHttpContext();
         public HttpRequest Request => HttpContext.Request;
         public HttpResponse Response => HttpContext.Response;
-        public IResult Get() => DetailedHealthEndpoint.Get(HttpContext, timeProvider);
         public Task<IResult> GetDetailed(CancellationToken cancellationToken) =>
             DetailedHealthEndpoint.GetDetailed(HttpContext, reportProvider, cancellationToken);
     }

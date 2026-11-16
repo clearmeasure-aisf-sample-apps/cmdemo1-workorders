@@ -13,7 +13,9 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
     IRequestHandler<SaveSearchViewCommand, SavedSearchViewResult>,
     IRequestHandler<DeleteSearchViewCommand, SavedSearchViewResult>
 {
-    private readonly DataContext context = context;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
     private const string UnknownUser = "User not found.";
 
     public async ValueTask<SavedSearchView[]> Handle(SavedSearchViewsQuery request, CancellationToken cancellationToken = default)
@@ -23,7 +25,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
 
         var employeeId = employee.Id;
         var ct = cancellationToken;
-        var views = await context.Set<SavedSearchView>().AsNoTracking()
+        var views = await _context.Set<SavedSearchView>().AsNoTracking()
             .Where(v => v.EmployeeId == employeeId)
             .ToListAsync(ct);
 
@@ -37,7 +39,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
 
         var employeeId = employee.Id;
         var ct = cancellationToken;
-        var existingNames = await context.Set<SavedSearchView>().AsNoTracking()
+        var existingNames = await _context.Set<SavedSearchView>().AsNoTracking()
             .Where(v => v.EmployeeId == employeeId)
             .Select(v => v.Name)
             .ToListAsync(ct);
@@ -45,7 +47,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
         var error = SavedSearchView.ValidateNew(request.Name, request.Query, existingNames);
         if (error != null) return SavedSearchViewResult.Failure(error);
 
-        context.Add(new SavedSearchView
+        _context.Add(new SavedSearchView
         {
             Id = Guid.NewGuid(),
             EmployeeId = employee.Id,
@@ -53,7 +55,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
             Query = request.Query,
             CreatedDate = time.GetUtcNow().DateTime
         });
-        await context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
         return SavedSearchViewResult.Success;
     }
 
@@ -65,12 +67,12 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
         var viewId = request.Id;
         var employeeId = employee.Id;
         var ct = cancellationToken;
-        var view = await context.Set<SavedSearchView>()
+        var view = await _context.Set<SavedSearchView>()
             .SingleOrDefaultAsync(v => v.Id == viewId && v.EmployeeId == employeeId, ct);
         if (view == null) return SavedSearchViewResult.Failure("View not found.");
 
-        context.Remove(view);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Remove(view);
+        await _context.SaveChangesAsync(cancellationToken);
         return SavedSearchViewResult.Success;
     }
 
@@ -78,6 +80,6 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
     {
         var name = userName;
         var ct = cancellationToken;
-        return context.Set<Employee>().AsNoTracking().SingleOrDefaultAsync(e => e.UserName == name, ct);
+        return _context.Set<Employee>().AsNoTracking().SingleOrDefaultAsync(e => e.UserName == name, ct);
     }
 }

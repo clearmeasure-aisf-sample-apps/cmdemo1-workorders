@@ -26,7 +26,7 @@ public static class SingleApiEndpoint
 
     public static async Task<string> Post(WebServiceMessage webServiceMessage, IBus bus, ILoggerFactory? loggerFactory = null)
     {
-        var logger = (ILogger?)loggerFactory?.CreateLogger(typeof(SingleApiEndpoint).FullName!) ?? NullLogger.Instance;
+        var logger = loggerFactory?.CreateLogger(typeof(SingleApiEndpoint).FullName!) ?? NullLogger.Instance;
         logger.LogDebug("Receiving {messageType}", webServiceMessage.TypeName);
         var bodyObject = webServiceMessage.GetBodyObject();
 

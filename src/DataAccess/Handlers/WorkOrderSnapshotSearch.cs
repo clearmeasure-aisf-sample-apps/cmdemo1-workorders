@@ -32,7 +32,7 @@ internal static class WorkOrderSnapshotSearch
         filters.Add(NameFilter(specification.Room, specification.NoRoom, wo => wo.RoomNumber));
         AddValue(filters, specification.CompletedWithinDays, snapshot.IsCompletedWithin);
         Add(filters, Blank(specification.SearchText),
-            text => WorkOrderSearchText.Matches(text.Trim().ToLower()).Compile());
+            text => WorkOrderSearchText.Matches(text.Trim().ToLowerInvariant()).Compile());
 
         return wo => filters.TrueForAll(filter => filter(wo));
     }

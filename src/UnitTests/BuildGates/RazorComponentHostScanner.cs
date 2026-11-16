@@ -20,13 +20,14 @@ internal static class RazorComponentHostScanner
         "src/UI/Client",
     ];
 
-    private static readonly HashSet<string> TerminalFileNames = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> TerminalFileNames =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "MainLayout.razor",
         "NavMenu.razor",
         "PrintLayout.razor",
         "App.razor",
-    };
+    ];
 
     /// <summary>
     /// Checkout-relative component path → host pages/layouts that ultimately render it.

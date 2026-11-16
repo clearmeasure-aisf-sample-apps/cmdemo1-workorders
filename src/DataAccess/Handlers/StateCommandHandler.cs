@@ -1,4 +1,3 @@
-using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -34,7 +33,8 @@ public class StateCommandHandler(
         IRequestHandler<WaitingOnVendorToInProgressCommand, StateCommandResult>,
         IRequestHandler<WaitingOnVendorToCancelledCommand, StateCommandResult>
 {
-    private readonly DataContext dbContext = (DataContext)dbContext;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    private readonly DataContext _dbContext = (DataContext)dbContext;
 
     public ValueTask<StateCommandResult> Handle(SaveDraftCommand request, CancellationToken cancellationToken) =>
         Handle((StateCommandBase)request, cancellationToken);
@@ -101,7 +101,7 @@ public class StateCommandHandler(
         WorkOrderStatusTransition transition,
         CancellationToken cancellationToken)
     {
-        dbContext.ChangeTracker.Clear();
+        _dbContext.ChangeTracker.Clear();
         var persisted = order.Id == Guid.Empty
             ? await InsertNewAsync(order, cancellationToken)
             : await UpdateExistingAsync(order, cancellationToken);
@@ -109,10 +109,10 @@ public class StateCommandHandler(
         // Recorded in the same SaveChanges (one transaction) as the work order.
         if (transition.ChangeOf(persisted) is { } statusChange)
         {
-            dbContext.Add(statusChange);
+            _dbContext.Add(statusChange);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return persisted;
     }
 
@@ -120,13 +120,13 @@ public class StateCommandHandler(
     {
         var number = order.Number;
         var ct = cancellationToken;
-        if (await dbContext.Set<WorkOrder>().AnyAsync(w => w.Number == number, ct))
+        if (await _dbContext.Set<WorkOrder>().AnyAsync(w => w.Number == number, ct))
         {
             throw new InvalidOperationException($"Work order number {order.Number} already exists.");
         }
 
-        dbContext.Attach(order);
-        dbContext.Add(order);
+        _dbContext.Attach(order);
+        _dbContext.Add(order);
         return order;
     }
 
@@ -134,10 +134,10 @@ public class StateCommandHandler(
     {
         var id = order.Id;
         var ct = cancellationToken;
-        var existing = await dbContext.Set<WorkOrder>()
+        var existing = await _dbContext.Set<WorkOrder>()
             .SingleAsync(workOrder => workOrder.Id == id, ct);
 
-        dbContext.Entry(existing).CurrentValues.SetValues(order);
+        _dbContext.Entry(existing).CurrentValues.SetValues(order);
         // Attachments remain database-owned; remoted commands do not carry a complete collection.
         await ApplyRelationshipsAsync(existing, order, cancellationToken);
         return existing;
@@ -160,7 +160,7 @@ public class StateCommandHandler(
 
     private async Task<Employee> ResolveEmployeeAsync(Guid employeeId, CancellationToken cancellationToken)
     {
-        var tracked = dbContext.Set<Employee>().Local
+        var tracked = _dbContext.Set<Employee>().Local
             .FirstOrDefault(employee => employee.Id == employeeId);
         if (tracked != null)
         {
@@ -169,7 +169,7 @@ public class StateCommandHandler(
 
         var id = employeeId;
         var ct = cancellationToken;
-        return await dbContext.Set<Employee>()
+        return await _dbContext.Set<Employee>()
             .SingleAsync(employee => employee.Id == id, ct);
     }
 }

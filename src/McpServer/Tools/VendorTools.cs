@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using FluentValidation;
 using ModelContextProtocol.Server;

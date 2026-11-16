@@ -463,11 +463,11 @@ jobs:
           fetch-depth: 0
 
       - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2025.2
+        uses: JetBrains/qodana-action@v2026.2.2
         # Hard gate (#8846): failThreshold 0 + committed baseline (qodana.sarif.json).
         # Unchanged baselined findings do not fail; new/absent problems do.
         with:
-          args: --linter,jetbrains/qodana-cdnet:latest,--solution,src/ChurchBulletin.sln,--baseline,qodana.sarif.json,--fail-threshold,0
+          args: --linter,jetbrains/qodana-cdnet:2026.3-eap,--solution,src/ChurchBulletin.sln,--baseline,qodana.sarif.json,--fail-threshold,0
           results-dir: ${{ runner.temp }}/qodana/results
           upload-result: true
           artifact-name: qodana-report

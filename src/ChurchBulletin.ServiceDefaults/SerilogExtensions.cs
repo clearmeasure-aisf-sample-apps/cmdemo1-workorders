@@ -1,6 +1,5 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Formatting.Compact;
@@ -80,14 +79,5 @@ public static class SerilogExtensions
     {
         app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
         return app;
-    }
-
-    /// <summary>
-    /// Flushes Serilog sinks when the generic host stops.
-    /// </summary>
-    public static IHost UseSerilogShutdown(this IHost host)
-    {
-        host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopped.Register(Log.CloseAndFlush);
-        return host;
     }
 }

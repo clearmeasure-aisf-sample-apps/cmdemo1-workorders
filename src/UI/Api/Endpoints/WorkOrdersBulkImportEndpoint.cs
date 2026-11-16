@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UI.Api.Endpoints;
 public static class WorkOrdersBulkImportEndpoint
 {
     /// <summary>Largest accepted request body: 10 MiB.</summary>
-    public const long MaxRequestBodyBytes = 10 * 1024 * 1024;
+    private const long MaxRequestBodyBytes = 10 * 1024 * 1024;
 
     public static void Map(IEndpointRouteBuilder api) =>
         api.MapPost("work-orders/bulk-import", Post)

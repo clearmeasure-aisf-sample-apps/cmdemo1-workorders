@@ -46,6 +46,9 @@ public static class McpServiceRegistry
         // Source-generated at build time: each handler is registered exactly once and Send is a type switch, with no
         // reflection, so it works under Native AOT. Transient matches the old MediatR lifetimes (handlers take DbContext).
         // Behaviors run in array order, outermost first: validation, then the feature-flag gate.
+        // Mediator's source generator reads these options from the call syntax, in the documented form with the
+        // explicit MediatorOptions parameter type.
+        // ReSharper disable once RedundantLambdaParameterType
         services.AddMediator((MediatorOptions options) =>
         {
             // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.
@@ -71,7 +74,7 @@ public static class McpServiceRegistry
     /// commands in <see cref="HttpEnvelopeValidationDeferral"/> are validated on the HTTP envelope only (#1824).
     /// UI.Server registers the same set.
     /// </summary>
-    public static IServiceCollection AddRequestValidators(this IServiceCollection services)
+    public static void AddRequestValidators(this IServiceCollection services)
     {
         services.AddTransient<IValidator<DeleteSearchViewCommand>, DeleteSearchViewCommandValidator>();
         services.AddTransient<IValidator<EmployeeByUserNameQuery>, EmployeeByUserNameQueryValidator>();
@@ -91,6 +94,5 @@ public static class McpServiceRegistry
         services.AddTransient<IValidator<WorkOrderSearchSummaryQuery>, WorkOrderSearchSummaryQueryValidator>();
         services.AddTransient<IValidator<WorkOrderSpecificationQuery>, WorkOrderSpecificationQueryValidator>();
         services.AddTransient<IValidator<WorkOrderStatusHistoryQuery>, WorkOrderStatusHistoryQueryValidator>();
-        return services;
     }
 }

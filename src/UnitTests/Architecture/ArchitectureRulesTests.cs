@@ -382,11 +382,12 @@ public class ArchitectureRulesTests
         comparison.IsClean.ShouldBeTrue(comparison.Report(baselineFile));
     }
 
-    private static readonly HashSet<string> UiServerDbContextAllowList = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> UiServerDbContextAllowList =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "src/UI/Server/UIServiceRegistry.cs",
         "src/UI/Server/TestingDatabaseStartupFilter.cs",
-    };
+    ];
 
     private static IReadOnlyList<string> WorkOrderBoolExpressionsOutsideCore(RepositoryCheckout checkout)
     {

@@ -9,6 +9,8 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// <summary>Reads the work orders a bulk action targets, in one query.</summary>
 public class WorkOrdersByNumbersQueryHandler(DataContext context) : IRequestHandler<WorkOrdersByNumbersQuery, WorkOrder[]>
 {
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
     private readonly DataContext _context = context;
 
     public async ValueTask<WorkOrder[]> Handle(WorkOrdersByNumbersQuery request,

@@ -15,6 +15,8 @@ public record WorkOrdersByNumbersQuery(string[] Numbers) : IRequest<WorkOrder[]>
     /// <summary>The distinct, non-blank numbers to read. More than <see cref="MaxNumbers"/> is refused.</summary>
     public string[] DistinctNumbers()
     {
+        // A remoted query whose JSON omits Numbers deserializes with null despite the annotation.
+        // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
         var numbers = (Numbers ?? [])
             .Where(number => !string.IsNullOrWhiteSpace(number))
             .Distinct(StringComparer.Ordinal)
@@ -22,4 +24,5 @@ public record WorkOrdersByNumbersQuery(string[] Numbers) : IRequest<WorkOrder[]>
         return numbers.Length <= MaxNumbers
             ? numbers
             : throw new InvalidOperationException($"WorkOrdersByNumbersQuery accepts at most {MaxNumbers} numbers.");
-    }}
+    }
+}

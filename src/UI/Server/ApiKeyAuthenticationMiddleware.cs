@@ -84,8 +84,9 @@ internal static class ApiKeyValidationRules
 
 internal static class ApiPublicPathRules
 {
-    private static readonly HashSet<string> PublicLeaves = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> PublicLeaves =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "version",
         "time",
         "ping",
@@ -102,7 +103,7 @@ internal static class ApiPublicPathRules
         "work-orders/status-counts",
         "health",
         "health/detailed"
-    };
+    ];
 
     internal static bool TryGetLeafSegment(string pathValue, out string leaf)
     {

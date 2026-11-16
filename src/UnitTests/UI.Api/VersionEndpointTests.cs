@@ -86,7 +86,7 @@ public class VersionEndpointTests
 
     private sealed class EndpointUnderTest(Func<HttpContext, IResult> get)
     {
-        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        private HttpContext HttpContext { get; } = new DefaultHttpContext();
         public HttpRequest Request => HttpContext.Request;
         public HttpResponse Response => HttpContext.Response;
         public IResult Get() => get(HttpContext);

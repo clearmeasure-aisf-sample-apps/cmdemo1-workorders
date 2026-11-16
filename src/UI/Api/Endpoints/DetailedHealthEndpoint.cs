@@ -15,7 +15,7 @@ public static class DetailedHealthEndpoint
     /// Lightweight liveness/readiness probe used by the load balancer and container orchestrator.
     /// Returns a simple timestamp JSON payload. Performs no deep dependency checks.
     /// </summary>
-    public static IResult Get(HttpContext context, TimeProvider timeProvider) =>
+    private static IResult Get(HttpContext context, TimeProvider timeProvider) =>
         ConditionalGetEtag.ConditionalJson(context, SimpleHealthResponseBuilder.Build(timeProvider));
 
     /// <summary>

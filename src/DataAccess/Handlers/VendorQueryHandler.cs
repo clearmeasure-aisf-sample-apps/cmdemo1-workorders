@@ -13,7 +13,9 @@ public class VendorQueryHandler(DataContext context)
     : IRequestHandler<VendorsQuery, Vendor[]>,
         IRequestHandler<CreateVendorCommand, CreateVendorResult>
 {
-    private readonly DataContext context = context;
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
 
     /// <summary>
     /// Returns active vendors first, then inactive ones, each group ordered by name ignoring case. Sorting
@@ -22,7 +24,7 @@ public class VendorQueryHandler(DataContext context)
     public async ValueTask<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken = default)
     {
         var ct = cancellationToken;
-        var vendors = await context.Set<Vendor>().ToListAsync(ct);
+        var vendors = await _context.Set<Vendor>().ToListAsync(ct);
 
         return vendors
             .OrderByDescending(v => v.IsActive)
@@ -38,7 +40,7 @@ public class VendorQueryHandler(DataContext context)
         CancellationToken cancellationToken = default)
     {
         var ct = cancellationToken;
-        var existingNames = await context.Set<Vendor>()
+        var existingNames = await _context.Set<Vendor>()
             .Select(v => v.Name)
             .ToListAsync(ct);
 
@@ -57,8 +59,8 @@ public class VendorQueryHandler(DataContext context)
             PhoneNumber = request.PhoneNumber,
             IsActive = request.IsActive
         };
-        context.Add(vendor);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Add(vendor);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return new CreateVendorResult(true, $"Vendor '{vendor.Name}' created.", vendor.Id);
     }

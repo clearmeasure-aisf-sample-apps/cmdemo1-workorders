@@ -58,7 +58,7 @@ public static class ApiEndpoints
     }
 
     /// <summary>Puts <paramref name="group"/> in contract version 1.0.</summary>
-    public static RouteGroupBuilder Versioned(RouteGroupBuilder group, ApiVersionSet versions)
+    private static RouteGroupBuilder Versioned(RouteGroupBuilder group, ApiVersionSet versions)
     {
         group.WithApiVersionSet(versions).HasApiVersion(new ApiVersion(1, 0));
         return group;

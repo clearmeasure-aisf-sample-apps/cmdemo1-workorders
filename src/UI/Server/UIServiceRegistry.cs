@@ -54,6 +54,9 @@ public static class UiServiceRegistry
         services.AddSingleton<RealtimeNotificationHub>();
         services.AddSingleton<IRealtimeNotificationHub>(sp => sp.GetRequiredService<RealtimeNotificationHub>());
         // Behaviors run in array order, outermost first. Transient matches the old MediatR lifetimes (handlers take DbContext).
+        // Mediator's source generator reads these options from the call syntax, in the documented form with the
+        // explicit MediatorOptions parameter type.
+        // ReSharper disable once RedundantLambdaParameterType
         services.AddMediator((MediatorOptions options) =>
         {
             // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.

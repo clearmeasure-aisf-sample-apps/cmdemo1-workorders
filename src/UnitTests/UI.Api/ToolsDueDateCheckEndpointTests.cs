@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,7 @@ public class ToolsDueDateCheckEndpointTests
         var fixedClock = new FixedTimeProvider(fixedNow);
         var endpoint = CreateEndpoint(fixedClock);
 
-        var result = endpoint.Get(today.ToString("yyyy-MM-dd"));
+        var result = endpoint.Get(today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
         var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();

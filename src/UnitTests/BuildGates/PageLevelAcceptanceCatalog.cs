@@ -9,22 +9,24 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// </summary>
 internal static class PageLevelAcceptanceCatalog
 {
-    private static readonly HashSet<string> AlwaysPageLevelBases = new(StringComparer.Ordinal)
-    {
+    private static readonly HashSet<string> AlwaysPageLevelBases =
+    [
+        with(StringComparer.Ordinal),
         "AppAcceptanceTestBase",
         "AuthAcceptanceTestBase",
         "WorkOrderAcceptanceTestBase",
         "BuildingsAcceptanceTestBase",
         "TeamsAndVendorsAcceptanceTestBase",
         "AiAgentsAcceptanceTestBase",
-    };
+    ];
 
-    private static readonly HashSet<string> BrowserUnlessDisabledBases = new(StringComparer.Ordinal)
-    {
+    private static readonly HashSet<string> BrowserUnlessDisabledBases =
+    [
+        with(StringComparer.Ordinal),
         "McpAcceptanceTestBase",
         "AcceptanceTestBase",
         "AcceptanceApiTestBase",
-    };
+    ];
 
     private static readonly Regex NamespaceLine = new(
         @"^namespace\s+(?<name>[\w.]+)\s*;",

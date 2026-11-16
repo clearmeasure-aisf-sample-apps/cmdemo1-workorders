@@ -21,7 +21,7 @@ namespace ClearMeasure.Bootcamp.UI.Client;
 public static class UIClientServiceRegistry
 {
     /// <summary>Registers authentication, the remotable bus, client services and the client health checks.</summary>
-    public static IServiceCollection AddUiClientServices(this IServiceCollection services)
+    public static void AddUiClientServices(this IServiceCollection services)
     {
         AddAuthentication(services);
         AddRemotableBus(services);
@@ -30,7 +30,6 @@ public static class UIClientServiceRegistry
             .AddCheck<HealthCheckTracer>("UI.Client")
             .AddCheck<RemotableBusHealthCheck>("Remotable Bus")
             .AddCheck<ServerHealthCheck>("Server health check");
-        return services;
     }
 
     private static void AddAuthentication(IServiceCollection services)
@@ -47,6 +46,9 @@ public static class UIClientServiceRegistry
         services.AddScoped<IUiBus>(_ => new MvcBus(NullLogger<MvcBus>.Instance));
         services.AddScoped<IUserSession, UserSession>();
         // In-browser handlers (the LlmGateway chat handlers); remotable requests skip the mediator and go to the server.
+        // Mediator's source generator reads these options from the call syntax, in the documented form with the
+        // explicit MediatorOptions parameter type.
+        // ReSharper disable once RedundantLambdaParameterType
         services.AddMediator((MediatorOptions options) =>
         {
             // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.
