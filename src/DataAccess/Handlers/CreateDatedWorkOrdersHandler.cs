@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +20,7 @@ public class CreateDatedWorkOrdersHandler(
     ILogger<CreateDatedWorkOrdersHandler> logger)
     : IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>
 {
-    public async Task<CreateDatedWorkOrdersResult> Handle(
+    public async ValueTask<CreateDatedWorkOrdersResult> Handle(
         CreateDatedWorkOrdersCommand request,
         CancellationToken cancellationToken)
     {

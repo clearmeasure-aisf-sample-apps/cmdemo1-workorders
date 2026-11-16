@@ -1,21 +1,21 @@
 using FluentValidation;
 using FluentValidation.Results;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
 
 /// <summary>
-/// The one place FluentValidation runs for MediatR requests: resolves every
+/// The one place FluentValidation runs for mediator requests: resolves every
 /// <see cref="IValidator{TRequest}"/> from DI and throws <see cref="ValidationException"/>
 /// before the handler when any rule fails.
 /// </summary>
 public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
+    where TRequest : IMessage
 {
-    public async Task<TResponse> Handle(
+    public async ValueTask<TResponse> Handle(
         TRequest request,
-        RequestHandlerDelegate<TResponse> next,
+        MessageHandlerDelegate<TRequest, TResponse> next,
         CancellationToken cancellationToken)
     {
         var failures = await CollectFailuresAsync(request, cancellationToken);
@@ -24,7 +24,7 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
             throw new ValidationException(failures);
         }
 
-        return await next();
+        return await next(request, cancellationToken);
     }
 
     private async Task<List<ValidationFailure>> CollectFailuresAsync(

@@ -1,5 +1,5 @@
 ﻿using ClearMeasure.Bootcamp.Core;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace ClearMeasure.Bootcamp.UI.Client.HealthChecks;

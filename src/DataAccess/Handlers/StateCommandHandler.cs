@@ -2,7 +2,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -13,14 +13,58 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// EF compares against database originals. Clear+Attach+Update left shadow FKs such as
 /// AssigneeId unmodified when Cancel nulled the navigation on a detached graph (#9118).
 /// </summary>
+/// <remarks>
+/// The source-generated mediator routes each message to a handler for its exact type, so every concrete
+/// state command is listed here and all of them share <see cref="Handle(StateCommandBase, CancellationToken)"/>.
+/// A new state command without a line here fails the build (Mediator diagnostic MSG0005).
+/// </remarks>
 public class StateCommandHandler(
     DbContext dbContext,
     TimeProvider time,
     IDistributedBus distributedBus,
     ILogger<StateCommandHandler> logger)
-    : IRequestHandler<StateCommandBase, StateCommandResult>
+    : IRequestHandler<SaveDraftCommand, StateCommandResult>,
+        IRequestHandler<DraftToAssignedCommand, StateCommandResult>,
+        IRequestHandler<AssignedToInProgressCommand, StateCommandResult>,
+        IRequestHandler<AssignedToCancelledCommand, StateCommandResult>,
+        IRequestHandler<InProgressToAssignedCommand, StateCommandResult>,
+        IRequestHandler<InProgressToCompleteCommand, StateCommandResult>,
+        IRequestHandler<InProgressToCancelledCommand, StateCommandResult>,
+        IRequestHandler<InProgressToWaitingOnVendorCommand, StateCommandResult>,
+        IRequestHandler<WaitingOnVendorToInProgressCommand, StateCommandResult>,
+        IRequestHandler<WaitingOnVendorToCancelledCommand, StateCommandResult>
 {
-    public async Task<StateCommandResult> Handle(StateCommandBase request,
+    public ValueTask<StateCommandResult> Handle(SaveDraftCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(DraftToAssignedCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(AssignedToInProgressCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(AssignedToCancelledCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(InProgressToAssignedCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(InProgressToCompleteCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(InProgressToCancelledCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(InProgressToWaitingOnVendorCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(WaitingOnVendorToInProgressCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public ValueTask<StateCommandResult> Handle(WaitingOnVendorToCancelledCommand request, CancellationToken cancellationToken) =>
+        Handle((StateCommandBase)request, cancellationToken);
+
+    public async ValueTask<StateCommandResult> Handle(StateCommandBase request,
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Executing");

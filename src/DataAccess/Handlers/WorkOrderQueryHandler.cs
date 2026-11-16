@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -24,14 +24,14 @@ public class WorkOrderQueryHandler(DataContext context) :
         return await query.ToArrayAsync();
     }
 
-    public async Task<WorkOrder?> Handle(WorkOrderByNumberQuery request,
+    public async ValueTask<WorkOrder?> Handle(WorkOrderByNumberQuery request,
         CancellationToken cancellationToken = default)
     {
         return await GetWorkOrderAsync(request.Number);
     }
 
     /// <summary>Loads every requested work order in one query. Blanks and duplicates count once.</summary>
-    public async Task<WorkOrder[]> Handle(WorkOrdersByNumbersQuery request,
+    public async ValueTask<WorkOrder[]> Handle(WorkOrdersByNumbersQuery request,
         CancellationToken cancellationToken = default)
     {
         if (request.Numbers is not { Length: > 0 })

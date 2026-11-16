@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -10,7 +10,7 @@ public class EmployeeQueryHandler(DataContext context)
     : IRequestHandler<EmployeeByUserNameQuery, Employee>,
         IRequestHandler<EmployeeGetAllQuery, Employee[]>
 {
-    public async Task<Employee> Handle(EmployeeByUserNameQuery request,
+    public async ValueTask<Employee> Handle(EmployeeByUserNameQuery request,
         CancellationToken cancellationToken = default)
     {
         var employee = await context.Set<Employee>()
@@ -19,7 +19,7 @@ public class EmployeeQueryHandler(DataContext context)
         return employee;
     }
 
-    public async Task<Employee[]> Handle(EmployeeGetAllQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<Employee[]> Handle(EmployeeGetAllQuery request, CancellationToken cancellationToken = default)
     {
         var take = Math.Clamp(request.Take, 1, EmployeeGetAllQuery.MaxTake);
         var skip = Math.Max(request.Skip, 0);

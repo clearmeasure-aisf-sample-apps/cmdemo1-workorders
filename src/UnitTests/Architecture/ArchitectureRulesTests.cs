@@ -100,7 +100,7 @@ public class ArchitectureRulesTests
         ArchitectureRules.MisnamedHandlerTypeNames("""
             namespace Sample;
 
-            public sealed class WorkOrderQueryHandler : MediatR.IRequestHandler<WorkOrderByNumberQuery, WorkOrder>
+            public sealed class WorkOrderQueryHandler : Mediator.IRequestHandler<WorkOrderByNumberQuery, WorkOrder>
             {
             }
             """).ShouldBeEmpty();
@@ -126,7 +126,7 @@ public class ArchitectureRulesTests
 
             public sealed class Outer
             {
-                private sealed class Inner : global::MediatR.IRequestHandler<Q, R>
+                private sealed class Inner : global::Mediator.IRequestHandler<Q, R>
                 {
                 }
             }

@@ -1,5 +1,5 @@
 ﻿using ClearMeasure.Bootcamp.Core.Model;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.Core.Queries;
 

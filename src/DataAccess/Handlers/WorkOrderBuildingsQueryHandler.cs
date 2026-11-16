@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -12,7 +12,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class WorkOrderBuildingsQueryHandler(DataContext context) : IRequestHandler<WorkOrderBuildingsQuery, string[]>
 {
-    public async Task<string[]> Handle(WorkOrderBuildingsQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<string[]> Handle(WorkOrderBuildingsQuery request, CancellationToken cancellationToken = default)
     {
         var buildings = await context.Set<WorkOrder>().AsNoTracking()
             .Where(wo => wo.Building != null)

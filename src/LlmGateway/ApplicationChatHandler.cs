@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Queries;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using System.ClientModel;
@@ -12,7 +12,7 @@ public class ApplicationChatHandler(ChatClientFactory factory, IToolProvider too
     internal const string FriendlyProviderErrorMessage =
         "I couldn't process that request. Please rephrase and try again.";
 
-    public async Task<ApplicationChatResult> Handle(ApplicationChatQuery request, CancellationToken cancellationToken)
+    public async ValueTask<ApplicationChatResult> Handle(ApplicationChatQuery request, CancellationToken cancellationToken)
     {
         var tools = await toolProvider.GetToolsAsync();
         var chatOptions = new ChatOptions { Tools = tools };

@@ -5,7 +5,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -79,23 +79,13 @@ public class VendorManagementGateTests
         CountingHandler<TeamsQuery, Team[]> teams,
         CountingHandler<CreateTeamCommand, CreateTeamResult> createTeam)
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(TimeProvider.System);
-        services.AddMediatR(cfg =>
+        return HostPipeline.Build(new StubFeatureFlagEvaluator(vendorManagement), services =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<IBus>();
-            cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
+            services.AddTransient<IRequestHandler<VendorsQuery, Vendor[]>>(_ => vendors);
+            services.AddTransient<IRequestHandler<CreateVendorCommand, CreateVendorResult>>(_ => createVendor);
+            services.AddTransient<IRequestHandler<TeamsQuery, Team[]>>(_ => teams);
+            services.AddTransient<IRequestHandler<CreateTeamCommand, CreateTeamResult>>(_ => createTeam);
         });
-        services.AddSingleton<IFeatureFlagEvaluator>(new StubFeatureFlagEvaluator(vendorManagement));
-        services.AddSingleton(vendors);
-        services.AddSingleton(createVendor);
-        services.AddSingleton(teams);
-        services.AddSingleton(createTeam);
-        services.AddTransient<IRequestHandler<VendorsQuery, Vendor[]>>(_ => vendors);
-        services.AddTransient<IRequestHandler<CreateVendorCommand, CreateVendorResult>>(_ => createVendor);
-        services.AddTransient<IRequestHandler<TeamsQuery, Team[]>>(_ => teams);
-        services.AddTransient<IRequestHandler<CreateTeamCommand, CreateTeamResult>>(_ => createTeam);
-        return services.BuildServiceProvider();
     }
 
     private sealed class CountingHandler<TRequest, TResponse>(Func<TRequest, TResponse> respond)
@@ -104,10 +94,10 @@ public class VendorManagementGateTests
     {
         public int Calls { get; private set; }
 
-        public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
+        public ValueTask<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
         {
             Calls++;
-            return Task.FromResult(respond(request));
+            return ValueTask.FromResult(respond(request));
         }
     }
 

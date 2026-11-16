@@ -1,20 +1,20 @@
 ﻿using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Server.TestSupport;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 public class ChatClientConfigQueryHandler(IConfiguration configuration, ILogger<ChatClientConfigQueryHandler> logger)
     : IRequestHandler<ChatClientConfigQuery, ChatClientConfig>
 {
-    public Task<ChatClientConfig> Handle(ChatClientConfigQuery request, CancellationToken cancellationToken)
+    public ValueTask<ChatClientConfig> Handle(ChatClientConfigQuery request, CancellationToken cancellationToken)
     {
         if (ShouldUseStubChatClient())
         {
-            return Task.FromResult(StubConfig());
+            return ValueTask.FromResult(StubConfig());
         }
 
-        return Task.FromResult(AzureOpenAiConfig());
+        return ValueTask.FromResult(AzureOpenAiConfig());
     }
 
     private bool ShouldUseStubChatClient()

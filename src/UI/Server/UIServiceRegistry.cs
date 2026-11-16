@@ -13,7 +13,7 @@ using ClearMeasure.Bootcamp.UI.Server.Notifications;
 using ClearMeasure.Bootcamp.UI.Shared;
 using FluentValidation;
 using Lamar;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using FunJeffreyCustomEventHealthCheck = ClearMeasure.Bootcamp.UI.Shared.FunJeffreyCustomEventHealthCheck;
@@ -40,17 +40,22 @@ public class UiServiceRegistry : ServiceRegistry
         AddHealthReporting();
     }
 
-    /// <summary>MediatR with validation and feature-flag behaviors, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
+    /// <summary>
+    /// The source-generated mediator with validation and feature-flag behaviors, behind an <see cref="IBus"/> that also
+    /// notifies realtime clients. The generator registers every handler in the referenced assemblies exactly once.
+    /// </summary>
     private void AddRealtimeBus()
     {
         this.AddSingleton<RealtimeNotificationHub>();
         this.AddSingleton<IRealtimeNotificationHub>(sp => sp.GetRequiredService<RealtimeNotificationHub>());
-        this.AddMediatR(cfg =>
+        // Behaviors run in array order, outermost first. Transient matches the old MediatR lifetimes (handlers take DbContext).
+        this.AddMediator((MediatorOptions options) =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<UiServiceRegistry>();
-            cfg.RegisterServicesFromAssemblyContaining<HealthCheck>();
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
+            // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.
+            options.Namespace = "ClearMeasure.Bootcamp.Generated.UiServerMediator";
+            options.GenerateTypesAsInternal = true;
+            options.ServiceLifetime = ServiceLifetime.Transient;
+            options.PipelineBehaviors = [typeof(ValidationBehavior<,>), typeof(FeatureFlagBehavior<,>)];
         });
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IBus>(provider => new ServerRealtimeBus(
@@ -68,8 +73,6 @@ public class UiServiceRegistry : ServiceRegistry
             scanner.AssemblyContainingType<CanConnectToLlmServerHealthCheck>();
             scanner.AssemblyContainingType<FunJeffreyCustomEventHealthCheck>();
             scanner.AssemblyContainingType<ToolProvider>();
-            scanner.ConnectImplementationsToTypesClosing(typeof(IRequestHandler<,>));
-            scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
         });
 
     private void AddHealthReporting()

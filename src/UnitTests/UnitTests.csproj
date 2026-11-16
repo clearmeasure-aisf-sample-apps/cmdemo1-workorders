@@ -51,7 +51,7 @@
 		<PackageReference Include="Shouldly" />
 		<PackageReference Include="TngTech.ArchUnitNET" />
 		<PackageReference Include="bunit" />
-		<PackageReference Include="MediatR" />
+		<PackageReference Include="Mediator.Abstractions" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
 		<PackageReference Include="Toolbelt.Blazor.SpeechRecognition" />
 		<PackageReference Include="Toolbelt.Blazor.SpeechSynthesis" />

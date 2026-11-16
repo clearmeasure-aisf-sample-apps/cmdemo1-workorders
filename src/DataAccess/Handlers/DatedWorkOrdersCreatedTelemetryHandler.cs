@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model.Events;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.Metrics;
 
@@ -18,10 +18,10 @@ public class DatedWorkOrdersCreatedTelemetryHandler(ILogger<DatedWorkOrdersCreat
         unit: "{workorders}",
         description: "Number of work orders created via dated batch create");
 
-    public Task Handle(DatedWorkOrdersCreatedEvent notification, CancellationToken cancellationToken)
+    public ValueTask Handle(DatedWorkOrdersCreatedEvent notification, CancellationToken cancellationToken)
     {
         CreatedCounter.Add(notification.Count);
         logger.LogInformation("Recorded dated batch create metric for {Count} work orders", notification.Count);
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.AI;
 
 namespace ClearMeasure.Bootcamp.LlmGateway;

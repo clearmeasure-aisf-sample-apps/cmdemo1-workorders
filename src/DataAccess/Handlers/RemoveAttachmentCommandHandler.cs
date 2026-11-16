@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class RemoveAttachmentCommandHandler(DataContext context)
     : IRequestHandler<RemoveAttachmentCommand, RemoveAttachmentResult>
 {
-    public async Task<RemoveAttachmentResult> Handle(RemoveAttachmentCommand request,
+    public async ValueTask<RemoveAttachmentResult> Handle(RemoveAttachmentCommand request,
         CancellationToken cancellationToken = default)
     {
         var workOrder = await context.Set<WorkOrder>().AsNoTracking()

@@ -1,10 +1,11 @@
 using System.Reflection;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -20,12 +21,12 @@ public class FeatureFlagBehaviorTests
         var behavior = new FeatureFlagBehavior<GatedProbeRequest, string>(evaluator);
         var handlerCalled = false;
 
-        var ex = await Should.ThrowAsync<FeatureDisabledException>(() => behavior.Handle(
+        var ex = await Should.ThrowAsync<FeatureDisabledException>(async () => await behavior.Handle(
             new GatedProbeRequest(),
-            () =>
+            (_, _) =>
             {
                 handlerCalled = true;
-                return Task.FromResult("handled");
+                return ValueTask.FromResult("handled");
             },
             CancellationToken.None));
 
@@ -41,7 +42,7 @@ public class FeatureFlagBehaviorTests
         var evaluator = new StubFeatureFlagEvaluator { [FeatureFlagNames.VendorManagement] = true };
         var behavior = new FeatureFlagBehavior<GatedProbeRequest, string>(evaluator);
 
-        var result = await behavior.Handle(new GatedProbeRequest(), () => Task.FromResult("handled"),
+        var result = await behavior.Handle(new GatedProbeRequest(), (_, _) => ValueTask.FromResult("handled"),
             CancellationToken.None);
 
         result.ShouldBe("handled");
@@ -54,7 +55,7 @@ public class FeatureFlagBehaviorTests
         var evaluator = new StubFeatureFlagEvaluator();
         var behavior = new FeatureFlagBehavior<OpenProbeRequest, string>(evaluator);
 
-        var result = await behavior.Handle(new OpenProbeRequest(), () => Task.FromResult("handled"),
+        var result = await behavior.Handle(new OpenProbeRequest(), (_, _) => ValueTask.FromResult("handled"),
             CancellationToken.None);
 
         result.ShouldBe("handled");
@@ -67,8 +68,8 @@ public class FeatureFlagBehaviorTests
         var evaluator = new StubFeatureFlagEvaluator { [FeatureFlagNames.BuildingManagement] = true };
         var behavior = new FeatureFlagBehavior<DoublyGatedProbeRequest, string>(evaluator);
 
-        var ex = await Should.ThrowAsync<FeatureDisabledException>(() => behavior.Handle(
-            new DoublyGatedProbeRequest(), () => Task.FromResult("handled"), CancellationToken.None));
+        var ex = await Should.ThrowAsync<FeatureDisabledException>(async () => await behavior.Handle(
+            new DoublyGatedProbeRequest(), (_, _) => ValueTask.FromResult("handled"), CancellationToken.None));
 
         ex.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
     }
@@ -78,18 +79,18 @@ public class FeatureFlagBehaviorTests
     {
         var evaluator = new StubFeatureFlagEvaluator();
 
-        var summary = await Should.ThrowAsync<FeatureDisabledException>(() =>
+        var summary = await Should.ThrowAsync<FeatureDisabledException>(async () => await
             new FeatureFlagBehavior<BuildingRoomSummaryQuery, BuildingSummary[]>(evaluator).Handle(
                 new BuildingRoomSummaryQuery(),
-                () => Task.FromResult(Array.Empty<BuildingSummary>()),
+                (_, _) => ValueTask.FromResult(Array.Empty<BuildingSummary>()),
                 CancellationToken.None));
         summary.FeatureName.ShouldBe(FeatureFlagNames.BuildingManagement);
         summary.RequestName.ShouldBe(nameof(BuildingRoomSummaryQuery));
 
-        var buildings = await Should.ThrowAsync<FeatureDisabledException>(() =>
+        var buildings = await Should.ThrowAsync<FeatureDisabledException>(async () => await
             new FeatureFlagBehavior<WorkOrderBuildingsQuery, string[]>(evaluator).Handle(
                 new WorkOrderBuildingsQuery(),
-                () => Task.FromResult(Array.Empty<string>()),
+                (_, _) => ValueTask.FromResult(Array.Empty<string>()),
                 CancellationToken.None));
         buildings.FeatureName.ShouldBe(FeatureFlagNames.BuildingManagement);
         buildings.RequestName.ShouldBe(nameof(WorkOrderBuildingsQuery));
@@ -108,18 +109,18 @@ public class FeatureFlagBehaviorTests
 
         var summary = await new FeatureFlagBehavior<BuildingRoomSummaryQuery, BuildingSummary[]>(evaluator).Handle(
             new BuildingRoomSummaryQuery(),
-            () =>
+            (_, _) =>
             {
                 summaryCalled = true;
-                return Task.FromResult(Array.Empty<BuildingSummary>());
+                return ValueTask.FromResult(Array.Empty<BuildingSummary>());
             },
             CancellationToken.None);
         var names = await new FeatureFlagBehavior<WorkOrderBuildingsQuery, string[]>(evaluator).Handle(
             new WorkOrderBuildingsQuery(),
-            () =>
+            (_, _) =>
             {
                 namesCalled = true;
-                return Task.FromResult(new[] { "Kitchen" });
+                return ValueTask.FromResult(new[] { "Kitchen" });
             },
             CancellationToken.None);
 
@@ -150,8 +151,8 @@ public class FeatureFlagBehaviorTests
         await using var provider = BuildPipeline(new StubFeatureFlagEvaluator());
         var bus = new Bus(provider.GetRequiredService<IMediator>());
 
-        await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new GatedProbeRequest()));
-        (await bus.Send(new OpenProbeRequest())).ShouldBe(nameof(OpenProbeRequest));
+        await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new VendorsQuery()));
+        (await bus.Send(new TeamsQuery())).ShouldBeSameAs(ProbeTeams);
     }
 
     [Test]
@@ -161,24 +162,22 @@ public class FeatureFlagBehaviorTests
             new StubFeatureFlagEvaluator { [FeatureFlagNames.VendorManagement] = true });
         var bus = new Bus(provider.GetRequiredService<IMediator>());
 
-        (await bus.Send(new GatedProbeRequest())).ShouldBe(nameof(GatedProbeRequest));
-        (await bus.Send((object)new GatedProbeRequest())).ShouldBe(nameof(GatedProbeRequest));
+        (await bus.Send(new VendorsQuery())).ShouldBeSameAs(ProbeVendors);
+        (await bus.Send((object)new VendorsQuery())).ShouldBeSameAs(ProbeVendors);
     }
 
-    private static ServiceProvider BuildPipeline(IFeatureFlagEvaluator evaluator)
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton(TimeProvider.System);
-        services.AddMediatR(cfg =>
+    private static readonly Vendor[] ProbeVendors = [];
+    private static readonly Team[] ProbeTeams = [];
+
+    /// <summary>The MCP host's generated pipeline with canned handlers for one gated and one open query.</summary>
+    private static ServiceProvider BuildPipeline(IFeatureFlagEvaluator evaluator) =>
+        HostPipeline.Build(evaluator, services =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<IBus>();
-            cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
+            services.AddTransient<IRequestHandler<VendorsQuery, Vendor[]>>(_ =>
+                new CannedHandler<VendorsQuery, Vendor[]>(ProbeVendors));
+            services.AddTransient<IRequestHandler<TeamsQuery, Team[]>>(_ =>
+                new CannedHandler<TeamsQuery, Team[]>(ProbeTeams));
         });
-        services.AddSingleton(evaluator);
-        services.AddTransient<IRequestHandler<GatedProbeRequest, string>, ProbeHandler<GatedProbeRequest>>();
-        services.AddTransient<IRequestHandler<OpenProbeRequest, string>, ProbeHandler<OpenProbeRequest>>();
-        return services.BuildServiceProvider();
-    }
 
     [RequiresFeature(FeatureFlagNames.VendorManagement)]
     private record GatedProbeRequest : IRequest<string>;
@@ -189,10 +188,11 @@ public class FeatureFlagBehaviorTests
     [RequiresFeature(FeatureFlagNames.VendorManagement)]
     private record DoublyGatedProbeRequest : IRequest<string>;
 
-    private sealed class ProbeHandler<TRequest> : IRequestHandler<TRequest, string> where TRequest : IRequest<string>
+    private sealed class CannedHandler<TRequest, TResponse>(TResponse response) : IRequestHandler<TRequest, TResponse>
+        where TRequest : IRequest<TResponse>
     {
-        public Task<string> Handle(TRequest request, CancellationToken cancellationToken) =>
-            Task.FromResult(typeof(TRequest).Name);
+        public ValueTask<TResponse> Handle(TRequest request, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(response);
     }
 
     private sealed class StubFeatureFlagEvaluator : Dictionary<string, bool>, IFeatureFlagEvaluator

@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.AI;
 using Shouldly;
 using Worker.Sagas.AiBotWorkerOrder;

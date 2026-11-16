@@ -1,6 +1,6 @@
 # Feature flags
 
-Feature flags are evaluated at runtime on the server and enforced in one place: the MediatR bus. The catalog of flag names is fixed in code (`FeatureFlagNames` in `src/Core/FeatureFlags/FeatureFlagNames.cs`); the values come from Octopus Feature Toggles, then configuration, then false.
+Feature flags are evaluated at runtime on the server and enforced in one place: the mediator pipeline. The catalog of flag names is fixed in code (`FeatureFlagNames` in `src/Core/FeatureFlags/FeatureFlagNames.cs`); the values come from Octopus Feature Toggles, then configuration, then false.
 
 ## Flags
 
@@ -40,7 +40,7 @@ The acceptance host sets `ASPNETCORE_ENVIRONMENT` to `Development`, so it loads 
 
 ## Enforcing a flag on a request
 
-Put `[RequiresFeature(FeatureFlagNames.X)]` on the request record (command or query). `FeatureFlagBehavior<TRequest, TResponse>` (`src/UI.Shared/FeatureFlagBehavior.cs`) runs in the MediatR pipeline of both hosts, registered with `AddOpenBehavior` in `src/UI/Server/UIServiceRegistry.cs` and `src/McpServer/McpServiceRegistry.cs`. When any required flag is off it throws `FeatureDisabledException` before the handler runs. Apply the attribute more than once to require several flags.
+Put `[RequiresFeature(FeatureFlagNames.X)]` on the request record (command or query). `FeatureFlagBehavior<TRequest, TResponse>` (`src/UI.Shared/FeatureFlagBehavior.cs`) runs in the mediator pipeline of both hosts, listed in `MediatorOptions.PipelineBehaviors` (after `ValidationBehavior`) in `src/UI/Server/UIServiceRegistry.cs` and `src/McpServer/McpServiceRegistry.cs`. When any required flag is off it throws `FeatureDisabledException` before the handler runs. Apply the attribute more than once to require several flags.
 
 Because Blazor WebAssembly and the Worker reach the server bus through the single API, and MCP tools call the bus in-process, one attribute gates every caller:
 

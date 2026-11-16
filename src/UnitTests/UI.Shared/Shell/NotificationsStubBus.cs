@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Shell;
 

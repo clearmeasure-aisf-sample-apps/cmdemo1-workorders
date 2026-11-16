@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -15,7 +15,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
 {
     private const string UnknownUser = "User not found.";
 
-    public async Task<SavedSearchView[]> Handle(SavedSearchViewsQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<SavedSearchView[]> Handle(SavedSearchViewsQuery request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
         if (employee == null) return [];
@@ -27,7 +27,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
         return views.OrderBy(v => v.Name, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public async Task<SavedSearchViewResult> Handle(SaveSearchViewCommand request, CancellationToken cancellationToken = default)
+    public async ValueTask<SavedSearchViewResult> Handle(SaveSearchViewCommand request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
         if (employee == null) return SavedSearchViewResult.Failure(UnknownUser);
@@ -52,7 +52,7 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
         return SavedSearchViewResult.Success;
     }
 
-    public async Task<SavedSearchViewResult> Handle(DeleteSearchViewCommand request, CancellationToken cancellationToken = default)
+    public async ValueTask<SavedSearchViewResult> Handle(DeleteSearchViewCommand request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
         if (employee == null) return SavedSearchViewResult.Failure(UnknownUser);

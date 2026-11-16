@@ -7,7 +7,7 @@ using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Components.Authorization;
 using Shouldly;
 

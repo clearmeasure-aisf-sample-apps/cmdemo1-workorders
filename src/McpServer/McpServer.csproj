@@ -10,6 +10,9 @@
 		<Configurations>Debug;Release;exclude-maui.slnf</Configurations>
 		<!-- Native AOT experiment (Exp 1): opt in at publish with -p:McpServerAot=true so UI.Server's JIT reference is unaffected. -->
 		<PublishAot Condition="'$(McpServerAot)' == 'true'">true</PublishAot>
+		<!-- MSG0005 (request with no handler): ApplicationChatQuery and DeploymentIdentityQuery are served only by UI.Server,
+		     whose build keeps MSG0005 as an error. -->
+		<NoWarn>$(NoWarn);MSG0005</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -20,7 +23,8 @@
 	<ItemGroup>
 		<PackageReference Include="ModelContextProtocol" />
 		<PackageReference Include="ModelContextProtocol.AspNetCore" />
-		<PackageReference Include="MediatR" />
+		<PackageReference Include="Mediator.Abstractions" />
+		<PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
 		<!-- Pin transitive SQLitePCLRaw above 2.1.11 to resolve NU1903 (GHSA-2m69-gcr7-jv3q). -->

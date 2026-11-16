@@ -75,7 +75,7 @@ internal static partial class ArchitectureRules
     }
 
     /// <summary>
-    /// Handler type names whose base list names a MediatR handler interface and whose name does not end in <c>Handler</c>.
+    /// Handler type names whose base list names a mediator handler interface and whose name does not end in <c>Handler</c>.
     /// </summary>
     internal static IReadOnlyList<string> MisnamedHandlerTypeNames(string source)
     {
@@ -83,7 +83,7 @@ internal static partial class ArchitectureRules
     }
 
     /// <summary>
-    /// Handler type names whose base list names a MediatR handler interface and whose name does not end in <c>Handler</c>.
+    /// Handler type names whose base list names a mediator handler interface and whose name does not end in <c>Handler</c>.
     /// </summary>
     internal static IReadOnlyList<string> MisnamedHandlerTypeNames(CompilationUnitSyntax root)
     {
@@ -95,7 +95,7 @@ internal static partial class ArchitectureRules
                 continue;
             }
 
-            if (IsMediatRHandler(type) && !type.Identifier.ValueText.EndsWith("Handler", StringComparison.Ordinal))
+            if (IsMediatorHandler(type) && !type.Identifier.ValueText.EndsWith("Handler", StringComparison.Ordinal))
             {
                 names.Add(type.Identifier.ValueText);
             }
@@ -178,7 +178,7 @@ internal static partial class ArchitectureRules
         return false;
     }
 
-    private static bool IsMediatRHandler(TypeDeclarationSyntax type)
+    private static bool IsMediatorHandler(TypeDeclarationSyntax type)
     {
         if (type.BaseList == null)
         {

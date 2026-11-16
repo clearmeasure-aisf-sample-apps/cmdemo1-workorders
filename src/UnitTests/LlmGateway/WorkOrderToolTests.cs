@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
-using MediatR;
+using Mediator;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.LlmGateway;

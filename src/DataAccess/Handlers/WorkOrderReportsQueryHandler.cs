@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -18,7 +18,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
     private const int CompletedWindowDays = 30;
     private const int WeeksToShow = 8;
 
-    public async Task<WorkOrderReportsData> Handle(WorkOrderReportsQuery request,
+    public async ValueTask<WorkOrderReportsData> Handle(WorkOrderReportsQuery request,
         CancellationToken cancellationToken = default)
     {
         var orders = context.Set<WorkOrder>().AsNoTracking();

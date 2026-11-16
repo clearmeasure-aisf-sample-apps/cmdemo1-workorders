@@ -1,6 +1,6 @@
 using System.Reflection;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UI.Shared;
 
@@ -11,7 +11,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared;
 /// </summary>
 public sealed class FeatureFlagBehavior<TRequest, TResponse>(IFeatureFlagEvaluator evaluator)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
+    where TRequest : IMessage
 {
     // ReSharper disable once StaticMemberInGenericType -- one attribute lookup per closed request type
     private static readonly string[] RequiredFeatures = typeof(TRequest)
@@ -20,9 +20,9 @@ public sealed class FeatureFlagBehavior<TRequest, TResponse>(IFeatureFlagEvaluat
         .Distinct(StringComparer.Ordinal)
         .ToArray();
 
-    public async Task<TResponse> Handle(
+    public async ValueTask<TResponse> Handle(
         TRequest request,
-        RequestHandlerDelegate<TResponse> next,
+        MessageHandlerDelegate<TRequest, TResponse> next,
         CancellationToken cancellationToken)
     {
         foreach (var feature in RequiredFeatures)
@@ -33,6 +33,6 @@ public sealed class FeatureFlagBehavior<TRequest, TResponse>(IFeatureFlagEvaluat
             }
         }
 
-        return await next();
+        return await next(request, cancellationToken);
     }
 }

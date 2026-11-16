@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.Core.Services;
 

@@ -19,7 +19,7 @@ public static class HttpEnvelopeValidationDeferral
         (typeof(CreateDatedWorkOrdersCommand), typeof(CreateDatedWorkOrdersCommandValidator))
     ];
 
-    /// <summary>True when assembly scanning must skip this type for MediatR <c>IValidator&lt;T&gt;</c>.</summary>
+    /// <summary>True when assembly scanning must skip this type for mediator <c>IValidator&lt;T&gt;</c>.</summary>
     public static bool IsDeferredValidator(Type validatorType)
     {
         for (var i = 0; i < Entries.Count; i++)

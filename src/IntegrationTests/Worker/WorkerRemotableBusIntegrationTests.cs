@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Messaging;
-using MediatR;
+using Mediator;
 using Shouldly;
 using Worker.Messaging;
 

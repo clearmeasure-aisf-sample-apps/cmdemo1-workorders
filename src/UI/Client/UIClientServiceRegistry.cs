@@ -5,7 +5,7 @@ using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Lamar;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Logging.Abstractions;
 using Palermo.BlazorMvc;
@@ -26,8 +26,6 @@ public class UIClientServiceRegistry : ServiceRegistry
             scanner.AssemblyContainingType<UIClientServiceRegistry>();
             scanner.AssemblyContainingType<IRemotableRequest>();
             scanner.AssemblyContainingType<CanConnectToLlmServerHealthCheck>();
-            scanner.ConnectImplementationsToTypesClosing(typeof(IRequestHandler<,>));
-            scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
         });
         this.AddHealthChecks().AddCheck<HealthCheckTracer>("UI.Client");
         this.AddHealthChecks().AddCheck<RemotableBusHealthCheck>("Remotable Bus");
@@ -47,12 +45,18 @@ public class UIClientServiceRegistry : ServiceRegistry
     {
         this.AddScoped<IUiBus>(_ => new MvcBus(NullLogger<MvcBus>.Instance));
         this.AddScoped<IUserSession, UserSession>();
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RemotableBus>());
+        // In-browser handlers (the LlmGateway chat handlers); remotable requests skip the mediator and go to the server.
+        this.AddMediator((MediatorOptions options) =>
+        {
+            // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.
+            options.Namespace = "ClearMeasure.Bootcamp.Generated.UiClientMediator";
+            options.GenerateTypesAsInternal = true;
+            options.ServiceLifetime = ServiceLifetime.Transient;
+            options.Assemblies = [typeof(IRemotableRequest), typeof(UIClientServiceRegistry), typeof(CanConnectToLlmServerHealthCheck)];
+        });
         this.AddTransient<IPublisherGateway>(sp =>
             new PublisherGateway(sp.GetRequiredService<HttpClient>(), sp.GetRequiredService<IConfiguration>()));
         this.AddTransient<IBus, RemotableBus>();
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<UIClientServiceRegistry>());
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CanConnectToLlmServerHealthCheck>());
     }
 
     private void AddClientServices()

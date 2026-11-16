@@ -8,11 +8,15 @@
 	  <RootNamespace>ClearMeasure.Bootcamp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <Configurations>Debug;Release;exclude-maui.slnf</Configurations>
     <NoWarn>$(NoWarn);IL2037</NoWarn>
+    <!-- MSG0005 (message with no handler): the browser handles only the LlmGateway chat requests; every other request
+         and event is remoted to UI.Server, whose build keeps MSG0005 as an error. -->
+    <NoWarn>$(NoWarn);MSG0005</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BlazorMvc" />
-    <PackageReference Include="MediatR" />
+    <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
     <PackageReference Include="Lamar.Microsoft.DependencyInjection" />
 	  <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />

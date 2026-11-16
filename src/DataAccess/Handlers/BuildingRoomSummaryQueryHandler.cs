@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -18,7 +18,7 @@ public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider t
 {
     private const int CompletedWindowDays = 30;
 
-    public async Task<BuildingSummary[]> Handle(BuildingRoomSummaryQuery request,
+    public async ValueTask<BuildingSummary[]> Handle(BuildingRoomSummaryQuery request,
         CancellationToken cancellationToken = default)
     {
         var counts = await CountsQuery().ToListAsync(cancellationToken);

@@ -1,6 +1,6 @@
 ﻿using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.UI.Shared;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UI.Client;
 

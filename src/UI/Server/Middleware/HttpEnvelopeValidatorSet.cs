@@ -7,7 +7,7 @@ namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 /// DI-owned FluentValidation instances for <see cref="HttpEnvelopeValidationDeferral"/> (#1804 c /
 /// #1824). Built once from the Core catalog via <see cref="ActivatorUtilities"/> so the types are
 /// never registered as unkeyed <see cref="IValidator{T}"/> (Lamar would otherwise feed them to
-/// MediatR <c>ValidationBehavior</c>).
+/// the mediator <c>ValidationBehavior</c>).
 /// </summary>
 internal sealed class HttpEnvelopeValidatorSet
 {

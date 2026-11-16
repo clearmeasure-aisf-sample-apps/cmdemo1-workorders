@@ -1,7 +1,7 @@
 # CQRS request flow
 
 The [request-flow overview](../request-flow.md) describes the common path:
-Blazor UI → API controller → `IBus` → MediatR → handler → EF Core → database.
+Blazor UI → API controller → `IBus` → Mediator → handler → EF Core → database.
 For a concrete read, follow an existing work order loaded by the Blazor WebAssembly client:
 
 ```text
@@ -29,7 +29,7 @@ WorkOrderManage → IBus.Send(WorkOrderByNumberQuery)
 4. **Server dispatch.** [IBus](../../src/Core/IBus.cs) is the application abstraction.
    [UIServiceRegistry](../../src/UI/Server/UIServiceRegistry.cs) registers
    `ServerRealtimeBus`, which inherits request dispatch from
-   [Bus](../../src/UI.Shared/Bus.cs). `Bus.Send` calls `IMediator.Send`, and MediatR
+   [Bus](../../src/UI.Shared/Bus.cs). `Bus.Send` calls `IMediator.Send`, and the source-generated mediator
    selects the matching `IRequestHandler<WorkOrderByNumberQuery, WorkOrder?>`.
 5. **Handler and database.** [WorkOrderQueryHandler](../../src/DataAccess/Handlers/WorkOrderQueryHandler.cs)
    reads `context.Set<WorkOrder>()` with `AsNoTracking()` and
@@ -37,7 +37,7 @@ WorkOrderManage → IBus.Send(WorkOrderByNumberQuery)
    [DataContext](../../src/DataAccess/Mappings/DataContext.cs) configures EF Core
    mappings and the database provider: SQLite for a connection string starting
    with `Data Source=`, otherwise SQL Server.
-6. **Return path.** The result returns through MediatR and the server bus.
+6. **Return path.** The result returns through the mediator and the server bus.
    `SingleApiController` wraps a non-null result in a `WebServiceMessage`;
    `PublisherGateway` deserializes the response envelope, and `RemotableBus`
    unwraps its body into the response type returned to the page.
@@ -54,5 +54,5 @@ That handler executes the state command, persists the order with EF Core
 
 The HTTP hop is specific to remoted browser requests, not every `IBus` call.
 Client `RemotableBus` delegates requests without `IRemotableRequest` to its base
-`Bus` for local MediatR dispatch; server callers can dispatch directly through
+`Bus` for local mediator dispatch; server callers can dispatch directly through
 the server bus without going through the browser transport.

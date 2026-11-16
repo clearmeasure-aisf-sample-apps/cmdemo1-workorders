@@ -11,7 +11,7 @@ using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UI.Shared;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.McpServer;
@@ -43,13 +43,17 @@ public static class McpServiceRegistry
 
     private static void AddBus(IServiceCollection services)
     {
-        // Named with generic arguments so the trimmer keeps Mediator's constructor; AddMediatR registers it by runtime Type.
-        services.AddTransient<IMediator, Mediator>();
-        services.AddMediatR(cfg =>
+        // Source-generated at build time: each handler is registered exactly once and Send is a type switch, with no
+        // reflection, so it works under Native AOT. Transient matches the old MediatR lifetimes (handlers take DbContext).
+        // Behaviors run in array order, outermost first: validation, then the feature-flag gate.
+        services.AddMediator((MediatorOptions options) =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<DataContext>();
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
+            // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.
+            options.Namespace = "ClearMeasure.Bootcamp.Generated.McpServerMediator";
+            options.GenerateTypesAsInternal = true;
+            options.ServiceLifetime = ServiceLifetime.Transient;
+            options.Assemblies = [typeof(IBus), typeof(DataContext)];
+            options.PipelineBehaviors = [typeof(ValidationBehavior<,>), typeof(FeatureFlagBehavior<,>)];
         });
         services.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
         // The MCP server has no NServiceBus endpoint, so domain events published to the distributed bus are dropped.

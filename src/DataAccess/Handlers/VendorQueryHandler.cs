@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -17,7 +17,7 @@ public class VendorQueryHandler(DataContext context)
     /// Returns active vendors first, then inactive ones, each group ordered by name ignoring case. Sorting
     /// happens in memory so SQLite and SQL Server give the same order.
     /// </summary>
-    public async Task<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken = default)
     {
         var vendors = await context.Set<Vendor>().ToListAsync(cancellationToken);
 
@@ -31,7 +31,7 @@ public class VendorQueryHandler(DataContext context)
     /// Creates the vendor when its name is unique ignoring case. Otherwise returns the violation and writes
     /// nothing.
     /// </summary>
-    public async Task<CreateVendorResult> Handle(CreateVendorCommand request,
+    public async ValueTask<CreateVendorResult> Handle(CreateVendorCommand request,
         CancellationToken cancellationToken = default)
     {
         var existingNames = await context.Set<Vendor>()

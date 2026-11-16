@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Queries;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
@@ -9,7 +9,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class FeatureFlagsQueryHandler(IFeatureFlagEvaluator evaluator) : IRequestHandler<FeatureFlagsQuery, FeatureFlagsResult>
 {
-    public async Task<FeatureFlagsResult> Handle(FeatureFlagsQuery request, CancellationToken cancellationToken)
+    public async ValueTask<FeatureFlagsResult> Handle(FeatureFlagsQuery request, CancellationToken cancellationToken)
     {
         var flags = new Dictionary<string, bool>(StringComparer.Ordinal);
         foreach (var name in FeatureFlagNames.All)
