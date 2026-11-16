@@ -77,9 +77,9 @@ public class SingleApiEndpointTests
     {
         var stubBus = new StubBus();
         
-        var message = new WebServiceMessage(new NonRemotableObject { Value = "test" });
+        var message = new WebServiceMessage(new WeatherForecast { Summary = "test" });
         await Should.ThrowAsync<InvalidOperationException>(async () => await SingleApiEndpoint.Post(message, stubBus));
-        message.GetBodyObject().ShouldBeOfType<NonRemotableObject>().Value.ShouldBe("test");
+        message.GetBodyObject().ShouldBeOfType<WeatherForecast>().Summary.ShouldBe("test");
     }
 
     [Test]
@@ -133,10 +133,5 @@ public class SingleApiEndpointTests
             LastPublishedNotification = notification;
             return Task.CompletedTask;
         }
-    }
-
-    private class NonRemotableObject
-    {
-        public string Value { get; init; } = "";
     }
 }

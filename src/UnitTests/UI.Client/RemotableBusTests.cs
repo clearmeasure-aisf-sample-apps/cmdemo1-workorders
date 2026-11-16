@@ -1,5 +1,6 @@
-﻿using ClearMeasure.Bootcamp.UnitTests.UI.Shared;
+using ClearMeasure.Bootcamp.UnitTests.UI.Shared;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.UI.Client;
@@ -16,10 +17,9 @@ public class RemotableBusTests
     {
         var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
-        var expectedResponse = "Remote test";
-        stubGateway.SetResponse(expectedResponse);
+        string[] expectedResponse = ["Remote test"];        stubGateway.SetResponse(expectedResponse);
         var bus = new RemotableBus(stubMediator, stubGateway);
-        var request = new TestRemotableRequest();
+        var request = new WorkOrderBuildingsQuery();
 
         var result = bus.Send(request).Result;
 
@@ -82,12 +82,11 @@ public class RemotableBusTests
         var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
         var bus = new RemotableBus(stubMediator, stubGateway);
-        var remotableEvent = new TestRemotableEvent { Message = "remote event" };
+        var remotableEvent = new UserLoggedInEvent("remote event");
 
         await bus.Publish(remotableEvent);
 
-        stubGateway.LastRequest.ShouldBeOfType<TestRemotableEvent>();
-        ((TestRemotableEvent)stubGateway.LastRequest!).Message.ShouldBe("remote event");
+        stubGateway.LastRequest.ShouldBeOfType<UserLoggedInEvent>().UserName.ShouldBe("remote event");
         stubMediator.LastNotification.ShouldBeNull();
     }
 
@@ -134,16 +133,9 @@ public class RemotableBusTests
 
     private record NonRemotableTestRequest : IRequest<string>;
 
-    private record TestRemotableRequest : IRequest<string>, IRemotableRequest;
-
     private class TestCommand;
 
     private class TestNotification : INotification
-    {
-        public string Message { get; init; } = string.Empty;
-    }
-
-    private class TestRemotableEvent : IRemotableEvent
     {
         public string Message { get; init; } = string.Empty;
     }

@@ -28,20 +28,27 @@ public class AotNotificationsPanelQueryHandler(DataContext context, TimeProvider
         var sevenDaysAgo = snapshot.UtcNow.AddDays(-7);
         var mine = snapshot.AssignedTo(employee.Id).ToList();
 
-        var overdue = mine
-            .Where(wo => WorkOrderSnapshot.IsOpen(wo) && wo.DueDate <= snapshot.Today)
+        return new NotificationsSummary(
+            OverdueOrDueToday(mine, snapshot.Today),
+            AssignedSince(mine, sevenDaysAgo),
+            ChangedSince(snapshot.CreatedBy(employee.Id), sevenDaysAgo));
+    }
+
+    private static WorkOrder[] OverdueOrDueToday(IEnumerable<WorkOrder> mine, DateOnly today) =>
+        mine.Where(wo => WorkOrderSnapshot.IsOpen(wo) && wo.DueDate <= today)
             .OrderByDescending(wo => wo.DueDate).ThenByDescending(wo => wo.CreatedDate)
             .ToArray();
-        var newlyAssigned = mine
-            .Where(wo => wo.AssignedDate >= sevenDaysAgo)
+
+    private static WorkOrder[] AssignedSince(IEnumerable<WorkOrder> mine, DateTime since) =>
+        mine.Where(wo => wo.AssignedDate >= since)
             .OrderByDescending(wo => wo.AssignedDate)
             .ToArray();
-        var createdByMeChanged = snapshot.CreatedBy(employee.Id)
-            .Where(wo => (wo.AssignedDate >= sevenDaysAgo && wo.Status != WorkOrderStatus.Draft) ||
-                         (wo.CompletedDate >= sevenDaysAgo && wo.Status == WorkOrderStatus.Complete))
+
+    /// <summary>Work orders I created that someone has since assigned or completed.</summary>
+    private static WorkOrder[] ChangedSince(IEnumerable<WorkOrder> createdByMe, DateTime since) =>
+        createdByMe
+            .Where(wo => (wo.AssignedDate >= since && wo.Status != WorkOrderStatus.Draft) ||
+                         (wo.CompletedDate >= since && wo.Status == WorkOrderStatus.Complete))
             .OrderByDescending(wo => wo.AssignedDate ?? wo.CompletedDate)
             .ToArray();
-
-        return new NotificationsSummary(overdue, newlyAssigned, createdByMeChanged);
-    }
 }

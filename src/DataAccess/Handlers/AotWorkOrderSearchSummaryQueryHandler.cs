@@ -20,10 +20,25 @@ public class AotWorkOrderSearchSummaryQueryHandler(DataContext context, TimeProv
         CancellationToken cancellationToken = default)
     {
         var snapshot = await _source.LoadAsync(cancellationToken);
+        var summary = CountAll(snapshot);
+
+        var user = string.IsNullOrWhiteSpace(request.UserName)
+            ? null
+            : await _source.FindEmployeeAsync(request.UserName, cancellationToken);
+        if (user != null)
+        {
+            CountMine(summary, snapshot, user);
+        }
+
+        return summary;
+    }
+
+    private static WorkOrderSearchSummary CountAll(WorkOrderSnapshot snapshot)
+    {
         var openedSince = snapshot.UtcNow.AddDays(-OpenedWindowDays);
         var open = snapshot.Open.ToList();
         var (completedCount, averageDaysToClose) = snapshot.CompletionsWithin(CompletedWindowDays);
-        var summary = new WorkOrderSearchSummary
+        return new WorkOrderSearchSummary
         {
             OpenCount = open.Count,
             OpenedLast7Days = open.Count(wo => wo.CreatedDate >= openedSince),
@@ -33,19 +48,15 @@ public class AotWorkOrderSearchSummaryQueryHandler(DataContext context, TimeProv
             CompletedLast30Days = completedCount,
             AverageDaysToClose = averageDaysToClose
         };
+    }
 
-        var user = string.IsNullOrWhiteSpace(request.UserName)
-            ? null
-            : await _source.FindEmployeeAsync(request.UserName, cancellationToken);
-        if (user != null)
-        {
-            var assigned = snapshot.AssignedTo(user.Id).ToList();
-            summary.AssignedToMeTotal = assigned.Count;
-            summary.AssignedToMeCount = assigned.Count(WorkOrderSnapshot.IsOpen);
-            summary.AssignedToMeDueToday = assigned.Count(wo => WorkOrderSnapshot.IsOpen(wo) && wo.DueDate == snapshot.Today);
-            summary.CreatedByMeCount = snapshot.CreatedBy(user.Id).Count();
-        }
-
-        return summary;
+    /// <summary>The "assigned to me" and "created by me" cards for the signed-in user.</summary>
+    private static void CountMine(WorkOrderSearchSummary summary, WorkOrderSnapshot snapshot, Employee user)
+    {
+        var assigned = snapshot.AssignedTo(user.Id).ToList();
+        summary.AssignedToMeTotal = assigned.Count;
+        summary.AssignedToMeCount = assigned.Count(WorkOrderSnapshot.IsOpen);
+        summary.AssignedToMeDueToday = assigned.Count(wo => WorkOrderSnapshot.IsOpen(wo) && wo.DueDate == snapshot.Today);
+        summary.CreatedByMeCount = snapshot.CreatedBy(user.Id).Count();
     }
 }

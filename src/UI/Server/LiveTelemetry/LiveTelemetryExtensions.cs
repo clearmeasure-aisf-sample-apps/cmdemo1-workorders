@@ -12,8 +12,7 @@ public static class LiveTelemetryExtensions
 {
     private const string EndpointPath = "/_telemetry";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
+    
     /// <summary>
     /// Adds <see cref="LiveTelemetryCounters"/> and the <see cref="DependencyCallListener"/> that feeds it.
     /// </summary>
@@ -38,6 +37,6 @@ public static class LiveTelemetryExtensions
     {
         context.Response.Headers[HeaderNames.AccessControlAllowOrigin] = "*";
         context.Response.Headers[HeaderNames.CacheControl] = "no-store";
-        return Results.Json(counters.Snapshot(), JsonOptions);
+        return TypedResults.Json(counters.Snapshot(), ServerJsonContext.Default.LiveTelemetrySnapshot);
     }
 }

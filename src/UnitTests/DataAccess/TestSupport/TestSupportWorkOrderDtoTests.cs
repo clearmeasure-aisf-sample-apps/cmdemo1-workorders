@@ -20,6 +20,5 @@ public class TestSupportWorkOrderDtoTests
         };
         dto.Number.ShouldBe("WO1");
         dto.CreatorUserName.ShouldBe("c");
-        dto.ToApiShape().ShouldNotBeNull();
     }
 }

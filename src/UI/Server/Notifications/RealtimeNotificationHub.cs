@@ -47,7 +47,7 @@ public sealed class RealtimeNotificationHub : IRealtimeNotificationHub
         var envelope = new RealtimeNotificationEnvelope(
             RealtimeNotificationKinds.RemotableEvent,
             messageJson);
-        var json = JsonSerializer.Serialize(envelope, RealtimeNotificationHubJson.Options);
+        var json = JsonSerializer.Serialize(envelope, RealtimeNotificationHubJson.Contracts.RealtimeNotificationEnvelope);
         await BroadcastUtf8JsonAsync(json, cancellationToken).ConfigureAwait(false);
     }
 
@@ -102,8 +102,8 @@ public sealed record RealtimeNotificationEnvelope(string Kind, string MessageJso
 
 internal static class RealtimeNotificationHubJson
 {
-    internal static readonly JsonSerializerOptions Options = new()
+    internal static readonly ServerJsonContext Contracts = new(new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+    });
 }

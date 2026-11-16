@@ -14,12 +14,12 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 /// </summary>
 public static class DetailedHealthCheckResponseWriter
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly ServerJsonContext Json = new(new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = true
-    };
+    });
 
     /// <summary>
     /// Writes the <paramref name="report"/> as a detailed JSON payload to the HTTP response.
@@ -48,7 +48,7 @@ public static class DetailedHealthCheckResponseWriter
             Version = AssemblyVersion()
         };
 
-        await context.Response.WriteAsJsonAsync(response, JsonOptions);
+        await context.Response.WriteAsJsonAsync(response, Json.DetailedHealthCheckResponse);
     }
 
     /// <summary>

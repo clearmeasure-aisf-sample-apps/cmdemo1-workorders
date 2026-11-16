@@ -6,6 +6,7 @@ using ClearMeasure.Bootcamp.UI.Server.Middleware;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using ClearMeasure.Bootcamp.UnitTests.Core;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.Middleware;
 
@@ -52,23 +53,23 @@ public class WebServiceMessagePayloadValidatorTests
         var services = new ServiceCollection().BuildServiceProvider();
 
         var result = await WebServiceMessagePayloadValidator.ValidateAsync(
-            new WebServiceMessage(new NotRemotablePayload()), services, CancellationToken.None);
+            new WebServiceMessage(new WeatherForecast()), services, CancellationToken.None);
 
         result.BadRequestDetail.ShouldBe(
-            $"Type {typeof(NotRemotablePayload).FullName} is not a remotable request or event.");
+            $"Type {typeof(WeatherForecast).FullName} is not a remotable request or event.");
     }
 
     [Test]
     public async Task ShouldBeABadRequest_WhenChatClientConfigQueryIsPosted()
     {
         var result = await WebServiceMessagePayloadValidator.ValidateAsync(
-            new WebServiceMessage(new ChatClientConfigQuery()),
+            ForeignWebServiceMessage.Carrying(new ChatClientConfigQuery()),
             new ServiceCollection().BuildServiceProvider(),
             CancellationToken.None);
 
         result.IsValid.ShouldBeFalse();
         result.BadRequestDetail.ShouldBe(
-            $"Type {typeof(ChatClientConfigQuery).FullName} is not a remotable request or event.");
+            "Invalid message payload or type.");
     }
 
     [Test]
@@ -76,13 +77,13 @@ public class WebServiceMessagePayloadValidatorTests
     {
         var workOrder = new WorkOrder { Title = "T", Creator = new Employee() };
         var result = await WebServiceMessagePayloadValidator.ValidateAsync(
-            new WebServiceMessage(new WorkOrderChatQuery("hi", workOrder)),
+            ForeignWebServiceMessage.Carrying(new WorkOrderChatQuery("hi", workOrder)),
             new ServiceCollection().BuildServiceProvider(),
             CancellationToken.None);
 
         result.IsValid.ShouldBeFalse();
         result.BadRequestDetail.ShouldBe(
-            $"Type {typeof(WorkOrderChatQuery).FullName} is not a remotable request or event.");
+            "Invalid message payload or type.");
     }
 
     [Test]
@@ -103,6 +104,4 @@ public class WebServiceMessagePayloadValidatorTests
     {
         public WorkOrderByNumberQueryRule() => RuleFor(query => query.Number).NotEmpty();
     }
-
-    private sealed class NotRemotablePayload;
 }

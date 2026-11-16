@@ -17,14 +17,4 @@ public sealed class TestSupportEmployeeDto
 
     /// <summary>Email.</summary>
     public required string EmailAddress { get; init; }
-
-    /// <summary>JSON-stable shape that reads every property.</summary>
-    public object ToApiShape() => new
-    {
-        id = Id,
-        userName = UserName,
-        firstName = FirstName,
-        lastName = LastName,
-        emailAddress = EmailAddress
-    };
 }

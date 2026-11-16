@@ -118,7 +118,7 @@ public static class ServerPipeline
             NeedsRebootHealthCheck.NeedsReboot = value;
             return Results.Text($"NeedsReboot set to {value}");
         });
-        app.MapGet("/_version", () => Results.Json(new { version = InformationalVersion() }))
+        app.MapGet("/_version", () => TypedResults.Json(new ServerVersion(InformationalVersion()), ServerJsonContext.Default.ServerVersion))
             .CacheOutput(OutputCachePolicyNames.VersionMetadata);
         app.MapLiveTelemetry();
         app.MapBuildFacts();

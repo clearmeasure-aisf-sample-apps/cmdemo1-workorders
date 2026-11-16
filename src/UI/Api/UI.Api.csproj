@@ -7,6 +7,8 @@
 		<AssemblyName>ClearMeasure.Bootcamp.$(MSBuildProjectName)</AssemblyName>
 		<RootNamespace>ClearMeasure.Bootcamp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 		<Configurations>Debug;Release;exclude-maui.slnf</Configurations>
+		<!-- Minimal API endpoints are mapped here, so the request delegates are source-generated here (Native AOT). -->
+		<EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
 	</PropertyGroup>
 
 	<ItemGroup>

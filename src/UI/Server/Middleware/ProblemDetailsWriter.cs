@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 /// </summary>
 internal static class ProblemDetailsWriter
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    
 
     public static Task WriteAsync(HttpContext context, int status, string title, string? detail) =>
         WriteAsync(context, new ProblemDetailsDto(status, title, detail, null));
@@ -28,8 +28,9 @@ internal static class ProblemDetailsWriter
     {
         context.Response.StatusCode = problem.Status;
         context.Response.ContentType = "application/problem+json";
-        await JsonSerializer.SerializeAsync(context.Response.Body, problem, JsonOptions, context.RequestAborted);
+        await JsonSerializer.SerializeAsync(
+            context.Response.Body, problem, ServerJsonContext.Default.ProblemDetailsDto, context.RequestAborted);
     }
 
-    private sealed record ProblemDetailsDto(int Status, string Title, string? Detail, Dictionary<string, string[]>? Errors);
+    internal sealed record ProblemDetailsDto(int Status, string Title, string? Detail, Dictionary<string, string[]>? Errors);
 }

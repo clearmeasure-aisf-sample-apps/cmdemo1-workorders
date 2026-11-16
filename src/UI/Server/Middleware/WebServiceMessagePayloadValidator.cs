@@ -69,14 +69,6 @@ internal static class WebServiceMessagePayloadValidator
             : new PayloadValidationResult(false, result.Errors, null);
     }
 
-    private static IValidator? ResolveValidator(object payload, IServiceProvider services)
-    {
-        var validatorType = typeof(IValidator<>).MakeGenericType(payload.GetType());
-        if (services.GetService(validatorType) is IValidator fromDi)
-        {
-            return fromDi;
-        }
-
-        return HttpEnvelopeFluentValidators.Resolve(payload, services);
-    }
+    private static IValidator? ResolveValidator(object payload, IServiceProvider services) =>
+        RemotableMessageCatalog.ValidatorFor(payload, services) ?? HttpEnvelopeFluentValidators.Resolve(payload, services);
 }

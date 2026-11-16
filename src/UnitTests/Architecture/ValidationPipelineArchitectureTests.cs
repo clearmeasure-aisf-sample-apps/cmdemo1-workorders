@@ -95,7 +95,7 @@ public class ValidationPipelineArchitectureTests
         resolver.ShouldContain("HttpEnvelopeValidatorSet");
         resolver.ShouldNotContain("new CreateVendorCommandValidator");
         set.ShouldContain("HttpEnvelopeValidationDeferral");
-        set.ShouldContain("ActivatorUtilities.CreateInstance");
+        set.ShouldContain("entry.Create()");
         set.ShouldNotContain("new CreateVendorCommandValidator");
         set.ShouldNotContain("new CreateTeamCommandValidator");
         set.ShouldNotContain("new CreateDatedWorkOrdersCommandValidator");

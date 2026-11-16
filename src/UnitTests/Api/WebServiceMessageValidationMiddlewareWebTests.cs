@@ -8,6 +8,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Client;
 using Shouldly;
+using ClearMeasure.Bootcamp.UnitTests.Core;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Api;
 
@@ -34,7 +35,7 @@ public class WebServiceMessageValidationMiddlewareWebTests
         await using var factory = new WebServiceMessageValidationWebApplicationFactory();
         using var client = factory.CreateClient();
 
-        var response = await PostSingleApiAsync(client, new WebServiceMessage(new ChatClientConfigQuery()));
+        var response = await PostSingleApiAsync(client, ForeignWebServiceMessage.Carrying(new ChatClientConfigQuery()));
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -47,7 +48,7 @@ public class WebServiceMessageValidationMiddlewareWebTests
 
         var response = await PostSingleApiAsync(
             client,
-            new WebServiceMessage(new WorkOrderChatQuery("hi", new WorkOrder())));
+            ForeignWebServiceMessage.Carrying(new WorkOrderChatQuery("hi", new WorkOrder())));
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }

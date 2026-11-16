@@ -82,7 +82,7 @@
   </ItemGroup>
   <ItemGroup Condition="'$(NativeAotDataAccess)' != 'true'">
     <Compile Remove="Handlers\Aot*.cs" />
-    <Compile Remove="Handlers\WorkOrderSnapshot.cs" />
+    <Compile Remove="Handlers\WorkOrderSnapshot*.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(McpServerAot)' == 'true' Or '$(UiServerAot)' == 'true'">
     <!-- The EF tool runs this class library with dotnet exec, which needs a runtimeconfig.json. -->
