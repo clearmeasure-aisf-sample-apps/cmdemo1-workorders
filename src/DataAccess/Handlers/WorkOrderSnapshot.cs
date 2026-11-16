@@ -5,7 +5,7 @@ using ClearMeasure.Bootcamp.Core.Services;
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
 /// <summary>
-/// Every work order (creator and assignee auto-included), read by <see cref="WorkOrderSnapshotSource"/> with one precompiled query, and the
+/// Every work order (creator and assignee auto-included), read by <c>WorkOrderSnapshotSource</c> with one precompiled query, and the
 /// <see cref="WorkOrderSpecifications"/> as in-memory predicates over it. The UI.Server Native AOT build
 /// (<c>UiServerAot=true</c>) answers its search, summary, report and load queries from this snapshot because EF 11
 /// cannot precompile the composed queries the JIT handlers send to the database.
@@ -57,7 +57,7 @@ internal sealed class WorkOrderSnapshot
     {
         var completed = All.Where(IsCompletedWithin(days)).ToList();
         var durations = completed
-            .Where(wo => wo.CreatedDate.HasValue && wo.CompletedDate.HasValue)
+            .Where(wo => wo is { CreatedDate: not null, CompletedDate: not null })
             .Select(wo => (wo.CompletedDate!.Value - wo.CreatedDate!.Value).TotalDays)
             .ToList();
         return (completed.Count, durations.Count == 0 ? null : durations.Average());

@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// <summary>
 /// Runs a <see cref="WorkOrderSpecificationQuery"/> over a <see cref="WorkOrderSnapshot"/> in memory, with every filter
 /// of <see cref="WorkOrderQueryFilters"/> and the same orders as <c>WorkOrderSearchHandler</c>. The Native AOT builds
-/// answer the query this way (<see cref="AotWorkOrderSearchHandler"/>); the JIT build compiles it too so unit tests pin
+/// answer the query this way (<c>AotWorkOrderSearchHandler</c>); the JIT build compiles it too so unit tests pin
 /// its filters.
 /// </summary>
 internal static class WorkOrderSnapshotSearch

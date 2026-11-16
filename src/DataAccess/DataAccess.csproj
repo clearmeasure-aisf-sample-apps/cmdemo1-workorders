@@ -89,6 +89,8 @@
   </ItemGroup>
   <ItemGroup Condition="'$(NativeAotDataAccess)' != 'true'">
     <Compile Remove="Handlers\Aot*.cs" />
+    <!-- Only the Aot* handlers load the snapshot; the JIT build compiles the snapshot reads for their unit tests. -->
+    <Compile Remove="Handlers\WorkOrderSnapshotSource.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(McpServerAot)' == 'true' Or '$(UiServerAot)' == 'true'">
     <!-- The EF tool runs this class library with dotnet exec, which needs a runtimeconfig.json. -->

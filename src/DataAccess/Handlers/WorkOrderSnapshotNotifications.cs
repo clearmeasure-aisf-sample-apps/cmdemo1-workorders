@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// <summary>
 /// The notifications panel for one employee, read from a <see cref="WorkOrderSnapshot"/> with the same filters and
 /// orders as <c>NotificationsPanelQueryHandler</c>. The UI.Server Native AOT build answers the panel this way
-/// (<see cref="AotNotificationsPanelQueryHandler"/>); the JIT build compiles it too so unit tests pin its filters.
+/// (<c>AotNotificationsPanelQueryHandler</c>); the JIT build compiles it too so unit tests pin its filters.
 /// </summary>
 internal static class WorkOrderSnapshotNotifications
 {
