@@ -4,10 +4,10 @@ using FluentValidation.Results;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// #1824: runs the HTTP-envelope FluentValidation type for a deferred create command without
-/// registering it as MediatR <c>IValidator&lt;T&gt;</c>. Handlers map the error messages onto
-/// Failed create results. Uses <see cref="Activator.CreateInstance(Type)"/> so production code
-/// does not <c>new</c> an <see cref="AbstractValidator{T}"/> (architecture gate).
+/// #1824: the one allowed in-process construction site for deferred create-command FluentValidation
+/// types (see <c>ValidationPipelineArchitectureTests</c>). Runs the HTTP-envelope validator without
+/// registering it as MediatR <c>IValidator&lt;T&gt;</c>; handlers map error messages onto Failed
+/// create results. HTTP construction stays on <c>HttpEnvelopeValidatorSet</c>.
 /// </summary>
 public static class InProcessCreateCommandShapeValidation
 {

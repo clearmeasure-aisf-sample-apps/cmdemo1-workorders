@@ -23,9 +23,11 @@ single catalog the host registries and HTTP resolver share.
 | `CreateVendorCommand` | Shape via `CreateVendorCommandValidator`, then duplicate name ignoring case | Yes for shape (validator error messages) |
 | `CreateTeamCommand` | Shape via `CreateTeamCommandValidator`, then duplicate name and unknown members | Yes for shape (validator error messages) |
 
-`InProcessCreateCommandShapeValidation` constructs the deferred validator with
-`Activator.CreateInstance` (not MediatR DI, not `new AbstractValidator` in handlers) so production
-architecture gates stay green and HTTP 400 registration is unchanged.
+`InProcessCreateCommandShapeValidation` is the **named exception** to the #1804 rule that production
+code must not construct FluentValidation validators outside `ValidationBehavior`. It builds the
+deferred validator with `Activator.CreateInstance` (not MediatR DI). The matching HTTP site is
+`HttpEnvelopeValidatorSet` (`ActivatorUtilities`). `ValidationPipelineArchitectureTests` allow-lists
+only those two files for Activator construction and still forbids `new AbstractValidator` elsewhere.
 
 Handlers call `FindRuleViolations` before writing. MCP tools branch on `Succeeded` / `Success`.
 
@@ -35,6 +37,7 @@ Handlers call `FindRuleViolations` before writing. MCP tools branch on `Succeede
 - `ValidationBehavior` (no type exception list, no opt-out marker)
 - Registration of the three validators only through `HttpEnvelopeValidatorSet` / envelope resolution
   (not as MediatR `IValidator<T>`)
+- No additional production Activator sites for validators beyond the two allow-listed files
 
 ## Tests
 
