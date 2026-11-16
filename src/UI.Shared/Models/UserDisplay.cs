@@ -16,11 +16,14 @@ public static class UserDisplay
             ? $"{char.ToUpperInvariant(employee!.FirstName.Trim()[0])}{char.ToUpperInvariant(employee.LastName.Trim()[0])}"
             : InitialsFromName(fallbackName ?? employee?.UserName);
 
-    /// <summary>Role names joined by " · ", sorted; empty when there are none.</summary>
+    /// <summary>
+    /// Role names joined by " · ", sorted case-insensitively with duplicates removed
+    /// (case-insensitive, first spelling kept); empty when there are none.
+    /// </summary>
     public static string Roles(Employee? employee) =>
         employee == null
             ? string.Empty
-            : string.Join(" · ", employee.Roles.Select(r => r.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Order(StringComparer.OrdinalIgnoreCase));
+            : string.Join(" · ", employee.Roles.Select(r => r.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase));
 
     /// <summary>One of six avatar colours ("avatar--0" to "avatar--5"), stable for a given user name.</summary>
     public static string AvatarCssClass(string? userName) =>
