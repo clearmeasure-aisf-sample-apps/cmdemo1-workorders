@@ -11,7 +11,7 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
 /// Compile-time JSON contracts for the payloads UI.Server writes itself: health, telemetry, problem details, realtime
-/// envelopes, version, and the test-only endpoints. Writers with their own options build a context over those options.
+/// envelopes, version, and the test-only endpoints (request bodies included). Writers with their own options build a context over those options.
 /// </summary>
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Web)]
 [JsonSerializable(typeof(DetailedHealthCheckResponseWriter.DetailedHealthCheckResponse))]
@@ -21,6 +21,8 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 [JsonSerializable(typeof(ServerVersion))]
 [JsonSerializable(typeof(TestingEndpoints.ConnectionCount))]
 [JsonSerializable(typeof(TestingEndpoints.BodyReadTwice))]
+[JsonSerializable(typeof(CreateEmployeeRequest))]
+[JsonSerializable(typeof(CreateWorkOrderRequest))]
 [JsonSerializable(typeof(TestSupportChatClientStatus))]
 [JsonSerializable(typeof(TestSupportEmployeeDto))]
 [JsonSerializable(typeof(TestSupportWorkOrderDto))]

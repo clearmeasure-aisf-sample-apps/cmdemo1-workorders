@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Resources;
@@ -12,6 +13,7 @@ using ClearMeasure.Bootcamp.UI.Server.Testing;
 using ClearMeasure.Bootcamp.UI.Server.TestSupport;
 using ChurchBulletin.ServiceDefaults;
 using Microsoft.AspNetCore.ResponseCompression;
+using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
@@ -32,11 +34,21 @@ public static class ServerServices
         builder.Services.AddSingleton(new RegisteredServices(builder.Services));
     }
 
+    /// <summary>
+    /// Minimal API bodies bind through these compile-time contracts first: the API payloads, UI.Server's own
+    /// payloads, and the remotable <see cref="WebServiceMessage"/> envelope. Native AOT has no reflection fallback.
+    /// </summary>
+    private static void UseSourceGeneratedContracts(JsonSerializerOptions options)
+    {
+        options.TypeInfoResolverChain.Insert(0, ApiJsonContext.Default);
+        options.TypeInfoResolverChain.Insert(1, ServerJsonContext.Default);
+        options.TypeInfoResolverChain.Insert(2, RemotableMessageJsonContext.Default);
+    }
+
     private static void AddWebFramework(WebApplicationBuilder builder)
     {
         builder.Services.AddProblemDetails();
-        builder.Services.ConfigureHttpJsonOptions(options =>
-            options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApiJsonContext.Default));
+        builder.Services.ConfigureHttpJsonOptions(options => UseSourceGeneratedContracts(options.SerializerOptions));
         builder.Services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);

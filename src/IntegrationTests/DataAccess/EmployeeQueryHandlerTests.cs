@@ -179,7 +179,8 @@ public class EmployeeQueryHandlerTests
         page.Length.ShouldBeGreaterThanOrEqualTo(2);
         page.Length.ShouldBeLessThanOrEqualTo(30);
         oneCommands.ShouldBe(pageCommands);
-        oneCommands.ShouldBe(2, pageSql);
+        // One statement: EF takes the page of employees in a subquery, then joins their roles.
+        oneCommands.ShouldBe(1, pageSql);
         (pageSql.Contains("TOP", StringComparison.Ordinal)
             || pageSql.Contains("FETCH", StringComparison.Ordinal)
             || pageSql.Contains("LIMIT", StringComparison.Ordinal)).ShouldBeTrue(pageSql);
