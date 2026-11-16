@@ -19,6 +19,7 @@ UI → API controller → IBus.Send(query or command) → MediatR
 Most requests run FluentValidation in `ValidationBehavior` and throw `ValidationException` on failure
 (HTTP maps that to 400). Three create commands — `CreateDatedWorkOrdersCommand`,
 `CreateVendorCommand`, and `CreateTeamCommand` — use a deliberate split: in-process callers get
-Failed results from each command's `FindRuleViolations` seam; HTTP shape rules stay on the
-envelope FluentValidators in `HttpEnvelopeValidationDeferral`. See
+Failed results from handler-injected concrete validators plus each command's `FindRuleViolations`
+stored-data checks; HTTP shape rules stay on the envelope FluentValidators in
+`HttpEnvelopeValidationDeferral`. See
 [in-process-create-command-validation.md](conventions/in-process-create-command-validation.md).

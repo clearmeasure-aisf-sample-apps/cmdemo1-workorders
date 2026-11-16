@@ -7,9 +7,10 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// HTTP-envelope FluentValidation for <see cref="CreateVendorCommand"/> (#1824): the name is
-/// required, and every string fits its column. In-process duplicate-name rules live on
-/// <see cref="CreateVendorCommand.FindRuleViolations"/> and return Failed results.
+/// FluentValidation for <see cref="CreateVendorCommand"/> (#1824): the name is required, and every
+/// string fits its column. HTTP uses this via <c>HttpEnvelopeValidatorSet</c>. In-process handlers
+/// inject this concrete type (not <c>IValidator&lt;T&gt;</c>) and map failures to Failed results;
+/// duplicate-name rules stay on <see cref="CreateVendorCommand.FindRuleViolations"/>.
 /// </summary>
 public sealed class CreateVendorCommandValidator : AbstractValidator<CreateVendorCommand>
 {

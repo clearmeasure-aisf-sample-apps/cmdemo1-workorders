@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
-using ClearMeasure.Bootcamp.Core.Validation;
 using MediatR;
 
 // ReSharper disable NotAccessedPositionalProperty.Global -- Message and Id are read by the vendor UI (later item) and by tests
@@ -18,19 +17,14 @@ public record CreateVendorCommand(
     bool IsActive = true) : IRequest<CreateVendorResult>, IRemotableRequest
 {
     /// <summary>
-    /// In-process validation (#1824): shape rules from <c>CreateVendorCommandValidator</c> (same
-    /// messages as HTTP), then duplicate name ignoring case. An empty list means the vendor can be
-    /// created. Handlers map these to <see cref="CreateVendorResult"/> with <c>Succeeded</c> false —
-    /// never a FluentValidation exception. HTTP still runs the envelope FluentValidator for 400.
+    /// Stored-data rules for in-process create (#1824): duplicate name ignoring case. Shape rules
+    /// run in the handler via the injected <c>CreateVendorCommandValidator</c>. An empty list means
+    /// the vendor can be created. Handlers map violations to <see cref="CreateVendorResult"/> with
+    /// <c>Succeeded</c> false — never a FluentValidation exception. HTTP still runs the envelope
+    /// FluentValidator for 400.
     /// </summary>
     public IReadOnlyList<string> FindRuleViolations(IEnumerable<string> existingVendorNames)
     {
-        var shape = InProcessCreateCommandShapeValidation.ErrorMessages(this);
-        if (shape.Count > 0)
-        {
-            return shape;
-        }
-
         var name = Name.Trim();
         return existingVendorNames.Contains(name, StringComparer.OrdinalIgnoreCase)
             ? [$"A vendor named '{name}' already exists."]

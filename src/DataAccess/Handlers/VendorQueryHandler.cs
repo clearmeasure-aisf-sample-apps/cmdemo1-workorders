@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// <summary>
 /// Reads and creates vendors.
 /// </summary>
-public class VendorQueryHandler(DataContext context)
+public class VendorQueryHandler(DataContext context, CreateVendorCommandShapeRules shapeRules)
     : IRequestHandler<VendorsQuery, Vendor[]>,
         IRequestHandler<CreateVendorCommand, CreateVendorResult>
 {
@@ -28,22 +29,32 @@ public class VendorQueryHandler(DataContext context)
     }
 
     /// <summary>
-    /// Creates the vendor when <see cref="CreateVendorCommand.FindRuleViolations"/> is empty.
-    /// Otherwise returns a Failed <see cref="CreateVendorResult"/> and writes nothing (#1824).
+    /// Creates the vendor when shape validation and
+    /// <see cref="CreateVendorCommand.FindRuleViolations"/> pass. Otherwise returns a Failed
+    /// <see cref="CreateVendorResult"/> and writes nothing (#1824).
     /// </summary>
     public async Task<CreateVendorResult> Handle(CreateVendorCommand request,
         CancellationToken cancellationToken = default)
     {
+        if (FailedResult(shapeRules.ErrorMessages(request)) is { } shapeFailure)
+        {
+            return shapeFailure;
+        }
+
         var existingNames = await context.Set<Vendor>()
             .Select(v => v.Name)
             .ToListAsync(cancellationToken);
-
-        var violations = request.FindRuleViolations(existingNames);
-        if (violations.Count > 0)
+        if (FailedResult(request.FindRuleViolations(existingNames)) is { } storedFailure)
         {
-            return new CreateVendorResult(false, string.Join(" ", violations), null);
+            return storedFailure;
         }
 
+        return await PersistAsync(request, cancellationToken);
+    }
+
+    private async Task<CreateVendorResult> PersistAsync(
+        CreateVendorCommand request, CancellationToken cancellationToken)
+    {
         var vendor = new Vendor
         {
             Name = request.Name.Trim(),
@@ -55,7 +66,11 @@ public class VendorQueryHandler(DataContext context)
         };
         context.Add(vendor);
         await context.SaveChangesAsync(cancellationToken);
-
         return new CreateVendorResult(true, $"Vendor '{vendor.Name}' created.", vendor.Id);
     }
+
+    private static CreateVendorResult? FailedResult(IReadOnlyList<string> violations) =>
+        violations.Count > 0
+            ? new CreateVendorResult(false, string.Join(" ", violations), null)
+            : null;
 }

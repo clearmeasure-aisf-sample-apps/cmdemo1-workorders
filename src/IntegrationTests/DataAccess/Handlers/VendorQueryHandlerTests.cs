@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
@@ -25,7 +26,7 @@ public class VendorQueryHandlerTests
     [Test]
     public async Task ShouldReturnActiveVendorsFirstThenByName()
     {
-        var handler = new VendorQueryHandler(TestHost.GetRequiredService<DataContext>());
+        var handler = Handler();
         (await handler.Handle(new CreateVendorCommand(VendorName("Acme"), null, null, null, null, false)))
             .Succeeded.ShouldBeTrue();
         (await handler.Handle(new CreateVendorCommand(VendorName("Zed"), null, null, null, null)))
@@ -44,7 +45,7 @@ public class VendorQueryHandlerTests
     public async Task ShouldPersistAllVendorFields()
     {
         var name = VendorName("Acme Heating");
-        var result = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
+        var result = await Handler()
             .Handle(new CreateVendorCommand($" {name} ", "HVAC", "Pat Smith", "pat@acme.test", "555-0100"));
 
         result.Succeeded.ShouldBeTrue(result.Message);
@@ -63,10 +64,10 @@ public class VendorQueryHandlerTests
     public async Task ShouldFail_WhenVendorNameDuplicatesIgnoringCase()
     {
         var name = VendorName("Acme");
-        (await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
+        (await Handler()
             .Handle(new CreateVendorCommand(name, null, null, null, null))).Succeeded.ShouldBeTrue();
 
-        var result = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
+        var result = await Handler()
             .Handle(new CreateVendorCommand(name.ToLowerInvariant(), "Plumbing", null, null, null));
 
         result.Succeeded.ShouldBeFalse();
@@ -78,7 +79,7 @@ public class VendorQueryHandlerTests
     [Test]
     public async Task ShouldFailWithoutWriting_WhenVendorNameIsBlank()
     {
-        var result = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
+        var result = await Handler()
             .Handle(new CreateVendorCommand("", "HVAC", null, null, null));
 
         result.Succeeded.ShouldBeFalse();
@@ -87,11 +88,15 @@ public class VendorQueryHandlerTests
         (await OwnVendors()).ShouldBeEmpty();
     }
 
+
+    private static VendorQueryHandler Handler() =>
+        new(TestHost.GetRequiredService<DataContext>(), new CreateVendorCommandShapeRules(new CreateVendorCommandValidator()));
+
     private string VendorName(string name) => $"{name} {_tag}";
 
     private async Task<Vendor[]> OwnVendors()
     {
-        var vendors = await new VendorQueryHandler(TestHost.GetRequiredService<DataContext>())
+        var vendors = await Handler()
             .Handle(new VendorsQuery());
         return vendors.Where(v => v.Name.EndsWith(_tag, StringComparison.Ordinal)).ToArray();
     }

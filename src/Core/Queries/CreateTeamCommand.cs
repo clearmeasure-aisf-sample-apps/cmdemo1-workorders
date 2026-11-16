@@ -1,4 +1,3 @@
-using ClearMeasure.Bootcamp.Core.Validation;
 using MediatR;
 
 // ReSharper disable NotAccessedPositionalProperty.Global -- Message and Id are read by the team UI (later item) and by tests
@@ -11,20 +10,15 @@ public record CreateTeamCommand(string Name, string? Description, IReadOnlyList<
     : IRequest<CreateTeamResult>, IRemotableRequest
 {
     /// <summary>
-    /// In-process validation (#1824): shape rules from <c>CreateTeamCommandValidator</c> (same
-    /// messages as HTTP), then duplicate team name and unknown members. An empty list means the team
-    /// can be created. Handlers map these to <see cref="CreateTeamResult"/> with <c>Succeeded</c>
-    /// false — never a FluentValidation exception. HTTP still runs the envelope FluentValidator for 400.
+    /// Stored-data rules for in-process create (#1824): duplicate team name and unknown members.
+    /// Shape rules run in the handler via the injected <c>CreateTeamCommandValidator</c>. An empty
+    /// list means the team can be created. Handlers map violations to <see cref="CreateTeamResult"/>
+    /// with <c>Succeeded</c> false — never a FluentValidation exception. HTTP still runs the
+    /// envelope FluentValidator for 400.
     /// </summary>
     public IReadOnlyList<string> FindRuleViolations(IEnumerable<string> existingTeamNames,
         IEnumerable<string> knownUserNames)
     {
-        var shape = InProcessCreateCommandShapeValidation.ErrorMessages(this);
-        if (shape.Count > 0)
-        {
-            return shape;
-        }
-
         var violations = new List<string>();
         var name = Name.Trim();
         if (existingTeamNames.Contains(name, StringComparer.OrdinalIgnoreCase))

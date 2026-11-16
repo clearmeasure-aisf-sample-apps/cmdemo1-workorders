@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
@@ -25,7 +26,7 @@ public class CreateVendorCommandIntegrationTests
     [Test]
     public async Task ShouldCreateAndReadVendorWithValidEmailAndPhone()
     {
-        var handler = new VendorQueryHandler(TestHost.GetRequiredService<DataContext>());
+        var handler = new VendorQueryHandler(TestHost.GetRequiredService<DataContext>(), new CreateVendorCommandShapeRules(new CreateVendorCommandValidator()));
         var name = VendorName("Acme HVAC");
         var email = "pat@acme.test";
         var phone = "555-0100";

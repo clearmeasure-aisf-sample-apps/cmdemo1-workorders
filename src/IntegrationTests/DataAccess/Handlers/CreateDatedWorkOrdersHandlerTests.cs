@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
@@ -248,7 +249,9 @@ public class CreateDatedWorkOrdersHandlerTests
         new(creatorUserName, assigneeUserName, "Mow the grass", "Weekly Saturday mow", dueDates);
 
     private static CreateDatedWorkOrdersHandler CreateHandler(IWorkOrderNumberGenerator numbers, IBus bus) =>
-        new(TestHost.GetRequiredService<DbContext>(), bus, numbers, TimeProvider.System,
+        new(new CreateDatedWorkOrdersCommandShapeRules(new CreateDatedWorkOrdersCommandValidator()),
+            new DatedWorkOrderBatchCreator(
+                TestHost.GetRequiredService<DbContext>(), bus, numbers, TimeProvider.System),
             NullLogger<CreateDatedWorkOrdersHandler>.Instance);
 
     private static async Task ThenDueDatesUnshiftedAsync(string withDateNumber, string withoutDateNumber)

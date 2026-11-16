@@ -95,7 +95,6 @@ parameters src/Core/Import/WorkOrderBulkImportRow.cs WorkOrderBulkImportRow(int,
 parameters src/Core/Model/StateCommands/AddAttachmentMetadataCommand.cs AddAttachmentMetadataCommand(WorkOrder,Employee,string,string,long)
 parameters src/Core/Model/StateCommands/CreateDatedWorkOrdersCommand.cs CreateDatedWorkOrdersCommand(string,string,string,string,IReadOnlyList<DateOnly>)
 parameters src/Core/Queries/CreateVendorCommand.cs CreateVendorCommand(string,string?,string?,string?,string?,bool)
-parameters src/DataAccess/Handlers/CreateDatedWorkOrdersHandler.cs CreateDatedWorkOrdersHandler(DbContext,IBus,IWorkOrderNumberGenerator,TimeProvider,ILogger<CreateDatedWorkOrdersHandler>)
 parameters src/IntegrationTests/DemoData/DemoEmployeeSeeder.cs DemoEmployeeSeedResult(int,int,int,int,int)
 parameters src/IntegrationTests/DemoData/DemoEmployeeSeeder.cs DemoEmployeeSeeder.DemoEmployee(string,string,string,string,string?,string[])
 parameters src/McpServer/Tools/VendorTools.cs VendorTools.CreateVendor(IBus,string,string,string?,string?,string?,bool)

@@ -7,7 +7,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.Core.Validation;
 
 /// <summary>
 /// Characterization and design tests for #1824 in-process create validation: Failed results via
-/// <c>FindRuleViolations</c> (shape from deferred FluentValidators + stored-data rules), not
+/// stored-data <c>FindRuleViolations</c> plus handler-injected concrete FluentValidators — not
 /// <see cref="FluentValidation.ValidationException"/>. Real handlers are covered by integration tests.
 /// </summary>
 [TestFixture]
@@ -50,7 +50,7 @@ public class InProcessCreateCommandValidationTests
     }
 
     [Test]
-    public void FindRuleViolations_ShouldReportDatedTitleShape_WhenTitleIsBlankAndDueDatesOk()
+    public void FindRuleViolations_ShouldIgnoreBlankTitle_WhenOnlyStoredBatchRulesRun()
     {
         var command = new CreateDatedWorkOrdersCommand(
             "creator",
@@ -59,7 +59,7 @@ public class InProcessCreateCommandValidationTests
             "Desc",
             [new DateOnly(2026, 8, 29)]);
 
-        command.FindRuleViolations().ShouldContain("'Title' must not be empty.");
+        command.FindRuleViolations().ShouldBeEmpty();
     }
 
     [Test]
@@ -73,11 +73,11 @@ public class InProcessCreateCommandValidationTests
     }
 
     [Test]
-    public void FindRuleViolations_ShouldReportVendorNameShape_WhenNameIsBlank()
+    public void FindRuleViolations_ShouldIgnoreBlankVendorName_WhenOnlyStoredDataRulesRun()
     {
         var command = new CreateVendorCommand("  ", null, null, null, null);
 
-        command.FindRuleViolations([]).ShouldContain("'Name' must not be empty.");
+        command.FindRuleViolations([]).ShouldBeEmpty();
     }
 
     [Test]
@@ -91,11 +91,11 @@ public class InProcessCreateCommandValidationTests
     }
 
     [Test]
-    public void FindRuleViolations_ShouldReportTeamNameShape_WhenNameIsBlank()
+    public void FindRuleViolations_ShouldIgnoreBlankTeamName_WhenOnlyStoredDataRulesRun()
     {
         var command = new CreateTeamCommand("", null, []);
 
-        command.FindRuleViolations([], []).ShouldContain("'Name' must not be empty.");
+        command.FindRuleViolations([], []).ShouldBeEmpty();
     }
 
     [Test]
@@ -113,14 +113,5 @@ public class InProcessCreateCommandValidationTests
             .ShouldBeTrue();
         HttpEnvelopeValidationDeferral.IsDeferredValidator(typeof(CreateDatedWorkOrdersCommandValidator))
             .ShouldBeTrue();
-    }
-
-    [Test]
-    public void ErrorMessages_ShouldMatchHttpFluentValidation_WhenVendorNameIsBlank()
-    {
-        var command = new CreateVendorCommand("", "HVAC", null, null, null);
-
-        InProcessCreateCommandShapeValidation.ErrorMessages(command)
-            .ShouldBe(new CreateVendorCommandValidator().Validate(command).Errors.Select(e => e.ErrorMessage));
     }
 }

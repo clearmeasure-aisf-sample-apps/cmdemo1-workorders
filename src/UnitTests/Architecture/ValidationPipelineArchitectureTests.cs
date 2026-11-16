@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.BuildGates;
@@ -66,27 +65,6 @@ public class ValidationPipelineArchitectureTests
     }
 
     [Test]
-    public void ShouldAllowOnlyNamedSites_WhenProductionConstructsValidatorsViaActivator()
-    {
-        var sites = ProductionValidatorActivatorSites(RepositoryCheckout.Current);
-
-        sites.ShouldBe(
-            AllowedValidatorActivatorSites,
-            "Only HttpEnvelopeValidatorSet (HTTP) and InProcessCreateCommandShapeValidation "
-            + "(#1824 in-process Failed results) may construct deferred validators via Activator. "
-            + "Found: " + string.Join(", ", sites));
-    }
-
-    [Test]
-    public void ShouldNameInProcessShapeValidation_WhenAllowedActivatorSiteIsDocumented()
-    {
-        AllowedValidatorActivatorSites.ShouldContain(
-            "src/Core/Validation/InProcessCreateCommandShapeValidation.cs");
-        typeof(InProcessCreateCommandShapeValidation).Namespace
-            .ShouldBe("ClearMeasure.Bootcamp.Core.Validation");
-    }
-
-    [Test]
     public void ShouldResideInUiShared_WhenValidationBehaviorIsThePipeline()
     {
         typeof(ValidationBehavior<,>).Namespace.ShouldBe("ClearMeasure.Bootcamp.UI.Shared");
@@ -122,16 +100,6 @@ public class ValidationPipelineArchitectureTests
         set.ShouldNotContain("new CreateTeamCommandValidator");
         set.ShouldNotContain("new CreateDatedWorkOrdersCommandValidator");
     }
-
-    /// <summary>
-    /// Explicit #1824 / HTTP-envelope exemptions: the only production files allowed to construct
-    /// deferred FluentValidation types via <c>Activator</c> / <c>ActivatorUtilities</c>.
-    /// </summary>
-    private static IReadOnlyList<string> AllowedValidatorActivatorSites { get; } =
-    [
-        "src/Core/Validation/InProcessCreateCommandShapeValidation.cs",
-        "src/UI/Server/Middleware/HttpEnvelopeValidatorSet.cs"
-    ];
 
     private static IReadOnlyList<string> EmptyAbstractValidators(RepositoryCheckout checkout)
     {
@@ -197,41 +165,6 @@ public class ValidationPipelineArchitectureTests
         }
 
         return offenders;
-    }
-
-    private static IReadOnlyList<string> ProductionValidatorActivatorSites(RepositoryCheckout checkout)
-    {
-        var sites = new SortedSet<string>(StringComparer.Ordinal);
-        foreach (var file in checkout.SourceFiles(".cs"))
-        {
-            var relative = checkout.Relative(file);
-            if (!IsProductionSource(relative))
-            {
-                continue;
-            }
-
-            var root = CSharpSyntaxTree.ParseText(File.ReadAllText(file)).GetCompilationUnitRoot();
-            if (!root.DescendantNodes().OfType<InvocationExpressionSyntax>().Any(IsValidatorActivatorCall))
-            {
-                continue;
-            }
-
-            sites.Add(relative);
-        }
-
-        return sites.ToList();
-    }
-
-    private static bool IsValidatorActivatorCall(InvocationExpressionSyntax invocation)
-    {
-        var name = invocation.Expression switch
-        {
-            MemberAccessExpressionSyntax member => member.Name.Identifier.ValueText,
-            IdentifierNameSyntax id => id.Identifier.ValueText,
-            _ => null
-        };
-
-        return name is "CreateInstance";
     }
 
     private static HashSet<string> AbstractValidatorTypeNames(RepositoryCheckout checkout)

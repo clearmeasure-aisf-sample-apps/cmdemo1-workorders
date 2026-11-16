@@ -7,9 +7,10 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// HTTP-envelope FluentValidation for <see cref="CreateDatedWorkOrdersCommand"/> (#1824).
-/// In-process DueDates empty / batch-size rules live on
-/// <see cref="CreateDatedWorkOrdersCommand.FindRuleViolations"/> and return Failed results.
+/// FluentValidation for <see cref="CreateDatedWorkOrdersCommand"/> (#1824). HTTP uses this via
+/// <c>HttpEnvelopeValidatorSet</c>. In-process handlers inject this concrete type (not
+/// <c>IValidator&lt;T&gt;</c>) for shape rules and map failures to Failed results; DueDates empty /
+/// batch-size wording stays on <see cref="CreateDatedWorkOrdersCommand.FindRuleViolations"/>.
 /// </summary>
 public sealed class CreateDatedWorkOrdersCommandValidator : AbstractValidator<CreateDatedWorkOrdersCommand>
 {
