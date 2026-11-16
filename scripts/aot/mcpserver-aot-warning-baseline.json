@@ -1,0 +1,16 @@
+{
+  "total": 691.0,
+  "bySource": {
+    "ClearMeasure.Bootcamp.DataAccess": 5,
+    "FluentValidation.Validators": 1,
+    "Microsoft.Data": 45,
+    "Microsoft.EntityFrameworkCore": 616,
+    "Microsoft.Extensions": 1,
+    "Octopus.OpenFeature": 8,
+    "Serilog.Capturing": 1,
+    "System": 2,
+    "System.Configuration": 5,
+    "System.Reflection": 4,
+    "System.SharedTypeExtensions": 3
+  }
+}

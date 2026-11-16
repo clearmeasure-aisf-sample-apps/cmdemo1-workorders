@@ -1,0 +1,48 @@
+# Native AOT gate for McpServer (aot experiment 5). Publishes McpServer as Native AOT with the EF Core compiled model and
+# precompiled queries, then fails when the publish has a new IL trimming/AOT warning source or more warnings from a
+# source than scripts/aot/mcpserver-aot-warning-baseline.json allows. The baseline only goes down.
+name: AOT warning gate
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/aot/**"
+      - ".github/workflows/aot-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mcpserver-aot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    container: mcr.microsoft.com/dotnet/sdk:11.0-aot
+    env:
+      # The EF Core query precompiler re-reads the projects without command-line properties, so the switch is also
+      # an environment variable.
+      McpServerAot: "true"
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - name: Publish McpServer as Native AOT
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet publish src/McpServer/McpServer.csproj -c Release -r linux-x64 \
+            -p:McpServerAot=true -p:TrimmerSingleWarn=false \
+            -p:TreatWarningsAsErrors=false -p:MSBuildTreatAllWarningsAsErrors=false \
+            -p:CodeAnalysisTreatWarningsAsErrors=false \
+            -o aot-out/McpServer 2>&1 | tee aot-publish.log
+
+      - name: Check the AOT warning ratchet
+        shell: pwsh
+        run: ./scripts/aot/Assert-AotWarningRatchet.ps1 -PublishLog aot-publish.log
+
+      - name: Keep the publish log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcpserver-aot-publish-log
+          path: aot-publish.log
