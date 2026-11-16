@@ -49,13 +49,13 @@ public static class VersionEndpoint
 /// </summary>
 public record VersionMetadataResponse
 {
-    public required string? AssemblyVersion { get; init; }
+    public string? AssemblyVersion { get; init; }
 
-    public required string? InformationalVersion { get; init; }
+    public string? InformationalVersion { get; init; }
 
     public required string BuildConfiguration { get; init; }
 
-    public required string? Environment { get; init; }
+    public string? Environment { get; init; }
 
     public required string MachineName { get; init; }
 

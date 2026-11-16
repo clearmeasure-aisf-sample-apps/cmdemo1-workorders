@@ -9,6 +9,14 @@ src/ChurchBulletin.ServiceDefaults/LocalTelemetryLoggerProvider.cs :: LocalTelem
 src/Core/FeatureFlags/FeatureDisabledException.cs :: FeatureDisabledException.RequestName
 src/Core/Model/Employee.cs :: Employee.GetDisplayName()
 src/Core/Model/WorkOrderStatus.cs :: WorkOrderStatus.IsEmpty()
+src/DataAccess/Handlers/AotBuildingRoomSummaryQueryHandler.cs :: AotBuildingRoomSummaryQueryHandler
+src/DataAccess/Handlers/AotEmployeeWorkLoadSummaryQueryHandler.cs :: AotEmployeeWorkLoadSummaryQueryHandler
+src/DataAccess/Handlers/AotNotificationsPanelQueryHandler.cs :: AotNotificationsPanelQueryHandler
+src/DataAccess/Handlers/AotRecentWorkOrdersQueryHandler.cs :: AotRecentWorkOrdersQueryHandler
+src/DataAccess/Handlers/AotWorkOrderReportsQueryHandler.cs :: AotWorkOrderReportsQueryHandler
+src/DataAccess/Handlers/AotWorkOrderSearchHandler.cs :: AotWorkOrderSearchHandler
+src/DataAccess/Handlers/AotWorkOrderSearchSummaryQueryHandler.cs :: AotWorkOrderSearchSummaryQueryHandler
+src/DataAccess/Handlers/AotWorkOrdersByNumbersQueryHandler.cs :: AotWorkOrdersByNumbersQueryHandler
 src/DataAccess/Handlers/BuildingRoomSummaryQueryHandler.cs :: BuildingRoomSummaryQueryHandler
 src/DataAccess/Handlers/EmployeeQueryHandler.cs :: EmployeeQueryHandler
 src/DataAccess/Handlers/EmployeeWorkLoadQueryHandler.cs :: EmployeeWorkLoadQueryHandler
@@ -31,6 +39,8 @@ src/DataAccess/Handlers/WorkOrderSearchSummaryQueryHandler.cs :: WorkOrderSearch
 src/DataAccess/Handlers/WorkOrderStatusHistoryQueryHandler.cs :: WorkOrderStatusHistoryQueryHandler
 src/DataAccess/Handlers/WorkOrdersByNumbersQueryHandler.cs :: WorkOrdersByNumbersQueryHandler
 src/DataAccess/HealthCheckRemotableRequestHandler.cs :: HealthCheckRemotableRequestHandler
+src/DataAccess/Mappings/DesignTimeDataContextFactory.cs :: DesignTimeDataContextFactory
+src/DataAccess/Mappings/DesignTimeDataContextFactory.cs :: DesignTimeDataContextFactory.CreateDbContext(string[])
 src/LlmGateway/ChatActivityTracing.cs :: ChatActivityTracing
 src/LlmGateway/ChatActivityTracing.cs :: ChatActivityTracing.RecordStreamingCompletion(Activity?,string?,string)
 src/McpServer/McpServiceRegistry.cs :: McpServiceRegistry

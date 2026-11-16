@@ -71,7 +71,7 @@ public record EchoResponse
 
     public required string Protocol { get; init; }
 
-    public required string? RemoteIpAddress { get; init; }
+    public string? RemoteIpAddress { get; init; }
 
     public required IReadOnlyDictionary<string, string> Headers { get; init; }
 }

@@ -34,7 +34,7 @@ public class BlazorWasmWarmUp
     {
         TestContext.Out.WriteLine("Blazor WASM warm-up: starting...");
         await using var browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
-        var context = await browser.NewContextAsync(new BrowserNewContextOptions { BaseURL = _baseUrl, IgnoreHTTPSErrors = true });
+        var context = await browser.NewContextAsync(ContextOptions());
         context.SetDefaultTimeout(TimeoutSeconds * 1000);
         var page = await context.NewPageAsync();
         var problems = WatchForProblems(page);
@@ -58,6 +58,11 @@ public class BlazorWasmWarmUp
             $"Blazor WASM warm-up: LoginLink not visible after {MaxAttempts} attempts of {TimeoutSeconds}s. " +
             $"Last attempt saw: {string.Join(" | ", problems)}. Server output: {ServerFixture.RecentServerOutput()}");
     }
+
+    // Locale as BrowserContextFactory sets it. Without one, Chromium on the ARM runner (LANG=C) reports
+    // "en-US@posix", which the .NET 11 WebAssembly runtime rejects at start-up (CultureNotSupportedException).
+    private BrowserNewContextOptions ContextOptions() =>
+        new() { BaseURL = _baseUrl, Locale = "en-US", IgnoreHTTPSErrors = true };
 
     private static ConcurrentQueue<string> WatchForProblems(IPage page)
     {

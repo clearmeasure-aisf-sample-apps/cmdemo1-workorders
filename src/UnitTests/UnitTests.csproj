@@ -18,6 +18,10 @@
 
 	<ItemGroup>
 		<Compile Remove="TestResults\**" />
+		<!-- The Native AOT handlers and their snapshot reads compile only into the AOT DataAccess build. Linked here (no
+		     Mediator generator in this project, so they register nowhere) so their tests pin each against the JIT handler
+		     it replaces on the same database. -->
+		<Compile Include="..\DataAccess\Handlers\Aot*.cs;..\DataAccess\Handlers\WorkOrderSnapshotSource.cs" LinkBase="DataAccess\AotHandlers\Linked" />
 		<EmbeddedResource Remove="TestResults\**" />
 		<None Remove="TestResults\**" />
 	</ItemGroup>
