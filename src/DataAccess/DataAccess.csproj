@@ -68,11 +68,12 @@
     <Compile Remove="Handlers\UserWorkOrders.cs" />
     <Compile Remove="Handlers\WorkOrderReportsQueryHandler.cs" />
     <Compile Remove="Handlers\WorkOrderSearchSummaryQueryHandler.cs" />
+    <Compile Remove="Handlers\WorkOrderSearchHandler.Queries.cs" />
     <Compile Remove="DatabaseMigrationVersionReader.cs" />
     <Compile Remove="TestSupport\**" />
   </ItemGroup>
   <ItemGroup Condition="'$(McpServerAot)' != 'true'">
-    <Compile Remove="Mappings\AotValueConverterRoots.cs" />
+    <Compile Remove="Handlers\WorkOrderSearchHandler.Queries.Aot.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(McpServerAot)' == 'true'">
     <!-- The EF tool runs this class library with dotnet exec, which needs a runtimeconfig.json. -->
