@@ -19,6 +19,7 @@ using Palermo.BlazorMvc;
 using Shouldly;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
 using WorkOrderSearchPage = ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderSearch;
+using WorkOrderManagePage = ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderManage;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -132,10 +133,10 @@ public class ClientDateFormatterTests
         }
 
         await using var manage = CreateManageContext(order);
-        var page = manage.Render<WorkOrderManage>();
-        var due = await page.WaitForElementAsync($"[data-testid='{WorkOrderManage.Elements.DueDateDisplay}']");
+        var page = manage.Render<WorkOrderManagePage>();
+        var due = await page.WaitForElementAsync($"[data-testid='{WorkOrderManagePage.Elements.DueDateDisplay}']");
         due.TextContent.ShouldContain(expectedDue);
-        var created = page.Find($"[data-testid='{WorkOrderManage.Elements.CreatedDate}']");
+        var created = page.Find($"[data-testid='{WorkOrderManagePage.Elements.CreatedDate}']");
         created.TextContent.Trim().ShouldBe(Created.ToString("G", culture));
     }
 
