@@ -15,10 +15,10 @@ public class KpiCardLoadingAriaLabelTests
         var component = ctx.Render<KpiCard>(p => p
             .Add(c => c.TestId, "CardId")
             .Add(c => c.Label, "Open work orders")
-            .Add(c => c.Count, (int?)null));
+            .Add(c => c.Count, null));
 
         component.Find(".summary-card").GetAttribute("aria-label")
-            .ShouldBe("Open work orders: loading. Show these work orders");
+            .ShouldBe("Open work orders: –, loading. Show these work orders");
         component.Find(".summary-card-value").TextContent.ShouldBe("–");
     }
 
@@ -30,11 +30,11 @@ public class KpiCardLoadingAriaLabelTests
         var component = ctx.Render<KpiCard>(p => p
             .Add(c => c.TestId, "CardId")
             .Add(c => c.Label, "Overdue")
-            .Add(c => c.Count, (int?)null)
+            .Add(c => c.Count, null)
             .Add(c => c.Note, "Needs attention"));
 
         component.Find(".summary-card").GetAttribute("aria-label")
-            .ShouldBe("Overdue: loading. Needs attention. Show these work orders");
+            .ShouldBe("Overdue: –, loading. Needs attention. Show these work orders");
         component.Find(".summary-card-value").TextContent.ShouldBe("–");
     }
 
