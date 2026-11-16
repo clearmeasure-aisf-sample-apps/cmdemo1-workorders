@@ -17,7 +17,7 @@ public class WorkOrdersByNumbersQueryHandlerTests
         var userName = TestData.UserName("batch");
         var numbers = TestData.NumberSeries(8);
         var context = await GivenBatchOrdersAsync(userName, numbers);
-        var handler = new WorkOrderQueryHandler(context);
+        var handler = new WorkOrdersByNumbersQueryHandler(context);
 
         await ThenOneAndAllShareCommandCountAsync(handler, context, userName, numbers);
         await ThenEmptyAndTooManyStayAtZeroAsync(handler, context);
@@ -37,7 +37,7 @@ public class WorkOrdersByNumbersQueryHandlerTests
     }
 
     private static async Task ThenOneAndAllShareCommandCountAsync(
-        WorkOrderQueryHandler handler, CountingDataContext context, string userName, string[] numbers)
+        WorkOrdersByNumbersQueryHandler handler, CountingDataContext context, string userName, string[] numbers)
     {
         context.Commands.Reset();
         var one = await handler.Handle(new WorkOrdersByNumbersQuery([numbers[0]]));
@@ -55,7 +55,7 @@ public class WorkOrdersByNumbersQueryHandlerTests
     }
 
     private static async Task ThenEmptyAndTooManyStayAtZeroAsync(
-        WorkOrderQueryHandler handler, CountingDataContext context)
+        WorkOrdersByNumbersQueryHandler handler, CountingDataContext context)
     {
         context.Commands.Reset();
         (await handler.Handle(new WorkOrdersByNumbersQuery([]))).ShouldBeEmpty();

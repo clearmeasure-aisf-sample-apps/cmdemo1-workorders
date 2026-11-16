@@ -68,6 +68,7 @@
     <Compile Remove="Handlers\WorkOrderReportsQueryHandler.cs" />
     <Compile Remove="Handlers\WorkOrderSearchSummaryQueryHandler.cs" />
     <Compile Remove="Handlers\WorkOrderSearchHandler.cs" />
+    <Compile Remove="Handlers\WorkOrdersByNumbersQueryHandler.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(McpServerAot)' == 'true'">
     <Compile Remove="Handlers\AotBuildingRoomSummaryQueryHandler.cs" />
@@ -77,6 +78,7 @@
     <Compile Remove="Handlers\AotRecentWorkOrdersQueryHandler.cs" />
     <Compile Remove="Handlers\AotWorkOrderReportsQueryHandler.cs" />
     <Compile Remove="Handlers\AotWorkOrderSearchSummaryQueryHandler.cs" />
+    <Compile Remove="Handlers\AotWorkOrdersByNumbersQueryHandler.cs" />
     <Compile Remove="DatabaseMigrationVersionReader.cs" />
     <Compile Remove="TestSupport\**" />
   </ItemGroup>
