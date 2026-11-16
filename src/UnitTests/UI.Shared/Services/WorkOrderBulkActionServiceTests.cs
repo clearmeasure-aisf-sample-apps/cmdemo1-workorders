@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
 using Palermo.BlazorMvc;
 using Shouldly;
@@ -14,13 +15,20 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Services;
 [TestFixture]
 public class WorkOrderBulkActionServiceTests
 {
-    private static readonly Employee Creator = NewEmployee("creator", true, false);
-    private static readonly Employee Fixer = NewEmployee("fixer", false, true);
+    private static readonly Employee Creator = EmployeeBuilder.Create("creator")
+        .WithFirstName("creator").WithLastName("Person").WithEmail("creator@example.com")
+        .WithId(Guid.NewGuid()).WithRole("creator-role", canCreate: true, canFulfill: false).Build();
+
+    private static readonly Employee Fixer = EmployeeBuilder.Create("fixer")
+        .WithFirstName("fixer").WithLastName("Person").WithEmail("fixer@example.com")
+        .WithId(Guid.NewGuid()).WithRole("fixer-role", canCreate: false, canFulfill: true).Build();
 
     [Test]
     public async Task Assign_ValidDrafts_SendsDraftToAssignedForEach()
     {
-        var bus = new StubCommandBus(Order("1", WorkOrderStatus.Draft), Order("2", WorkOrderStatus.Draft));
+        var bus = new StubCommandBus(
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Draft).WithId(Guid.NewGuid()).WithNumber("1").WithTitle("1").Build(),
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Draft).WithId(Guid.NewGuid()).WithNumber("2").WithTitle("2").Build());
         var service = new WorkOrderBulkActionService(bus, new CountingUiBus());
 
         var outcome = await service.AssignAsync(["1", "2"], "fixer", Creator);
@@ -34,9 +42,11 @@ public class WorkOrderBulkActionServiceTests
     [Test]
     public async Task Assign_NotCreator_SkipsRow()
     {
-        var otherCreator = NewEmployee("someone", true, false);
-        var order = Order("1", WorkOrderStatus.Draft);
-        order.Creator = otherCreator;
+        var otherCreator = EmployeeBuilder.Create("someone")
+            .WithFirstName("someone").WithLastName("Person").WithEmail("someone@example.com")
+            .WithId(Guid.NewGuid()).WithRole("someone-role", canCreate: true, canFulfill: false).Build();
+        var order = WorkOrderBuilder.For(otherCreator, WorkOrderStatus.Draft)
+            .WithId(Guid.NewGuid()).WithNumber("1").WithTitle("1").Build();
         var bus = new StubCommandBus(order);
         var service = new WorkOrderBulkActionService(bus, new CountingUiBus());
 
@@ -50,10 +60,10 @@ public class WorkOrderBulkActionServiceTests
     [Test]
     public async Task ChangeStatus_Mixed_ReportsUpdatedAndSkipped()
     {
-        var assigned1 = Order("1", WorkOrderStatus.Assigned);
-        var assigned2 = Order("2", WorkOrderStatus.Assigned);
-        var draft = Order("3", WorkOrderStatus.Draft);
-        var bus = new StubCommandBus(assigned1, assigned2, draft);
+        var bus = new StubCommandBus(
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Assigned).WithId(Guid.NewGuid()).WithNumber("1").WithTitle("1").Build(),
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Assigned).WithId(Guid.NewGuid()).WithNumber("2").WithTitle("2").Build(),
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Draft).WithId(Guid.NewGuid()).WithNumber("3").WithTitle("3").Build());
         var service = new WorkOrderBulkActionService(bus, new CountingUiBus());
 
         var outcome = await service.ChangeStatusAsync(["1", "2", "3", "missing"], AssignedToCancelledCommand.Name, Creator);
@@ -68,13 +78,14 @@ public class WorkOrderBulkActionServiceTests
     [Test]
     public void ChangeStatusOptions_ExcludeSaveAndAssign()
     {
+        var inProgress = WorkOrderBuilder.For(Creator, WorkOrderStatus.InProgress)
+            .WithId(Guid.NewGuid()).WithNumber("3").WithTitle("3").AssignedTo(Creator).Build();
         var orders = new[]
         {
-            Order("1", WorkOrderStatus.Draft),
-            Order("2", WorkOrderStatus.Assigned),
-            Order("3", WorkOrderStatus.InProgress)
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Draft).WithId(Guid.NewGuid()).WithNumber("1").WithTitle("1").Build(),
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Assigned).WithId(Guid.NewGuid()).WithNumber("2").WithTitle("2").Build(),
+            inProgress
         };
-        orders[2].Assignee = Creator;
 
         var options = WorkOrderBulkActionService.ChangeStatusOptions(orders, Creator);
 
@@ -101,7 +112,8 @@ public class WorkOrderBulkActionServiceTests
     [Test]
     public async Task ChangeStatus_BlankNumbers_SkipsWithoutACommand()
     {
-        var bus = new StubCommandBus(Order("1", WorkOrderStatus.Assigned));
+        var bus = new StubCommandBus(
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Assigned).WithId(Guid.NewGuid()).WithNumber("1").WithTitle("1").Build());
         var service = new WorkOrderBulkActionService(bus, new CountingUiBus());
 
         var outcome = await service.ChangeStatusAsync(["", " "], AssignedToCancelledCommand.Name, Creator);
@@ -115,7 +127,9 @@ public class WorkOrderBulkActionServiceTests
     [Test]
     public async Task ShouldNotifyWorkOrderChanged_ForEachUpdate()
     {
-        var bus = new StubCommandBus(Order("1", WorkOrderStatus.Assigned), Order("2", WorkOrderStatus.Assigned));
+        var bus = new StubCommandBus(
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Assigned).WithId(Guid.NewGuid()).WithNumber("1").WithTitle("1").Build(),
+            WorkOrderBuilder.For(Creator, WorkOrderStatus.Assigned).WithId(Guid.NewGuid()).WithNumber("2").WithTitle("2").Build());
         var uiBus = new CountingUiBus();
         var service = new WorkOrderBulkActionService(bus, uiBus);
 
@@ -124,16 +138,6 @@ public class WorkOrderBulkActionServiceTests
         uiBus.Events.Count.ShouldBe(2);
         uiBus.Events.ShouldAllBe(e => e is WorkOrderChangedEvent);
     }
-
-    private static Employee NewEmployee(string userName, bool canCreate, bool canFulfill)
-    {
-        var employee = new Employee(userName, userName, "Person", $"{userName}@example.com") { Id = Guid.NewGuid() };
-        employee.AddRole(new Role(userName + "-role", canCreate, canFulfill));
-        return employee;
-    }
-
-    private static WorkOrder Order(string number, WorkOrderStatus status) =>
-        new() { Id = Guid.NewGuid(), Number = number, Title = number, Status = status, Creator = Creator };
 
     private sealed class StubCommandBus(params WorkOrder[] orders) : Bus(null!)
     {

@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -23,15 +24,7 @@ public class WorkOrderSearchSummaryQueryHandlerTests
         var now = clock.GetUtcNow().UtcDateTime;
         var today = DateOnly.FromDateTime(now);
         var before = await Handle(null, clock);
-        var creator = NewEmployee("sumcreator");
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Draft, created: now.AddDays(-1)),
-            Order(creator, WorkOrderStatus.Assigned, created: now.AddDays(-20), due: today.AddDays(-1)),
-            Order(creator, WorkOrderStatus.InProgress, created: now.AddDays(-3), due: today),
-            Order(creator, WorkOrderStatus.InProgress, created: now.AddDays(-40), due: today.AddDays(-10)),
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-12), completed: now.AddDays(-10), due: today.AddDays(-30)),
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-90), completed: now.AddDays(-60)),
-            Order(creator, WorkOrderStatus.Cancelled, created: now.AddDays(-2), due: today.AddDays(-5)));
+        await GivenOpenOverdueCompletedAsync(now, today);
 
         var summary = await Handle(null, clock);
 
@@ -50,15 +43,7 @@ public class WorkOrderSearchSummaryQueryHandlerTests
         var clock = TestData.FutureClock();
         var today = ChurchTimeZone.Today(clock);
         var before = await Handle(null, clock);
-        var creator = NewEmployee("dueweek");
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Draft, due: today.AddDays(-1)),
-            Order(creator, WorkOrderStatus.Assigned, due: today),
-            Order(creator, WorkOrderStatus.InProgress, due: today.AddDays(6)),
-            Order(creator, WorkOrderStatus.Assigned, due: today.AddDays(7)),
-            Order(creator, WorkOrderStatus.Draft),
-            Order(creator, WorkOrderStatus.Complete, due: today),
-            Order(creator, WorkOrderStatus.Cancelled, due: today.AddDays(1)));
+        await GivenDueThisWeekAsync(today);
 
         var summary = await Handle(null, clock);
 
@@ -71,10 +56,7 @@ public class WorkOrderSearchSummaryQueryHandlerTests
         var clock = TestData.FutureClock();
         var now = clock.GetUtcNow().UtcDateTime;
         var before = await Handle(null, clock);
-        var creator = NewEmployee("sumcreator");
-        var waiting = Order(creator, WorkOrderStatus.InProgress, created: now.AddDays(-20));
-        waiting.WaitingOnVendorSince = now.AddDays(-1);
-        await SaveAsync(creator, waiting, Order(creator, WorkOrderStatus.InProgress, created: now.AddDays(-20)));
+        await GivenWaitingOnVendorAsync(now);
 
         var summary = await Handle(null, clock);
 
@@ -85,22 +67,9 @@ public class WorkOrderSearchSummaryQueryHandlerTests
     [Test]
     public async Task ShouldCountAssignedToMeAndDueToday_ForUser()
     {
-        var creator = NewEmployee("sumcreator2");
-        var me = NewEmployee("summe");
-        await using (var context = TestHost.GetRequiredService<DbContext>())
-        {
-            context.Add(me);
-            await context.SaveChangesAsync();
-        }
+        var meUserName = await GivenAssignedToMeAsync();
 
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Assigned, assignee: me, due: Today),
-            Order(creator, WorkOrderStatus.InProgress, assignee: me, due: Today.AddDays(3)),
-            Order(creator, WorkOrderStatus.Complete, assignee: me, due: Today),
-            Order(creator, WorkOrderStatus.Assigned, assignee: creator, due: Today),
-            Order(me, WorkOrderStatus.Draft));
-
-        var summary = await Handle(me.UserName);
+        var summary = await Handle(meUserName);
 
         summary.AssignedToMeCount.ShouldBe(2);
         summary.AssignedToMeTotal.ShouldBe(3);
@@ -113,12 +82,7 @@ public class WorkOrderSearchSummaryQueryHandlerTests
     public async Task ShouldComputeAverageDaysToClose()
     {
         var clock = TestData.FutureClock();
-        var creator = NewEmployee("sumcreator3");
-        var now = clock.GetUtcNow().UtcDateTime;
-        await SaveAsync(creator,
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-5), completed: now.AddDays(-3)),
-            Order(creator, WorkOrderStatus.Complete, created: now.AddDays(-10), completed: now.AddDays(-6)),
-            Order(creator, WorkOrderStatus.Complete, created: null, completed: now.AddDays(-1)));
+        await GivenAverageCloseAsync(clock);
 
         var summary = await Handle(null, clock);
 
@@ -140,35 +104,95 @@ public class WorkOrderSearchSummaryQueryHandlerTests
         summary.CreatedByMeCount.ShouldBe(0);
     }
 
+    private static async Task GivenOpenOverdueCompletedAsync(DateTime now, DateOnly today)
+    {
+        var userName = TestData.UserName("sumcreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Sum").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).CreatedAt(now.AddDays(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned)
+                .CreatedAt(now.AddDays(-20)).DueOn(today.AddDays(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress)
+                .CreatedAt(now.AddDays(-3)).DueOn(today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress)
+                .CreatedAt(now.AddDays(-40)).DueOn(today.AddDays(-10)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-12)).CompletedAt(now.AddDays(-10)).DueOn(today.AddDays(-30)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-90)).CompletedAt(now.AddDays(-60)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled)
+                .CreatedAt(now.AddDays(-2)).DueOn(today.AddDays(-5)).Build());
+    }
+
+    private static async Task GivenDueThisWeekAsync(DateOnly today)
+    {
+        var userName = TestData.UserName("dueweek");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Sum").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).DueOn(today.AddDays(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).DueOn(today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).DueOn(today.AddDays(6)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).DueOn(today.AddDays(7)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Draft).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).DueOn(today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Cancelled).DueOn(today.AddDays(1)).Build());
+    }
+
+    private static async Task GivenWaitingOnVendorAsync(DateTime now)
+    {
+        var userName = TestData.UserName("sumcreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Sum").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress)
+                .CreatedAt(now.AddDays(-20)).WaitingOnVendorSince(now.AddDays(-1)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).CreatedAt(now.AddDays(-20)).Build());
+    }
+
+    private static async Task<string> GivenAssignedToMeAsync()
+    {
+        var creatorName = TestData.UserName("sumcreator2");
+        var meName = TestData.UserName("summe");
+        var creator = EmployeeBuilder.Create(creatorName)
+            .WithFirstName("Sum").WithLastName("Tester").WithEmail(TestData.Email(creatorName)).Build();
+        var me = EmployeeBuilder.Create(meName)
+            .WithFirstName("Sum").WithLastName("Tester").WithEmail(TestData.Email(meName)).Build();
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.Add(me);
+            await context.SaveChangesAsync();
+        }
+
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).AssignedTo(me).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.InProgress).AssignedTo(me).DueOn(Today.AddDays(3)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete).AssignedTo(me).DueOn(Today).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Assigned).AssignedTo(creator).DueOn(Today).Build(),
+            WorkOrderBuilder.For(me, WorkOrderStatus.Draft).Build());
+        return me.UserName;
+    }
+
+    private static async Task GivenAverageCloseAsync(TimeProvider clock)
+    {
+        var userName = TestData.UserName("sumcreator3");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Sum").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        var now = clock.GetUtcNow().UtcDateTime;
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-5)).CompletedAt(now.AddDays(-3)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CreatedAt(now.AddDays(-10)).CompletedAt(now.AddDays(-6)).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .CompletedAt(now.AddDays(-1)).Build());
+    }
+
     private static async Task<WorkOrderSearchSummary> Handle(string? userName, TimeProvider? clock = null)
     {
         var handler = new WorkOrderSearchSummaryQueryHandler(
             TestHost.GetRequiredService<DataContext>(), clock ?? TestData.FixedClock(Now));
         return await handler.Handle(new WorkOrderSearchSummaryQuery(userName));
-    }
-
-    private static Employee NewEmployee(string prefix)
-    {
-        var userName = TestData.UserName(prefix);
-        return new Employee(userName, "Sum", "Tester", TestData.Email(userName));
-    }
-
-    private static WorkOrder Order(Employee creator, WorkOrderStatus status,
-        Employee? assignee = null, DateTime? created = null, DateTime? completed = null, DateOnly? due = null) =>
-        new()
-        {
-            Creator = creator, Assignee = assignee, Number = TestData.Number("S"), Title = $"Summary {creator.UserName}",
-            Status = status,
-            CreatedDate = created, CompletedDate = completed, DueDate = due
-        };
-
-    private static async Task SaveAsync(Employee creator, params WorkOrder[] orders)
-    {
-        await using var context = TestHost.GetRequiredService<DbContext>();
-        var assignees = orders.Select(o => o.Assignee).OfType<Employee>().Where(e => e != creator).Distinct();
-        context.AttachRange(assignees);
-        context.Add(creator);
-        context.AddRange(orders.Cast<object>());
-        await context.SaveChangesAsync();
     }
 }

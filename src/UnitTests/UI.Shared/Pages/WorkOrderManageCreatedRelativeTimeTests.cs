@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -19,7 +20,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 [TestFixture]
 public class WorkOrderManageCreatedRelativeTimeTests
 {
-    private static readonly Employee Creator = new("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+    private static readonly Employee Creator = EmployeeBuilder.Create("jpalermo")
+        .WithFirstName("Jeffrey")
+        .WithLastName("Palermo")
+        .WithEmail("jp@example.com")
+        .WithId(Guid.NewGuid())
+        .Build();
 
     [Test]
     public async Task WorkOrderManage_ShouldShowRelativeCreatedTime_BesideTheFullDate()
@@ -56,16 +62,16 @@ public class WorkOrderManageCreatedRelativeTimeTests
         component.FindAll($"[data-testid='{WorkOrderManage.Elements.CreatedRelativeTime}']").Count.ShouldBe(0);
     }
 
-    private static WorkOrder SampleWorkOrder(DateTime? created) => new()
-    {
-        Id = Guid.NewGuid(),
-        Number = "WO-001",
-        Title = "Test",
-        Description = "Test",
-        Status = WorkOrderStatus.Draft,
-        Creator = Creator,
-        CreatedDate = created
-    };
+    private static WorkOrder SampleWorkOrder(DateTime? created) =>
+        WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid())
+            .WithNumber("WO-001")
+            .WithTitle("Test")
+            .WithDescription("Test")
+            .WithStatus(WorkOrderStatus.Draft)
+            .CreatedBy(Creator)
+            .CreatedAt(created)
+            .Build();
 
     private static BunitContext CreateContext(Bus bus, TimeProvider clock)
     {

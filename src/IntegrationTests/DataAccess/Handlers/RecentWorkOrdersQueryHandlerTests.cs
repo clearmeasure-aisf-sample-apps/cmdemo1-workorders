@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using Microsoft.EntityFrameworkCore;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
@@ -15,17 +15,8 @@ public class RecentWorkOrdersQueryHandlerTests
     {
         // Dates after every stored work order date make this test's rows the most recent in the database.
         var start = TestData.FutureClock().GetUtcNow().UtcDateTime;
-        var creator = NewEmployee("recentcreator");
         var numbers = TestData.NumberSeries(13);
-        var orders = Enumerable.Range(1, 11)
-            .Select(i => Order(creator, numbers[i - 1], created: start.AddDays(10 + i)))
-            .ToList();
-        var oldCompletedLast = Order(creator, numbers[11], created: start, completed: start.AddDays(40));
-        oldCompletedLast.Status = WorkOrderStatus.Complete;
-        var undated = Order(creator, numbers[12], created: null);
-        orders.Add(oldCompletedLast);
-        orders.Add(undated);
-        await SaveAsync(creator, orders);
+        var creatorUserName = await GivenLatestChangedOrdersAsync(start, numbers);
 
         var result = await Handle(10);
 
@@ -35,16 +26,15 @@ public class RecentWorkOrdersQueryHandlerTests
         result[9].Number.ShouldBe(numbers[2]);
         result.ShouldNotContain(wo => wo.Number == numbers[12]);
         result[0].Creator.ShouldNotBeNull();
-        result[0].Creator!.UserName.ShouldBe(creator.UserName);
+        result[0].Creator!.UserName.ShouldBe(creatorUserName);
     }
 
     [Test]
     public async Task ShouldBreakTiesByNumber()
     {
-        var creator = NewEmployee("recenttie");
         var created = TestData.FutureClock().GetUtcNow().UtcDateTime;
         var numbers = TestData.NumberSeries(12).Reverse().ToArray();
-        await SaveAsync(creator, numbers.Select(n => Order(creator, n, created: created)).ToList());
+        await GivenTiedOrdersAsync(created, numbers);
 
         var first = await Handle(10);
         var second = await Handle(10);
@@ -54,31 +44,31 @@ public class RecentWorkOrdersQueryHandlerTests
         second.Select(wo => wo.Number).ShouldBe(expected);
     }
 
-    private static Employee NewEmployee(string prefix)
+    private static async Task<string> GivenLatestChangedOrdersAsync(DateTime start, string[] numbers)
     {
-        var userName = TestData.UserName(prefix);
-        return new Employee(userName, "Recent", "Tester", TestData.Email(userName));
+        var userName = TestData.UserName("recentcreator");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Recent").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        var orders = RecentWorkOrdersSteps.BuildLatestChangedOrders(creator, start, numbers);
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator, orders);
+        return creator.UserName;
+    }
+
+    private static async Task GivenTiedOrdersAsync(DateTime created, string[] numbers)
+    {
+        var userName = TestData.UserName("recenttie");
+        var creator = EmployeeBuilder.Create(userName)
+            .WithFirstName("Recent").WithLastName("Tester").WithEmail(TestData.Email(userName)).Build();
+        var orders = numbers
+            .Select(n => WorkOrderBuilder.For(creator, WorkOrderStatus.Draft)
+                .WithNumber(n).WithTitle(n).CreatedAt(created).Build())
+            .ToArray();
+        await WorkOrderQuerySteps.SaveOrdersAsync(creator, orders);
     }
 
     private static async Task<WorkOrder[]> Handle(int count)
     {
         var handler = new RecentWorkOrdersQueryHandler(TestHost.GetRequiredService<DataContext>());
         return await handler.Handle(new RecentWorkOrdersQuery(count));
-    }
-
-    private static WorkOrder Order(Employee creator, string number, DateTime? created,
-        DateTime? completed = null) =>
-        new()
-        {
-            Creator = creator, Number = number, Title = number, Status = WorkOrderStatus.Draft,
-            CreatedDate = created, AssignedDate = null, CompletedDate = completed
-        };
-
-    private static async Task SaveAsync(Employee creator, List<WorkOrder> orders)
-    {
-        await using var context = TestHost.GetRequiredService<DbContext>();
-        context.Add(creator);
-        context.AddRange(orders);
-        await context.SaveChangesAsync();
     }
 }

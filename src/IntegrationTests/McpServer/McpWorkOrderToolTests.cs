@@ -5,8 +5,10 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.McpServer.Tools;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
+using TestWorkOrderBuilder = ClearMeasure.Bootcamp.UnitTests.TestSupport.WorkOrderBuilder;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.McpServer;
 
@@ -750,17 +752,19 @@ public class McpWorkOrderToolTests
         string number,
         Employee creator,
         Employee? assignee,
-        WorkOrderStatus status) =>
-        new()
-        {
-            Number = number,
-            Title = number,
-            Description = "Filter test",
-            Instructions = "Summary must not expose this",
-            Creator = creator,
-            Assignee = assignee,
-            Status = status
-        };
+        WorkOrderStatus status)
+    {
+        var order = TestWorkOrderBuilder.Create()
+            .WithNumber(number)
+            .WithTitle(number)
+            .WithDescription("Filter test")
+            .CreatedBy(creator)
+            .AssignedTo(assignee)
+            .WithStatus(status)
+            .Build();
+        order.Instructions = "Summary must not expose this";
+        return order;
+    }
 
     private static string[] ExtractNumbers(string json)
     {

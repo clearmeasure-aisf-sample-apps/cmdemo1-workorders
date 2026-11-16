@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -24,9 +25,9 @@ public class TeamQueryHandlerTests
         _tag = TestData.Tag();
         _employees =
         [
-            NewEmployee("u1", "Una", "One"),
-            NewEmployee("u2", "Dos", "Two"),
-            NewEmployee("u3", "Tres", "Three")
+            EmployeeBuilder.Create(TestData.UserName("u1")).WithFirstName("Una").WithLastName("One").Build(),
+            EmployeeBuilder.Create(TestData.UserName("u2")).WithFirstName("Dos").WithLastName("Two").Build(),
+            EmployeeBuilder.Create(TestData.UserName("u3")).WithFirstName("Tres").WithLastName("Three").Build()
         ];
 
         await using var context = TestHost.GetRequiredService<DbContext>();
@@ -104,12 +105,6 @@ public class TeamQueryHandlerTests
     }
 
     private string TeamName(string name) => $"{name} {_tag}";
-
-    private static Employee NewEmployee(string prefix, string firstName, string lastName)
-    {
-        var userName = TestData.UserName(prefix);
-        return new Employee(userName, firstName, lastName, TestData.Email(userName));
-    }
 
     private async Task<Team[]> OwnTeams()
     {

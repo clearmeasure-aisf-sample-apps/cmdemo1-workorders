@@ -8,6 +8,7 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using MediatR;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Palermo.BlazorMvc;
 using Shouldly;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
+using WorkOrderSearchPage = ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderSearch;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -25,10 +27,12 @@ public class ClientDateFormatterTests
 {
     private static readonly DateOnly Due = new(2026, 10, 23);
     private static readonly DateTime Created = new(2026, 10, 23, 15, 4, 5, DateTimeKind.Utc);
-    private static readonly Employee Creator = new("jpalermo", "Jeffrey", "Palermo", "jp@example.com")
-    {
-        Id = Guid.NewGuid()
-    };
+    private static readonly Employee Creator = EmployeeBuilder.Create("jpalermo")
+        .WithFirstName("Jeffrey")
+        .WithLastName("Palermo")
+        .WithEmail("jp@example.com")
+        .WithId(Guid.NewGuid())
+        .Build();
 
     [Test]
     public async Task ShouldShowDayFirstDueDate_WhenCultureIsEnGb_OnPageAndList()
@@ -119,8 +123,8 @@ public class ClientDateFormatterTests
         var order = SampleWorkOrder();
 
         await using var search = CreateSearchContext(order);
-        var list = search.Render<WorkOrderSearch>();
-        var cells = list.FindAll($"[data-testid='{WorkOrderSearch.Elements.DueDateCell}{order.Number}']");
+        var list = search.Render<WorkOrderSearchPage>();
+        var cells = list.FindAll($"[data-testid='{WorkOrderSearchPage.Elements.DueDateCell}{order.Number}']");
         cells.Count.ShouldBeGreaterThan(0);
         foreach (var cell in cells)
         {
@@ -135,17 +139,17 @@ public class ClientDateFormatterTests
         created.TextContent.Trim().ShouldBe(Created.ToString("G", culture));
     }
 
-    private static WorkOrder SampleWorkOrder() => new()
-    {
-        Id = Guid.NewGuid(),
-        Number = "WO-603",
-        Title = "Culture dates",
-        Description = "Dates follow the browser culture",
-        Status = WorkOrderStatus.Complete,
-        Creator = Creator,
-        CreatedDate = Created,
-        DueDate = Due
-    };
+    private static WorkOrder SampleWorkOrder() =>
+        WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid())
+            .WithNumber("WO-603")
+            .WithTitle("Culture dates")
+            .WithDescription("Dates follow the browser culture")
+            .WithStatus(WorkOrderStatus.Complete)
+            .CreatedBy(Creator)
+            .CreatedAt(Created)
+            .DueOn(Due)
+            .Build();
 
     private static BunitContext CreateSearchContext(WorkOrder order)
     {

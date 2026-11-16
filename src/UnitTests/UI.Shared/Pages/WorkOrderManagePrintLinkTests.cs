@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -18,10 +19,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 [TestFixture]
 public class WorkOrderManagePrintLinkTests
 {
-    private static readonly Employee Creator = new("jpalermo", "Jeffrey", "Palermo", "jp@example.com")
-    {
-        Id = Guid.NewGuid()
-    };
+    private static readonly Employee Creator = EmployeeBuilder.Create("jpalermo")
+        .WithFirstName("Jeffrey")
+        .WithLastName("Palermo")
+        .WithEmail("jp@example.com")
+        .WithId(Guid.NewGuid())
+        .Build();
 
     [Test]
     public async Task Should_RenderPrintLink_WithRelNoopenerNoreferrer()
@@ -53,16 +56,16 @@ public class WorkOrderManagePrintLinkTests
         hidden.TextContent.ShouldBe("(opens in a new tab)");
     }
 
-    private static WorkOrder CreatePrintWorkOrder() => new()
-    {
-        Id = Guid.NewGuid(),
-        Number = "WO-PRINT",
-        Title = "Print link",
-        Description = "Print link",
-        Status = WorkOrderStatus.Draft,
-        Creator = Creator,
-        CreatedDate = DateTime.UtcNow
-    };
+    private static WorkOrder CreatePrintWorkOrder() =>
+        WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid())
+            .WithNumber("WO-PRINT")
+            .WithTitle("Print link")
+            .WithDescription("Print link")
+            .WithStatus(WorkOrderStatus.Draft)
+            .CreatedBy(Creator)
+            .CreatedAt(DateTime.UtcNow)
+            .Build();
 
     private static BunitContext CreateEditContext(WorkOrder order)
     {
@@ -113,14 +116,14 @@ public class WorkOrderManagePrintLinkTests
 
     private sealed class StubManageWorkOrderCreator(Guid workOrderId, Employee creator) : IWorkOrderBuilder
     {
-        public WorkOrder CreateNewWorkOrder(Employee currentUser) => new()
-        {
-            Id = workOrderId,
-            Number = "WO-PRINT",
-            Status = WorkOrderStatus.Draft,
-            Creator = creator,
-            Title = "Print link"
-        };
+        public WorkOrder CreateNewWorkOrder(Employee currentUser) =>
+            WorkOrderBuilder.Create()
+                .WithId(workOrderId)
+                .WithNumber("WO-PRINT")
+                .WithStatus(WorkOrderStatus.Draft)
+                .CreatedBy(creator)
+                .WithTitle("Print link")
+                .Build();
     }
 
     private sealed class StubTranslationService : ITranslationService

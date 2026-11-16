@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
@@ -21,7 +22,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 [TestFixture]
 public class WorkOrderManageRestyleTests
 {
-    private static readonly Employee Creator = new("jpalermo", "Jeffrey", "Palermo", "jp@example.com") { Id = Guid.NewGuid() };
+    private static readonly Employee Creator = EmployeeBuilder.Create("jpalermo")
+        .WithFirstName("Jeffrey")
+        .WithLastName("Palermo")
+        .WithEmail("jp@example.com")
+        .WithId(Guid.NewGuid())
+        .Build();
 
     [Test]
     public async Task ShouldRenderPageHeaderIconsAndExistingTestIds()

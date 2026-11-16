@@ -1,5 +1,5 @@
-using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Queries;
@@ -72,9 +72,6 @@ public class SlaHealthCalculationTests
         result.ShouldBe("↑ up from 90%");
     }
 
-    private static WorkOrder Order(DateOnly? due, DateTime? completed) =>
-        new() { DueDate = due, CompletedDate = completed };
-
     [Test]
     public void Should_ReturnNullPercentage_When_ZeroOrders()
     {
@@ -89,8 +86,9 @@ public class SlaHealthCalculationTests
     {
         var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
         [
-            Order(null, new DateTime(2026, 5, 10)),
-            Order(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 11, 12, 0, 0))
+            WorkOrderBuilder.Create().CompletedAt(new DateTime(2026, 5, 10)).Build(),
+            WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 5, 10))
+                .CompletedAt(new DateTime(2026, 5, 11, 12, 0, 0)).Build()
         ]);
 
         percentage.ShouldBe(0m);
@@ -100,7 +98,8 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnNullPercentage_When_AllOrdersHaveNoDueDate()
     {
-        var (percentage, count) = SlaHealth.CalculateOnTimePercentage([Order(null, new DateTime(2026, 5, 10))]);
+        var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
+            [WorkOrderBuilder.Create().CompletedAt(new DateTime(2026, 5, 10)).Build()]);
 
         percentage.ShouldBeNull();
         count.ShouldBe(0);
@@ -110,7 +109,10 @@ public class SlaHealthCalculationTests
     public void Should_CountAsOnTime_When_CompletedOnDueDate()
     {
         var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
-            [Order(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 10, 23, 59, 0))]);
+        [
+            WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 5, 10))
+                .CompletedAt(new DateTime(2026, 5, 10, 23, 59, 0)).Build()
+        ]);
 
         percentage.ShouldBe(100m);
         count.ShouldBe(1);
@@ -120,7 +122,10 @@ public class SlaHealthCalculationTests
     public void Should_CountAsLate_When_CompletedAfterDueDate()
     {
         var (percentage, _) = SlaHealth.CalculateOnTimePercentage(
-            [Order(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 11, 5, 1, 0))]);
+        [
+            WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 5, 10))
+                .CompletedAt(new DateTime(2026, 5, 11, 5, 1, 0)).Build()
+        ]);
 
         percentage.ShouldBe(0m);
     }
@@ -129,7 +134,10 @@ public class SlaHealthCalculationTests
     public void Should_CountAsOnTime_When_CompletedEveningLocal_NextDayUtc()
     {
         var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
-            [Order(new DateOnly(2026, 10, 15), new DateTime(2026, 10, 16, 1, 0, 0))]);
+        [
+            WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 10, 15))
+                .CompletedAt(new DateTime(2026, 10, 16, 1, 0, 0)).Build()
+        ]);
 
         percentage.ShouldBe(100m);
         count.ShouldBe(1);
@@ -149,9 +157,9 @@ public class SlaHealthCalculationTests
         var due = new DateOnly(2026, 5, 10);
         var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
         [
-            Order(due, new DateTime(2026, 5, 9)),
-            Order(due, new DateTime(2026, 5, 10)),
-            Order(due, new DateTime(2026, 5, 12))
+            WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 9)).Build(),
+            WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 10)).Build(),
+            WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 12)).Build()
         ]);
 
         percentage.ShouldBe(67m);
@@ -181,9 +189,15 @@ public class SlaHealthCalculationTests
     {
         var due = new DateOnly(2026, 5, 10);
         var (current, _) = SlaHealth.CalculateOnTimePercentage(
-            [Order(due, new DateTime(2026, 5, 9)), Order(due, new DateTime(2026, 5, 10))]);
+        [
+            WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 9)).Build(),
+            WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 10)).Build()
+        ]);
         var (last, _) = SlaHealth.CalculateOnTimePercentage(
-            [Order(due, new DateTime(2026, 5, 9)), Order(due, new DateTime(2026, 5, 12))]);
+        [
+            WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 9)).Build(),
+            WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 12)).Build()
+        ]);
 
         SlaHealth.TrendText(current, last).ShouldBe("↑ up from 50%");
         SlaHealth.TrendText(last, current).ShouldBe("↓ down from 100%");
