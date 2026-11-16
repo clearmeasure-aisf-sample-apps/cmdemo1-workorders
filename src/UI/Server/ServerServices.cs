@@ -1,6 +1,5 @@
 using Asp.Versioning;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.DataAccess.Messaging;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Resources;

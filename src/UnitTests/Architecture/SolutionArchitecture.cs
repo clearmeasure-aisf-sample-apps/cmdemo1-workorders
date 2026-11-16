@@ -41,7 +41,6 @@ public static class SolutionArchitecture
         new("UI.Client", "ClearMeasure.Bootcamp.UI.Client", [Core, UiShared, LlmGateway]),
         new("UI.Api", "ClearMeasure.Bootcamp.UI.Api", [Core]),
         new("McpServer", "ClearMeasure.Bootcamp.McpServer", [Core, DataAccess, LlmGateway, UiShared, ServiceDefaults]),
-        new("Worker", "Worker", [Core, DataAccess, LlmGateway, ServiceDefaults]),
     ];
 
     /// <summary>

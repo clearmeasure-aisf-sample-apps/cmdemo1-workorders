@@ -37,6 +37,7 @@ codebase-audit-report # owner decision pending
 codecov.yml
 coverlet.runsettings
 docs
+experiments # Native AOT test-runner pilot (Exp 8)
 feature-proposals
 global.json
 images
