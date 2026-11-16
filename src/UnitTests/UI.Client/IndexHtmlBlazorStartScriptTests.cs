@@ -9,36 +9,37 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Client;
 [TestFixture]
 public class IndexHtmlBlazorStartScriptTests
 {
-    private string _markup = string.Empty;
-
-    [SetUp]
-    public void SetUp()
+    private static string ReadIndexHtml()
     {
         var indexHtml = Path.GetFullPath(Path.Combine(
             TestContext.CurrentContext.TestDirectory,
             "..", "..", "..", "..", "UI", "Client", "wwwroot", "index.html"));
-
-        File.Exists(indexHtml).ShouldBeTrue();
-        _markup = File.ReadAllText(indexHtml);
+        return File.ReadAllText(indexHtml);
     }
 
     [Test]
     public void IndexHtml_ShouldStartBlazorExplicitly()
     {
-        _markup.ShouldContain("<script src=\"_framework/blazor.webassembly.js\" autostart=\"false\"></script>");
-        _markup.ShouldContain("Blazor.start(options);");
+        var markup = ReadIndexHtml();
+
+        markup.ShouldContain("<script src=\"_framework/blazor.webassembly.js\" autostart=\"false\"></script>");
+        markup.ShouldContain("Blazor.start(options);");
     }
 
     [Test]
     public void IndexHtml_ShouldStripPosixModifierFromBrowserLanguage()
     {
-        _markup.ShouldContain("language.split(/[@.]/)[0]");
-        _markup.ShouldContain("options.applicationCulture");
+        var markup = ReadIndexHtml();
+
+        markup.ShouldContain("language.split(/[@.]/)[0]");
+        markup.ShouldContain("options.applicationCulture");
     }
 
     [Test]
     public void IndexHtml_ShouldFallBackToEnUs_WhenLocaleIsPosixOrC()
     {
-        _markup.ShouldContain("/^(|c|posix)$/i.test(tag) ? \"en-US\" : tag");
+        var markup = ReadIndexHtml();
+
+        markup.ShouldContain("/^(|c|posix)$/i.test(tag) ? \"en-US\" : tag");
     }
 }
