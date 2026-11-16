@@ -41,20 +41,24 @@
   </ItemGroup>
 
 
-  <!-- Native AOT (Exp 2): when McpServer is published with -p:McpServerAot=true (PublishAot), EF generates the compiled
+  <!-- Native AOT (Exp 2): when McpServer (-p:McpServerAot=true) or UI.Server (-p:UiServerAot=true) is published Native AOT, EF generates the compiled
        model and precompiled queries for DataContext during that publish (DesignTimeDataContextFactory picks SQL Server).
        Normal builds do not reference the tasks, so the JIT apps keep the runtime-built model and both providers. -->
-  <ItemGroup Condition="'$(McpServerAot)' == 'true'">
+  <ItemGroup Condition="'$(McpServerAot)' == 'true' Or '$(UiServerAot)' == 'true'">
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
     <!-- EF 11's generator can emit a file whose unsafe accessors name model types without a using for them (seen on
          WorkOrderBuildingsQueryHandler, a string-only projection); a global using covers every generated file. -->
     <Using Include="ClearMeasure.Bootcamp.Core.Model" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tasks" PrivateAssets="all" />
   </ItemGroup>
-  <!-- UI-only read models whose queries are composed at run time (shared specifications, reused IQueryable bases,
-       raw SQL), which EF cannot precompile. McpServer sends none of these requests, so its AOT build leaves them out;
-       UI.Server (JIT) keeps them. Making them precompile means inlining every specification at each call site. -->
-  <ItemGroup Condition="'$(McpServerAot)' == 'true'">
+  <!-- UI read models whose queries are composed at run time (shared specifications, reused IQueryable bases), which EF
+       cannot precompile. The Native AOT builds swap each for an Aot* handler that reads the WorkOrderSnapshot with one
+       precompiled query and applies the same specifications in memory; McpServer sends none of the UI-only requests,
+       so its AOT build also leaves out the UI-only handlers and the acceptance-test support. -->
+  <PropertyGroup>
+    <NativeAotDataAccess Condition="'$(McpServerAot)' == 'true' Or '$(UiServerAot)' == 'true'">true</NativeAotDataAccess>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(NativeAotDataAccess)' == 'true'">
     <Compile Remove="Handlers\BuildingRoomSummaryQueryHandler.cs" />
     <Compile Remove="Handlers\EmployeeWorkLoadQueryHandler.cs" />
     <Compile Remove="Handlers\EmployeeWorkLoadSummaryQueryHandler.cs" />
@@ -64,13 +68,23 @@
     <Compile Remove="Handlers\WorkOrderReportsQueryHandler.cs" />
     <Compile Remove="Handlers\WorkOrderSearchSummaryQueryHandler.cs" />
     <Compile Remove="Handlers\WorkOrderSearchHandler.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(McpServerAot)' == 'true'">
+    <Compile Remove="Handlers\AotBuildingRoomSummaryQueryHandler.cs" />
+    <Compile Remove="Handlers\AotEmployeeWorkLoadQueryHandler.cs" />
+    <Compile Remove="Handlers\AotEmployeeWorkLoadSummaryQueryHandler.cs" />
+    <Compile Remove="Handlers\AotNotificationsPanelQueryHandler.cs" />
+    <Compile Remove="Handlers\AotRecentWorkOrdersQueryHandler.cs" />
+    <Compile Remove="Handlers\AotWorkOrderReportsQueryHandler.cs" />
+    <Compile Remove="Handlers\AotWorkOrderSearchSummaryQueryHandler.cs" />
     <Compile Remove="DatabaseMigrationVersionReader.cs" />
     <Compile Remove="TestSupport\**" />
   </ItemGroup>
-  <ItemGroup Condition="'$(McpServerAot)' != 'true'">
-    <Compile Remove="Handlers\AotWorkOrderSearchHandler.cs" />
+  <ItemGroup Condition="'$(NativeAotDataAccess)' != 'true'">
+    <Compile Remove="Handlers\Aot*.cs" />
+    <Compile Remove="Handlers\WorkOrderSnapshot.cs" />
   </ItemGroup>
-  <PropertyGroup Condition="'$(McpServerAot)' == 'true'">
+  <PropertyGroup Condition="'$(McpServerAot)' == 'true' Or '$(UiServerAot)' == 'true'">
     <!-- The EF tool runs this class library with dotnet exec, which needs a runtimeconfig.json. -->
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <!-- The precompiled queries are C# interceptors generated into this namespace. -->

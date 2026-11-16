@@ -16,6 +16,9 @@ public sealed class TestSupportDataService(
 {
     private const string UserNamePrefix = "test_";
 
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    private readonly DataContext _context = context;
+
     /// <summary>Creates an employee whose user name carries the request test tag.</summary>
     public async Task<TestSupportEmployeeDto> CreateEmployeeAsync(
         TestSupportEmployeeCreate request,
@@ -23,8 +26,8 @@ public sealed class TestSupportDataService(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(request.TestTag);
         var employee = BuildEmployee(request);
-        context.Add(employee);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Add(employee);
+        await _context.SaveChangesAsync(cancellationToken);
         return ToEmployeeDto(employee);
     }
 
@@ -36,12 +39,11 @@ public sealed class TestSupportDataService(
         ArgumentException.ThrowIfNullOrWhiteSpace(request.TestTag);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.CreatorUserName);
 
-        var creator = await context.Set<Employee>()
-            .SingleAsync(employee => employee.UserName == request.CreatorUserName, cancellationToken);
+        var creator = await EmployeeNamedAsync(request.CreatorUserName, cancellationToken);
         var assignee = await ResolveAssigneeAsync(request.AssigneeUserName, cancellationToken);
         var workOrder = BuildWorkOrder(request, creator, assignee);
-        context.Add(workOrder);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Add(workOrder);
+        await _context.SaveChangesAsync(cancellationToken);
         return ToWorkOrderDto(workOrder, creator.UserName);
     }
 
@@ -52,8 +54,14 @@ public sealed class TestSupportDataService(
             return null;
         }
 
-        return await context.Set<Employee>()
-            .SingleAsync(employee => employee.UserName == userName, cancellationToken);
+        return await EmployeeNamedAsync(userName, cancellationToken);
+    }
+
+    private Task<Employee> EmployeeNamedAsync(string userName, CancellationToken cancellationToken)
+    {
+        var name = userName;
+        var ct = cancellationToken;
+        return _context.Set<Employee>().SingleAsync(employee => employee.UserName == name, ct);
     }
 
     private static Employee BuildEmployee(TestSupportEmployeeCreate request)

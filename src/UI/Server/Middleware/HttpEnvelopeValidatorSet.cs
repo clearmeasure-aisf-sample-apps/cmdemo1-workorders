@@ -5,7 +5,7 @@ namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 
 /// <summary>
 /// DI-owned FluentValidation instances for <see cref="HttpEnvelopeValidationDeferral"/> (#1804 c /
-/// #1824). Built once from the Core catalog via <see cref="ActivatorUtilities"/> so the types are
+/// #1824). Built once from the Core deferral list (each entry carries its own factory) so the types are
 /// never registered as unkeyed <see cref="IValidator{T}"/> (DI would otherwise feed them to
 /// the mediator <c>ValidationBehavior</c>).
 /// </summary>
@@ -13,15 +13,9 @@ internal sealed class HttpEnvelopeValidatorSet
 {
     private readonly IReadOnlyDictionary<Type, IValidator> _byRequest;
 
-    public HttpEnvelopeValidatorSet(IServiceProvider services)
+    public HttpEnvelopeValidatorSet()
     {
-        var map = new Dictionary<Type, IValidator>();
-        foreach (var (requestType, validatorType) in HttpEnvelopeValidationDeferral.Entries)
-        {
-            map[requestType] = (IValidator)ActivatorUtilities.CreateInstance(services, validatorType);
-        }
-
-        _byRequest = map;
+        _byRequest = HttpEnvelopeValidationDeferral.Entries.ToDictionary(entry => entry.RequestType, entry => entry.Create());
     }
 
     /// <summary>Deferred validator for the payload's request type, or null when not deferred.</summary>
