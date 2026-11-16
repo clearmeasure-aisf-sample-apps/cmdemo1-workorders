@@ -45,4 +45,39 @@
   <ItemGroup>
     <Using Include="NServiceBus" />
   </ItemGroup>
+
+  <!-- Native AOT (Exp 2): when McpServer is published with -p:McpServerAot=true (PublishAot), EF generates the compiled
+       model and precompiled queries for DataContext during that publish (DesignTimeDataContextFactory picks SQL Server).
+       Normal builds do not reference the tasks, so the JIT apps keep the runtime-built model and both providers. -->
+  <ItemGroup Condition="'$(McpServerAot)' == 'true'">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <!-- EF 11's generator can emit a file whose unsafe accessors name model types without a using for them (seen on
+         WorkOrderBuildingsQueryHandler, a string-only projection); a global using covers every generated file. -->
+    <Using Include="ClearMeasure.Bootcamp.Core.Model" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tasks" PrivateAssets="all" />
+  </ItemGroup>
+  <!-- UI-only read models whose queries are composed at run time (shared specifications, reused IQueryable bases,
+       raw SQL), which EF cannot precompile. McpServer sends none of these requests, so its AOT build leaves them out;
+       UI.Server (JIT) keeps them. Making them precompile means inlining every specification at each call site. -->
+  <ItemGroup Condition="'$(McpServerAot)' == 'true'">
+    <Compile Remove="Handlers\BuildingRoomSummaryQueryHandler.cs" />
+    <Compile Remove="Handlers\EmployeeWorkLoadQueryHandler.cs" />
+    <Compile Remove="Handlers\EmployeeWorkLoadSummaryQueryHandler.cs" />
+    <Compile Remove="Handlers\NotificationsPanelQueryHandler.cs" />
+    <Compile Remove="Handlers\RecentWorkOrdersQueryHandler.cs" />
+    <Compile Remove="Handlers\UserWorkOrders.cs" />
+    <Compile Remove="Handlers\WorkOrderReportsQueryHandler.cs" />
+    <Compile Remove="Handlers\WorkOrderSearchSummaryQueryHandler.cs" />
+    <Compile Remove="DatabaseMigrationVersionReader.cs" />
+    <Compile Remove="TestSupport\**" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(McpServerAot)' != 'true'">
+    <Compile Remove="Mappings\AotValueConverterRoots.cs" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(McpServerAot)' == 'true'">
+    <!-- The EF tool runs this class library with dotnet exec, which needs a runtimeconfig.json. -->
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <!-- The precompiled queries are C# interceptors generated into this namespace. -->
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.EntityFrameworkCore.GeneratedInterceptors</InterceptorsNamespaces>
+  </PropertyGroup>
 </Project>

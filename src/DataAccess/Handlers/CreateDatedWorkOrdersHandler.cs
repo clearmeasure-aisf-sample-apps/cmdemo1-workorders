@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,8 @@ public class CreateDatedWorkOrdersHandler(
     ILogger<CreateDatedWorkOrdersHandler> logger)
     : IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>
 {
+    private readonly DataContext dbContext = (DataContext)dbContext;
+
     public async ValueTask<CreateDatedWorkOrdersResult> Handle(
         CreateDatedWorkOrdersCommand request,
         CancellationToken cancellationToken)
@@ -120,8 +123,10 @@ public class CreateDatedWorkOrdersHandler(
 
     private async Task<Employee?> FindEmployeeAsync(string username, CancellationToken cancellationToken)
     {
+        var userName = username;
+        var ct = cancellationToken;
         return await dbContext.Set<Employee>()
             .Include(e => e.Roles)
-            .SingleOrDefaultAsync(e => e.UserName == username, cancellationToken);
+            .SingleOrDefaultAsync(e => e.UserName == userName, ct);
     }
 }

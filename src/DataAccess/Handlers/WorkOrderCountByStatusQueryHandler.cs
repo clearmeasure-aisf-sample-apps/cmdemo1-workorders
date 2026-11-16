@@ -14,14 +14,17 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class WorkOrderCountByStatusQueryHandler(DataContext context) :
     IRequestHandler<WorkOrderCountByStatusQuery, Dictionary<string, int>>
 {
+    private readonly DataContext context = context;
+
     public async ValueTask<Dictionary<string, int>> Handle(WorkOrderCountByStatusQuery request,
         CancellationToken cancellationToken = default)
     {
+        var ct = cancellationToken;
         var grouped = await context.Set<WorkOrder>()
             .AsNoTracking()
             .GroupBy(workOrder => workOrder.Status)
             .Select(group => new { Status = group.Key, Count = group.Count() })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         var result = new Dictionary<string, int>();
         foreach (var status in WorkOrderStatus.GetAllItems())

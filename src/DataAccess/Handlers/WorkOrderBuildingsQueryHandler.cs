@@ -12,13 +12,16 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class WorkOrderBuildingsQueryHandler(DataContext context) : IRequestHandler<WorkOrderBuildingsQuery, string[]>
 {
+    private readonly DataContext context = context;
+
     public async ValueTask<string[]> Handle(WorkOrderBuildingsQuery request, CancellationToken cancellationToken = default)
     {
+        var ct = cancellationToken;
         var buildings = await context.Set<WorkOrder>().AsNoTracking()
             .Where(wo => wo.Building != null)
             .Select(wo => wo.Building!)
             .Distinct()
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         return buildings
             .Select(b => b.Trim())

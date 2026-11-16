@@ -20,7 +20,7 @@ public class WorkOrderMap : IEntityFrameworkMapping
             MapColumns(entity);
             MapEmployees(entity);
             entity.Property(e => e.Status)
-                .HasConversion(new WorkOrderStatusConverter())
+                .HasConversion(WorkOrderStatusConverter.Create())
                 .HasMaxLength(3);
         });
     }

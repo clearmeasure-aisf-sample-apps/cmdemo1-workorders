@@ -2,6 +2,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -34,6 +35,8 @@ public class StateCommandHandler(
         IRequestHandler<WaitingOnVendorToInProgressCommand, StateCommandResult>,
         IRequestHandler<WaitingOnVendorToCancelledCommand, StateCommandResult>
 {
+    private readonly DataContext dbContext = (DataContext)dbContext;
+
     public ValueTask<StateCommandResult> Handle(SaveDraftCommand request, CancellationToken cancellationToken) =>
         Handle((StateCommandBase)request, cancellationToken);
 
@@ -117,7 +120,9 @@ public class StateCommandHandler(
 
     private async Task<WorkOrder> InsertNewAsync(WorkOrder order, CancellationToken cancellationToken)
     {
-        if (await dbContext.Set<WorkOrder>().AnyAsync(w => w.Number == order.Number, cancellationToken))
+        var number = order.Number;
+        var ct = cancellationToken;
+        if (await dbContext.Set<WorkOrder>().AnyAsync(w => w.Number == number, ct))
         {
             throw new InvalidOperationException($"Work order number {order.Number} already exists.");
         }
@@ -129,8 +134,10 @@ public class StateCommandHandler(
 
     private async Task<WorkOrder> UpdateExistingAsync(WorkOrder order, CancellationToken cancellationToken)
     {
+        var id = order.Id;
+        var ct = cancellationToken;
         var existing = await dbContext.Set<WorkOrder>()
-            .SingleAsync(workOrder => workOrder.Id == order.Id, cancellationToken);
+            .SingleAsync(workOrder => workOrder.Id == id, ct);
 
         dbContext.Entry(existing).CurrentValues.SetValues(order);
         // Attachments remain database-owned; remoted commands do not carry a complete collection.
@@ -162,7 +169,9 @@ public class StateCommandHandler(
             return tracked;
         }
 
+        var id = employeeId;
+        var ct = cancellationToken;
         return await dbContext.Set<Employee>()
-            .SingleAsync(employee => employee.Id == employeeId, cancellationToken);
+            .SingleAsync(employee => employee.Id == id, ct);
     }
 }

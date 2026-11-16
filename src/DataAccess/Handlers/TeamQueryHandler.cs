@@ -13,15 +13,18 @@ public class TeamQueryHandler(DataContext context)
     : IRequestHandler<TeamsQuery, Team[]>,
         IRequestHandler<CreateTeamCommand, CreateTeamResult>
 {
+    private readonly DataContext context = context;
+
     /// <summary>
     /// Returns every team with its members, ordered by name ignoring case. Sorting happens in memory so
     /// SQLite and SQL Server give the same order.
     /// </summary>
     public async ValueTask<Team[]> Handle(TeamsQuery request, CancellationToken cancellationToken = default)
     {
+        var ct = cancellationToken;
         var teams = await context.Set<Team>()
             .Include(t => t.Members)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         return teams.OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase).ToArray();
     }
@@ -33,10 +36,11 @@ public class TeamQueryHandler(DataContext context)
     public async ValueTask<CreateTeamResult> Handle(CreateTeamCommand request,
         CancellationToken cancellationToken = default)
     {
+        var ct = cancellationToken;
         var existingNames = await context.Set<Team>()
             .Select(t => t.Name)
-            .ToListAsync(cancellationToken);
-        var employees = await context.Set<Employee>().ToListAsync(cancellationToken);
+            .ToListAsync(ct);
+        var employees = await context.Set<Employee>().ToListAsync(ct);
 
         var violations = request.FindRuleViolations(existingNames, employees.Select(e => e.UserName));
         if (violations.Count > 0)

@@ -13,13 +13,16 @@ public class VendorQueryHandler(DataContext context)
     : IRequestHandler<VendorsQuery, Vendor[]>,
         IRequestHandler<CreateVendorCommand, CreateVendorResult>
 {
+    private readonly DataContext context = context;
+
     /// <summary>
     /// Returns active vendors first, then inactive ones, each group ordered by name ignoring case. Sorting
     /// happens in memory so SQLite and SQL Server give the same order.
     /// </summary>
     public async ValueTask<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken = default)
     {
-        var vendors = await context.Set<Vendor>().ToListAsync(cancellationToken);
+        var ct = cancellationToken;
+        var vendors = await context.Set<Vendor>().ToListAsync(ct);
 
         return vendors
             .OrderByDescending(v => v.IsActive)
@@ -34,9 +37,10 @@ public class VendorQueryHandler(DataContext context)
     public async ValueTask<CreateVendorResult> Handle(CreateVendorCommand request,
         CancellationToken cancellationToken = default)
     {
+        var ct = cancellationToken;
         var existingNames = await context.Set<Vendor>()
             .Select(v => v.Name)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         var violations = request.FindRuleViolations(existingNames);
         if (violations.Count > 0)

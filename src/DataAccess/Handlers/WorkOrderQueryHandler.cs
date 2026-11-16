@@ -11,17 +11,26 @@ public class WorkOrderQueryHandler(DataContext context) :
     IRequestHandler<WorkOrderByNumberQuery, WorkOrder?>,
     IRequestHandler<WorkOrdersByNumbersQuery, WorkOrder[]>
 {
+    private readonly DataContext context = context;
+
     public async Task<WorkOrder?> GetWorkOrderAsync(string number)
     {
+        var workOrderNumber = number;
         return await context.Set<WorkOrder>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(wo => wo.Number == number);
+            .SingleOrDefaultAsync(wo => wo.Number == workOrderNumber);
     }
 
     public async Task<WorkOrder[]> GetWorkOrdersAsync(WorkOrderSearchSpecification specification)
     {
-        var query = WorkOrderQueryFilters.Apply(context.Set<WorkOrder>(), specification);
-        return await query.ToArrayAsync();
+        var assignee = specification.Assignee;
+        var creator = specification.Creator;
+        var status = specification.Status;
+        return await context.Set<WorkOrder>()
+            .Where(wo => (assignee == null || wo.Assignee == assignee)
+                && (creator == null || wo.Creator == creator)
+                && (status == null || wo.Status == status))
+            .ToArrayAsync();
     }
 
     public async ValueTask<WorkOrder?> Handle(WorkOrderByNumberQuery request,
@@ -39,6 +48,7 @@ public class WorkOrderQueryHandler(DataContext context) :
             return [];
         }
 
+        var ct = cancellationToken;
         var numbers = request.Numbers
             .Where(number => !string.IsNullOrWhiteSpace(number))
             .Distinct(StringComparer.Ordinal)
@@ -57,6 +67,6 @@ public class WorkOrderQueryHandler(DataContext context) :
         return await context.Set<WorkOrder>()
             .AsNoTracking()
             .Where(workOrder => workOrder.Number != null && numbers.Contains(workOrder.Number))
-            .ToArrayAsync(cancellationToken);
+            .ToArrayAsync(ct);
     }
 }

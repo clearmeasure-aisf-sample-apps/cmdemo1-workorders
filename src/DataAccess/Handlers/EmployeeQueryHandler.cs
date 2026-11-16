@@ -10,12 +10,16 @@ public class EmployeeQueryHandler(DataContext context)
     : IRequestHandler<EmployeeByUserNameQuery, Employee>,
         IRequestHandler<EmployeeGetAllQuery, Employee[]>
 {
+    private readonly DataContext context = context;
+
     public async ValueTask<Employee> Handle(EmployeeByUserNameQuery request,
         CancellationToken cancellationToken = default)
     {
+        var userName = request.Username;
+        var ct = cancellationToken;
         var employee = await context.Set<Employee>()
             .Include("Roles")
-            .SingleAsync(emp => emp.UserName == request.Username, cancellationToken);
+            .SingleAsync(emp => emp.UserName == userName, ct);
         return employee;
     }
 
@@ -23,30 +27,21 @@ public class EmployeeQueryHandler(DataContext context)
     {
         var take = Math.Clamp(request.Take, 1, EmployeeGetAllQuery.MaxTake);
         var skip = Math.Max(request.Skip, 0);
+        var ct = cancellationToken;
 
-        // Page the keys first. Including Roles in the same statement would make Skip/Take
-        // apply to the join rows instead of employees.
-        var ids = await context.Set<Employee>()
+        // One statement: EF applies Take to the employees in a subquery before joining their roles. The database
+        // returns the first skip + take employees and the skip happens here: with both Skip and Take, EF 11's
+        // precompiled (Native AOT) query names both SQL parameters @p and the page comes back empty.
+        var end = skip + take;
+        var firstEmployees = await context.Set<Employee>()
             .AsNoTracking()
+            .Include(employee => employee.Roles)
             .OrderBy(employee => employee.LastName)
             .ThenBy(employee => employee.FirstName)
             .ThenBy(employee => employee.UserName)
-            .Skip(skip)
-            .Take(take)
-            .Select(employee => employee.Id)
-            .ToListAsync(cancellationToken);
-
-        if (ids.Count == 0)
-        {
-            return [];
-        }
-
-        var employees = await context.Set<Employee>()
-            .AsNoTracking()
-            .Include(employee => employee.Roles)
-            .Where(employee => ids.Contains(employee.Id))
-            .ToListAsync(cancellationToken);
-
+            .Take(end)
+            .ToListAsync(ct);
+        var employees = firstEmployees.Skip(skip);
         return employees.OrderBy(employee => employee.LastName).ThenBy(employee => employee.FirstName).ToArray();
     }
 }

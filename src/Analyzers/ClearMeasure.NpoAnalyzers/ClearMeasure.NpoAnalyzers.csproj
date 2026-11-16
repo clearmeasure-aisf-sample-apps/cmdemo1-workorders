@@ -18,9 +18,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
-    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
-  </ItemGroup>
+  <!-- AnalyzerReleases.Shipped.md / Unshipped.md are added as AdditionalFiles by Microsoft.CodeAnalysis.Analyzers' own targets.
+       Listing them here too made duplicate items, which the EF AOT query precompiler (MSBuildWorkspace) fails on. -->
 
 </Project>

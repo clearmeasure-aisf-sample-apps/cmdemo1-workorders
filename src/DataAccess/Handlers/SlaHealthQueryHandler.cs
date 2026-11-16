@@ -15,6 +15,8 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRequestHandler<SlaHealthQuery, SlaHealth>
 {
+    private readonly DataContext context = context;
+
     public async ValueTask<SlaHealth> Handle(SlaHealthQuery request, CancellationToken cancellationToken = default)
     {
         var currentMonth = ChurchMonth.Containing(ChurchTimeZone.Today(time));
@@ -42,15 +44,17 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         CancellationToken cancellationToken)
     {
         var (windowStart, windowEnd) = SlaHealth.CompletionWindow(firstMonth.FirstDay, lastMonth.LastDay);
+        var complete = WorkOrderStatus.Complete;
+        var ct = cancellationToken;
         var rows = await context.Set<WorkOrder>()
             .AsNoTracking()
             .IgnoreAutoIncludes()
-            .Where(wo => wo.Status == WorkOrderStatus.Complete
+            .Where(wo => wo.Status == complete
                 && wo.DueDate != null
                 && wo.CompletedDate >= windowStart
                 && wo.CompletedDate < windowEnd)
             .Select(wo => new { wo.DueDate, wo.CompletedDate })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         return rows.Select(row => new WorkOrder
         {
