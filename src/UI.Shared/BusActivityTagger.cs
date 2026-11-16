@@ -16,12 +16,15 @@ internal static class BusActivityTagger
     /// </remarks>
     public static void AddScalarPropertyTags(object message, Activity activity)
     {
-        if (message is not IBusMessage busMessage)
+        if (message is IBusMessage busMessage)
         {
-            return;
+            AddBusMessageTags(busMessage, activity);
         }
+    }
 
-        foreach (var property in busMessage.GetType().GetProperties())
+    private static void AddBusMessageTags(IBusMessage message, Activity activity)
+    {
+        foreach (var property in message.GetType().GetProperties())
         {
             if (IsScalarProperty(property.PropertyType)
                 && property.GetCustomAttribute<ExcludeFromBusActivityAttribute>() == null)
