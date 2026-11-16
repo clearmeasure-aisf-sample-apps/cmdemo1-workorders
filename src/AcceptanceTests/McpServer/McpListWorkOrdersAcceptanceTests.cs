@@ -178,6 +178,7 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
         }
 
         await OpenTaggedWorkOrderSearchAsync();
+        await WaitForSeededPortalFilterAsync(seed, seed.AllSeeded);
         var portalNumbers = await VisibleSearchNumbers();
         foreach (var number in seed.AllSeeded)
         {
