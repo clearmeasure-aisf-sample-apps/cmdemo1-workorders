@@ -11,6 +11,8 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
 /// <summary>
 /// Persists multiple dated assigned work orders in one database transaction.
+/// In-process batch-size validation uses <see cref="CreateDatedWorkOrdersCommand.FindRuleViolations"/>
+/// and returns <see cref="CreateDatedWorkOrdersResult.Failed"/> (#1824).
 /// </summary>
 public class CreateDatedWorkOrdersHandler(
     DbContext dbContext,
@@ -24,9 +26,10 @@ public class CreateDatedWorkOrdersHandler(
         CreateDatedWorkOrdersCommand request,
         CancellationToken cancellationToken)
     {
-        if (BatchSizeFailure(request.DueDates.Count) is { } sizeFailure)
+        var batchViolations = request.FindRuleViolations();
+        if (batchViolations.Count > 0)
         {
-            return sizeFailure;
+            return CreateDatedWorkOrdersResult.Failed(string.Join(" ", batchViolations));
         }
 
         var (batch, missingEmployee) = await FindBatchAsync(request, cancellationToken);
@@ -43,18 +46,6 @@ public class CreateDatedWorkOrdersHandler(
             workOrders.Count,
             request.AssigneeUsername);
         return CreateDatedWorkOrdersResult.Created(workOrders);
-    }
-
-    private static CreateDatedWorkOrdersResult? BatchSizeFailure(int count)
-    {
-        if (count == 0)
-        {
-            return CreateDatedWorkOrdersResult.Failed(CreateDatedWorkOrdersCommand.AtLeastOneDueDateRequired);
-        }
-
-        return count > CreateDatedWorkOrdersCommand.MaximumBatchSize
-            ? CreateDatedWorkOrdersResult.Failed(CreateDatedWorkOrdersCommand.BatchCannotExceed)
-            : null;
     }
 
     /// <summary>The batch, or the failure naming the assignee or creator that was not found (assignee first).</summary>

@@ -27,8 +27,8 @@ public class TeamQueryHandler(DataContext context)
     }
 
     /// <summary>
-    /// Creates the team when its name is unique and every member user name matches an employee, both
-    /// ignoring case. Otherwise returns the violations and writes nothing.
+    /// Creates the team when <see cref="CreateTeamCommand.FindRuleViolations"/> is empty.
+    /// Otherwise returns a Failed <see cref="CreateTeamResult"/> and writes nothing (#1824).
     /// </summary>
     public async Task<CreateTeamResult> Handle(CreateTeamCommand request,
         CancellationToken cancellationToken = default)

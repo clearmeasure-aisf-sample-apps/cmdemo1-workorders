@@ -28,8 +28,8 @@ public class VendorQueryHandler(DataContext context)
     }
 
     /// <summary>
-    /// Creates the vendor when its name is unique ignoring case. Otherwise returns the violation and writes
-    /// nothing.
+    /// Creates the vendor when <see cref="CreateVendorCommand.FindRuleViolations"/> is empty.
+    /// Otherwise returns a Failed <see cref="CreateVendorResult"/> and writes nothing (#1824).
     /// </summary>
     public async Task<CreateVendorResult> Handle(CreateVendorCommand request,
         CancellationToken cancellationToken = default)

@@ -24,7 +24,7 @@ internal sealed class HttpEnvelopeValidatorSet
         _byRequest = map;
     }
 
-    /// <summary>Deferred validator for the payload's request type, or null when not deferred.</summary>
+    /// <summary>HTTP-envelope validator for the payload's request type, or null when not catalogued.</summary>
     public IValidator? For(object payload) =>
         _byRequest.TryGetValue(payload.GetType(), out var validator) ? validator : null;
 }

@@ -7,8 +7,9 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// Validator for <see cref="CreateDatedWorkOrdersCommand"/> so the remotable command is accepted by
-/// the single-API validation middleware.
+/// HTTP-envelope FluentValidation for <see cref="CreateDatedWorkOrdersCommand"/> (#1824).
+/// In-process DueDates empty / batch-size rules live on
+/// <see cref="CreateDatedWorkOrdersCommand.FindRuleViolations"/> and return Failed results.
 /// </summary>
 public sealed class CreateDatedWorkOrdersCommandValidator : AbstractValidator<CreateDatedWorkOrdersCommand>
 {

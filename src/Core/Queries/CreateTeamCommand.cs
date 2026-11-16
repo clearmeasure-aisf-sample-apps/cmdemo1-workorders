@@ -10,9 +10,11 @@ public record CreateTeamCommand(string Name, string? Description, IReadOnlyList<
     : IRequest<CreateTeamResult>, IRemotableRequest
 {
     /// <summary>
-    /// Returns the rules this command breaks given the data already stored: a team name that matches an
-    /// existing one ignoring case, and each member user name that matches no employee ignoring case.
-    /// An empty list means the team can be created.
+    /// In-process validation (#1824): rules this command breaks given stored team names and known
+    /// employee user names (duplicate team name, unknown members). An empty list means the team can
+    /// be created. Handlers map these to <see cref="CreateTeamResult"/> with <c>Succeeded</c> false —
+    /// never a FluentValidation exception. HTTP shape rules stay on <c>CreateTeamCommandValidator</c>
+    /// via <c>HttpEnvelopeValidationDeferral</c>.
     /// </summary>
     public IReadOnlyList<string> FindRuleViolations(IEnumerable<string> existingTeamNames,
         IEnumerable<string> knownUserNames)
