@@ -39,13 +39,11 @@ public class SlaHealthCardNoDataStatusTests
 
     private class StubSlaHealthBus(SlaHealth health) : Bus(null!)
     {
-        private readonly SlaHealth _health = health;
-
-        public override async Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        public override Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
         {
             if (request is SlaHealthQuery)
             {
-                return (TResponse)(object)_health;
+                return Task.FromResult((TResponse)(object)health);
             }
 
             throw new NotImplementedException();
