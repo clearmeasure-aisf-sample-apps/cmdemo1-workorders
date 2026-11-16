@@ -1,5 +1,5 @@
 {
   "minLines": 8,
-  "maxDuplicatedLines": 7569,
-  "note": "Ratchet ceiling for normalized 8-line clones under src, excluding Generated, bin, and obj. May only decrease. #1540. 7569 after #1806 LoginPageTests CreateContext extract and WorkOrderSpecifications consolidation."
+  "maxDuplicatedLines": 5550,
+  "note": "Ratchet ceiling for normalized 8-line clones under src, excluding Generated, bin, and obj. May only decrease. #1540. 5550 after #1816 WorkOrderManagePageContext shared test context (was 7569)."
 }
