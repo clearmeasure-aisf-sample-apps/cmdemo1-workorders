@@ -150,7 +150,6 @@ Employee src/UnitTests/UI.Shared/Models/WorkOrderSearchUrlStateTests.cs#1
 Employee src/UnitTests/UI.Shared/NavMenuTests.cs#1
 Employee src/UnitTests/UI.Shared/NavMenuTests.cs#2
 Employee src/UnitTests/UI.Shared/Pages/IndexPageTests.cs#1
-Employee src/UnitTests/UI.Shared/Pages/LoginPageTests.cs#1
 Employee src/UnitTests/UI.Shared/Pages/SignedInUserCharacterizationTests.cs#1
 Employee src/UnitTests/UI.Shared/Pages/StubBus.cs#1
 Employee src/UnitTests/UI.Shared/Pages/StubBus.cs#10
@@ -164,14 +163,6 @@ Employee src/UnitTests/UI.Shared/Pages/StubBus.cs#6
 Employee src/UnitTests/UI.Shared/Pages/StubBus.cs#7
 Employee src/UnitTests/UI.Shared/Pages/StubBus.cs#8
 Employee src/UnitTests/UI.Shared/Pages/StubBus.cs#9
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#1
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#2
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#3
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#4
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#5
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#6
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#7
-Employee src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs#8
 Employee src/UnitTests/UI.Shared/Pages/WorkOrderPrintAttachmentsTests.cs#1
 Employee src/UnitTests/UI.Shared/Pages/WorkOrderPrintAttachmentsTests.cs#2
 Employee src/UnitTests/UI.Shared/Pages/WorkOrderPrintTests.cs#1

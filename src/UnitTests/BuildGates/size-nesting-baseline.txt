@@ -6,9 +6,6 @@
 # file lines are today's oversized files. method and parameters lines are
 # members that already exceed a limit. Nesting has no current exceptions.
 # Do not add lines. Delete a line in the same change that fixes a violation.
-file src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs
-file src/UnitTests/UI.Shared/Pages/LoginPageTests.cs
-file src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs
 method src/AcceptanceTests/AcceptanceTestBase.cs AcceptanceTestBase.CreateAndSaveNewWorkOrder()
 method src/AcceptanceTests/App/AiAgentPageTests.cs AiAgentPageTests.ShouldKeepPromptVisibleWhenResizingWithLongConversation()
 method src/AcceptanceTests/App/AppShellTests.cs AppShellTests.ShouldFitWithoutHorizontalScroll_At1280()
@@ -65,13 +62,6 @@ method src/IntegrationTests/TestSupport/LlmTestAttribute.cs LlmTestAttribute.Ret
 method src/IntegrationTests/ZDataLoader.cs ZDataLoader.LoadChristmasConcertWorkOrders()
 method src/UnitTests/Analyzers/DataAccessNPlusOneCanaryTests.cs DataAccessNPlusOneCanaryTests.TryReadDiagnostic(string)
 method src/UnitTests/Analyzers/DataAccessNPlusOneCanaryTests.cs DataAccessNPlusOneCanaryTests.WriteProject(string,string,IReadOnlyList<PackageReference>)
-method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportCm0001_When_LoopAwaitsSameTypeHelperThatAwaitsBus()
-method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportCm0001_When_SendIsInTheLoopCondition()
-method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportCm0001_When_SendIsInsideForWhileOrDo()
-method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportCm0002_When_ReceiverImplementsIQueryable()
-method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportNothing_When_HelperFollowDoesNotReachABusSend()
-method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportNothing_When_InMemoryMaterializerIsInsideForeach()
-method src/UnitTests/Analyzers/NpoAnalyzerRulesTests.cs NpoAnalyzerRulesTests.ShouldReportNothing_When_OptionalRulesRunOutsideALoop()
 method src/UnitTests/Api/RateLimitedApiWebApplicationFactory.cs RateLimitedApiWebApplicationFactory.ConfigureWebHost(IWebHostBuilder)
 method src/UnitTests/Core/Queries/RemotableRequestTests.cs RemotableRequestTests.ShouldRoundTripEmployeeWorkLoadSummaryQueryAndResult()
 method src/UnitTests/Database/DatabaseConsoleTests.cs RebuildDatabaseCommandTests.ExecuteInternal_WhenConnectionUnreachable_ReturnsFailureCode()
@@ -91,7 +81,6 @@ method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs Notificatio
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderWorkOrderAsLink_ToManageRoute()
 method src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs NotificationsPanelTests.ShouldRenderWorkOrderCards_WhenOverdueAndDueTodayHasItems()
 method src/UnitTests/UI.Shared/Pages/StubBus.cs StubBus.Send<1>(IRequest<TResponse>)
-method src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs StubBusTeamsAndVendors.Send<1>(IRequest<TResponse>)
 method src/UnitTests/UI.Shared/Pages/WorkOrderPrintTests.cs WorkOrderPrintTests.ShouldRenderAllFields()
 method src/UnitTests/UI/Api/DetailedHealthEtagFingerprintTests.cs DetailedHealthEtagFingerprintTests.FromReport_Should_OmitVolatileFields_When_BuildingFingerprint()
 method src/UnitTests/UI/Api/DetailedHealthEtagFingerprintTests.cs DetailedHealthEtagFingerprintTests.FromReport_Should_ProduceSameEtag_When_OnlyVolatileFieldsDiffer()

@@ -2,4 +2,3 @@
 # See docs/refactoring-oversized-code.md.
 src/AcceptanceTests/ProcessCleanupHelper.cs :: ProcessCleanupHelper
 src/Analyzers/ClearMeasure.NpoAnalyzers/LoopHelpers.cs :: LoopHelpers
-src/UnitTests/Analyzers/AnalyzerTestHelper.cs :: AnalyzerTestHelper

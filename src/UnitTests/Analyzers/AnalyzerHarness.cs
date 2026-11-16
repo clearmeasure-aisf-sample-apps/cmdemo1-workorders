@@ -6,9 +6,20 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Analyzers;
 
-internal static class AnalyzerTestHelper
+/// <summary>
+/// Compiles a C# snippet and runs one <see cref="DiagnosticAnalyzer"/> against it.
+/// </summary>
+public sealed class AnalyzerHarness
 {
-    public static async Task<ImmutableArray<Diagnostic>> GetDiagnosticsAsync(
+    /// <summary>
+    /// Compiles <paramref name="source"/> and returns diagnostics from <paramref name="analyzer"/>.
+    /// </summary>
+    /// <param name="analyzer">Analyzer under test.</param>
+    /// <param name="source">C# source to compile.</param>
+    /// <param name="assemblyName">Compilation assembly name (affects assembly-name-gated rules).</param>
+    /// <returns>Analyzer diagnostics for the compilation.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the snippet has compile errors.</exception>
+    public static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
         DiagnosticAnalyzer analyzer,
         string source,
         string assemblyName = "AnalyzerTest")
