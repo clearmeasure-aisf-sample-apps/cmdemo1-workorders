@@ -22,9 +22,7 @@ public class AotWorkOrderSearchSummaryQueryHandler(DataContext context, TimeProv
         var snapshot = await _source.LoadAsync(cancellationToken);
         var summary = CountAll(snapshot);
 
-        var user = string.IsNullOrWhiteSpace(request.UserName)
-            ? null
-            : await _source.FindEmployeeAsync(request.UserName, cancellationToken);
+        var user = await _source.FindEmployeeAsync(request.UserName, cancellationToken);
         if (user != null)
         {
             CountMine(summary, snapshot, user);

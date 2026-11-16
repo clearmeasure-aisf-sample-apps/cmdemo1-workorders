@@ -10,6 +10,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- Unit tests pin the in-memory WorkOrderSnapshot reads the Native AOT handlers use. -->
+		<InternalsVisibleTo Include="ClearMeasure.Bootcamp.UnitTests" />
+	</ItemGroup>
+
+	<ItemGroup>
     <PackageReference Include="Mediator.Abstractions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
@@ -84,7 +89,6 @@
   </ItemGroup>
   <ItemGroup Condition="'$(NativeAotDataAccess)' != 'true'">
     <Compile Remove="Handlers\Aot*.cs" />
-    <Compile Remove="Handlers\WorkOrderSnapshot*.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(McpServerAot)' == 'true' Or '$(UiServerAot)' == 'true'">
     <!-- The EF tool runs this class library with dotnet exec, which needs a runtimeconfig.json. -->

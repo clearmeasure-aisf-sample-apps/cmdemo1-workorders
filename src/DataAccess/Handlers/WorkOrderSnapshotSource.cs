@@ -21,9 +21,14 @@ internal sealed class WorkOrderSnapshotSource(DataContext context, TimeProvider 
         return new WorkOrderSnapshot(all, _time);
     }
 
-    /// <summary>The employee with <paramref name="userName"/>, compared by the database, or null.</summary>
-    public Task<Employee?> FindEmployeeAsync(string userName, CancellationToken cancellationToken)
+    /// <summary>The employee with <paramref name="userName"/>, compared by the database, or null (also for a blank name).</summary>
+    public Task<Employee?> FindEmployeeAsync(string? userName, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            return Task.FromResult<Employee?>(null);
+        }
+
         var name = userName;
         var ct = cancellationToken;
         return _context.Set<Employee>().AsNoTracking().SingleOrDefaultAsync(e => e.UserName == name, ct);

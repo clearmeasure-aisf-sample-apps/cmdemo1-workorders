@@ -25,6 +25,6 @@ public class AotWorkOrdersByNumbersQueryHandler(DataContext context, TimeProvide
         }
 
         var snapshot = await _source.LoadAsync(cancellationToken);
-        return snapshot.All.Where(workOrder => workOrder.Number != null && numbers.Contains(workOrder.Number)).ToArray();
+        return snapshot.WithNumbers(numbers);
     }
 }

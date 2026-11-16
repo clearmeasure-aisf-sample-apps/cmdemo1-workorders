@@ -48,6 +48,10 @@ internal sealed class WorkOrderSnapshot
 
     public IEnumerable<WorkOrder> CreatedBy(Guid employeeId) => All.Where(wo => wo.Creator?.Id == employeeId);
 
+    /// <summary>The work orders whose number is in <paramref name="numbers"/>, compared with the set's comparer.</summary>
+    public WorkOrder[] WithNumbers(IReadOnlySet<string> numbers) =>
+        All.Where(wo => wo.Number != null && numbers.Contains(wo.Number)).ToArray();
+
     /// <summary>Count and average days to close of the work orders completed within <paramref name="days"/>.</summary>
     public (int Count, double? AverageDaysToClose) CompletionsWithin(int days)
     {
