@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared;
 using MediatR;
 
@@ -138,14 +139,21 @@ public sealed class WorkOrderManageBus : Bus
             return _existing.Assignee;
         }
 
-        return new Employee(byUser.Username, "A", "B", "a@b.com");
+        return EmployeeBuilder.Create(byUser.Username)
+            .WithFirstName("A")
+            .WithLastName("B")
+            .WithEmail("a@b.com")
+            .Build();
     }
 
     private async Task<TResponse> CaptureCommand<TResponse>(IRequest<TResponse> request)
     {
         LastCommand = request;
         CommandCount++;
-        var wo = _existing ?? new WorkOrder { Number = "WO-TEST", Status = WorkOrderStatus.Draft };
+        var wo = _existing ?? WorkOrderBuilder.Create()
+            .WithNumber("WO-TEST")
+            .WithStatus(WorkOrderStatus.Draft)
+            .Build();
         var result = (TResponse)(object)new StateCommandResult(wo);
         if (_commandGate != null)
         {

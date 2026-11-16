@@ -16,9 +16,12 @@ public class CreatedRelativeTimeTests
         var now = new DateTimeOffset(2026, 6, 15, 15, 0, 0, TimeSpan.Zero);
         var created = now.UtcDateTime.AddDays(-3);
         var creator = WorkOrderManageSteps.Viewer();
+        var order = WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid()).WithNumber("WO-001").WithTitle("Test").WithDescription("Test")
+            .WithStatus(WorkOrderStatus.Draft).CreatedBy(creator).CreatedAt(created).Build();
         var page = WorkOrderManagePageContext.Create()
             .SignedInAs(creator)
-            .Editing(SampleWorkOrder(creator, created))
+            .Editing(order)
             .WithClock(new WorkOrderManageFixedClock(now));
         await using var ctx = page.Build();
 
@@ -39,9 +42,12 @@ public class CreatedRelativeTimeTests
     {
         var clock = new WorkOrderManageFixedClock(new DateTimeOffset(2026, 6, 15, 15, 0, 0, TimeSpan.Zero));
         var creator = WorkOrderManageSteps.Viewer();
+        var order = WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid()).WithNumber("WO-001").WithTitle("Test").WithDescription("Test")
+            .WithStatus(WorkOrderStatus.Draft).CreatedBy(creator).CreatedAt(null).Build();
         var page = WorkOrderManagePageContext.Create()
             .SignedInAs(creator)
-            .Editing(SampleWorkOrder(creator, null))
+            .Editing(order)
             .WithClock(clock);
         await using var ctx = page.Build();
 
@@ -51,15 +57,4 @@ public class CreatedRelativeTimeTests
         component.FindAll(WorkOrderManageSteps.TestId(WorkOrderManagePage.Elements.CreatedRelativeTime))
             .Count.ShouldBe(0);
     }
-
-    private static WorkOrder SampleWorkOrder(Employee creator, DateTime? created) =>
-        WorkOrderBuilder.Create()
-            .WithId(Guid.NewGuid())
-            .WithNumber("WO-001")
-            .WithTitle("Test")
-            .WithDescription("Test")
-            .WithStatus(WorkOrderStatus.Draft)
-            .CreatedBy(creator)
-            .CreatedAt(created)
-            .Build();
 }

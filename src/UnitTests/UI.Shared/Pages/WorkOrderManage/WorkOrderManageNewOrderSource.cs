@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.WorkOrderManage;
 
@@ -75,14 +76,13 @@ public sealed class WorkOrderManageNewOrderSource : IWorkOrderBuilder
 
     /// <inheritdoc />
     public WorkOrder CreateNewWorkOrder(Employee creator) =>
-        new()
-        {
-            Id = _emptyId ? Guid.Empty : _id ?? Guid.NewGuid(),
-            Number = _number,
-            Status = _status,
-            Creator = _creator ?? creator,
-            Assignee = _assignee,
-            Title = _title,
-            Description = _description
-        };
+        WorkOrderBuilder.Create()
+            .WithId(_emptyId ? Guid.Empty : _id ?? Guid.NewGuid())
+            .WithNumber(_number)
+            .WithStatus(_status)
+            .CreatedBy(_creator ?? creator)
+            .AssignedTo(_assignee)
+            .WithTitle(_title)
+            .WithDescription(_description)
+            .Build();
 }

@@ -20,7 +20,7 @@ public class AttachmentsTests
     public async Task WorkOrderManage_ShouldRenderAttachmentsSection()
     {
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
+        var page = AttachmentsPage(Creator, workOrderId,
             WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator));
         await using var ctx = page.Build();
 
@@ -34,7 +34,7 @@ public class AttachmentsTests
     public async Task WorkOrderManage_ShouldShowRemoveButton_WhenUserIsCreator()
     {
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
+        var page = AttachmentsPage(Creator, workOrderId,
             WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
@@ -48,9 +48,9 @@ public class AttachmentsTests
     public async Task WorkOrderManage_ShouldShowRemoveButton_WhenUserIsAssignee()
     {
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Assignee,
-            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator),
-            WorkOrderStatus.InProgress, Creator, Assignee);
+        var page = AttachmentsPage(Assignee, workOrderId,
+            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator))
+            .WithNewOrder(o => o.WithStatus(WorkOrderStatus.InProgress).WithCreator(Creator).WithAssignee(Assignee));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
 
@@ -65,9 +65,9 @@ public class AttachmentsTests
         var stranger = EmployeeBuilder.Create("hsimpson")
             .WithFirstName("Homer").WithLastName("Simpson").WithEmail("hs@example.com")
             .WithId(Guid.NewGuid()).Build();
-        var page = AttachmentsPage(workOrderId, stranger,
-            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator),
-            WorkOrderStatus.Assigned, Creator, Assignee);
+        var page = AttachmentsPage(stranger, workOrderId,
+            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator))
+            .WithNewOrder(o => o.WithStatus(WorkOrderStatus.Assigned).WithCreator(Creator).WithAssignee(Assignee));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
 
@@ -80,9 +80,9 @@ public class AttachmentsTests
     public async Task WorkOrderManage_ShouldHideRemoveButton_WhenWorkOrderIsClosed(string statusKey)
     {
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
-            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator),
-            WorkOrderStatus.FromKey(statusKey));
+        var page = AttachmentsPage(Creator, workOrderId,
+            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator))
+            .WithNewOrder(o => o.WithStatus(WorkOrderStatus.FromKey(statusKey)));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
 
@@ -93,7 +93,7 @@ public class AttachmentsTests
     public async Task WorkOrderManage_ShouldAskForConfirmation_WhenRemoveClicked()
     {
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
+        var page = AttachmentsPage(Creator, workOrderId,
             WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
@@ -115,7 +115,7 @@ public class AttachmentsTests
     {
         const string fileName = "damage-photo.jpg";
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
+        var page = AttachmentsPage(Creator, workOrderId,
             WorkOrderManageSteps.Attachment(workOrderId, fileName, Creator));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
@@ -135,7 +135,7 @@ public class AttachmentsTests
     public async Task WorkOrderManage_ShouldKeepAttachment_WhenRemoveCancelled()
     {
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
+        var page = AttachmentsPage(Creator, workOrderId,
             WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
@@ -152,8 +152,8 @@ public class AttachmentsTests
     {
         var workOrderId = Guid.NewGuid();
         var first = WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator);
-        var page = AttachmentsPage(workOrderId, Creator, first,
-            extra: WorkOrderManageSteps.Attachment(workOrderId, "invoice.pdf", Creator));
+        var page = AttachmentsPage(Creator, workOrderId, first,
+            WorkOrderManageSteps.Attachment(workOrderId, "invoice.pdf", Creator));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
         await component.FindAll(WorkOrderManageSteps.TestId(WorkOrderManagePage.Elements.AttachmentRemove))[0]
@@ -169,7 +169,7 @@ public class AttachmentsTests
     public async Task WorkOrderManage_ShouldHideSection_WhenLastAttachmentRemoved()
     {
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
+        var page = AttachmentsPage(Creator, workOrderId,
             WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
@@ -188,9 +188,9 @@ public class AttachmentsTests
     {
         const string error = "Only the creator or the assignee can remove attachments.";
         var workOrderId = Guid.NewGuid();
-        var page = AttachmentsPage(workOrderId, Creator,
-            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator));
-        page.WithRemoveResult(RemoveAttachmentResult.Failure(error));
+        var page = AttachmentsPage(Creator, workOrderId,
+            WorkOrderManageSteps.Attachment(workOrderId, "damage-photo.jpg", Creator))
+            .WithRemoveResult(RemoveAttachmentResult.Failure(error));
         await using var ctx = page.Build();
         var component = await RenderWithAttachmentsAsync(page, ctx);
         await component.Find(WorkOrderManageSteps.TestId(WorkOrderManagePage.Elements.AttachmentRemove)).ClickAsync(new());
@@ -239,16 +239,10 @@ public class AttachmentsTests
     }
 
     private static WorkOrderManagePageContext AttachmentsPage(
-        Guid workOrderId,
         Employee loggedInAs,
-        WorkOrderAttachment attachment,
-        WorkOrderStatus? status = null,
-        Employee? creatorOverride = null,
-        Employee? assignee = null,
-        WorkOrderAttachment? extra = null)
-    {
-        var attachments = extra == null ? new[] { attachment } : new[] { attachment, extra };
-        return WorkOrderManagePageContext.Create()
+        Guid workOrderId,
+        params WorkOrderAttachment[] attachments) =>
+        WorkOrderManagePageContext.Create()
             .SignedInAs(loggedInAs)
             .WhenBusReceives<RemoveAttachmentCommand>()
             .WithAttachments(attachments)
@@ -256,10 +250,7 @@ public class AttachmentsTests
                 .WithId(workOrderId)
                 .WithNumber("WO-TEST")
                 .WithTitle("Test Order")
-                .WithStatus(status ?? WorkOrderStatus.Draft)
-                .WithCreator(creatorOverride ?? loggedInAs)
-                .WithAssignee(assignee));
-    }
+                .WithCreator(loggedInAs));
 
     private static async Task<IRenderedComponent<WorkOrderManagePage>> RenderWithAttachmentsAsync(
         WorkOrderManagePageContext page, BunitContext ctx)

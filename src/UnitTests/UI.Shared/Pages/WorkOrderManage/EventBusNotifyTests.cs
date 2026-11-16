@@ -1,5 +1,5 @@
 using Bunit;
-using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared;
 using Shouldly;
 using WorkOrderManagePage = ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderManage;
@@ -13,7 +13,7 @@ public class EventBusNotifyTests
     public void ShouldCountNonGenericNotify_WhenNotifiedThroughTheObjectOverload()
     {
         var uiBus = new WorkOrderManageUiBusSpy();
-        var workOrder = new WorkOrder { Id = Guid.NewGuid(), Number = "WO-TEST" };
+        var workOrder = WorkOrderBuilder.Create().WithId(Guid.NewGuid()).WithNumber("WO-TEST").Build();
 
         uiBus.Notify((object)new WorkOrderSelectedEvent(workOrder));
 

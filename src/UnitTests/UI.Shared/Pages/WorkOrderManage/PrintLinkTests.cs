@@ -13,9 +13,10 @@ public class PrintLinkTests
     public async Task Should_RenderPrintLink_WithRelNoopenerNoreferrer()
     {
         var creator = WorkOrderManageSteps.Viewer();
-        var page = WorkOrderManagePageContext.Create()
-            .SignedInAs(creator)
-            .Editing(PrintWorkOrder(creator));
+        var order = WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid()).WithNumber("WO-PRINT").WithTitle("Print link").WithDescription("Print link")
+            .WithStatus(WorkOrderStatus.Draft).CreatedBy(creator).CreatedAt(DateTime.UtcNow).Build();
+        var page = WorkOrderManagePageContext.Create().SignedInAs(creator).Editing(order);
         await using var ctx = page.Build();
 
         var link = await page.Render(ctx)
@@ -30,9 +31,10 @@ public class PrintLinkTests
     public async Task Should_RenderPrintLink_WithVisuallyHiddenNewTabText()
     {
         var creator = WorkOrderManageSteps.Viewer();
-        var page = WorkOrderManagePageContext.Create()
-            .SignedInAs(creator)
-            .Editing(PrintWorkOrder(creator));
+        var order = WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid()).WithNumber("WO-PRINT").WithTitle("Print link").WithDescription("Print link")
+            .WithStatus(WorkOrderStatus.Draft).CreatedBy(creator).CreatedAt(DateTime.UtcNow).Build();
+        var page = WorkOrderManagePageContext.Create().SignedInAs(creator).Editing(order);
         await using var ctx = page.Build();
 
         var link = await page.Render(ctx)
@@ -46,15 +48,4 @@ public class PrintLinkTests
         hidden.ShouldNotBeNull();
         hidden.TextContent.ShouldBe("(opens in a new tab)");
     }
-
-    private static WorkOrder PrintWorkOrder(Employee creator) =>
-        WorkOrderBuilder.Create()
-            .WithId(Guid.NewGuid())
-            .WithNumber("WO-PRINT")
-            .WithTitle("Print link")
-            .WithDescription("Print link")
-            .WithStatus(WorkOrderStatus.Draft)
-            .CreatedBy(creator)
-            .CreatedAt(DateTime.UtcNow)
-            .Build();
 }

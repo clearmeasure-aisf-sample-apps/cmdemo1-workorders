@@ -42,8 +42,13 @@ public class HistoryTests
         var workOrderId = Guid.NewGuid();
         var history = new[]
         {
-            StatusChange(workOrderId, WorkOrderStatus.Draft, WorkOrderStatus.Assigned,
-                new DateTime(2025, 3, 1, 10, 0, 0))
+            ToChange(new HistoryChange
+            {
+                WorkOrderId = workOrderId,
+                From = WorkOrderStatus.Draft,
+                To = WorkOrderStatus.Assigned,
+                ChangedDate = new DateTime(2025, 3, 1, 10, 0, 0)
+            })
         };
         var workOrder = WorkOrderBuilder.Create()
             .WithId(workOrderId).WithNumber("WO-001").WithTitle("Test").WithDescription("Test")
@@ -60,16 +65,11 @@ public class HistoryTests
     public async Task WorkOrderManage_ShouldRenderShelveReason_WhenHistoryHasReason()
     {
         var workOrderId = Guid.NewGuid();
-        var history = new[]
-        {
-            StatusChange(workOrderId, WorkOrderStatus.InProgress, WorkOrderStatus.Assigned,
-                new DateTime(2025, 3, 1, 10, 0, 0), "Waiting on parts")
-        };
         var workOrder = WorkOrderBuilder.Create()
             .WithId(workOrderId).WithNumber("WO-001").WithTitle("Test").WithDescription("Test")
             .WithStatus(WorkOrderStatus.Assigned).CreatedBy(Creator).AssignedTo(Assignee)
             .CreatedAt(DateTime.UtcNow).Build();
-        var page = HistoryPage(workOrder, history);
+        var page = HistoryPage(workOrder, ShelveReasonHistory(workOrderId));
         await using var ctx = page.Build();
         var component = page.Render(ctx);
 
@@ -86,18 +86,11 @@ public class HistoryTests
     public async Task WorkOrderManage_ShouldDisplayHistoryNewestFirst()
     {
         var workOrderId = Guid.NewGuid();
-        var history = new[]
-        {
-            StatusChange(workOrderId, WorkOrderStatus.Assigned, WorkOrderStatus.InProgress,
-                new DateTime(2025, 3, 1, 10, 0, 0)),
-            StatusChange(workOrderId, WorkOrderStatus.Draft, WorkOrderStatus.Assigned,
-                new DateTime(2025, 2, 15, 10, 0, 0))
-        };
         var workOrder = WorkOrderBuilder.Create()
             .WithId(workOrderId).WithNumber("WO-001").WithTitle("Test").WithDescription("Test")
             .WithStatus(WorkOrderStatus.InProgress).CreatedBy(Creator).AssignedTo(Assignee)
             .CreatedAt(DateTime.UtcNow).Build();
-        var page = HistoryPage(workOrder, history);
+        var page = HistoryPage(workOrder, NewestFirstHistory(workOrderId));
         await using var ctx = page.Build();
         var component = page.Render(ctx);
 
@@ -133,21 +126,55 @@ public class HistoryTests
             .Editing(workOrder)
             .WithHistory(history);
 
-    private static WorkOrderStatusChange StatusChange(
-        Guid workOrderId,
-        WorkOrderStatus from,
-        WorkOrderStatus to,
-        DateTime changedDate,
-        string? reason = null) =>
+    private static WorkOrderStatusChange[] ShelveReasonHistory(Guid workOrderId) =>
+    [
+        ToChange(new HistoryChange
+        {
+            WorkOrderId = workOrderId,
+            From = WorkOrderStatus.InProgress,
+            To = WorkOrderStatus.Assigned,
+            ChangedDate = new DateTime(2025, 3, 1, 10, 0, 0),
+            Reason = "Waiting on parts"
+        })
+    ];
+
+    private static WorkOrderStatusChange[] NewestFirstHistory(Guid workOrderId) =>
+    [
+        ToChange(new HistoryChange
+        {
+            WorkOrderId = workOrderId,
+            From = WorkOrderStatus.Assigned,
+            To = WorkOrderStatus.InProgress,
+            ChangedDate = new DateTime(2025, 3, 1, 10, 0, 0)
+        }),
+        ToChange(new HistoryChange
+        {
+            WorkOrderId = workOrderId,
+            From = WorkOrderStatus.Draft,
+            To = WorkOrderStatus.Assigned,
+            ChangedDate = new DateTime(2025, 2, 15, 10, 0, 0)
+        })
+    ];
+
+    private sealed class HistoryChange
+    {
+        public Guid WorkOrderId { get; init; }
+        public WorkOrderStatus From { get; init; } = WorkOrderStatus.None;
+        public WorkOrderStatus To { get; init; } = WorkOrderStatus.None;
+        public DateTime ChangedDate { get; init; }
+        public string? Reason { get; init; }
+    }
+
+    private static WorkOrderStatusChange ToChange(HistoryChange change) =>
         new()
         {
             Id = Guid.NewGuid(),
-            WorkOrderId = workOrderId,
-            FromStatus = from,
-            ToStatus = to,
+            WorkOrderId = change.WorkOrderId,
+            FromStatus = change.From,
+            ToStatus = change.To,
             ChangedById = Assignee.Id,
             ChangedBy = Assignee,
-            ChangedDate = changedDate,
-            Reason = reason
+            ChangedDate = change.ChangedDate,
+            Reason = change.Reason
         };
 }

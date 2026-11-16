@@ -3,11 +3,3 @@
 src/IntegrationTests/BuildGates/BuildFactsInputsMother.cs :: BuildFactsInputsMother
 src/UnitTests/ObjectMother.cs :: ObjectMother
 src/UnitTests/UI.Shared/Pages/ClientDateFormatterTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageCreatedRelativeTimeTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageDescriptionCharCountTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageEventBusNotifyTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageHeadingTooltipTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageInstructionsFieldTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageRequiredFieldsNoteTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageRoomFieldTests.cs :: StubWorkOrderBuilder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageTitleCharCountTests.cs :: StubWorkOrderBuilder
