@@ -7,7 +7,7 @@ public record AddAttachmentMetadataCommand(
     Employee UploadedBy,
     string FileName,
     string ContentType,
-    long FileSize) : IRequest<WorkOrderAttachment>
+    long FileSize) : IRequest<WorkOrderAttachment>, IBusMessage
 {
     public WorkOrderAttachment CreateAttachment(DateTime uploadedDate)
     {

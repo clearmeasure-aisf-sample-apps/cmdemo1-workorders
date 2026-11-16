@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using Mediator;
 using Microsoft.Extensions.AI;
@@ -8,4 +9,4 @@ namespace ClearMeasure.Bootcamp.LlmGateway;
 /// Server-only work-order chat. Not an <c>IRemotableRequest</c> — must not cross the
 /// Blazor WASM single API (#1804). In-process bus sends on the server still work.
 /// </summary>
-public record WorkOrderChatQuery(string Prompt, WorkOrder CurrentWorkOrder) : IRequest<ChatResponse>;
+public record WorkOrderChatQuery(string Prompt, WorkOrder CurrentWorkOrder) : IRequest<ChatResponse>, IBusMessage;

@@ -7,9 +7,21 @@ namespace ClearMeasure.Bootcamp.UI.Shared;
 
 internal static class BusActivityTagger
 {
+    /// <summary>
+    /// Tags the activity with the scalar properties of a bus message.
+    /// </summary>
+    /// <remarks>
+    /// Only <see cref="IBusMessage"/> types are tagged. Their public properties are kept by the
+    /// trimmer, so the reflection below is safe under Native AOT. Other objects get no property tags.
+    /// </remarks>
     public static void AddScalarPropertyTags(object message, Activity activity)
     {
-        foreach (var property in message.GetType().GetProperties())
+        if (message is not IBusMessage busMessage)
+        {
+            return;
+        }
+
+        foreach (var property in busMessage.GetType().GetProperties())
         {
             if (IsScalarProperty(property.PropertyType)
                 && property.GetCustomAttribute<ExcludeFromBusActivityAttribute>() == null)
