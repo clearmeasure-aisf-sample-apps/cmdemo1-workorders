@@ -1,4 +1,4 @@
-﻿using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
+using ClearMeasure.Bootcamp.Core.Queries;
 using Mediator;
 
 namespace ClearMeasure.Bootcamp.UI.Server.Handlers;

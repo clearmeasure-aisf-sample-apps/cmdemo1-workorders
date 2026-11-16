@@ -24,7 +24,7 @@ public class SingleApiEndpointTests
         var message = new WebServiceMessage(request);
         var json = await SingleApiEndpoint.Post(message, stubBus);
 
-        var responseMessage = JsonSerializer.Deserialize<WebServiceMessage>(json)!;
+        var responseMessage = WebServiceMessage.FromJson(json)!;
         var result = (Employee[])responseMessage.GetBodyObject();
         result.Length.ShouldBe(1);
         result[0].UserName.ShouldBe("hsimpson");
@@ -41,7 +41,7 @@ public class SingleApiEndpointTests
 
         stubBus.LastPublishedNotification.ShouldBeOfType<UserLoggedInEvent>();
         ((UserLoggedInEvent)stubBus.LastPublishedNotification!).UserName.ShouldBe("testuser");
-        var responseMessage = JsonSerializer.Deserialize<WebServiceMessage>(json)!;
+        var responseMessage = WebServiceMessage.FromJson(json)!;
         responseMessage.Body.ShouldBeEmpty();
     }
 
@@ -67,7 +67,7 @@ public class SingleApiEndpointTests
         var message = new WebServiceMessage(loginEvent);
         var json = await SingleApiEndpoint.Post(message, stubBus);
 
-        var responseMessage = JsonSerializer.Deserialize<WebServiceMessage>(json)!;
+        var responseMessage = WebServiceMessage.FromJson(json)!;
         responseMessage.Body.ShouldBeEmpty();
         responseMessage.TypeName.ShouldBeEmpty();
     }

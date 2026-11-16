@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Server.Handlers;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Shouldly;

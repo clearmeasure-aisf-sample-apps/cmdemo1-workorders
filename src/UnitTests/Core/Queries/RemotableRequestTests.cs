@@ -6,7 +6,6 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Messaging;
-using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Shouldly;
 
@@ -304,7 +303,7 @@ public class RemotableRequestTests
     public static object SimulateRemoteObject(object theObject)
     {
         var json = new WebServiceMessage(theObject).GetJson();
-        var message = JsonSerializer.Deserialize<WebServiceMessage>(json);
+        var message = WebServiceMessage.FromJson(json);
         var rehydratedQuery = message!.GetBodyObject();
         return rehydratedQuery;
     }

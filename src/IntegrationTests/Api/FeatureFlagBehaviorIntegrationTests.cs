@@ -82,7 +82,7 @@ public class FeatureFlagBehaviorIntegrationTests
             "/api/blazor-wasm-single-api", new WebServiceMessage(new VendorsQuery()));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var message = JsonSerializer.Deserialize<WebServiceMessage>(await response.Content.ReadAsStringAsync())!;
+        var message = WebServiceMessage.FromJson(await response.Content.ReadAsStringAsync())!;
         message.GetBodyObject().ShouldBeOfType<Vendor[]>().Select(vendor => vendor.Name)
             .ShouldBe([RecordingVendorsHandler.VendorName]);
     }
@@ -133,7 +133,7 @@ public class FeatureFlagBehaviorIntegrationTests
             "/api/blazor-wasm-single-api", new WebServiceMessage(new FeatureFlagsQuery()));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var message = JsonSerializer.Deserialize<WebServiceMessage>(await response.Content.ReadAsStringAsync())!;
+        var message = WebServiceMessage.FromJson(await response.Content.ReadAsStringAsync())!;
         var result = message.GetBodyObject().ShouldBeOfType<FeatureFlagsResult>();
         result.Flags.Keys.ShouldBe(FeatureFlagNames.All, ignoreOrder: true);
         result.Flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();

@@ -62,7 +62,7 @@ internal static class HttpAllowListTypes
         var assemblies = new[]
         {
             typeof(IRemotableRequest).Assembly,
-            typeof(ServerHealthCheckQuery).Assembly,
+            typeof(ServerHealthCheck).Assembly,
             typeof(ChatClientConfigQuery).Assembly
         };
 

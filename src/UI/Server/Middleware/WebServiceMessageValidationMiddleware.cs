@@ -1,11 +1,12 @@
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using ClearMeasure.Bootcamp.Core.Messaging;
 using FluentValidation;
 
 namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 
 /// <summary>
-/// Validates a Blazor WASM single-API POST before MVC: the body must be a <see cref="WebServiceMessage"/>, the
+/// Validates a Blazor WASM single-API POST before the endpoint runs: the body must be a <see cref="WebServiceMessage"/>, the
 /// envelope must pass its validator, and the payload must be remotable (and pass its validator when one exists).
 /// </summary>
 public sealed class WebServiceMessageValidationMiddleware(
@@ -15,12 +16,10 @@ public sealed class WebServiceMessageValidationMiddleware(
     private const string SingleApiPathSuffix = "/blazor-wasm-single-api";
     private const string InvalidBody = "Invalid request body.";
 
-    private static readonly JsonSerializerOptions JsonOptions =
-        new(JsonSerializerDefaults.Web)
-        {
-            IncludeFields = false,
-            PropertyNameCaseInsensitive = true
-        };
+    private static readonly JsonTypeInfo<WebServiceMessage> EnvelopeContract =
+        new RemotableMessageJsonContext(
+                new JsonSerializerOptions(JsonSerializerDefaults.Web) { PropertyNameCaseInsensitive = true })
+            .WebServiceMessage;
 
     public async Task InvokeAsync(
         HttpContext context,
@@ -55,7 +54,7 @@ public sealed class WebServiceMessageValidationMiddleware(
     {
         try
         {
-            message = JsonSerializer.Deserialize<WebServiceMessage>(body, JsonOptions);
+            message = JsonSerializer.Deserialize(body, EnvelopeContract);
         }
         catch (JsonException)
         {
