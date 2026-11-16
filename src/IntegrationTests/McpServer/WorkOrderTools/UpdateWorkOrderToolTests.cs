@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.UnitTests;
 using Shouldly;
@@ -81,7 +82,7 @@ public class UpdateWorkOrderToolTests
             McpWorkOrderSteps.Bus(),
             number,
             creator.UserName,
-            dueDate: newDueDate.ToString("yyyy-MM-dd"));
+            dueDate: newDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
         McpWorkOrderSteps.ReadString(result, "DueDate").ShouldBe("2026-12-25");
         (await McpWorkOrderSteps.LoadByNumberAsync(number))!.DueDate.ShouldBe(newDueDate);

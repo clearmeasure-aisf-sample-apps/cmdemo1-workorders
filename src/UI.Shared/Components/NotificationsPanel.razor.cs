@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -87,6 +88,6 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
         if (daysUntil == 1)
             return "Due tomorrow";
 
-        return dueDate.Value.ToString("M/d");
+        return dueDate.Value.ToString("M/d", CultureInfo.InvariantCulture);
     }
 }

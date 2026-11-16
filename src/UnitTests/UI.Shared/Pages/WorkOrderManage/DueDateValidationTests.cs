@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -47,7 +48,7 @@ public class DueDateValidationTests
         var component = page.Render(ctx);
         await FillRequiredFields(component);
         await component.Find(WorkOrderManageSteps.TestId(WorkOrderManagePage.Elements.DueDate))
-            .ChangeAsync(new() { Value = today.ToString("yyyy-MM-dd") });
+            .ChangeAsync(new() { Value = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) });
 
         await component.Find(CommandButton("Save")).ClickAsync(new());
 

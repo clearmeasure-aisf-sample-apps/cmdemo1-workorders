@@ -87,11 +87,7 @@ public class ToolsSlugifyEndpointTests
         var nullBody = ToolsSlugifyEndpoint.Post(null);
         var nullText = ToolsSlugifyEndpoint.Post(new SlugifyRequest(null));
 
-        foreach (var result in new[] { nullBody, nullText })
-        {
-            var objectResult = result.ShouldBeValueResult();
-            objectResult.StatusCode.ShouldBe(400);
-            objectResult.Value.ShouldBeOfType<ProblemDetails>();
-        }
+        nullBody.ShouldBeBadRequestProblem();
+        nullText.ShouldBeBadRequestProblem();
     }
 }

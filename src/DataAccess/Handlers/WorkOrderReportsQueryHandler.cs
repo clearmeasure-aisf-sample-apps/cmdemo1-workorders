@@ -49,7 +49,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
         // Group in memory because Status uses a value converter
         var statusGroups = statuses
             .GroupBy(s => s.Key)
-            .OrderBy(g => g.Key)
+            .OrderBy(g => g.Key, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.Count());
 
         foreach (var (key, count) in statusGroups)
@@ -68,7 +68,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
         // Group in memory because Priority is an enum value converter
         var priorityGroups = priorities
             .GroupBy(p => p.ToString())
-            .OrderBy(g => g.Key)
+            .OrderBy(g => g.Key, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.Count());
 
         foreach (var (key, count) in priorityGroups)
@@ -87,7 +87,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
 
         var buildingGroups = buildings
             .GroupBy(b => b!)
-            .OrderBy(g => g.Key)
+            .OrderBy(g => g.Key, StringComparer.CurrentCulture)
             .ToDictionary(g => g.Key, g => g.Count());
 
         foreach (var (building, count) in buildingGroups)

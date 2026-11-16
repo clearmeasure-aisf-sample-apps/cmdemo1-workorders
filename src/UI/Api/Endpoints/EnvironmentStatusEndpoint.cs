@@ -36,15 +36,17 @@ public static class EnvironmentStatusEndpoint
             .Where(name => Environment.GetEnvironmentVariable(name) is not null)
             .ToList();
         var deployment = DeploymentIdentity.FromProcess();
-        return new EnvironmentStatusResponse(
-            OsDescription: RuntimeInformation.OSDescription,
-            ProcessorCount: Environment.ProcessorCount,
-            ClrVersion: Environment.Version.ToString(),
-            EnvironmentVariableNames: names,
-            EnvironmentVariables: names.ToDictionary(name => name, _ => RedactedValue, StringComparer.OrdinalIgnoreCase),
-            Version: EntryAssemblyVersion(),
-            GitSha: deployment.GitSha,
-            EnvironmentName: deployment.EnvironmentName);
+        return new EnvironmentStatusResponse
+        {
+            OsDescription = RuntimeInformation.OSDescription,
+            ProcessorCount = Environment.ProcessorCount,
+            ClrVersion = Environment.Version.ToString(),
+            EnvironmentVariableNames = names,
+            EnvironmentVariables = names.ToDictionary(name => name, _ => RedactedValue, StringComparer.OrdinalIgnoreCase),
+            Version = EntryAssemblyVersion(),
+            GitSha = deployment.GitSha,
+            EnvironmentName = deployment.EnvironmentName
+        };
     }
 
     private static string EntryAssemblyVersion() =>
@@ -56,12 +58,21 @@ public static class EnvironmentStatusEndpoint
 /// <summary>
 /// JSON payload for <c>GET /api/status/environment</c> and the versioned twin.
 /// </summary>
-public record EnvironmentStatusResponse(
-    string OsDescription,
-    int ProcessorCount,
-    string ClrVersion,
-    IReadOnlyList<string> EnvironmentVariableNames,
-    IReadOnlyDictionary<string, string> EnvironmentVariables,
-    string Version,
-    string GitSha,
-    string EnvironmentName);
+public record EnvironmentStatusResponse
+{
+    public required string OsDescription { get; init; }
+
+    public required int ProcessorCount { get; init; }
+
+    public required string ClrVersion { get; init; }
+
+    public required IReadOnlyList<string> EnvironmentVariableNames { get; init; }
+
+    public required IReadOnlyDictionary<string, string> EnvironmentVariables { get; init; }
+
+    public required string Version { get; init; }
+
+    public required string GitSha { get; init; }
+
+    public required string EnvironmentName { get; init; }
+}

@@ -21,13 +21,14 @@ internal static class AcceptanceShardBalance
         AcceptanceShardAssignment assignment,
         IReadOnlyList<DiscoveredAcceptanceClass> discovered)
     {
-        var problems = new List<string>();
-        problems.AddRange(Bounds(assignment));
-        problems.AddRange(Membership(assignment, discovered));
-        problems.AddRange(Collisions(assignment));
-        problems.AddRange(Durations(assignment, discovered));
-        problems.AddRange(Counts(assignment, discovered));
-        return problems;
+        return
+        [
+            ..Bounds(assignment),
+            ..Membership(assignment, discovered),
+            ..Collisions(assignment),
+            ..Durations(assignment, discovered),
+            ..Counts(assignment, discovered)
+        ];
     }
 
     private static IEnumerable<string> Bounds(AcceptanceShardAssignment assignment)

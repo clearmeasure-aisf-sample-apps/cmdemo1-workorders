@@ -254,7 +254,7 @@ public class LocalTelemetryFileWriter : BackgroundService, IAsyncDisposable
         tagsDictionary["meter.version"] = instrument.Meter.Version;
         tagsDictionary["instrument.type"] = instrument.GetType().Name;
 
-        var value = Convert.ToDouble(measurement);
+        var value = Convert.ToDouble(measurement, CultureInfo.InvariantCulture);
         WriteMetricEntry(instrument.Name, value, instrument.Unit ?? "", tagsDictionary);
     }
 }

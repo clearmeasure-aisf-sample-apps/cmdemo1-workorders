@@ -83,7 +83,7 @@ public class StateCommandHandler(
         var transition = WorkOrderStatusTransition.Of(request, beginStatus, currentDateTime);
         var persisted = await PersistAsync(order, transition, cancellationToken);
 
-        var loweredTransitionVerb = request.TransitionVerbPastTense.ToLower();
+        var loweredTransitionVerb = request.TransitionVerbPastTense.ToLowerInvariant();
         var workOrderNumber = persisted.Number;
         var fullName = request.CurrentUser.GetFullName();
 

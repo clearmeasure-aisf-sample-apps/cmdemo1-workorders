@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bunit;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.Core;
@@ -103,7 +104,7 @@ public class WorkOrderPrintTests
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-4"));
 
-        c.Find(Id(WorkOrderPrint.Elements.DueDate)).TextContent.ShouldBe(due.ToString("yyyy-MM-dd"));
+        c.Find(Id(WorkOrderPrint.Elements.DueDate)).TextContent.ShouldBe(due.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
     [Test]

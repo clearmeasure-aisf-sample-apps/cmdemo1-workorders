@@ -14,12 +14,8 @@ public class ToolsBase64EndpointTests
         var defaultMode = ToolsBase64Endpoint.Post(new Base64Request("hello"));
         var explicitEncode = ToolsBase64Endpoint.Post(new Base64Request("hello", "encode"));
 
-        foreach (var result in new[] { defaultMode, explicitEncode })
-        {
-            var ok = result.ShouldBeOkResult();
-            var payload = ok.Value.ShouldBeOfType<Base64Response>();
-            payload.Result.ShouldBe("aGVsbG8=");
-        }
+        defaultMode.ShouldBeOkResult().Value.ShouldBeOfType<Base64Response>().Result.ShouldBe("aGVsbG8=");
+        explicitEncode.ShouldBeOkResult().Value.ShouldBeOfType<Base64Response>().Result.ShouldBe("aGVsbG8=");
     }
 
     [Test]
@@ -62,12 +58,9 @@ public class ToolsBase64EndpointTests
         var nullText = ToolsBase64Endpoint.Post(new Base64Request(null));
         var emptyText = ToolsBase64Endpoint.Post(new Base64Request(""));
 
-        foreach (var result in new[] { nullBody, nullText, emptyText })
-        {
-            var objectResult = result.ShouldBeValueResult();
-            objectResult.StatusCode.ShouldBe(400);
-            objectResult.Value.ShouldBeOfType<ProblemDetails>();
-        }
+        nullBody.ShouldBeBadRequestProblem();
+        nullText.ShouldBeBadRequestProblem();
+        emptyText.ShouldBeBadRequestProblem();
     }
 
     [Test]

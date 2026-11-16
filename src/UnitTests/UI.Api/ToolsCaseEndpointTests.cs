@@ -62,12 +62,9 @@ public class ToolsCaseEndpointTests
         var missing = ToolsCaseEndpoint.Post(new CaseRequest("Hello", null));
         var blank = ToolsCaseEndpoint.Post(new CaseRequest("Hello", "  "));
 
-        foreach (var result in new[] { unknown, missing, blank })
-        {
-            var objectResult = result.ShouldBeValueResult();
-            objectResult.StatusCode.ShouldBe(400);
-            objectResult.Value.ShouldBeOfType<ProblemDetails>();
-        }
+        unknown.ShouldBeBadRequestProblem();
+        missing.ShouldBeBadRequestProblem();
+        blank.ShouldBeBadRequestProblem();
     }
 
     [Test]
@@ -76,12 +73,8 @@ public class ToolsCaseEndpointTests
         var nullBody = ToolsCaseEndpoint.Post(null);
         var nullText = ToolsCaseEndpoint.Post(new CaseRequest(null, "upper"));
 
-        foreach (var result in new[] { nullBody, nullText })
-        {
-            var objectResult = result.ShouldBeValueResult();
-            objectResult.StatusCode.ShouldBe(400);
-            objectResult.Value.ShouldBeOfType<ProblemDetails>();
-        }
+        nullBody.ShouldBeBadRequestProblem();
+        nullText.ShouldBeBadRequestProblem();
     }
 
     [Test]

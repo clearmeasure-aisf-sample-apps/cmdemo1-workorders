@@ -49,10 +49,7 @@ public class FeatureFlagsEndpointTests
 
         var content = result.ShouldBeContentResult();
         using var doc = JsonDocument.Parse(content.Content!);
-        foreach (var key in RuntimeFlags.Keys)
-        {
-            doc.RootElement.TryGetProperty(key, out _).ShouldBeTrue($"expected key '{key}' in JSON");
-        }
+        RuntimeFlags.Keys.ShouldBeSubsetOf(doc.RootElement.EnumerateObject().Select(property => property.Name));
     }
 
     private static FeatureFlagsUnderTest CreateEndpoint(IBus bus) => new(bus);

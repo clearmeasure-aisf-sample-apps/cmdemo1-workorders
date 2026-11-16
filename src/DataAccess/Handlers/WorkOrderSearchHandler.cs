@@ -21,6 +21,7 @@ public class WorkOrderSearchHandler(DataContext context, TimeProvider time) : IR
 
     private static IQueryable<WorkOrder> ApplyOrder(IQueryable<WorkOrder> query, WorkOrderSpecificationQuery specification)
     {
+        // ReSharper disable DefaultStringComparerUsage -- EF Core translates this ordering to SQL, where the column collation decides; a comparer cannot be translated.
         if (!specification.OrderByDueDate)
         {
             return query.OrderByDescending(wo => wo.CreatedDate).ThenBy(wo => wo.Number);
@@ -30,5 +31,6 @@ public class WorkOrderSearchHandler(DataContext context, TimeProvider time) : IR
         return specification.DueDateDescending
             ? nullsLast.ThenByDescending(wo => wo.DueDate).ThenBy(wo => wo.Number)
             : nullsLast.ThenBy(wo => wo.DueDate).ThenBy(wo => wo.Number);
+        // ReSharper restore DefaultStringComparerUsage
     }
 }

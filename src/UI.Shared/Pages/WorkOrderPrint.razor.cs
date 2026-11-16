@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
@@ -63,7 +64,7 @@ public partial class WorkOrderPrint : AppComponentBase
     {
         if (utc is null) return "None";
         var value = DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc);
-        return TimeZoneInfo.ConvertTimeFromUtc(value, ChurchTimeZone.Chicago).ToString("yyyy-MM-dd h:mm tt");
+        return TimeZoneInfo.ConvertTimeFromUtc(value, ChurchTimeZone.Chicago).ToString("yyyy-MM-dd h:mm tt", CultureInfo.InvariantCulture);
     }
 
     private string DueDateText
@@ -71,7 +72,7 @@ public partial class WorkOrderPrint : AppComponentBase
         get
         {
             if (_workOrder?.DueDate is null) return "None";
-            var text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd");
+            var text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             var urgency = DueDateUrgencyPresenter.ScreenReaderText(
                 DueDateUrgencyCalculator.Calculate(_workOrder, Clock));
             return string.IsNullOrEmpty(urgency) ? text : $"{text} ({urgency})";

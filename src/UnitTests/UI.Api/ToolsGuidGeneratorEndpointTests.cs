@@ -31,10 +31,7 @@ public class ToolsGuidGeneratorEndpointTests
         var guids = ok.Value.ShouldBeAssignableTo<string[]>();
         guids.ShouldNotBeNull();
         guids.Length.ShouldBe(5);
-        foreach (var guid in guids)
-        {
-            Guid.TryParseExact(guid, "D", out _).ShouldBeTrue();
-        }
+        guids.Select(guid => Guid.TryParseExact(guid, "D", out _)).ShouldAllBe(parsed => parsed);
 
         guids.Distinct().Count().ShouldBe(5);
     }

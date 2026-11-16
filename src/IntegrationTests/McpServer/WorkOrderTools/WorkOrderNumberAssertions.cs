@@ -7,6 +7,6 @@ internal static class WorkOrderNumberAssertions
 {
     public static void ShouldBeSet(this IEnumerable<string> actual, params string[] expected)
     {
-        actual.OrderBy(number => number).ShouldBe(expected.OrderBy(number => number));
+        actual.OrderBy(number => number, StringComparer.Ordinal).ShouldBe(expected.OrderBy(number => number, StringComparer.Ordinal));
     }
 }

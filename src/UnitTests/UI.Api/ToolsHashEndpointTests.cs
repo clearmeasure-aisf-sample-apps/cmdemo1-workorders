@@ -81,12 +81,8 @@ public class ToolsHashEndpointTests
         var nullBody = ToolsHashEndpoint.Post(null);
         var nullText = ToolsHashEndpoint.Post(new HashRequest(null));
 
-        foreach (var result in new[] { nullBody, nullText })
-        {
-            var objectResult = result.ShouldBeValueResult();
-            objectResult.StatusCode.ShouldBe(400);
-            objectResult.Value.ShouldBeOfType<ProblemDetails>();
-        }
+        nullBody.ShouldBeBadRequestProblem();
+        nullText.ShouldBeBadRequestProblem();
     }
 
     [Test]

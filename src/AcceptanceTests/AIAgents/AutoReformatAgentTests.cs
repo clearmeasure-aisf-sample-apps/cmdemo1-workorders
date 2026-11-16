@@ -24,7 +24,7 @@ public class AutoReformatAgentTests : AiAgentsAcceptanceTestBase
         var rehydrated = await WaitForReformatAsync(order);
         rehydrated.ShouldNotBeNull();
         rehydrated.Title.ShouldNotBeNull();
-        rehydrated.Title![0].ShouldBe(char.ToUpper(rehydrated.Title[0]));
+        rehydrated.Title![0].ShouldBe(char.ToUpperInvariant(rehydrated.Title[0]));
         rehydrated.Description.ShouldNotBeNull();
         rehydrated.Description.ShouldNotBe(order.Description);
     }

@@ -17,14 +17,16 @@ public static class VersionEndpoint
     public static IResult Get(HttpContext context, IHostEnvironment hostEnvironment)
     {
         var assembly = typeof(VersionEndpoint).Assembly;
-        var payload = new VersionMetadataResponse(
-            AssemblyVersion: assembly.GetName().Version?.ToString(),
-            InformationalVersion: assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
-            BuildConfiguration: ResolveBuildConfiguration(assembly),
-            Environment: hostEnvironment.EnvironmentName,
-            MachineName: Environment.MachineName,
-            FrameworkDescription: RuntimeInformation.FrameworkDescription,
-            OsDescription: RuntimeInformation.OSDescription);
+        var payload = new VersionMetadataResponse
+        {
+            AssemblyVersion = assembly.GetName().Version?.ToString(),
+            InformationalVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion,
+            BuildConfiguration = ResolveBuildConfiguration(assembly),
+            Environment = hostEnvironment.EnvironmentName,
+            MachineName = Environment.MachineName,
+            FrameworkDescription = RuntimeInformation.FrameworkDescription,
+            OsDescription = RuntimeInformation.OSDescription
+        };
         return ConditionalGetEtag.ConditionalJson(context, payload);
     }
 
@@ -45,12 +47,20 @@ public static class VersionEndpoint
 /// <summary>
 /// JSON payload for <c>GET /api/version</c> and <c>GET /api/v1.0/version</c>.
 /// </summary>
-public record VersionMetadataResponse(
-    string? AssemblyVersion,
-    string? InformationalVersion,
-    string BuildConfiguration,
-    string? Environment,
-    string MachineName,
-    string FrameworkDescription,
-    string OsDescription);
+public record VersionMetadataResponse
+{
+    public required string? AssemblyVersion { get; init; }
+
+    public required string? InformationalVersion { get; init; }
+
+    public required string BuildConfiguration { get; init; }
+
+    public required string? Environment { get; init; }
+
+    public required string MachineName { get; init; }
+
+    public required string FrameworkDescription { get; init; }
+
+    public required string OsDescription { get; init; }
+}
 

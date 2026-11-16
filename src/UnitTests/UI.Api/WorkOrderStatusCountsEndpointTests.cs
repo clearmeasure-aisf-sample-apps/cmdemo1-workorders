@@ -45,16 +45,30 @@ public class WorkOrderStatusCountsEndpointTests
         await using var factory = new ApiVersioningRoutingWebApplicationFactory();
         using var client = factory.CreateClient();
 
-        for (var i = 0; i < 120; i++)
-        {
-            using var response = await client.GetAsync("/api/work-orders/status-counts");
-            response.StatusCode.ShouldBe(HttpStatusCode.OK);
-            response.Headers.CacheControl!.NoStore.ShouldBeTrue();
-        }
+        var answers = await AskRepeatedly(client, "/api/work-orders/status-counts", TwiceASecondForAMinute);
+
+        answers.ShouldAllBe(answer => answer.StatusCode == HttpStatusCode.OK && answer.NoStore);
 
         using var document = JsonDocument.Parse(await client.GetStringAsync("/api/v1.0/work-orders/status-counts"));
         document.RootElement.EnumerateObject().Select(p => p.Name)
             .ShouldBe(WorkOrderStatus.GetAllItems().Select(s => s.Key), ignoreOrder: true);
+    }
+
+    private const int TwiceASecondForAMinute = 120;
+
+    private sealed record Answer(HttpStatusCode StatusCode, bool NoStore);
+
+    /// <summary>Sends <paramref name="times"/> GET requests one after another and keeps each status and no-store flag.</summary>
+    private static async Task<IReadOnlyList<Answer>> AskRepeatedly(HttpClient client, string path, int times)
+    {
+        var answers = new List<Answer>(times);
+        for (var i = 0; i < times; i++)
+        {
+            using var response = await client.GetAsync(path);
+            answers.Add(new Answer(response.StatusCode, response.Headers.CacheControl?.NoStore == true));
+        }
+
+        return answers;
     }
 
     private sealed class StubBus(Dictionary<string, int> counts) : IBus

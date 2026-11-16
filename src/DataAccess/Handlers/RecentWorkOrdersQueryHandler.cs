@@ -35,6 +35,7 @@ public class RecentWorkOrdersQueryHandler(DataContext context) : IRequestHandler
         var hasDate = Expression.Lambda<Func<WorkOrder, bool>>(
             Expression.NotEqual(date.Body, Expression.Constant(null, typeof(DateTime?))),
             date.Parameters);
+        // ReSharper disable DefaultStringComparerUsage -- EF Core translates this ordering to SQL, where the column collation decides; a comparer cannot be translated.
         return context.Set<WorkOrder>()
             .AsNoTracking()
             .Where(hasDate)
@@ -42,5 +43,6 @@ public class RecentWorkOrdersQueryHandler(DataContext context) : IRequestHandler
             .ThenBy(wo => wo.Number)
             .Take(count)
             .ToListAsync(cancellationToken);
+        // ReSharper restore DefaultStringComparerUsage
     }
 }

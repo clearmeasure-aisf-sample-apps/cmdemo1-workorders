@@ -48,13 +48,8 @@ public class ToolsWordCountEndpointTests
         var nullBody = ToolsWordCountEndpoint.Post(null);
         var nullText = ToolsWordCountEndpoint.Post(new WordCountRequest(null));
 
-        foreach (var result in new[] { nullBody, nullText })
-        {
-            var payload = ReadPayload(result);
-            payload.Words.ShouldBe(0);
-            payload.Characters.ShouldBe(0);
-            payload.Lines.ShouldBe(0);
-        }
+        ReadPayload(nullBody).ShouldBe(new WordCountResponse(0, 0, 0));
+        ReadPayload(nullText).ShouldBe(new WordCountResponse(0, 0, 0));
     }
 
     [Test]

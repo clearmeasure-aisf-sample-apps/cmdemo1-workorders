@@ -34,10 +34,8 @@ public class ToolsUppercaseEndpointTests
         var nullBody = ToolsUppercaseEndpoint.Post(null);
         var nullText = ToolsUppercaseEndpoint.Post(new UppercaseRequest(null));
 
-        foreach (var result in new[] { nullBody, nullText })
-        {
-            ReadPayload(result).Text.ShouldBe("");
-        }
+        ReadPayload(nullBody).Text.ShouldBe("");
+        ReadPayload(nullText).Text.ShouldBe("");
     }
 
     [Test]

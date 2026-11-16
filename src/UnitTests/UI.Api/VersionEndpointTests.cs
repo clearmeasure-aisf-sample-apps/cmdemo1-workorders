@@ -44,14 +44,6 @@ public class VersionEndpointTests
     {
         var apiAssembly = typeof(VersionEndpoint).Assembly;
         var expected = apiAssembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
-        if (string.IsNullOrWhiteSpace(expected))
-        {
-#if DEBUG
-            expected = "Debug";
-#else
-            expected = "Release";
-#endif
-        }
 
         var endpoint = CreateEndpoint(new StubHostEnvironment("Test"));
         var result = endpoint.Get();

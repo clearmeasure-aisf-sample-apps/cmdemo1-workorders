@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 
@@ -38,7 +39,7 @@ public static class SearchResultRowMother
         return new WorkOrderSearchResultRow
         {
             WorkOrder = workOrder,
-            DueDateDisplay = dueDate.ToString("MMM d, yyyy"),
+            DueDateDisplay = dueDate.ToString("MMM d, yyyy", CultureInfo.InvariantCulture),
             DueDateCssClass = "overdue",
             DueDateUrgencyText = "Overdue",
             Urgency = DueDateUrgency.Overdue

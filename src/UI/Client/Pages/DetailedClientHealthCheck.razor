@@ -1,5 +1,6 @@
 @page "/_clienthealthcheck/detailed"
 @using Microsoft.Extensions.Diagnostics.HealthChecks
+@using System.Globalization
 
 <style>
     .health-status-healthy {
@@ -61,15 +62,15 @@ else
         <span data-testid="@Elements.Status"
               class="@GetStatusCssClass(_report.Status)">@_report.Status</span>
     </p>
-    <p><strong>Total Duration:</strong> @_report.TotalDuration.TotalMilliseconds.ToString("F2") ms</p>
+    <p><strong>Total Duration:</strong> @_report.TotalDuration.TotalMilliseconds.ToString("F2", CultureInfo.CurrentCulture) ms</p>
 
     <ul aria-label="Detailed health check entries">
-        @foreach (var entry in _report.Entries.OrderBy(e => e.Key))
+        @foreach (var entry in _report.Entries.OrderBy(e => e.Key, StringComparer.Ordinal))
         {
             <li>
                 <strong>@entry.Key</strong><br/>
                 Status: <span class="@GetStatusCssClass(entry.Value.Status)">@entry.Value.Status</span><br/>
-                Duration: @entry.Value.Duration.TotalMilliseconds.ToString("F2") ms<br/>
+                Duration: @entry.Value.Duration.TotalMilliseconds.ToString("F2", CultureInfo.CurrentCulture) ms<br/>
 
                 @if (!string.IsNullOrEmpty(entry.Value.Description))
                 {

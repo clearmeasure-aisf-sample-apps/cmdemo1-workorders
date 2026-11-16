@@ -59,6 +59,7 @@ public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider t
             .GroupBy(r => r.Building)
             .Select(g => new { g.Key, Anchor = g.Min(r => r.Number) });
 
+        // ReSharper disable DefaultStringComparerUsage -- EF Core translates this ordering to SQL, where the column collation decides; a comparer cannot be translated.
         return rows
             .Join(buildings, r => r.Building, b => b.Key,
                 (r, b) => new { b.Anchor, Building = b.Key, r.Room, r.Open, r.Overdue, r.Completed })
@@ -76,6 +77,7 @@ public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider t
             .OrderBy(c => c.Building)
             .ThenBy(c => c.Anchor)
             .ThenBy(c => c.Room);
+        // ReSharper restore DefaultStringComparerUsage
     }
 
     private static void Close(List<BuildingSummary> buildings, List<RoomSummary> rooms)

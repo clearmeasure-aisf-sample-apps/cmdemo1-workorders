@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
@@ -30,6 +31,14 @@ internal static class HttpResultViews
         IValueHttpResult value => new ValueView(((IStatusCodeHttpResult)result).StatusCode, value.Value),
         _ => throw new ShouldAssertException($"Expected a result with a body value but was {result.GetType().Name}")
     };
+
+    /// <summary>A 400 result carrying <c>ProblemDetails</c>.</summary>
+    internal static void ShouldBeBadRequestProblem(this IResult result)
+    {
+        var view = result.ShouldBeValueResult();
+        view.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);
+        view.Value.ShouldBeOfType<ProblemDetails>();
+    }
 
     internal static ContentView ShouldBeContentResult(this IResult result)
     {

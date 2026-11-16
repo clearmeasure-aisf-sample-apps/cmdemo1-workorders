@@ -35,6 +35,7 @@ public class EmployeeQueryHandler(DataContext context)
         // returns the first skip + take employees and the skip happens here: with both Skip and Take, EF 11's
         // precompiled (Native AOT) query names both SQL parameters @p and the page comes back empty.
         var end = skip + take;
+        // ReSharper disable DefaultStringComparerUsage -- EF Core translates this ordering to SQL, where the column collation decides; a comparer cannot be translated.
         var firstEmployees = await _context.Set<Employee>()
             .AsNoTracking()
             .Include(employee => employee.Roles)
@@ -43,7 +44,9 @@ public class EmployeeQueryHandler(DataContext context)
             .ThenBy(employee => employee.UserName)
             .Take(end)
             .ToListAsync(ct);
+        // ReSharper restore DefaultStringComparerUsage
         var employees = firstEmployees.Skip(skip);
-        return employees.OrderBy(employee => employee.LastName).ThenBy(employee => employee.FirstName).ToArray();
+        return employees.OrderBy(employee => employee.LastName, StringComparer.CurrentCulture)
+            .ThenBy(employee => employee.FirstName, StringComparer.CurrentCulture).ToArray();
     }
 }

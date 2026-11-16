@@ -37,15 +37,17 @@ public static class EchoEndpoint
                 : header.Value.ToString();
         }
 
-        return new EchoResponse(
-            Method: request.Method,
-            Path: request.Path.Value ?? string.Empty,
-            QueryString: request.QueryString.HasValue ? request.QueryString.Value! : string.Empty,
-            Scheme: request.Scheme,
-            Host: request.Host.Value ?? string.Empty,
-            Protocol: request.Protocol,
-            RemoteIpAddress: FormatRemoteIp(httpContext.Connection.RemoteIpAddress),
-            Headers: headers);
+        return new EchoResponse
+        {
+            Method = request.Method,
+            Path = request.Path.Value ?? string.Empty,
+            QueryString = request.QueryString.HasValue ? request.QueryString.Value! : string.Empty,
+            Scheme = request.Scheme,
+            Host = request.Host.Value ?? string.Empty,
+            Protocol = request.Protocol,
+            RemoteIpAddress = FormatRemoteIp(httpContext.Connection.RemoteIpAddress),
+            Headers = headers
+        };
     }
 
     private static string? FormatRemoteIp(IPAddress? address) =>
@@ -55,12 +57,21 @@ public static class EchoEndpoint
 /// <summary>
 /// JSON payload for <c>GET /api/echo</c> and <c>GET /api/v1.0/echo</c>.
 /// </summary>
-public record EchoResponse(
-    string Method,
-    string Path,
-    string QueryString,
-    string Scheme,
-    string Host,
-    string Protocol,
-    string? RemoteIpAddress,
-    IReadOnlyDictionary<string, string> Headers);
+public record EchoResponse
+{
+    public required string Method { get; init; }
+
+    public required string Path { get; init; }
+
+    public required string QueryString { get; init; }
+
+    public required string Scheme { get; init; }
+
+    public required string Host { get; init; }
+
+    public required string Protocol { get; init; }
+
+    public required string? RemoteIpAddress { get; init; }
+
+    public required IReadOnlyDictionary<string, string> Headers { get; init; }
+}

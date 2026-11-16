@@ -11,6 +11,24 @@ public class EchoEndpointTests
     [Test]
     public void Get_Should_ReflectMethodPathQueryAndHeaders()
     {
+        var httpContext = SecureHttp2RequestWithQueryAndDebugHeader();
+
+        var result = EchoEndpoint.Get(httpContext);
+
+        var ok = result.ShouldBeOkResult();
+        var payload = ok.Value.ShouldBeOfType<EchoResponse>();
+        payload.Method.ShouldBe("GET");
+        payload.Path.ShouldBe("/api/echo");
+        payload.QueryString.ShouldBe("?foo=bar&x=1");
+        payload.Scheme.ShouldBe("https");
+        payload.Host.ShouldBe("localhost:7174");
+        payload.Protocol.ShouldBe("HTTP/2");
+        payload.RemoteIpAddress.ShouldBe("127.0.0.1");
+        payload.Headers["X-Debug"].ShouldBe("trace-1");
+    }
+
+    private static HttpContext SecureHttp2RequestWithQueryAndDebugHeader()
+    {
         var httpContext = new DefaultHttpContext
         {
             Request =
@@ -28,18 +46,6 @@ public class EchoEndpointTests
             }
         };
         httpContext.Request.Headers["X-Debug"] = "trace-1";
-
-        var result = EchoEndpoint.Get(httpContext);
-
-        var ok = result.ShouldBeOkResult();
-        var payload = ok.Value.ShouldBeOfType<EchoResponse>();
-        payload.Method.ShouldBe("GET");
-        payload.Path.ShouldBe("/api/echo");
-        payload.QueryString.ShouldBe("?foo=bar&x=1");
-        payload.Scheme.ShouldBe("https");
-        payload.Host.ShouldBe("localhost:7174");
-        payload.Protocol.ShouldBe("HTTP/2");
-        payload.RemoteIpAddress.ShouldBe("127.0.0.1");
-        payload.Headers["X-Debug"].ShouldBe("trace-1");
+        return httpContext;
     }
 }

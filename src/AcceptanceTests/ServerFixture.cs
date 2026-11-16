@@ -1,5 +1,6 @@
 // ReSharper disable MethodHasAsyncOverload -- Qodana P5 (#9440): synchronous TestContext.Out.WriteLine diagnostics/setup are intentional
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
@@ -27,6 +28,8 @@ public class ServerFixture
     public static bool HeadlessTestBrowser { get; private set; } = true;
     private static bool DatabaseInitialized { get; set; }
     private static readonly Lock DatabaseLock = new();
+    private const int ServerOutputLines = 60;
+    private static readonly ConcurrentQueue<string> ServerOutput = new();
     
     /// <summary>
     /// Shared Playwright instance for all tests. Thread-safe for parallel execution.
@@ -416,16 +419,29 @@ public class ServerFixture
         {
             if (e.Data != null)
             {
-                TestContext.Out.WriteLine($"  [{label} stdout] {e.Data}");
+                Log($"  [{label} stdout] {e.Data}");
             }
         };
         process.ErrorDataReceived += (_, e) =>
         {
             if (e.Data != null)
             {
-                TestContext.Out.WriteLine($"  [{label} stderr] {e.Data}");
+                Log($"  [{label} stderr] {e.Data}");
             }
         };
+    }
+
+    /// <summary>The last server output lines, for failures raised before any test runs (OneTimeSetUp output is not in the TRX).</summary>
+    internal static string RecentServerOutput() => string.Join(Environment.NewLine, ServerOutput);
+
+    private static void Log(string line)
+    {
+        TestContext.Out.WriteLine(line);
+        ServerOutput.Enqueue(line);
+        if (ServerOutput.Count > ServerOutputLines)
+        {
+            ServerOutput.TryDequeue(out _);
+        }
     }
 
     private static async Task ResetServerDbConnections()

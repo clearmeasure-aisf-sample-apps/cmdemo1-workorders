@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
@@ -335,7 +336,7 @@ public class NotificationsPanelTests
 
         var span = component.Find(".card-due-date");
         span.GetAttribute("data-due-urgency").ShouldBe("upcoming");
-        span.TextContent.Trim().ShouldBe(due.ToString("M/d"));
+        span.TextContent.Trim().ShouldBe(due.ToString("M/d", CultureInfo.InvariantCulture));
     }
 
     [Test]

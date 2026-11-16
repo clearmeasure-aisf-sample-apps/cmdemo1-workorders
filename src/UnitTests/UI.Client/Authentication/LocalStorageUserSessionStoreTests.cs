@@ -85,27 +85,15 @@ public class LocalStorageUserSessionStoreTests
             {
                 case "localStorage.getItem":
                     GetItemCalls++;
-                    if (GetItemException is not null)
-                    {
-                        throw GetItemException;
-                    }
-
-                    return ValueTask.FromResult((TValue)(object?)_value!);
+                    return GetItemException is null
+                        ? ValueTask.FromResult((TValue)(object?)_value!)
+                        : throw GetItemException;
                 case "localStorage.setItem":
-                    if (SetItemException is not null)
-                    {
-                        throw SetItemException;
-                    }
-
-                    _value = (string?)args![1];
+                    _value = SetItemException is null ? (string?)args![1] : throw SetItemException;
                     return ValueTask.FromResult(default(TValue)!);
                 case "localStorage.removeItem":
                     RemoveItemCalls++;
-                    if (!RefuseToRemove)
-                    {
-                        _value = null;
-                    }
-
+                    _value = RefuseToRemove ? _value : null;
                     return ValueTask.FromResult(default(TValue)!);
                 default:
                     throw new InvalidOperationException($"Unexpected InvokeAsync: {identifier}");

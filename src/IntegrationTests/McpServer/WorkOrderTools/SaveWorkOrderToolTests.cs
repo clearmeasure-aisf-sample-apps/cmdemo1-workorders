@@ -1,3 +1,4 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.UnitTests;
@@ -129,7 +130,7 @@ public class SaveWorkOrderToolTests
             McpWorkOrderSteps.Bus(),
             number,
             creatorUserName,
-            dueDate: expectedDueDate.ToString("yyyy-MM-dd"));
+            dueDate: expectedDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
         (await McpWorkOrderSteps.LoadByNumberAsync(number))!.DueDate.ShouldBe(expectedDueDate);
     }
@@ -142,7 +143,7 @@ public class SaveWorkOrderToolTests
         {
             Title = "Invalid due date",
             Description = "Description",
-            DueDate = originalDueDate.ToString("yyyy-MM-dd")
+            DueDate = originalDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
         });
 
         var result = await ProductionWorkOrderTools.SaveWorkOrder(
@@ -163,7 +164,7 @@ public class SaveWorkOrderToolTests
         {
             Title = "Keep this title",
             Description = "Description",
-            DueDate = originalDueDate.ToString("yyyy-MM-dd")
+            DueDate = originalDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
         });
 
         var result = await ProductionWorkOrderTools.SaveWorkOrder(
@@ -186,7 +187,7 @@ public class SaveWorkOrderToolTests
         {
             Title = "Keep this title",
             Description = "Description",
-            DueDate = originalDueDate.ToString("yyyy-MM-dd")
+            DueDate = originalDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
         });
 
         var result = await ProductionWorkOrderTools.SaveWorkOrder(

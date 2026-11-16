@@ -52,12 +52,9 @@ public class ToolsDueDateCheckEndpointTests
         var emptyResult = CreateEndpoint().Get("");
         var whitespaceResult = CreateEndpoint().Get("   ");
 
-        foreach (var result in new[] { nullResult, emptyResult, whitespaceResult })
-        {
-            var objectResult = result.ShouldBeValueResult();
-            objectResult.StatusCode.ShouldBe(400);
-            objectResult.Value.ShouldBeOfType<ProblemDetails>();
-        }
+        nullResult.ShouldBeBadRequestProblem();
+        emptyResult.ShouldBeBadRequestProblem();
+        whitespaceResult.ShouldBeBadRequestProblem();
     }
 
     [Test]

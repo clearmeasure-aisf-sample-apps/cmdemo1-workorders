@@ -226,7 +226,7 @@
                     {
                         var buttonTestId = Elements.CommandButton + command.TransitionVerbPresentTense;
                         var buttonClass = CommandButtons.CssClass(command);
-                        <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLower()}")" type="submit" disabled="@_isSubmitting" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
+                        <button data-testid="@buttonTestId" id="@($"command-{command.TransitionVerbPresentTense.ToLowerInvariant()}")" type="submit" disabled="@_isSubmitting" @onclick="@(() => SelectedCommand = command.TransitionVerbPresentTense)" class="@buttonClass">
                             @command.TransitionVerbPresentTense
                         </button>
                     }
