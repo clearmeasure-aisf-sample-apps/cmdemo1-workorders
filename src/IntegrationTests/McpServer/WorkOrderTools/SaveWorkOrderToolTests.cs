@@ -377,7 +377,7 @@ public class SaveWorkOrderToolTests
     [Test]
     public async Task ShouldFailWhenExecutingUserUnknown()
     {
-        var (creatorUserName, number) = await McpWorkOrderSteps.CreateDraftViaToolAsync(new McpDraftCreate { Title = "Title", Description = "Description" });
+        var (_, number) = await McpWorkOrderSteps.CreateDraftViaToolAsync(new McpDraftCreate { Title = "Title", Description = "Description" });
         var missingUserName = TestData.UserName("missing");
 
         var result = await ProductionWorkOrderTools.SaveWorkOrder(

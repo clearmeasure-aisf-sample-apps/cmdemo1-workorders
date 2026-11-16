@@ -27,7 +27,7 @@ public class McpCreateWorkOrderInstructionsTests
         result.ShouldContain("New Work Order");
         var number = McpWorkOrderSteps.ExtractWorkOrderNumber(result);
         number.ShouldNotBeNullOrWhiteSpace();
-        var reloaded = await McpWorkOrderSteps.LoadByNumberAsync(number!);
+        var reloaded = await McpWorkOrderSteps.LoadByNumberAsync(number);
         reloaded.ShouldNotBeNull();
         reloaded.Instructions.ShouldBe(instructions);
         reloaded.Instructions.ShouldNotBe(description);
