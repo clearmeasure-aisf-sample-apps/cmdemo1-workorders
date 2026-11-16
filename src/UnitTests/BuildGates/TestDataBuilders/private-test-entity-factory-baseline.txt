@@ -13,10 +13,4 @@ src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs :: NotificationsPa
 src/UnitTests/UI.Shared/Pages/ClientDateFormatterTests.cs :: ClientDateFormatterTests.SampleWorkOrder
 src/UnitTests/UI.Shared/Pages/IndexPageTests.cs :: IndexPageTests.User
 src/UnitTests/UI.Shared/Pages/SignedInUserCharacterizationTests.cs :: SignedInUserCharacterizationTests.Creator
-src/UnitTests/UI.Shared/Pages/WorkOrderManageCreatedRelativeTimeTests.cs :: WorkOrderManageCreatedRelativeTimeTests.SampleWorkOrder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageDueDateValidationTests.cs :: WorkOrderManageDueDateValidationTests.Creator
-src/UnitTests/UI.Shared/Pages/WorkOrderManageDueDateValidationTests.cs :: WorkOrderManageDueDateValidationTests.Draft
-src/UnitTests/UI.Shared/Pages/WorkOrderManagePrintLinkTests.cs :: WorkOrderManagePrintLinkTests.CreatePrintWorkOrder
-src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs :: WorkOrderManageSubmitTests.Assignee
-src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs :: WorkOrderManageSubmitTests.InProgressOrder
 src/UnitTests/UI.Shared/Services/BulkStateChangeTests.cs :: BulkStateChangeTests.Employee
