@@ -15,7 +15,6 @@ using FluentValidation;
 using Lamar;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using FunJeffreyCustomEventHealthCheck = ClearMeasure.Bootcamp.UI.Shared.FunJeffreyCustomEventHealthCheck;
 
@@ -58,7 +57,8 @@ public class UiServiceRegistry : ServiceRegistry
 
     private static TValidator CreateDeferredValidator<TValidator>(IServiceProvider services)
         where TValidator : class =>
-        (TValidator)ActivatorUtilities.CreateInstance(services, typeof(TValidator));
+        (TValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
+            .CreateInstance(services, typeof(TValidator));
 
     /// <summary>MediatR with validation and feature-flag behaviors, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
     private void AddRealtimeBus()

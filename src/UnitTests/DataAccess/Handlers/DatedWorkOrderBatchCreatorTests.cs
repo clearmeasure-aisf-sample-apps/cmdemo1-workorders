@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 
@@ -25,9 +26,10 @@ public class DatedWorkOrderBatchCreatorTests
     }
 
     [TearDown]
-    public void TearDown()
+    public async Task TearDown()
     {
-        _context.Dispose();
+        await _context.DisposeAsync();
+        SqliteConnection.ClearAllPools();
         if (File.Exists(_dbPath))
         {
             File.Delete(_dbPath);

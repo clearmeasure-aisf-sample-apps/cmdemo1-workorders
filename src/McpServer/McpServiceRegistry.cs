@@ -8,7 +8,6 @@ using FluentValidation;
 using Lamar;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ClearMeasure.Bootcamp.McpServer;
 
@@ -45,12 +44,14 @@ public class McpServiceRegistry : ServiceRegistry
         this.AddSingleton(TimeProvider.System);
         // Non-IValidator DI handles (#1824) — build deferred validators without registering them as IValidator<T>.
         this.AddSingleton(sp => new CreateVendorCommandShapeRules(
-            (CreateVendorCommandValidator)ActivatorUtilities.CreateInstance(sp, typeof(CreateVendorCommandValidator))));
+            (CreateVendorCommandValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
+                .CreateInstance(sp, typeof(CreateVendorCommandValidator))));
         this.AddSingleton(sp => new CreateTeamCommandShapeRules(
-            (CreateTeamCommandValidator)ActivatorUtilities.CreateInstance(sp, typeof(CreateTeamCommandValidator))));
+            (CreateTeamCommandValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
+                .CreateInstance(sp, typeof(CreateTeamCommandValidator))));
         this.AddSingleton(sp => new CreateDatedWorkOrdersCommandShapeRules(
-            (CreateDatedWorkOrdersCommandValidator)ActivatorUtilities.CreateInstance(
-                sp, typeof(CreateDatedWorkOrdersCommandValidator))));
+            (CreateDatedWorkOrdersCommandValidator)Microsoft.Extensions.DependencyInjection.ActivatorUtilities
+                .CreateInstance(sp, typeof(CreateDatedWorkOrdersCommandValidator))));
     }
 
     private void ScanForHandlers() =>
