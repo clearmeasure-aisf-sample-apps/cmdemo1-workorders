@@ -512,6 +512,12 @@ jobs:
           $version = "${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           "BUILD_BUILDNUMBER=$version" >> $env:GITHUB_ENV
 
+      # windows-latest does not ship the .NET 11 SDK yet; install the one global.json pins.
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
       - name: Run Private Build (Windows LocalDB)
         shell: pwsh
         env:

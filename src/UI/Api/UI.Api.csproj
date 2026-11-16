@@ -9,6 +9,8 @@
 		<Configurations>Debug;Release;exclude-maui.slnf</Configurations>
 		<!-- Minimal API endpoints are mapped here, so the request delegates are source-generated here (Native AOT). -->
 		<EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
+		<!-- UI.Api runs inside UI.Server, never on its own. Without this, the .NET 11 SDK gives it a Debug Hot Reload browser-tools asset at the same path as McpServer's, and a project that references both (AcceptanceTests) fails with "Conflicting assets". -->
+		<EnableHotReloadInRuntimeConfigDevFile>false</EnableHotReloadInRuntimeConfigDevFile>
 	</PropertyGroup>
 
 	<ItemGroup>

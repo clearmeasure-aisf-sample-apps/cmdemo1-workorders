@@ -7,3 +7,8 @@
 
 TngTech.ArchUnitNET | Architecture tests for the Onion layer rules (src/UnitTests/Architecture), requested with the architecture guardrails
 Microsoft.CodeAnalysis.BannedApiAnalyzers | Bans the system clock in Core (src/Core/BannedSymbols.txt), requested with the architecture guardrails
+Mediator.Abstractions | Native AOT (#1911): replaces MediatR; source-generated Send with no reflection, approved by Jeffrey Palermo for the AOT work
+Mediator.SourceGenerator | Native AOT (#1911): the generator half of Mediator.Abstractions (build-time only), approved by Jeffrey Palermo for the AOT work
+Microsoft.EntityFrameworkCore.Design | Native AOT (#1911): EF Core compiled model and precompiled queries for the AOT build, approved by Jeffrey Palermo for the AOT work
+Microsoft.EntityFrameworkCore.Tasks | Native AOT (#1911): MSBuild tasks that generate the EF Core compiled model at build time, approved by Jeffrey Palermo for the AOT work
+TUnit | Native AOT (#1911): Microsoft.Testing.Platform test pilot that runs under Native AOT (Exp 8), approved by Jeffrey Palermo for the AOT work
