@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -138,16 +139,15 @@ public class WorkOrderManageDueDateValidationTests
     }
 
     private static WorkOrder Draft(Employee user, string number, DateOnly dueDate) =>
-        new()
-        {
-            Id = Guid.NewGuid(),
-            Number = number,
-            Title = "Existing",
-            Description = "Desc",
-            Status = WorkOrderStatus.Draft,
-            Creator = user,
-            DueDate = dueDate
-        };
+        WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid())
+            .WithNumber(number)
+            .WithTitle("Existing")
+            .WithDescription("Desc")
+            .WithStatus(WorkOrderStatus.Draft)
+            .CreatedBy(user)
+            .DueOn(dueDate)
+            .Build();
 
     private static NavigationManager Register(BunitContext ctx, IBus bus, Employee user)
     {

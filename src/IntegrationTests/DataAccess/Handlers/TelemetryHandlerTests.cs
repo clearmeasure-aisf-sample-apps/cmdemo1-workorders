@@ -8,46 +8,35 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess.Handlers;
 [TestFixture]
 public class TelemetryHandlerTests
 {
-    [Test]
-    public async Task ShouldIncrementLoginCounter_WhenUserLogsIn()
+    private sealed class LoginCapture
     {
-        long recorded = 0;
-        string? recordedUserName = null;
+        public long Recorded { get; private set; }
+        public string? UserName { get; private set; }
 
-        using var listener = new MeterListener();
-
-        listener.InstrumentPublished = (publishedInstrument, meterListener) =>
+        public void OnMeasurement(long measurement, ReadOnlySpan<KeyValuePair<string, object?>> tags)
         {
-            if (publishedInstrument.Name == "app.user.logins")
-            {
-                meterListener.EnableMeasurementEvents(publishedInstrument);
-            }
-        };
-
-        listener.SetMeasurementEventCallback<long>((_, measurement, tags, _) =>
-        {
-            recorded += measurement;
-
+            Recorded += measurement;
             foreach (var tag in tags)
             {
                 if (tag.Key == "user.name")
                 {
-                    recordedUserName = tag.Value?.ToString();
+                    UserName = tag.Value?.ToString();
                 }
             }
-        });
+        }
+    }
 
-        listener.Start();
+    [Test]
+    public async Task ShouldIncrementLoginCounter_WhenUserLogsIn()
+    {
+        var capture = new LoginCapture();
+        using var listener = GivenLoginListener(capture.OnMeasurement);
 
-        var handler = TestHost.GetRequiredService<TelemetryHandler>();
-        var loginEvent = new UserLoggedInEvent("testuser");
-
-        await handler.Handle(loginEvent, CancellationToken.None);
-
+        await WhenUserLogsInAsync("testuser");
         listener.RecordObservableInstruments();
 
-        recorded.ShouldBeGreaterThan(0);
-        recordedUserName.ShouldBe("testuser");
+        capture.Recorded.ShouldBeGreaterThan(0);
+        capture.UserName.ShouldBe("testuser");
     }
 
     [Test]
@@ -80,4 +69,23 @@ public class TelemetryHandlerTests
 
         recorded.ShouldBe(2);
     }
+
+    private static MeterListener GivenLoginListener(
+        Action<long, ReadOnlySpan<KeyValuePair<string, object?>>> onMeasurement)
+    {
+        var listener = new MeterListener();
+        listener.InstrumentPublished = (publishedInstrument, meterListener) =>
+        {
+            if (publishedInstrument.Name == "app.user.logins")
+            {
+                meterListener.EnableMeasurementEvents(publishedInstrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((_, measurement, tags, _) => onMeasurement(measurement, tags));
+        listener.Start();
+        return listener;
+    }
+
+    private static Task WhenUserLogsInAsync(string userName) =>
+        TestHost.GetRequiredService<TelemetryHandler>().Handle(new UserLoggedInEvent(userName), CancellationToken.None);
 }

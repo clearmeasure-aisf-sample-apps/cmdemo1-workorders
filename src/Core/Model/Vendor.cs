@@ -69,12 +69,6 @@ public class Vendor : EntityBase<Vendor>
     public string? EmailAddress { get; init; }
 
     /// <summary>
-    /// Whether <see cref="EmailAddress"/> contains a usable contact email
-    /// (not null, empty, or whitespace).
-    /// </summary>
-    public bool HasContactEmail => !string.IsNullOrWhiteSpace(EmailAddress);
-
-    /// <summary>
     /// Optional phone number of the vendor.
     /// </summary>
     public string? PhoneNumber { get; init; }

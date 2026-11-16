@@ -1,0 +1,23 @@
+# Private test-fixture methods that return WorkOrder, Employee, or arrays of those types.
+# Replace with builders; baselines only shrink.
+
+src/IntegrationTests/McpServer/McpWorkOrderToolTests.cs :: McpWorkOrderToolTests.CreateWorkOrder
+src/UnitTests/Core/Model/StateCommands/RemoveAttachmentCommandTests.cs :: RemoveAttachmentCommandTests.NewWorkOrder
+src/UnitTests/Core/Model/StateCommands/WaitingOnVendorToInProgressCommandTests.cs :: WaitingOnVendorToInProgressCommandTests.WaitingOrder
+src/UnitTests/Core/Queries/WorkOrderSpecificationsTests.cs :: WorkOrderSpecificationsTests.SampleOrders
+src/UnitTests/DataAccess/Handlers/WorkOrderProjectionTests.cs :: WorkOrderProjectionTests.CountRowSamples
+src/UnitTests/UI.Client/UserSessionTests.cs :: UserSessionTests.Homer
+src/UnitTests/UI.Client/UserSessionTests.cs :: UserSessionTests.Lovejoy
+src/UnitTests/UI.Server/AutoReformatAgentServiceTests.cs :: AutoReformatAgentServiceTests.DraftWorkOrder
+src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs :: NotificationsPanelTests.BuildAssignedOrder
+src/UnitTests/UI.Shared/Components/NotificationsPanelTests.cs :: NotificationsPanelTests.BuildOrder
+src/UnitTests/UI.Shared/Pages/ClientDateFormatterTests.cs :: ClientDateFormatterTests.SampleWorkOrder
+src/UnitTests/UI.Shared/Pages/IndexPageTests.cs :: IndexPageTests.User
+src/UnitTests/UI.Shared/Pages/SignedInUserCharacterizationTests.cs :: SignedInUserCharacterizationTests.Creator
+src/UnitTests/UI.Shared/Pages/WorkOrderManageCreatedRelativeTimeTests.cs :: WorkOrderManageCreatedRelativeTimeTests.SampleWorkOrder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageDueDateValidationTests.cs :: WorkOrderManageDueDateValidationTests.Creator
+src/UnitTests/UI.Shared/Pages/WorkOrderManageDueDateValidationTests.cs :: WorkOrderManageDueDateValidationTests.Draft
+src/UnitTests/UI.Shared/Pages/WorkOrderManagePrintLinkTests.cs :: WorkOrderManagePrintLinkTests.CreatePrintWorkOrder
+src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs :: WorkOrderManageSubmitTests.Assignee
+src/UnitTests/UI.Shared/Pages/WorkOrderManageSubmitTests.cs :: WorkOrderManageSubmitTests.InProgressOrder
+src/UnitTests/UI.Shared/Services/BulkStateChangeTests.cs :: BulkStateChangeTests.Employee

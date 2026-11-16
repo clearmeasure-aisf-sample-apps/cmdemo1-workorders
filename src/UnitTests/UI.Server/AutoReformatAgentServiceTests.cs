@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Server;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server.BuildFacts;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -160,13 +161,12 @@ public class AutoReformatAgentServiceTests
             .Build();
 
     private static WorkOrder DraftWorkOrder(string number, string title = "t", string description = "d") =>
-        new()
-        {
-            Number = number,
-            Status = WorkOrderStatus.Draft,
-            Title = title,
-            Description = description
-        };
+        WorkOrderBuilder.Create()
+            .WithNumber(number)
+            .WithStatus(WorkOrderStatus.Draft)
+            .WithTitle(title)
+            .WithDescription(description)
+            .Build();
 
     private sealed class SingleLoggerFactory(ILogger logger) : ILoggerFactory
     {

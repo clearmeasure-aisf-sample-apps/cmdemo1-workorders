@@ -1,15 +1,25 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
+using TestWorkOrderBuilder = ClearMeasure.Bootcamp.UnitTests.TestSupport.WorkOrderBuilder;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Model.StateCommands;
 
 [TestFixture]
 public class CommandRoleTests
 {
-    private static readonly WorkOrder Order = new() { Number = "WO-1", Status = WorkOrderStatus.Draft };
-    private static readonly Employee User = new("user", "U", "Ser", "user@example.com");
+    private static readonly WorkOrder Order = TestWorkOrderBuilder.Create()
+        .WithNumber("WO-1")
+        .WithStatus(WorkOrderStatus.Draft)
+        .Build();
+
+    private static readonly Employee User = EmployeeBuilder.Create("user")
+        .WithFirstName("U")
+        .WithLastName("Ser")
+        .WithEmail("user@example.com")
+        .Build();
 
     [Test]
     public void Role_WhenCommandsShareBeginStatus_HasAtMostOneForward()

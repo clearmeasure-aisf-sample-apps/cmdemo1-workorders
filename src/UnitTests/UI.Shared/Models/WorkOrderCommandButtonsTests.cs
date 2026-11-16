@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Models;
@@ -9,11 +10,32 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Models;
 [TestFixture]
 public class WorkOrderCommandButtonsTests
 {
-    private static readonly WorkOrder Draft = new() { Number = "WO-D", Status = WorkOrderStatus.Draft };
-    private static readonly WorkOrder Assigned = new() { Number = "WO-A", Status = WorkOrderStatus.Assigned };
-    private static readonly WorkOrder InProgress = new() { Number = "WO-1", Status = WorkOrderStatus.InProgress };
-    private static readonly Employee Creator = new("creator", "Cre", "Ator", "creator@example.com");
-    private static readonly Employee Fixer = new("fixer", "Fix", "Er", "fixer@example.com");
+    private static readonly WorkOrder Draft = WorkOrderBuilder.Create()
+        .WithNumber("WO-D")
+        .WithStatus(WorkOrderStatus.Draft)
+        .Build();
+
+    private static readonly WorkOrder Assigned = WorkOrderBuilder.Create()
+        .WithNumber("WO-A")
+        .WithStatus(WorkOrderStatus.Assigned)
+        .Build();
+
+    private static readonly WorkOrder InProgress = WorkOrderBuilder.Create()
+        .WithNumber("WO-1")
+        .WithStatus(WorkOrderStatus.InProgress)
+        .Build();
+
+    private static readonly Employee Creator = EmployeeBuilder.Create("creator")
+        .WithFirstName("Cre")
+        .WithLastName("Ator")
+        .WithEmail("creator@example.com")
+        .Build();
+
+    private static readonly Employee Fixer = EmployeeBuilder.Create("fixer")
+        .WithFirstName("Fix")
+        .WithLastName("Er")
+        .WithEmail("fixer@example.com")
+        .Build();
 
     [Test]
     public void ShouldPutThePrimaryCommandLast_WhenCommandsAreSorted()

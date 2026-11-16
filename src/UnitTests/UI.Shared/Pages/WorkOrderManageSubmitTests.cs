@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -332,16 +333,15 @@ public class WorkOrderManageSubmitTests
     }
 
     private static WorkOrder InProgressOrder(Employee user) =>
-        new()
-        {
-            Id = Guid.NewGuid(),
-            Number = "WO-SHELVE",
-            Title = "Existing",
-            Description = "Desc",
-            Status = WorkOrderStatus.InProgress,
-            Creator = user,
-            Assignee = user
-        };
+        WorkOrderBuilder.Create()
+            .WithId(Guid.NewGuid())
+            .WithNumber("WO-SHELVE")
+            .WithTitle("Existing")
+            .WithDescription("Desc")
+            .WithStatus(WorkOrderStatus.InProgress)
+            .CreatedBy(user)
+            .AssignedTo(user)
+            .Build();
 
     private static void RegisterServices(
         BunitContext ctx, IBus bus, Employee user, IUserSession? session = null)

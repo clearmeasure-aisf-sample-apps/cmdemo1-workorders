@@ -22,6 +22,7 @@ using Microsoft.Extensions.Hosting;
 using Palermo.BlazorMvc;
 using Shouldly;
 using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
+using WorkOrderSearchPage = ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderSearch;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -105,10 +106,10 @@ public class SignedInUserCharacterizationTests
         var session = new StubUserSession(user);
         await using var ctx = CreateSearchContext(session);
 
-        var component = ctx.Render<WorkOrderSearch>();
+        var component = ctx.Render<WorkOrderSearchPage>();
 
         component.FindComponent<SearchSavedViewsMenu>().Instance.CurrentUserName.ShouldBe("jpalermo");
-        component.FindAll($"[data-testid='{WorkOrderSearch.Elements.NewWorkOrderButton}']").Count.ShouldBe(1);
+        component.FindAll($"[data-testid='{WorkOrderSearchPage.Elements.NewWorkOrderButton}']").Count.ShouldBe(1);
         session.GetCurrentUserNameCallCount.ShouldBeGreaterThan(0);
         session.GetCurrentUserCallCount.ShouldBeGreaterThan(0);
     }

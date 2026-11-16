@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Model.StateCommands;
@@ -10,13 +11,13 @@ public class WaitingOnVendorToInProgressCommandTests : StateCommandBaseTests
 {
     private static readonly DateTime WaitingSince = new(2026, 10, 13, 8, 0, 0);
 
-    private static WorkOrder WaitingOrder(Employee assignee) => new()
-    {
-        Number = "WO-1",
-        Status = WorkOrderStatus.InProgress,
-        Assignee = assignee,
-        WaitingOnVendorSince = WaitingSince
-    };
+    private static WorkOrder WaitingOrder(Employee assignee) =>
+        WorkOrderBuilder.Create()
+            .WithNumber("WO-1")
+            .WithStatus(WorkOrderStatus.InProgress)
+            .AssignedTo(assignee)
+            .WaitingOnVendorSince(WaitingSince)
+            .Build();
 
     [Test]
     public void Should_HaveInProgressBeginStatus_When_Created()
