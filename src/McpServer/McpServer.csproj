@@ -8,6 +8,8 @@
 		<AssemblyName>ClearMeasure.Bootcamp.$(MSBuildProjectName)</AssemblyName>
 		<RootNamespace>ClearMeasure.Bootcamp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 		<Configurations>Debug;Release;exclude-maui.slnf</Configurations>
+		<!-- Native AOT experiment (Exp 1): opt in at publish with -p:McpServerAot=true so UI.Server's JIT reference is unaffected. -->
+		<PublishAot Condition="'$(McpServerAot)' == 'true'">true</PublishAot>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -18,7 +20,6 @@
 	<ItemGroup>
 		<PackageReference Include="ModelContextProtocol" />
 		<PackageReference Include="ModelContextProtocol.AspNetCore" />
-		<PackageReference Include="Lamar.Microsoft.DependencyInjection" />
 		<PackageReference Include="MediatR" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />

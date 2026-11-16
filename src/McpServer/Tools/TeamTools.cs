@@ -15,8 +15,7 @@ public class TeamTools
     public static async Task<string> ListTeams(IBus bus)
     {
         var teams = await bus.Send(new TeamsQuery());
-        return JsonSerializer.Serialize(teams.Select(FormatTeam).ToArray(),
-            new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(teams.Select(TeamJson.From).ToArray(), McpJsonContext.Default.TeamJsonArray);
     }
 
     [McpServerTool(Name = "create-team"), Description("Creates a new team with optional description and members.")]
@@ -33,13 +32,9 @@ public class TeamTools
 
             if (result.Succeeded)
             {
-                var options = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-                return JsonSerializer.Serialize(new
-                {
-                    result.Succeeded,
-                    result.Message,
-                    result.Id
-                }, options);
+                return JsonSerializer.Serialize(
+                    new CreatedJson(result.Succeeded, result.Message, result.Id),
+                    McpCamelCaseJsonContext.Default.CreatedJson);
             }
 
             return result.Message;
@@ -49,17 +44,4 @@ public class TeamTools
             return ex.Message;
         }
     }
-
-    private static object FormatTeam(Team team) => new
-    {
-        team.Id,
-        team.Name,
-        team.Description,
-        Members = team.Members.Select(m => new
-        {
-            m.UserName,
-            m.FirstName,
-            m.LastName
-        }).ToArray()
-    };
 }
