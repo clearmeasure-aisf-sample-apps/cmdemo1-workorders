@@ -1,7 +1,7 @@
 @page "/workorder/print/{Number}"
 @layout PrintLayout
 
-<PageTitle>Print Work Order @Number</PageTitle>
+<PageTitle>Print Work Order @Number - .NET Conf Work Orders</PageTitle>
 
 <div class="print-page">
 @if (!_loaded)
@@ -10,7 +10,7 @@
 }
 else if (_workOrder == null)
 {
-    <p data-testid="@Elements.NotFound">Work order not found</p>
+    <p role="status" data-testid="@Elements.NotFound">Work order not found</p>
     <a href="/workorder/search">Back to work orders</a>
 }
 else
