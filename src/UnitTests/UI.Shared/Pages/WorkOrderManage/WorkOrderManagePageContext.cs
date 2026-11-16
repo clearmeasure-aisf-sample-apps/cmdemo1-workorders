@@ -86,9 +86,10 @@ public sealed class WorkOrderManagePageContext
     public WorkOrderManagePageContext TranslationReturns() => this;
 
     /// <summary>Configures the New-mode work order returned by <see cref="IWorkOrderBuilder"/>.</summary>
-    public WorkOrderManagePageContext WithNewOrder(Action<WorkOrderManageNewOrderSource> configure)
+    public WorkOrderManagePageContext WithNewOrder(
+        Func<WorkOrderManageNewOrderSource, WorkOrderManageNewOrderSource> configure)
     {
-        configure(_newOrder);
+        _ = configure(_newOrder);
         return this;
     }
 
@@ -168,10 +169,9 @@ public sealed class WorkOrderManagePageContext
 
     /// <summary>Renders the manage page, using the edited work-order number when in edit mode.</summary>
     public IRenderedComponent<ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderManage> Render(BunitContext ctx) =>
-        Render(ctx, _editing?.Number);
+        RenderWithOptionalId(ctx, _editing?.Number);
 
-    /// <summary>Renders the manage page, optionally supplying the route <c>Id</c> parameter.</summary>
-    public IRenderedComponent<ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderManage> Render(
+    private static IRenderedComponent<ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderManage> RenderWithOptionalId(
         BunitContext ctx,
         string? id)
     {
@@ -189,19 +189,19 @@ public sealed class WorkOrderManagePageContext
         var bus = new WorkOrderManageBus();
         if (_editing != null)
         {
-            bus.WithExisting(_editing);
+            bus = bus.WithExisting(_editing);
         }
 
-        bus.WithAttachments(_attachments).WithHistory(_history);
+        bus = bus.WithAttachments(_attachments).WithHistory(_history);
         bus.RemoveResult = _removeResult;
         if (_captureStateCommands)
         {
-            bus.CaptureStateCommands(_commandGate);
+            bus = bus.CaptureStateCommands(_commandGate);
         }
 
         if (_captureRemoveAttachment)
         {
-            bus.CaptureRemoveAttachment();
+            bus = bus.CaptureRemoveAttachment();
         }
 
         return bus;
