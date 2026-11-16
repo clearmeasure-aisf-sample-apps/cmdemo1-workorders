@@ -12,7 +12,7 @@
     }
     else if (_health.CurrentMonthPercentage is null)
     {
-        <div class="sla-health-no-data">No data</div>
+        <div class="sla-health-no-data" role="status" data-testid="@Elements.SlaHealthNoData">No data</div>
     }
     else
     {
@@ -51,7 +51,8 @@
 
     public enum Elements
     {
-        SlaHealthCard
+        SlaHealthCard,
+        SlaHealthNoData
     }
 
     public void Handle(WorkOrderChangedEvent theEvent)
