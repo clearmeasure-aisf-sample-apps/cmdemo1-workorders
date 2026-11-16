@@ -24,18 +24,4 @@ public class HttpEnvelopeValidationDeferralTests
             typeof(CreateDatedWorkOrdersCommand)
         ]);
     }
-
-    [Test]
-    public void IsDeferredValidator_ShouldBeTrue_WhenCreateTeamValidator()
-    {
-        HttpEnvelopeValidationDeferral.IsDeferredValidator(typeof(CreateTeamCommandValidator))
-            .ShouldBeTrue();
-    }
-
-    [Test]
-    public void IsDeferredValidator_ShouldBeFalse_WhenSaveDraftValidator()
-    {
-        HttpEnvelopeValidationDeferral.IsDeferredValidator(typeof(SaveDraftCommandValidator))
-            .ShouldBeFalse();
-    }
 }

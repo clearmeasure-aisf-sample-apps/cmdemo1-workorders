@@ -19,8 +19,6 @@ public static class RemotableMessageCatalog
 
     public static string TypeNameOf(Type type) => type.FullName + ", " + type.Assembly.GetName().Name;
 
-    public static IEnumerable<Type> Types => ByType.Keys;
-
     public static JsonTypeInfo ContractFor(Type type) => Find(ByType, type, type.FullName).Contract;
 
     public static JsonTypeInfo ContractFor(string typeName) => Find(ByTypeName, typeName, typeName).Contract;

@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.Core.Model;
-using ClearMeasure.Bootcamp.Core.Model.Constants;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.IntegrationTests;
 using Microsoft.EntityFrameworkCore;
@@ -27,12 +26,13 @@ public class DemoEmployeeSeeder
     private const string ChurchOrganist = "Church Organist";
     private const string Parishioner = "Parishioner";
     private const string Groundskeeper = "Groundskeeper";
+    private const string Bot = "Bot";
 
     private static readonly DemoRole[] DemoRoles =
     [
         new(FacilityLead, true, false),
         new(Fulfillment, false, true),
-        new(Roles.Bot, false, true),
+        new(Bot, false, true),
         new(Minister, true, true),
         new(Deacon, false, true),
         new(ChoirMember, false, false),
@@ -45,7 +45,7 @@ public class DemoEmployeeSeeder
     [
         new("jpalermo", "Jeffrey", "Palermo", "jeffreypalermo@yahoo.com", null, [FacilityLead, Fulfillment]),
         new("sspaniel", "Sean", "Spaniel", "sean.spaniel@clear-measure.com", null, [FacilityLead, Fulfillment]),
-        new("aibot", "AI", Roles.Bot, "aibot@system.local", null, [Roles.Bot]),
+        new("aibot", "AI", Bot, "aibot@system.local", null, [Bot]),
         new("jcuevas", "Joe", "Cuevas", "joecuevasjr@gmail.com", "es-ES", [Fulfillment]),
         new("bsides", "Bart", "Sides", "bartsides@gmail.com", null, [FacilityLead, Fulfillment]),
         new("cklaips", "Casey", "Klaips", "cklaips@gmail.com", null, [FacilityLead, Fulfillment]),
