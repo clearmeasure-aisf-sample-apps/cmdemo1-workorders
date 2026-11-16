@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net11.0</TargetFramework>
@@ -68,12 +68,12 @@
     <Compile Remove="Handlers\UserWorkOrders.cs" />
     <Compile Remove="Handlers\WorkOrderReportsQueryHandler.cs" />
     <Compile Remove="Handlers\WorkOrderSearchSummaryQueryHandler.cs" />
-    <Compile Remove="Handlers\WorkOrderSearchHandler.Queries.cs" />
+    <Compile Remove="Handlers\WorkOrderSearchHandler.cs" />
     <Compile Remove="DatabaseMigrationVersionReader.cs" />
     <Compile Remove="TestSupport\**" />
   </ItemGroup>
   <ItemGroup Condition="'$(McpServerAot)' != 'true'">
-    <Compile Remove="Handlers\WorkOrderSearchHandler.Queries.Aot.cs" />
+    <Compile Remove="Handlers\AotWorkOrderSearchHandler.cs" />
   </ItemGroup>
   <PropertyGroup Condition="'$(McpServerAot)' == 'true'">
     <!-- The EF tool runs this class library with dotnet exec, which needs a runtimeconfig.json. -->
