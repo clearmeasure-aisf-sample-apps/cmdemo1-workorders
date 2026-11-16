@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Shouldly;
 using LoginPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.Login;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.SignIn;
 
 [TestFixture]
 public class LoginCredentialValidationTests

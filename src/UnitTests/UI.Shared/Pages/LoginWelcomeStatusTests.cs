@@ -12,7 +12,6 @@ using MediatR;
 using Palermo.BlazorMvc;
 using Shouldly;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
-using LoginPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 
@@ -24,9 +23,9 @@ public class LoginWelcomeStatusTests
     {
         await using var ctx = CreateContext();
 
-        var component = ctx.Render<LoginPage>();
+        var component = ctx.Render<Login>();
 
-        var employeeSelect = component.Find($"[data-testid='{LoginPage.Elements.User}']");
+        var employeeSelect = component.Find($"[data-testid='{Login.Elements.User}']");
         await employeeSelect.ChangeAsync(new() { Value = "hsimpson" });
 
         var welcomeMessage = component.Find("small.text-success");

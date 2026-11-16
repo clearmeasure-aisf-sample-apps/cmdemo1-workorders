@@ -22,7 +22,6 @@ using Microsoft.Extensions.Hosting;
 using Palermo.BlazorMvc;
 using Shouldly;
 using IndexPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Index;
-using LoginPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 using WorkOrderSearchPage = ClearMeasure.Bootcamp.UI.Shared.Pages.WorkOrderSearch;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
@@ -148,9 +147,9 @@ public class SignedInUserCharacterizationTests
         ctx.Services.AddSingleton<IHostEnvironment>(new FakeHostEnvironment());
         ctx.Services.AddSingleton(TimeProvider.System);
 
-        var component = ctx.Render<LoginPage>();
-        await component.Find($"[data-testid='{LoginPage.Elements.User}']").ChangeAsync(new() { Value = "hsimpson" });
-        await component.Find($"[data-testid='{LoginPage.Elements.LoginButton}']").ClickAsync(new());
+        var component = ctx.Render<Login>();
+        await component.Find($"[data-testid='{Login.Elements.User}']").ChangeAsync(new() { Value = "hsimpson" });
+        await component.Find($"[data-testid='{Login.Elements.LoginButton}']").ClickAsync(new());
 
         session.SignInUserNames.ShouldBe(["hsimpson"]);
         auth.GetUsername().ShouldBe("hsimpson");

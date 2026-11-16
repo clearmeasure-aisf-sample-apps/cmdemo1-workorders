@@ -123,7 +123,7 @@ public class VendorsSectionTests
     }
 
     [Test]
-    public async Task WhenVendorManagementDisabled_ShouldHideVendorsAndKeepTeams()
+    public async Task TeamsAndVendors_WhenVendorManagementDisabled_ShouldHideVendorsAndKeepTeams()
     {
         var team = TeamsAndVendorsSteps.MaintenanceTeamWithMember();
         var vendor = TeamsAndVendorsSteps.HiddenVendor();

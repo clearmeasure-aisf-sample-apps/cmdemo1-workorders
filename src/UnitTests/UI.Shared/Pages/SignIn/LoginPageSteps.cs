@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using LoginPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.Login;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.SignIn;
 
 /// <summary>
 /// DOM selectors and shared arrange helpers for login-page tests. No assertions.

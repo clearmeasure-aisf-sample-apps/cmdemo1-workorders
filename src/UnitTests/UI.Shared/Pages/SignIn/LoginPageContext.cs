@@ -10,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Palermo.BlazorMvc;
 using LoginPage = ClearMeasure.Bootcamp.UI.Shared.Pages.Login;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.Login;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.SignIn;
 
 /// <summary>
 /// Fluent bUnit host for <see cref="LoginPage"/> page tests.

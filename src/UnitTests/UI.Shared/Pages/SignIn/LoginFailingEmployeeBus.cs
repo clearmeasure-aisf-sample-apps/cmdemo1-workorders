@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Queries;
 using MediatR;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.Login;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.SignIn;
 
 /// <summary>
 /// Stub bus that fails <see cref="EmployeeGetAllQuery"/> so the login page shows an error alert.

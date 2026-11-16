@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.Login;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.SignIn;
 
 /// <summary>
 /// Stub bus that returns a single employee with a middle name for login welcome tests.

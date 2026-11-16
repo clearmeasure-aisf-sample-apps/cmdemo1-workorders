@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Palermo.BlazorMvc;
 using Shouldly;
 
-namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.Login;
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.SignIn;
 
 public class LoginPageContextTests
 {
