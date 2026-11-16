@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -14,9 +14,7 @@ public class WhatDoIHaveControllerTests
         var services = new ServiceCollection();
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<IComparer<string>, OrdinalComparer>();
-        var controller = new WhatDoIHaveController();
-
-        var result = controller.Services(new RegisteredServices(services));
+        var result = DiagnosticEndpoints.Services(new RegisteredServices(services));
 
         result.ShouldContain("Singleton System.TimeProvider -> instance of");
         result.ShouldContain($"Transient System.Collections.Generic.IComparer`1[[System.String");

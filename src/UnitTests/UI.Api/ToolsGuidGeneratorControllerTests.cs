@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -11,9 +11,9 @@ public class ToolsGuidGeneratorControllerTests
     [Test]
     public void Post_Should_ReturnSingleGuidDFormat_When_CountOmitted()
     {
-        var result = CreateController().Post();
+        var result = ToolsGuidGeneratorEndpoint.Post();
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         ok.StatusCode.ShouldBe(200);
         var guids = ok.Value.ShouldBeAssignableTo<string[]>();
         guids.ShouldNotBeNull();
@@ -24,9 +24,9 @@ public class ToolsGuidGeneratorControllerTests
     [Test]
     public void Post_Should_ReturnNGuids_When_CountExplicit()
     {
-        var result = CreateController().Post(5);
+        var result = ToolsGuidGeneratorEndpoint.Post(5);
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         ok.StatusCode.ShouldBe(200);
         var guids = ok.Value.ShouldBeAssignableTo<string[]>();
         guids.ShouldNotBeNull();
@@ -42,9 +42,9 @@ public class ToolsGuidGeneratorControllerTests
     [Test]
     public void Post_Should_Return100Guids_When_CountAtMax()
     {
-        var result = CreateController().Post(100);
+        var result = ToolsGuidGeneratorEndpoint.Post(100);
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         ok.StatusCode.ShouldBe(200);
         var guids = ok.Value.ShouldBeAssignableTo<string[]>();
         guids.ShouldNotBeNull();
@@ -54,9 +54,9 @@ public class ToolsGuidGeneratorControllerTests
     [Test]
     public void Post_Should_Return400ProblemDetails_When_CountBelowOne()
     {
-        var result = CreateController().Post(0);
+        var result = ToolsGuidGeneratorEndpoint.Post(0);
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
         objectResult.Value.ShouldBeOfType<ProblemDetails>();
     }
@@ -64,16 +64,10 @@ public class ToolsGuidGeneratorControllerTests
     [Test]
     public void Post_Should_Return400ProblemDetails_When_CountAbove100()
     {
-        var result = CreateController().Post(101);
+        var result = ToolsGuidGeneratorEndpoint.Post(101);
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
         objectResult.Value.ShouldBeOfType<ProblemDetails>();
     }
-
-    private static ToolsGuidGeneratorController CreateController() =>
-        new()
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
 }

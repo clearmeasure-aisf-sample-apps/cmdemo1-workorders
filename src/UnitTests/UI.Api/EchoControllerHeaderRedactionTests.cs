@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 
@@ -18,10 +18,10 @@ public class EchoControllerHeaderRedactionTests
 
         var result = EchoControllerRequestSteps.InvokeGet(httpContext);
 
-        var payload = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<EchoResponse>();
-        payload.Headers["Authorization"].ShouldBe(EchoController.RedactedValue);
-        payload.Headers["X-Api-Key"].ShouldBe(EchoController.RedactedValue);
-        payload.Headers["Cookie"].ShouldBe(EchoController.RedactedValue);
+        var payload = result.ShouldBeOkResult().Value.ShouldBeOfType<EchoResponse>();
+        payload.Headers["Authorization"].ShouldBe(EchoEndpoint.RedactedValue);
+        payload.Headers["X-Api-Key"].ShouldBe(EchoEndpoint.RedactedValue);
+        payload.Headers["Cookie"].ShouldBe(EchoEndpoint.RedactedValue);
         payload.Headers["Accept"].ShouldBe("application/json");
     }
 
@@ -34,8 +34,8 @@ public class EchoControllerHeaderRedactionTests
 
         var result = EchoControllerRequestSteps.InvokeGet(httpContext);
 
-        var payload = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<EchoResponse>();
-        payload.Headers["Set-Cookie"].ShouldBe(EchoController.RedactedValue);
+        var payload = result.ShouldBeOkResult().Value.ShouldBeOfType<EchoResponse>();
+        payload.Headers["Set-Cookie"].ShouldBe(EchoEndpoint.RedactedValue);
         payload.Headers["User-Agent"].ShouldBe("EchoControllerTests");
     }
 }

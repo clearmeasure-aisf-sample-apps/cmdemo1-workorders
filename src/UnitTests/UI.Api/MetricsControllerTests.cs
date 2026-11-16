@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -8,7 +8,7 @@ using System.Text.Json;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 
 /// <summary>
-/// Unit coverage for <see cref="MetricsController"/> (issue #9158 metrics summary contract).
+/// Unit coverage for <see cref="MetricsEndpoint"/> (issue #9158 metrics summary contract).
 /// </summary>
 [TestFixture]
 public class MetricsControllerTests
@@ -31,7 +31,7 @@ public class MetricsControllerTests
 
         var result = controller.GetSummary();
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
         content.ContentType!.ShouldContain("application/json");
         var payload = JsonSerializer.Deserialize<MetricsSummaryResponse>(
@@ -66,17 +66,22 @@ public class MetricsControllerTests
 
         var result = controller.GetSummary();
 
-        var status = result.ShouldBeOfType<StatusCodeResult>();
+        var status = result.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
         controller.Response.Headers.ETag.ToString().ShouldNotBeNullOrEmpty();
     }
 
-    private static MetricsController CreateController(long totalRequests)
+    private static MetricsUnderTest CreateController(long totalRequests)
     {
         var clock = new FixedUtcTimeProvider(new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero));
-        return new MetricsController(clock, new StubRequestCounter(totalRequests))
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+        return new MetricsUnderTest(clock, new StubRequestCounter(totalRequests));
+    }
+
+    private sealed class MetricsUnderTest(TimeProvider timeProvider, IHttpRequestMetricsCounter requestCounter)
+    {
+        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        public HttpRequest Request => HttpContext.Request;
+        public HttpResponse Response => HttpContext.Response;
+        public IResult GetSummary() => MetricsEndpoint.GetSummary(HttpContext, timeProvider, requestCounter);
     }
 }

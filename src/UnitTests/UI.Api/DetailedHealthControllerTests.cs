@@ -1,6 +1,6 @@
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -48,7 +48,7 @@ public class DetailedHealthControllerTests
 
         var result = await controller.GetDetailed(CancellationToken.None);
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
         content.ContentType.ShouldNotBeNull();
         content.ContentType.ShouldContain("application/json");
@@ -71,7 +71,7 @@ public class DetailedHealthControllerTests
 
         var result = await controller.GetDetailed(CancellationToken.None);
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
         controller.Response.Headers.ETag.ToString().ShouldStartWith("W/\"");
     }
@@ -84,11 +84,11 @@ public class DetailedHealthControllerTests
         var etag = ConditionalGetEtag.CreateWeakEtagForJson(DetailedHealthEtagFingerprint.FromReport(report));
 
         var controller = CreateController(fixedTime);
-        controller.ControllerContext.HttpContext.Request.Headers.IfNoneMatch = etag.ToString();
+        controller.Request.Headers.IfNoneMatch = etag.ToString();
 
         var result = await controller.GetDetailed(CancellationToken.None);
 
-        result.ShouldBeOfType<StatusCodeResult>().StatusCode.ShouldBe(StatusCodes.Status304NotModified);
+        result.ShouldBeStatusCodeResult().StatusCode.ShouldBe(StatusCodes.Status304NotModified);
     }
 
     [Test]
@@ -96,23 +96,25 @@ public class DetailedHealthControllerTests
     {
         var fixedTime = new DateTime(2026, 8, 19, 12, 0, 0, DateTimeKind.Utc);
         var controller = CreateController(fixedTime);
-        controller.ControllerContext.HttpContext.Request.Headers.IfNoneMatch = "W/\"stale-etag\"";
+        controller.Request.Headers.IfNoneMatch = "W/\"stale-etag\"";
 
         var result = await controller.GetDetailed(CancellationToken.None);
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
         content.Content.ShouldNotBeNullOrEmpty();
     }
 
-    private static DetailedHealthController CreateController(DateTime fixedTime)
+    private static DetailedHealthUnderTest CreateController(DateTime fixedTime) =>
+        new(new FixedUtcTimeProvider(fixedTime), new StubDetailedHealthReportProvider(FixedReport(fixedTime)));
+
+    private sealed class DetailedHealthUnderTest(TimeProvider timeProvider, IDetailedHealthReportProvider reportProvider)
     {
-        var report = FixedReport(fixedTime);
-        return new DetailedHealthController(
-            new FixedUtcTimeProvider(fixedTime),
-            new StubDetailedHealthReportProvider(report))
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        public HttpRequest Request => HttpContext.Request;
+        public HttpResponse Response => HttpContext.Response;
+        public IResult Get() => DetailedHealthEndpoint.Get(HttpContext, timeProvider);
+        public Task<IResult> GetDetailed(CancellationToken cancellationToken) =>
+            DetailedHealthEndpoint.GetDetailed(HttpContext, reportProvider, cancellationToken);
     }
 }

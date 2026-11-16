@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -71,9 +71,9 @@ public class TimestampConverterControllerTests
         AssertProblem400(result);
     }
 
-    private static TimestampConverterResponse AssertOkPayload(IActionResult result)
+    private static TimestampConverterResponse AssertOkPayload(IResult result)
     {
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         ok.StatusCode.ShouldBe(200);
         return ok.Value.ShouldBeOfType<TimestampConverterResponse>();
     }
@@ -85,14 +85,14 @@ public class TimestampConverterControllerTests
         payload.Human.ShouldBe(KnownHuman);
     }
 
-    private static void AssertProblem400(IActionResult result)
+    private static void AssertProblem400(IResult result)
     {
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
         objectResult.Value.ShouldBeOfType<ProblemDetails>();
     }
 
-    private static TimestampConverterController CreateController(params (string Key, string Value)[] query)
+    private static TimestampConverterUnderTest CreateController(params (string Key, string Value)[] query)
     {
         var httpContext = new DefaultHttpContext();
         foreach (var (key, value) in query)
@@ -100,9 +100,11 @@ public class TimestampConverterControllerTests
             httpContext.Request.QueryString = httpContext.Request.QueryString.Add(key, value);
         }
 
-        return new TimestampConverterController
-        {
-            ControllerContext = new ControllerContext { HttpContext = httpContext }
-        };
+        return new TimestampConverterUnderTest(httpContext.Request);
+    }
+
+    private sealed class TimestampConverterUnderTest(HttpRequest request)
+    {
+        public IResult Get(string? unix, string? iso) => TimestampConverterEndpoint.Get(request, unix, iso);
     }
 }

@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -13,7 +13,7 @@ public class ToolsDueDateCheckControllerTests
     {
         var result = CreateController().Get("2000-01-01");
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
         payload.Urgency.ShouldBe("Overdue");
     }
@@ -23,7 +23,7 @@ public class ToolsDueDateCheckControllerTests
     {
         var result = CreateController().Get("2099-12-31");
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
         payload.Urgency.ShouldBe("None");
     }
@@ -39,7 +39,7 @@ public class ToolsDueDateCheckControllerTests
 
         var result = controller.Get(today.ToString("yyyy-MM-dd"));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
         payload.Urgency.ShouldBe("DueToday");
     }
@@ -53,7 +53,7 @@ public class ToolsDueDateCheckControllerTests
 
         foreach (var result in new[] { nullResult, emptyResult, whitespaceResult })
         {
-            var objectResult = result.ShouldBeOfType<ObjectResult>();
+            var objectResult = result.ShouldBeValueResult();
             objectResult.StatusCode.ShouldBe(400);
             objectResult.Value.ShouldBeOfType<ProblemDetails>();
         }
@@ -64,7 +64,7 @@ public class ToolsDueDateCheckControllerTests
     {
         var result = CreateController().Get("not-a-date");
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
         objectResult.Value.ShouldBeOfType<ProblemDetails>();
     }
@@ -75,16 +75,18 @@ public class ToolsDueDateCheckControllerTests
         // MM/dd/yyyy is wrong format — must be yyyy-MM-dd
         var result = CreateController().Get("01/15/2025");
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
         objectResult.Value.ShouldBeOfType<ProblemDetails>();
     }
 
-    private static ToolsDueDateCheckController CreateController(TimeProvider? timeProvider = null) =>
-        new(timeProvider ?? TimeProvider.System)
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+    private static DueDateCheckUnderTest CreateController(TimeProvider? timeProvider = null) =>
+        new(timeProvider ?? TimeProvider.System);
+
+    private sealed class DueDateCheckUnderTest(TimeProvider timeProvider)
+    {
+        public IResult Get(string? date) => ToolsDueDateCheckEndpoint.Get(date, timeProvider);
+    }
 }
 
 /// <summary>

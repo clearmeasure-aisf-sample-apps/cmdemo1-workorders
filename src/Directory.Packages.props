@@ -12,7 +12,6 @@
     <PackageVersion Include="AngleSharp" Version="1.7.2" />
     <PackageVersion Include="Asp.Versioning.Abstractions" Version="8.1.0" />
     <PackageVersion Include="Asp.Versioning.Http" Version="8.1.0" />
-    <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageVersion Include="AutoBogus.Conventions" Version="2.13.1" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageVersion Include="Azure.Core" Version="1.46.1" />

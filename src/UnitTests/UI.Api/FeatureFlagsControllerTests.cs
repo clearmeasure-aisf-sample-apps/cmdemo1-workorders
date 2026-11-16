@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Mediator;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +29,7 @@ public class FeatureFlagsControllerTests
 
         var result = await controller.Get();
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
         content.ContentType!.ShouldContain("application/json");
         var payload = JsonSerializer.Deserialize<Dictionary<string, bool>>(
@@ -47,7 +47,7 @@ public class FeatureFlagsControllerTests
 
         var result = await controller.Get();
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         using var doc = JsonDocument.Parse(content.Content!);
         foreach (var key in RuntimeFlags.Keys)
         {
@@ -55,8 +55,12 @@ public class FeatureFlagsControllerTests
         }
     }
 
-    private static FeatureFlagsController CreateController(IBus bus) =>
-        new(bus) { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };
+    private static FeatureFlagsUnderTest CreateController(IBus bus) => new(bus);
+
+    private sealed class FeatureFlagsUnderTest(IBus bus)
+    {
+        public Task<IResult> Get() => FeatureFlagsEndpoint.Get(bus);
+    }
 
     private sealed class StubBus(IReadOnlyDictionary<string, bool> flags) : IBus
     {

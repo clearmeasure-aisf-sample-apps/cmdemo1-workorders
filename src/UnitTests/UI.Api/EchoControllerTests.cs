@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -29,14 +29,9 @@ public class EchoControllerTests
         };
         httpContext.Request.Headers["X-Debug"] = "trace-1";
 
-        var controller = new EchoController
-        {
-            ControllerContext = new ControllerContext { HttpContext = httpContext }
-        };
+        var result = EchoEndpoint.Get(httpContext);
 
-        var result = controller.Get();
-
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<EchoResponse>();
         payload.Method.ShouldBe("GET");
         payload.Path.ShouldBe("/api/echo");

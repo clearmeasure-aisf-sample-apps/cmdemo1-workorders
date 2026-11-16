@@ -17,7 +17,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Asp.Versioning.Http" />
-		<PackageReference Include="Asp.Versioning.Mvc" />
 		<PackageReference Include="Google.Protobuf" />
 		<PackageReference Include="Grpc.AspNetCore" />
 		<PackageReference Include="Mediator.Abstractions" />

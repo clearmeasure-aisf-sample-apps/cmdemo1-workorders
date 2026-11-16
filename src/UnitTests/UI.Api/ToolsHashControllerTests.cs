@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -20,9 +20,9 @@ public class ToolsHashControllerTests
     [Test]
     public void Post_Should_ReturnSha256LowerHex_When_TextProvided()
     {
-        var result = CreateController().Post(new HashRequest("abc"));
+        var result = ToolsHashEndpoint.Post(new HashRequest("abc"));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<HashResponse>();
         payload.Sha256.ShouldBe(AbcSha256);
         payload.Md5.ShouldBeNull();
@@ -32,9 +32,9 @@ public class ToolsHashControllerTests
     [Test]
     public void Post_Should_ReturnSha256_When_EmptyString()
     {
-        var result = CreateController().Post(new HashRequest(""));
+        var result = ToolsHashEndpoint.Post(new HashRequest(""));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<HashResponse>();
         payload.Sha256.ShouldBe(EmptySha256);
     }
@@ -42,9 +42,9 @@ public class ToolsHashControllerTests
     [Test]
     public void Post_Should_IncludeMd5_When_IncludeMd5True()
     {
-        var result = CreateController().Post(new HashRequest("abc", IncludeMd5: true));
+        var result = ToolsHashEndpoint.Post(new HashRequest("abc", IncludeMd5: true));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<HashResponse>();
         payload.Sha256.ShouldBe(AbcSha256);
         payload.Md5.ShouldBe(AbcMd5);
@@ -54,9 +54,9 @@ public class ToolsHashControllerTests
     [Test]
     public void Post_Should_IncludeSha1_When_IncludeSha1True()
     {
-        var result = CreateController().Post(new HashRequest("abc", IncludeSha1: true));
+        var result = ToolsHashEndpoint.Post(new HashRequest("abc", IncludeSha1: true));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<HashResponse>();
         payload.Sha256.ShouldBe(AbcSha256);
         payload.Md5.ShouldBeNull();
@@ -66,9 +66,9 @@ public class ToolsHashControllerTests
     [Test]
     public void Post_Should_IncludeBothOptionalHashes_When_BothFlagsTrue()
     {
-        var result = CreateController().Post(new HashRequest("abc", IncludeMd5: true, IncludeSha1: true));
+        var result = ToolsHashEndpoint.Post(new HashRequest("abc", IncludeMd5: true, IncludeSha1: true));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<HashResponse>();
         payload.Sha256.ShouldBe(AbcSha256);
         payload.Md5.ShouldBe(AbcMd5);
@@ -78,12 +78,12 @@ public class ToolsHashControllerTests
     [Test]
     public void Post_Should_Return400ProblemDetails_When_TextMissing()
     {
-        var nullBody = CreateController().Post(null);
-        var nullText = CreateController().Post(new HashRequest(null));
+        var nullBody = ToolsHashEndpoint.Post(null);
+        var nullText = ToolsHashEndpoint.Post(new HashRequest(null));
 
         foreach (var result in new[] { nullBody, nullText })
         {
-            var objectResult = result.ShouldBeOfType<ObjectResult>();
+            var objectResult = result.ShouldBeValueResult();
             objectResult.StatusCode.ShouldBe(400);
             objectResult.Value.ShouldBeOfType<ProblemDetails>();
         }
@@ -92,16 +92,10 @@ public class ToolsHashControllerTests
     [Test]
     public void Post_Should_HashUtf8_When_NonAsciiText()
     {
-        var result = CreateController().Post(new HashRequest("café"));
+        var result = ToolsHashEndpoint.Post(new HashRequest("café"));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<HashResponse>();
         payload.Sha256.ShouldBe(CafeSha256);
     }
-
-    private static ToolsHashController CreateController() =>
-        new()
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
 }

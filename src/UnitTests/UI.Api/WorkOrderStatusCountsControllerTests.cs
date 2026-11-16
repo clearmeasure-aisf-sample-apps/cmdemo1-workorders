@@ -3,12 +3,13 @@ using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using Mediator;
 using Microsoft.Data.Sqlite;
-using Microsoft.AspNetCore.Mvc;
+using ClearMeasure.Bootcamp.UI.Api;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Shouldly;
 
@@ -23,21 +24,16 @@ public class WorkOrderStatusCountsControllerTests
         var counts = WorkOrderStatus.GetAllItems().ToDictionary(s => s.Key, _ => 0);
         counts[WorkOrderStatus.Assigned.Key] = 3;
         var bus = new StubBus(counts);
-        var controller = new WorkOrderStatusCountsController(bus);
+        var result = await WorkOrderStatusCountsEndpoint.Get(new DefaultHttpContext().Response, bus);
 
-        var result = await controller.Get();
-
-        result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeSameAs(counts);
+        result.ShouldBeOkResult().Value.ShouldBeSameAs(counts);
         bus.Requests.ShouldHaveSingleItem().ShouldBeOfType<WorkOrderCountByStatusQuery>();
     }
 
-    [Test]
-    public void Controller_ShouldNotUseTheApiSlidingWindowRateLimit()
-    {
-        typeof(WorkOrderStatusCountsController)
-            .GetCustomAttributes(typeof(EnableRateLimitingAttribute), inherit: true)
-            .ShouldBeEmpty();
-    }
+    [TestCase("api/work-orders/status-counts")]
+    [TestCase("api/v{version:apiVersion}/work-orders/status-counts")]
+    public void Endpoint_ShouldNotUseTheApiSlidingWindowRateLimit(string route) =>
+        MappedApiEndpoints.At(route).ShouldHaveSingleItem().Metadata.GetMetadata<EnableRateLimitingAttribute>().ShouldBeNull();
 
     [Test]
     public async Task Get_WhenOneClientCallsTwiceASecondForAMinute_ShouldAnswerEveryCallFromTheDatabase()

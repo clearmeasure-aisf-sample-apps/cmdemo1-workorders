@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -34,14 +34,14 @@ public class EnvironmentStatusControllerTests
     {
         var controller = CreateController();
         var first = controller.Get();
-        first.ShouldBeOfType<ContentResult>();
+        first.ShouldBeContentResult();
         var etag = controller.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
 
         controller.Request.Headers.IfNoneMatch = etag;
         var second = controller.Get();
 
-        var status = second.ShouldBeOfType<StatusCodeResult>();
+        var status = second.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
     }
 
@@ -53,10 +53,10 @@ public class EnvironmentStatusControllerTests
         var result = CreateController().Get();
         var payload = AssertOkPayload(result);
 
-        payload.EnvironmentVariableNames.ShouldContain(EnvironmentStatusController.RedactionProbeVariableName);
-        payload.EnvironmentVariables[EnvironmentStatusController.RedactionProbeVariableName]
-            .ShouldBe(EnvironmentStatusController.RedactedValue);
-        payload.EnvironmentVariables.Values.ShouldAllBe(value => value == EnvironmentStatusController.RedactedValue);
+        payload.EnvironmentVariableNames.ShouldContain(EnvironmentStatusEndpoint.RedactionProbeVariableName);
+        payload.EnvironmentVariables[EnvironmentStatusEndpoint.RedactionProbeVariableName]
+            .ShouldBe(EnvironmentStatusEndpoint.RedactedValue);
+        payload.EnvironmentVariables.Values.ShouldAllBe(value => value == EnvironmentStatusEndpoint.RedactedValue);
     }
 
     [Test]
@@ -65,7 +65,7 @@ public class EnvironmentStatusControllerTests
         using var probe = RedactionProbe.Install(SecretValue);
 
         var result = CreateController().Get();
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.Content.ShouldNotBeNull();
         content.Content!.ShouldNotContain(SecretValue);
     }
@@ -88,15 +88,19 @@ public class EnvironmentStatusControllerTests
         payload.GitSha.ShouldNotBeEmpty();
     }
 
-    private static EnvironmentStatusController CreateController() =>
-        new()
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+    private static EndpointUnderTest CreateController() => new(EnvironmentStatusEndpoint.Get);
 
-    private static EnvironmentStatusResponse AssertOkPayload(IActionResult result)
+    private sealed class EndpointUnderTest(Func<HttpContext, IResult> get)
     {
-        var content = result.ShouldBeOfType<ContentResult>();
+        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        public HttpRequest Request => HttpContext.Request;
+        public HttpResponse Response => HttpContext.Response;
+        public IResult Get() => get(HttpContext);
+    }
+
+    private static EnvironmentStatusResponse AssertOkPayload(IResult result)
+    {
+        var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
         content.ContentType!.ShouldContain("application/json");
         content.Content.ShouldNotBeNull();
@@ -116,14 +120,14 @@ public class EnvironmentStatusControllerTests
         public static RedactionProbe Install(string value)
         {
             var previous = Environment.GetEnvironmentVariable(
-                EnvironmentStatusController.RedactionProbeVariableName);
+                EnvironmentStatusEndpoint.RedactionProbeVariableName);
             Environment.SetEnvironmentVariable(
-                EnvironmentStatusController.RedactionProbeVariableName, value);
+                EnvironmentStatusEndpoint.RedactionProbeVariableName, value);
             return new RedactionProbe(previous);
         }
 
         public void Dispose() =>
             Environment.SetEnvironmentVariable(
-                EnvironmentStatusController.RedactionProbeVariableName, _previous);
+                EnvironmentStatusEndpoint.RedactionProbeVariableName, _previous);
     }
 }

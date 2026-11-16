@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -11,9 +11,9 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_ReturnSlug_When_NormalText()
     {
-        var result = CreateController().Post(new SlugifyRequest("Hello, World! 2026"));
+        var result = ToolsSlugifyEndpoint.Post(new SlugifyRequest("Hello, World! 2026"));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
         payload.Slug.ShouldBe("hello-world-2026");
     }
@@ -21,9 +21,9 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_HandleMultiplePunctuation_When_PunctuationRuns()
     {
-        var result = CreateController().Post(new SlugifyRequest("foo---bar!!!baz"));
+        var result = ToolsSlugifyEndpoint.Post(new SlugifyRequest("foo---bar!!!baz"));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
         payload.Slug.ShouldBe("foo-bar-baz");
     }
@@ -31,9 +31,9 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_TrimLeadingAndTrailing_When_SeparatorsOnEdges()
     {
-        var result = CreateController().Post(new SlugifyRequest("---hello-world---"));
+        var result = ToolsSlugifyEndpoint.Post(new SlugifyRequest("---hello-world---"));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
         payload.Slug.ShouldBe("hello-world");
     }
@@ -41,9 +41,9 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_ReturnEmptySlug_When_EmptyString()
     {
-        var result = CreateController().Post(new SlugifyRequest(""));
+        var result = ToolsSlugifyEndpoint.Post(new SlugifyRequest(""));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
         payload.Slug.ShouldBe(string.Empty);
     }
@@ -51,9 +51,9 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_ReturnEmptySlug_When_WhitespaceOnly()
     {
-        var result = CreateController().Post(new SlugifyRequest("   \t\n  "));
+        var result = ToolsSlugifyEndpoint.Post(new SlugifyRequest("   \t\n  "));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
         payload.Slug.ShouldBe(string.Empty);
     }
@@ -61,9 +61,9 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_CutSlugAt80Characters_When_AlphanumericTextIsLong()
     {
-        var result = CreateController().Post(new SlugifyRequest(new string('A', 100)));
+        var result = ToolsSlugifyEndpoint.Post(new SlugifyRequest(new string('A', 100)));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
         payload.Slug.ShouldBe(new string('a', 80));
         payload.Slug.ShouldNotEndWith("-");
@@ -72,9 +72,9 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_DropTrailingHyphen_When_CutLandsOnSeparator()
     {
-        var result = CreateController().Post(new SlugifyRequest(string.Join(' ', Enumerable.Repeat("word", 20))));
+        var result = ToolsSlugifyEndpoint.Post(new SlugifyRequest(string.Join(' ', Enumerable.Repeat("word", 20))));
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<SlugifyResponse>();
         payload.Slug.ShouldBe(string.Join('-', Enumerable.Repeat("word", 16)));
         payload.Slug.Length.ShouldBeLessThanOrEqualTo(80);
@@ -84,20 +84,14 @@ public class ToolsSlugifyControllerTests
     [Test]
     public void Post_Should_Return400ProblemDetails_When_TextNull()
     {
-        var nullBody = CreateController().Post(null);
-        var nullText = CreateController().Post(new SlugifyRequest(null));
+        var nullBody = ToolsSlugifyEndpoint.Post(null);
+        var nullText = ToolsSlugifyEndpoint.Post(new SlugifyRequest(null));
 
         foreach (var result in new[] { nullBody, nullText })
         {
-            var objectResult = result.ShouldBeOfType<ObjectResult>();
+            var objectResult = result.ShouldBeValueResult();
             objectResult.StatusCode.ShouldBe(400);
             objectResult.Value.ShouldBeOfType<ProblemDetails>();
         }
     }
-
-    private static ToolsSlugifyController CreateController() =>
-        new()
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
 }

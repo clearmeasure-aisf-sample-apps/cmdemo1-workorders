@@ -1,6 +1,6 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +15,7 @@ public class ToolsUppercaseControllerTests
     [Test]
     public void Post_Should_ReturnUpperCase_When_TextProvided()
     {
-        var payload = ReadPayload(CreateController().Post(new UppercaseRequest("Hello, World!")));
+        var payload = ReadPayload(ToolsUppercaseEndpoint.Post(new UppercaseRequest("Hello, World!")));
 
         payload.Text.ShouldBe("HELLO, WORLD!");
     }
@@ -23,7 +23,7 @@ public class ToolsUppercaseControllerTests
     [Test]
     public void Post_Should_ReturnEmptyText_When_EmptyString()
     {
-        var payload = ReadPayload(CreateController().Post(new UppercaseRequest("")));
+        var payload = ReadPayload(ToolsUppercaseEndpoint.Post(new UppercaseRequest("")));
 
         payload.Text.ShouldBe("");
     }
@@ -31,8 +31,8 @@ public class ToolsUppercaseControllerTests
     [Test]
     public void Post_Should_ReturnEmptyText_When_TextMissing()
     {
-        var nullBody = CreateController().Post(null);
-        var nullText = CreateController().Post(new UppercaseRequest(null));
+        var nullBody = ToolsUppercaseEndpoint.Post(null);
+        var nullText = ToolsUppercaseEndpoint.Post(new UppercaseRequest(null));
 
         foreach (var result in new[] { nullBody, nullText })
         {
@@ -43,7 +43,7 @@ public class ToolsUppercaseControllerTests
     [Test]
     public void Post_Should_KeepWhitespace_When_TextIsNotTrimmed()
     {
-        var payload = ReadPayload(CreateController().Post(new UppercaseRequest("  a  ")));
+        var payload = ReadPayload(ToolsUppercaseEndpoint.Post(new UppercaseRequest("  a  ")));
 
         payload.Text.ShouldBe("  A  ");
     }
@@ -56,7 +56,7 @@ public class ToolsUppercaseControllerTests
         try
         {
             "i".ToUpper(CultureInfo.CurrentCulture).ShouldBe("İ");
-            var payload = ReadPayload(CreateController().Post(new UppercaseRequest("i")));
+            var payload = ReadPayload(ToolsUppercaseEndpoint.Post(new UppercaseRequest("i")));
             payload.Text.ShouldBe("I");
         }
         finally
@@ -66,37 +66,12 @@ public class ToolsUppercaseControllerTests
     }
 
     [Test]
-    public void Controller_Should_AllowAnonymousRateLimitedRoutes()
+    public void Endpoint_Should_AllowAnonymousRateLimitedRoutes() =>
+        MappedApiEndpoints.ShouldBeAnonymousAndRateLimited("tools/uppercase", HttpMethods.Post);
+
+    private static UppercaseResponse ReadPayload(IResult result)
     {
-        var controllerType = typeof(ToolsUppercaseController);
-        var routes = controllerType.GetCustomAttributes(typeof(RouteAttribute), inherit: false)
-            .Cast<RouteAttribute>()
-            .Select(attribute => attribute.Template)
-            .ToArray();
-
-        routes.ShouldContain("api/tools/uppercase");
-        routes.ShouldContain($"{ApiRoutes.VersionedApiPrefix}/tools/uppercase");
-        routes.Length.ShouldBe(2);
-
-        var rateLimit = controllerType.GetCustomAttributes(typeof(EnableRateLimitingAttribute), inherit: false)
-            .Cast<EnableRateLimitingAttribute>()
-            .Single();
-        rateLimit.PolicyName.ShouldBe(ApiRateLimiting.PolicyName);
-
-        var post = controllerType.GetMethod(nameof(ToolsUppercaseController.Post));
-        post.ShouldNotBeNull();
-        post.GetCustomAttributes(typeof(AllowAnonymousAttribute), inherit: false).ShouldNotBeEmpty();
-    }
-
-    private static UppercaseResponse ReadPayload(IActionResult result)
-    {
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         return ok.Value.ShouldBeOfType<UppercaseResponse>();
     }
-
-    private static ToolsUppercaseController CreateController() =>
-        new()
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
 }

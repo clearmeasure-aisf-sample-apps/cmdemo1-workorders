@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Mediator;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +21,7 @@ public class WorkOrdersBulkImportControllerTests
         var controller = CreateController(new StubBus());
         var result = await controller.Post(null!, CancellationToken.None);
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
     }
 
@@ -37,7 +37,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
     }
 
@@ -49,7 +49,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
     }
 
@@ -61,7 +61,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
     }
 
@@ -73,7 +73,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        var objectResult = result.ShouldBeValueResult();
         objectResult.StatusCode.ShouldBe(400);
     }
 
@@ -88,7 +88,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
         payload.CreatedCount.ShouldBe(1);
         payload.Results.Count.ShouldBe(1);
@@ -108,7 +108,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
         payload.CreatedCount.ShouldBe(0);
         payload.Results[0].Success.ShouldBeFalse();
@@ -125,7 +125,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
         payload.CreatedCount.ShouldBe(0);
         payload.Results[0].Error!.ShouldContain("nobody");
@@ -142,7 +142,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
         payload.CreatedCount.ShouldBe(0);
         payload.Results[0].Error.ShouldBe("save failed");
@@ -159,7 +159,7 @@ public class WorkOrdersBulkImportControllerTests
 
         var result = await controller.Post(file, CancellationToken.None);
 
-        var ok = result.ShouldBeOfType<OkObjectResult>();
+        var ok = result.ShouldBeOkResult();
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
         payload.CreatedCount.ShouldBe(2);
         bus.EmployeeLookupCalls.ShouldBe(1);
@@ -174,10 +174,16 @@ public class WorkOrdersBulkImportControllerTests
         WorkOrderBulkImportProcessor.IsCsvFile(CreateFormFile("x", "a.txt", "text/plain")).ShouldBeFalse();
     }
 
-    private static WorkOrdersBulkImportController CreateController(
+    private static BulkImportUnderTest CreateController(
         StubBus bus,
         StubNumberGenerator? numbers = null) =>
         new(bus, numbers ?? new StubNumberGenerator());
+
+    private sealed class BulkImportUnderTest(StubBus bus, StubNumberGenerator numbers)
+    {
+        public Task<IResult> Post(IFormFile? file, CancellationToken cancellationToken) =>
+            WorkOrdersBulkImportEndpoint.Post(file, bus, numbers, cancellationToken);
+    }
 
     private static IFormFile CreateFormFile(string csvContent, string fileName = "import.csv", string contentType = "text/csv")
     {

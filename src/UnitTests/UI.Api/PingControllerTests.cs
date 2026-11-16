@@ -1,4 +1,4 @@
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shouldly;
@@ -12,14 +12,9 @@ public class PingControllerTests
     public void Get_Should_ReturnPlainTextPong()
     {
         var httpContext = new DefaultHttpContext();
-        var controller = new PingController
-        {
-            ControllerContext = new ControllerContext { HttpContext = httpContext }
-        };
+        var result = PingEndpoint.Get(httpContext.Response);
 
-        var result = controller.Get();
-
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(200);
         content.ContentType.ShouldNotBeNull();
         content.ContentType.ShouldContain("text/plain");

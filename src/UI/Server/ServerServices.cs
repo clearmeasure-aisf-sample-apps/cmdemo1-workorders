@@ -5,7 +5,6 @@ using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Resources;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using ClearMeasure.Bootcamp.UI.Server.BuildFacts;
 using ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
@@ -17,7 +16,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// The services UI.Server registers: the web framework (MVC, API versioning, Razor, Microsoft DI), the request protections
+/// The services UI.Server registers: the web framework (minimal APIs, API versioning, Microsoft DI), the request protections
 /// in front of the API, response caching and compression, and the embedded MCP server.
 /// </summary>
 public static class ServerServices
@@ -36,8 +35,8 @@ public static class ServerServices
     private static void AddWebFramework(WebApplicationBuilder builder)
     {
         builder.Services.AddProblemDetails();
-        builder.Services.AddControllersWithViews()
-            .AddApplicationPart(typeof(DetailedHealthController).Assembly);
+        builder.Services.ConfigureHttpJsonOptions(options =>
+            options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApiJsonContext.Default));
         builder.Services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -45,8 +44,7 @@ public static class ServerServices
             options.ReportApiVersions = true;
             options.ApiVersionReader = new UrlSegmentApiVersionReader();
             options.UnsupportedApiVersionStatusCode = StatusCodes.Status400BadRequest;
-        }).AddMvc();
-        builder.Services.AddRazorPages();
+        });
         builder.Services.AddUiServices();
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddLiveTelemetry();

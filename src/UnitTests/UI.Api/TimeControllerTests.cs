@@ -1,6 +1,6 @@
 using System.Globalization;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
@@ -16,14 +16,11 @@ public class TimeControllerTests
     {
         var fixedUtc = new DateTime(2026, 3, 30, 12, 0, 0, DateTimeKind.Utc);
         var stubTimeProvider = new StubFixedUtcTimeProvider(fixedUtc);
-        var controller = new TimeController(stubTimeProvider)
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+        var controller = new TimeUnderTest(stubTimeProvider, new DefaultHttpContext());
 
         var result = controller.Get();
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(200);
         content.ContentType.ShouldNotBeNull();
         content.ContentType.ShouldContain("text/plain");
@@ -42,14 +39,11 @@ public class TimeControllerTests
         var etag = ConditionalGetEtag.CreateWeakEtagForPlainText(expected);
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.IfNoneMatch = etag.ToString();
-        var controller = new TimeController(stubTimeProvider)
-        {
-            ControllerContext = new ControllerContext { HttpContext = httpContext }
-        };
+        var controller = new TimeUnderTest(stubTimeProvider, httpContext);
 
         var result = controller.Get();
 
-        result.ShouldBeOfType<StatusCodeResult>().StatusCode.ShouldBe(StatusCodes.Status304NotModified);
+        result.ShouldBeStatusCodeResult().StatusCode.ShouldBe(StatusCodes.Status304NotModified);
         controller.Response.Headers[HeaderNames.CacheControl].ToString().ShouldBe("no-store");
         controller.Response.Headers.ETag.ToString().ShouldBe(etag.ToString());
     }
@@ -57,5 +51,11 @@ public class TimeControllerTests
     private sealed class StubFixedUtcTimeProvider(DateTime utcNow) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
+    }
+
+    private sealed class TimeUnderTest(TimeProvider timeProvider, HttpContext httpContext)
+    {
+        public HttpResponse Response => httpContext.Response;
+        public IResult Get() => TimeEndpoint.Get(httpContext, timeProvider);
     }
 }

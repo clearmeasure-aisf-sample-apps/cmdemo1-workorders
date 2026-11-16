@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Mediator;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -72,15 +72,17 @@ public class DiagnosticsControllerTests
         [FeatureFlagNames.VendorManagement] = true
     };
 
-    private static DiagnosticsController DiagnosticsControllerUnderTest(TimeProvider clock, StubBus bus) =>
-        new(new StubHostEnvironment("UnitTestEnv"), clock, bus)
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+    private static DiagnosticsUnderTest DiagnosticsControllerUnderTest(TimeProvider clock, StubBus bus) =>
+        new(new StubHostEnvironment("UnitTestEnv"), clock, bus);
 
-    private static DiagnosticsResponse ReadDiagnosticsPayload(IActionResult result)
+    private sealed class DiagnosticsUnderTest(IHostEnvironment hostEnvironment, TimeProvider clock, IBus bus)
     {
-        var content = result.ShouldBeOfType<ContentResult>();
+        public Task<IResult> Get() => DiagnosticsEndpoint.Get(hostEnvironment, clock, bus);
+    }
+
+    private static DiagnosticsResponse ReadDiagnosticsPayload(IResult result)
+    {
+        var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
         content.ContentType!.ShouldContain("application/json");
         var payload = JsonSerializer.Deserialize<DiagnosticsResponse>(

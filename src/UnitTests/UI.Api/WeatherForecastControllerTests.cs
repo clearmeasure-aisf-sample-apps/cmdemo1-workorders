@@ -1,7 +1,7 @@
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,7 +19,7 @@ public class WeatherForecastControllerTests
 
         var result = controller.Get();
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.StatusCode.ShouldBe(StatusCodes.Status200OK);
         content.ContentType.ShouldNotBeNull();
         content.ContentType.ShouldContain("application/json");
@@ -39,16 +39,18 @@ public class WeatherForecastControllerTests
 
         var result = controller.Get();
 
-        var status = result.ShouldBeOfType<StatusCodeResult>();
+        var status = result.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
     }
 
-    private static WeatherForecastController CreateController()
+    private static EndpointUnderTest CreateController() =>
+        new(context => WeatherForecastEndpoint.Get(context, NullLoggerFactory.Instance));
+
+    private sealed class EndpointUnderTest(Func<HttpContext, IResult> get)
     {
-        var httpContext = new DefaultHttpContext();
-        return new WeatherForecastController(NullLogger<WeatherForecastController>.Instance)
-        {
-            ControllerContext = new ControllerContext { HttpContext = httpContext }
-        };
+        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        public HttpRequest Request => HttpContext.Request;
+        public HttpResponse Response => HttpContext.Response;
+        public IResult Get() => get(HttpContext);
     }
 }

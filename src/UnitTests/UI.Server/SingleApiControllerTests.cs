@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.Events;
-using ClearMeasure.Bootcamp.UI.Server.Controllers;
+using ClearMeasure.Bootcamp.UI.Server.Endpoints;
 using Mediator;
 using Shouldly;
 using System.Text.Json;
@@ -19,11 +19,10 @@ public class SingleApiControllerTests
         var expectedEmployees = new[] { new Employee("hsimpson", "Homer", "Simpson", "homer@test.com") };
         var stubBus = new StubBus();
         stubBus.SetSendResponse(expectedEmployees);
-        var controller = new SingleApiController(stubBus);
+        
         var request = new EmployeeGetAllQuery();
         var message = new WebServiceMessage(request);
-
-        var json = await controller.Post(message);
+        var json = await SingleApiEndpoint.Post(message, stubBus);
 
         var responseMessage = JsonSerializer.Deserialize<WebServiceMessage>(json)!;
         var result = (Employee[])responseMessage.GetBodyObject();
@@ -35,11 +34,10 @@ public class SingleApiControllerTests
     public async Task Should_Post_PublishAndReturnEmptyMessage_ForRemotableEvent()
     {
         var stubBus = new StubBus();
-        var controller = new SingleApiController(stubBus);
+        
         var loginEvent = new UserLoggedInEvent("testuser");
         var message = new WebServiceMessage(loginEvent);
-
-        var json = await controller.Post(message);
+        var json = await SingleApiEndpoint.Post(message, stubBus);
 
         stubBus.LastPublishedNotification.ShouldBeOfType<UserLoggedInEvent>();
         ((UserLoggedInEvent)stubBus.LastPublishedNotification!).UserName.ShouldBe("testuser");
@@ -51,11 +49,10 @@ public class SingleApiControllerTests
     public async Task Should_Post_PublishViaBusNotSend_ForRemotableEvent()
     {
         var stubBus = new StubBus();
-        var controller = new SingleApiController(stubBus);
+        
         var loginEvent = new UserLoggedInEvent("testuser");
         var message = new WebServiceMessage(loginEvent);
-
-        await controller.Post(message);
+        await SingleApiEndpoint.Post(message, stubBus);
 
         stubBus.LastPublishedNotification.ShouldNotBeNull();
         stubBus.LastSentObject.ShouldBeNull();
@@ -65,11 +62,10 @@ public class SingleApiControllerTests
     public async Task Should_Post_ReturnEmptyTypedWebServiceMessage_ForRemotableEvent()
     {
         var stubBus = new StubBus();
-        var controller = new SingleApiController(stubBus);
+        
         var loginEvent = new UserLoggedInEvent("testuser");
         var message = new WebServiceMessage(loginEvent);
-
-        var json = await controller.Post(message);
+        var json = await SingleApiEndpoint.Post(message, stubBus);
 
         var responseMessage = JsonSerializer.Deserialize<WebServiceMessage>(json)!;
         responseMessage.Body.ShouldBeEmpty();
@@ -80,10 +76,9 @@ public class SingleApiControllerTests
     public async Task Should_Post_Throw_ForNonRemotableObject()
     {
         var stubBus = new StubBus();
-        var controller = new SingleApiController(stubBus);
+        
         var message = new WebServiceMessage(new NonRemotableObject { Value = "test" });
-
-        await Should.ThrowAsync<InvalidOperationException>(async () => await controller.Post(message));
+        await Should.ThrowAsync<InvalidOperationException>(async () => await SingleApiEndpoint.Post(message, stubBus));
         message.GetBodyObject().ShouldBeOfType<NonRemotableObject>().Value.ShouldBe("test");
     }
 
@@ -92,11 +87,10 @@ public class SingleApiControllerTests
     {
         var stubBus = new StubBus();
         stubBus.SetSendResponse(Array.Empty<Employee>());
-        var controller = new SingleApiController(stubBus);
+        
         var request = new EmployeeGetAllQuery();
         var message = new WebServiceMessage(request);
-
-        await controller.Post(message);
+        await SingleApiEndpoint.Post(message, stubBus);
 
         stubBus.LastSentObject.ShouldBeOfType<EmployeeGetAllQuery>();
     }
@@ -106,11 +100,10 @@ public class SingleApiControllerTests
     {
         var stubBus = new StubBus();
         stubBus.SetSendResponse(null);
-        var controller = new SingleApiController(stubBus);
+        
         var request = new EmployeeGetAllQuery();
         var message = new WebServiceMessage(request);
-
-        await Should.ThrowAsync<InvalidOperationException>(async () => await controller.Post(message));
+        await Should.ThrowAsync<InvalidOperationException>(async () => await SingleApiEndpoint.Post(message, stubBus));
     }
 
     private class StubBus : IBus

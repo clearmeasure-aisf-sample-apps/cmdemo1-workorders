@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
@@ -22,7 +22,7 @@ public class VersionControllerTests
 
         var result = controller.Get();
 
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         content.ContentType.ShouldNotBeNull();
         content.ContentType!.ShouldContain("application/json");
         var payload = JsonSerializer.Deserialize<VersionMetadataResponse>(
@@ -42,7 +42,7 @@ public class VersionControllerTests
     [Test]
     public void Get_Should_IncludeBuildConfiguration_MatchingAssemblyAttribute()
     {
-        var apiAssembly = typeof(VersionController).Assembly;
+        var apiAssembly = typeof(VersionEndpoint).Assembly;
         var expected = apiAssembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration;
         if (string.IsNullOrWhiteSpace(expected))
         {
@@ -55,7 +55,7 @@ public class VersionControllerTests
 
         var controller = CreateController(new StubHostEnvironment("Test"));
         var result = controller.Get();
-        var content = result.ShouldBeOfType<ContentResult>();
+        var content = result.ShouldBeContentResult();
         var payload = JsonSerializer.Deserialize<VersionMetadataResponse>(
             content.Content!,
             ConditionalGetEtag.JsonSerializerOptions);
@@ -70,23 +70,26 @@ public class VersionControllerTests
     {
         var controller = CreateController(new StubHostEnvironment("Test"));
         var first = controller.Get();
-        first.ShouldBeOfType<ContentResult>();
+        first.ShouldBeContentResult();
         var etag = controller.Response.Headers.ETag.ToString();
         etag.ShouldNotBeNullOrEmpty();
 
         controller.Request.Headers.IfNoneMatch = etag;
         var second = controller.Get();
 
-        var status = second.ShouldBeOfType<StatusCodeResult>();
+        var status = second.ShouldBeStatusCodeResult();
         status.StatusCode.ShouldBe(StatusCodes.Status304NotModified);
     }
 
-    private static VersionController CreateController(IHostEnvironment hostEnvironment)
+    private static EndpointUnderTest CreateController(IHostEnvironment hostEnvironment) =>
+        new(context => VersionEndpoint.Get(context, hostEnvironment));
+
+    private sealed class EndpointUnderTest(Func<HttpContext, IResult> get)
     {
-        return new VersionController(hostEnvironment)
-        {
-            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
-        };
+        public HttpContext HttpContext { get; } = new DefaultHttpContext();
+        public HttpRequest Request => HttpContext.Request;
+        public HttpResponse Response => HttpContext.Response;
+        public IResult Get() => get(HttpContext);
     }
 
     private sealed class StubHostEnvironment(string environmentName) : IHostEnvironment
