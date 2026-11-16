@@ -55,4 +55,3 @@ src/UnitTests/UI.Shared/Components/LogoutTests.cs
 src/UnitTests/UI.Shared/Models/WorkOrderSearchTableModelTests.cs
 src/UnitTests/UI.Shared/Pages/BuildingsTests.cs
 src/UnitTests/UI.Shared/Pages/StubBus.cs
-src/UnitTests/UI.Shared/Pages/TeamsAndVendorsTests.cs
