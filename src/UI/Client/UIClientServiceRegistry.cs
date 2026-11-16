@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.LlmGateway;
@@ -7,6 +8,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using Mediator;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Palermo.BlazorMvc;
 
@@ -53,9 +55,21 @@ public static class UIClientServiceRegistry
             options.ServiceLifetime = ServiceLifetime.Transient;
             options.Assemblies = [typeof(IRemotableRequest), typeof(UIClientServiceRegistry), typeof(CanConnectToLlmServerHealthCheck)];
         });
+        RemoveServerOnlyHandlers(services);
         services.AddTransient<IPublisherGateway>(sp =>
             new PublisherGateway(sp.GetRequiredService<HttpClient>(), sp.GetRequiredService<IConfiguration>()));
         services.AddTransient<IBus, RemotableBus>();
+    }
+
+    /// <summary>
+    /// <see cref="ApplicationChatQuery"/> is remotable, so <see cref="RemotableBus"/> always sends it to the server. The
+    /// generator still registers its in-process handler from LlmGateway, which needs the server's MCP tool provider;
+    /// it is removed so the browser container holds only handlers it can build.
+    /// </summary>
+    private static void RemoveServerOnlyHandlers(IServiceCollection services)
+    {
+        services.RemoveAll<IRequestHandler<ApplicationChatQuery, ApplicationChatResult>>();
+        services.RemoveAll<ApplicationChatHandler>();
     }
 
     private static void AddClientServices(IServiceCollection services)
