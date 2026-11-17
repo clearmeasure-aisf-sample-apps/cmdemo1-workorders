@@ -40,12 +40,16 @@ internal sealed class AotParityDatabase : IAsyncDisposable
     private readonly Employee _idle = EmployeeBuilder.Create("iidle").WithFirstName("Ida").WithLastName("Idle")
         .WithEmail("ida@example.test").WithRole("Fulfiller", canCreate: false, canFulfill: true).Build();
 
-    public static async Task<AotParityDatabase> SeedAsync()
+    /// <summary>The shared seed: work orders across statuses, buildings, rooms and due dates.</summary>
+    public static Task<AotParityDatabase> SeedAsync() => SeedAsync(database => database.WorkOrders());
+
+    /// <summary>The seeded employees and only the work orders <paramref name="workOrders"/> builds, for one handler's cases.</summary>
+    public static async Task<AotParityDatabase> SeedAsync(Func<AotParityDatabase, IEnumerable<WorkOrderBuilder>> workOrders)
     {
         var database = new AotParityDatabase();
         await database.Context.Database.EnsureCreatedAsync();
         database.Context.AddRange(database._creator, database._fulfiller, database._idle);
-        database.Context.Set<WorkOrder>().AddRange(database.WorkOrders().Select(order => order.Build()));
+        database.Context.Set<WorkOrder>().AddRange(workOrders(database).Select(order => order.Build()));
         await database.Context.SaveChangesAsync();
         database.Context.ChangeTracker.Clear();
         return database;
@@ -79,7 +83,8 @@ internal sealed class AotParityDatabase : IAsyncDisposable
             .CreatedAt(utc.AddDays(-60)).AssignedAt(utc.AddDays(-59)).CompletedAt(utc.AddDays(-45));
     }
 
-    private WorkOrderBuilder Order(string number, WorkOrderStatus status) =>
+    /// <summary>A work order created by the seeded creator.</summary>
+    public WorkOrderBuilder Order(string number, WorkOrderStatus status) =>
         WorkOrderBuilder.Create().WithNumber(number).WithTitle($"Work order {number}").CreatedBy(_creator).WithStatus(status);
 
     private sealed class SqliteFile(string connectionString) : IDatabaseConfiguration

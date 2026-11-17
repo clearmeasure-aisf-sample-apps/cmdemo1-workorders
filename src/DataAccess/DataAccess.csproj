@@ -68,6 +68,7 @@
     <Compile Remove="Handlers\EmployeeWorkLoadSummaryQueryHandler.cs" />
     <Compile Remove="Handlers\NotificationsPanelQueryHandler.cs" />
     <Compile Remove="Handlers\RecentWorkOrdersQueryHandler.cs" />
+    <Compile Remove="Handlers\SlaHealthQueryHandler.cs" />
     <Compile Remove="Handlers\UserWorkOrders.cs" />
     <Compile Remove="Handlers\WorkOrderReportsQueryHandler.cs" />
     <Compile Remove="Handlers\WorkOrderSearchSummaryQueryHandler.cs" />
@@ -80,6 +81,7 @@
     <Compile Remove="Handlers\AotEmployeeWorkLoadSummaryQueryHandler.cs" />
     <Compile Remove="Handlers\AotNotificationsPanelQueryHandler.cs" />
     <Compile Remove="Handlers\AotRecentWorkOrdersQueryHandler.cs" />
+    <Compile Remove="Handlers\AotSlaHealthQueryHandler.cs" />
     <Compile Remove="Handlers\AotWorkOrderReportsQueryHandler.cs" />
     <Compile Remove="Handlers\AotWorkOrderSearchSummaryQueryHandler.cs" />
     <Compile Remove="Handlers\AotWorkOrdersByNumbersQueryHandler.cs" />
