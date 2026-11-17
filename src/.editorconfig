@@ -122,3 +122,8 @@ generated_code = true
 # size-baseline rationale check; renaming the namespace touches its consumers. Delete this section when it moves.
 [UI.Shared/App_Code/WorkOrderSelectedEvent.cs]
 dotnet_diagnostic.IDE0130.severity = none
+
+# Qodana Html.PathError reads href="/workorder/search" and similar as files under wwwroot. In Blazor they are
+# @page routes the router resolves at run time, so the inspection cannot see them (2026.3 engine, #1911).
+[*.razor]
+resharper_html_path_error_highlighting = none

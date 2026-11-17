@@ -22,20 +22,4 @@ public static class PlaywrightStorageStateFactory
             Origins = [playwrightOrigin]
         };
     }
-
-    /// <summary>Serializes storage state while reading every property (keeps the JSON shape stable).</summary>
-    public static object ToSerializable(PlaywrightStorageState state) =>
-        new
-        {
-            cookies = state.Cookies,
-            origins = state.Origins.Select(origin => new
-            {
-                origin = origin.Origin,
-                localStorage = origin.LocalStorage.Select(item => new
-                {
-                    name = item.Name,
-                    value = item.Value
-                })
-            })
-        };
 }

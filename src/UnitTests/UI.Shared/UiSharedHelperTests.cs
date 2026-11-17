@@ -1,5 +1,6 @@
 // ReSharper disable UnusedAutoPropertyAccessor.Local -- test message properties are set so activity tagging can read them
 using System.Diagnostics;
+using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
@@ -57,11 +58,32 @@ public class BusActivityTaggerTests
         activity.GetTagItem("bus.message.Prompt").ShouldBeNull();
         activity.GetTagItem("bus.message.CurrentUsername").ShouldBe("tlovejoy");
     }
+    [Test]
+    public void ShouldSkipPropertyTags_WhenObjectIsNotABusMessage()
+    {
+        using var listener = new ActivityListener();
+        listener.ShouldListenTo = _ => true;
+        listener.Sample = SampleAllData;
+        ActivitySource.AddActivityListener(listener);
+
+        using var source = new ActivitySource("Test");
+        using var activity = source.CreateActivity("bus", ActivityKind.Internal)?.Start();
+        activity.ShouldNotBeNull();
+
+        BusActivityTagger.AddScalarPropertyTags(new UnmarkedMessage { Number = "WO-2" }, activity);
+
+        activity.GetTagItem("bus.message.Number").ShouldBeNull();
+    }
+
 
     private static ActivitySamplingResult SampleAllData(ref ActivityCreationOptions<ActivityContext> _) =>
         ActivitySamplingResult.AllData;
 
-    private sealed class TestBusMessage
+    private sealed class TestBusMessage : IBusMessage
+    {
+        public string Number { get; init; } = string.Empty;
+    }
+    private sealed class UnmarkedMessage
     {
         public string Number { get; init; } = string.Empty;
     }

@@ -10,11 +10,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
 /// </summary>
 internal static class UiSharedConventionRules
 {
-    private static readonly HashSet<string> AuthProviderTypeNames = new(StringComparer.Ordinal)
-    {
+    private static readonly HashSet<string> AuthProviderTypeNames =
+    [
+        with(StringComparer.Ordinal),
         "AuthenticationStateProvider",
         "CustomAuthenticationStateProvider",
-    };
+    ];
 
     /// <summary>Names of <c>[Inject]</c> properties whose type is nullable.</summary>
     internal static IReadOnlyList<string> NullableInjectPropertyNames(string source)

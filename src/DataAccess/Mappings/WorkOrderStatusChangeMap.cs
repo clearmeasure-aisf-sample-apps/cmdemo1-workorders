@@ -28,7 +28,7 @@ public class WorkOrderStatusChangeMap : IEntityFrameworkMapping
 
     private static void MapColumns(EntityTypeBuilder<WorkOrderStatusChange> entity)
     {
-        var statusConverter = new WorkOrderStatusConverter();
+        var statusConverter = WorkOrderStatusConverter.Create();
         entity.Property(e => e.WorkOrderId).IsRequired();
         entity.Property(e => e.FromStatus).HasConversion(statusConverter).HasMaxLength(3).IsRequired();
         entity.Property(e => e.ToStatus).HasConversion(statusConverter).HasMaxLength(3).IsRequired();

@@ -40,6 +40,16 @@ public class TestOnlyReferenceScanTests
     }
 
     [Test]
+    public void ShouldPassMediatorHandler_WhenOnlyTestsNameIt()
+    {
+        AssertScan(
+            tree => tree.Write("src/DataAccess/Handler.cs",
+                    "namespace DataAccess; public class SampleHandler : IRequestHandler<SampleQuery, int> { }\n")
+                .Write("src/UnitTests/SampleHandlerTests.cs", "class SampleHandlerTests { void Run() { new SampleHandler(); } }\n"),
+            keys => keys.ShouldBeEmpty());
+    }
+
+    [Test]
     public void ShouldPassMember_WhenNothingReferencesIt()
     {
         AssertScan(

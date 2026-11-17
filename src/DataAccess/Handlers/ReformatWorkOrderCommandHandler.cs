@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
-using MediatR;
+using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -11,17 +12,22 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class ReformatWorkOrderCommandHandler(DbContext dbContext)
     : IRequestHandler<ReformatWorkOrderCommand, WorkOrder?>
 {
-    public async Task<WorkOrder?> Handle(ReformatWorkOrderCommand request, CancellationToken cancellationToken)
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    private readonly DataContext _dbContext = (DataContext)dbContext;
+
+    public async ValueTask<WorkOrder?> Handle(ReformatWorkOrderCommand request, CancellationToken cancellationToken)
     {
-        var workOrder = await dbContext.Set<WorkOrder>()
-            .SingleOrDefaultAsync(order => order.Number == request.Number, cancellationToken);
+        var number = request.Number;
+        var ct = cancellationToken;
+        var workOrder = await _dbContext.Set<WorkOrder>()
+            .SingleOrDefaultAsync(order => order.Number == number, ct);
         if (workOrder is null)
         {
             return null;
         }
 
         workOrder.ApplyReformat(request.Title, request.Description);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         return workOrder;
     }
 }

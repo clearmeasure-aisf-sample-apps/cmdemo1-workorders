@@ -492,15 +492,6 @@
       "longestArmSeconds": 0.1
     },
     {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.TracerBulletTests",
-      "shard": 5,
-      "tests": 1,
-      "x64Seconds": 2.2,
-      "armSeconds": 0.0,
-      "longestX64Seconds": 2.2,
-      "longestArmSeconds": 0.0
-    },
-    {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
       "shard": 5,
       "tests": 5,

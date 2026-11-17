@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model.Events;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.Metrics;
 
@@ -15,10 +15,10 @@ public class TelemetryHandler(ILogger<TelemetryHandler> logger)
         unit: "{logins}",
         description: "Number of user login events");
 
-    public Task Handle(UserLoggedInEvent request, CancellationToken cancellationToken)
+    public ValueTask Handle(UserLoggedInEvent request, CancellationToken cancellationToken)
     {
         LoginCounter.Add(1, new KeyValuePair<string, object?>("user.name", request.UserName));
         logger.LogInformation("Recorded login metric for {UserName}", request.UserName);
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

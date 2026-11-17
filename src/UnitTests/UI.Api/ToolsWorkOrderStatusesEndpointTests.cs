@@ -1,0 +1,60 @@
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shouldly;
+
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
+
+[TestFixture]
+public class ToolsWorkOrderStatusesEndpointTests
+{
+    [Test]
+    public void Get_Should_ReturnAllStatuses_WithExpectedCount()
+    {
+        var result = ToolsWorkOrderStatusesEndpoint.Get();
+
+        var ok = result.ShouldBeOkResult();
+        var statuses = ok.Value.ShouldBeOfType<WorkOrderStatusDto[]>();
+        statuses.Length.ShouldBe(5);
+    }
+
+    [Test]
+    public void Get_Should_ReturnStatusesInSortOrder()
+    {
+        var result = ToolsWorkOrderStatusesEndpoint.Get();
+
+        var ok = result.ShouldBeOkResult();
+        var statuses = ok.Value.ShouldBeOfType<WorkOrderStatusDto[]>();
+        statuses.Select(s => s.SortBy).ToList().ShouldBe(
+            statuses.Select(s => s.SortBy).OrderBy(x => x).ToList());
+    }
+
+    [Test]
+    public void Get_Should_ReturnExpectedFields_ForDraftStatus()
+    {
+        var result = ToolsWorkOrderStatusesEndpoint.Get();
+
+        var ok = result.ShouldBeOkResult();
+        var statuses = ok.Value.ShouldBeOfType<WorkOrderStatusDto[]>();
+        var draft = statuses.FirstOrDefault(s => s.Key == "Draft");
+        draft.ShouldNotBeNull();
+        draft.Code.ShouldBe("DRT");
+        draft.FriendlyName.ShouldBe("Draft");
+        draft.SortBy.ShouldBe((byte)1);
+    }
+
+    [Test]
+    public void Get_Should_ContainAllExpectedKeys()
+    {
+        var result = ToolsWorkOrderStatusesEndpoint.Get();
+
+        var ok = result.ShouldBeOkResult();
+        var statuses = ok.Value.ShouldBeOfType<WorkOrderStatusDto[]>();
+        var keys = statuses.Select(s => s.Key).ToHashSet();
+        keys.ShouldContain("Draft");
+        keys.ShouldContain("Assigned");
+        keys.ShouldContain("InProgress");
+        keys.ShouldContain("Complete");
+        keys.ShouldContain("Cancelled");
+    }
+}

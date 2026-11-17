@@ -5,7 +5,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.WorkOrderManage;
 /// <summary>
 /// Fake <see cref="IJSRuntime"/> that loads a clipboard module for copy-button tests.
 /// </summary>
-public sealed class WorkOrderManageClipboard : IJSRuntime
+public sealed class WorkOrderManageClipboard : IJSRuntime, IJsInteropDouble
 {
     private readonly ClipboardModule _module;
 
@@ -19,7 +19,10 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
     public string? LastCopiedText => _module.LastCopiedText;
 
     /// <inheritdoc />
-    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+    public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+        JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+    ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
     {
         if (identifier == "import" && typeof(TValue) == typeof(IJSObjectReference))
         {
@@ -32,13 +35,16 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
     /// <inheritdoc />
     public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
         object?[]? args) =>
-        InvokeAsync<TValue>(identifier, args);
+        JsInteropDouble.Answer<TValue>(this, identifier, args);
 
-    private sealed class ClipboardModule(bool throwJsException, bool throwDisconnectedException) : IJSObjectReference
+    private sealed class ClipboardModule(bool throwJsException, bool throwDisconnectedException) : IJSObjectReference, IJsInteropDouble
     {
         public string? LastCopiedText { get; private set; }
 
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+        ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
         {
             if (identifier != "copyToClipboard")
             {
@@ -60,12 +66,12 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
                 throw new JSDisconnectedException("JS runtime disconnected");
             }
 
-            return ValueTask.FromResult((TValue)(object)true);
+            return ValueTask.FromResult(default(TValue)!);
         }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-            InvokeAsync<TValue>(identifier, args);
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }

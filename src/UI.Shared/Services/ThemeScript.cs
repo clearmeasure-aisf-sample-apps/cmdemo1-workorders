@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.UI.Shared.Components;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Services;
@@ -9,13 +10,14 @@ public sealed class ThemeScript(IJSRuntime js) : IAsyncDisposable
 {
     public const string ModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/theme.js";
 
-    private IJSObjectReference? _module;
+    private readonly LazyJsModule _module = new(js, ModulePath);
 
     public async Task<string?> GetThemeAsync()
     {
         try
         {
-            return await (await ModuleAsync()).InvokeAsync<string>("getTheme");
+            var module = await _module.GetAsync();
+            return module is null ? null : await module.InvokeAsync<string>("getTheme");
         }
         catch (JSDisconnectedException)
         {
@@ -24,47 +26,25 @@ public sealed class ThemeScript(IJSRuntime js) : IAsyncDisposable
         }
     }
 
-    public async Task SyncDomFromThemeAsync(string theme)
+    public Task SyncDomFromThemeAsync(string theme) => InvokeBestEffortAsync("syncDomFromTheme", theme);
+
+    public Task SetThemeAsync(bool enabled) => InvokeBestEffortAsync("setTheme", enabled);
+
+    public ValueTask DisposeAsync() => _module.DisposeAsync();
+
+    private async Task InvokeBestEffortAsync(string function, object argument)
     {
         try
         {
-            await (await ModuleAsync()).InvokeVoidAsync("syncDomFromTheme", theme);
+            var module = await _module.GetAsync();
+            if (module is null)
+                return;
+
+            await module.InvokeVoidAsync(function, argument);
         }
         catch (JSDisconnectedException)
         {
-            // Circuit gone during theme init; DOM sync is best-effort.
+            // Circuit gone during theme init or toggle; the in-memory state still updates.
         }
     }
-
-    public async Task SetThemeAsync(bool enabled)
-    {
-        try
-        {
-            await (await ModuleAsync()).InvokeVoidAsync("setTheme", enabled);
-        }
-        catch (JSDisconnectedException)
-        {
-            // Circuit gone while toggling theme; in-memory state still updates.
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_module is null)
-            return;
-
-        try
-        {
-            await _module.DisposeAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // Circuit gone during teardown; module dispose is best-effort.
-        }
-
-        _module = null;
-    }
-
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
 }

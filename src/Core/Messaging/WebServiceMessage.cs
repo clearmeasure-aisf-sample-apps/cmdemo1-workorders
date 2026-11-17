@@ -1,14 +1,15 @@
-﻿// ReSharper disable PropertyCanBeMadeInitOnly.Global -- Qodana P5 (#9440): NHibernate proxy / System.Text.Json set-by-convention requires mutable setters
+// ReSharper disable PropertyCanBeMadeInitOnly.Global -- System.Text.Json set-by-convention requires mutable setters
 
 using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.Core.Messaging;
 
+/// <summary>
+/// The envelope the remotable bus puts on the wire: a payload serialized with its source-generated contract and the
+/// type name <see cref="RemotableMessageCatalog"/> resolves it back with.
+/// </summary>
 public class WebServiceMessage
 {
-    private readonly JsonSerializerOptions _jsonSerializerOptions =
-        new(JsonSerializerDefaults.General) { IncludeFields = false };
-
     public string Body { get; set; } = "";
     public string TypeName { get; set; } = "";
 
@@ -19,25 +20,18 @@ public class WebServiceMessage
     public WebServiceMessage(object request)
     {
         Body = GetBody(request);
-        TypeName = request.GetType().FullName + ", " + request.GetType().Assembly.GetName().Name;
+        TypeName = RemotableMessageCatalog.TypeNameOf(request.GetType());
     }
 
-    public string GetBody(object request)
-    {
-        var body = JsonSerializer.Serialize(request, request.GetType(),
-            _jsonSerializerOptions);
-        return body;
-    }
+    public static WebServiceMessage? FromJson(string json) =>
+        JsonSerializer.Deserialize(json, RemotableMessageJsonContext.Default.WebServiceMessage);
 
-    public string GetJson()
-    {
-        return JsonSerializer.Serialize(this, GetType(), _jsonSerializerOptions);
-    }
+    public string GetBody(object request) =>
+        JsonSerializer.Serialize(request, RemotableMessageCatalog.ContractFor(request.GetType()));
 
-    public object GetBodyObject()
-    {
-        var type = Type.GetType(TypeName, true)!;
-        var value = Body;
-        return JsonSerializer.Deserialize(value, type, _jsonSerializerOptions)!;
-    }
+    public string GetJson() => JsonSerializer.Serialize(this, RemotableMessageJsonContext.Default.WebServiceMessage);
+
+    public object GetBodyObject() =>
+        JsonSerializer.Deserialize(Body, RemotableMessageCatalog.ContractFor(TypeName))
+        ?? throw new InvalidOperationException($"{TypeName} body deserialized to null.");
 }

@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
@@ -177,7 +177,7 @@ public class CreateDatedWorkOrdersHandlerTests
         var assigneeUserName = TestData.UserName("gw");
         await GivenCreatorAndAssigneeAsync(creatorUserName, assigneeUserName);
 
-        await Should.ThrowAsync<InvalidOperationException>(() =>
+        await Should.ThrowAsync<InvalidOperationException>(async () => await
             CreateHandler(new ThrowingAfterCountNumberGenerator(5), TestHost.GetRequiredService<IBus>())
                 .Handle(MowCommand(creatorUserName, assigneeUserName, WeeklyDueDates(10)), CancellationToken.None));
 

@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class NotificationsPanelQueryHandler(DataContext context, TimeProvider time)
     : IRequestHandler<NotificationsPanelQuery, NotificationsSummary>
 {
-    public async Task<NotificationsSummary> Handle(
+    public async ValueTask<NotificationsSummary> Handle(
         NotificationsPanelQuery request,
         CancellationToken cancellationToken = default)
     {

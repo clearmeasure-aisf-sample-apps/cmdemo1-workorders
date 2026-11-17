@@ -13,7 +13,7 @@ using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;

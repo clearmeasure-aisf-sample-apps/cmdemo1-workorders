@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -15,7 +15,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class RecentWorkOrdersQueryHandler(DataContext context) : IRequestHandler<RecentWorkOrdersQuery, WorkOrder[]>
 {
-    public async Task<WorkOrder[]> Handle(RecentWorkOrdersQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<WorkOrder[]> Handle(RecentWorkOrdersQuery request, CancellationToken cancellationToken = default)
     {
         var completed = await LatestBy(wo => wo.CompletedDate, request.Count, cancellationToken);
         var assigned = await LatestBy(wo => wo.AssignedDate, request.Count, cancellationToken);
@@ -35,6 +35,7 @@ public class RecentWorkOrdersQueryHandler(DataContext context) : IRequestHandler
         var hasDate = Expression.Lambda<Func<WorkOrder, bool>>(
             Expression.NotEqual(date.Body, Expression.Constant(null, typeof(DateTime?))),
             date.Parameters);
+        // ReSharper disable DefaultStringComparerUsage -- EF Core translates this ordering to SQL, where the column collation decides; a comparer cannot be translated.
         return context.Set<WorkOrder>()
             .AsNoTracking()
             .Where(hasDate)
@@ -42,5 +43,6 @@ public class RecentWorkOrdersQueryHandler(DataContext context) : IRequestHandler
             .ThenBy(wo => wo.Number)
             .Take(count)
             .ToListAsync(cancellationToken);
+        // ReSharper restore DefaultStringComparerUsage
     }
 }

@@ -16,9 +16,9 @@ stages:
         pool:
           vmImage: "windows-latest"
         steps:
-          # Manual .NET 10 SDK Installation (fallback)
+          # Manual .NET 11 SDK Installation (fallback)
           - task: PowerShell@2
-            displayName: "Install .NET 10 SDK Manually"
+            displayName: "Install .NET 11 SDK Manually"
             inputs:
               pwsh: true
               targetType: "inline"
@@ -27,19 +27,19 @@ stages:
                 dotnet --list-sdks
                 dotnet --version
                 
-                # Check if .NET 10 SDK is already available
+                # Check if .NET 11 SDK is already available
                 $sdks = dotnet --list-sdks
                 if ($sdks -match "10\.0\.") {
-                  Write-Host "? .NET 10 SDK is already installed"
+                  Write-Host "? .NET 11 SDK is already installed"
                   exit 0
                 }
                 
-                # Download and install .NET 10 SDK using official installer script
-                Write-Host "Downloading .NET 10 SDK installer script..."
+                # Download and install .NET 11 SDK using official installer script
+                Write-Host "Downloading .NET 11 SDK installer script..."
                 try {
                   Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "$env:TEMP\dotnet-install.ps1"
-                  Write-Host "Installing .NET 10 SDK..."
-                  & "$env:TEMP\dotnet-install.ps1" -Channel 10.0 -InstallDir "$env:ProgramFiles\dotnet" -NoPath
+                  Write-Host "Installing .NET 11 SDK..."
+                  & "$env:TEMP\dotnet-install.ps1" -Channel 11.0 -InstallDir "$env:ProgramFiles\dotnet" -NoPath
                   
                   Write-Host "? SDK installation completed"
                   Write-Host "Available SDKs:"
@@ -155,28 +155,28 @@ stages:
                       $coreInstalled = (dotnet --list-runtimes) -match "Microsoft.NETCore.App 10\.0\."
                       if (-not $coreInstalled) {
                         try {
-                          Write-Host "Installing .NET 10 Core runtime..."
-                          & "$env:TEMP\dotnet-install.ps1" -Channel 10.0 -Runtime dotnet -InstallDir "$env:ProgramFiles\dotnet" -NoPath
+                          Write-Host "Installing .NET 11 Core runtime..."
+                          & "$env:TEMP\dotnet-install.ps1" -Channel 11.0 -Runtime dotnet -InstallDir "$env:ProgramFiles\dotnet" -NoPath
                           Write-Host "? Core runtime installation completed"
                         } catch {
                           Write-Warning "? Could not install Core runtime: $_"
                         }
                       } else {
-                        Write-Host "? .NET 10 Core runtime already installed"
+                        Write-Host "? .NET 11 Core runtime already installed"
                       }
                       
                       # Install ASP.NET Core 10 Runtime (for Acceptance Tests)
                       $aspnetInstalled = (dotnet --list-runtimes) -match "Microsoft.AspNetCore.App 10\.0\."
                       if (-not $aspnetInstalled) {
                         try {
-                          Write-Host "Installing ASP.NET Core 10 runtime..."
-                          & "$env:TEMP\dotnet-install.ps1" -Channel 10.0 -Runtime aspnetcore -InstallDir "$env:ProgramFiles\dotnet" -NoPath
+                          Write-Host "Installing ASP.NET Core 11 runtime..."
+                          & "$env:TEMP\dotnet-install.ps1" -Channel 11.0 -Runtime aspnetcore -InstallDir "$env:ProgramFiles\dotnet" -NoPath
                           Write-Host "? ASP.NET Core runtime installation completed"
                         } catch {
                           Write-Warning "? Could not install ASP.NET Core runtime: $_"
                         }
                       } else {
-                        Write-Host "? ASP.NET Core 10 runtime already installed"
+                        Write-Host "? ASP.NET Core 11 runtime already installed"
                       }
                       
                       Write-Host "Available runtimes:"
@@ -345,8 +345,8 @@ stages:
                       Write-Host "Downloading .NET 10 runtime installer script..."
                       try {
                         Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "$env:TEMP\dotnet-install.ps1"
-                        Write-Host "Installing .NET 10 runtime..."
-                        & "$env:TEMP\dotnet-install.ps1" -Channel 10.0 -Runtime dotnet -InstallDir "$env:ProgramFiles\dotnet" -NoPath
+                        Write-Host "Installing .NET 11 runtime..."
+                        & "$env:TEMP\dotnet-install.ps1" -Channel 11.0 -Runtime dotnet -InstallDir "$env:ProgramFiles\dotnet" -NoPath
                         
                         Write-Host "? Runtime installation completed"
                         Write-Host "Available runtimes:"
@@ -415,8 +415,8 @@ stages:
                       Write-Host "Downloading .NET 10 runtime installer script..."
                       try {
                         Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "$env:TEMP\dotnet-install.ps1"
-                        Write-Host "Installing .NET 10 runtime..."
-                        & "$env:TEMP\dotnet-install.ps1" -Channel 10.0 -Runtime dotnet -InstallDir "$env:ProgramFiles\dotnet" -NoPath
+                        Write-Host "Installing .NET 11 runtime..."
+                        & "$env:TEMP\dotnet-install.ps1" -Channel 11.0 -Runtime dotnet -InstallDir "$env:ProgramFiles\dotnet" -NoPath
                         
                         Write-Host "? Runtime installation completed"
                         Write-Host "Available runtimes:"

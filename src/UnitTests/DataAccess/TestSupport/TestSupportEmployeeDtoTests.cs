@@ -19,6 +19,5 @@ public class TestSupportEmployeeDtoTests
         };
         dto.UserName.ShouldBe("u");
         dto.EmailAddress.ShouldBe("e@t");
-        dto.ToApiShape().ShouldNotBeNull();
     }
 }

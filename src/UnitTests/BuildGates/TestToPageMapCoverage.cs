@@ -17,16 +17,17 @@ internal static class TestToPageMapCoverage
         IReadOnlyList<DiscoveredAcceptanceClass> pageLevel,
         RepositoryCheckout checkout)
     {
-        var problems = new List<string>();
-        problems.AddRange(MissingMappings(map, pageLevel));
-        problems.AddRange(UnknownMappings(map, pageLevel));
-        problems.AddRange(DuplicateClasses(map));
-        problems.AddRange(EmptyOrBlankEntries(map));
-        problems.AddRange(MissingRazorFiles(map, checkout));
-        problems.AddRange(ComponentEntryProblems(map));
-        problems.AddRange(ComponentHostUsageMismatches(map, checkout));
-        problems.AddRange(UnmappedUiRazor(map, checkout));
-        return problems;
+        return
+        [
+            ..MissingMappings(map, pageLevel),
+            ..UnknownMappings(map, pageLevel),
+            ..DuplicateClasses(map),
+            ..EmptyOrBlankEntries(map),
+            ..MissingRazorFiles(map, checkout),
+            ..ComponentEntryProblems(map),
+            ..ComponentHostUsageMismatches(map, checkout),
+            ..UnmappedUiRazor(map, checkout)
+        ];
     }
 
     private static IEnumerable<string> MissingMappings(

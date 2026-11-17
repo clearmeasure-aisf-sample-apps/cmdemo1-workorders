@@ -61,7 +61,7 @@ internal static class ShellLayoutContext
 
     private sealed class FailingDeploymentBus : StubBus
     {
-        public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        public override Task<TResponse> Send<TResponse>(Mediator.IRequest<TResponse> request)
         {
             if (request is DeploymentIdentityQuery)
                 throw new HttpRequestException("boom");
@@ -71,7 +71,7 @@ internal static class ShellLayoutContext
 
     private sealed class RemotingFailureDeploymentBus : StubBus
     {
-        public override Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+        public override Task<TResponse> Send<TResponse>(Mediator.IRequest<TResponse> request)
         {
             if (request is DeploymentIdentityQuery)
                 throw new InvalidOperationException("Remoting call failed (500)");

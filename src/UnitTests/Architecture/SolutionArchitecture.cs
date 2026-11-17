@@ -9,7 +9,6 @@ using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UI.Shared.Components.Search;
-using Worker;
 using ArchArchitecture = ArchUnitNET.Domain.Architecture;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
@@ -42,7 +41,6 @@ public static class SolutionArchitecture
         new("UI.Client", "ClearMeasure.Bootcamp.UI.Client", [Core, UiShared, LlmGateway]),
         new("UI.Api", "ClearMeasure.Bootcamp.UI.Api", [Core]),
         new("McpServer", "ClearMeasure.Bootcamp.McpServer", [Core, DataAccess, LlmGateway, UiShared, ServiceDefaults]),
-        new("Worker", "Worker", [Core, DataAccess, LlmGateway, ServiceDefaults]),
     ];
 
     /// <summary>
@@ -84,7 +82,6 @@ public static class SolutionArchitecture
                 typeof(RemotableBus).Assembly,
                 typeof(ApiRoutes).Assembly,
                 typeof(McpServiceRegistry).Assembly,
-                typeof(WorkOrderEndpoint).Assembly,
                 typeof(DetailedHealthReportProvider).Assembly)
             .Build();
     }

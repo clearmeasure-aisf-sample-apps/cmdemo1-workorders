@@ -9,10 +9,8 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 [TestFixture]
 public class DiagnosticEndpointPathsTests
 {
-    [TestCase("/_lamar", true)]
-    [TestCase("/_lamar/services", true)]
-    [TestCase("/_lamar/scanning", true)]
-    [TestCase("/_LAMAR/services", true)]
+    [TestCase("/_lamar/services", false)]
+    [TestCase("/_diagnostics/services", true)]
     [TestCase("/_diagnostics", true)]
     [TestCase("/_diagnostics/reset-db-connections", true)]
     [TestCase("/_DIAGNOSTICS/reset-db-connections", true)]

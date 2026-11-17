@@ -192,7 +192,7 @@ public class SlaHealthQueryHandlerTests
     private static Task<SlaHealth> WhenSlaQueried(TimeProvider clock)
     {
         var handler = new SlaHealthQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
-        return handler.Handle(new SlaHealthQuery());
+        return handler.Handle(new SlaHealthQuery()).AsTask();
     }
 
     private static (DateTime Start, DateTime End, DateTime Completed) GivenCompletionWindow(DateOnly today)

@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -14,14 +14,19 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 public class WorkOrderCountByStatusQueryHandler(DataContext context) :
     IRequestHandler<WorkOrderCountByStatusQuery, Dictionary<string, int>>
 {
-    public async Task<Dictionary<string, int>> Handle(WorkOrderCountByStatusQuery request,
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
+
+    public async ValueTask<Dictionary<string, int>> Handle(WorkOrderCountByStatusQuery request,
         CancellationToken cancellationToken = default)
     {
-        var grouped = await context.Set<WorkOrder>()
+        var ct = cancellationToken;
+        var grouped = await _context.Set<WorkOrder>()
             .AsNoTracking()
             .GroupBy(workOrder => workOrder.Status)
             .Select(group => new { Status = group.Key, Count = group.Count() })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         var result = new Dictionary<string, int>();
         foreach (var status in WorkOrderStatus.GetAllItems())

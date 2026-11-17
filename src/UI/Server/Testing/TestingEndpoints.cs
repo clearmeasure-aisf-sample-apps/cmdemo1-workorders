@@ -20,7 +20,7 @@ public static class TestingEndpoints
         app.MapGet("/_test/compression-probe", () => Results.Text(new string('A', 4096), PlainText));
         app.MapGet(
             "/_test/realtime/connection-count",
-            (IRealtimeNotificationHub hub) => Results.Json(new { count = hub.ConnectionCount }));
+            (IRealtimeNotificationHub hub) => TypedResults.Json(new ConnectionCount(hub.ConnectionCount), ServerJsonContext.Default.ConnectionCount));
         app.MapPost("/_test/body-buffer-probe", ReadBodyTwiceAsync);
         app.MapPost("/__test/request-body-echo", EchoRequestBodyAsync);
         app.MapGet("/api/_test/request-timeout-probe", WaitPastTheTimeoutAsync)
@@ -40,7 +40,7 @@ public static class TestingEndpoints
 
         using var secondReader = new StreamReader(request.Body, leaveOpen: true);
         var second = await secondReader.ReadToEndAsync(cancellationToken);
-        return Results.Json(new { first, second });
+        return TypedResults.Json(new BodyReadTwice(first, second), ServerJsonContext.Default.BodyReadTwice);
     }
 
     private static async Task EchoRequestBodyAsync(HttpContext httpContext)
@@ -58,4 +58,8 @@ public static class TestingEndpoints
 
     private static IResult CountIdempotentCalls(IdempotencyProbeState state) =>
         Results.Text($"count={state.Next()}", PlainText);
+
+    internal sealed record ConnectionCount(int Count);
+
+    internal sealed record BodyReadTwice(string First, string Second);
 }

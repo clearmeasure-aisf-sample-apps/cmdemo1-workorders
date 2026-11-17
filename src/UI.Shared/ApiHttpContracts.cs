@@ -12,7 +12,7 @@ public static class ApiKeyConstants
 }
 
 /// <summary>
-/// Routes for the Blazor WASM abstract web-service endpoint (MediatR-over-HTTP).
+/// Routes for the Blazor WASM abstract web-service endpoint (mediator-over-HTTP).
 /// </summary>
 public static class WebServiceApiRoutes
 {

@@ -1,10 +1,10 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Tools;
-using Lamar;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -12,8 +12,10 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.McpServer;
 
 /// <summary>
-/// Builds the standalone MCP server container from <see cref="McpServiceRegistry"/> to prove its own MediatR
-/// pipeline enforces <see cref="RequiresFeatureAttribute"/> and answers <see cref="FeatureFlagsQuery"/>.
+/// Builds the standalone MCP server services from <see cref="McpServiceRegistry"/> to prove its own source-generated
+/// mediator pipeline enforces <see cref="RequiresFeatureAttribute"/> and answers <see cref="FeatureFlagsQuery"/>.
+/// The gated probe is the real <see cref="VendorsQuery"/> with a canned handler, because the generated mediator only
+/// routes message types it saw at build time.
 /// </summary>
 [TestFixture]
 public class McpFeatureFlagBehaviorTests
@@ -21,10 +23,10 @@ public class McpFeatureFlagBehaviorTests
     [Test]
     public async Task Send_Should_ThrowFeatureDisabled_When_TaggedRequestFlagIsOff()
     {
-        await using var container = BuildContainer(vendorManagement: false);
-        var bus = container.GetInstance<IBus>();
+        await using var provider = BuildProvider(vendorManagement: false);
+        var bus = provider.GetRequiredService<IBus>();
 
-        var ex = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new McpGatedProbeRequest()));
+        var ex = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new VendorsQuery()));
 
         ex.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
     }
@@ -32,17 +34,17 @@ public class McpFeatureFlagBehaviorTests
     [Test]
     public async Task Send_Should_RunHandler_When_TaggedRequestFlagIsOn()
     {
-        await using var container = BuildContainer(vendorManagement: true);
-        var bus = container.GetInstance<IBus>();
+        await using var provider = BuildProvider(vendorManagement: true);
+        var bus = provider.GetRequiredService<IBus>();
 
-        (await bus.Send(new McpGatedProbeRequest())).ShouldBe("handled");
+        (await bus.Send(new VendorsQuery())).ShouldBeSameAs(CannedVendorsHandler.Vendors);
     }
 
     [Test]
     public async Task Send_Should_ReturnBothManagementFlags_When_FeatureFlagsQuerySent()
     {
-        await using var container = BuildContainer(vendorManagement: true);
-        var bus = container.GetInstance<IBus>();
+        await using var provider = BuildProvider(vendorManagement: true);
+        var bus = provider.GetRequiredService<IBus>();
 
         var result = await bus.Send(new FeatureFlagsQuery());
 
@@ -53,8 +55,8 @@ public class McpFeatureFlagBehaviorTests
     [Test]
     public async Task VendorTools_Should_ThrowFeatureDisabled_When_VendorManagementIsOff()
     {
-        await using var container = BuildContainer(vendorManagement: false);
-        var bus = container.GetInstance<IBus>();
+        await using var provider = BuildProvider(vendorManagement: false);
+        var bus = provider.GetRequiredService<IBus>();
 
         var list = await Should.ThrowAsync<FeatureDisabledException>(() => VendorTools.ListVendors(bus));
         list.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
@@ -66,7 +68,7 @@ public class McpFeatureFlagBehaviorTests
         create.RequestName.ShouldBe(nameof(CreateVendorCommand));
     }
 
-    private static Container BuildContainer(bool vendorManagement)
+    private static ServiceProvider BuildProvider(bool vendorManagement)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -74,20 +76,19 @@ public class McpFeatureFlagBehaviorTests
                 ["FeatureFlags:VendorManagement"] = vendorManagement ? "true" : "false"
             })
             .Build();
-        var registry = new ServiceRegistry();
-        registry.IncludeRegistry<McpServiceRegistry>();
-        registry.AddSingleton<IConfiguration>(configuration);
-        registry.AddLogging();
-        registry.AddTransient<IRequestHandler<McpGatedProbeRequest, string>, McpGatedProbeHandler>();
-        return new Container(registry);
+        var services = new ServiceCollection();
+        services.AddMcpServerServices();
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging();
+        services.AddTransient<IRequestHandler<VendorsQuery, Vendor[]>, CannedVendorsHandler>();
+        return services.BuildServiceProvider();
     }
 
-    [RequiresFeature(FeatureFlagNames.VendorManagement)]
-    public record McpGatedProbeRequest : IRequest<string>;
-
-    public sealed class McpGatedProbeHandler : IRequestHandler<McpGatedProbeRequest, string>
+    public sealed class CannedVendorsHandler : IRequestHandler<VendorsQuery, Vendor[]>
     {
-        public Task<string> Handle(McpGatedProbeRequest request, CancellationToken cancellationToken) =>
-            Task.FromResult("handled");
+        public static Vendor[] Vendors { get; } = [];
+
+        public ValueTask<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(Vendors);
     }
 }

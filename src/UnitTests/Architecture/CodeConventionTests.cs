@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.Core.Services;
-using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
@@ -46,11 +45,10 @@ public class CodeConventionTests
     }
 
     [Test]
-    public void ShouldLiveInControllersAndEndWithController_WhenClassIsAConcreteController()
+    public void ShouldLiveInEndpoints_WhenClassIsAnHttpEndpoint()
     {
-        var rule = Classes().That().AreAssignableTo(typeof(ControllerBase)).And().AreNotAbstract()
-            .Should().ResideInNamespaceMatching(@"\.Controllers$")
-            .AndShould().HaveNameEndingWith("Controller");
+        var rule = Classes().That().HaveNameEndingWith("Endpoint")
+            .Should().ResideInNamespaceMatching(@"\.Endpoints$");
 
         ArchitectureViolations.Of(rule).ShouldBeEmpty(rule.Description);
     }

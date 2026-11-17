@@ -1,7 +1,12 @@
 version: "1.0"
-linter: jetbrains/qodana-cdnet:latest
+# 2026.3-eap: the first qodana-cdnet whose ReSharper engine loads .NET 11 / Roslyn 5.11 analyzers and the Razor
+# generator (2026.2 = latest fails to load them, so every Razor-only member reads as unused). Move to 2026.3 when released.
+linter: jetbrains/qodana-cdnet:2026.3-eap
 dotnet:
   solution: src/ChurchBulletin.sln
+# The qodana-cdnet images (2026.2 and 2026.3-eap) ship .NET 8/9/10 SDKs only; global.json pins .NET 11 (#1911 Native AOT).
+# Install the pinned SDK into the image's dotnet root before analysis so MSBuild can load the solution.
+bootstrap: curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && bash /tmp/dotnet-install.sh --jsonfile global.json --install-dir /usr/share/dotnet
 # Phase 5 (#8846): fail on new/absent problems vs committed baseline.
 # Community .NET supports failThreshold only (not severityThresholds).
 # Refresh qodana.sarif.json when intentionally remediating baselined findings

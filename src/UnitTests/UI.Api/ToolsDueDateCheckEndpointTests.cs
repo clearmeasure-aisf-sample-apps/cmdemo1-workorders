@@ -1,0 +1,96 @@
+using System.Globalization;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shouldly;
+
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
+
+[TestFixture]
+public class ToolsDueDateCheckEndpointTests
+{
+    [Test]
+    public void Get_Should_ReturnOverdue_When_DateIsInPast()
+    {
+        var result = CreateEndpoint().Get("2000-01-01");
+
+        var ok = result.ShouldBeOkResult();
+        var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
+        payload.Urgency.ShouldBe("Overdue");
+    }
+
+    [Test]
+    public void Get_Should_ReturnNone_When_DateIsInFuture()
+    {
+        var result = CreateEndpoint().Get("2099-12-31");
+
+        var ok = result.ShouldBeOkResult();
+        var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
+        payload.Urgency.ShouldBe("None");
+    }
+
+    [Test]
+    public void Get_Should_ReturnDueToday_When_DateIsToday()
+    {
+        // Use a fixed clock so the test is deterministic (avoids midnight boundary flicker).
+        var today = new DateOnly(2025, 6, 15);
+        var fixedNow = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
+        var fixedClock = new FixedTimeProvider(fixedNow);
+        var endpoint = CreateEndpoint(fixedClock);
+
+        var result = endpoint.Get(today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+
+        var ok = result.ShouldBeOkResult();
+        var payload = ok.Value.ShouldBeOfType<DueDateCheckResponse>();
+        payload.Urgency.ShouldBe("DueToday");
+    }
+
+    [Test]
+    public void Get_Should_Return400_When_DateMissing()
+    {
+        var nullResult = CreateEndpoint().Get(null);
+        var emptyResult = CreateEndpoint().Get("");
+        var whitespaceResult = CreateEndpoint().Get("   ");
+
+        nullResult.ShouldBeBadRequestProblem();
+        emptyResult.ShouldBeBadRequestProblem();
+        whitespaceResult.ShouldBeBadRequestProblem();
+    }
+
+    [Test]
+    public void Get_Should_Return400_When_DateInvalidFormat()
+    {
+        var result = CreateEndpoint().Get("not-a-date");
+
+        var objectResult = result.ShouldBeValueResult();
+        objectResult.StatusCode.ShouldBe(400);
+        objectResult.Value.ShouldBeOfType<ProblemDetails>();
+    }
+
+    [Test]
+    public void Get_Should_Return400_When_DateWrongFormat()
+    {
+        // MM/dd/yyyy is wrong format — must be yyyy-MM-dd
+        var result = CreateEndpoint().Get("01/15/2025");
+
+        var objectResult = result.ShouldBeValueResult();
+        objectResult.StatusCode.ShouldBe(400);
+        objectResult.Value.ShouldBeOfType<ProblemDetails>();
+    }
+
+    private static DueDateCheckUnderTest CreateEndpoint(TimeProvider? timeProvider = null) =>
+        new(timeProvider ?? TimeProvider.System);
+
+    private sealed class DueDateCheckUnderTest(TimeProvider timeProvider)
+    {
+        public IResult Get(string? date) => ToolsDueDateCheckEndpoint.Get(date, timeProvider);
+    }
+}
+
+/// <summary>
+/// Stub <see cref="TimeProvider"/> that returns a fixed UTC instant for deterministic tests.
+/// </summary>
+file sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => utcNow;
+}

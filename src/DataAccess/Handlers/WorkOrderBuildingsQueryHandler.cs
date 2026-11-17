@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -12,13 +12,18 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// </summary>
 public class WorkOrderBuildingsQueryHandler(DataContext context) : IRequestHandler<WorkOrderBuildingsQuery, string[]>
 {
-    public async Task<string[]> Handle(WorkOrderBuildingsQuery request, CancellationToken cancellationToken = default)
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
+
+    public async ValueTask<string[]> Handle(WorkOrderBuildingsQuery request, CancellationToken cancellationToken = default)
     {
-        var buildings = await context.Set<WorkOrder>().AsNoTracking()
+        var ct = cancellationToken;
+        var buildings = await _context.Set<WorkOrder>().AsNoTracking()
             .Where(wo => wo.Building != null)
             .Select(wo => wo.Building!)
             .Distinct()
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         return buildings
             .Select(b => b.Trim())

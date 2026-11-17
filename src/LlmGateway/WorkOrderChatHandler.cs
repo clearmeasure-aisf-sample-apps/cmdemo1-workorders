@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using System.ClientModel;
@@ -18,7 +18,7 @@ public class WorkOrderChatHandler(ChatClientFactory factory, WorkOrderTool workO
         ]
     };
 
-    public async Task<ChatResponse> Handle(WorkOrderChatQuery request, CancellationToken cancellationToken)
+    public async ValueTask<ChatResponse> Handle(WorkOrderChatQuery request, CancellationToken cancellationToken)
     {
         string prompt = request.Prompt;
         var chatMessages = new List<ChatMessage>()

@@ -156,6 +156,6 @@ public class NotificationsPanelQueryHandlerTests
         var handler = new NotificationsPanelQueryHandler(
             TestHost.GetRequiredService<DataContext>(),
             TestHost.GetRequiredService<TimeProvider>());
-        return handler.Handle(new NotificationsPanelQuery(userName));
+        return handler.Handle(new NotificationsPanelQuery(userName)).AsTask();
     }
 }

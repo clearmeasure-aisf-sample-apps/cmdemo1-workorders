@@ -20,15 +20,4 @@ public sealed class TestSupportWorkOrderDto
 
     /// <summary>Creator user name.</summary>
     public required string CreatorUserName { get; init; }
-
-    /// <summary>JSON-stable shape that reads every property.</summary>
-    public object ToApiShape() => new
-    {
-        id = Id,
-        number = Number,
-        title = Title,
-        description = Description,
-        roomNumber = RoomNumber,
-        creatorUserName = CreatorUserName
-    };
 }

@@ -1,6 +1,8 @@
 // ReSharper disable MethodHasAsyncOverload -- Qodana C6 (#9039): Playwright/NUnit sync APIs are the
 // idiomatic call shape here; qodana.yaml path-scoped exclude is documentation-only (qodana-cdnet
 // ignores it, see #8986/C2), so enforcement is this file-level directive.
+using System.Collections.Concurrent;
+
 namespace ClearMeasure.Bootcamp.AcceptanceTests;
 
 /// <summary>
@@ -24,78 +26,75 @@ public class BlazorWasmWarmUp
     }
 
     /// <summary>
-    /// Loads the home page in a disposable headless browser, retrying on JavaScript errors
-    /// or stuck loading screens until the LoginLink element is visible.
+    /// Loads the home page in a disposable headless browser, retrying until the LoginLink element is visible.
+    /// When it never shows, fails with what the browser saw (page and console errors, failed and 4xx/5xx
+    /// requests) and the server's recent output, so a CI run says why the client did not start.
     /// </summary>
     public async Task ExecuteAsync()
     {
         TestContext.Out.WriteLine("Blazor WASM warm-up: starting...");
-
-        await using var browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-        {
-            Headless = true
-        });
-
-        var context = await browser.NewContextAsync(new BrowserNewContextOptions
-        {
-            BaseURL = _baseUrl,
-            IgnoreHTTPSErrors = true
-        });
+        await using var browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
+        var context = await browser.NewContextAsync(ContextOptions());
         context.SetDefaultTimeout(TimeoutSeconds * 1000);
-
         var page = await context.NewPageAsync();
-
-        var jsErrors = new List<string>();
-        page.PageError += (_, error) => jsErrors.Add(error);
+        var problems = WatchForProblems(page);
 
         for (var attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            jsErrors.Clear();
+            problems.Clear();
             TestContext.Out.WriteLine($"Blazor WASM warm-up: attempt {attempt}/{MaxAttempts}");
-
-            await page.GotoAsync("/");
-
-            var loginLink = page.GetByTestId("LoginLink");
-            try
+            if (await LoginLinkAppears(page))
             {
-                await loginLink.WaitForAsync(new LocatorWaitForOptions
-                {
-                    State = WaitForSelectorState.Visible,
-                    Timeout = TimeoutSeconds * 1000
-                });
-
                 TestContext.Out.WriteLine("Blazor WASM warm-up: LoginLink visible — app is ready.");
-                await page.CloseAsync();
                 await context.CloseAsync();
                 return;
             }
-            catch (TimeoutException)
-            {
-                TestContext.Out.WriteLine(
-                    $"Blazor WASM warm-up: LoginLink not visible after {TimeoutSeconds}s. " +
-                    $"JS errors captured: {jsErrors.Count}");
-                foreach (var error in jsErrors)
-                {
-                    TestContext.Out.WriteLine($"  JS error: {error}");
-                }
 
-                if (attempt < MaxAttempts)
-                {
-                    TestContext.Out.WriteLine("Blazor WASM warm-up: reloading page...");
-                    await page.ReloadAsync();
-                    await loginLink.WaitForAsync(new LocatorWaitForOptions
-                    {
-                        State = WaitForSelectorState.Visible,
-                        Timeout = TimeoutSeconds * 1000
-                    });
-                }
-            }
+            TestContext.Out.WriteLine($"Blazor WASM warm-up: LoginLink not visible after {TimeoutSeconds}s: {string.Join(" | ", problems)}");
         }
 
-        await page.CloseAsync();
         await context.CloseAsync();
-        TestContext.Out.WriteLine(
-            $"WARNING: Blazor WASM warm-up did not confirm LoginLink after {MaxAttempts} attempts. " +
-            "Tests will proceed but may encounter loading issues.");
+        throw new TimeoutException(
+            $"Blazor WASM warm-up: LoginLink not visible after {MaxAttempts} attempts of {TimeoutSeconds}s. " +
+            $"Last attempt saw: {string.Join(" | ", problems)}. Server output: {ServerFixture.RecentServerOutput()}");
+    }
+
+    // Locale as BrowserContextFactory sets it. Without one, Chromium on the ARM runner (LANG=C) reports
+    // "en-US@posix", which the .NET 11 WebAssembly runtime rejects at start-up (CultureNotSupportedException).
+    private BrowserNewContextOptions ContextOptions() =>
+        new() { BaseURL = _baseUrl, Locale = "en-US", IgnoreHTTPSErrors = true };
+
+    private static ConcurrentQueue<string> WatchForProblems(IPage page)
+    {
+        var problems = new ConcurrentQueue<string>();
+        page.PageError += (_, error) => problems.Enqueue($"page error: {error}");
+        page.Console += (_, message) =>
+        {
+            if (message.Type == "error") problems.Enqueue($"console: {message.Text}");
+        };
+        page.Response += (_, response) =>
+        {
+            if (response.Status >= 400) problems.Enqueue($"HTTP {response.Status} {response.Url}");
+        };
+        page.RequestFailed += (_, request) => problems.Enqueue($"request failed: {request.Failure} {request.Url}");
+        return problems;
+    }
+
+    private static async Task<bool> LoginLinkAppears(IPage page)
+    {
+        await page.GotoAsync("/");
+        try
+        {
+            await page.GetByTestId("LoginLink").WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = TimeoutSeconds * 1000
+            });
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
     }
 }

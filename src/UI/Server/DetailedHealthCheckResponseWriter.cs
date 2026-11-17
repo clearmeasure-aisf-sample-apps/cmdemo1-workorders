@@ -14,12 +14,12 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 /// </summary>
 public static class DetailedHealthCheckResponseWriter
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly ServerJsonContext Json = new(new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = true
-    };
+    });
 
     /// <summary>
     /// Writes the <paramref name="report"/> as a detailed JSON payload to the HTTP response.
@@ -48,7 +48,7 @@ public static class DetailedHealthCheckResponseWriter
             Version = AssemblyVersion()
         };
 
-        await context.Response.WriteAsJsonAsync(response, JsonOptions);
+        await context.Response.WriteAsJsonAsync(response, Json.DetailedHealthCheckResponse);
     }
 
     /// <summary>
@@ -127,21 +127,21 @@ public static class DetailedHealthCheckResponseWriter
         public required string Status { get; init; }
 
         /// <summary>Human-readable description returned by the health check.</summary>
-        public string? Description { get; init; }
+        public string? Description { get; private init; }
 
         /// <summary>Duration in milliseconds the health check took to execute.</summary>
-        public double DurationMs { get; init; }
+        public double DurationMs { get; private init; }
 
         /// <summary>Exception message when the check captured a failure.</summary>
-        public string? ExceptionMessage { get; init; }
+        public string? ExceptionMessage { get; private init; }
 
         /// <summary>Full exception detail including stack trace for production issue diagnosis.</summary>
-        public string? ExceptionDetail { get; init; }
+        public string? ExceptionDetail { get; private init; }
 
         /// <summary>Arbitrary key-value data reported by the health check.</summary>
-        public IReadOnlyDictionary<string, string>? Data { get; init; }
+        public IReadOnlyDictionary<string, string>? Data { get; private init; }
 
         /// <summary>Tags associated with this health check registration.</summary>
-        public IReadOnlyList<string>? Tags { get; init; }
+        public IReadOnlyList<string>? Tags { get; private init; }
     }
 }

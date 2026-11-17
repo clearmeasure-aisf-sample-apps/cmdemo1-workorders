@@ -1,59 +1,98 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Messaging;
+using ClearMeasure.Bootcamp.Core.Model.Events;
+using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.Core.Services.Impl;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UI.Shared;
 using FluentValidation;
-using Lamar;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.McpServer;
 
-public class McpServiceRegistry : ServiceRegistry
+/// <summary>
+/// Every service the standalone MCP server resolves, named explicitly on
+/// <see cref="Microsoft.Extensions.DependencyInjection"/> (no convention scanning), so the wiring reads top to bottom
+/// and works under Native AOT.
+/// </summary>
+public static class McpServiceRegistry
 {
-    public McpServiceRegistry()
+    /// <summary>Registers the MCP server's application services, bus, and request validators.</summary>
+    public static IServiceCollection AddMcpServerServices(this IServiceCollection services)
     {
-        this.AddScoped<DbContext, DataContext>();
-        AddBus();
-        AddApplicationServices();
-        ScanForHandlers();
-
-        // Register after scanning to override the auto-discovered DistributedBus
-        // which requires NServiceBus IMessageSession (not available in the MCP server)
-        this.AddTransient<IDistributedBus, NullDistributedBus>();
+        AddDataAccess(services);
+        AddBus(services);
+        AddApplicationServices(services);
+        services.AddRequestValidators();
+        return services;
     }
 
-    private void AddBus()
+    private static void AddDataAccess(IServiceCollection services)
     {
-        this.AddMediatR(cfg =>
+        services.AddScoped<DbContext, DataContext>();
+        // Handlers that take the concrete DataContext get their own instance, as Lamar's concrete-type resolution did.
+        services.AddTransient<DataContext>();
+        services.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
+    }
+
+    private static void AddBus(IServiceCollection services)
+    {
+        // Source-generated at build time: each handler is registered exactly once and Send is a type switch, with no
+        // reflection, so it works under Native AOT. Transient matches the old MediatR lifetimes (handlers take DbContext).
+        // Behaviors run in array order, outermost first: validation, then the feature-flag gate.
+        // Mediator's source generator reads these options from the call syntax, in the documented form with the
+        // explicit MediatorOptions parameter type.
+        // ReSharper disable once RedundantLambdaParameterType
+        services.AddMediator((MediatorOptions options) =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<McpServiceRegistry>();
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
+            // Outside the layer namespaces: the generated Mediator and its Internals namespace reference each other, which the namespace-cycle architecture rule would flag.
+            options.Namespace = "ClearMeasure.Bootcamp.Generated.McpServerMediator";
+            options.GenerateTypesAsInternal = true;
+            options.ServiceLifetime = ServiceLifetime.Transient;
+            options.Assemblies = [typeof(IBus), typeof(DataContext)];
+            options.PipelineBehaviors = [typeof(ValidationBehavior<,>), typeof(FeatureFlagBehavior<,>)];
         });
-        this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DataContext>());
-        this.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
+        services.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
     }
 
-    private void AddApplicationServices()
+    private static void AddApplicationServices(IServiceCollection services)
     {
-        this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
-        this.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
-        this.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddTransient<IWorkOrderNumberGenerator, WorkOrderNumberGenerator>();
+        services.AddTransient<IWorkOrderBuilder, WorkOrderBuilder>();
     }
 
-    private void ScanForHandlers() =>
-        Scan(scanner =>
-        {
-            scanner.WithDefaultConventions();
-            scanner.AssemblyContainingType<IBus>();
-            scanner.AssemblyContainingType<DataContext>();
-            scanner.AssemblyContainingType<WebServiceMessageValidator>();
-            scanner.Exclude(HttpEnvelopeValidationDeferral.IsDeferredValidator);
-            scanner.ConnectImplementationsToTypesClosing(typeof(IRequestHandler<,>));
-            scanner.ConnectImplementationsToTypesClosing(typeof(INotificationHandler<>));
-            scanner.ConnectImplementationsToTypesClosing(typeof(IValidator<>));
-        });
+    /// <summary>
+    /// The validators <see cref="ValidationBehavior{TRequest,TResponse}"/> runs for in-process requests. The create
+    /// commands in <see cref="HttpEnvelopeValidationDeferral"/> are validated on the HTTP envelope only (#1824).
+    /// UI.Server registers the same set.
+    /// </summary>
+    public static void AddRequestValidators(this IServiceCollection services)
+    {
+        services.AddTransient<IValidator<DeleteSearchViewCommand>, DeleteSearchViewCommandValidator>();
+        services.AddTransient<IValidator<EmployeeByUserNameQuery>, EmployeeByUserNameQueryValidator>();
+        services.AddTransient<IValidator<EmployeeGetAllQuery>, EmployeeGetAllQueryValidator>();
+        services.AddTransient<IValidator<HealthCheckRemotableRequest>, HealthCheckRemotableRequestValidator>();
+        services.AddTransient<IValidator<InProgressToAssignedCommand>, InProgressToAssignedCommandValidator>();
+        services.AddTransient<IValidator<RecentWorkOrdersQuery>, RecentWorkOrdersQueryValidator>();
+        services.AddTransient<IValidator<RemoveAttachmentCommand>, RemoveAttachmentCommandValidator>();
+        services.AddTransient<IValidator<SaveDraftCommand>, SaveDraftCommandValidator>();
+        services.AddTransient<IValidator<SavedSearchViewsQuery>, SavedSearchViewsQueryValidator>();
+        services.AddTransient<IValidator<SaveSearchViewCommand>, SaveSearchViewCommandValidator>();
+        services.AddTransient<IValidator<UserLoggedInEvent>, UserLoggedInEventValidator>();
+        services.AddTransient<IValidator<WebServiceMessage>, WebServiceMessageValidator>();
+        services.AddTransient<IValidator<WorkOrderAttachmentsQuery>, WorkOrderAttachmentsQueryValidator>();
+        services.AddTransient<IValidator<WorkOrderByNumberQuery>, WorkOrderByNumberQueryValidator>();
+        services.AddTransient<IValidator<WorkOrdersByNumbersQuery>, WorkOrdersByNumbersQueryValidator>();
+        services.AddTransient<IValidator<WorkOrderSearchSummaryQuery>, WorkOrderSearchSummaryQueryValidator>();
+        services.AddTransient<IValidator<WorkOrderSpecificationQuery>, WorkOrderSpecificationQueryValidator>();
+        services.AddTransient<IValidator<WorkOrderStatusHistoryQuery>, WorkOrderStatusHistoryQueryValidator>();
+    }
 }

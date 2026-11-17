@@ -4,7 +4,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.AcceptanceShards;
 
 /// <summary>
-/// Source-level checks that TeamsAndVendors, Buildings, AIAgents, Extensions and NServiceBus
+/// Source-level checks that TeamsAndVendors, Buildings, AIAgents and Extensions
 /// fixtures stay API-seeded and <see cref="NUnit.Framework.ParallelScope.All"/>.
 /// </summary>
 [TestFixture]
@@ -15,8 +15,7 @@ public class TeamsBuildingsAgentsFixtureIndependenceTests
         "src/AcceptanceTests/TeamsAndVendors/",
         "src/AcceptanceTests/Buildings/",
         "src/AcceptanceTests/AIAgents/",
-        "src/AcceptanceTests/Extensions/",
-        "src/AcceptanceTests/NServiceBus/"
+        "src/AcceptanceTests/Extensions/"
     ];
 
     public static IEnumerable<string> TargetFixturePaths()

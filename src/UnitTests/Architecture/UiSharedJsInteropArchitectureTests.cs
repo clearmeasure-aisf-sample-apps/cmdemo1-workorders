@@ -39,7 +39,7 @@ public class UiSharedJsInteropArchitectureTests
     }
 
     [Test]
-    public void JsModuleScriptAllowList_WhenFiveScriptClasses_IsExact()
+    public void JsModuleScriptAllowList_WhenFiveScriptClassesAndTheirModule_IsExact()
     {
         UiSharedConventionScan.IsJsModuleScriptAllowListed(
             "src/UI.Shared/Components/ClipboardScript.cs").ShouldBeTrue();
@@ -51,6 +51,8 @@ public class UiSharedJsInteropArchitectureTests
             "src/UI.Shared/Components/Search/SearchPageScript.cs").ShouldBeTrue();
         UiSharedConventionScan.IsJsModuleScriptAllowListed(
             "src/UI.Shared/Services/ThemeScript.cs").ShouldBeTrue();
+        UiSharedConventionScan.IsJsModuleScriptAllowListed(
+            "src/UI.Shared/Components/LazyJsModule.cs").ShouldBeTrue();
         UiSharedConventionScan.IsJsModuleScriptAllowListed(
             "src/UI.Shared/Components/FooScript.cs").ShouldBeFalse();
     }

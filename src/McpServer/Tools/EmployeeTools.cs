@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ModelContextProtocol.Server;
 
@@ -14,8 +13,7 @@ public class EmployeeTools
     public static async Task<string> ListEmployees(IBus bus)
     {
         var employees = await bus.Send(new EmployeeGetAllQuery());
-        return JsonSerializer.Serialize(employees.Select(FormatEmployee).ToArray(),
-            new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(employees.Select(EmployeeJson.From).ToArray(), McpJsonContext.Default.EmployeeJsonArray);
     }
 
     [McpServerTool(Name = "get-employee"), Description("Retrieves a single employee by username.")]
@@ -31,27 +29,11 @@ public class EmployeeTools
         try
         {
             var employee = await bus.Send(new EmployeeByUserNameQuery(username));
-            return JsonSerializer.Serialize(FormatEmployee(employee),
-                new JsonSerializerOptions { WriteIndented = true });
+            return JsonSerializer.Serialize(EmployeeJson.From(employee), McpJsonContext.Default.EmployeeJson);
         }
         catch (InvalidOperationException)
         {
             return $"No employee found with username '{username}'.";
         }
     }
-
-    private static object FormatEmployee(Employee emp) => new
-    {
-        emp.UserName,
-        emp.FirstName,
-        emp.MiddleName,
-        emp.LastName,
-        emp.EmailAddress,
-        Roles = emp.Roles.Select(r => new
-        {
-            r.Name,
-            r.CanCreateWorkOrder,
-            r.CanFulfillWorkOrder
-        }).ToArray()
-    };
 }

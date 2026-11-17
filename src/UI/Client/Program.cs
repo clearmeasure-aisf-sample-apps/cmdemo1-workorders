@@ -1,6 +1,4 @@
 using ClearMeasure.Bootcamp.UI.Client;
-using Lamar;
-using Lamar.Microsoft.DependencyInjection;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -18,10 +16,7 @@ builder.Services.AddSingleton<IHostEnvironment>(new WasmHostEnvironment(builder.
 builder.Services.AddAuthorizationCore();
 builder.Services.AddSpeechSynthesis();
 builder.Services.AddSpeechRecognition();
-builder.ConfigureContainer<ServiceRegistry>(
-    new LamarServiceProviderFactory(), registry =>
-        registry.IncludeRegistry<UIClientServiceRegistry>());
-
+builder.Services.AddUiClientServices();
 
 var app = builder.Build();
 await app.Services.GetRequiredService<HealthCheckService>().CheckHealthAsync();

@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.Core.Model.StateCommands;
 
@@ -6,4 +6,4 @@ namespace ClearMeasure.Bootcamp.Core.Model.StateCommands;
 /// Applies an AI-reformatted title and description to an existing work order by number.
 /// Truncation of the description is a <see cref="WorkOrder"/> behavior.
 /// </summary>
-public record ReformatWorkOrderCommand(string Number, string Title, string Description) : IRequest<WorkOrder?>;
+public record ReformatWorkOrderCommand(string Number, string Title, string Description) : IRequest<WorkOrder?>, IBusMessage;

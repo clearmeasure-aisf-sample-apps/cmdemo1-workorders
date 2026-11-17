@@ -1,0 +1,15 @@
+{
+  "total": 682,
+  "bySource": {
+    "ClearMeasure.Bootcamp.DataAccess": 4,
+    "FluentValidation.Validators": 1,
+    "Microsoft.Data": 45,
+    "Microsoft.EntityFrameworkCore": 616,
+    "Microsoft.Extensions": 1,
+    "Serilog.Capturing": 1,
+    "System": 2,
+    "System.Configuration": 5,
+    "System.Reflection": 4,
+    "System.SharedTypeExtensions": 3
+  }
+}

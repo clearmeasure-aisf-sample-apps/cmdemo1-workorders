@@ -1,0 +1,14 @@
+# Build context of Dockerfile.aot only (BuildKit reads <Dockerfile>.dockerignore); the JIT Dockerfile is unaffected.
+**/bin/
+**/obj/
+**/node_modules/
+.git/
+build/
+built/
+video/
+images/
+codebase-audit-report/
+crap-metrics/
+experiments/
+labs/
+qodana.sarif.json

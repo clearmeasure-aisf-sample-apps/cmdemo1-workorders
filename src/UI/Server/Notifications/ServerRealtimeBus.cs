@@ -1,11 +1,11 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.UI.Shared;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UI.Server.Notifications;
 
 /// <summary>
-/// After MediatR publishes, pushes <see cref="IRemotableEvent"/> to WebSocket subscribers.
+/// After the mediator publishes, pushes <see cref="IRemotableEvent"/> to WebSocket subscribers.
 /// </summary>
 public sealed class ServerRealtimeBus(IMediator mediator, IRealtimeNotificationHub hub) : Bus(mediator)
 {

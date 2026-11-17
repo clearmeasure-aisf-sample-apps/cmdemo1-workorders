@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Shared;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 

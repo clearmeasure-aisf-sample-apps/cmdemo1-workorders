@@ -167,9 +167,11 @@ internal static class UiSharedConventionScan
             "Owns theme.js get/set preference and dispose on disconnect.",
         ["src/UI.Shared/Components/ClipboardScript.cs"] =
             "Owns clipboard.js copy and dispose on disconnect.",
+        ["src/UI.Shared/Components/LazyJsModule.cs"] =
+            "Owns the lazy import and best-effort dispose that every module script class shares.",
     };
 
-    /// <summary>True when <paramref name="relative"/> is one of the five module script classes.</summary>
+    /// <summary>True when <paramref name="relative"/> is one of the five module script classes or their shared <c>LazyJsModule</c>.</summary>
     internal static bool IsJsModuleScriptAllowListed(string relative) =>
         JsModuleScriptAllowList.ContainsKey(relative.Replace('\\', '/'));
 

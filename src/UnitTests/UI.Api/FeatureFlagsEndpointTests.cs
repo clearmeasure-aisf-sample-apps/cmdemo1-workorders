@@ -1,0 +1,76 @@
+using System.Text.Json;
+using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UI.Api;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
+using Mediator;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Shouldly;
+
+namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
+
+[TestFixture]
+public class FeatureFlagsEndpointTests
+{
+    private static readonly Dictionary<string, bool> RuntimeFlags = new()
+    {
+        [FeatureFlagNames.ShowPriorityBadges] = true,
+        [FeatureFlagNames.BuildingManagement] = true,
+        [FeatureFlagNames.VendorManagement] = false
+    };
+
+    [Test]
+    public async Task Get_Should_ReturnQueryFlags_When_Called()
+    {
+        var bus = new StubBus(RuntimeFlags);
+        var endpoint = CreateEndpoint(bus);
+
+        var result = await endpoint.Get();
+
+        var content = result.ShouldBeContentResult();
+        content.ContentType.ShouldNotBeNull();
+        content.ContentType!.ShouldContain("application/json");
+        var payload = JsonSerializer.Deserialize<Dictionary<string, bool>>(
+            content.Content!,
+            ConditionalGetEtag.JsonSerializerOptions);
+        payload.ShouldNotBeNull();
+        payload.ShouldBe(RuntimeFlags, ignoreOrder: true);
+        bus.Requests.Single().ShouldBeOfType<FeatureFlagsQuery>();
+    }
+
+    [Test]
+    public async Task Get_Should_SerializeFlagKeysAsCatalogNames_When_UsingWebJsonDefaults()
+    {
+        var endpoint = CreateEndpoint(new StubBus(RuntimeFlags));
+
+        var result = await endpoint.Get();
+
+        var content = result.ShouldBeContentResult();
+        using var doc = JsonDocument.Parse(content.Content!);
+        RuntimeFlags.Keys.ShouldBeSubsetOf(doc.RootElement.EnumerateObject().Select(property => property.Name));
+    }
+
+    private static FeatureFlagsUnderTest CreateEndpoint(IBus bus) => new(bus);
+
+    private sealed class FeatureFlagsUnderTest(IBus bus)
+    {
+        public Task<IResult> Get() => FeatureFlagsEndpoint.Get(bus);
+    }
+
+    private sealed class StubBus(IReadOnlyDictionary<string, bool> flags) : IBus
+    {
+        public List<object> Requests { get; } = [];
+
+        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request)
+        {
+            Requests.Add(request);
+            return Task.FromResult((TResponse)(object)new FeatureFlagsResult(flags));
+        }
+
+        public Task<object?> Send(object request) => throw new NotSupportedException();
+
+        public Task Publish(INotification notification) => Task.CompletedTask;
+    }
+}

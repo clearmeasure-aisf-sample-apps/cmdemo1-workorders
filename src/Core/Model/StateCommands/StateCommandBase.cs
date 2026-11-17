@@ -1,4 +1,3 @@
-using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Services;
 
 namespace ClearMeasure.Bootcamp.Core.Model.StateCommands;
@@ -18,8 +17,6 @@ public abstract record StateCommandBase(WorkOrder WorkOrder, Employee CurrentUse
         GetEndStatus() == WorkOrderStatus.Cancelled
             ? CommandRole.Destructive
             : CommandRole.Secondary;
-
-    public IStateTransitionEvent? StateTransitionEvent { get; protected set; }
 
     public bool IsValid()
     {

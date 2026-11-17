@@ -11,7 +11,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
 
 /// <summary>
-/// Deterministic gates for the single MediatR validation pipeline (#1804): no empty
+/// Deterministic gates for the single mediator validation pipeline (#1804): no empty
 /// <see cref="AbstractValidator{T}"/> markers, HTTP allow-list is remotable markers matching
 /// master's set (LLM config/chat queries are not remotable), and production code does not
 /// <c>new</c> a FluentValidation <see cref="AbstractValidator{T}"/> outside the pipeline.
@@ -95,7 +95,7 @@ public class ValidationPipelineArchitectureTests
         resolver.ShouldContain("HttpEnvelopeValidatorSet");
         resolver.ShouldNotContain("new CreateVendorCommandValidator");
         set.ShouldContain("HttpEnvelopeValidationDeferral");
-        set.ShouldContain("ActivatorUtilities.CreateInstance");
+        set.ShouldContain("entry.Create()");
         set.ShouldNotContain("new CreateVendorCommandValidator");
         set.ShouldNotContain("new CreateTeamCommandValidator");
         set.ShouldNotContain("new CreateDatedWorkOrdersCommandValidator");

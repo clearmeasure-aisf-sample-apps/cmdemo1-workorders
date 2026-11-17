@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Queries;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UI.Server.Handlers;
 
@@ -8,6 +8,6 @@ namespace ClearMeasure.Bootcamp.UI.Server.Handlers;
 /// </summary>
 public class DeploymentIdentityQueryHandler : IRequestHandler<DeploymentIdentityQuery, DeploymentIdentity>
 {
-    public Task<DeploymentIdentity> Handle(DeploymentIdentityQuery request, CancellationToken cancellationToken) =>
-        Task.FromResult(DeploymentIdentity.FromProcess());
+    public ValueTask<DeploymentIdentity> Handle(DeploymentIdentityQuery request, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(DeploymentIdentity.FromProcess());
 }

@@ -7,8 +7,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 [TestFixture]
 public class DiagnosticEndpointAccessWebTests
 {
-    [TestCase("/_lamar/services")]
-    [TestCase("/_lamar/scanning")]
+    [TestCase("/_diagnostics/services")]
     public async Task Should_Return401_When_ApiKeyEnabledAndAnonymous(string path)
     {
         await using var factory = new ApiKeyProtectedWebApplicationFactory();
@@ -30,8 +29,7 @@ public class DiagnosticEndpointAccessWebTests
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
-    [TestCase("/_lamar/services")]
-    [TestCase("/_lamar/scanning")]
+    [TestCase("/_diagnostics/services")]
     public async Task Should_Return200_When_ApiKeyEnabledAndAuthorized(string path)
     {
         await using var factory = new ApiKeyProtectedWebApplicationFactory();
@@ -61,8 +59,7 @@ public class DiagnosticEndpointAccessWebTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    [TestCase("/_lamar/services")]
-    [TestCase("/_lamar/scanning")]
+    [TestCase("/_diagnostics/services")]
     public async Task Should_Return404_When_ApiKeyOffOutsideDevelopmentAndTdd(string path)
     {
         await using var factory = new DiagnosticsEndpointAccessWebApplicationFactory("Testing");
@@ -84,8 +81,7 @@ public class DiagnosticEndpointAccessWebTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [TestCase("/_lamar/services")]
-    [TestCase("/_lamar/scanning")]
+    [TestCase("/_diagnostics/services")]
     public async Task Should_Return200_When_ApiKeyOffInDevelopment(string path)
     {
         await using var factory = new DiagnosticsEndpointAccessWebApplicationFactory("Development");
@@ -107,8 +103,7 @@ public class DiagnosticEndpointAccessWebTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
-    [TestCase("/_lamar/services")]
-    [TestCase("/_lamar/scanning")]
+    [TestCase("/_diagnostics/services")]
     public async Task Should_Return200_When_ApiKeyOffInTdd(string path)
     {
         await using var factory = new DiagnosticsEndpointAccessWebApplicationFactory("tdd");

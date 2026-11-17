@@ -1,6 +1,7 @@
 using System.Reflection;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Server.BuildFacts;
+using ClearMeasure.Bootcamp.UI.Server.Endpoints;
 using ClearMeasure.Bootcamp.UI.Server.Grpc;
 using ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
@@ -48,13 +49,9 @@ public static class ServerPipeline
                 ExceptionHandler = context => ProblemDetailsExceptionHandler.HandleAsync(context, app.Environment)
             }));
 
-        if (app.Environment.IsDevelopment())
+        if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
         {
-            app.UseWebAssemblyDebugging();
-        }
-        else if (!app.Environment.IsEnvironment("Testing"))
-        {
-            app.UseExceptionHandler("/Error");
+            app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = ErrorPage.WriteAsync });
             app.UseHsts();
         }
     }
@@ -102,10 +99,11 @@ public static class ServerPipeline
 
     private static void MapApplicationEndpoints(WebApplication app)
     {
-        app.MapRazorPages();
-        var apiControllers = app.MapControllers();
-        ApiControllerMapping.ApplyRequestTimeout(app, apiControllers);
-        ApiControllerMapping.ApplyCorsWhenActive(app, apiControllers);
+        var api = app.MapGroup("");
+        api.MapApiEndpoints();
+        SingleApiEndpoint.Map(api);
+        ApiEndpointConventions.ApplyRequestTimeout(app, api);
+        ApiEndpointConventions.ApplyCorsWhenActive(app, api);
         app.MapTestSupport();
         app.MapGrpcService<WorkOrdersGrpcService>();
         app.MapMcp("/mcp");
@@ -120,7 +118,7 @@ public static class ServerPipeline
             NeedsRebootHealthCheck.NeedsReboot = value;
             return Results.Text($"NeedsReboot set to {value}");
         });
-        app.MapGet("/_version", () => Results.Json(new { version = InformationalVersion() }))
+        app.MapGet("/_version", () => TypedResults.Json(new ServerVersion(InformationalVersion()), ServerJsonContext.Default.ServerVersion))
             .CacheOutput(OutputCachePolicyNames.VersionMetadata);
         app.MapLiveTelemetry();
         app.MapBuildFacts();

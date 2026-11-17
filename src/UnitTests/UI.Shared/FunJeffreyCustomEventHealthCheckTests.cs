@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Diagnostics;
 using ClearMeasure.Bootcamp.UI.Shared;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -35,7 +36,7 @@ public class FunJeffreyCustomEventHealthCheckTests
             .Single(e => e.Name == FunJeffreyCustomEventHealthCheck.EventName);
         var tags = healthEvent.Tags.ToDictionary(t => t.Key, t => t.Value);
         tags["time minute of day"].ShouldBe(37);
-        tags["time"].ShouldBe(now.ToString());
+        tags["time"].ShouldBe(now.ToString(CultureInfo.InvariantCulture));
     }
 
     [Test]

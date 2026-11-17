@@ -269,11 +269,6 @@
       "seconds": 0.1
     },
     {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.NServiceBus.TracerBulletTests",
-      "tests": 1,
-      "seconds": 2.2
-    },
-    {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.TestUsers.AcceptanceTestEmployeesTests",
       "tests": 4,
       "seconds": 80.0

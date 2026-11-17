@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.UI.Client.HealthChecks;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;

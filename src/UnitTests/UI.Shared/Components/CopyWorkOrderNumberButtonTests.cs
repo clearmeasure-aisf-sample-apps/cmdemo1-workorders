@@ -15,7 +15,7 @@ public class CopyWorkOrderNumberButtonTests
     {
         await using var ctx = ComponentContextBuilder.WithStubBuses();
         var clipboard = ctx.JSInterop.SetupModule(ClipboardModule);
-        clipboard.Setup<object>("copyToClipboard", _ => true).SetResult(new object());
+        clipboard.SetupVoid("copyToClipboard", _ => true).SetVoidResult();
         var button = ctx.Render<CopyWorkOrderNumberButton>(parameters => parameters.Add(p => p.Number, "WO-42"));
 
         var clicking = button.Find($"[data-testid='{nameof(WorkOrderManage.Elements.CopyWorkOrderNumber)}']").ClickAsync(new());

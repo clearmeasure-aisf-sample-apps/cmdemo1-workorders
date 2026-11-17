@@ -42,6 +42,28 @@ public class SlaHealth
     }
 
     /// <summary>
+    /// SLA health for <paramref name="currentMonth"/> and the month before it, from completed work orders: each order counts
+    /// in the month its church completion date falls in, and orders outside both months are ignored. The JIT handler reads
+    /// only the completions in that window; the Native AOT handler passes every completed order in its snapshot.
+    /// </summary>
+    public static SlaHealth ForMonths(IEnumerable<WorkOrder> completed, ChurchMonth currentMonth)
+    {
+        var orders = completed.ToList();
+        var (currentPercentage, currentCount) = CalculateOnTimePercentage(CompletedIn(orders, currentMonth));
+        var (lastPercentage, lastCount) = CalculateOnTimePercentage(CompletedIn(orders, currentMonth.Previous()));
+        return new SlaHealth
+        {
+            CurrentMonthPercentage = currentPercentage,
+            LastMonthPercentage = lastPercentage,
+            CurrentMonthOrderCount = currentCount,
+            LastMonthOrderCount = lastCount
+        };
+    }
+
+    private static IEnumerable<WorkOrder> CompletedIn(IEnumerable<WorkOrder> orders, ChurchMonth month) =>
+        orders.Where(wo => wo.CompletedDate is { } completedUtc && month.Contains(ChurchDate(completedUtc)));
+
+    /// <summary>
     /// Computes the on-time percentage (0–100, rounded to a whole number) for the given orders.
     /// Orders without a DueDate or CompletedDate are excluded. On time means the church-local completion date is on or before the DueDate.
     /// Returns a null percentage when no qualifying orders exist.

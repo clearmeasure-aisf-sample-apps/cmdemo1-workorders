@@ -10,13 +10,16 @@ public sealed class NotificationsPanelScript(IJSRuntime js) : IAsyncDisposable
 {
     public const string ModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/notificationsPanel.js";
 
-    private IJSObjectReference? _module;
+    private readonly LazyJsModule _module = new(js, ModulePath);
 
     public async Task SetupEscapeHandlerAsync(DotNetObjectReference<NotificationsPanel> dotNetRef)
     {
         try
         {
-            var module = await ModuleAsync();
+            var module = await _module.GetAsync();
+            if (module is null)
+                return;
+
             await module.InvokeVoidAsync("setupEscapeHandler", dotNetRef);
         }
         catch (JSDisconnectedException)
@@ -37,24 +40,5 @@ public sealed class NotificationsPanelScript(IJSRuntime js) : IAsyncDisposable
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_module is null)
-            return;
-
-        try
-        {
-            await _module.InvokeVoidAsync("cleanupEscapeHandler");
-            await _module.DisposeAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // Circuit gone during teardown; escape cleanup is best-effort.
-        }
-
-        _module = null;
-    }
-
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+    public ValueTask DisposeAsync() => _module.DisposeAsync(cleanupFunction: "cleanupEscapeHandler");
 }

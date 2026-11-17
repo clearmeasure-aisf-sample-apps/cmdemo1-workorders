@@ -94,7 +94,7 @@ internal static class WorkOrderQueryFilters
     {
         if (!string.IsNullOrWhiteSpace(room))
         {
-            var trimmed = room.Trim().ToLower();
+            var trimmed = room.Trim().ToLowerInvariant();
             return query.Where(wo => wo.RoomNumber != null && wo.RoomNumber.Trim().ToLower() == trimmed);
         }
 
@@ -127,7 +127,7 @@ internal static class WorkOrderQueryFilters
             return query;
         }
 
-        var q = searchText.Trim().ToLower();
+        var q = searchText.Trim().ToLowerInvariant();
         return query.Where(WorkOrderSearchText.Matches(q));
     }
 }

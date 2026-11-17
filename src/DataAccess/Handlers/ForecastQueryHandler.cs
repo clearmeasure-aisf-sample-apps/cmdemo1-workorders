@@ -1,14 +1,14 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
 public class ForecastQueryHandler(TimeProvider timeProvider) : IRequestHandler<ForecastQuery, WeatherForecast[]>
 {
-    public Task<WeatherForecast[]> Handle(ForecastQuery request, CancellationToken cancellationToken)
+    public ValueTask<WeatherForecast[]> Handle(ForecastQuery request, CancellationToken cancellationToken)
     {
-        return Task.FromResult(new WeatherForecastData(timeProvider).GetAll());
+        return ValueTask.FromResult(new WeatherForecastData(timeProvider).GetAll());
     }
 
     private class WeatherForecastData

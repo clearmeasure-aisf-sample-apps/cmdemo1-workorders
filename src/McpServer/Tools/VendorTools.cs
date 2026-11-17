@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using FluentValidation;
 using ModelContextProtocol.Server;
@@ -15,8 +14,7 @@ public class VendorTools
     public static async Task<string> ListVendors(IBus bus)
     {
         var vendors = await bus.Send(new VendorsQuery());
-        return JsonSerializer.Serialize(vendors.Select(FormatVendor).ToArray(),
-            new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(vendors.Select(VendorJson.From).ToArray(), McpJsonContext.Default.VendorJsonArray);
     }
 
     [McpServerTool(Name = "create-vendor"), Description("Creates a new vendor.")]
@@ -44,17 +42,6 @@ public class VendorTools
 
     private static string FormatCreated(CreateVendorResult result) =>
         JsonSerializer.Serialize(
-            new { result.Succeeded, result.Message, result.Id },
-            new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-
-    private static object FormatVendor(Vendor vendor) => new
-    {
-        vendor.Id,
-        vendor.Name,
-        vendor.Trade,
-        vendor.ContactName,
-        vendor.EmailAddress,
-        vendor.PhoneNumber,
-        vendor.IsActive
-    };
+            new CreatedJson(result.Succeeded, result.Message, result.Id),
+            McpCamelCaseJsonContext.Default.CreatedJson);
 }

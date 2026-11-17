@@ -22,7 +22,7 @@ public static class TestSupportEndpoints
     {
         var testSupport = TestSupportOptions.FromConfiguration(configuration);
         var useStub = configuration.GetValue("AI_UseStubChatClient", false) || testSupport.Enabled;
-        return Results.Json(new TestSupportChatClientStatus(useStub));
+        return TypedResults.Json(new TestSupportChatClientStatus(useStub), ServerJsonContext.Default.TestSupportChatClientStatus);
     }
 
     private static async Task<IResult> CreateEmployeeAsync(
@@ -36,7 +36,7 @@ public static class TestSupportEndpoints
         }
 
         var employee = await data.CreateEmployeeAsync(ToEmployeeCreate(request), cancellationToken);
-        return Results.Json(employee.ToApiShape());
+        return TypedResults.Json(employee, ServerJsonContext.Default.TestSupportEmployeeDto);
     }
 
     private static async Task<IResult> CreateWorkOrderAsync(
@@ -52,7 +52,7 @@ public static class TestSupportEndpoints
         }
 
         var workOrder = await data.CreateWorkOrderAsync(ToWorkOrderCreate(request), cancellationToken);
-        return Results.Json(workOrder.ToApiShape());
+        return TypedResults.Json(workOrder, ServerJsonContext.Default.TestSupportWorkOrderDto);
     }
 
     private static TestSupportEmployeeCreate ToEmployeeCreate(CreateEmployeeRequest request) => new()
@@ -98,6 +98,6 @@ public static class TestSupportEndpoints
             ? $"{request.Scheme}://{request.Host}"
             : origin.Trim().TrimEnd('/');
         var state = PlaywrightStorageStateFactory.ForUser(userName.Trim(), resolvedOrigin);
-        return Results.Json(PlaywrightStorageStateFactory.ToSerializable(state));
+        return TypedResults.Json(state, ServerJsonContext.Default.PlaywrightStorageState);
     }
 }

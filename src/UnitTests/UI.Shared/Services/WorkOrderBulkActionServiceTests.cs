@@ -6,7 +6,7 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
-using MediatR;
+using Mediator;
 using Palermo.BlazorMvc;
 using Shouldly;
 

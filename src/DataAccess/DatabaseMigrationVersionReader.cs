@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -22,13 +23,48 @@ public sealed class DatabaseMigrationVersionReader(
             var sql = UsesSqlite()
                 ? "SELECT ScriptName AS Value FROM SchemaVersions"
                 : "SELECT ScriptName AS Value FROM dbo.SchemaVersions";
-            var names = await dbContext.Database.SqlQueryRaw<string>(sql).ToListAsync(cancellationToken);
+            var names = await ReadScriptNamesAsync(sql, cancellationToken);
             return HighestScriptNumber(names);
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Could not read the DbUp schema journal");
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Reads the journal through the context's own connection with a plain command: a raw SQL query is not something
+    /// EF can precompile for Native AOT, and the journal is not part of the model.
+    /// </summary>
+    private async Task<List<string>> ReadScriptNamesAsync(string sql, CancellationToken cancellationToken)
+    {
+        var connection = dbContext.Database.GetDbConnection();
+        var openedHere = connection.State != ConnectionState.Open;
+        if (openedHere)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = sql;
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            var names = new List<string>();
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                names.Add(reader.GetString(0));
+            }
+
+            return names;
+        }
+        finally
+        {
+            if (openedHere)
+            {
+                await connection.CloseAsync();
+            }
         }
     }
 

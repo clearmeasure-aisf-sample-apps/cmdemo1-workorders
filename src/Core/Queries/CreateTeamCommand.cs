@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 
 // ReSharper disable NotAccessedPositionalProperty.Global -- Message and Id are read by the team UI (later item) and by tests
 namespace ClearMeasure.Bootcamp.Core.Queries;

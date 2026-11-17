@@ -6,8 +6,9 @@ namespace ClearMeasure.Bootcamp.UI.Server.Middleware;
 /// </summary>
 internal sealed record IdempotentResponseSnapshot(int StatusCode, Dictionary<string, string[]> Headers, byte[] Body)
 {
-    private static readonly HashSet<string> HopByHopHeaderNames = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> HopByHopHeaderNames =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "Connection",
         "Keep-Alive",
         "Proxy-Authenticate",
@@ -16,7 +17,7 @@ internal sealed record IdempotentResponseSnapshot(int StatusCode, Dictionary<str
         "Trailer",
         "Transfer-Encoding",
         "Upgrade"
-    };
+    ];
 
     public static IdempotentResponseSnapshot Capture(HttpResponse response, byte[] body) =>
         new(response.StatusCode,

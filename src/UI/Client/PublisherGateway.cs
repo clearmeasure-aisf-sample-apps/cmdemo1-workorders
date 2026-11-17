@@ -1,5 +1,3 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.UI.Shared;
@@ -35,7 +33,7 @@ public class PublisherGateway(HttpClient httpClient, IConfiguration? configurati
         // Construct then assign Content so a Content factory throw cannot skip Dispose
         // (Qodana UsingStatementResourceInitialization).
         using var request = new HttpRequestMessage(HttpMethod.Post, ApiRelativeUrl);
-        request.Content = JsonContent.Create(message);
+        request.Content = JsonContent.Create(message, RemotableMessageJsonContext.Default.WebServiceMessage);
         var key = configuration?["ApiKeyAuthentication:ValidationKey"];
         if (!string.IsNullOrWhiteSpace(key))
         {
@@ -51,6 +49,6 @@ public class PublisherGateway(HttpClient httpClient, IConfiguration? configurati
                 $"Remoting call failed ({(int)result.StatusCode} {result.ReasonPhrase}).");
         }
 
-        return JsonSerializer.Deserialize<WebServiceMessage>(json);
+        return WebServiceMessage.FromJson(json);
     }
 }

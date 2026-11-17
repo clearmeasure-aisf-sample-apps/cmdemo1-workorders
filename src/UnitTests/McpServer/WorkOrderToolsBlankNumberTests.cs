@@ -3,7 +3,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
-using MediatR;
+using Mediator;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.McpServer;

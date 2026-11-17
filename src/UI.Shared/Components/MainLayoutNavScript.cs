@@ -10,7 +10,7 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
 {
     public const string ModulePath = "./_content/ClearMeasure.Bootcamp.UI.Shared/js/mainLayoutNav.js";
 
-    private IJSObjectReference? _module;
+    private readonly LazyJsModule _module = new(js, ModulePath);
     private IJSObjectReference? _navToggleHelper;
     private IJSObjectReference? _globalSearchShortcut;
 
@@ -19,8 +19,8 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
     {
         try
         {
-            var module = await ModuleAsync();
-            if (isDisposed())
+            var module = await _module.GetAsync();
+            if (module is null || isDisposed())
                 return;
 
             _navToggleHelper = await module.InvokeAsync<IJSObjectReference>("initNavToggle", dotNetRef, mediaQuery);
@@ -35,7 +35,10 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
     {
         try
         {
-            var module = await ModuleAsync();
+            var module = await _module.GetAsync();
+            if (module is null)
+                return;
+
             _globalSearchShortcut = await module.InvokeAsync<IJSObjectReference>("initGlobalSearchShortcut", inputId);
         }
         catch (JSDisconnectedException)
@@ -62,23 +65,10 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
         _navToggleHelper = null;
         await DisposeHelperAsync(_globalSearchShortcut);
         _globalSearchShortcut = null;
-
-        if (_module is not null)
-        {
-            try
-            {
-                await _module.DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-                // Circuit gone during teardown; module dispose is best-effort.
-            }
-
-            _module = null;
-        }
+        await _module.DisposeAsync();
     }
 
-    private async Task DisposeHelperAsync(IJSObjectReference? helper)
+    private static async Task DisposeHelperAsync(IJSObjectReference? helper)
     {
         if (helper is null)
             return;
@@ -93,7 +83,4 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
             // Circuit gone during teardown; helper dispose is best-effort.
         }
     }
-
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
 }

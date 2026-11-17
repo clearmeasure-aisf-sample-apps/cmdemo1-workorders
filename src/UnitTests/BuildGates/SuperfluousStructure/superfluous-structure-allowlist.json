@@ -1,5 +1,10 @@
 {
-  "singleImplementationInterfaces": [],
+  "singleImplementationInterfaces": [
+    {
+      "id": "ClearMeasure.Bootcamp.Core.IRemotableEvent",
+      "reason": "Marker the remotable bus routes on: an event that crosses to the server. It classifies messages; it does not abstract an implementation, so one implementer is expected."
+    }
+  ],
   "singleSubclassAbstractClasses": [],
   "passThroughClasses": [],
   "singleFileFolders": [

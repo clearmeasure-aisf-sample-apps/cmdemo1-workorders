@@ -90,8 +90,8 @@ else
 
     private List<EmployeeWorkLoadSummary> Sorted(IEnumerable<EmployeeWorkLoadSummary> rows) => (_sortColumn, _sortAscending) switch
     {
-        (SortColumn.Name, true) => rows.OrderBy(r => r.Employee.LastName).ThenBy(r => r.Employee.FirstName).ToList(),
-        (SortColumn.Name, false) => rows.OrderByDescending(r => r.Employee.LastName).ThenByDescending(r => r.Employee.FirstName).ToList(),
+        (SortColumn.Name, true) => rows.OrderBy(r => r.Employee.LastName, StringComparer.CurrentCulture).ThenBy(r => r.Employee.FirstName, StringComparer.CurrentCulture).ToList(),
+        (SortColumn.Name, false) => rows.OrderByDescending(r => r.Employee.LastName, StringComparer.CurrentCulture).ThenByDescending(r => r.Employee.FirstName, StringComparer.CurrentCulture).ToList(),
         (SortColumn.OpenLoad, true) => rows.OrderBy(r => r.Load.AssignedAndOpen).ToList(),
         _ => rows.OrderByDescending(r => r.Load.AssignedAndOpen).ToList()
     };

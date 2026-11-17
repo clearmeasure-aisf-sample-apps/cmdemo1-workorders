@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Shouldly;
 
@@ -13,7 +14,7 @@ public class LoginLinkBlinkStyleTests
 
         var trough = Regex.Match(css, @"50%\s*\{[^}]*opacity:\s*(?<opacity>[\d.]+)");
         trough.Success.ShouldBeTrue("Expected a 50% keyframe declaring opacity");
-        double.Parse(trough.Groups["opacity"].Value).ShouldBe(1);
+        double.Parse(trough.Groups["opacity"].Value, CultureInfo.InvariantCulture).ShouldBe(1);
 
         css.ShouldContain("color: var(--login-link-bright)");
         css.ShouldContain("color: var(--login-link-dim)");
@@ -26,7 +27,7 @@ public class LoginLinkBlinkStyleTests
 
         foreach (Match match in Regex.Matches(css, @"opacity:\s*(?<opacity>[\d.]+)"))
         {
-            double.Parse(match.Groups["opacity"].Value).ShouldBeGreaterThanOrEqualTo(0.55);
+            double.Parse(match.Groups["opacity"].Value, CultureInfo.InvariantCulture).ShouldBeGreaterThanOrEqualTo(0.55);
         }
     }
 

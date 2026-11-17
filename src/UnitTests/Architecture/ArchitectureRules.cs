@@ -5,7 +5,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
 /// <summary>
 /// Deterministic architecture checks for the teaching solution.
 /// Core references no other solution project. UI projects do not reference DataAccess
-/// beyond the shrinking allowlist. MediatR handler types end in <c>Handler</c>.
+/// beyond the shrinking allowlist. mediator handler types end in <c>Handler</c>.
 /// A source file declares at most one public top-level type. A file's namespace
 /// matches its project root namespace plus its folder path.
 /// </summary>

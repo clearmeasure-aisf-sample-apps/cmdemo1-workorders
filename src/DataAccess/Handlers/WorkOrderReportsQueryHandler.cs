@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -18,7 +18,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
     private const int CompletedWindowDays = 30;
     private const int WeeksToShow = 8;
 
-    public async Task<WorkOrderReportsData> Handle(WorkOrderReportsQuery request,
+    public async ValueTask<WorkOrderReportsData> Handle(WorkOrderReportsQuery request,
         CancellationToken cancellationToken = default)
     {
         var orders = context.Set<WorkOrder>().AsNoTracking();
@@ -49,7 +49,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
         // Group in memory because Status uses a value converter
         var statusGroups = statuses
             .GroupBy(s => s.Key)
-            .OrderBy(g => g.Key)
+            .OrderBy(g => g.Key, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.Count());
 
         foreach (var (key, count) in statusGroups)
@@ -68,7 +68,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
         // Group in memory because Priority is an enum value converter
         var priorityGroups = priorities
             .GroupBy(p => p.ToString())
-            .OrderBy(g => g.Key)
+            .OrderBy(g => g.Key, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.Count());
 
         foreach (var (key, count) in priorityGroups)
@@ -87,7 +87,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
 
         var buildingGroups = buildings
             .GroupBy(b => b!)
-            .OrderBy(g => g.Key)
+            .OrderBy(g => g.Key, StringComparer.CurrentCulture)
             .ToDictionary(g => g.Key, g => g.Count());
 
         foreach (var (building, count) in buildingGroups)

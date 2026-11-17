@@ -23,4 +23,4 @@ jobs:
           global-json-file: global.json
       - run: dotnet restore src/ChurchBulletin.sln
       - run: dotnet build src/AcceptanceTests --configuration Debug
-      - run: pwsh src/AcceptanceTests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+      - run: pwsh src/AcceptanceTests/bin/Debug/net11.0/playwright.ps1 install --with-deps chromium

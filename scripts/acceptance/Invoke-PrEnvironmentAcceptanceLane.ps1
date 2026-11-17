@@ -51,7 +51,6 @@ if ([string]::IsNullOrWhiteSpace($ResultsDirectory)) {
 
 $env:ApplicationBaseUrl = $ApplicationBaseUrl.TrimEnd('/')
 $env:StartLocalServer = "false"
-$env:StartWorker = "false"
 
 if ($Lane -eq "Parallel") {
     if ($ShardNumber -lt 1 -or $ShardNumber -gt $ShardCount) {

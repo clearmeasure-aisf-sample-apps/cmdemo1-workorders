@@ -9,7 +9,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.WorkOrderSearch;
 public sealed class StubStatusFilteredBus(WorkOrder matching, WorkOrder other) : StubBus
 {
     /// <inheritdoc />
-    public override async Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request)
+    public override async Task<TResponse> Send<TResponse>(Mediator.IRequest<TResponse> request)
     {
         if (request is not WorkOrderSpecificationQuery specification)
         {

@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -11,25 +11,15 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// Computes SLA health (on-time completion percentage) for the current month and last month.
 /// Only completions whose church date falls in those two months are read, as due date and
 /// completed date. SLA = (on-time count / total count) * 100, where on-time means the church
-/// completion date is on or before the due date.
+/// completion date is on or before the due date. The Native AOT builds use <c>AotSlaHealthQueryHandler</c> instead.
 /// </summary>
 public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRequestHandler<SlaHealthQuery, SlaHealth>
 {
-    public async Task<SlaHealth> Handle(SlaHealthQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<SlaHealth> Handle(SlaHealthQuery request, CancellationToken cancellationToken = default)
     {
         var currentMonth = ChurchMonth.Containing(ChurchTimeZone.Today(time));
-        var lastMonth = currentMonth.Previous();
-        var orders = await CompletedWithDueDateAsync(lastMonth, currentMonth, cancellationToken);
-        var currentMonthData = ComputeMonthSla(orders, currentMonth);
-        var lastMonthData = ComputeMonthSla(orders, lastMonth);
-
-        return new SlaHealth
-        {
-            CurrentMonthPercentage = currentMonthData.Percentage,
-            LastMonthPercentage = lastMonthData.Percentage,
-            CurrentMonthOrderCount = currentMonthData.TotalCount,
-            LastMonthOrderCount = lastMonthData.TotalCount
-        };
+        var orders = await CompletedWithDueDateAsync(currentMonth.Previous(), currentMonth, cancellationToken);
+        return SlaHealth.ForMonths(orders, currentMonth);
     }
 
     /// <summary>
@@ -42,15 +32,17 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         CancellationToken cancellationToken)
     {
         var (windowStart, windowEnd) = SlaHealth.CompletionWindow(firstMonth.FirstDay, lastMonth.LastDay);
+        var complete = WorkOrderStatus.Complete;
+        var ct = cancellationToken;
         var rows = await context.Set<WorkOrder>()
             .AsNoTracking()
             .IgnoreAutoIncludes()
-            .Where(wo => wo.Status == WorkOrderStatus.Complete
+            .Where(wo => wo.Status == complete
                 && wo.DueDate != null
                 && wo.CompletedDate >= windowStart
                 && wo.CompletedDate < windowEnd)
             .Select(wo => new { wo.DueDate, wo.CompletedDate })
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         return rows.Select(row => new WorkOrder
         {
@@ -58,21 +50,5 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
             CompletedDate = row.CompletedDate,
             Status = WorkOrderStatus.Complete
         }).ToList();
-    }
-
-    private static MonthSlaData ComputeMonthSla(List<WorkOrder> orders, ChurchMonth month)
-    {
-        var monthOrders = orders
-            .Where(wo => month.Contains(SlaHealth.ChurchDate(wo.CompletedDate!.Value)))
-            .ToList();
-
-        var (percentage, totalCount) = SlaHealth.CalculateOnTimePercentage(monthOrders);
-        return new MonthSlaData { TotalCount = totalCount, Percentage = percentage };
-    }
-
-    private sealed class MonthSlaData
-    {
-        public decimal? Percentage { get; init; }
-        public int TotalCount { get; init; }
     }
 }

@@ -1,12 +1,10 @@
 using Asp.Versioning;
-using ClearMeasure.Bootcamp.Core;
-using ClearMeasure.Bootcamp.DataAccess.Messaging;
+using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Resources;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using ClearMeasure.Bootcamp.UI.Server.BuildFacts;
 using ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
 using ClearMeasure.Bootcamp.UI.Server.Middleware;
@@ -14,11 +12,12 @@ using ClearMeasure.Bootcamp.UI.Server.Testing;
 using ClearMeasure.Bootcamp.UI.Server.TestSupport;
 using ChurchBulletin.ServiceDefaults;
 using Microsoft.AspNetCore.ResponseCompression;
+using System.Text.Json;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// The services UI.Server registers: the web framework (MVC, API versioning, Razor, Lamar), the request protections
+/// The services UI.Server registers: the web framework (minimal APIs, API versioning, Microsoft DI), the request protections
 /// in front of the API, response caching and compression, and the embedded MCP server.
 /// </summary>
 public static class ServerServices
@@ -31,13 +30,24 @@ public static class ServerServices
         AddRequestProtections(builder.Services, builder.Configuration);
         AddResponseCaching(builder.Services);
         AddEmbeddedMcpServer(builder.Services);
+        builder.Services.AddSingleton(new RegisteredServices(builder.Services));
+    }
+
+    /// <summary>
+    /// Minimal API bodies bind through these compile-time contracts first: the API payloads, UI.Server's own
+    /// payloads, and the remotable <see cref="WebServiceMessage"/> envelope. Native AOT has no reflection fallback.
+    /// </summary>
+    private static void UseSourceGeneratedContracts(JsonSerializerOptions options)
+    {
+        options.TypeInfoResolverChain.Insert(0, ApiJsonContext.Default);
+        options.TypeInfoResolverChain.Insert(1, ServerJsonContext.Default);
+        options.TypeInfoResolverChain.Insert(2, RemotableMessageJsonContext.Default);
     }
 
     private static void AddWebFramework(WebApplicationBuilder builder)
     {
         builder.Services.AddProblemDetails();
-        builder.Services.AddControllersWithViews()
-            .AddApplicationPart(typeof(DetailedHealthController).Assembly);
+        builder.Services.ConfigureHttpJsonOptions(options => UseSourceGeneratedContracts(options.SerializerOptions));
         builder.Services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -45,13 +55,11 @@ public static class ServerServices
             options.ReportApiVersions = true;
             options.ApiVersionReader = new UrlSegmentApiVersionReader();
             options.UnsupportedApiVersionStatusCode = StatusCodes.Status400BadRequest;
-        }).AddMvc();
-        builder.Services.AddRazorPages();
-        builder.Host.UseLamar(registry => { registry.IncludeRegistry<UiServiceRegistry>(); });
+        });
+        builder.Services.AddUiServices();
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddLiveTelemetry();
         builder.Services.AddBuildFacts();
-        builder.Services.AddScoped<IDistributedBus, DistributedBus>();
         builder.Services.AddMemoryCache();
         builder.Services.AddGrpc();
         builder.Services.Configure<LlmHealthCheckOptions>(builder.Configuration.GetSection("LlmHealthCheck"));

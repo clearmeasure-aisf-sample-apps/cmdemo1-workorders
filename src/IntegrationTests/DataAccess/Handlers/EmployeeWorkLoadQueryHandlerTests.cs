@@ -46,7 +46,7 @@ public class EmployeeWorkLoadQueryHandlerTests
     private static Task<EmployeeWorkLoad> WhenQueried(string userName)
     {
         var handler = new EmployeeWorkLoadQueryHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
-        return handler.Handle(new EmployeeWorkLoadQuery(userName));
+        return handler.Handle(new EmployeeWorkLoadQuery(userName)).AsTask();
     }
 
     private static EmployeeWorkLoad Expected(

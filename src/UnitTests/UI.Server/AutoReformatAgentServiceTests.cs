@@ -6,7 +6,7 @@ using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server.BuildFacts;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

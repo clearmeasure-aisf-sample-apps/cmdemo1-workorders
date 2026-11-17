@@ -66,15 +66,6 @@ public class ArchitectureRulesTests
         violations.ShouldBeEmpty();
     }
 
-    [Test]
-    public void UiProjectsReferencingDataAccess_WhenWorkerReferencesDataAccess_IsEmpty()
-    {
-        var violations = ArchitectureRules.UiProjectsReferencingDataAccess([
-            ("src/Worker/Worker.csproj", DataAccessProject),
-        ]);
-
-        violations.ShouldBeEmpty();
-    }
 
     [Test]
     public void UiProjectsReferencingDataAccess_WhenMasterIsScanned_MatchesBaseline()
@@ -100,7 +91,7 @@ public class ArchitectureRulesTests
         ArchitectureRules.MisnamedHandlerTypeNames("""
             namespace Sample;
 
-            public sealed class WorkOrderQueryHandler : MediatR.IRequestHandler<WorkOrderByNumberQuery, WorkOrder>
+            public sealed class WorkOrderQueryHandler : Mediator.IRequestHandler<WorkOrderByNumberQuery, WorkOrder>
             {
             }
             """).ShouldBeEmpty();
@@ -126,7 +117,7 @@ public class ArchitectureRulesTests
 
             public sealed class Outer
             {
-                private sealed class Inner : global::MediatR.IRequestHandler<Q, R>
+                private sealed class Inner : global::Mediator.IRequestHandler<Q, R>
                 {
                 }
             }
@@ -391,11 +382,12 @@ public class ArchitectureRulesTests
         comparison.IsClean.ShouldBeTrue(comparison.Report(baselineFile));
     }
 
-    private static readonly HashSet<string> UiServerDbContextAllowList = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly HashSet<string> UiServerDbContextAllowList =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "src/UI/Server/UIServiceRegistry.cs",
         "src/UI/Server/TestingDatabaseStartupFilter.cs",
-    };
+    ];
 
     private static IReadOnlyList<string> WorkOrderBoolExpressionsOutsideCore(RepositoryCheckout checkout)
     {

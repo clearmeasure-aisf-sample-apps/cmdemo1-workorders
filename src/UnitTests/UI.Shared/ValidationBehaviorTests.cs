@@ -1,10 +1,11 @@
+using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.UI.Shared;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -92,33 +93,25 @@ public class ValidationBehaviorTests
     [Test]
     public async Task Handle_Should_CallNext_WhenNoValidatorIsRegistered()
     {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblyContaining<ValidationBehaviorTests>();
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-        });
-        services.AddTransient<IRequestHandler<OpenProbeRequest, string>, OpenProbeHandler>();
-        var bus = new Bus(services.BuildServiceProvider().GetRequiredService<IMediator>());
+        var expected = Array.Empty<WeatherForecast>();
+        var bus = new Bus(HostPipeline.Build(new AllFeaturesOn(), services =>
+                services.AddTransient<IRequestHandler<ForecastQuery, WeatherForecast[]>>(_ => new ForecastProbeHandler(expected)))
+            .GetRequiredService<IMediator>());
 
-        var result = await bus.Send(new OpenProbeRequest());
+        var result = await bus.Send(new ForecastQuery());
 
-        result.ShouldBe("ok");
+        result.ShouldBeSameAs(expected);
     }
 
     [Test]
     public async Task Handle_Should_ReachHandler_WhenDeferredHttpEnvelopeValidatorsAreNotRegisteredAsIValidator()
     {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg =>
+        var bus = new Bus(HostPipeline.Build(new AllFeaturesOn(), services =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<ValidationBehaviorTests>();
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-        });
-        services.AddTransient<IRequestHandler<CreateVendorCommand, CreateVendorResult>, CreateVendorProbeHandler>();
-        services.AddTransient<IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>,
-            CreateDatedProbeHandler>();
-        var bus = new Bus(services.BuildServiceProvider().GetRequiredService<IMediator>());
+            services.AddTransient<IRequestHandler<CreateVendorCommand, CreateVendorResult>, CreateVendorProbeHandler>();
+            services.AddTransient<IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>,
+                CreateDatedProbeHandler>();
+        }).GetRequiredService<IMediator>());
 
         var vendor = await bus.Send(new CreateVendorCommand("", "HVAC", null, null, null));
         var dated = await bus.Send(new CreateDatedWorkOrdersCommand("a", "b", "t", "d", []));
@@ -131,20 +124,15 @@ public class ValidationBehaviorTests
 
     private static Bus BusWithValidators(StateCommandResult? response = null)
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(TimeProvider.System);
-        services.AddTransient<IValidator<SaveDraftCommand>, SaveDraftCommandValidator>();
-        services.AddTransient<IValidator<InProgressToAssignedCommand>, InProgressToAssignedCommandValidator>();
-        services.AddMediatR(cfg =>
+        // The host registers SaveDraftCommandValidator and InProgressToAssignedCommandValidator once each.
+        var provider = HostPipeline.Build(new AllFeaturesOn(), services =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<ValidationBehaviorTests>();
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            services.AddTransient<IRequestHandler<SaveDraftCommand, StateCommandResult>>(
+                _ => new FixedStateCommandHandler(response));
+            services.AddTransient<IRequestHandler<InProgressToAssignedCommand, StateCommandResult>>(
+                _ => new FixedStateCommandHandler(response));
         });
-        services.AddTransient<IRequestHandler<SaveDraftCommand, StateCommandResult>>(
-            _ => new FixedStateCommandHandler(response));
-        services.AddTransient<IRequestHandler<InProgressToAssignedCommand, StateCommandResult>>(
-            _ => new FixedStateCommandHandler(response));
-        return new Bus(services.BuildServiceProvider().GetRequiredService<IMediator>());
+        return new Bus(provider.GetRequiredService<IMediator>());
     }
 
     private static InProgressToAssignedCommand ShelveCommand(string? reason)
@@ -165,33 +153,37 @@ public class ValidationBehaviorTests
         : IRequestHandler<SaveDraftCommand, StateCommandResult>,
             IRequestHandler<InProgressToAssignedCommand, StateCommandResult>
     {
-        public Task<StateCommandResult> Handle(SaveDraftCommand request, CancellationToken cancellationToken) =>
-            Task.FromResult(response ?? new StateCommandResult(request.WorkOrder));
+        public ValueTask<StateCommandResult> Handle(SaveDraftCommand request, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(response ?? new StateCommandResult(request.WorkOrder));
 
-        public Task<StateCommandResult> Handle(InProgressToAssignedCommand request, CancellationToken cancellationToken) =>
-            Task.FromResult(response ?? new StateCommandResult(request.WorkOrder));
+        public ValueTask<StateCommandResult> Handle(InProgressToAssignedCommand request, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(response ?? new StateCommandResult(request.WorkOrder));
     }
 
-    private record OpenProbeRequest : IRequest<string>;
-
-    private sealed class OpenProbeHandler : IRequestHandler<OpenProbeRequest, string>
+    private sealed class ForecastProbeHandler(WeatherForecast[] forecasts) : IRequestHandler<ForecastQuery, WeatherForecast[]>
     {
-        public Task<string> Handle(OpenProbeRequest request, CancellationToken cancellationToken) =>
-            Task.FromResult("ok");
+        public ValueTask<WeatherForecast[]> Handle(ForecastQuery request, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(forecasts);
+    }
+
+    private sealed class AllFeaturesOn : IFeatureFlagEvaluator
+    {
+        public Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 
     private sealed class CreateVendorProbeHandler : IRequestHandler<CreateVendorCommand, CreateVendorResult>
     {
-        public Task<CreateVendorResult> Handle(CreateVendorCommand request, CancellationToken cancellationToken) =>
-            Task.FromResult(new CreateVendorResult(true, "handler-ran", Guid.Empty));
+        public ValueTask<CreateVendorResult> Handle(CreateVendorCommand request, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(new CreateVendorResult(true, "handler-ran", Guid.Empty));
     }
 
     private sealed class CreateDatedProbeHandler
         : IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>
     {
-        public Task<CreateDatedWorkOrdersResult> Handle(
+        public ValueTask<CreateDatedWorkOrdersResult> Handle(
             CreateDatedWorkOrdersCommand request,
             CancellationToken cancellationToken) =>
-            Task.FromResult(new CreateDatedWorkOrdersResult(true, "handler-ran", []));
+            ValueTask.FromResult(new CreateDatedWorkOrdersResult(true, "handler-ran", []));
     }
 }

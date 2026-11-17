@@ -1,5 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Queries;
-using MediatR;
+using Mediator;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.SignIn;
 

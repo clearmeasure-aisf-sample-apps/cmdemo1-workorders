@@ -1,7 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization.Metadata;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Net.Http.Headers;
 
 namespace ClearMeasure.Bootcamp.UI.Api;
@@ -12,9 +13,11 @@ namespace ClearMeasure.Bootcamp.UI.Api;
 public static class ConditionalGetEtag
 {
     /// <summary>
-    /// Default JSON serialization for API GET bodies; must match <see cref="ControllerBase"/> output formatting.
+    /// JSON serialization for API GET bodies: web defaults over the source-generated <see cref="ApiJsonContext"/>,
+    /// the same contract the minimal API JSON results use.
     /// </summary>
-    public static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web);
+    public static readonly JsonSerializerOptions JsonSerializerOptions =
+        new(JsonSerializerDefaults.Web) { TypeInfoResolver = ApiJsonContext.Default };
 
     /// <summary>
     /// Builds a weak entity-tag of the form <c>W/"{lowercase-hex}"</c> (SHA-256 of the representation) from UTF-8 bytes.
@@ -29,11 +32,8 @@ public static class ConditionalGetEtag
     /// <summary>
     /// Serializes <paramref name="value"/> to JSON (web defaults) and returns its weak ETag.
     /// </summary>
-    public static EntityTagHeaderValue CreateWeakEtagForJson<T>(T value)
-    {
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, JsonSerializerOptions);
-        return CreateWeakEtag(bytes);
-    }
+    public static EntityTagHeaderValue CreateWeakEtagForJson<T>(T value) =>
+        CreateWeakEtag(JsonSerializer.SerializeToUtf8Bytes(value, TypeInfo<T>()));
 
     /// <summary>
     /// UTF-8 encodes <paramref name="text"/> and returns its weak ETag.
@@ -66,11 +66,31 @@ public static class ConditionalGetEtag
     /// <summary>
     /// 200 OK with JSON body using <see cref="JsonSerializerOptions"/> (matches default web JSON contract).
     /// </summary>
-    public static ContentResult JsonContent(object value) =>
-        new()
-        {
-            Content = JsonSerializer.Serialize(value, JsonSerializerOptions),
-            ContentType = "application/json; charset=utf-8",
-            StatusCode = StatusCodes.Status200OK
-        };
+    public static ContentHttpResult JsonContent<T>(T value) =>
+        TypedResults.Content(
+            JsonSerializer.Serialize(value, TypeInfo<T>()),
+            "application/json; charset=utf-8",
+            statusCode: StatusCodes.Status200OK);
+
+    /// <summary>
+    /// Sets the weak ETag of <paramref name="payload"/>'s JSON and answers 304 when the client already has it,
+    /// otherwise 200 with the JSON.
+    /// </summary>
+    public static IResult ConditionalJson<T>(HttpContext context, T payload) =>
+        Conditional(context, CreateWeakEtagForJson(payload), () => JsonContent(payload));
+
+    /// <summary>
+    /// Sets <paramref name="etag"/> on the response and answers 304 when the client already has it, otherwise
+    /// <paramref name="representation"/>.
+    /// </summary>
+    public static IResult Conditional(HttpContext context, EntityTagHeaderValue etag, Func<IResult> representation)
+    {
+        context.Response.Headers.ETag = etag.ToString();
+        return IfNoneMatchIncludesEtag(context.Request, etag)
+            ? TypedResults.StatusCode(StatusCodes.Status304NotModified)
+            : representation();
+    }
+
+    private static JsonTypeInfo<T> TypeInfo<T>() =>
+        (JsonTypeInfo<T>)JsonSerializerOptions.GetTypeInfo(typeof(T));
 }

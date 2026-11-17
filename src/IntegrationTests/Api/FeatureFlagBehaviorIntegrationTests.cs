@@ -4,11 +4,12 @@ using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Messaging;
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.UI.Server;
 using ClearMeasure.Bootcamp.UI.Shared;
 using FluentValidation;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -21,7 +22,8 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 /// <summary>
 /// Runs the UI.Server host with a request tagged <see cref="RequiresFeatureAttribute"/> to prove the
 /// <see cref="FeatureFlagBehavior{TRequest,TResponse}"/> registration, the runtime evaluator, and the single-API
-/// 403 mapping work together.
+/// 403 mapping work together. The tagged request is the real <see cref="VendorsQuery"/> with a recording handler,
+/// because the source-generated mediator only routes message types it saw at build time.
 /// </summary>
 [TestFixture]
 public class FeatureFlagBehaviorIntegrationTests
@@ -33,15 +35,10 @@ public class FeatureFlagBehaviorIntegrationTests
         using var scope = factory.Services.CreateScope();
         var bus = scope.ServiceProvider.GetRequiredService<IBus>();
 
-        var value = $"off-{Guid.NewGuid():N}";
-
-        var ex = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new GatedProbeRequest(value)));
+        var ex = await Should.ThrowAsync<FeatureDisabledException>(() => bus.Send(new VendorsQuery()));
 
         ex.FeatureName.ShouldBe(FeatureFlagNames.VendorManagement);
-        lock (GatedProbeHandler.Calls)
-        {
-            GatedProbeHandler.Calls.ShouldNotContain(value);
-        }
+        factory.Services.GetRequiredService<RecordingVendorsHandler>().Calls.ShouldBe(0);
     }
 
     [Test]
@@ -51,9 +48,10 @@ public class FeatureFlagBehaviorIntegrationTests
         using var scope = factory.Services.CreateScope();
         var bus = scope.ServiceProvider.GetRequiredService<IBus>();
 
-        var result = await bus.Send(new GatedProbeRequest("ping"));
+        var result = await bus.Send(new VendorsQuery());
 
-        result.ShouldBe("pong:ping");
+        result.Select(vendor => vendor.Name).ShouldBe([RecordingVendorsHandler.VendorName]);
+        factory.Services.GetRequiredService<RecordingVendorsHandler>().Calls.ShouldBe(1);
     }
 
     [Test]
@@ -63,7 +61,7 @@ public class FeatureFlagBehaviorIntegrationTests
         using var client = factory.CreateClient();
 
         using var response = await client.PostAsJsonAsync(
-            "/api/blazor-wasm-single-api", new WebServiceMessage(new GatedProbeRequest("ping")));
+            "/api/blazor-wasm-single-api", new WebServiceMessage(new VendorsQuery()));
 
         response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
@@ -71,7 +69,7 @@ public class FeatureFlagBehaviorIntegrationTests
         problem.RootElement.GetProperty("status").GetInt32().ShouldBe(403);
         problem.RootElement.GetProperty("title").GetString().ShouldBe("Feature disabled");
         problem.RootElement.GetProperty("feature").GetString().ShouldBe(FeatureFlagNames.VendorManagement);
-        problem.RootElement.GetProperty("detail").GetString()!.ShouldContain(nameof(GatedProbeRequest));
+        problem.RootElement.GetProperty("detail").GetString()!.ShouldContain(nameof(VendorsQuery));
     }
 
     [Test]
@@ -81,11 +79,12 @@ public class FeatureFlagBehaviorIntegrationTests
         using var client = factory.CreateClient();
 
         using var response = await client.PostAsJsonAsync(
-            "/api/blazor-wasm-single-api", new WebServiceMessage(new GatedProbeRequest("ping")));
+            "/api/blazor-wasm-single-api", new WebServiceMessage(new VendorsQuery()));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var message = JsonSerializer.Deserialize<WebServiceMessage>(await response.Content.ReadAsStringAsync())!;
-        message.GetBodyObject().ShouldBe("pong:ping");
+        var message = WebServiceMessage.FromJson(await response.Content.ReadAsStringAsync())!;
+        message.GetBodyObject().ShouldBeOfType<Vendor[]>().Select(vendor => vendor.Name)
+            .ShouldBe([RecordingVendorsHandler.VendorName]);
     }
 
     [Test]
@@ -134,7 +133,7 @@ public class FeatureFlagBehaviorIntegrationTests
             "/api/blazor-wasm-single-api", new WebServiceMessage(new FeatureFlagsQuery()));
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var message = JsonSerializer.Deserialize<WebServiceMessage>(await response.Content.ReadAsStringAsync())!;
+        var message = WebServiceMessage.FromJson(await response.Content.ReadAsStringAsync())!;
         var result = message.GetBodyObject().ShouldBeOfType<FeatureFlagsResult>();
         result.Flags.Keys.ShouldBe(FeatureFlagNames.All, ignoreOrder: true);
         result.Flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
@@ -159,21 +158,19 @@ public class FeatureFlagBehaviorIntegrationTests
         create.RequestName.ShouldBe(nameof(CreateVendorCommand));
     }
 
-    [RequiresFeature(FeatureFlagNames.VendorManagement)]
-    public record GatedProbeRequest(string Value) : IRequest<string>, IRemotableRequest;
-
-    public sealed class GatedProbeHandler : IRequestHandler<GatedProbeRequest, string>
+    /// <summary>Stands in for the database-backed vendor handler; one instance per host so calls can be counted.</summary>
+    public sealed class RecordingVendorsHandler : IRequestHandler<VendorsQuery, Vendor[]>
     {
-        public static List<string> Calls { get; } = [];
+        public const string VendorName = "Probe Vendor";
 
-        public Task<string> Handle(GatedProbeRequest request, CancellationToken cancellationToken)
+        private int _calls;
+
+        public int Calls => Volatile.Read(ref _calls);
+
+        public ValueTask<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken)
         {
-            lock (Calls)
-            {
-                Calls.Add(request.Value);
-            }
-
-            return Task.FromResult($"pong:{request.Value}");
+            Interlocked.Increment(ref _calls);
+            return ValueTask.FromResult(new[] { new Vendor { Name = VendorName } });
         }
     }
 
@@ -199,8 +196,10 @@ public class FeatureFlagBehaviorIntegrationTests
             });
             builder.ConfigureTestServices(services =>
             {
-                services.AddTransient<IRequestHandler<GatedProbeRequest, string>, GatedProbeHandler>();
-                services.AddSingleton<IValidator<GatedProbeRequest>, InlineValidator<GatedProbeRequest>>();
+                services.AddSingleton<RecordingVendorsHandler>();
+                services.AddTransient<IRequestHandler<VendorsQuery, Vendor[]>>(
+                    provider => provider.GetRequiredService<RecordingVendorsHandler>());
+                services.AddSingleton<IValidator<VendorsQuery>, InlineValidator<VendorsQuery>>();
             });
         }
     }

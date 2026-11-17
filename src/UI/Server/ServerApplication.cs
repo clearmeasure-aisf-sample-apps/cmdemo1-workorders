@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// Host bootstrap for UI.Server: Kestrel, <see cref="ServerServices"/>, the <see cref="ServerMessagingEndpoint"/>
-/// and the <see cref="ServerPipeline"/>.
+/// Host bootstrap for UI.Server: Kestrel, <see cref="ServerServices"/> and the <see cref="ServerPipeline"/>.
 /// </summary>
 public static class ServerApplication
 {
@@ -27,7 +26,6 @@ public static class ServerApplication
             options.ConfigureEndpointDefaults(listenOptions => listenOptions.Protocols = HttpProtocols.Http1AndHttp2));
         builder.AddServerServices();
         configureBuilder?.Invoke(builder);
-        ServerMessagingEndpoint.Register(builder);
         var app = builder.Build();
         app.UseServerPipeline();
         return app;

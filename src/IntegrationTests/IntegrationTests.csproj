@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFramework>net11.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
@@ -63,7 +63,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Using Include="NServiceBus" />
   </ItemGroup>
 
 	<!-- Coverlet/Cecil cannot instrument Core.dll unless HealthChecks.Abstractions (and siblings) sit beside it. -->

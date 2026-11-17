@@ -2,7 +2,6 @@ using System.Text;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Octopus.OpenFeature.Provider;
 using OpenFeature;
 using OpenFeature.Constant;
 
@@ -27,18 +26,19 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
     /// <summary>Configuration section holding per-flag fallback values.</summary>
     private const string ConfigurationSectionName = "FeatureFlags";
 
-    private const string ProductName = "ChurchBulletin";
+    /// <summary>The product name sent to Octopus and used for the OpenFeature domain.</summary>
+    internal const string ProductName = "ChurchBulletin";
 
     private readonly IConfiguration _configuration;
     private readonly Lazy<Task<IFeatureClient?>> _client;
 
-    /// <summary>Uses the Octopus OpenFeature provider when <see cref="ClientIdentifierKey"/> is configured.</summary>
+    /// <summary>
+    /// Reads Octopus Feature Toggles when <see cref="ClientIdentifierKey"/> is configured, through the interim
+    /// <see cref="OctopusFlagsProvider"/> until Octopus.OpenFeature works under Native AOT (see that type).
+    /// </summary>
     public RuntimeFeatureFlagEvaluator(IConfiguration configuration, ILoggerFactory loggerFactory)
-        : this(configuration, loggerFactory, clientIdentifier => new OctopusFeatureProvider(
-            new OctopusFeatureConfiguration(clientIdentifier, new ProductMetadata(ProductName))
-            {
-                LoggerFactory = loggerFactory
-            }))
+        : this(configuration, loggerFactory, clientIdentifier => new OctopusFlagsProvider(
+            clientIdentifier, configuration, loggerFactory.CreateLogger<OctopusFlagsProvider>()))
     {
     }
 

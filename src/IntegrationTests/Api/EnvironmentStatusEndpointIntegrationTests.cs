@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Api.Endpoints;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using Shouldly;
@@ -21,7 +21,7 @@ public class EnvironmentStatusEndpointIntegrationTests
     public void OneTimeSetUp()
     {
         Environment.SetEnvironmentVariable(
-            EnvironmentStatusController.RedactionProbeVariableName, SecretValue);
+            EnvironmentStatusEndpoint.RedactionProbeVariableName, SecretValue);
         _factory = new DiagnosticsWebApplicationFactory();
         _client = _factory.CreateClient();
     }
@@ -32,7 +32,7 @@ public class EnvironmentStatusEndpointIntegrationTests
         _client?.Dispose();
         _factory?.Dispose();
         Environment.SetEnvironmentVariable(
-            EnvironmentStatusController.RedactionProbeVariableName, null);
+            EnvironmentStatusEndpoint.RedactionProbeVariableName, null);
     }
 
     [Test]
@@ -78,9 +78,9 @@ public class EnvironmentStatusEndpointIntegrationTests
             body, ConditionalGetEtag.JsonSerializerOptions);
         payload.ShouldNotBeNull();
         payload.EnvironmentVariableNames.ShouldContain(
-            EnvironmentStatusController.RedactionProbeVariableName);
-        payload.EnvironmentVariables[EnvironmentStatusController.RedactionProbeVariableName]
-            .ShouldBe(EnvironmentStatusController.RedactedValue);
+            EnvironmentStatusEndpoint.RedactionProbeVariableName);
+        payload.EnvironmentVariables[EnvironmentStatusEndpoint.RedactionProbeVariableName]
+            .ShouldBe(EnvironmentStatusEndpoint.RedactedValue);
     }
 
     [Test]

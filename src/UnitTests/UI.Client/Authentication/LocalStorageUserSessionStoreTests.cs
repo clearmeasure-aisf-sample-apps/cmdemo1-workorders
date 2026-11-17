@@ -62,7 +62,7 @@ public class LocalStorageUserSessionStoreTests
         ex.InnerException.ShouldBe(jsException);
     }
 
-    private sealed class StubLocalStorageJsRuntime : IJSRuntime
+    private sealed class StubLocalStorageJsRuntime : IJSRuntime, IJsInteropDouble
     {
         private string? _value;
 
@@ -73,36 +73,27 @@ public class LocalStorageUserSessionStoreTests
         public int GetItemCalls { get; private set; }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
-            InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
-            object?[]? args)
+            object?[]? args) =>
+            JsInteropDouble.Answer<TValue>(this, identifier, args);
+
+        ValueTask<TValue> IJsInteropDouble.Answer<TValue>(string identifier, object?[]? args)
         {
             switch (identifier)
             {
                 case "localStorage.getItem":
                     GetItemCalls++;
-                    if (GetItemException is not null)
-                    {
-                        throw GetItemException;
-                    }
-
-                    return ValueTask.FromResult((TValue)(object?)_value!);
+                    return GetItemException is null
+                        ? ValueTask.FromResult((TValue)(object?)_value!)
+                        : throw GetItemException;
                 case "localStorage.setItem":
-                    if (SetItemException is not null)
-                    {
-                        throw SetItemException;
-                    }
-
-                    _value = (string?)args![1];
+                    _value = SetItemException is null ? (string?)args![1] : throw SetItemException;
                     return ValueTask.FromResult(default(TValue)!);
                 case "localStorage.removeItem":
                     RemoveItemCalls++;
-                    if (!RefuseToRemove)
-                    {
-                        _value = null;
-                    }
-
+                    _value = RefuseToRemove ? _value : null;
                     return ValueTask.FromResult(default(TValue)!);
                 default:
                     throw new InvalidOperationException($"Unexpected InvokeAsync: {identifier}");

@@ -1,8 +1,10 @@
+using System.Globalization;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 
 namespace ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -43,7 +45,18 @@ public partial class WorkOrderPrint : AppComponentBase
         }
     }
 
-    private async Task PrintAsync() => await Js.InvokeVoidAsync("window.print");
+    /// <summary>Opens the browser's print dialog. A circuit that is gone has no browser to print from.</summary>
+    private async Task PrintAsync()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("window.print");
+        }
+        catch (JSDisconnectedException ex)
+        {
+            Logger.LogWarning(ex, "Print for work order {Number} skipped: the browser circuit is gone.", Number);
+        }
+    }
 
     private static string Or(string? value) => string.IsNullOrWhiteSpace(value) ? "None" : value;
 
@@ -51,7 +64,7 @@ public partial class WorkOrderPrint : AppComponentBase
     {
         if (utc is null) return "None";
         var value = DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc);
-        return TimeZoneInfo.ConvertTimeFromUtc(value, ChurchTimeZone.Chicago).ToString("yyyy-MM-dd h:mm tt");
+        return TimeZoneInfo.ConvertTimeFromUtc(value, ChurchTimeZone.Chicago).ToString("yyyy-MM-dd h:mm tt", CultureInfo.InvariantCulture);
     }
 
     private string DueDateText
@@ -59,7 +72,7 @@ public partial class WorkOrderPrint : AppComponentBase
         get
         {
             if (_workOrder?.DueDate is null) return "None";
-            var text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd");
+            var text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
             var urgency = DueDateUrgencyPresenter.ScreenReaderText(
                 DueDateUrgencyCalculator.Calculate(_workOrder, Clock));
             return string.IsNullOrEmpty(urgency) ? text : $"{text} ({urgency})";

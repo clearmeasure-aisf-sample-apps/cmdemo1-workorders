@@ -1,4 +1,5 @@
-﻿using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Queries;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace ClearMeasure.Bootcamp.UI.Client.HealthChecks;

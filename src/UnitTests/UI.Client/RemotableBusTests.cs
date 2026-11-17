@@ -1,8 +1,10 @@
-﻿using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.UnitTests.UI.Shared;
+using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Messaging;
 using ClearMeasure.Bootcamp.UI.Client;
-using MediatR;
+using Mediator;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Client;
@@ -13,12 +15,11 @@ public class RemotableBusTests
     [Test]
     public void Should_SendRemoteableRequest_CallsGateway()
     {
-        var stubMediator = new StubMediator();
+        var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
-        var expectedResponse = "Remote test";
-        stubGateway.SetResponse(expectedResponse);
+        string[] expectedResponse = ["Remote test"];        stubGateway.SetResponse(expectedResponse);
         var bus = new RemotableBus(stubMediator, stubGateway);
-        var request = new TestRemotableRequest();
+        var request = new WorkOrderBuildingsQuery();
 
         var result = bus.Send(request).Result;
 
@@ -30,7 +31,7 @@ public class RemotableBusTests
     [Test]
     public void Should_SendNonRemoteableRequest_CallsMediator()
     {
-        var stubMediator = new StubMediator();
+        var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
         var expectedResponse = "mediator response";
         stubMediator.SetResponse(expectedResponse);
@@ -47,7 +48,7 @@ public class RemotableBusTests
     [Test]
     public void Should_SendObjectRequest_CallsMediator()
     {
-        var stubMediator = new StubMediator();
+        var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
         var expectedResponse = "object response";
         stubMediator.SetObjectResponse(expectedResponse);
@@ -63,7 +64,7 @@ public class RemotableBusTests
     [Test]
     public async Task Should_PublishNotification_CallsMediator()
     {
-        var stubMediator = new StubMediator();
+        var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
         var bus = new RemotableBus(stubMediator, stubGateway);
         var notification = new TestNotification { Message = "test message" };
@@ -78,91 +79,27 @@ public class RemotableBusTests
     [Test]
     public async Task Should_PublishRemotableEvent_CallsGateway()
     {
-        var stubMediator = new StubMediator();
+        var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
         var bus = new RemotableBus(stubMediator, stubGateway);
-        var remotableEvent = new TestRemotableEvent { Message = "remote event" };
+        var remotableEvent = new UserLoggedInEvent("remote event");
 
         await bus.Publish(remotableEvent);
 
-        stubGateway.LastRequest.ShouldBeOfType<TestRemotableEvent>();
-        ((TestRemotableEvent)stubGateway.LastRequest!).Message.ShouldBe("remote event");
+        stubGateway.LastRequest.ShouldBeOfType<UserLoggedInEvent>().UserName.ShouldBe("remote event");
         stubMediator.LastNotification.ShouldBeNull();
     }
 
     [Test]
     public void Should_ThrowException_WhenGatewayReturnsNull()
     {
-        var stubMediator = new StubMediator();
+        var stubMediator = new RecordingMediator();
         var stubGateway = new StubPublisherGateway();
         stubGateway.SetResponse<object>(null);
         var bus = new RemotableBus(stubMediator, stubGateway);
         var request = new ForecastQuery();
 
         Should.Throw<Exception>(() => bus.Send(request).Result);
-    }
-
-    private class StubMediator : IMediator
-    {
-        private object? _response;
-        private object? _objectResponse;
-
-        public object? LastRequest { get; private set; }
-        public object? LastObjectRequest { get; private set; }
-        public object? LastNotification { get; private set; }
-
-        public void SetResponse<T>(T response)
-        {
-            _response = response;
-        }
-
-        public void SetObjectResponse(object? response)
-        {
-            _objectResponse = response;
-        }
-
-        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request,
-            CancellationToken cancellationToken = default)
-        {
-            LastRequest = request;
-            return Task.FromResult((TResponse)_response!);
-        }
-
-        public Task<object?> Send(object request, CancellationToken cancellationToken = default)
-        {
-            LastObjectRequest = request;
-            return Task.FromResult(_objectResponse);
-        }
-
-        public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
-            where TRequest : IRequest
-        {
-            return Task.CompletedTask;
-        }
-
-        public Task Publish(object notification, CancellationToken cancellationToken = default)
-        {
-            LastNotification = notification;
-            return Task.CompletedTask;
-        }
-
-        public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
-            where TNotification : INotification
-        {
-            LastNotification = notification;
-            return Task.CompletedTask;
-        }
-
-        public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request,
-            CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IAsyncEnumerable<object?> CreateStream(object request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     private class StubPublisherGateway : PublisherGateway
@@ -196,16 +133,9 @@ public class RemotableBusTests
 
     private record NonRemotableTestRequest : IRequest<string>;
 
-    private record TestRemotableRequest : IRequest<string>, IRemotableRequest;
-
     private class TestCommand;
 
     private class TestNotification : INotification
-    {
-        public string Message { get; init; } = string.Empty;
-    }
-
-    private class TestRemotableEvent : IRemotableEvent
     {
         public string Message { get; init; } = string.Empty;
     }

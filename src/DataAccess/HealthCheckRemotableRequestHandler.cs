@@ -1,13 +1,13 @@
 ﻿using ClearMeasure.Bootcamp.Core;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace ClearMeasure.Bootcamp.DataAccess;
 
 public class HealthCheckRemotableRequestHandler : IRequestHandler<HealthCheckRemotableRequest, HealthStatus>
 {
-    public Task<HealthStatus> Handle(HealthCheckRemotableRequest request, CancellationToken cancellationToken = default)
+    public ValueTask<HealthStatus> Handle(HealthCheckRemotableRequest request, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(request.Status);
+        return ValueTask.FromResult(request.Status);
     }
 }

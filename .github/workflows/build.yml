@@ -463,11 +463,11 @@ jobs:
           fetch-depth: 0
 
       - name: Qodana Scan
-        uses: JetBrains/qodana-action@v2025.2
+        uses: JetBrains/qodana-action@v2026.2.2
         # Hard gate (#8846): failThreshold 0 + committed baseline (qodana.sarif.json).
         # Unchanged baselined findings do not fail; new/absent problems do.
         with:
-          args: --linter,jetbrains/qodana-cdnet:latest,--solution,src/ChurchBulletin.sln,--baseline,qodana.sarif.json,--fail-threshold,0
+          args: --linter,jetbrains/qodana-cdnet:2026.3-eap,--solution,src/ChurchBulletin.sln,--baseline,qodana.sarif.json,--fail-threshold,0
           results-dir: ${{ runner.temp }}/qodana/results
           upload-result: true
           artifact-name: qodana-report
@@ -511,6 +511,12 @@ jobs:
         run: |
           $version = "${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
           "BUILD_BUILDNUMBER=$version" >> $env:GITHUB_ENV
+
+      # windows-latest does not ship the .NET 11 SDK yet; install the one global.json pins.
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
 
       - name: Run Private Build (Windows LocalDB)
         shell: pwsh
@@ -862,7 +868,7 @@ jobs:
           Write-Host "Validating shard coverage with vstest..."
           Write-Host ""
 
-          $dll = "src/AcceptanceTests/bin/Release/net10.0/ClearMeasure.Bootcamp.AcceptanceTests.dll"
+          $dll = "src/AcceptanceTests/bin/Release/net11.0/ClearMeasure.Bootcamp.AcceptanceTests.dll"
 
           $shardNumbers = 1..6
 

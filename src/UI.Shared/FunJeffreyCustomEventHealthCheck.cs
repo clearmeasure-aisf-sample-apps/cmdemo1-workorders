@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +21,7 @@ public class FunJeffreyCustomEventHealthCheck(
         activity?.AddEvent(new ActivityEvent(EventName, tags: new ActivityTagsCollection
         {
             ["time minute of day"] = now.Minute,
-            ["time"] = now.ToString()
+            ["time"] = now.ToString(CultureInfo.InvariantCulture)
         }));
 
         logger.LogDebug("Health check success");

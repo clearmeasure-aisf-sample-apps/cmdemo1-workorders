@@ -2,7 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -13,34 +13,41 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
     IRequestHandler<SaveSearchViewCommand, SavedSearchViewResult>,
     IRequestHandler<DeleteSearchViewCommand, SavedSearchViewResult>
 {
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
     private const string UnknownUser = "User not found.";
 
-    public async Task<SavedSearchView[]> Handle(SavedSearchViewsQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<SavedSearchView[]> Handle(SavedSearchViewsQuery request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
         if (employee == null) return [];
 
-        var views = await context.Set<SavedSearchView>().AsNoTracking()
-            .Where(v => v.EmployeeId == employee.Id)
-            .ToListAsync(cancellationToken);
+        var employeeId = employee.Id;
+        var ct = cancellationToken;
+        var views = await _context.Set<SavedSearchView>().AsNoTracking()
+            .Where(v => v.EmployeeId == employeeId)
+            .ToListAsync(ct);
 
         return views.OrderBy(v => v.Name, StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    public async Task<SavedSearchViewResult> Handle(SaveSearchViewCommand request, CancellationToken cancellationToken = default)
+    public async ValueTask<SavedSearchViewResult> Handle(SaveSearchViewCommand request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
         if (employee == null) return SavedSearchViewResult.Failure(UnknownUser);
 
-        var existingNames = await context.Set<SavedSearchView>().AsNoTracking()
-            .Where(v => v.EmployeeId == employee.Id)
+        var employeeId = employee.Id;
+        var ct = cancellationToken;
+        var existingNames = await _context.Set<SavedSearchView>().AsNoTracking()
+            .Where(v => v.EmployeeId == employeeId)
             .Select(v => v.Name)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         var error = SavedSearchView.ValidateNew(request.Name, request.Query, existingNames);
         if (error != null) return SavedSearchViewResult.Failure(error);
 
-        context.Add(new SavedSearchView
+        _context.Add(new SavedSearchView
         {
             Id = Guid.NewGuid(),
             EmployeeId = employee.Id,
@@ -48,24 +55,31 @@ public class SavedSearchViewHandler(DataContext context, TimeProvider time) :
             Query = request.Query,
             CreatedDate = time.GetUtcNow().DateTime
         });
-        await context.SaveChangesAsync(cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
         return SavedSearchViewResult.Success;
     }
 
-    public async Task<SavedSearchViewResult> Handle(DeleteSearchViewCommand request, CancellationToken cancellationToken = default)
+    public async ValueTask<SavedSearchViewResult> Handle(DeleteSearchViewCommand request, CancellationToken cancellationToken = default)
     {
         var employee = await FindEmployee(request.UserName, cancellationToken);
         if (employee == null) return SavedSearchViewResult.Failure(UnknownUser);
 
-        var view = await context.Set<SavedSearchView>()
-            .SingleOrDefaultAsync(v => v.Id == request.Id && v.EmployeeId == employee.Id, cancellationToken);
+        var viewId = request.Id;
+        var employeeId = employee.Id;
+        var ct = cancellationToken;
+        var view = await _context.Set<SavedSearchView>()
+            .SingleOrDefaultAsync(v => v.Id == viewId && v.EmployeeId == employeeId, ct);
         if (view == null) return SavedSearchViewResult.Failure("View not found.");
 
-        context.Remove(view);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Remove(view);
+        await _context.SaveChangesAsync(cancellationToken);
         return SavedSearchViewResult.Success;
     }
 
-    private Task<Employee?> FindEmployee(string userName, CancellationToken cancellationToken) =>
-        context.Set<Employee>().AsNoTracking().SingleOrDefaultAsync(e => e.UserName == userName, cancellationToken);
+    private Task<Employee?> FindEmployee(string userName, CancellationToken cancellationToken)
+    {
+        var name = userName;
+        var ct = cancellationToken;
+        return _context.Set<Employee>().AsNoTracking().SingleOrDefaultAsync(e => e.UserName == name, ct);
+    }
 }

@@ -4,7 +4,7 @@ using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Client;
 using ClearMeasure.Bootcamp.UI.Shared.Authentication;
 using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
-using MediatR;
+using Mediator;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;

@@ -198,9 +198,8 @@ public class DiagnosticsEndpointIntegrationTests
         legacyResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [TestCase("/_lamar/services")]
-    [TestCase("/_lamar/scanning")]
-    public async Task Should_RejectAnonymousLamar_When_TestingEnvironmentWithoutApiKey(string path)
+    [TestCase("/_diagnostics/services")]
+    public async Task Should_RejectAnonymousServiceListing_When_TestingEnvironmentWithoutApiKey(string path)
     {
         var response = await _client!.GetAsync(path);
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -213,9 +212,8 @@ public class DiagnosticsEndpointIntegrationTests
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
-    [TestCase("/_lamar/services")]
-    [TestCase("/_lamar/scanning")]
-    public async Task Should_AllowAuthorizedLamar_When_ApiKeyEnabled(string path)
+    [TestCase("/_diagnostics/services")]
+    public async Task Should_AllowAuthorizedServiceListing_When_ApiKeyEnabled(string path)
     {
         await using var factory = new DiagnosticsApiKeyProtectedWebApplicationFactory();
         using var client = factory.CreateClient();

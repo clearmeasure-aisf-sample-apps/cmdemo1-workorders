@@ -1,8 +1,10 @@
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.McpServer;
-using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using FluentValidation;
-using Lamar;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.McpServer;
@@ -11,15 +13,23 @@ namespace ClearMeasure.Bootcamp.UnitTests.McpServer;
 public class McpHttpEnvelopeValidatorRegistrationTests
 {
     [Test]
-    public void ShouldOmitDeferredIValidators_WhenMcpServiceRegistryIsBuilt()
+    public void ShouldOmitDeferredIValidators_WhenMcpServerServicesAreAdded()
     {
-        using var container = new Container(registry =>
-        {
-            registry.For<TimeProvider>().Use(TimeProvider.System);
-            registry.IncludeRegistry<McpServiceRegistry>();
-        });
+        using var provider = BuildProvider();
 
-        DeferredIValidatorRegistration.ShouldOmitDeferredCreateCommands(container);
-        container.GetInstance<IValidator<SaveDraftCommand>>().ShouldNotBeNull();
+        provider.GetService<IValidator<CreateVendorCommand>>().ShouldBeNull();
+        provider.GetService<IValidator<CreateTeamCommand>>().ShouldBeNull();
+        provider.GetService<IValidator<CreateDatedWorkOrdersCommand>>().ShouldBeNull();
+        provider.GetRequiredService<IValidator<SaveDraftCommand>>().ShouldNotBeNull();
+    }
+
+    private static ServiceProvider BuildProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+        services.AddSingleton(typeof(Microsoft.Extensions.Logging.ILogger<>), typeof(NullLogger<>));
+        services.AddSingleton<Microsoft.Extensions.Logging.ILoggerFactory>(NullLoggerFactory.Instance);
+        services.AddMcpServerServices();
+        return services.BuildServiceProvider();
     }
 }

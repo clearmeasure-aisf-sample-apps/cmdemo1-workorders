@@ -3,7 +3,8 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.Events;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
-using MediatR;
+using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +21,10 @@ public class CreateDatedWorkOrdersHandler(
     ILogger<CreateDatedWorkOrdersHandler> logger)
     : IRequestHandler<CreateDatedWorkOrdersCommand, CreateDatedWorkOrdersResult>
 {
-    public async Task<CreateDatedWorkOrdersResult> Handle(
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    private readonly DataContext _dbContext = (DataContext)dbContext;
+
+    public async ValueTask<CreateDatedWorkOrdersResult> Handle(
         CreateDatedWorkOrdersCommand request,
         CancellationToken cancellationToken)
     {
@@ -89,11 +93,11 @@ public class CreateDatedWorkOrdersHandler(
 
     private async Task SaveInOneTransactionAsync(IReadOnlyList<WorkOrder> workOrders, CancellationToken cancellationToken)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            dbContext.AddRange(workOrders);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            _dbContext.AddRange(workOrders);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -120,8 +124,10 @@ public class CreateDatedWorkOrdersHandler(
 
     private async Task<Employee?> FindEmployeeAsync(string username, CancellationToken cancellationToken)
     {
-        return await dbContext.Set<Employee>()
+        var userName = username;
+        var ct = cancellationToken;
+        return await _dbContext.Set<Employee>()
             .Include(e => e.Roles)
-            .SingleOrDefaultAsync(e => e.UserName == username, cancellationToken);
+            .SingleOrDefaultAsync(e => e.UserName == userName, ct);
     }
 }

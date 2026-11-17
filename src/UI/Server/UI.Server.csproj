@@ -1,13 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFramework>net11.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AssemblyName>ClearMeasure.Bootcamp.$(MSBuildProjectName)</AssemblyName>
 		<RootNamespace>ClearMeasure.Bootcamp.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
 		<Configurations>Debug;Release;exclude-maui.slnf</Configurations>
 		<UserSecretsId>dotnet-Worker-b9b5c0f8-4249-469b-8bfb-c4cc9398b886</UserSecretsId>
+		<!-- Native AOT (Exp 9): opt in at publish with -p:UiServerAot=true. -->
+		<PublishAot Condition="'$(UiServerAot)' == 'true'">true</PublishAot>
+		<!-- McpServer and UI.Api are executables that UI.Server uses only as libraries. A Native AOT publish is self-contained
+		     and compiles every referenced assembly into one native binary, so their entry points never run; without this the
+		     SDK stops the publish with NETSDK1150 (non self-contained executable referenced by a self-contained one). -->
+		<ValidateExecutableReferencesMatchSelfContained Condition="'$(UiServerAot)' == 'true'">false</ValidateExecutableReferencesMatchSelfContained>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -17,15 +23,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="Asp.Versioning.Http" />
-		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
-		<PackageReference Include="Asp.Versioning.Mvc" />
 		<PackageReference Include="Google.Protobuf" />
 		<PackageReference Include="Grpc.AspNetCore" />
-		<PackageReference Include="Lamar.Microsoft.DependencyInjection" />
+		<PackageReference Include="Mediator.Abstractions" />
+		<PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
 		<PackageReference Include="ModelContextProtocol" />
 		<PackageReference Include="ModelContextProtocol.AspNetCore" />
-		<PackageReference Include="NServiceBus.Extensions.Hosting" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Http" />
 		<PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
@@ -44,7 +48,4 @@
 	</ItemGroup>
 
 
-  <ItemGroup>
-    <Using Include="NServiceBus" />
-  </ItemGroup>
 </Project>

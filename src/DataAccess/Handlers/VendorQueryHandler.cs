@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
-using MediatR;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
@@ -13,13 +13,18 @@ public class VendorQueryHandler(DataContext context)
     : IRequestHandler<VendorsQuery, Vendor[]>,
         IRequestHandler<CreateVendorCommand, CreateVendorResult>
 {
+    // A field, not the primary-constructor parameter, so EF 11 can precompile the queries for Native AOT.
+    // ReSharper disable once ReplaceWithPrimaryConstructorParameter
+    private readonly DataContext _context = context;
+
     /// <summary>
     /// Returns active vendors first, then inactive ones, each group ordered by name ignoring case. Sorting
     /// happens in memory so SQLite and SQL Server give the same order.
     /// </summary>
-    public async Task<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken = default)
+    public async ValueTask<Vendor[]> Handle(VendorsQuery request, CancellationToken cancellationToken = default)
     {
-        var vendors = await context.Set<Vendor>().ToListAsync(cancellationToken);
+        var ct = cancellationToken;
+        var vendors = await _context.Set<Vendor>().ToListAsync(ct);
 
         return vendors
             .OrderByDescending(v => v.IsActive)
@@ -31,12 +36,13 @@ public class VendorQueryHandler(DataContext context)
     /// Creates the vendor when its name is unique ignoring case. Otherwise returns the violation and writes
     /// nothing.
     /// </summary>
-    public async Task<CreateVendorResult> Handle(CreateVendorCommand request,
+    public async ValueTask<CreateVendorResult> Handle(CreateVendorCommand request,
         CancellationToken cancellationToken = default)
     {
-        var existingNames = await context.Set<Vendor>()
+        var ct = cancellationToken;
+        var existingNames = await _context.Set<Vendor>()
             .Select(v => v.Name)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
 
         var violations = request.FindRuleViolations(existingNames);
         if (violations.Count > 0)
@@ -53,8 +59,8 @@ public class VendorQueryHandler(DataContext context)
             PhoneNumber = request.PhoneNumber,
             IsActive = request.IsActive
         };
-        context.Add(vendor);
-        await context.SaveChangesAsync(cancellationToken);
+        _context.Add(vendor);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return new CreateVendorResult(true, $"Vendor '{vendor.Name}' created.", vendor.Id);
     }

@@ -1,6 +1,6 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.LlmGateway;
-using MediatR;
+using Mediator;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;

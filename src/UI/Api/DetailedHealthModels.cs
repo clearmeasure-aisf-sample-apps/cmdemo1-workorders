@@ -105,7 +105,7 @@ public static class ComponentHealthStatus
 /// <summary>
 /// Per-component fingerprint for conditional GET (<see cref="ComponentHealthEntry.ExceptionDetail"/> excluded).
 /// </summary>
-internal sealed record DetailedHealthComponentEtagFingerprint
+public sealed record DetailedHealthComponentEtagFingerprint
 {
     public required string Name { get; init; }
     public required string Status { get; init; }
@@ -122,7 +122,7 @@ internal sealed record DetailedHealthComponentEtagFingerprint
 /// (<see cref="ComponentHealthEntry.ExceptionDetail"/>) are omitted so probes can reuse ETags across polls.
 /// Host memory/process metadata is also omitted because those values drift between requests.
 /// </remarks>
-internal sealed record DetailedHealthEtagFingerprint
+public sealed record DetailedHealthEtagFingerprint
 {
     public required string OverallStatus { get; init; }
     public required IReadOnlyList<DetailedHealthComponentEtagFingerprint> Components { get; init; }
