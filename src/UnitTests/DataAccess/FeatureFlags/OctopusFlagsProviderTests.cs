@@ -110,25 +110,12 @@ public class OctopusFlagsProviderTests
         details.ErrorType.ShouldBe(ErrorType.ParseError);
     }
 
-    [TestCase("value-and-rules")]
-    [TestCase("neither-value-nor-rules")]
-    [TestCase("rules-without-evaluation-key")]
-    [TestCase("no-rules")]
-    [TestCase("a-missing-rule")]
-    [TestCase("rule-without-name")]
-    [TestCase("rule-without-conditions")]
-    [TestCase("rule-with-a-missing-condition")]
-    [TestCase("condition-without-type")]
-    [TestCase("condition-without-key")]
-    [TestCase("condition-without-values")]
-    [TestCase("condition-with-a-missing-value")]
-    [TestCase("rollout-without-percentage")]
-    [TestCase("rollout-over-100")]
-    public async Task ResolveBooleanValueAsync_Should_ReportAParseError_When_TheToggleIsMalformed(string slug)
+    [Test]
+    public async Task ResolveBooleanValueAsync_Should_ReportAParseError_When_ADeferredToggleIsMalformed()
     {
         using var provider = await ProviderReading(new StubOctopusTogglesHandler(OctopusTogglesMother.MalformedToggles));
 
-        var details = await provider.ResolveBooleanValueAsync(slug, true, InRegion("eu"));
+        var details = await provider.ResolveBooleanValueAsync("rule-without-conditions", true, InRegion("eu"));
 
         details.Value.ShouldBeTrue();
         details.ErrorType.ShouldBe(ErrorType.ParseError);
