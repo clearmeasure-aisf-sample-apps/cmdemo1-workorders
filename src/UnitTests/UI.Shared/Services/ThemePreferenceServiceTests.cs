@@ -65,20 +65,19 @@ public class ThemePreferenceServiceTests
         sut.IsDarkMode.ShouldBeTrue();
     }
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     private sealed class StubDisconnectedJsRuntime : IJSRuntime
     {
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
             throw new JSDisconnectedException("circuit disconnected");
-#pragma warning restore BL0016
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             throw new JSDisconnectedException("circuit disconnected");
-#pragma warning restore BL0016
     }
+#pragma warning restore BL0016
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     private sealed class StubThemeJsRuntime : IJSRuntime
     {
         public string InitialTheme { get; init; } = "light";
@@ -86,7 +85,6 @@ public class ThemePreferenceServiceTests
         public int SetThemeCalls { get; private set; }
         public bool? LastSetThemeArg { get; private set; }
 
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && typeof(TValue) == typeof(IJSObjectReference))
@@ -97,13 +95,10 @@ public class ThemePreferenceServiceTests
 
             throw new InvalidOperationException($"Unexpected InvokeAsync: {identifier}");
         }
-#pragma warning restore BL0016
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             InvokeAsync<TValue>(identifier, args);
-#pragma warning restore BL0016
 
         private sealed class StubThemeModule : IJSObjectReference
         {
@@ -117,7 +112,6 @@ public class ThemePreferenceServiceTests
                 _parent = parent;
             }
 
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
             {
                 if (identifier == "getTheme" && typeof(TValue) == typeof(string))
@@ -139,13 +133,10 @@ public class ThemePreferenceServiceTests
 
                 throw new InvalidOperationException($"Unexpected module InvokeAsync: {identifier}");
             }
-#pragma warning restore BL0016
 
             public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
                 object?[]? args) =>
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
                 InvokeAsync<TValue>(identifier, args);
-#pragma warning restore BL0016
 
             public ValueTask DisposeAsync()
             {
@@ -155,4 +146,5 @@ public class ThemePreferenceServiceTests
             }
         }
     }
+#pragma warning restore BL0016
 }

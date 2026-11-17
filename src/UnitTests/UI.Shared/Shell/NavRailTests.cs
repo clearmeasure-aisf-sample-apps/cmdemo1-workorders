@@ -208,11 +208,11 @@ public class NavRailTests
         bool isNarrow) =>
         layout.InvokeAsync(() => rail.Instance.OnViewportChanged(isNarrow));
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     private sealed class PendingImportJsRuntime : IJSRuntime
     {
         public TaskCompletionSource<IJSObjectReference> Import { get; } = new();
 
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         public async ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier == "import" && args?[0] is string path && path.EndsWith("mainLayoutNav.js"))
@@ -221,33 +221,27 @@ public class NavRailTests
                 return (TValue)(object)new RecordingJsModule();
             return default!;
         }
-#pragma warning restore BL0016
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             InvokeAsync<TValue>(identifier, args);
-#pragma warning restore BL0016
     }
 
     private sealed class RecordingJsModule : IJSObjectReference
     {
         public List<string> Identifiers { get; } = [];
 
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             Identifiers.Add(identifier);
             return ValueTask.FromResult(default(TValue)!);
         }
-#pragma warning restore BL0016
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             InvokeAsync<TValue>(identifier, args);
-#pragma warning restore BL0016
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
+#pragma warning restore BL0016
 }
