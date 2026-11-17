@@ -39,7 +39,7 @@ public class WorkOrderSummaryCardsTests
 
         component.FindAll(".summary-card-value").ShouldAllBe(v => v.TextContent == "–");
         Text(component, "SummaryCardCompleted")
-            .ShouldBe("Completed (30 days) – No recent closures loading Show these work orders");
+            .ShouldBe("Completed (30 days) – loading No recent closures Show these work orders");
     }
 
     [Test]

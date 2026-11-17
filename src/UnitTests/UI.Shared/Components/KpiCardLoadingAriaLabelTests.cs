@@ -39,6 +39,24 @@ public class KpiCardLoadingAriaLabelTests
     }
 
     [Test]
+    public async Task ShouldKeepVisibleTextInAriaLabelOrder_WhenCountIsNullWithNote()
+    {
+        await using var ctx = new BunitContext();
+
+        var component = ctx.Render<KpiCard>(p => p
+            .Add(c => c.TestId, "CardId")
+            .Add(c => c.Label, "Overdue")
+            .Add(c => c.Count, null)
+            .Add(c => c.Note, "Needs attention"));
+
+        // axe label-content-name-mismatch: the visible text must appear, in order, inside the accessible name.
+        static string Words(string s) => string.Join(' ', s.Split(' ', '.', ',', ':', '–', '\n', '\t')
+            .Where(w => w.Length > 0)).ToLowerInvariant();
+        var card = component.Find(".summary-card");
+        Words(card.GetAttribute("aria-label")!).ShouldContain(Words(card.TextContent));
+    }
+
+    [Test]
     public async Task ShouldShowCountInAriaLabel_WhenCountIsNotNull()
     {
         await using var ctx = new BunitContext();
