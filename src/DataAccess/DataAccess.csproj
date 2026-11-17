@@ -16,7 +16,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="NServiceBus.Persistence.Sql.TransactionalSession" />
     <PackageReference Include="Octopus.OpenFeature" />
     <PackageReference Include="OpenFeature" />
