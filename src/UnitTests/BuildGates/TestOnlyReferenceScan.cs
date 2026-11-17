@@ -7,7 +7,8 @@ namespace ClearMeasure.Bootcamp.UnitTests.BuildGates;
 /// <summary>
 /// Finds public and internal production members or types whose simple name appears only in test
 /// projects (plus the declaration itself). Syntax-only, same style as
-/// <c>SolutionArchitectureScan</c>: no compilation, ratchet keys only shrink.
+/// <c>SolutionArchitectureScan</c>: no compilation, ratchet keys only shrink. Mediator handler types are not
+/// declarations here: the Mediator source generator registers them, so no hand-written code names them.
 /// </summary>
 internal static class TestOnlyReferenceScan
 {
@@ -161,7 +162,7 @@ internal static class TestOnlyReferenceScan
 
     private static IEnumerable<Declaration> TypeDeclarationsAt(string relativePath, SyntaxNode node)
     {
-        if (node is TypeDeclarationSyntax type && IsPublicOrInternalType(type))
+        if (node is TypeDeclarationSyntax type && IsPublicOrInternalType(type) && !IsMediatorHandler(type))
         {
             yield return Named(relativePath, type.Identifier, type.Identifier.ValueText);
             yield break;
@@ -219,6 +220,16 @@ internal static class TestOnlyReferenceScan
         var type = node.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
         return type is null ? "" : type.Identifier.ValueText + ".";
     }
+
+    private static readonly string[] MediatorHandlerInterfaces = ["IRequestHandler", "INotificationHandler"];
+
+    /// <summary>
+    /// A request or notification handler: the Mediator source generator references it from generated code, which this
+    /// scan cannot see.
+    /// </summary>
+    private static bool IsMediatorHandler(TypeDeclarationSyntax type) =>
+        type.BaseList?.Types.Any(baseType => baseType.Type is GenericNameSyntax generic
+            && MediatorHandlerInterfaces.Contains(generic.Identifier.ValueText)) == true;
 
     private static bool IsPublicOrInternalType(TypeDeclarationSyntax type)
     {
