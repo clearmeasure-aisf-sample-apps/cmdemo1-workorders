@@ -569,7 +569,7 @@ jobs:
           BUILD_CONFIGURATION: ${{ env.BUILD_CONFIGURATION }}
         run: |
           set -euo pipefail
-          BIN_OUT="src/AcceptanceTests/bin/${BUILD_CONFIGURATION}/net10.0"
+          BIN_OUT="src/AcceptanceTests/bin/${BUILD_CONFIGURATION}/net11.0"
           STAGE="${RUNNER_TEMP}/pr-acceptance-stage"
           mkdir -p "${STAGE}/trx" "${STAGE}/media"
           cp -a "${RESULTS_DIR}/." "${STAGE}/trx/" 2>/dev/null || true
@@ -697,7 +697,7 @@ jobs:
           BUILD_CONFIGURATION: ${{ env.BUILD_CONFIGURATION }}
         run: |
           set -euo pipefail
-          BIN_OUT="src/AcceptanceTests/bin/${BUILD_CONFIGURATION}/net10.0"
+          BIN_OUT="src/AcceptanceTests/bin/${BUILD_CONFIGURATION}/net11.0"
           STAGE="${RUNNER_TEMP}/pr-acceptance-stage"
           mkdir -p "${STAGE}/trx" "${STAGE}/media"
           cp -a "${RESULTS_DIR}/." "${STAGE}/trx/" 2>/dev/null || true

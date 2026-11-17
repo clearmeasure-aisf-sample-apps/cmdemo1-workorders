@@ -862,7 +862,7 @@ jobs:
           Write-Host "Validating shard coverage with vstest..."
           Write-Host ""
 
-          $dll = "src/AcceptanceTests/bin/Release/net10.0/ClearMeasure.Bootcamp.AcceptanceTests.dll"
+          $dll = "src/AcceptanceTests/bin/Release/net11.0/ClearMeasure.Bootcamp.AcceptanceTests.dll"
 
           $shardNumbers = 1..6
 
