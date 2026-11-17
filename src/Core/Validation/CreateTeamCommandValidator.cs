@@ -7,8 +7,11 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// Validator for <see cref="CreateTeamCommand"/>: the name is required, and the name and description fit the
-/// columns. Rules that depend on stored data are in <see cref="CreateTeamCommand.FindRuleViolations"/>.
+/// FluentValidation for <see cref="CreateTeamCommand"/> (#1824): the name is required, and the name
+/// and description fit the columns. HTTP uses this via <c>HttpEnvelopeValidatorSet</c>. In-process
+/// handlers inject this concrete type (not <c>IValidator&lt;T&gt;</c>) and map failures to Failed
+/// results; duplicate-name and unknown-member rules stay on
+/// <see cref="CreateTeamCommand.FindRuleViolations"/>.
 /// </summary>
 public sealed class CreateTeamCommandValidator : AbstractValidator<CreateTeamCommand>
 {

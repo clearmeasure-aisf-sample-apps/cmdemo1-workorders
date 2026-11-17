@@ -27,6 +27,7 @@ public class UiServiceRegistry : ServiceRegistry
         this.AddSingleton<IStartupFilter, TestingDatabaseStartupFilter>();
         this.AddValidatorsFromAssemblyContaining<WebServiceMessageValidator>(
             filter: result => !HttpEnvelopeValidationDeferral.IsDeferredValidator(result.ValidatorType));
+        RegisterInProcessCreateCommandValidators();
         this.AddSingleton<Middleware.HttpEnvelopeValidatorSet>();
         this.AddScoped<DbContext, DataContext>();
         AddRealtimeBus();
@@ -39,6 +40,24 @@ public class UiServiceRegistry : ServiceRegistry
         this.AddScoped<DatabaseMigrationVersionReader>();
         AddHealthReporting();
     }
+
+    /// <summary>
+    /// In-process create shape rules (#1824). Builds each deferred FluentValidation type with
+    /// <c>ActivatorUtilities</c> (same as <c>HttpEnvelopeValidatorSet</c>) and wraps it so the
+    /// validator type is never an unkeyed DI service — Lamar would otherwise resolve it as
+    /// <c>IValidator&lt;T&gt;</c> and <c>ValidationBehavior</c> would throw.
+    /// </summary>
+    private void RegisterInProcessCreateCommandValidators()
+    {
+        this.AddSingleton(sp => new CreateVendorCommandShapeRules(CreateDeferredValidator<CreateVendorCommandValidator>(sp)));
+        this.AddSingleton(sp => new CreateTeamCommandShapeRules(CreateDeferredValidator<CreateTeamCommandValidator>(sp)));
+        this.AddSingleton(sp => new CreateDatedWorkOrdersCommandShapeRules(
+            CreateDeferredValidator<CreateDatedWorkOrdersCommandValidator>(sp)));
+    }
+
+    private static TValidator CreateDeferredValidator<TValidator>(IServiceProvider services)
+        where TValidator : class =>
+        (TValidator)ActivatorUtilities.CreateInstance(services, typeof(TValidator));
 
     /// <summary>MediatR with validation and feature-flag behaviors, behind an <see cref="IBus"/> that also notifies realtime clients.</summary>
     private void AddRealtimeBus()

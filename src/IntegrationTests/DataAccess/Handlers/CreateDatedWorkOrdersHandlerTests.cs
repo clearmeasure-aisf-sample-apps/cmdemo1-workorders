@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
@@ -141,6 +142,25 @@ public class CreateDatedWorkOrdersHandlerTests
     }
 
     [Test]
+    public async Task Handle_WhenTitleIsBlank_CreatesZero()
+    {
+        var creatorUserName = TestData.UserName("tl");
+        var assigneeUserName = TestData.UserName("gw");
+        var bus = TestHost.GetRequiredService<IBus>();
+
+        var result = await bus.Send(new CreateDatedWorkOrdersCommand(
+            creatorUserName,
+            assigneeUserName,
+            "",
+            "Weekly Saturday mow",
+            [new DateOnly(2026, 8, 29)]));
+
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldContain("'Title' must not be empty.");
+        result.WorkOrders.Count.ShouldBe(0);
+    }
+
+    [Test]
     public async Task Handle_WhenCreatorMissing_CreatesZero()
     {
         var assigneeUserName = TestData.UserName("gw");
@@ -229,7 +249,9 @@ public class CreateDatedWorkOrdersHandlerTests
         new(creatorUserName, assigneeUserName, "Mow the grass", "Weekly Saturday mow", dueDates);
 
     private static CreateDatedWorkOrdersHandler CreateHandler(IWorkOrderNumberGenerator numbers, IBus bus) =>
-        new(TestHost.GetRequiredService<DbContext>(), bus, numbers, TimeProvider.System,
+        new(new CreateDatedWorkOrdersCommandShapeRules(new CreateDatedWorkOrdersCommandValidator()),
+            new DatedWorkOrderBatchCreator(
+                TestHost.GetRequiredService<DbContext>(), bus, numbers, TimeProvider.System),
             NullLogger<CreateDatedWorkOrdersHandler>.Instance);
 
     private static async Task ThenDueDatesUnshiftedAsync(string withDateNumber, string withoutDateNumber)

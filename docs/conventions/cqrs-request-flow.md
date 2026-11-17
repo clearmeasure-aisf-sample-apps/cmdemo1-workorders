@@ -56,3 +56,11 @@ The HTTP hop is specific to remoted browser requests, not every `IBus` call.
 Client `RemotableBus` delegates requests without `IRemotableRequest` to its base
 `Bus` for local MediatR dispatch; server callers can dispatch directly through
 the server bus without going through the browser transport.
+
+## Create-command validation (#1824)
+
+Most requests fail FluentValidation with `ValidationException` in `ValidationBehavior`.
+Three create commands answer in-process failures with Failed results: handlers inject the
+concrete validators (not `IValidator<T>`) for shape rules and use `FindRuleViolations` for
+stored-data checks, while HTTP shape rules stay on the envelope catalog.
+See [in-process-create-command-validation.md](in-process-create-command-validation.md).

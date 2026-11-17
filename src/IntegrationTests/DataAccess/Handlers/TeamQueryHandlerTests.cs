@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
@@ -43,7 +44,7 @@ public class TeamQueryHandlerTests
     public async Task ShouldCreateTeamWithMembersAndReadBackThroughTeamsQuery()
     {
         var name = TeamName("Grounds");
-        var result = await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
+        var result = await Handler()
             .Handle(new CreateTeamCommand(name, "Lawn and snow",
                 [_employees[0].UserName, _employees[1].UserName.ToUpperInvariant()]));
 
@@ -61,7 +62,7 @@ public class TeamQueryHandlerTests
     [Test]
     public async Task ShouldReturnTeamsOrderedByName()
     {
-        var handler = new TeamQueryHandler(TestHost.GetRequiredService<DataContext>());
+        var handler = Handler();
         (await handler.Handle(new CreateTeamCommand(TeamName("kitchen"), null, [_employees[2].UserName])))
             .Succeeded.ShouldBeTrue();
         (await handler.Handle(new CreateTeamCommand(TeamName("Grounds"), null, []))).Succeeded.ShouldBeTrue();
@@ -78,7 +79,7 @@ public class TeamQueryHandlerTests
     public async Task ShouldFailAndWriteNothing_WhenMemberUnknown()
     {
         var unknown = TestData.UserName("ghost");
-        var result = await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
+        var result = await Handler()
             .Handle(new CreateTeamCommand(TeamName("Grounds"), null, [_employees[0].UserName, unknown]));
 
         result.Succeeded.ShouldBeFalse();
@@ -92,10 +93,10 @@ public class TeamQueryHandlerTests
     public async Task ShouldFail_WhenTeamNameDuplicatesIgnoringCase()
     {
         var name = TeamName("Grounds");
-        (await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
+        (await Handler()
             .Handle(new CreateTeamCommand(name, null, [_employees[0].UserName]))).Succeeded.ShouldBeTrue();
 
-        var result = await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>())
+        var result = await Handler()
             .Handle(new CreateTeamCommand($"  {name.ToLowerInvariant()} ", null, [_employees[1].UserName]));
 
         result.Succeeded.ShouldBeFalse();
@@ -104,11 +105,27 @@ public class TeamQueryHandlerTests
         (await OwnMembershipCount()).ShouldBe(1);
     }
 
+    [Test]
+    public async Task ShouldFailWithoutWriting_WhenTeamNameIsBlank()
+    {
+        var result = await Handler()
+            .Handle(new CreateTeamCommand("", null, [_employees[0].UserName]));
+
+        result.Succeeded.ShouldBeFalse();
+        result.Id.ShouldBeNull();
+        result.Message.ShouldContain("'Name' must not be empty.");
+        (await OwnTeams()).ShouldBeEmpty();
+        (await OwnMembershipCount()).ShouldBe(0);
+    }
+
+    private static TeamQueryHandler Handler() =>
+        new(TestHost.GetRequiredService<DataContext>(), new CreateTeamCommandShapeRules(new CreateTeamCommandValidator()));
+
     private string TeamName(string name) => $"{name} {_tag}";
 
     private async Task<Team[]> OwnTeams()
     {
-        var teams = await new TeamQueryHandler(TestHost.GetRequiredService<DataContext>()).Handle(new TeamsQuery());
+        var teams = await Handler().Handle(new TeamsQuery());
         return teams.Where(t => t.Name.EndsWith(_tag, StringComparison.Ordinal)).ToArray();
     }
 

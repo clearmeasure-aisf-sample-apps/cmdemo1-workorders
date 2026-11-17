@@ -4,14 +4,16 @@ using ClearMeasure.Bootcamp.Core.Queries;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// #1824 deferral: FluentValidation for CreateVendor, CreateTeam, and CreateDatedWorkOrders
-/// stays on the HTTP envelope only so in-process MCP / IBus callers keep master's handler
-/// results. Both host registries and the HTTP payload resolver use this one list — do not
-/// duplicate the three types elsewhere (#1804).
+/// #1824 design (from #1804 decision c): FluentValidation for CreateVendor, CreateTeam, and
+/// CreateDatedWorkOrders is listed here so host registries omit them from MediatR
+/// <c>IValidator&lt;T&gt;</c> registration and HTTP 400 responses stay on
+/// <c>HttpEnvelopeValidatorSet</c>. In-process MCP / IBus callers never get
+/// <c>ValidationException</c>; handlers inject the concrete validator types and map shape failures
+/// to Failed results, with stored-data rules on each command's <c>FindRuleViolations</c>.
 /// </summary>
 public static class HttpEnvelopeValidationDeferral
 {
-    /// <summary>Request → concrete validator pairs for the HTTP-envelope host.</summary>
+    /// <summary>Request → concrete validator pairs for the HTTP-envelope host only.</summary>
     public static IReadOnlyList<(Type RequestType, Type ValidatorType)> Entries { get; } =
     [
         (typeof(CreateVendorCommand), typeof(CreateVendorCommandValidator)),
@@ -19,7 +21,10 @@ public static class HttpEnvelopeValidationDeferral
         (typeof(CreateDatedWorkOrdersCommand), typeof(CreateDatedWorkOrdersCommandValidator))
     ];
 
-    /// <summary>True when assembly scanning must skip this type for MediatR <c>IValidator&lt;T&gt;</c>.</summary>
+    /// <summary>
+    /// True when assembly scanning must skip this type for MediatR <c>IValidator&lt;T&gt;</c>
+    /// so in-process validation stays on injected concrete validators and Failed results.
+    /// </summary>
     public static bool IsDeferredValidator(Type validatorType)
     {
         for (var i = 0; i < Entries.Count; i++)

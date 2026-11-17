@@ -107,7 +107,7 @@ public class ValidationBehaviorTests
     }
 
     [Test]
-    public async Task Handle_Should_ReachHandler_WhenDeferredHttpEnvelopeValidatorsAreNotRegisteredAsIValidator()
+    public async Task Handle_Should_ReachHandler_WhenHttpEnvelopeValidatorsAreNotRegisteredAsIValidator()
     {
         var services = new ServiceCollection();
         services.AddMediatR(cfg =>

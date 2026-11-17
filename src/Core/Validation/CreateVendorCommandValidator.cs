@@ -7,8 +7,10 @@ using FluentValidation;
 namespace ClearMeasure.Bootcamp.Core.Validation;
 
 /// <summary>
-/// Validator for <see cref="CreateVendorCommand"/>: the name is required, and every string fits its column.
-/// Rules that depend on stored data are in <see cref="CreateVendorCommand.FindRuleViolations"/>.
+/// FluentValidation for <see cref="CreateVendorCommand"/> (#1824): the name is required, and every
+/// string fits its column. HTTP uses this via <c>HttpEnvelopeValidatorSet</c>. In-process handlers
+/// inject this concrete type (not <c>IValidator&lt;T&gt;</c>) and map failures to Failed results;
+/// duplicate-name rules stay on <see cref="CreateVendorCommand.FindRuleViolations"/>.
 /// </summary>
 public sealed class CreateVendorCommandValidator : AbstractValidator<CreateVendorCommand>
 {

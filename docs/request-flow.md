@@ -13,3 +13,13 @@ UI → API controller → IBus.Send(query or command) → MediatR
 4. MediatR dispatches it to the matching handler in `DataAccess`.
 5. The handler reads or updates data through `DataContext`, which uses EF Core to access the database.
 6. The handler's result returns through MediatR and `IBus` to the API, which responds to the UI.
+
+## Validation
+
+Most requests run FluentValidation in `ValidationBehavior` and throw `ValidationException` on failure
+(HTTP maps that to 400). Three create commands — `CreateDatedWorkOrdersCommand`,
+`CreateVendorCommand`, and `CreateTeamCommand` — use a deliberate split: in-process callers get
+Failed results from handler-injected concrete validators plus each command's `FindRuleViolations`
+stored-data checks; HTTP shape rules stay on the envelope FluentValidators in
+`HttpEnvelopeValidationDeferral`. See
+[in-process-create-command-validation.md](conventions/in-process-create-command-validation.md).

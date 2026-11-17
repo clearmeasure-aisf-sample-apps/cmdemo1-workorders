@@ -42,6 +42,14 @@ public class McpServiceRegistry : ServiceRegistry
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
         this.AddSingleton(TimeProvider.System);
+        // Non-IValidator DI handles (#1824) — build deferred validators without registering them as IValidator<T>.
+        this.AddSingleton(sp => new CreateVendorCommandShapeRules(
+            (CreateVendorCommandValidator)ActivatorUtilities.CreateInstance(sp, typeof(CreateVendorCommandValidator))));
+        this.AddSingleton(sp => new CreateTeamCommandShapeRules(
+            (CreateTeamCommandValidator)ActivatorUtilities.CreateInstance(sp, typeof(CreateTeamCommandValidator))));
+        this.AddSingleton(sp => new CreateDatedWorkOrdersCommandShapeRules(
+            (CreateDatedWorkOrdersCommandValidator)ActivatorUtilities.CreateInstance(
+                sp, typeof(CreateDatedWorkOrdersCommandValidator))));
     }
 
     private void ScanForHandlers() =>

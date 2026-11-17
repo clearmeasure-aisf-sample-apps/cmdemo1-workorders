@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
+using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using FluentValidation;
@@ -13,13 +14,27 @@ public class McpHttpEnvelopeValidatorRegistrationTests
     [Test]
     public void ShouldOmitDeferredIValidators_WhenMcpServiceRegistryIsBuilt()
     {
-        using var container = new Container(registry =>
-        {
-            registry.For<TimeProvider>().Use(TimeProvider.System);
-            registry.IncludeRegistry<McpServiceRegistry>();
-        });
+        using var container = BuildMcpContainer();
 
         DeferredIValidatorRegistration.ShouldOmitDeferredCreateCommands(container);
         container.GetInstance<IValidator<SaveDraftCommand>>().ShouldNotBeNull();
     }
+
+    [Test]
+    public void ShouldResolveInProcessCreateShapeRules_WhenMcpServiceRegistryIsBuilt()
+    {
+        using var container = BuildMcpContainer();
+
+        container.GetInstance<CreateVendorCommandShapeRules>().ShouldNotBeNull();
+        container.GetInstance<CreateTeamCommandShapeRules>().ShouldNotBeNull();
+        container.GetInstance<CreateDatedWorkOrdersCommandShapeRules>().ShouldNotBeNull();
+        DeferredIValidatorRegistration.ShouldOmitDeferredCreateCommands(container);
+    }
+
+    private static Container BuildMcpContainer() =>
+        new(registry =>
+        {
+            registry.For<TimeProvider>().Use(TimeProvider.System);
+            registry.IncludeRegistry<McpServiceRegistry>();
+        });
 }

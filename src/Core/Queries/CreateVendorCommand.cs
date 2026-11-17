@@ -17,8 +17,11 @@ public record CreateVendorCommand(
     bool IsActive = true) : IRequest<CreateVendorResult>, IRemotableRequest
 {
     /// <summary>
-    /// Returns the rules this command breaks given the data already stored: a vendor name that matches an
-    /// existing one ignoring case. An empty list means the vendor can be created.
+    /// Stored-data rules for in-process create (#1824): duplicate name ignoring case. Shape rules
+    /// run in the handler via the injected <c>CreateVendorCommandValidator</c>. An empty list means
+    /// the vendor can be created. Handlers map violations to <see cref="CreateVendorResult"/> with
+    /// <c>Succeeded</c> false — never a FluentValidation exception. HTTP still runs the envelope
+    /// FluentValidator for 400.
     /// </summary>
     public IReadOnlyList<string> FindRuleViolations(IEnumerable<string> existingVendorNames)
     {

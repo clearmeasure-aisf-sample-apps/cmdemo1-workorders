@@ -22,6 +22,23 @@ public record CreateDatedWorkOrdersCommand(
 
     /// <summary>User-visible message when the due-date list is larger than <see cref="MaximumBatchSize"/>.</summary>
     public const string BatchCannotExceed = "A dated work-order batch cannot exceed 10 dates.";
+
+    /// <summary>
+    /// In-process DueDates empty / over-ten checks (#1824) with master's Failed messages. Shape
+    /// rules (usernames, title, description) run in the handler via the injected
+    /// <c>CreateDatedWorkOrdersCommandValidator</c>. An empty list means the handler may continue
+    /// with shape validation and employee lookup. Callers receive failures as
+    /// <see cref="CreateDatedWorkOrdersResult.Failed"/> — never a FluentValidation exception.
+    /// </summary>
+    public IReadOnlyList<string> FindRuleViolations()
+    {
+        if (DueDates.Count == 0)
+        {
+            return [AtLeastOneDueDateRequired];
+        }
+
+        return DueDates.Count > MaximumBatchSize ? [BatchCannotExceed] : [];
+    }
 }
 
 /// <summary>
