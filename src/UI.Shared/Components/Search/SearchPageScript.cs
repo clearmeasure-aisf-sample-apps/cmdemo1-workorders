@@ -13,11 +13,37 @@ public sealed class SearchPageScript(IJSRuntime js) : IAsyncDisposable
 
     private IJSObjectReference? _module;
 
-    public async Task DownloadCsvAsync(string fileName, string csv) =>
-        await (await ModuleAsync()).InvokeVoidAsync("downloadCsv", fileName, csv);
+    public async Task DownloadCsvAsync(string fileName, string csv)
+    {
+        try
+        {
+            await (await ModuleAsync()).InvokeVoidAsync("downloadCsv", fileName, csv);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit gone during CSV download; download is best-effort.
+        }
+        catch (JSException)
+        {
+            // JS error during CSV download; best-effort.
+        }
+    }
 
-    public async Task FocusByIdAsync(string elementId) =>
-        await (await ModuleAsync()).InvokeVoidAsync("focusById", elementId);
+    public async Task FocusByIdAsync(string elementId)
+    {
+        try
+        {
+            await (await ModuleAsync()).InvokeVoidAsync("focusById", elementId);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit gone during focus; best-effort.
+        }
+        catch (JSException)
+        {
+            // JS error during focus; best-effort.
+        }
+    }
 
     public async Task SetIndeterminateAsync(ElementReference checkbox, bool indeterminate)
     {
@@ -28,6 +54,10 @@ public sealed class SearchPageScript(IJSRuntime js) : IAsyncDisposable
         catch (JSDisconnectedException)
         {
             // Circuit gone during table re-render; indeterminate state is best-effort.
+        }
+        catch (JSException)
+        {
+            // JS error during indeterminate toggle; best-effort.
         }
     }
 
@@ -48,6 +78,13 @@ public sealed class SearchPageScript(IJSRuntime js) : IAsyncDisposable
         _module = null;
     }
 
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+    private async Task<IJSObjectReference> ModuleAsync()
+    {
+        if (_module is not null)
+            return _module;
+
+        #pragma warning disable BL0016 // -- reason: wrapper lets JS exceptions propagate to callers that catch them
+        return _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+        #pragma warning restore BL0016
+    }
 }

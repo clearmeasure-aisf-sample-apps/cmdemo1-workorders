@@ -22,6 +22,11 @@ public sealed class ThemeScript(IJSRuntime js) : IAsyncDisposable
             // Circuit gone during theme init; keep the in-memory default.
             return null;
         }
+        catch (JSException)
+        {
+            // JS error during theme read; keep the in-memory default.
+            return null;
+        }
     }
 
     public async Task SyncDomFromThemeAsync(string theme)
@@ -34,6 +39,10 @@ public sealed class ThemeScript(IJSRuntime js) : IAsyncDisposable
         {
             // Circuit gone during theme init; DOM sync is best-effort.
         }
+        catch (JSException)
+        {
+            // JS error during DOM sync; best-effort.
+        }
     }
 
     public async Task SetThemeAsync(bool enabled)
@@ -45,6 +54,10 @@ public sealed class ThemeScript(IJSRuntime js) : IAsyncDisposable
         catch (JSDisconnectedException)
         {
             // Circuit gone while toggling theme; in-memory state still updates.
+        }
+        catch (JSException)
+        {
+            // JS error during theme toggle; best-effort.
         }
     }
 
@@ -65,6 +78,13 @@ public sealed class ThemeScript(IJSRuntime js) : IAsyncDisposable
         _module = null;
     }
 
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+    private async Task<IJSObjectReference> ModuleAsync()
+    {
+        if (_module is not null)
+            return _module;
+
+        #pragma warning disable BL0016 // -- reason: wrapper lets JS exceptions propagate to callers that catch them
+        return _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+        #pragma warning restore BL0016
+    }
 }

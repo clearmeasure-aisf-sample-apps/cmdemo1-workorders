@@ -239,6 +239,7 @@ public class UserSessionTests
         public TaskCompletionSource? AfterReadGate { get; set; }
         public int WaitingCount { get; private set; }
 
+#pragma warning disable BL0013 // -- reason: test double calls GetAuthenticationStateAsync on base without subscribing; callers subscribe
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var state = await base.GetAuthenticationStateAsync();
@@ -252,6 +253,7 @@ public class UserSessionTests
             await gate.Task;
             return state;
         }
+#pragma warning restore BL0013
     }
 
     private sealed class StubEmployeeBus(params Employee?[] employees) : IBus

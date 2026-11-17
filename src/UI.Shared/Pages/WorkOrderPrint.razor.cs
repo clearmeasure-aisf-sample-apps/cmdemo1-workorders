@@ -43,7 +43,21 @@ public partial class WorkOrderPrint : AppComponentBase
         }
     }
 
-    private async Task PrintAsync() => await Js.InvokeVoidAsync("window.print");
+    private async Task PrintAsync()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("window.print");
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit gone during print; best-effort.
+        }
+        catch (JSException)
+        {
+            // JS print error; best-effort.
+        }
+    }
 
     private static string Or(string? value) => string.IsNullOrWhiteSpace(value) ? "None" : value;
 

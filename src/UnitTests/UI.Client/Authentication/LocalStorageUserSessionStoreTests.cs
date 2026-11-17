@@ -73,7 +73,9 @@ public class LocalStorageUserSessionStoreTests
         public int GetItemCalls { get; private set; }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             InvokeAsync<TValue>(identifier, CancellationToken.None, args);
+#pragma warning restore BL0016
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args)

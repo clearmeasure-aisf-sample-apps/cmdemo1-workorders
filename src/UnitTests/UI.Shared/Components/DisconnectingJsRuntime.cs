@@ -32,7 +32,9 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
 
     public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
         object?[]? args) =>
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         InvokeAsync<TValue>(identifier, args);
+#pragma warning restore BL0016
 
     private sealed class DisconnectingModule : IJSObjectReference
     {
@@ -41,6 +43,7 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
         // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
         public DisconnectingModule(bool failDispose) => _failDispose = failDispose;
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (typeof(TValue) == typeof(IJSObjectReference))
@@ -51,7 +54,9 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             InvokeAsync<TValue>(identifier, args);
+#pragma warning restore BL0016
 
         public ValueTask DisposeAsync()
         {
