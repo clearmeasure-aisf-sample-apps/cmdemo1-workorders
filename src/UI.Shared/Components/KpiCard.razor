@@ -57,13 +57,16 @@ else
             <span class="summary-card-text">
                 <span class="summary-card-label">@Label</span>
                 <span class="summary-card-value" data-testid="@ValueTestId">@CountText</span>
+                @if (Count == null)
+                {
+                    @(" ")<span class="summary-card-loading">loading</span>
+                }
                 @if (Note != null)
                 {
                     @(" ")<span class="summary-card-note @NoteTone">@Note</span>
                 }
                 @if (Count == null)
                 {
-                    @(" ")<span class="summary-card-loading">loading</span>
                     @(" ")<span class="summary-card-action">Show these work orders</span>
                 }
             </span>
