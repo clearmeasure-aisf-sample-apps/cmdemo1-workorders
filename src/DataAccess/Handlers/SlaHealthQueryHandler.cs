@@ -11,7 +11,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// Computes SLA health (on-time completion percentage) for the current month and last month.
 /// Only completions whose church date falls in those two months are read, as due date and
 /// completed date. SLA = (on-time count / total count) * 100, where on-time means the church
-/// completion date is on or before the due date. The Native AOT builds use <see cref="AotSlaHealthQueryHandler"/> instead.
+/// completion date is on or before the due date. The Native AOT builds use <c>AotSlaHealthQueryHandler</c> instead.
 /// </summary>
 public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRequestHandler<SlaHealthQuery, SlaHealth>
 {

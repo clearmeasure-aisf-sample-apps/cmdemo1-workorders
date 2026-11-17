@@ -103,8 +103,7 @@ public class AotHandlerCoverageTests
 
     private static IEnumerable<Type> RequestTypes(Type handler) =>
         handler.GetInterfaces()
-            .Where(contract => contract.IsGenericType
-                && contract.Namespace == "Mediator"
+            .Where(contract => contract is { IsGenericType: true, Namespace: "Mediator" }
                 && contract.Name.Contains("Handler", StringComparison.Ordinal))
             .Select(contract => contract.GetGenericArguments()[0]);
 }
