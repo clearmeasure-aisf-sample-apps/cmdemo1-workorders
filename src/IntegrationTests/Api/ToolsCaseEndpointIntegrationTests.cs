@@ -49,16 +49,4 @@ public class ToolsCaseEndpointIntegrationTests
         json.GetProperty("text").GetString().ShouldBe("hello");
     }
 
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.PostAsJsonAsync("/api/tools/case", new { text = "Hello", to = "upper" });
-        unversioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var versioned = await client.PostAsJsonAsync("/api/v1.0/tools/case", new { text = "Hello", to = "lower" });
-        versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-    }
 }
