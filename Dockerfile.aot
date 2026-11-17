@@ -1,0 +1,23 @@
+# Native AOT image of UI.Server (test deploys of PR #1911; publish-image.yml still builds the JIT Dockerfile).
+#   docker build -f Dockerfile.aot --build-arg VERSION=2.4.387-pr.1911.aot -t <registry>/cmdemo1/ui:<version> .
+# Build: the sdk:11.0-aot image has the native toolchain (clang, lld) Native AOT needs. Runtime: runtime-deps only,
+# since the app is one self-contained native executable; it listens on 8080 (ASPNETCORE_HTTP_PORTS of the base image).
+FROM mcr.microsoft.com/dotnet/sdk:11.0-aot AS build
+ARG VERSION=0.0.0-local
+WORKDIR /src
+COPY . .
+# The EF Core query precompiler re-reads the projects without command-line properties, so the switch is also an
+# environment variable (as in .github/workflows/aot-gate.yml).
+ENV UiServerAot=true
+RUN dotnet publish src/UI/Server/UI.Server.csproj -c Release -r linux-x64 \
+      -p:UiServerAot=true -p:Version=${VERSION} \
+      -p:TrimmerSingleWarn=false -p:TreatWarningsAsErrors=false -p:MSBuildTreatAllWarningsAsErrors=false \
+      -p:CodeAnalysisTreatWarningsAsErrors=false \
+      -o /out
+
+FROM mcr.microsoft.com/dotnet/runtime-deps:11.0 AS runtime
+WORKDIR /app
+COPY --from=build --chown=$APP_UID:$APP_UID /out/ /app/
+EXPOSE 8080
+USER $APP_UID
+ENTRYPOINT ["./ClearMeasure.Bootcamp.UI.Server"]
