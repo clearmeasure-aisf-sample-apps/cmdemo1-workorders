@@ -26,6 +26,16 @@ internal sealed record OctopusFlagCondition(string? Type, string? Key, string?[]
 
     private bool AttributeIsOneOfValues(EvaluationContext? context)
     {
+        var (key, values) = AttributeAndValues();
+        return context is not null && context.AsDictionary().Any(entry =>
+            entry.Key.Equals(key, StringComparison.OrdinalIgnoreCase)
+            && entry.Value.AsString is { } text
+            && values.Contains(text, StringComparer.OrdinalIgnoreCase));
+    }
+
+    /// <summary>The attribute and accepted values of an is-one-of condition, after checking none is missing.</summary>
+    private (string Key, string?[] Values) AttributeAndValues()
+    {
         if (Key is null)
         {
             throw new ParseErrorException("A condition is missing a key.");
@@ -36,15 +46,9 @@ internal sealed record OctopusFlagCondition(string? Type, string? Key, string?[]
             throw new ParseErrorException("A condition is missing values.");
         }
 
-        if (Values.Any(value => value is null))
-        {
-            throw new ParseErrorException("A condition is missing a value.");
-        }
-
-        return context is not null && context.AsDictionary().Any(entry =>
-            entry.Key.Equals(Key, StringComparison.OrdinalIgnoreCase)
-            && entry.Value.AsString is { } text
-            && Values.Contains(text, StringComparer.OrdinalIgnoreCase));
+        return Values.Contains(null)
+            ? throw new ParseErrorException("A condition is missing a value.")
+            : (Key, Values);
     }
 
     private bool IncludedByPercentage(EvaluationContext? context)

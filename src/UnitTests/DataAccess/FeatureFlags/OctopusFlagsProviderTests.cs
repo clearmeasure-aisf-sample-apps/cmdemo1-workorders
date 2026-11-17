@@ -110,6 +110,41 @@ public class OctopusFlagsProviderTests
         details.ErrorType.ShouldBe(ErrorType.ParseError);
     }
 
+    [TestCase("value-and-rules")]
+    [TestCase("neither-value-nor-rules")]
+    [TestCase("rules-without-evaluation-key")]
+    [TestCase("no-rules")]
+    [TestCase("a-missing-rule")]
+    [TestCase("rule-without-name")]
+    [TestCase("rule-without-conditions")]
+    [TestCase("rule-with-a-missing-condition")]
+    [TestCase("condition-without-type")]
+    [TestCase("condition-without-key")]
+    [TestCase("condition-without-values")]
+    [TestCase("condition-with-a-missing-value")]
+    [TestCase("rollout-without-percentage")]
+    [TestCase("rollout-over-100")]
+    public async Task ResolveBooleanValueAsync_Should_ReportAParseError_When_TheToggleIsMalformed(string slug)
+    {
+        using var provider = await ProviderReading(new StubOctopusTogglesHandler(OctopusTogglesMother.MalformedToggles));
+
+        var details = await provider.ResolveBooleanValueAsync(slug, true, InRegion("eu"));
+
+        details.Value.ShouldBeTrue();
+        details.ErrorType.ShouldBe(ErrorType.ParseError);
+    }
+
+    [Test]
+    public async Task ResolveBooleanValueAsync_Should_NotMatchAnAttributeRule_When_NoContextIsSent()
+    {
+        using var provider = await ProviderReading(new StubOctopusTogglesHandler(OctopusTogglesMother.EuRegionOnly));
+
+        var details = await provider.ResolveBooleanValueAsync("eu-only", true);
+
+        details.Value.ShouldBeFalse();
+        details.Reason.ShouldBe("Did not match any rules.");
+    }
+
     [Test]
     public async Task ResolveBooleanValueAsync_Should_ReportFlagNotFound_When_TheSlugIsUnknown()
     {

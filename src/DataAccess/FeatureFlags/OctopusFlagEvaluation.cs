@@ -31,17 +31,7 @@ internal sealed record OctopusFlagEvaluation
     {
         if (Value is { } value)
         {
-            if (Reason is null)
-            {
-                throw new ParseErrorException("The flag has a value but has no reason.");
-            }
-
-            if (EvaluationKey is not null || Rules is not null)
-            {
-                throw new ParseErrorException("The flag has both a server-resolved value and client-side rules.");
-            }
-
-            return Resolved(value, Reason);
+            return Resolved(value, ServerReason());
         }
 
         foreach (var rule in DeferredRules())
@@ -53,6 +43,17 @@ internal sealed record OctopusFlagEvaluation
         }
 
         return Resolved(false, "Did not match any rules.");
+    }
+
+    /// <summary>The reason of a toggle resolved by the server, after checking it carries nothing of the deferred shape.</summary>
+    private string ServerReason()
+    {
+        if (EvaluationKey is not null || Rules is not null)
+        {
+            throw new ParseErrorException("The flag has both a server-resolved value and client-side rules.");
+        }
+
+        return Reason ?? throw new ParseErrorException("The flag has a value but has no reason.");
     }
 
     /// <summary>The rules of a toggle deferred to the client, after checking the deferred shape is complete.</summary>

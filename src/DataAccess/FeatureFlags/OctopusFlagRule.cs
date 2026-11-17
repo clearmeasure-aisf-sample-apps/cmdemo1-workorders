@@ -7,7 +7,10 @@ namespace ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 internal sealed record OctopusFlagRule(string? Name, OctopusFlagCondition?[]? Conditions)
 {
     /// <summary>Whether every condition holds for <paramref name="context"/>, read in order until one does not.</summary>
-    public bool Matches(EvaluationContext? context)
+    public bool Matches(EvaluationContext? context) => CheckedConditions().All(condition => condition.Matches(context));
+
+    /// <summary>The rule's conditions, in order, each checked as it is reached so later ones are not read needlessly.</summary>
+    private IEnumerable<OctopusFlagCondition> CheckedConditions()
     {
         if (Name is null)
         {
@@ -19,19 +22,7 @@ internal sealed record OctopusFlagRule(string? Name, OctopusFlagCondition?[]? Co
             throw new ParseErrorException($"Rule '{Name}' has no conditions.");
         }
 
-        foreach (var condition in Conditions)
-        {
-            if (condition is null)
-            {
-                throw new ParseErrorException($"Rule '{Name}' has a missing condition.");
-            }
-
-            if (!condition.Matches(context))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return Conditions.Select(condition =>
+            condition ?? throw new ParseErrorException($"Rule '{Name}' has a missing condition."));
     }
 }
