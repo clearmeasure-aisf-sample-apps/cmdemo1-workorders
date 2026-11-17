@@ -128,7 +128,7 @@ Versions are centrally managed in `src/Directory.Packages.props` (no `Version` o
 
 **Core** — FluentValidation 11.11.0, Mediator.Abstractions 3.0.2, Microsoft.CodeAnalysis.BannedApiAnalyzers 4.14.0 (build only), Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0
 
-**DataAccess** — Mediator.Abstractions 3.0.2, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, NServiceBus.Persistence.Sql.TransactionalSession 8.3.0, ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30, OpenFeature 2.14.1, Octopus.OpenFeature 4.0.0, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0, SQLitePCLRaw.bundle_e_sqlite3 2.1.12, System.Security.Cryptography.Xml 10.0.11
+**DataAccess** — Mediator.Abstractions 3.0.2, Microsoft.EntityFrameworkCore 10.0.0, Microsoft.EntityFrameworkCore.SqlServer 10.0.0, Microsoft.EntityFrameworkCore.Sqlite 10.0.0, NServiceBus.Persistence.Sql.TransactionalSession 8.3.0, ClearMeasureLabs.HostedEndpoint.SqlServerTransport 1.0.30, OpenFeature 2.14.1, Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions 10.0.0, Microsoft.Extensions.Logging.Abstractions 10.0.0, SQLitePCLRaw.bundle_e_sqlite3 2.1.12, System.Security.Cryptography.Xml 10.0.11
 
 **Database** — DbUp 5.0.41, dbup-sqlserver 6.0.16, JetBrains.Annotations 2025.2.2, Spectre.Console 0.54.0, Spectre.Console.Cli 0.53.0
 

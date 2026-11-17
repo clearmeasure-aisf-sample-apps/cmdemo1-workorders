@@ -1,6 +1,9 @@
-# Native AOT gate for McpServer (aot experiment 5). Publishes McpServer as Native AOT with the EF Core compiled model and
-# precompiled queries, then fails when the publish has a new IL trimming/AOT warning source or more warnings from a
-# source than scripts/aot/mcpserver-aot-warning-baseline.json allows. The baseline only goes down.
+# Native AOT gates.
+# mcpserver-aot (aot experiment 5): publishes McpServer as Native AOT with the EF Core compiled model and precompiled
+# queries, then fails when the publish has a new IL trimming/AOT warning source or more warnings from a source than
+# scripts/aot/mcpserver-aot-warning-baseline.json allows. The baseline only goes down.
+# uiserver-aot: publishes UI.Server as Native AOT, as Dockerfile.aot does.
+# Both fail when the feature-flag path has any trim or AOT warning (scripts/aot/Assert-NoAotWarnings.ps1).
 name: AOT warning gate
 
 on:
@@ -40,9 +43,45 @@ jobs:
         shell: pwsh
         run: ./scripts/aot/Assert-AotWarningRatchet.ps1 -PublishLog aot-publish.log
 
+      - name: Check the feature-flag path has no AOT warnings
+        shell: pwsh
+        run: ./scripts/aot/Assert-NoAotWarnings.ps1 -PublishLog aot-publish.log
+
       - name: Keep the publish log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mcpserver-aot-publish-log
+          path: aot-publish.log
+
+  # UI.Server is the image TDD runs (Dockerfile.aot). Publishing it here catches a broken AOT publish, and the feature-flag
+  # path must stay free of trim and AOT warnings: a reflection-based serializer call there made every flag read OFF (PR #1911).
+  uiserver-aot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    container: mcr.microsoft.com/dotnet/sdk:11.0-aot
+    env:
+      UiServerAot: "true"
+    steps:
+      - uses: actions/checkout@v6.0.1
+
+      - name: Publish UI.Server as Native AOT
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet publish src/UI/Server/UI.Server.csproj -c Release -r linux-x64 \
+            -p:UiServerAot=true -p:TrimmerSingleWarn=false \
+            -p:TreatWarningsAsErrors=false -p:MSBuildTreatAllWarningsAsErrors=false \
+            -p:CodeAnalysisTreatWarningsAsErrors=false \
+            -o aot-out/UI.Server 2>&1 | tee aot-publish.log
+
+      - name: Check the feature-flag path has no AOT warnings
+        shell: pwsh
+        run: ./scripts/aot/Assert-NoAotWarnings.ps1 -PublishLog aot-publish.log
+
+      - name: Keep the publish log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uiserver-aot-publish-log
           path: aot-publish.log
