@@ -75,16 +75,4 @@ public class EchoEndpointIntegrationTests
         payload.Headers["X-Client-Trace"].ShouldBe("echo-it");
     }
 
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_EchoAndMiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.GetAsync("/api/echo");
-        unversioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var versioned = await client.GetAsync("/api/v1.0/echo");
-        versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-    }
 }

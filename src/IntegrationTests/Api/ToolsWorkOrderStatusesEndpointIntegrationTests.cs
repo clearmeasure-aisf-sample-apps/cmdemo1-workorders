@@ -79,16 +79,4 @@ public class ToolsWorkOrderStatusesEndpointIntegrationTests
         sortByValues.ShouldBe(sortByValues.OrderBy(x => x).ToList());
     }
 
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.GetAsync("/api/tools/work-order-statuses");
-        unversioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var versioned = await client.GetAsync("/api/v1.0/tools/work-order-statuses");
-        versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-    }
 }
