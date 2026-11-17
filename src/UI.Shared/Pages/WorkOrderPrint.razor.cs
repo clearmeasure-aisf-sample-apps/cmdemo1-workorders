@@ -12,6 +12,7 @@ public partial class WorkOrderPrint : AppComponentBase
     private WorkOrder? _workOrder;
     private WorkOrderAttachment[] _attachments = [];
     private bool _loaded;
+    private string? _printError;
 
     [Parameter] public string? Number { get; set; }
 
@@ -45,17 +46,18 @@ public partial class WorkOrderPrint : AppComponentBase
 
     private async Task PrintAsync()
     {
+        _printError = null;
         try
         {
             await Js.InvokeVoidAsync("window.print");
         }
         catch (JSDisconnectedException)
         {
-            // Circuit gone during print; best-effort.
+            _printError = "Print failed: connection lost.";
         }
         catch (JSException)
         {
-            // JS print error; best-effort.
+            _printError = "Print failed: browser denied the request.";
         }
     }
 
@@ -84,6 +86,7 @@ public partial class WorkOrderPrint : AppComponentBase
     {
         NotFound,
         PrintButton,
+        PrintError,
         Number,
         Title,
         Status,

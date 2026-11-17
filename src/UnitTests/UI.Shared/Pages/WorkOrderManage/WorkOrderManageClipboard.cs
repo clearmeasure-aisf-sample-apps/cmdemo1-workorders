@@ -5,6 +5,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.WorkOrderManage;
 /// <summary>
 /// Fake <see cref="IJSRuntime"/> that loads a clipboard module for copy-button tests.
 /// </summary>
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
 public sealed class WorkOrderManageClipboard : IJSRuntime
 {
     private readonly ClipboardModule _module;
@@ -19,7 +20,6 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
     public string? LastCopiedText => _module.LastCopiedText;
 
     /// <inheritdoc />
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
     {
         if (identifier == "import" && typeof(TValue) == typeof(IJSObjectReference))
@@ -33,15 +33,12 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
     /// <inheritdoc />
     public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
         object?[]? args) =>
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         InvokeAsync<TValue>(identifier, args);
-#pragma warning restore BL0016
 
     private sealed class ClipboardModule(bool throwJsException, bool throwDisconnectedException) : IJSObjectReference
     {
         public string? LastCopiedText { get; private set; }
 
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
         {
             if (identifier != "copyToClipboard")
@@ -64,16 +61,15 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
                 throw new JSDisconnectedException("JS runtime disconnected");
             }
 
-            return ValueTask.FromResult((TValue)(object)true);
+            // InvokeVoidAsync expects IJSVoidResult; return default for that generic.
+            return ValueTask.FromResult(default(TValue)!);
         }
-#pragma warning restore BL0016
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
             object?[]? args) =>
-#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
             InvokeAsync<TValue>(identifier, args);
-#pragma warning restore BL0016
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }
+#pragma warning restore BL0016
