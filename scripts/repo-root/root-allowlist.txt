@@ -24,6 +24,8 @@ BuildFunctions.ps1
 CLAUDE.md # owner decision pending
 CONTRIBUTING.md
 Dockerfile
+Dockerfile.aot # Native AOT UI.Server image for PR #1911 test deploys (Exp 9)
+Dockerfile.aot.dockerignore # build context of Dockerfile.aot; BuildKit reads it beside that Dockerfile
 INTEGRATION-BUILD-SETUP.md
 LICENSE
 NuGet.Config
