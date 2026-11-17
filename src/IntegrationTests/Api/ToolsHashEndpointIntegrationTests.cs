@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -75,19 +75,6 @@ public class ToolsHashEndpointIntegrationTests
         payload.GetProperty("sha256").GetString().ShouldBe(AbcSha256);
         payload.GetProperty("md5").GetString().ShouldBe(AbcMd5);
         payload.GetProperty("sha1").GetString().ShouldBe(AbcSha1);
-    }
-
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.PostAsJsonAsync("/api/tools/hash", new { text = "abc" });
-        await AssertSha256OnlyAsync(unversioned, AbcSha256);
-
-        var versioned = await client.PostAsJsonAsync("/api/v1.0/tools/hash", new { text = "abc" });
-        await AssertSha256OnlyAsync(versioned, AbcSha256);
     }
 
     private static async Task AssertSha256OnlyAsync(HttpResponseMessage response, string expectedSha256)

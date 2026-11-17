@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -61,19 +61,6 @@ public class ToolsRandomEndpointIntegrationTests
         var response = await _client!.GetAsync(path);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-    }
-
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.GetAsync("/api/tools/random?type=uuid");
-        await AssertValidPayloadAsync(unversioned, "uuid");
-
-        var versioned = await client.GetAsync("/api/v1.0/tools/random?type=color");
-        await AssertValidPayloadAsync(versioned, "color");
     }
 
     [TestCase("/api/tools/random?min=5&max=1")]

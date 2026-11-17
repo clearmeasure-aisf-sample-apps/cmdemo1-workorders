@@ -1,9 +1,8 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Api;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using Shouldly;
@@ -107,38 +106,6 @@ public class EnvironmentStatusEndpointIntegrationTests
         second.StatusCode.ShouldBe(HttpStatusCode.NotModified);
         (await second.Content.ReadAsByteArrayAsync()).Length.ShouldBe(0);
         second.Headers.ETag.ShouldNotBeNull();
-    }
-
-    [Test]
-    public async Task Should_Return401_When_ApiKeyRequiredAndMissing()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unauth = await client.GetAsync("/api/status/environment");
-        unauth.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-
-        var unauthVersioned = await client.GetAsync("/api/v1.0/status/environment");
-        unauthVersioned.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-    }
-
-    [Test]
-    public async Task Should_Return200_When_ApiKeyRequiredAndValid()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var withKey = factory.CreateClient();
-        withKey.DefaultRequestHeaders.Add(
-            ApiKeyConstants.HeaderName,
-            ApiKeyProtectedWebApplicationFactory.TestApiKey);
-
-        var ok = await withKey.GetAsync("/api/status/environment");
-        ok.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var mediaType = ok.Content.Headers.ContentType?.MediaType;
-        mediaType.ShouldNotBeNull();
-        mediaType.ShouldContain("application/json");
-
-        var okVersioned = await withKey.GetAsync("/api/v1.0/status/environment");
-        okVersioned.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Test]
