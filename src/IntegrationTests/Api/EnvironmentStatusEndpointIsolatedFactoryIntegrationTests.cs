@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using Shouldly;
 
