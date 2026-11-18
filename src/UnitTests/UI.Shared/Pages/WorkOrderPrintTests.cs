@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
@@ -138,24 +139,39 @@ public class WorkOrderPrintTests
         c.Find(Id(WorkOrderPrint.Elements.NotFound)).TextContent.ShouldBe("Work order not found");
     }
 
+    private static WorkOrder BuildPrintTestOrder(string number)
+    {
+        var order = WorkOrderBuilder.Create()
+            .WithNumber(number)
+            .WithTitle("Leaky roof")
+            .WithStatus(WorkOrderStatus.Assigned)
+            .WithPriority(WorkOrderPriority.High)
+            .InBuilding("Sanctuary")
+            .InRoom("12")
+            .WithDescription("Drips")
+            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
+            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
+            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
+            .Build();
+        order.Instructions = "Bucket";
+        return order;
+    }
+
+    private static void RegisterPrintTestServices(BunitContext ctx, WorkOrder wo)
+    {
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+    }
+
     [Test]
     public async Task PrintAsync_ShouldSucceed_WhenBrowserPrintSucceeds()
     {
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Strict;
         ctx.JSInterop.SetupVoid("window.print");
-        var wo = new WorkOrder
-        {
-            Number = "WO-1", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
-            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
-            Description = "Drips", Instructions = "Bucket",
-            Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
-            Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
-            CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
-        };
-        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
-        ctx.Services.AddSingleton(TimeProvider.System);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        var wo = BuildPrintTestOrder("WO-1");
+        RegisterPrintTestServices(ctx, wo);
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
 
@@ -170,18 +186,8 @@ public class WorkOrderPrintTests
         ctx.JSInterop.Mode = JSRuntimeMode.Strict;
         ctx.JSInterop.SetupVoid("window.print")
             .SetException(new JSException("browser denied"));
-        var wo = new WorkOrder
-        {
-            Number = "WO-2", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
-            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
-            Description = "Drips", Instructions = "Bucket",
-            Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
-            Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
-            CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
-        };
-        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
-        ctx.Services.AddSingleton(TimeProvider.System);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        var wo = BuildPrintTestOrder("WO-2");
+        RegisterPrintTestServices(ctx, wo);
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-2"));
 
@@ -196,18 +202,8 @@ public class WorkOrderPrintTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Strict;
         ctx.JSInterop.SetupVoid("window.print").SetException(new JSDisconnectedException("connection lost"));
-        var wo = new WorkOrder
-        {
-            Number = "WO-3", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
-            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
-            Description = "Drips", Instructions = "Bucket",
-            Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
-            Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
-            CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
-        };
-        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
-        ctx.Services.AddSingleton(TimeProvider.System);
-        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+        var wo = BuildPrintTestOrder("WO-3");
+        RegisterPrintTestServices(ctx, wo);
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-3"));
 
