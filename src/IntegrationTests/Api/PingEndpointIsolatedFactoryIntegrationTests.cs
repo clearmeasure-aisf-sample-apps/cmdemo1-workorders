@@ -5,26 +5,40 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 /// <summary>
-/// API-key-protected tests for the ping endpoint. Extracted into their own fixture
-/// to avoid a second <see cref="WebApplicationFactory{TEntryMarker}"/> being active
-/// simultaneously with the shared factory from <see cref="PingEndpointIntegrationTests"/>,
+/// API-key-protected tests for the ping endpoint.
+/// Extracted into its own fixture to avoid a second
+/// <see cref="WebApplicationFactory{TEntryMarker}"/> being active simultaneously
+/// with the shared factory from <see cref="PingEndpointIntegrationTests"/>,
 /// which races on the global <c>HostFactoryResolver</c>.
 /// </summary>
 [TestFixture]
 public class PingEndpointIsolatedFactoryIntegrationTests
 {
     [Test]
-    public async Task Should_Return200WithoutApiKey_When_PingAndMiddlewareEnabled()
+    public async Task Should_Return200WithoutApiKey_When_GetUnversioned()
     {
         await using var factory = new ApiKeyProtectedWebApplicationFactory();
         using var client = factory.CreateClient();
 
-        var unversioned = await client.GetAsync("/api/ping");
-        unversioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await unversioned.Content.ReadAsStringAsync()).ShouldBe("pong");
+        var response = await client.GetAsync("/api/ping");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        mediaType.ShouldNotBeNull();
+        mediaType.ShouldContain("text/plain");
+        (await response.Content.ReadAsStringAsync()).ShouldBe("pong");
+    }
 
-        var versioned = await client.GetAsync("/api/v1.0/ping");
-        versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await versioned.Content.ReadAsStringAsync()).ShouldBe("pong");
+    [Test]
+    public async Task Should_Return200WithoutApiKey_When_GetVersioned()
+    {
+        await using var factory = new ApiKeyProtectedWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/v1.0/ping");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        mediaType.ShouldNotBeNull();
+        mediaType.ShouldContain("text/plain");
+        (await response.Content.ReadAsStringAsync()).ShouldBe("pong");
     }
 }

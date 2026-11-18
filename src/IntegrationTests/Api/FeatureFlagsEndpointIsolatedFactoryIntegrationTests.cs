@@ -12,10 +12,10 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 /// <summary>
 /// API-key-protected and configuration-overridden tests for the feature-flags endpoint.
-/// Extracted into their own fixture to avoid a second <see cref="WebApplicationFactory{TEntryMarker}"/>
-/// being active simultaneously with the shared factory from
-/// <see cref="FeatureFlagsEndpointIntegrationTests"/>, which races on the global
-/// <c>HostFactoryResolver</c>.
+/// Extracted into its own fixture to avoid a second
+/// <see cref="WebApplicationFactory{TEntryMarker}"/> being active simultaneously
+/// with the shared factory from <see cref="FeatureFlagsEndpointIntegrationTests"/>,
+/// which races on the global <c>HostFactoryResolver</c>.
 /// </summary>
 [TestFixture]
 public class FeatureFlagsEndpointIsolatedFactoryIntegrationTests

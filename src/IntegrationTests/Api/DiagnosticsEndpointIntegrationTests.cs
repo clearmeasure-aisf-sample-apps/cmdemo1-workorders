@@ -117,7 +117,7 @@ public class DiagnosticsEndpointIntegrationTests
     }
 
 
-    private static async Task<Dictionary<string, bool>> ReadFlagMapAsync(HttpClient client, string path)
+    internal static async Task<Dictionary<string, bool>> ReadFlagMapAsync(HttpClient client, string path)
     {
         var response = await client.GetAsync(path);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -127,7 +127,7 @@ public class DiagnosticsEndpointIntegrationTests
         return payload;
     }
 
-    private static async Task<Dictionary<string, bool>> ReadDiagnosticsFlagsAsync(HttpClient client, string path)
+    internal static async Task<Dictionary<string, bool>> ReadDiagnosticsFlagsAsync(HttpClient client, string path)
     {
         var response = await client.GetAsync(path);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);

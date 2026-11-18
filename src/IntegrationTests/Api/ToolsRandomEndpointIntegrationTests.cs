@@ -104,7 +104,7 @@ public class ToolsRandomEndpointIntegrationTests
         value.ShouldBeLessThanOrEqualTo(max);
     }
 
-    private static async Task AssertValidPayloadAsync(HttpResponseMessage response, string type)
+    internal static async Task AssertValidPayloadAsync(HttpResponseMessage response, string type)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var mediaType = response.Content.Headers.ContentType?.MediaType;

@@ -1,5 +1,6 @@
-﻿using System.Net;
-using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using Shouldly;
@@ -7,11 +8,11 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 /// <summary>
-/// Isolated-factory API-key tests for the environment-status endpoint. Extracted from
-/// <see cref="EnvironmentStatusEndpointIntegrationTests"/> to avoid a second
+/// API-key-protected tests for the environment-status endpoint.
+/// Extracted into its own fixture to avoid a second
 /// <see cref="WebApplicationFactory{TEntryMarker}"/> being active simultaneously
-/// with the shared factory from the original fixture, which races on the global
-/// <c>HostFactoryResolver</c>.
+/// with the shared factory from <see cref="EnvironmentStatusEndpointIntegrationTests"/>,
+/// which races on the global <c>HostFactoryResolver</c>.
 /// </summary>
 [TestFixture]
 public class EnvironmentStatusEndpointIsolatedFactoryIntegrationTests

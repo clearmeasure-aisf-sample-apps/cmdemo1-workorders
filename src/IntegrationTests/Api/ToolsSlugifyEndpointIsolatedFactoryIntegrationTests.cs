@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -7,11 +7,11 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 /// <summary>
-/// Isolated-factory API-key tests for the tools/slugify endpoint. Extracted from
-/// <see cref="ToolsSlugifyEndpointIntegrationTests"/> to avoid a second
+/// API-key-protected tests for the tools/slugify endpoint.
+/// Extracted into its own fixture to avoid a second
 /// <see cref="WebApplicationFactory{TEntryMarker}"/> being active simultaneously
-/// with the shared factory from the original fixture, which races on the global
-/// <c>HostFactoryResolver</c>.
+/// with the shared factory from <see cref="ToolsSlugifyEndpointIntegrationTests"/>,
+/// which races on the global <c>HostFactoryResolver</c>.
 /// </summary>
 [TestFixture]
 public class ToolsSlugifyEndpointIsolatedFactoryIntegrationTests
@@ -20,15 +20,26 @@ public class ToolsSlugifyEndpointIsolatedFactoryIntegrationTests
         new() { PropertyNameCaseInsensitive = true };
 
     [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
+    public async Task Should_Return200WithoutApiKey_When_PostUnversioned()
     {
         await using var factory = new ApiKeyProtectedWebApplicationFactory();
         using var client = factory.CreateClient();
 
-        var unversioned = await client.PostAsJsonAsync("/api/tools/slugify", new { text = "test" });
-        unversioned.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var response = await client.PostAsJsonAsync("/api/tools/slugify", new { text = "Hello, World!" });
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        json.GetProperty("slug").GetString().ShouldBe("hello-world");
+    }
 
-        var versioned = await client.PostAsJsonAsync("/api/v1.0/tools/slugify", new { text = "test" });
-        versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
+    [Test]
+    public async Task Should_Return200WithoutApiKey_When_PostVersioned()
+    {
+        await using var factory = new ApiKeyProtectedWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/v1.0/tools/slugify", new { text = "foo---bar" });
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        json.GetProperty("slug").GetString().ShouldBe("foo-bar");
     }
 }

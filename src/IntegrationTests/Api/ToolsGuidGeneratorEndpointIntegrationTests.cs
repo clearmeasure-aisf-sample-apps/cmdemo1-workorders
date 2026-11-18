@@ -52,7 +52,7 @@ public class ToolsGuidGeneratorEndpointIntegrationTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    private static async Task AssertGuidArrayAsync(HttpResponseMessage response, int expectedCount)
+    internal static async Task AssertGuidArrayAsync(HttpResponseMessage response, int expectedCount)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var guids = await response.Content.ReadFromJsonAsync<string[]>();

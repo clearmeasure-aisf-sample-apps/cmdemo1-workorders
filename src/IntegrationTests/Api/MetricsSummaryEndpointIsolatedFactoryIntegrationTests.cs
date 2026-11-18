@@ -8,11 +8,11 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 /// <summary>
-/// API-key-protected tests for <c>GET /api/metrics/summary</c>. Extracted into their own
-/// fixture to avoid a second <see cref="WebApplicationFactory{TEntryMarker}"/> being active
-/// simultaneously with the shared factory from
-/// <see cref="MetricsSummaryEndpointIntegrationTests"/>, which races on the global
-/// <c>HostFactoryResolver</c>.
+/// API-key-protected tests for <c>GET /api/metrics/summary</c>.
+/// Extracted into its own fixture to avoid a second
+/// <see cref="WebApplicationFactory{TEntryMarker}"/> being active simultaneously
+/// with the shared factory from <see cref="MetricsSummaryEndpointIntegrationTests"/>,
+/// which races on the global <c>HostFactoryResolver</c>.
 /// </summary>
 [TestFixture]
 public class MetricsSummaryEndpointIsolatedFactoryIntegrationTests
