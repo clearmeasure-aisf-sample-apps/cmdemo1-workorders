@@ -36,9 +36,11 @@ public class EmployeeQueryHandlerTests
     [Test]
     public async Task ShouldGetAllEmployees()
     {
-        var one = new Employee(TestData.UserName("employee1"), "first1", "last1", "email1");
-        var two = new Employee(TestData.UserName("employee2"), "first2", "last2", "email2");
-        var three = new Employee(TestData.UserName("employee3"), "first3", "last3", "email3");
+        // Names starting with "!" sort before any real data so the test rows
+        // are always in the first page of the ordered EmployeeGetAllQuery.
+        var one = new Employee(TestData.UserName("employee1"), "first1", "!last1", "email1");
+        var two = new Employee(TestData.UserName("employee2"), "first2", "!last2", "email2");
+        var three = new Employee(TestData.UserName("employee3"), "first3", "!last3", "email3");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(two);
@@ -56,7 +58,7 @@ public class EmployeeQueryHandlerTests
         employees.Length.ShouldBe(3);
         employees[0].UserName.ShouldBe(one.UserName);
         employees[0].FirstName.ShouldBe("first1");
-        employees[0].LastName.ShouldBe("last1");
+        employees[0].LastName.ShouldBe("!last1");
         employees[0].EmailAddress.ShouldBe("email1");
     }
 
@@ -97,8 +99,10 @@ public class EmployeeQueryHandlerTests
     [Test]
     public async Task Should_ReturnStoredEmployeeNames_Unchanged_When_EmployeeGetAllQueryHandled()
     {
-        var one = new Employee(TestData.UserName("employee1"), "first1", "last1", "email1");
-        var two = new Employee(TestData.UserName("employee2"), "First2", "Last2", "email2");
+        // Names starting with "!" sort before any real data so the test rows
+        // are always in the first page of the ordered EmployeeGetAllQuery.
+        var one = new Employee(TestData.UserName("employee1"), "first1", "!last1", "email1");
+        var two = new Employee(TestData.UserName("employee2"), "First2", "!Last2", "email2");
         await using (var context = TestHost.GetRequiredService<DbContext>())
         {
             context.Add(one);
@@ -113,9 +117,9 @@ public class EmployeeQueryHandlerTests
 
         employees.Length.ShouldBe(2);
         employees[0].FirstName.ShouldBe("first1");
-        employees[0].LastName.ShouldBe("last1");
+        employees[0].LastName.ShouldBe("!last1");
         employees[1].FirstName.ShouldBe("First2");
-        employees[1].LastName.ShouldBe("Last2");
+        employees[1].LastName.ShouldBe("!Last2");
     }
 
     [Test]
@@ -201,3 +205,4 @@ public class EmployeeQueryHandlerTests
         found.Roles.Single().CanCreateWorkOrder.ShouldBeTrue();
     }
 }
+

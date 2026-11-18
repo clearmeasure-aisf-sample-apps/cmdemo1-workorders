@@ -13,8 +13,10 @@ public class McpEmployeeToolTests
     [Test]
     public async Task ShouldListAllEmployees()
     {
-        var emp1 = new Employee(TestData.UserName("jdoe"), "John", "Doe", "john@test.com");
-        var emp2 = new Employee(TestData.UserName("jsmith"), "Jane", "Smith", "jane@test.com");
+        // Names starting with "!" sort before any real data so the test rows
+        // are always in the first page of the ordered EmployeeGetAllQuery.
+        var emp1 = new Employee(TestData.UserName("jdoe"), "John", "!Doe", "john@test.com");
+        var emp2 = new Employee(TestData.UserName("jsmith"), "Jane", "!Smith", "jane@test.com");
 
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(emp1);
