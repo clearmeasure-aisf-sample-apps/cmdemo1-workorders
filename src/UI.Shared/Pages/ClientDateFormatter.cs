@@ -41,8 +41,18 @@ internal static class ClientDateFormatter
             return null;
         }
 
-        return TryGet(language.Trim());
+        var tag = Sanitize(language);
+        return tag is null ? null : TryGet(tag);
     }
+
+    private static string? Sanitize(string language)
+    {
+        var tag = language.Trim().Split('@', '.')[0].Replace('_', '-');
+        return IsPosixDefault(tag) ? null : tag;
+    }
+
+    private static bool IsPosixDefault(string tag)
+        => tag.Length == 0 || tag.Equals("C", StringComparison.OrdinalIgnoreCase) || tag.Equals("POSIX", StringComparison.OrdinalIgnoreCase);
 
     private static CultureInfo? TryGet(string name)
     {

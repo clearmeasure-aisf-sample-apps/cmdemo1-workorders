@@ -63,35 +63,22 @@ public class TimestampConverterEndpointIntegrationTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.GetAsync($"/api/tools/timestamp-converter?unix={KnownUnixSeconds}");
-        await AssertGoldenAsync(unversioned);
-
-        var versioned = await client.GetAsync(
-            $"/api/v1.0/tools/timestamp-converter?iso={Uri.EscapeDataString(KnownIso)}");
-        await AssertGoldenAsync(versioned);
-    }
-
-    private static async Task AssertGoldenAsync(HttpResponseMessage response)
+    internal static async Task AssertGoldenAsync(HttpResponseMessage response)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var mediaType = response.Content.Headers.ContentType?.MediaType;
         mediaType.ShouldNotBeNull();
         mediaType.ShouldContain("application/json");
 
-        var payload = await response.Content.ReadFromJsonAsync<TimestampConverterDto>(JsonOptions);
+        var payload = await response.Content.ReadFromJsonAsync<TimestampConverterDto>(
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         payload.ShouldNotBeNull();
         payload.Unix.ShouldBe(KnownUnixSeconds);
         payload.Iso.ShouldBe(KnownIso);
         payload.Human.ShouldBe(KnownHuman);
     }
 
-    private sealed class TimestampConverterDto
+    internal sealed class TimestampConverterDto
     {
         public long Unix { get; init; }
         public string? Iso { get; init; }

@@ -5,6 +5,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages.WorkOrderManage;
 /// <summary>
 /// Fake <see cref="IJSRuntime"/> that loads a clipboard module for copy-button tests.
 /// </summary>
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
 public sealed class WorkOrderManageClipboard : IJSRuntime
 {
     private readonly ClipboardModule _module;
@@ -60,7 +61,8 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
                 throw new JSDisconnectedException("JS runtime disconnected");
             }
 
-            return ValueTask.FromResult((TValue)(object)true);
+            // InvokeVoidAsync expects IJSVoidResult; return default for that generic.
+            return ValueTask.FromResult(default(TValue)!);
         }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
@@ -70,3 +72,4 @@ public sealed class WorkOrderManageClipboard : IJSRuntime
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }
+#pragma warning restore BL0016

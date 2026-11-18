@@ -16,6 +16,10 @@ else if (_workOrder == null)
 else
 {
     <button type="button" data-testid="@Elements.PrintButton" class="print-button" @onclick="PrintAsync">Print</button>
+    @if (!string.IsNullOrEmpty(_printError))
+    {
+        <p role="alert" data-testid="@Elements.PrintError" class="text-danger">@_printError</p>
+    }
     <h1>Work Order <span data-testid="@Elements.Number">@_workOrder.Number</span></h1>
     <dl>
         <dt>Title</dt><dd data-testid="@Elements.Title">@Or(_workOrder.Title)</dd>

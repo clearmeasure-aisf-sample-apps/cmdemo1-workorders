@@ -65,6 +65,7 @@ public class ThemePreferenceServiceTests
         sut.IsDarkMode.ShouldBeTrue();
     }
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     private sealed class StubDisconnectedJsRuntime : IJSRuntime
     {
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
@@ -74,7 +75,9 @@ public class ThemePreferenceServiceTests
             object?[]? args) =>
             throw new JSDisconnectedException("circuit disconnected");
     }
+#pragma warning restore BL0016
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     private sealed class StubThemeJsRuntime : IJSRuntime
     {
         public string InitialTheme { get; init; } = "light";
@@ -143,4 +146,5 @@ public class ThemePreferenceServiceTests
             }
         }
     }
+#pragma warning restore BL0016
 }

@@ -40,11 +40,23 @@
     </div>
     <script src="js/chat.js"></script>
     <script>
+        window.churchBulletinSanitizeCulture = function (tag) {
+            try { tag = tag.trim(); } catch (e) { return "en-US"; }
+            var idx = tag.indexOf("@"); if (idx >= 0) tag = tag.substring(0, idx);
+            idx = tag.indexOf("."); if (idx >= 0) tag = tag.substring(0, idx);
+            tag = tag.replace(/_/g, "-");
+            if (!tag || tag.toLowerCase() === "c" || tag.toLowerCase() === "posix") return "en-US";
+            var re = /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/;
+            return re.test(tag) ? tag : "en-US";
+        };
         window.churchBulletinBrowserCulture = function () {
-            try { return navigator.language || ""; } catch (e) { return ""; }
+            try { return window.churchBulletinSanitizeCulture(navigator.language || ""); } catch (e) { return "en-US"; }
         };
     </script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        Blazor.start({ applicationCulture: window.churchBulletinBrowserCulture() });
+    </script>
 </body>
 
 </html>

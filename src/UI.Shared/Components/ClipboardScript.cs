@@ -15,7 +15,7 @@ public sealed class ClipboardScript(IJSRuntime js) : IAsyncDisposable
     {
         try
         {
-            await (await ModuleAsync()).InvokeAsync<object>("copyToClipboard", text);
+            await (await ModuleAsync()).InvokeVoidAsync("copyToClipboard", text);
             return true;
         }
         catch (JSDisconnectedException)
@@ -47,6 +47,13 @@ public sealed class ClipboardScript(IJSRuntime js) : IAsyncDisposable
         _module = null;
     }
 
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+    private async Task<IJSObjectReference> ModuleAsync()
+    {
+        if (_module is not null)
+            return _module;
+
+        #pragma warning disable BL0016 // -- reason: wrapper lets JS exceptions propagate to callers that catch them
+        return _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+        #pragma warning restore BL0016
+    }
 }

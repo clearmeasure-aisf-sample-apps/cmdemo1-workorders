@@ -21,6 +21,7 @@ public sealed class GrpcWebApplicationFactory : WebApplicationFactory<UiServerWe
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:SqlConnectionString", SqliteSharedMemoryConnectionString);
+        builder.UseSetting(AutoReformatOptions.DisableConfigurationKey, "true");
         builder.ConfigureAppConfiguration((_, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -29,6 +30,7 @@ public sealed class GrpcWebApplicationFactory : WebApplicationFactory<UiServerWe
                 ["AI_OpenAI_ApiKey"] = "",
                 ["AI_OpenAI_Url"] = "",
                 ["AI_OpenAI_Model"] = "",
+                [AutoReformatOptions.DisableConfigurationKey] = "true",
             });
         });
     }

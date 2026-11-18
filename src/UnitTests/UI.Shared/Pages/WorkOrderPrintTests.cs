@@ -5,8 +5,10 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Palermo.BlazorMvc;
 using Shouldly;
 
@@ -135,6 +137,97 @@ public class WorkOrderPrintTests
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, number));
 
         c.Find(Id(WorkOrderPrint.Elements.NotFound)).TextContent.ShouldBe("Work order not found");
+    }
+
+    private static void RegisterPrintTestServices(BunitContext ctx, WorkOrder wo)
+    {
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+    }
+
+    [Test]
+    public async Task PrintAsync_ShouldSucceed_WhenBrowserPrintSucceeds()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Strict;
+        ctx.JSInterop.SetupVoid("window.print");
+        var wo = WorkOrderBuilder.Create()
+            .WithNumber("WO-1")
+            .WithTitle("Leaky roof")
+            .WithStatus(WorkOrderStatus.Assigned)
+            .WithPriority(WorkOrderPriority.High)
+            .InBuilding("Sanctuary")
+            .InRoom("12")
+            .WithDescription("Drips")
+            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
+            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
+            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
+            .Build();
+        wo.Instructions = "Bucket";
+        RegisterPrintTestServices(ctx, wo);
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
+
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintButton)}").Click();
+        c.FindAll($"{Id(WorkOrderPrint.Elements.PrintError)}").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task PrintAsync_ShouldShowError_WhenJSException()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Strict;
+        ctx.JSInterop.SetupVoid("window.print")
+            .SetException(new JSException("browser denied"));
+        var wo = WorkOrderBuilder.Create()
+            .WithNumber("WO-2")
+            .WithTitle("Leaky roof")
+            .WithStatus(WorkOrderStatus.Assigned)
+            .WithPriority(WorkOrderPriority.High)
+            .InBuilding("Sanctuary")
+            .InRoom("12")
+            .WithDescription("Drips")
+            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
+            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
+            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
+            .Build();
+        wo.Instructions = "Bucket";
+        RegisterPrintTestServices(ctx, wo);
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-2"));
+
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintButton)}").Click();
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintError)}").TextContent
+            .ShouldBe("Print failed: browser denied the request.");
+    }
+
+    [Test]
+    public async Task PrintAsync_ShouldShowError_WhenJSDisconnectedException()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Strict;
+        ctx.JSInterop.SetupVoid("window.print").SetException(new JSDisconnectedException("connection lost"));
+        var wo = WorkOrderBuilder.Create()
+            .WithNumber("WO-3")
+            .WithTitle("Leaky roof")
+            .WithStatus(WorkOrderStatus.Assigned)
+            .WithPriority(WorkOrderPriority.High)
+            .InBuilding("Sanctuary")
+            .InRoom("12")
+            .WithDescription("Drips")
+            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
+            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
+            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
+            .Build();
+        wo.Instructions = "Bucket";
+        RegisterPrintTestServices(ctx, wo);
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-3"));
+
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintButton)}").Click();
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintError)}").TextContent
+            .ShouldBe("Print failed: connection lost.");
     }
 
     private class ThrowingBus() : Bus(null!)

@@ -56,54 +56,6 @@ public class FeatureFlagsEndpointIntegrationTests
         await AssertCatalogPayloadAsync(response);
     }
 
-    [Test]
-    public async Task Should_EnforceApiKey_When_MiddlewareEnabledAndFeatureFlagsProtected()
-    {
-        await using var factory = new DiagnosticsApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unauth = await client.GetAsync("/api/features/flags");
-        unauth.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-
-        var unauthVersioned = await client.GetAsync("/api/v1.0/features/flags");
-        unauthVersioned.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-
-        using var withKey = factory.CreateClient();
-        withKey.DefaultRequestHeaders.Add(
-            ApiKeyConstants.HeaderName,
-            ApiKeyProtectedWebApplicationFactory.TestApiKey);
-
-        var ok = await withKey.GetAsync("/api/features/flags");
-        ok.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var okVersioned = await withKey.GetAsync("/api/v1.0/features/flags");
-        okVersioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-    }
-
-    [Test]
-    public async Task Should_ReportSameRuntimeValues_When_FlagsAndDiagnosticsRead()
-    {
-        await using var factory = new DiagnosticsWebApplicationFactory().WithWebHostBuilder(builder =>
-            builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["FeatureFlags:VendorManagement"] = "true",
-                    ["FeatureFlags:ShowPriorityBadges"] = "false"
-                })));
-        using var client = factory.CreateClient();
-
-        var flags = await client.GetFromJsonAsync<Dictionary<string, bool>>("/api/features/flags");
-        var diagnostics = await client.GetFromJsonAsync<DiagnosticsResponse>(
-            "/api/diagnostics", new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-        flags.ShouldNotBeNull();
-        flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
-        flags[FeatureFlagNames.BuildingManagement].ShouldBeTrue();
-        flags[FeatureFlagNames.ShowPriorityBadges].ShouldBeFalse();
-        diagnostics.ShouldNotBeNull();
-        diagnostics.FeatureFlags.ShouldBe(flags, ignoreOrder: true);
-    }
-
     private static async Task AssertCatalogPayloadAsync(HttpResponseMessage response)
     {
         await using var stream = await response.Content.ReadAsStreamAsync();

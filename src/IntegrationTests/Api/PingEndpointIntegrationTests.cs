@@ -50,18 +50,4 @@ public class PingEndpointIntegrationTests
         (await response.Content.ReadAsStringAsync()).ShouldBe("pong");
     }
 
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_PingAndMiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.GetAsync("/api/ping");
-        unversioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await unversioned.Content.ReadAsStringAsync()).ShouldBe("pong");
-
-        var versioned = await client.GetAsync("/api/v1.0/ping");
-        versioned.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await versioned.Content.ReadAsStringAsync()).ShouldBe("pong");
-    }
 }

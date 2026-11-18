@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
 using Shouldly;
@@ -52,20 +52,7 @@ public class ToolsGuidGeneratorEndpointIntegrationTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.PostAsync("/api/tools/guid-generator", null);
-        await AssertGuidArrayAsync(unversioned, expectedCount: 1);
-
-        var versioned = await client.PostAsync("/api/v1.0/tools/guid-generator?count=2", null);
-        await AssertGuidArrayAsync(versioned, expectedCount: 2);
-    }
-
-    private static async Task AssertGuidArrayAsync(HttpResponseMessage response, int expectedCount)
+    internal static async Task AssertGuidArrayAsync(HttpResponseMessage response, int expectedCount)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var guids = await response.Content.ReadFromJsonAsync<string[]>();

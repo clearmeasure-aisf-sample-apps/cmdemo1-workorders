@@ -62,6 +62,7 @@ public class LocalStorageUserSessionStoreTests
         ex.InnerException.ShouldBe(jsException);
     }
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     private sealed class StubLocalStorageJsRuntime : IJSRuntime
     {
         private string? _value;
@@ -109,4 +110,5 @@ public class LocalStorageUserSessionStoreTests
             }
         }
     }
+#pragma warning restore BL0016
 }

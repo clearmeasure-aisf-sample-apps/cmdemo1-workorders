@@ -26,6 +26,11 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 [TestFixture]
 public class ClientDateFormatterTests
 {
+    private CultureInfo _savedCulture = null!;
+    private CultureInfo _savedUICulture = null!;
+    private CultureInfo _savedDefaultCulture = null!;
+    private CultureInfo _savedDefaultUICulture = null!;
+
     private static readonly DateOnly Due = new(2026, 10, 23);
     private static readonly DateTime Created = new(2026, 10, 23, 15, 4, 5, DateTimeKind.Utc);
     private static readonly Employee Creator = EmployeeBuilder.Create("jpalermo")
@@ -34,6 +39,24 @@ public class ClientDateFormatterTests
         .WithEmail("jp@example.com")
         .WithId(Guid.NewGuid())
         .Build();
+
+    [SetUp]
+    public void SetUp()
+    {
+        _savedCulture = CultureInfo.CurrentCulture;
+        _savedUICulture = CultureInfo.CurrentUICulture;
+        _savedDefaultCulture = CultureInfo.DefaultThreadCurrentCulture!;
+        _savedDefaultUICulture = CultureInfo.DefaultThreadCurrentUICulture!;
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        CultureInfo.CurrentCulture = _savedCulture;
+        CultureInfo.CurrentUICulture = _savedUICulture;
+        CultureInfo.DefaultThreadCurrentCulture = _savedDefaultCulture;
+        CultureInfo.DefaultThreadCurrentUICulture = _savedDefaultUICulture;
+    }
 
     [Test]
     public async Task ShouldShowDayFirstDueDate_WhenCultureIsEnGb_OnPageAndList()
@@ -76,46 +99,38 @@ public class ClientDateFormatterTests
         CultureInfo.CurrentCulture.ShouldBe(before);
     }
 
+    [TestCase("en-us@posix", "en-US")]
+    [TestCase("en_GB.UTF-8", "en-GB")]
+    public void ShouldApplySanitizedCulture_WhenBrowserLanguageHasPosixSuffix(string language, string expected)
+    {
+        ClientDateFormatter.ApplyBrowserCulture(language);
+        CultureInfo.CurrentCulture.Name.ShouldBe(expected);
+        CultureInfo.CurrentUICulture.Name.ShouldBe(expected);
+        CultureInfo.DefaultThreadCurrentCulture!.Name.ShouldBe(expected);
+        CultureInfo.DefaultThreadCurrentUICulture!.Name.ShouldBe(expected);
+    }
+
+    [TestCase("C")]
+    [TestCase("POSIX")]
+    public void ShouldLeaveCulture_WhenBrowserLanguageIsPosixDefault(string language)
+    {
+        var before = CultureInfo.CurrentCulture.Name;
+        ClientDateFormatter.ApplyBrowserCulture(language);
+        CultureInfo.CurrentCulture.Name.ShouldBe(before);
+    }
+
     [Test]
     public void ShouldFormatEnGbShortDate_WhenBrowserLanguageIsEnGb()
     {
-        var previous = CultureInfo.CurrentCulture;
-        var previousUi = CultureInfo.CurrentUICulture;
-        var previousDefault = CultureInfo.DefaultThreadCurrentCulture;
-        var previousDefaultUi = CultureInfo.DefaultThreadCurrentUICulture;
-        try
-        {
-            ClientDateFormatter.ApplyBrowserCulture("en-GB");
-            ClientDateFormatter.Format(Due).ShouldBe("23/10/2026");
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = previous;
-            CultureInfo.CurrentUICulture = previousUi;
-            CultureInfo.DefaultThreadCurrentCulture = previousDefault;
-            CultureInfo.DefaultThreadCurrentUICulture = previousDefaultUi;
-        }
+        ClientDateFormatter.ApplyBrowserCulture("en-GB");
+        ClientDateFormatter.Format(Due).ShouldBe("23/10/2026");
     }
 
     [Test]
     public void ShouldFormatEnGbShortDate_WhenBrowserLanguageHasExtraSubtag()
     {
-        var previous = CultureInfo.CurrentCulture;
-        var previousUi = CultureInfo.CurrentUICulture;
-        var previousDefault = CultureInfo.DefaultThreadCurrentCulture;
-        var previousDefaultUi = CultureInfo.DefaultThreadCurrentUICulture;
-        try
-        {
-            ClientDateFormatter.ApplyBrowserCulture("en-GB-x-private");
-            ClientDateFormatter.Format(Due).ShouldBe("23/10/2026");
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = previous;
-            CultureInfo.CurrentUICulture = previousUi;
-            CultureInfo.DefaultThreadCurrentCulture = previousDefault;
-            CultureInfo.DefaultThreadCurrentUICulture = previousDefaultUi;
-        }
+        ClientDateFormatter.ApplyBrowserCulture("en-GB-x-private");
+        ClientDateFormatter.Format(Due).ShouldBe("23/10/2026");
     }
 
     private static async Task AssertDueDateAsync(string expectedDue)

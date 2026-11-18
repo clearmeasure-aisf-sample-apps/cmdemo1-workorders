@@ -5,6 +5,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 /// <summary>
 /// Test double that throws <see cref="JSDisconnectedException"/> on module import or on dispose of a loaded module.
 /// </summary>
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
 internal sealed class DisconnectingJsRuntime : IJSRuntime
 {
     private readonly bool _failImport;
@@ -61,3 +62,4 @@ internal sealed class DisconnectingJsRuntime : IJSRuntime
         }
     }
 }
+#pragma warning restore BL0016

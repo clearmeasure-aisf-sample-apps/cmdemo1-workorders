@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 using ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -63,19 +63,6 @@ public class ToolsRandomEndpointIntegrationTests
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    [Test]
-    public async Task Should_Return200WithoutApiKey_When_MiddlewareEnabled()
-    {
-        await using var factory = new ApiKeyProtectedWebApplicationFactory();
-        using var client = factory.CreateClient();
-
-        var unversioned = await client.GetAsync("/api/tools/random?type=uuid");
-        await AssertValidPayloadAsync(unversioned, "uuid");
-
-        var versioned = await client.GetAsync("/api/v1.0/tools/random?type=color");
-        await AssertValidPayloadAsync(versioned, "color");
-    }
-
     [TestCase("/api/tools/random?min=5&max=1")]
     [TestCase("/api/v1.0/tools/random?min=9&max=2")]
     public async Task Should_Return400_When_MinGreaterThanMax(string path)
@@ -117,7 +104,7 @@ public class ToolsRandomEndpointIntegrationTests
         value.ShouldBeLessThanOrEqualTo(max);
     }
 
-    private static async Task AssertValidPayloadAsync(HttpResponseMessage response, string type)
+    internal static async Task AssertValidPayloadAsync(HttpResponseMessage response, string type)
     {
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var mediaType = response.Content.Headers.ContentType?.MediaType;

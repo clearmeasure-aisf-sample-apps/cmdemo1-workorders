@@ -30,6 +30,7 @@ public sealed class RateLimitedApiWebApplicationFactory : WebApplicationFactory<
         builder.UseSetting("ApiRateLimiting:WindowSeconds", "60");
         builder.UseSetting("ApiRateLimiting:SegmentsPerWindow", "2");
         builder.UseSetting("ApiRateLimiting:QueueLimit", "0");
+        builder.UseSetting(AutoReformatOptions.DisableConfigurationKey, "true");
         builder.ConfigureAppConfiguration((_, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -44,7 +45,8 @@ public sealed class RateLimitedApiWebApplicationFactory : WebApplicationFactory<
                 ["ApiRateLimiting:SegmentsPerWindow"] = "2",
                 ["ApiRateLimiting:QueueLimit"] = "0",
                 ["ApiKeyAuthentication:Enabled"] = "false",
-                ["ApiKeyAuthentication:ValidationKey"] = ""
+                ["ApiKeyAuthentication:ValidationKey"] = "",
+                [AutoReformatOptions.DisableConfigurationKey] = "true"
             });
         });
 

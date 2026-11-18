@@ -23,6 +23,10 @@ public sealed class NotificationsPanelScript(IJSRuntime js) : IAsyncDisposable
         {
             // Circuit gone while opening the panel; Escape handling is best-effort.
         }
+        catch (JSException)
+        {
+            // JS error while setting up escape handler; best-effort.
+        }
     }
 
     public async Task FocusAsync(ElementReference element)
@@ -51,10 +55,21 @@ public sealed class NotificationsPanelScript(IJSRuntime js) : IAsyncDisposable
         {
             // Circuit gone during teardown; escape cleanup is best-effort.
         }
+        catch (JSException)
+        {
+            // JS error during cleanup; best-effort.
+        }
 
         _module = null;
     }
 
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+    private async Task<IJSObjectReference> ModuleAsync()
+    {
+        if (_module is not null)
+            return _module;
+
+        #pragma warning disable BL0016 // -- reason: wrapper lets JS exceptions propagate to callers that catch them
+        return _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+        #pragma warning restore BL0016
+    }
 }

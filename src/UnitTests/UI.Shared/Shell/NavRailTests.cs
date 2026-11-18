@@ -208,6 +208,7 @@ public class NavRailTests
         bool isNarrow) =>
         layout.InvokeAsync(() => rail.Instance.OnViewportChanged(isNarrow));
 
+#pragma warning disable BL0016 // -- reason: test fake lets JS exceptions propagate to callers that catch them
     private sealed class PendingImportJsRuntime : IJSRuntime
     {
         public TaskCompletionSource<IJSObjectReference> Import { get; } = new();
@@ -222,7 +223,8 @@ public class NavRailTests
         }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
-            object?[]? args) => InvokeAsync<TValue>(identifier, args);
+            object?[]? args) =>
+            InvokeAsync<TValue>(identifier, args);
     }
 
     private sealed class RecordingJsModule : IJSObjectReference
@@ -236,8 +238,10 @@ public class NavRailTests
         }
 
         public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken,
-            object?[]? args) => InvokeAsync<TValue>(identifier, args);
+            object?[]? args) =>
+            InvokeAsync<TValue>(identifier, args);
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
+#pragma warning restore BL0016
 }

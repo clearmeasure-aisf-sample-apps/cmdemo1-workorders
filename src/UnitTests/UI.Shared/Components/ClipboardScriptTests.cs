@@ -12,7 +12,7 @@ public class ClipboardScriptTests
     {
         await using var ctx = new BunitContext();
         var module = ctx.JSInterop.SetupModule(ClipboardScript.ModulePath);
-        module.Setup<object>("copyToClipboard", _ => true).SetResult(new object());
+        module.SetupVoid("copyToClipboard", _ => true).SetVoidResult();
         var script = new ClipboardScript(ctx.JSInterop.JSRuntime);
 
         var copied = await script.CopyToClipboardAsync("WO-1");
@@ -34,7 +34,7 @@ public class ClipboardScriptTests
     {
         await using var ctx = new BunitContext();
         var module = ctx.JSInterop.SetupModule(ClipboardScript.ModulePath);
-        module.Setup<object>("copyToClipboard", _ => true).SetResult(new object());
+        module.SetupVoid("copyToClipboard", _ => true).SetVoidResult();
         var script = new ClipboardScript(ctx.JSInterop.JSRuntime);
         await script.CopyToClipboardAsync("WO-1");
 

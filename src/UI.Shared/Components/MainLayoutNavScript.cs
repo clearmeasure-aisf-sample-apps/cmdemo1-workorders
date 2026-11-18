@@ -29,6 +29,10 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
         {
             // Circuit gone during shell init; nav toggle stays in its default CSS state.
         }
+        catch (JSException)
+        {
+            // JS error during nav toggle init; best-effort.
+        }
     }
 
     public async Task InitGlobalSearchShortcutAsync(string inputId)
@@ -41,6 +45,10 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
         catch (JSDisconnectedException)
         {
             // Circuit gone during shell init; Ctrl+K shortcut is best-effort.
+        }
+        catch (JSException)
+        {
+            // JS error during global search init; best-effort.
         }
     }
 
@@ -92,8 +100,19 @@ public sealed class MainLayoutNavScript(IJSRuntime js) : IAsyncDisposable
         {
             // Circuit gone during teardown; helper dispose is best-effort.
         }
+        catch (JSException)
+        {
+            // JS error during helper dispose; best-effort.
+        }
     }
 
-    private async Task<IJSObjectReference> ModuleAsync() =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+    private async Task<IJSObjectReference> ModuleAsync()
+    {
+        if (_module is not null)
+            return _module;
+
+        #pragma warning disable BL0016 // -- reason: wrapper lets JS exceptions propagate to callers that catch them
+        return _module = await js.InvokeAsync<IJSObjectReference>("import", ModulePath);
+        #pragma warning restore BL0016
+    }
 }
