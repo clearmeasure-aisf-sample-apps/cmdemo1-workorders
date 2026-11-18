@@ -7,6 +7,7 @@ using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 using Palermo.BlazorMvc;
 using Shouldly;
 
@@ -135,6 +136,84 @@ public class WorkOrderPrintTests
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, number));
 
         c.Find(Id(WorkOrderPrint.Elements.NotFound)).TextContent.ShouldBe("Work order not found");
+    }
+
+    [Test]
+    public async Task PrintAsync_ShouldSucceed_WhenBrowserPrintSucceeds()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Strict;
+        ctx.JSInterop.SetupVoid("window.print");
+        var wo = new WorkOrder
+        {
+            Number = "WO-1", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
+            Description = "Drips", Instructions = "Bucket",
+            Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
+            Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
+            CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
+        };
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
+
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintButton)}").Click();
+        c.FindAll($"{Id(WorkOrderPrint.Elements.PrintError)}").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task PrintAsync_ShouldShowError_WhenJSException()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Strict;
+        ctx.JSInterop.SetupVoid("window.print")
+            .SetException(new JSException("browser denied"));
+        var wo = new WorkOrder
+        {
+            Number = "WO-2", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
+            Description = "Drips", Instructions = "Bucket",
+            Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
+            Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
+            CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
+        };
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-2"));
+
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintButton)}").Click();
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintError)}").TextContent
+            .ShouldBe("Print failed: browser denied the request.");
+    }
+
+    [Test]
+    public async Task PrintAsync_ShouldShowError_WhenJSDisconnectedException()
+    {
+        await using var ctx = new BunitContext();
+        ctx.JSInterop.Mode = JSRuntimeMode.Strict;
+        ctx.JSInterop.SetupVoid("window.print").SetException(new JSDisconnectedException("connection lost"));
+        var wo = new WorkOrder
+        {
+            Number = "WO-3", Title = "Leaky roof", Status = WorkOrderStatus.Assigned,
+            Priority = WorkOrderPriority.High, Building = "Sanctuary", RoomNumber = "12",
+            Description = "Drips", Instructions = "Bucket",
+            Creator = new Employee("a", "Ann", "Lee", "a@x.com"),
+            Assignee = new Employee("b", "Bob", "Ray", "b@x.com"),
+            CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
+        };
+        ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
+        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
+
+        var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-3"));
+
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintButton)}").Click();
+        c.Find($"{Id(WorkOrderPrint.Elements.PrintError)}").TextContent
+            .ShouldBe("Print failed: connection lost.");
     }
 
     private class ThrowingBus() : Bus(null!)
