@@ -13,6 +13,8 @@
   <ItemGroup>
     <PackageReference Include="BlazorMvc" />
     <PackageReference Include="MediatR" />
+    <!-- Pin transitive Microsoft.Bcl.TimeProvider (Lamar -> JasperFx brings 8.0.1, whose ILLink.Substitutions breaks WASM trimming on .NET 11 with IL2008 'System.SR'). 10.0.0 ships without it. -->
+    <PackageReference Include="Microsoft.Bcl.TimeProvider" />
     <PackageReference Include="Lamar.Microsoft.DependencyInjection" />
 	  <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />

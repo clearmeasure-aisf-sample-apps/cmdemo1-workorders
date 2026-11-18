@@ -7,3 +7,4 @@
 
 TngTech.ArchUnitNET | Architecture tests for the Onion layer rules (src/UnitTests/Architecture), requested with the architecture guardrails
 Microsoft.CodeAnalysis.BannedApiAnalyzers | Bans the system clock in Core (src/Core/BannedSymbols.txt), requested with the architecture guardrails
+Microsoft.Bcl.TimeProvider | Pin transitive JasperFx dependency to 10.0.0 to fix .NET 11 WASM trim failure IL2008 (PR #1918)
