@@ -139,24 +139,6 @@ public class WorkOrderPrintTests
         c.Find(Id(WorkOrderPrint.Elements.NotFound)).TextContent.ShouldBe("Work order not found");
     }
 
-    private static WorkOrder BuildPrintTestOrder(string number)
-    {
-        var order = WorkOrderBuilder.Create()
-            .WithNumber(number)
-            .WithTitle("Leaky roof")
-            .WithStatus(WorkOrderStatus.Assigned)
-            .WithPriority(WorkOrderPriority.High)
-            .InBuilding("Sanctuary")
-            .InRoom("12")
-            .WithDescription("Drips")
-            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
-            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
-            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
-            .Build();
-        order.Instructions = "Bucket";
-        return order;
-    }
-
     private static void RegisterPrintTestServices(BunitContext ctx, WorkOrder wo)
     {
         ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
@@ -170,7 +152,19 @@ public class WorkOrderPrintTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Strict;
         ctx.JSInterop.SetupVoid("window.print");
-        var wo = BuildPrintTestOrder("WO-1");
+        var wo = WorkOrderBuilder.Create()
+            .WithNumber("WO-1")
+            .WithTitle("Leaky roof")
+            .WithStatus(WorkOrderStatus.Assigned)
+            .WithPriority(WorkOrderPriority.High)
+            .InBuilding("Sanctuary")
+            .InRoom("12")
+            .WithDescription("Drips")
+            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
+            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
+            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
+            .Build();
+        wo.Instructions = "Bucket";
         RegisterPrintTestServices(ctx, wo);
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
@@ -186,7 +180,19 @@ public class WorkOrderPrintTests
         ctx.JSInterop.Mode = JSRuntimeMode.Strict;
         ctx.JSInterop.SetupVoid("window.print")
             .SetException(new JSException("browser denied"));
-        var wo = BuildPrintTestOrder("WO-2");
+        var wo = WorkOrderBuilder.Create()
+            .WithNumber("WO-2")
+            .WithTitle("Leaky roof")
+            .WithStatus(WorkOrderStatus.Assigned)
+            .WithPriority(WorkOrderPriority.High)
+            .InBuilding("Sanctuary")
+            .InRoom("12")
+            .WithDescription("Drips")
+            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
+            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
+            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
+            .Build();
+        wo.Instructions = "Bucket";
         RegisterPrintTestServices(ctx, wo);
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-2"));
@@ -202,7 +208,19 @@ public class WorkOrderPrintTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Strict;
         ctx.JSInterop.SetupVoid("window.print").SetException(new JSDisconnectedException("connection lost"));
-        var wo = BuildPrintTestOrder("WO-3");
+        var wo = WorkOrderBuilder.Create()
+            .WithNumber("WO-3")
+            .WithTitle("Leaky roof")
+            .WithStatus(WorkOrderStatus.Assigned)
+            .WithPriority(WorkOrderPriority.High)
+            .InBuilding("Sanctuary")
+            .InRoom("12")
+            .WithDescription("Drips")
+            .CreatedBy(ObjectMother.Employee("a", "Ann", "Lee"))
+            .AssignedTo(ObjectMother.Employee("b", "Bob", "Ray"))
+            .CreatedAt(new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc))
+            .Build();
+        wo.Instructions = "Bucket";
         RegisterPrintTestServices(ctx, wo);
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-3"));
