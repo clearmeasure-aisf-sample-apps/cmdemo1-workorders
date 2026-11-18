@@ -44,13 +44,11 @@ public class BlazorWasmWarmUp
         context.SetDefaultTimeout(TimeoutSeconds * 1000);
 
         var page = await context.NewPageAsync();
-
-        var jsErrors = new List<string>();
-        page.PageError += (_, error) => jsErrors.Add(error);
+        var diagnostics = new WarmUpDiagnostics(page);
 
         for (var attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            jsErrors.Clear();
+            diagnostics.Clear();
             TestContext.Out.WriteLine($"Blazor WASM warm-up: attempt {attempt}/{MaxAttempts}");
 
             await page.GotoAsync("/");
@@ -71,10 +69,12 @@ public class BlazorWasmWarmUp
             }
             catch (TimeoutException)
             {
+                await diagnostics.SaveAsync($"attempt-{attempt}");
+
                 TestContext.Out.WriteLine(
                     $"Blazor WASM warm-up: LoginLink not visible after {TimeoutSeconds}s. " +
-                    $"JS errors captured: {jsErrors.Count}");
-                foreach (var error in jsErrors)
+                    $"JS errors captured: {diagnostics.JsErrors.Count}");
+                foreach (var error in diagnostics.JsErrors)
                 {
                     TestContext.Out.WriteLine($"  JS error: {error}");
                 }
@@ -83,11 +83,7 @@ public class BlazorWasmWarmUp
                 {
                     TestContext.Out.WriteLine("Blazor WASM warm-up: reloading page...");
                     await page.ReloadAsync();
-                    await loginLink.WaitForAsync(new LocatorWaitForOptions
-                    {
-                        State = WaitForSelectorState.Visible,
-                        Timeout = TimeoutSeconds * 1000
-                    });
+                    await WaitForLoginLinkAsync(loginLink, diagnostics, $"reload-{attempt}");
                 }
             }
         }
@@ -97,5 +93,28 @@ public class BlazorWasmWarmUp
         TestContext.Out.WriteLine(
             $"WARNING: Blazor WASM warm-up did not confirm LoginLink after {MaxAttempts} attempts. " +
             "Tests will proceed but may encounter loading issues.");
+    }
+
+    /// <summary>
+    /// Waits for the LoginLink to become visible; on timeout saves diagnostics then re-throws.
+    /// </summary>
+    private async Task WaitForLoginLinkAsync(
+        ILocator loginLink,
+        WarmUpDiagnostics diagnostics,
+        string label)
+    {
+        try
+        {
+            await loginLink.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Visible,
+                Timeout = TimeoutSeconds * 1000
+            });
+        }
+        catch (TimeoutException)
+        {
+            await diagnostics.SaveAsync(label);
+            throw;
+        }
     }
 }

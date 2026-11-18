@@ -506,6 +506,11 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-${{ runner.arch }}-
 
+      - name: Setup .NET (global.json)
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
       - name: Set Version
         shell: pwsh
         run: |
@@ -751,6 +756,16 @@ jobs:
           path: build/test/**/*.trx
           retention-days: 2
 
+      - name: Upload warm-up diagnostics (Shard ${{ matrix.shard }}/6)
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 3
+        if: failure()
+        with:
+          name: warmup-diagnostics-linux-shard-${{ matrix.shard }}
+          path: src/AcceptanceTests/bin/**/warmup-diagnostics/**
+          if-no-files-found: ignore
+          retention-days: 2
+
   acceptance-tests-arm:
     name: Acceptance Tests (ARM SQLite) [shard ${{ matrix.shard }}/6]
     needs: changes
@@ -825,6 +840,16 @@ jobs:
         with:
           name: test-results-acceptance-arm-shard-${{ matrix.shard }}
           path: build/test/**/*.trx
+          retention-days: 2
+
+      - name: Upload warm-up diagnostics (Shard ${{ matrix.shard }}/6)
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 3
+        if: failure()
+        with:
+          name: warmup-diagnostics-arm-shard-${{ matrix.shard }}
+          path: src/AcceptanceTests/bin/**/warmup-diagnostics/**
+          if-no-files-found: ignore
           retention-days: 2
 
   acceptance-tests-coverage-check:
