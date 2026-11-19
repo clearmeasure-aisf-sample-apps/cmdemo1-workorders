@@ -25,6 +25,7 @@ public class ApiRateLimitingWebTests
     {
         await using var factory = new RateLimitedApiWebApplicationFactory();
         using var client = factory.CreateClient();
+        client.Timeout = TestServerClientTimeout.Value;
 
         (await client.GetAsync("/api/version")).StatusCode.ShouldBe(HttpStatusCode.OK);
 
@@ -41,6 +42,7 @@ public class ApiRateLimitingWebTests
     {
         await using var factory = new RateLimitedApiWebApplicationFactory();
         using var client = factory.CreateClient();
+        client.Timeout = TestServerClientTimeout.Value;
 
         for (var i = 0; i < 5; i++)
             (await client.GetAsync("/_healthcheck")).StatusCode.ShouldBe(HttpStatusCode.OK);

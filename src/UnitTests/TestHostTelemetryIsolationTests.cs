@@ -11,6 +11,11 @@ public class TestHostTelemetryIsolationTests
 {
     private const string ConnectionStringVariable = "APPLICATIONINSIGHTS_CONNECTION_STRING";
 
+    private static readonly HttpClient NeverCompletingClient = new(new NeverCompletingHandler())
+    {
+        Timeout = TimeSpan.FromMilliseconds(200)
+    };
+
     [Test]
     public void Should_ClearApplicationInsightsConnectionString_When_TestAssemblyStarts()
     {
@@ -46,9 +51,7 @@ public class TestHostTelemetryIsolationTests
     [Test]
     public async Task Should_FailWithTimeout_When_RequestNeverCompletes()
     {
-        using var client = new HttpClient(new NeverCompletingHandler()) { Timeout = TimeSpan.FromMilliseconds(200) };
-
-        await Should.ThrowAsync<TaskCanceledException>(() => client.GetAsync("http://localhost/"));
+        await Should.ThrowAsync<TaskCanceledException>(() => NeverCompletingClient.GetAsync("http://localhost/"));
     }
 
     [Test]

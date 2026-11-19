@@ -43,6 +43,7 @@ public class CorsWebTests
     {
         await using var factory = new RateLimitedApiWebApplicationFactory();
         using var client = factory.CreateClient();
+        client.Timeout = TestServerClientTimeout.Value;
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/version");
         request.Headers.Add("Origin", "https://any.example");
