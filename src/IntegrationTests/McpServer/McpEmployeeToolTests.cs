@@ -10,33 +10,42 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.McpServer;
 [TestFixture]
 public class McpEmployeeToolTests
 {
+    private readonly List<Employee> _createdEmployees = new();
+
+    [TearDown]
+    public async Task TearDown()
+    {
+        if (_createdEmployees.Count == 0)
+        {
+            return;
+        }
+
+        await using var cleanup = TestHost.GetRequiredService<DbContext>();
+        cleanup.RemoveRange(_createdEmployees.ToArray());
+        await cleanup.SaveChangesAsync();
+        _createdEmployees.Clear();
+    }
+
     [Test]
     public async Task ShouldListAllEmployees()
     {
         var emp1 = new Employee(TestData.UserName("jdoe"), "John", "Doe", "john@test.com");
         var emp2 = new Employee(TestData.UserName("jsmith"), "Jane", "Smith", "jane@test.com");
+        _createdEmployees.Add(emp1);
+        _createdEmployees.Add(emp2);
 
-        try
-        {
-            await using var context = TestHost.GetRequiredService<DbContext>();
-            context.Add(emp1);
-            context.Add(emp2);
-            await context.SaveChangesAsync();
+        await using var context = TestHost.GetRequiredService<DbContext>();
+        context.Add(emp1);
+        context.Add(emp2);
+        await context.SaveChangesAsync();
 
-            var bus = TestHost.GetRequiredService<IBus>();
-            var result = await EmployeeTools.ListEmployees(bus);
+        var bus = TestHost.GetRequiredService<IBus>();
+        var result = await EmployeeTools.ListEmployees(bus);
 
-            result.ShouldContain(emp1.UserName);
-            result.ShouldContain(emp2.UserName);
-            result.ShouldContain("John");
-            result.ShouldContain("Jane");
-        }
-        finally
-        {
-            await using var cleanup = TestHost.GetRequiredService<DbContext>();
-            cleanup.RemoveRange(emp1, emp2);
-            await cleanup.SaveChangesAsync();
-        }
+        result.ShouldContain(emp1.UserName);
+        result.ShouldContain(emp2.UserName);
+        result.ShouldContain("John");
+        result.ShouldContain("Jane");
     }
 
     [Test]
