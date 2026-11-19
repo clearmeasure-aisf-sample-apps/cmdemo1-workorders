@@ -21,7 +21,7 @@ public class McpEmployeeToolTests
         }
 
         await using var cleanup = TestHost.GetRequiredService<DbContext>();
-        cleanup.RemoveRange(_createdEmployees.ToArray());
+        cleanup.RemoveRange(_createdEmployees);
         await cleanup.SaveChangesAsync();
         _createdEmployees.Clear();
     }

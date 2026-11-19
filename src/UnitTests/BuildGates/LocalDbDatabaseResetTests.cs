@@ -66,7 +66,7 @@ public class LocalDbDatabaseResetTests
     public void ShouldResolveTheDatabaseNameForBuildAndAcceptance_WhenBuildScriptIsRead()
     {
         string source = RepositoryCheckout.Current.ReadText("build.ps1");
-        int occurrences = source.Split(ResolvedNameAssignment, StringSplitOptions.None).Length - 1;
+        int occurrences = source.Split(ResolvedNameAssignment).Length - 1;
 
         occurrences.ShouldBe(2);
     }
