@@ -11,11 +11,11 @@ namespace ClearMeasure.Bootcamp.UnitTests.McpServer;
 public class McpSingleRegistrationTests
 {
     private static readonly Type[] ServiceTypeDefinitions =
-    {
+    [
         typeof(IValidator<>),
         typeof(INotificationHandler<>),
         typeof(IRequestHandler<,>),
-    };
+    ];
 
     [Test]
     public void ShouldRegisterEachHandlerAndValidatorOnce_WhenMcpServiceRegistryIsBuilt()
@@ -29,7 +29,7 @@ public class McpSingleRegistrationTests
         targetInstances.ShouldNotBeEmpty();
 
         var duplicates = targetInstances
-            .GroupBy(instance => (ServiceType: instance.ServiceType, ImplementationType: instance.ImplementationType))
+            .GroupBy(instance => (instance.ServiceType, instance.ImplementationType))
             .Where(group => group.Count() > 1)
             .Select(group => $"{group.Key.ServiceType} <- {group.Key.ImplementationType} registered {group.Count()} times")
             .ToList();

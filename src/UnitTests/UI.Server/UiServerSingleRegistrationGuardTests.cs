@@ -17,10 +17,10 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 public class UiServerSingleRegistrationGuardTests
 {
     private static readonly Type[] ServiceTypeDefinitions =
-    {
+    [
         typeof(IValidator<>),
         typeof(INotificationHandler<>),
-    };
+    ];
 
     [Test]
     public void ShouldRegisterEachValidatorAndNotificationHandlerOnce_WhenUiServiceRegistryIsBuilt()
@@ -32,7 +32,7 @@ public class UiServerSingleRegistrationGuardTests
         targetInstances.ShouldNotBeEmpty();
 
         var duplicates = targetInstances
-            .GroupBy(instance => (ServiceType: instance.ServiceType, ImplementationType: instance.ImplementationType))
+            .GroupBy(instance => (instance.ServiceType, instance.ImplementationType))
             .Where(group => group.Count() > 1)
             .Select(group => $"{group.Key.ServiceType} <- {group.Key.ImplementationType} registered {group.Count()} times")
             .ToList();

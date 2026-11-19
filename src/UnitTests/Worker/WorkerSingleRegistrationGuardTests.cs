@@ -18,10 +18,10 @@ namespace ClearMeasure.Bootcamp.UnitTests.Worker;
 public class WorkerSingleRegistrationGuardTests
 {
     private static readonly Type[] ServiceTypeDefinitions =
-    {
+    [
         typeof(IValidator<>),
         typeof(INotificationHandler<>),
-    };
+    ];
 
     [Test]
     public void ShouldRegisterEachValidatorAndNotificationHandlerOnce_WhenWorkerServicesAreRegistered()
@@ -34,7 +34,7 @@ public class WorkerSingleRegistrationGuardTests
         var targetDescriptors = services.Where(IsTargetServiceType).ToList();
 
         var duplicates = targetDescriptors
-            .GroupBy(descriptor => (ServiceType: descriptor.ServiceType, ImplementationType: descriptor.ImplementationType))
+            .GroupBy(descriptor => (descriptor.ServiceType, descriptor.ImplementationType))
             .Where(group => group.Count() > 1)
             .Select(group => $"{group.Key.ServiceType} <- {group.Key.ImplementationType} registered {group.Count()} times")
             .ToList();
@@ -55,12 +55,8 @@ public class WorkerSingleRegistrationGuardTests
             })
             .Build();
 
-    private sealed class HarnessEndpoint : WorkOrderEndpoint
+    private sealed class HarnessEndpoint(IConfiguration configuration) : WorkOrderEndpoint(configuration)
     {
-        public HarnessEndpoint(IConfiguration configuration) : base(configuration)
-        {
-        }
-
         public IServiceCollection CreateWorkerServiceCollection()
         {
             var services = CreateServiceCollection();

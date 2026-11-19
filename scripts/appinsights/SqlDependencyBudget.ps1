@@ -208,7 +208,7 @@ function ConvertFrom-AppInsightsQueryTable {
 
     try {
         $root = $document.RootElement
-        $tablesProperty = [System.Text.Json.JsonElement]::new()
+        $tablesProperty = [System.Text.Json.JsonElement]::Parse('null')
         if (-not $root.TryGetProperty('tables', [ref]$tablesProperty)) {
             throw 'Application Insights query result has no tables property.'
         }
@@ -224,7 +224,7 @@ function ConvertFrom-AppInsightsQueryTable {
             $columns.Add($column.GetProperty('name').GetString())
         }
 
-        $rowsElement = [System.Text.Json.JsonElement]::new()
+        $rowsElement = [System.Text.Json.JsonElement]::Parse('null')
         $hasRows = $table.TryGetProperty('rows', [ref]$rowsElement)
         if ($hasRows -and $rowsElement.ValueKind -eq [System.Text.Json.JsonValueKind]::Array) {
             foreach ($row in $rowsElement.EnumerateArray()) {
