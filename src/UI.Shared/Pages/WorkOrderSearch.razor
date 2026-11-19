@@ -3,6 +3,10 @@
 
 <div class="search-page">
     <div class="search-container">
+        @if (_earlyAccessBanner)
+        {
+            <p class="early-access-banner" role="status">Early access: you are seeing a feature that is not yet available to everyone.</p>
+        }
         <PageHeader Title="Work Order Search" TitleTooltip="Search every work order"
                     TitleTestId="@nameof(Elements.SearchHeadingTooltip)"
                     Subtitle="Find, triage and track maintenance requests across all church facilities."

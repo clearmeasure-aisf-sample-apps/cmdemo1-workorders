@@ -14,7 +14,7 @@ public class FeatureFlagsQueryHandler(IFeatureFlagEvaluator evaluator) : IReques
         var flags = new Dictionary<string, bool>(StringComparer.Ordinal);
         foreach (var name in FeatureFlagNames.All)
         {
-            flags[name] = await evaluator.IsEnabledAsync(name, cancellationToken);
+            flags[name] = await evaluator.IsEnabledAsync(name, request.UserName, cancellationToken);
         }
 
         return new FeatureFlagsResult(flags);

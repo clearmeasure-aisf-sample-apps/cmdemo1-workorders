@@ -110,6 +110,7 @@ public class RemotableRequestTests
     public void ShouldRoundTripFeatureFlagsQueryAndResult()
     {
         AssertRemotable(new FeatureFlagsQuery());
+        AssertRemotable(new FeatureFlagsQuery("tlovejoy"));
         var result = new FeatureFlagsResult(new Dictionary<string, bool>
         {
             [FeatureFlagNames.BuildingManagement] = true,

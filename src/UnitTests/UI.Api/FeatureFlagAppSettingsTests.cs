@@ -29,6 +29,22 @@ public class FeatureFlagAppSettingsTests
         flags[FeatureFlagNames.VendorManagement].ShouldBeTrue();
     }
 
+    [Test]
+    public void Appsettings_Should_LeaveEarlyAccessBannerOff_When_ImageDefaultRead()
+    {
+        var flags = ReadFlags("appsettings.json");
+
+        flags[FeatureFlagNames.EarlyAccessBanner].ShouldBeFalse();
+    }
+
+    [Test]
+    public void DevelopmentAppsettings_Should_LeaveEarlyAccessBannerOff_When_TddHostRead()
+    {
+        var flags = ReadFlags("appsettings.Development.json");
+
+        flags[FeatureFlagNames.EarlyAccessBanner].ShouldBeFalse();
+    }
+
     private static Dictionary<string, bool> ReadFlags(string fileName)
     {
         using var document = JsonDocument.Parse(RepositoryCheckout.Current.ReadText($"src/UI/Server/{fileName}"));

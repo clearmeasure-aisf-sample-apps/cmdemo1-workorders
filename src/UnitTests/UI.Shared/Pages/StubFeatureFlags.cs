@@ -6,18 +6,22 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared.Pages;
 /// <summary>
 /// In-memory feature flags for component tests.
 /// <see cref="FeatureFlagNames.ShowPriorityBadges"/>, <see cref="FeatureFlagNames.BuildingManagement"/>,
-/// and <see cref="FeatureFlagNames.VendorManagement"/> default to enabled.
+/// and <see cref="FeatureFlagNames.VendorManagement"/> default to enabled;
+/// <see cref="FeatureFlagNames.EarlyAccessBanner"/> defaults to disabled.
 /// </summary>
 public sealed class StubFeatureFlags(
     bool showPriorityBadges = true,
     bool buildingManagement = true,
-    bool vendorManagement = true) : IFeatureFlags
+    bool vendorManagement = true,
+    bool earlyAccessBanner = false)
+    : IFeatureFlags
 {
     private readonly Dictionary<string, bool> _flags = new(StringComparer.Ordinal)
     {
         [FeatureFlagNames.ShowPriorityBadges] = showPriorityBadges,
         [FeatureFlagNames.BuildingManagement] = buildingManagement,
-        [FeatureFlagNames.VendorManagement] = vendorManagement
+        [FeatureFlagNames.VendorManagement] = vendorManagement,
+        [FeatureFlagNames.EarlyAccessBanner] = earlyAccessBanner
     };
 
     /// <inheritdoc />

@@ -22,9 +22,33 @@ public class FeatureFlagsQueryHandlerTests
         result.Flags[FeatureFlagNames.ShowPriorityBadges].ShouldBeTrue();
     }
 
+    [Test]
+    public async Task Handle_Should_EvaluateEveryCatalogNameForTheQueryUserName_When_QueryCarriesOne()
+    {
+        var evaluator = new StubFeatureFlagEvaluator();
+        var handler = new FeatureFlagsQueryHandler(evaluator);
+
+        await handler.Handle(new FeatureFlagsQuery("tlovejoy"), CancellationToken.None);
+
+        evaluator.UserNames.Count.ShouldBe(FeatureFlagNames.All.Count);
+        evaluator.UserNames.ShouldAllBe(userName => userName == "tlovejoy");
+    }
+
     private sealed class StubFeatureFlagEvaluator(params string[] enabled) : IFeatureFlagEvaluator
     {
+        /// <summary>The username every evaluation was asked for, in order.</summary>
+        public List<string?> UserNames { get; } = [];
+
         public Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default) =>
-            Task.FromResult(enabled.Contains(featureName));
+            IsEnabledAsync(featureName, null, cancellationToken);
+
+        public Task<bool> IsEnabledAsync(
+            string featureName,
+            string? userName,
+            CancellationToken cancellationToken = default)
+        {
+            UserNames.Add(userName);
+            return Task.FromResult(enabled.Contains(featureName));
+        }
     }
 }

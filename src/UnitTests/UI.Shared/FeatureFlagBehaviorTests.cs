@@ -199,7 +199,13 @@ public class FeatureFlagBehaviorTests
     {
         public List<string> Evaluated { get; } = [];
 
-        public Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default)
+        public Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default) =>
+            IsEnabledAsync(featureName, null, cancellationToken);
+
+        public Task<bool> IsEnabledAsync(
+            string featureName,
+            string? userName,
+            CancellationToken cancellationToken = default)
         {
             Evaluated.Add(featureName);
             return Task.FromResult(TryGetValue(featureName, out var enabled) && enabled);
