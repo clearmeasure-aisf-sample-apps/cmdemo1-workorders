@@ -8,6 +8,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.TestSupport;
 /// <summary>In-process UI.Server host with TestSupport on, as on a pool slot.</summary>
 public sealed class TestSupportEnabledWebApplicationFactory : WebApplicationFactory<UiServerWebApplicationMarker>
 {
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        client.Timeout = TestServerClientTimeout.Value;
+    }
+
     public const string Secret = "unit-test-support-secret";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

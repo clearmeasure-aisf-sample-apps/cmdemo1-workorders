@@ -10,6 +10,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 /// </summary>
 public sealed class RequestBodyBufferingDisabledWebApplicationFactory : WebApplicationFactory<UiServerWebApplicationMarker>
 {
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        client.Timeout = TestServerClientTimeout.Value;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
