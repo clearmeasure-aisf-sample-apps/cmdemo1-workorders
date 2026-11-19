@@ -120,6 +120,34 @@ try {
         -OutputDirectory $evilOut 2>&1
     Assert-True ($LASTEXITCODE -ne 0) 'Unprotect must refuse symlink entries'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $evilOut 'evil-link'))) 'symlink not extracted'
+
+    # Regression: the session key must be newline-free text so OpenSSL's `file:`
+    # password read always sees the full key (binary keys with 0x0A used to
+    # truncate the password, ~12% of random keys). Repeat the round trip to
+    # catch the intermittent failure.
+    $loopPayload = 'acceptance-artifact-secret-payload'
+    for ($i = 1; $i -le 25; $i++) {
+        $loopSource = Join-Path $temp "source-$i"
+        $loopBundle = Join-Path $temp "bundle-$i"
+        $loopOut = Join-Path $temp "out-$i"
+        New-Item -ItemType Directory -Force -Path $loopSource | Out-Null
+        Set-Content -LiteralPath (Join-Path $loopSource 'hello.txt') -Value $loopPayload
+
+        & pwsh -NoProfile -File $scriptPath -Mode Protect `
+            -PublicKeyPath $publicKey `
+            -SourceDirectory $loopSource `
+            -BundleDirectory $loopBundle
+        Assert-True ($LASTEXITCODE -eq 0) "Protect should succeed (iteration $i)"
+
+        & pwsh -NoProfile -File $scriptPath -Mode Unprotect `
+            -PrivateKeyPath $privateKey `
+            -BundleDirectory $loopBundle `
+            -OutputDirectory $loopOut
+        Assert-True ($LASTEXITCODE -eq 0) "Unprotect should succeed (iteration $i)"
+
+        $recovered = Get-Content -LiteralPath (Join-Path $loopOut 'hello.txt') -Raw
+        Assert-True ($recovered.Trim() -eq $loopPayload) "payload round-trip (iteration $i)"
+    }
 }
 finally {
     Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue
