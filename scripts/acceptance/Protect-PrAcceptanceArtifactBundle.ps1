@@ -152,7 +152,11 @@ function Invoke-Protect {
 
     $bytes = [byte[]]::new(32)
     [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-    [System.IO.File]::WriteAllBytes($sessionKey, $bytes)
+    # Text key with no trailing newline: OpenSSL reads only the first LINE of a
+    # `file:` password, so a binary key containing 0x0A truncated the password
+    # (an empty password when the first byte was 0x0A).
+    $hex = [BitConverter]::ToString($bytes).Replace('-', '').ToLowerInvariant()
+    [System.IO.File]::WriteAllText($sessionKey, $hex, [System.Text.UTF8Encoding]::new($false))
 
     & openssl enc -aes-256-cbc -pbkdf2 -salt -pass file:$sessionKey -in $tarPath -out $cipherPath
     if ($LASTEXITCODE -ne 0) { throw "openssl enc failed (exit $LASTEXITCODE)" }
