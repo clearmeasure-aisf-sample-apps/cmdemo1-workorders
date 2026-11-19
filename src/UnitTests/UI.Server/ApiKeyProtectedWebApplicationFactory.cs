@@ -10,6 +10,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 /// </summary>
 public sealed class ApiKeyProtectedWebApplicationFactory : WebApplicationFactory<UiServerWebApplicationMarker>
 {
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        client.Timeout = TestServerClientTimeout.Value;
+    }
+
     public const string TestApiKey = "integration-test-api-key";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)

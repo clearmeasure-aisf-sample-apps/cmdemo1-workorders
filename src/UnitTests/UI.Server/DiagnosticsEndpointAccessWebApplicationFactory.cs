@@ -11,6 +11,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 public sealed class DiagnosticsEndpointAccessWebApplicationFactory(string environmentName)
     : WebApplicationFactory<UiServerWebApplicationMarker>
 {
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        client.Timeout = TestServerClientTimeout.Value;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(environmentName);

@@ -11,6 +11,12 @@ namespace ClearMeasure.Bootcamp.UnitTests.Api;
 /// </summary>
 public sealed class RateLimitedApiWebApplicationFactory : WebApplicationFactory<UiServerWebApplicationMarker>
 {
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        client.Timeout = TestServerClientTimeout.Value;
+    }
+
     private readonly string _sqlConnectionString;
 
     // ReSharper disable once ConvertToPrimaryConstructor -- epic guardrail: no mass primary-constructor conversion
