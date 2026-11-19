@@ -26,7 +26,8 @@ public partial class MainLayout
         BrandSubtitle,
         HelpLink,
         NotificationsButton,
-        NotificationsBadge
+        NotificationsBadge,
+        BackToTop
     }
 
     [Inject]

@@ -213,6 +213,58 @@ public class AppFooterTests
         span.TextContent.Trim().ShouldBe("unknown");
     }
 
+    [Test]
+    public async Task ShouldRenderBackToTopLink_WithTextHrefTestIdAndAriaLabel()
+    {
+        await using var ctx = ShellLayoutContext.Create();
+        var layout = RenderLayout(ctx);
+
+        var link = layout.Find($"[data-testid='{nameof(MainLayout.Elements.BackToTop)}']");
+        link.TagName.ShouldBe("A");
+        link.TextContent.Trim().ShouldBe("Back to top");
+        link.GetAttribute("href").ShouldBe("#top");
+        link.GetAttribute("data-testid").ShouldBe(nameof(MainLayout.Elements.BackToTop));
+        link.GetAttribute("aria-label").ShouldBe("Back to top of page");
+        link.HasAttribute("tabindex").ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ShouldRenderBackToTopLink_InFooterRight_AfterEnvironmentName()
+    {
+        var bus = ShellLayoutContext.BusWithDeployment(new DeploymentIdentity("unknown", "Staging"));
+        await using var ctx = ShellLayoutContext.Create(bus: bus);
+        var layout = RenderLayout(ctx);
+
+        var footer = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}']");
+        footer.QuerySelector($".footer-right [data-testid='{nameof(MainLayout.Elements.BackToTop)}']").ShouldNotBeNull();
+
+        var footerRight = footer.QuerySelector(".footer-right");
+        footerRight.ShouldNotBeNull();
+        string.Join(' ', footerRight.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .ShouldEndWith("Staging · Back to top");
+    }
+
+    [Test]
+    public async Task ShouldRenderBackToTopLink_WhenAuthenticated()
+    {
+        await using var ctx = ShellLayoutContext.Create(authenticateAsUser: "hsimpson");
+        var layout = RenderLayout(ctx);
+
+        var link = layout.Find($"[data-testid='{nameof(MainLayout.Elements.BackToTop)}']");
+        link.GetAttribute("href").ShouldBe("#top");
+    }
+
+    [Test]
+    public async Task ShouldRenderTopAnchor_OnMainContainer()
+    {
+        await using var ctx = ShellLayoutContext.Create();
+        var layout = RenderLayout(ctx);
+
+        layout.FindAll("#top").Count.ShouldBe(1);
+        var top = layout.Find("#top");
+        top.ClassList.ShouldContain("main-container");
+    }
+
     private static IRenderedComponent<CascadingAuthenticationState> RenderLayout(BunitContext ctx) =>
         ctx.Render<CascadingAuthenticationState>(p => p.AddChildContent<MainLayout>());
 }
