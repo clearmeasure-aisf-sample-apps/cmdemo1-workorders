@@ -35,8 +35,11 @@ if (Test-IsArmArchitecture) {
 }
 $script:databaseEngine = $env:DATABASE_ENGINE
 
-$databaseName = $projectName
-
+# No top-level database name assignment here: build.ps1 is dot-sourced by
+# PrivateBuild.ps1 and AcceptanceTests.ps1, and a top-level assignment would
+# clobber their -databaseName parameters before they reach Build. Name
+# resolution happens in Build and Invoke-AcceptanceTests via
+# Get-ResolvedDatabaseName.
 $script:databaseServer = $databaseServer;
 $script:databaseScripts = Join-PathSegments $source_dir "Database" "scripts"
 
@@ -157,6 +160,11 @@ Function Setup-DatabaseForBuild {
 		MigrateDatabaseLocal -databaseServerFunc $script:databaseServer -databaseNameFunc $script:databaseName
 	}
 	elseif ($script:databaseEngine -eq "LocalDB") {
+		# Drop and recreate the LocalDB database so every build starts from a
+		# fresh, cleanly-migrated database instead of accumulating data from
+		# earlier runs in (LocalDb)\MSSQLLocalDB (same behaviour as the
+		# SQL-Container branch above).
+		Reset-LocalDbDatabase -databaseName $script:databaseName
 		$env:ConnectionStrings__SqlConnectionString = New-IntegratedConnectionString -server $script:databaseServer -database $script:databaseName
 		MigrateDatabaseLocal -databaseServerFunc $script:databaseServer -databaseNameFunc $script:databaseName
 	}

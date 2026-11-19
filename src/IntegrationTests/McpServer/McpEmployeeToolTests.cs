@@ -16,18 +16,27 @@ public class McpEmployeeToolTests
         var emp1 = new Employee(TestData.UserName("jdoe"), "John", "Doe", "john@test.com");
         var emp2 = new Employee(TestData.UserName("jsmith"), "Jane", "Smith", "jane@test.com");
 
-        await using var context = TestHost.GetRequiredService<DbContext>();
-        context.Add(emp1);
-        context.Add(emp2);
-        await context.SaveChangesAsync();
+        try
+        {
+            await using var context = TestHost.GetRequiredService<DbContext>();
+            context.Add(emp1);
+            context.Add(emp2);
+            await context.SaveChangesAsync();
 
-        var bus = TestHost.GetRequiredService<IBus>();
-        var result = await EmployeeTools.ListEmployees(bus);
+            var bus = TestHost.GetRequiredService<IBus>();
+            var result = await EmployeeTools.ListEmployees(bus);
 
-        result.ShouldContain(emp1.UserName);
-        result.ShouldContain(emp2.UserName);
-        result.ShouldContain("John");
-        result.ShouldContain("Jane");
+            result.ShouldContain(emp1.UserName);
+            result.ShouldContain(emp2.UserName);
+            result.ShouldContain("John");
+            result.ShouldContain("Jane");
+        }
+        finally
+        {
+            await using var cleanup = TestHost.GetRequiredService<DbContext>();
+            cleanup.RemoveRange(emp1, emp2);
+            await cleanup.SaveChangesAsync();
+        }
     }
 
     [Test]
