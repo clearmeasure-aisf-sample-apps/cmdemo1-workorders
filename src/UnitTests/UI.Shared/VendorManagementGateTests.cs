@@ -114,6 +114,12 @@ public class VendorManagementGateTests
     private sealed class StubFeatureFlagEvaluator(bool vendorManagement) : IFeatureFlagEvaluator
     {
         public Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default) =>
+            IsEnabledAsync(featureName, null, cancellationToken);
+
+        public Task<bool> IsEnabledAsync(
+            string featureName,
+            string? userName,
+            CancellationToken cancellationToken = default) =>
             Task.FromResult(featureName == FeatureFlagNames.VendorManagement && vendorManagement);
     }
 }

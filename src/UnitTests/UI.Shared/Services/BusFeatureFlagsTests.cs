@@ -2,6 +2,7 @@ using System.Text.Json;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UnitTests.UI.Client.Authentication;
 using ClearMeasure.Bootcamp.UI.Shared.Services;
 using MediatR;
 using Shouldly;
@@ -66,6 +67,17 @@ public class BusFeatureFlagsTests
         (await flags.IsEnabledAsync(FeatureFlagNames.VendorManagement)).ShouldBeFalse();
         (await flags.IsEnabledAsync(FeatureFlagNames.BuildingManagement)).ShouldBeFalse();
         bus.Requests.Count.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task IsEnabledAsync_Should_SendSessionUserName_When_SessionIsSignedIn()
+    {
+        var bus = new StubBus(() => Flags((FeatureFlagNames.EarlyAccessBanner, true)));
+        var flags = new BusFeatureFlags(bus, userSession: new StubUserSession(userName: "tlovejoy"));
+
+        (await flags.IsEnabledAsync(FeatureFlagNames.EarlyAccessBanner)).ShouldBeTrue();
+
+        bus.Requests.Single().ShouldBeOfType<FeatureFlagsQuery>().UserName.ShouldBe("tlovejoy");
     }
 
     private static FeatureFlagsResult Flags(params (string Name, bool Enabled)[] flags) =>

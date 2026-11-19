@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Octopus.OpenFeature.Provider;
 using OpenFeature;
 using OpenFeature.Constant;
+using OpenFeature.Model;
 
 namespace ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 
@@ -57,15 +58,23 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default)
+    public Task<bool> IsEnabledAsync(string featureName, CancellationToken cancellationToken = default) =>
+        IsEnabledAsync(featureName, null, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<bool> IsEnabledAsync(
+        string featureName,
+        string? userName,
+        CancellationToken cancellationToken = default)
     {
         var client = await _client.Value.ConfigureAwait(false);
         if (client is not null)
         {
+            var context = TargetingContext(userName);
             foreach (var key in OpenFeatureKeys(featureName))
             {
                 var details = await client
-                    .GetBooleanDetailsAsync(key, false, cancellationToken: cancellationToken)
+                    .GetBooleanDetailsAsync(key, false, context: context, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
                 if (details.ErrorType == ErrorType.None)
                 {
@@ -75,6 +84,21 @@ public sealed class RuntimeFeatureFlagEvaluator : IFeatureFlagEvaluator
         }
 
         return bool.TryParse(_configuration[$"{ConfigurationSectionName}:{featureName}"], out var enabled) && enabled;
+    }
+
+    /// <summary>
+    /// The OpenFeature context for the signed-in user: the username as the targeting key and as the
+    /// <c>username</c> attribute. An empty context when there is no username.
+    /// </summary>
+    private static EvaluationContext TargetingContext(string? userName)
+    {
+        var builder = EvaluationContext.Builder();
+        if (!string.IsNullOrWhiteSpace(userName))
+        {
+            builder = builder.SetTargetingKey(userName).Set("username", userName);
+        }
+
+        return builder.Build();
     }
 
     /// <summary>The OpenFeature keys tried for <paramref name="featureName"/>, in order.</summary>

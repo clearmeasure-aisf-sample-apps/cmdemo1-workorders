@@ -7,7 +7,8 @@ namespace ClearMeasure.Bootcamp.Core.Queries;
 /// Returns the runtime value of every <see cref="FeatureFlagNames.All"/> entry so callers can hide UI for
 /// disabled features. Enforcement stays in the bus feature flag behavior.
 /// </summary>
-public record FeatureFlagsQuery : IRequest<FeatureFlagsResult>, IRemotableRequest;
+/// <param name="UserName">The signed-in username, the OpenFeature targeting key.</param>
+public record FeatureFlagsQuery(string? UserName = null) : IRequest<FeatureFlagsResult>, IRemotableRequest;
 
 /// <summary>Flag name to enabled, one entry per catalog name.</summary>
 public record FeatureFlagsResult(IReadOnlyDictionary<string, bool> Flags);
