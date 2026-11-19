@@ -12,7 +12,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.DataAccess;
 public sealed class TargetingStubFeatureProvider : FeatureProvider
 {
     /// <summary>The one key this provider knows: the compact Octopus slug of EarlyAccessBanner.</summary>
-    public const string EarlyAccessKey = "earlyaccessbanner";
+    private const string EarlyAccessKey = "earlyaccessbanner";
 
     /// <summary>The rollout user of phase 1.</summary>
     public const string EarlyAccessUser = "tlovejoy";
@@ -20,11 +20,11 @@ public sealed class TargetingStubFeatureProvider : FeatureProvider
     /// <summary>The username of a colleague who is not in the rollout yet.</summary>
     public const string OtherUser = "gwillie";
 
-    /// <summary>Every context this provider was asked to evaluate <see cref="EarlyAccessKey"/> with, in order.</summary>
+    /// <summary>Every context this provider was asked to evaluate the early-access key with, in order.</summary>
     public List<EvaluationContext> Contexts { get; } = [];
 
     /// <summary>Turns on the later phase, where the toggle is enabled for everyone.</summary>
-    public bool LaterPhase { get; set; }
+    public bool LaterPhase { get; init; }
 
     /// <inheritdoc />
     public override Metadata GetMetadata() => new("Targeting Stub");
@@ -33,7 +33,7 @@ public sealed class TargetingStubFeatureProvider : FeatureProvider
     public override Task<ResolutionDetails<bool>> ResolveBooleanValueAsync(
         string flagKey,
         bool defaultValue,
-        EvaluationContext? context,
+        EvaluationContext? context = null,
         CancellationToken cancellationToken = default)
     {
         if (flagKey != EarlyAccessKey)
@@ -55,7 +55,7 @@ public sealed class TargetingStubFeatureProvider : FeatureProvider
     public override Task<ResolutionDetails<string>> ResolveStringValueAsync(
         string flagKey,
         string defaultValue,
-        EvaluationContext? context,
+        EvaluationContext? context = null,
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("the early-access toggle is boolean");
 
@@ -63,7 +63,7 @@ public sealed class TargetingStubFeatureProvider : FeatureProvider
     public override Task<ResolutionDetails<int>> ResolveIntegerValueAsync(
         string flagKey,
         int defaultValue,
-        EvaluationContext? context,
+        EvaluationContext? context = null,
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("the early-access toggle is boolean");
 
@@ -71,7 +71,7 @@ public sealed class TargetingStubFeatureProvider : FeatureProvider
     public override Task<ResolutionDetails<double>> ResolveDoubleValueAsync(
         string flagKey,
         double defaultValue,
-        EvaluationContext? context,
+        EvaluationContext? context = null,
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("the early-access toggle is boolean");
 
@@ -79,7 +79,7 @@ public sealed class TargetingStubFeatureProvider : FeatureProvider
     public override Task<ResolutionDetails<Value>> ResolveStructureValueAsync(
         string flagKey,
         Value defaultValue,
-        EvaluationContext? context,
+        EvaluationContext? context = null,
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("the early-access toggle is boolean");
 }
