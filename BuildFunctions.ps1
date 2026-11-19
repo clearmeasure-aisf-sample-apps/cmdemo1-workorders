@@ -284,6 +284,54 @@ END
     Log-Message -Message "Recreated database '$databaseName' on server '$serverName'" -Type "DEBUG"
 }
 
+Function Reset-LocalDbDatabase {
+    <#
+    .SYNOPSIS
+        Drops the LocalDB database if it exists and creates it again.
+    .DESCRIPTION
+        Mirrors New-SqlServerDatabase, but for the (LocalDb)\MSSQLLocalDB instance
+        and with integrated security (no sa password). Gives every build a freshly
+        created database so data from earlier runs does not accumulate.
+    .PARAMETER databaseName
+        The database to drop and recreate on the LocalDB instance.
+    #>
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$databaseName
+    )
+
+    $localDbServer = "(LocalDb)\MSSQLLocalDB"
+
+    $dropDbCmd = @"
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'$databaseName')
+BEGIN
+    ALTER DATABASE [$databaseName] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [$databaseName];
+END
+"@
+
+    $createDbCmd = "CREATE DATABASE [$databaseName];"
+    Log-Message -Message "Recreating LocalDB database '$databaseName' on '$localDbServer'" -Type "DEBUG"
+
+    try {
+        if (Get-Command Invoke-Sqlcmd -ErrorAction SilentlyContinue) {
+            Invoke-Sqlcmd -ServerInstance $localDbServer -Database master -Query $dropDbCmd
+            Invoke-Sqlcmd -ServerInstance $localDbServer -Database master -Query $createDbCmd
+        } elseif (Get-Command sqlcmd -ErrorAction SilentlyContinue) {
+            & sqlcmd -S $localDbServer -d master -Q $dropDbCmd 2>&1 | Out-Null
+            & sqlcmd -S $localDbServer -d master -Q $createDbCmd 2>&1 | Out-Null
+        } else {
+            throw "Neither Invoke-Sqlcmd (SqlServer module) nor the sqlcmd CLI is available to reset the LocalDB database '$databaseName' on '$localDbServer'."
+        }
+    }
+    catch {
+        Log-Message -Message "Error recreating LocalDB database '$databaseName' on '$localDbServer': $_" -Type "ERROR"
+        throw $_
+    }
+
+    Log-Message -Message "Recreated LocalDB database '$databaseName' on '$localDbServer'" -Type "DEBUG"
+}
+
 Function New-DockerContainerForSqlServer {
     param (
         [Parameter(Mandatory = $true)]

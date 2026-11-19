@@ -10,11 +10,29 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.McpServer;
 [TestFixture]
 public class McpEmployeeToolTests
 {
+    private readonly List<Employee> _createdEmployees = new();
+
+    [TearDown]
+    public async Task TearDown()
+    {
+        if (_createdEmployees.Count == 0)
+        {
+            return;
+        }
+
+        await using var cleanup = TestHost.GetRequiredService<DbContext>();
+        cleanup.RemoveRange(_createdEmployees);
+        await cleanup.SaveChangesAsync();
+        _createdEmployees.Clear();
+    }
+
     [Test]
     public async Task ShouldListAllEmployees()
     {
         var emp1 = new Employee(TestData.UserName("jdoe"), "John", "Doe", "john@test.com");
         var emp2 = new Employee(TestData.UserName("jsmith"), "Jane", "Smith", "jane@test.com");
+        _createdEmployees.Add(emp1);
+        _createdEmployees.Add(emp2);
 
         await using var context = TestHost.GetRequiredService<DbContext>();
         context.Add(emp1);
