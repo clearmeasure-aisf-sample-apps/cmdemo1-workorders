@@ -1,0 +1,126 @@
+@startuml
+!include templates/plantuml-theme.puml
+
+scale 2/3
+center header
+    C4 Architecture: Containers
+endheader
+
+title Work Order Management System — Container Diagram
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Container.puml
+
+' Palette overrides (C4 1-0 stereotypes)
+skinparam rectangle<<person>> {
+    BackgroundColor #0F766E
+    BorderColor #115E59
+}
+skinparam rectangle<<ai>> {
+    BackgroundColor #7C3AED
+    BorderColor #5B21B6
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+}
+skinparam rectangle<<container>> {
+    BackgroundColor #1D4ED8
+    BorderColor #1E3A8A
+}
+skinparam rectangle<<web>> {
+    BackgroundColor #7C3AED
+    BorderColor #5B21B6
+    FontColor #FFFFFF
+}
+skinparam rectangle<<mcp>> {
+    BackgroundColor #BE185D
+    BorderColor #831843
+    FontColor #FFFFFF
+}
+skinparam rectangle<<worker>> {
+    BackgroundColor #0E7490
+    BorderColor #155E75
+    FontColor #FFFFFF
+}
+skinparam database<<container>> {
+    BackgroundColor #B45309
+    BorderColor #78350F
+    FontColor #FFFFFF
+}
+skinparam rectangle<<external_system>> {
+    BackgroundColor #64748B
+    BorderColor #475569
+}
+skinparam rectangle<<ai_ext>> {
+    BackgroundColor #BE185D
+    BorderColor #831843
+    FontColor #FFFFFF
+}
+skinparam rectangle<<obs_ext>> {
+    BackgroundColor #15803D
+    BorderColor #14532D
+    FontColor #FFFFFF
+}
+skinparam rectangle<<flag_ext>> {
+    BackgroundColor #4338CA
+    BorderColor #312E81
+    FontColor #FFFFFF
+}
+skinparam Arrow {
+    Color #475569
+    FontColor #334155
+}
+hide stereotype
+
+!define PersonAi(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ai>> as e_alias
+!define ContainerWeb(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<web>> as e_alias
+!define ContainerMcp(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<mcp>> as e_alias
+!define ContainerWorker(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<worker>> as e_alias
+!define ContainerDb(e_alias, e_label, e_techn, e_descr) database "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<container>> as e_alias
+!define SystemExtAi(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ai_ext>> as e_alias
+!define SystemExtObs(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<obs_ext>> as e_alias
+!define SystemExtFlags(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<flag_ext>> as e_alias
+
+Person(user, "End User", "Employee or administrator using the web application in a browser")
+PersonAi(agent, "AI Agent", "LLM agent connecting as an MCP client (for example an IDE or chat assistant)")
+
+System_Boundary(system, "Work Order Management System (.NET 10 — Azure Container Apps)") {
+    ContainerWeb(web, "UI.Client", "Blazor WebAssembly", "Interactive single-page app: work order search and manage pages, saved searches, AI chat. Runs entirely in the browser.")
+    Container(webserver, "UI.Server", "ASP.NET Core", "Hosts the WASM app. REST /api (and /api/v1.0) including tools, feature flags and status counts; gRPC workorders.WorkOrders; MCP endpoint /mcp; /_telemetry, /_build and /_healthcheck. Publishes NServiceBus messages via the SQL Server transport.")
+    ContainerMcp(mcphost, "McpServer", "ASP.NET Core", "Standalone host exposing the same work order MCP tools to AI agents.")
+    ContainerWorker(worker, "Worker", ".NET Worker", "NServiceBus hosted endpoint on the SQL Server transport processing background work.")
+    ContainerDb(db, "SQL Server", "Relational database", "Work orders, employees, roles, teams, vendors, status history, attachments and the NServiceBus transport tables.")
+}
+
+SystemExtAi(openai, "Azure OpenAI", "LLM for AI work-order chat (LlmGateway)")
+SystemExtObs(appinsights, "Application Insights", "Traces, metrics and logs via OpenTelemetry")
+SystemExtFlags(octopus, "Octopus Feature Toggles", "Feature flag values via OpenFeature")
+
+Rel(user, web, "Uses the web app", "HTTPS / WASM")
+Rel(web, webserver, "Remote calls: REST, MCP and gRPC", "HTTP (JSON, MCP, HTTP/2)")
+Rel(agent, webserver, "MCP tool calls", "MCP over HTTP")
+Rel(agent, mcphost, "MCP tool calls", "MCP over HTTP")
+Rel(webserver, db, "Reads and writes with EF Core; publishes messages", "SQL (TDS + NServiceBus transport)")
+Rel(mcphost, db, "Reads and writes with EF Core", "SQL (TDS)")
+Rel(worker, db, "Polls messages; reads and writes with EF Core", "SQL (TDS + NServiceBus transport)")
+Rel(webserver, openai, "LLM calls", "HTTPS")
+Rel(mcphost, openai, "LLM calls", "HTTPS")
+Rel(worker, openai, "LLM calls", "HTTPS")
+Rel(webserver, appinsights, "Traces, metrics and logs", "OpenTelemetry / OTLP")
+Rel(mcphost, appinsights, "Traces, metrics and logs", "OpenTelemetry / OTLP")
+Rel(worker, appinsights, "Traces, metrics and logs", "OpenTelemetry / OTLP")
+Rel(webserver, octopus, "Reads flag values when configured", "OpenFeature / HTTPS")
+Rel(mcphost, octopus, "Reads flag values when configured", "OpenFeature / HTTPS")
+
+legend right
+|=  |= Work Order Management System |
+|<#0F766E>      | Person |
+|<#7C3AED>      | AI agent / web UI (browser) |
+|<#1D4ED8>      | Web server container |
+|<#BE185D>      | MCP host / LLM |
+|<#0E7490>      | Background worker |
+|<#B45309>      | Database |
+|<#15803D>      | Observability |
+|<#4338CA>      | Feature flags |
+|<#64748B>      | External system |
+endlegend
+FOOTER()
+@enduml

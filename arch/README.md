@@ -51,6 +51,10 @@ Each source is listed individually, even when PlantUML and Mermaid describe the 
 | File | Diagram type | Description |
 |------|--------------|-------------|
 | [arch-c4-system.puml](arch-c4-system.puml) | C4Context | Church Bulletin users and external systems |
+| [arch-c4-workorders-system-context.puml](arch-c4-workorders-system-context.puml) | C4Context | Work order system context: employee roles, AI agent (MCP client) and external systems |
+| [arch-c4-workorders-containers.puml](arch-c4-workorders-containers.puml) | C4Container | Containers: Blazor WASM, UI.Server, standalone MCP host, NServiceBus worker and SQL Server |
+| [arch-c4-workorders-components.puml](arch-c4-workorders-components.puml) | C4Component | Request flow through UI.Server, DataAccess and the Core domain (CQRS, state machine, feature flags) |
+| [arch-c4-workorders-deployment.puml](arch-c4-workorders-deployment.puml) | C4Deployment | Azure production (Front Door, Container Apps, ACR, Application Insights) and local Aspire development |
 | [arch-c4-ai-software-factory.puml](arch-c4-ai-software-factory.puml) | C4Container | AI Software Factory SDLC workflow |
 | [arch-c4-component-project-dependencies.puml](arch-c4-component-project-dependencies.puml) | C4Component | Solution projects and their dependencies |
 | [arch-c4-class-domain-model.puml](arch-c4-class-domain-model.puml) | Class | Work order domain entities and relationships |

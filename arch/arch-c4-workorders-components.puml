@@ -1,0 +1,136 @@
+@startuml
+!include templates/plantuml-theme.puml
+
+scale 2/3
+center header
+    C4 Architecture: Components — request flow and domain
+endheader
+
+title Work Order Management System — Component Diagram (request flow through the onion)
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Component.puml
+
+' Palette overrides (C4 1-0 stereotypes)
+skinparam rectangle<<person>> {
+    BackgroundColor #0F766E
+    BorderColor #115E59
+}
+skinparam rectangle<<ai>> {
+    BackgroundColor #7C3AED
+    BorderColor #5B21B6
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+}
+skinparam rectangle<<container>> {
+    BackgroundColor #1D4ED8
+    BorderColor #1E3A8A
+}
+skinparam rectangle<<worker>> {
+    BackgroundColor #0E7490
+    BorderColor #155E75
+    FontColor #FFFFFF
+}
+skinparam database<<container>> {
+    BackgroundColor #B45309
+    BorderColor #78350F
+    FontColor #FFFFFF
+}
+skinparam rectangle<<component>> {
+    BackgroundColor #85BBF0
+    BorderColor #78A8D8
+    FontColor #0F172A
+}
+skinparam rectangle<<domain>> {
+    BackgroundColor #0F766E
+    BorderColor #115E59
+    FontColor #FFFFFF
+}
+skinparam rectangle<<pipeline>> {
+    BackgroundColor #1D4ED8
+    BorderColor #1E3A8A
+    FontColor #FFFFFF
+}
+skinparam rectangle<<persistence>> {
+    BackgroundColor #B45309
+    BorderColor #78350F
+    FontColor #FFFFFF
+}
+skinparam Arrow {
+    Color #475569
+    FontColor #334155
+}
+hide stereotype
+
+!define PersonAi(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ai>> as e_alias
+!define ContainerWorker(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<worker>> as e_alias
+!define ContainerDb(e_alias, e_label, e_techn, e_descr) database "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<container>> as e_alias
+!define ComponentPipeline(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<pipeline>> as e_alias
+!define ComponentDomain(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<domain>> as e_alias
+!define ComponentPersistence(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<persistence>> as e_alias
+
+Person(user, "End User", "Employee or administrator in a browser")
+PersonAi(agent, "AI Agent", "LLM agent calling the MCP endpoint")
+
+System_Boundary(system, "Work Order Management System (.NET 10)") {
+    Container_Boundary(uiserver, "UI.Server (ASP.NET Core host)") {
+        Component(ui, "Blazor UI (UI.Shared)", "Razor", "Work order search and manage pages, saved searches, AI chat; filters, sort, page and view live in the URL.")
+        Component(api, "REST API (UI.Api)", "ASP.NET Core MVC", "Versioned /api and /api/v1.0: work orders, utility tools, feature flags, status counts; rate limited, RFC 7807 problems.")
+        Component(grpcsvc, "gRPC WorkOrders", "Grpc.AspNetCore", "workorders.WorkOrders service: Ping and GetWorkOrderByNumber over HTTP/2.")
+        Component(mcpep, "MCP Endpoint", "ModelContextProtocol", "Work order tools for AI agents served at /mcp, with feature-flag tool filtering.")
+        Component(livetelemetry, "Live Telemetry & Build Facts", "ASP.NET Core", "/_telemetry rolling one-minute counters, /_build build facts, /_healthcheck.")
+        ComponentPipeline(bus, "IBus / MediatR Pipeline", "MediatR 12", "CQRS dispatch for every operation. FeatureFlagBehavior enforces [RequiresFeature]; requests are validated before handlers run.")
+    }
+    Container_Boundary(dataaccess, "DataAccess (adapters — references Core)") {
+        Component(handlers, "MediatR Handlers", "MediatR", "Query handlers and the StateCommandHandler; NServiceBus message handlers for the worker.")
+        ComponentPersistence(ctx, "DataContext", "EF Core 10", "DbContext with entity mappings and the WorkOrderStatus value converter; SaveChangesAsync persists transitions.")
+        ComponentPersistence(nsb, "NServiceBus SQL Transport", "NServiceBus", "Publishes messages from the UI and polls them in the worker, using SQL Server transport tables.")
+    }
+    Container_Boundary(core, "Core (domain — no dependencies)") {
+        ComponentDomain(wo, "WorkOrder Aggregate", "C#", "State machine: Draft → Assigned → InProgress → Complete, with InProgress → Assigned shelving and cancellation. WaitingOnVendor is an InProgress substate. Due-date urgency and overdue checks.")
+        ComponentDomain(status, "WorkOrderStatus", "Smart enum", "Draft, Assigned, InProgress, Complete, Cancelled with Code, Key and FriendlyName; FromCode and FromKey factories.")
+        ComponentDomain(cmds, "StateCommands", "IStateCommand", "SaveDraft, Assign, Start, Complete, Cancel, WaitOnVendor, Resume — each mutates the aggregate with guarded transitions.")
+        ComponentDomain(queries, "Queries", "IRequest<T>", "Specification search, search summary counts, recent activity, buildings, status counts.")
+        ComponentDomain(valid, "Validators", "FluentValidation", "Field rules for work orders and employees enforced in the pipeline.")
+        ComponentDomain(ff, "Feature Flags", "FeatureFlagNames", "ShowPriorityBadges, BuildingManagement, VendorManagement; [RequiresFeature] on request records.")
+        ComponentDomain(people, "People & Vendors", "C#", "Employee, Role, Team, Vendor, SavedSearchView, WorkOrderAttachment and WorkOrderStatusChange.")
+    }
+    Container_Boundary(worker, "Worker (NServiceBus endpoint)") {
+        Component(workersvc, "Message Handlers", "NServiceBus", "Consumes messages published by the UI server and performs background processing.")
+    }
+    ContainerDb(db, "SQL Server", "Relational database", "Single source of truth for work orders plus the NServiceBus transport tables.")
+}
+
+Rel(user, ui, "Works on work orders", "HTTPS / WASM")
+Rel(agent, mcpep, "Calls work order tools", "MCP over HTTP")
+Rel(ui, bus, "Sends queries and state commands")
+Rel(api, bus, "Sends queries and state commands")
+Rel(grpcsvc, bus, "Sends queries")
+Rel(mcpep, bus, "Sends queries and state commands")
+Rel(bus, handlers, "Dispatches after flag check and validation")
+Rel(handlers, cmds, "Executes state commands")
+Rel(cmds, wo, "command.Execute(workOrder)")
+Rel(wo, status, "ChangeStatus() with guarded transitions")
+Rel(handlers, queries, "Executes queries")
+Rel(queries, ctx, "Reads through EF Core")
+Rel(handlers, ctx, "Persists through EF Core")
+Rel(ctx, db, "SQL (TDS)")
+Rel(nsb, db, "Transport tables (SQL)")
+Rel(nsb, workersvc, "Delivers queued messages")
+Rel(bus, valid, "Validates requests")
+Rel(bus, ff, "Evaluates flags before dispatch")
+
+Lay_R(ui, bus)
+Lay_R(handlers, ctx)
+Lay_R(wo, status)
+
+legend right
+|=  |= Work Order Management System |
+|<#0F766E>      | Person / domain (Core) |
+|<#7C3AED>      | AI agent |
+|<#1D4ED8>      | Pipeline (UI.Server) |
+|<#85BBF0>      | Supporting component |
+|<#B45309>      | Persistence / database |
+|<#0E7490>      | Worker endpoint |
+endlegend
+FOOTER()
+@enduml

@@ -1,0 +1,77 @@
+@startuml
+!include templates/plantuml-theme.puml
+
+scale 1
+center header
+    C4 Architecture: Work Order Management System
+endheader
+
+title Work Order Management System — System Context
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Context.puml
+
+' Palette overrides (C4 1-0 stereotypes)
+skinparam rectangle<<person>> {
+    BackgroundColor #0F766E
+    BorderColor #115E59
+}
+skinparam rectangle<<ai>> {
+    BackgroundColor #7C3AED
+    BorderColor #5B21B6
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+}
+skinparam rectangle<<system>> {
+    BackgroundColor #1D4ED8
+    BorderColor #1E3A8A
+}
+skinparam rectangle<<external_system>> {
+    BackgroundColor #64748B
+    BorderColor #475569
+}
+skinparam database<<system>> {
+    BackgroundColor #1D4ED8
+    BorderColor #1E3A8A
+}
+skinparam database<<external_system>> {
+    BackgroundColor #64748B
+    BorderColor #475569
+}
+skinparam Arrow {
+    Color #475569
+    FontColor #334155
+}
+hide stereotype
+
+!define PersonAi(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ai>> as e_alias
+
+Person(requester, "Requester", "Employee with the CanCreateWorkOrder role. Creates and edits work orders and tracks due dates.")
+Person(fulfiller, "Fulfiller", "Employee with the CanFulfillWorkOrder role. Assigns, starts, completes and cancels work orders.")
+Person(admin, "Administrator", "Manages employees, roles, teams, vendors and saved searches.")
+PersonAi(agent, "AI Agent", "LLM agent acting as an MCP client. Reads and acts on work orders through MCP tools.")
+
+System(workorders, "Work Order Management System", "Blazor web app for managing work orders across their lifecycle: draft, assigned, in progress (with a waiting-on-vendor substate), complete and cancelled. Serves a REST API, a gRPC service, MCP tools and live telemetry.")
+
+System_Ext(openai, "Azure OpenAI", "LLM behind the AI work-order chat features")
+System_Ext(appinsights, "Application Insights", "Traces, metrics and logs via OpenTelemetry")
+System_Ext(octopus, "Octopus Feature Toggles", "Runtime feature flags via OpenFeature")
+System_Ext(github, "GitHub", "CI/CD: builds, tests and deploys the containers")
+
+Rel(requester, workorders, "Creates and edits work orders", "HTTPS")
+Rel(fulfiller, workorders, "Assigns, starts and completes work orders", "HTTPS")
+Rel(admin, workorders, "Manages people, teams and vendors", "HTTPS")
+Rel(agent, workorders, "Reads and acts on work orders", "MCP over HTTP")
+Rel(workorders, openai, "LLM calls for AI chat", "HTTPS")
+Rel(workorders, appinsights, "Sends traces, metrics and logs", "OpenTelemetry / OTLP")
+Rel(workorders, octopus, "Reads feature flag values", "OpenFeature / HTTPS")
+Rel_Back(github, workorders, "Builds, tests and deploys containers", "GitHub Actions / ACR")
+
+legend right
+|=  |= Work Order Management System |
+|<#0F766E>      | Person (employee role) |
+|<#7C3AED>      | AI agent (MCP client) |
+|<#1D4ED8>      | System in scope |
+|<#64748B>      | External system |
+endlegend
+FOOTER()
+@enduml

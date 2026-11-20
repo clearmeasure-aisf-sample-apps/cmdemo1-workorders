@@ -1,0 +1,160 @@
+@startuml
+!include templates/plantuml-theme.puml
+
+scale 2/3
+center header
+    C4 Architecture: Deployment
+endheader
+
+title Work Order Management System — Deployment Diagram
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/release/1-0/C4_Component.puml
+
+' Palette overrides (C4 1-0 stereotypes)
+skinparam rectangle<<person>> {
+    BackgroundColor #0F766E
+    BorderColor #115E59
+}
+skinparam rectangle<<ai>> {
+    BackgroundColor #7C3AED
+    BorderColor #5B21B6
+    StereotypeFontColor #FFFFFF
+    FontColor #FFFFFF
+}
+skinparam rectangle<<container>> {
+    BackgroundColor #1D4ED8
+    BorderColor #1E3A8A
+}
+skinparam rectangle<<web>> {
+    BackgroundColor #7C3AED
+    BorderColor #5B21B6
+    FontColor #FFFFFF
+}
+skinparam rectangle<<mcp>> {
+    BackgroundColor #BE185D
+    BorderColor #831843
+    FontColor #FFFFFF
+}
+skinparam rectangle<<worker>> {
+    BackgroundColor #0E7490
+    BorderColor #155E75
+    FontColor #FFFFFF
+}
+skinparam database<<container>> {
+    BackgroundColor #B45309
+    BorderColor #78350F
+    FontColor #FFFFFF
+}
+skinparam rectangle<<edge>> {
+    BackgroundColor #475569
+    BorderColor #334155
+    FontColor #FFFFFF
+}
+skinparam rectangle<<registry>> {
+    BackgroundColor #7C2D12
+    BorderColor #431407
+    FontColor #FFFFFF
+}
+skinparam rectangle<<obs>> {
+    BackgroundColor #15803D
+    BorderColor #14532D
+    FontColor #FFFFFF
+}
+skinparam rectangle<<ai_ext>> {
+    BackgroundColor #BE185D
+    BorderColor #831843
+    FontColor #FFFFFF
+}
+skinparam rectangle<<flag_ext>> {
+    BackgroundColor #4338CA
+    BorderColor #312E81
+    FontColor #FFFFFF
+}
+skinparam Arrow {
+    Color #475569
+    FontColor #334155
+}
+hide stereotype
+
+!define PersonAi(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ai>> as e_alias
+!define ContainerWeb(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<web>> as e_alias
+!define ContainerMcp(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<mcp>> as e_alias
+!define ContainerWorker(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<worker>> as e_alias
+!define ContainerDb(e_alias, e_label, e_techn, e_descr) database "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<container>> as e_alias
+!define ContainerEdge(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<edge>> as e_alias
+!define ContainerRegistry(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<registry>> as e_alias
+!define ContainerObs(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<obs>> as e_alias
+!define ContainerAi(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<ai_ext>> as e_alias
+!define ContainerFlags(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n//<size:TECHN_FONT_SIZE>[e_techn]</size>//\n\n e_descr" <<flag_ext>> as e_alias
+
+Person(user, "End User", "Employee or administrator in a browser")
+Person(dev, "Developer", "Runs the local Aspire development environment")
+PersonAi(agent, "AI Agent", "LLM agent connecting as an MCP client")
+
+System_Boundary(azure, "Azure (production / uat)") {
+    ContainerEdge(frontdoor, "Front Door", "Azure Front Door", "Global HTTPS edge: TLS termination, routing and health probes.")
+    System_Boundary(containerapps, "Azure Container Apps") {
+        Container(webserver, "UI.Server", "ASP.NET Core", "Scaled web server: WASM host, REST /api, gRPC, MCP /mcp, /_telemetry and /_build.")
+        ContainerMcp(mcphost, "McpServer", "ASP.NET Core", "Standalone MCP host for AI agents.")
+        ContainerWorker(worker, "Worker", ".NET Worker", "NServiceBus hosted endpoint.")
+    }
+    ContainerDb(db, "SQL Server", "Relational database", "Work order data and the NServiceBus transport tables.")
+    ContainerRegistry(acr, "Azure Container Registry", "ACR", "Container images built by the release pipeline.")
+    ContainerObs(appinsights, "Application Insights", "Azure Monitor", "Traces, metrics and logs via OpenTelemetry.")
+    ContainerAi(openai, "Azure OpenAI", "SaaS", "LLM for AI work-order chat.")
+    ContainerFlags(octopus, "Octopus Feature Toggles", "SaaS", "Feature flag values via OpenFeature.")
+}
+
+System_Boundary(local, "Local development (Aspire)") {
+    System_Boundary(machine, "Developer machine") {
+        Container(apphost, "Aspire AppHost", ".NET Aspire", "Orchestrates the local resources and sets OTEL_EXPORTER_OTLP_ENDPOINT.")
+        Container(webserverlocal, "UI.Server", "ASP.NET Core", "Local web server process or container.")
+        ContainerWorker(workerlocal, "Worker", ".NET Worker", "Local NServiceBus endpoint.")
+        ContainerDb(dblocal, "SQL Server", "LocalDB / Docker / SQLite", "Local database; SQLite fallback when Docker is unavailable.")
+        ContainerObs(dashboard, "Aspire Dashboard", "Web", "Receives OTLP metrics, traces and logs.")
+        ContainerAi(ollama, "Ollama", "Local LLM", "Optional local LLM for AI work-order chat.")
+    }
+}
+
+Rel(user, frontdoor, "Uses the web app", "HTTPS")
+Rel(frontdoor, webserver, "Routes requests", "HTTPS")
+Rel(agent, webserver, "MCP tool calls", "MCP over HTTP")
+Rel(webserver, db, "Reads and writes; publishes messages", "SQL (TDS + NServiceBus transport)")
+Rel(mcphost, db, "Reads and writes", "SQL (TDS)")
+Rel(worker, db, "Polls messages; reads and writes", "SQL (TDS + NServiceBus transport)")
+Rel(webserver, appinsights, "Traces, metrics and logs", "OpenTelemetry / OTLP")
+Rel(mcphost, appinsights, "Traces, metrics and logs", "OpenTelemetry / OTLP")
+Rel(worker, appinsights, "Traces, metrics and logs", "OpenTelemetry / OTLP")
+Rel(webserver, openai, "LLM calls", "HTTPS")
+Rel(mcphost, openai, "LLM calls", "HTTPS")
+Rel(webserver, octopus, "Reads flag values when configured", "OpenFeature / HTTPS")
+Rel(acr, webserver, "Serves container images", "Docker pull")
+
+Rel(dev, machine, "Runs the Aspire environment", "Local process")
+Rel(apphost, webserverlocal, "Starts")
+Rel(apphost, workerlocal, "Starts")
+Rel(apphost, dblocal, "Creates and migrates")
+Rel(apphost, dashboard, "Starts")
+Rel(webserverlocal, dblocal, "Reads and writes", "SQL")
+Rel(workerlocal, dblocal, "Polls messages; reads and writes", "SQL")
+Rel(webserverlocal, dashboard, "Traces, metrics and logs", "OTLP")
+Rel(webserverlocal, ollama, "LLM calls (optional)", "HTTP")
+
+Lay_D(frontdoor, containerapps)
+Lay_D(apphost, webserverlocal)
+
+legend right
+|=  |= Work Order Management System |
+|<#0F766E>      | Person / developer |
+|<#7C3AED>      | AI agent |
+|<#475569>      | Edge (Front Door) |
+|<#1D4ED8>      | Web server |
+|<#BE185D>      | MCP host / LLM |
+|<#0E7490>      | Worker |
+|<#B45309>      | Database |
+|<#7C2D12>      | Image registry |
+|<#15803D>      | Observability |
+|<#4338CA>      | Feature flags |
+endlegend
+FOOTER()
+@enduml
