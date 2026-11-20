@@ -22,12 +22,28 @@ public class WorkOrderSearchBoardTests
     }
 
     [Test]
-    public async Task ShouldTellScreenReadersTheCardIsUnassigned_WhenItHasNoAssignee()
+    public async Task ShouldShowUnassigned_WhenTheCardHasNoAssignee()
     {
         await using var ctx = new BunitContext();
 
         var board = ctx.Render<WorkOrderSearchBoard>(parameters => parameters.Add(p => p.Results, [SearchResultRowMother.Unassigned("402")]));
 
-        board.Find(".board-card-assignee .visually-hidden").TextContent.ShouldBe("Unassigned");
+        var name = board.Find(".board-card-assignee-name");
+        name.TextContent.ShouldBe("Unassigned");
+        name.ClassList.ShouldContain("muted-cell");
+        name.ClassList.ShouldNotContain("visually-hidden");
+    }
+
+    [Test]
+    public async Task ShouldShowTheAssigneeName_WhenTheCardIsAssigned()
+    {
+        await using var ctx = new BunitContext();
+
+        var board = ctx.Render<WorkOrderSearchBoard>(parameters => parameters.Add(p => p.Results, [SearchResultRowMother.AssignedToAda("404")]));
+
+        var name = board.Find(".board-card-assignee-name");
+        name.TextContent.ShouldBe("Ada Lovelace");
+        name.ClassList.ShouldNotContain("visually-hidden");
+        board.FindAll(".board-card-assignee .visually-hidden").Count.ShouldBe(0);
     }
 }

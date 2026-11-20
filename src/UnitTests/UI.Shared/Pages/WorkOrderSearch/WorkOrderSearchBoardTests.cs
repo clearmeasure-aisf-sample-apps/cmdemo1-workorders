@@ -234,8 +234,8 @@ public class WorkOrderSearchBoardTests
         assigned.QuerySelector(".board-card-title")!.TextContent.ShouldBe(assignedOrder.Title);
         assigned.QuerySelector(".priority")!.TextContent.Trim().ShouldBe("High");
         assigned.QuerySelector(".avatar")!.TextContent.ShouldBe("GW");
-        assigned.QuerySelector(".board-card-assignee .visually-hidden")!.TextContent
-            .ShouldBe("Assigned to Groundskeeper Willie");
+        assigned.QuerySelector(".board-card-assignee-name")!.TextContent.ShouldBe("Groundskeeper Willie");
+        assigned.QuerySelector(".board-card-assignee .visually-hidden").ShouldBeNull();
         assigned.QuerySelector(".board-card-room")!.TextContent.ShouldBe("101");
         assigned.QuerySelector(WorkOrderSearchSteps.TestId(WorkOrderSearchPage.Elements.UrgencyBadge, "WO-002"))!
             .TextContent.ShouldBe("Overdue");
@@ -244,7 +244,8 @@ public class WorkOrderSearchBoardTests
     private static void AssertDraftBoardCard(IRenderedComponent<WorkOrderSearchPage> component)
     {
         var draft = component.Find(WorkOrderSearchSteps.TestId(WorkOrderSearchPage.Elements.BoardCard, "WO-001"));
-        draft.QuerySelector(".board-card-assignee .visually-hidden")!.TextContent.ShouldBe("Unassigned");
+        draft.QuerySelector(".board-card-assignee-name")!.TextContent.ShouldBe("Unassigned");
+        draft.QuerySelector(".board-card-assignee-name")!.ClassList.ShouldContain("muted-cell");
         draft.QuerySelector(".avatar")!.ClassList.ShouldContain("avatar--empty");
         draft.QuerySelector(WorkOrderSearchSteps.TestId(WorkOrderSearchPage.Elements.DueDateCell, "WO-001"))!
             .TextContent.ShouldBe("–");

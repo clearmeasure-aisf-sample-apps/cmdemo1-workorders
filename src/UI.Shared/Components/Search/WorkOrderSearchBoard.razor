@@ -31,7 +31,17 @@
                                     }
                                     <span class="board-card-meta">
                                         <WorkOrderPriorityLabel Row="card" ShowHighBadge="ShowPriorityBadges"/>
-                                        <span class="board-card-assignee"><AssigneeAvatar Row="card"/><span class="visually-hidden">@AssigneeText(card)</span></span>
+                                        <span class="board-card-assignee">
+                                            <AssigneeAvatar Row="card"/>
+                                            @if (card.Assignee is null)
+                                            {
+                                                <span class="board-card-assignee-name muted-cell">Unassigned</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="board-card-assignee-name">@card.Assignee.DisplayName</span>
+                                            }
+                                        </span>
                                         @if (string.IsNullOrWhiteSpace(card.WorkOrder.RoomNumber))
                                         {
                                             <span class="board-card-room">
@@ -61,8 +71,4 @@
     [Parameter, EditorRequired] public WorkOrderSearchResultRow[] Results { get; set; } = [];
 
     [Parameter] public bool ShowPriorityBadges { get; set; }
-
-    /// <summary>Screen-reader text next to a card's avatar.</summary>
-    private static string AssigneeText(WorkOrderSearchResultRow card) =>
-        card.Assignee is null ? "Unassigned" : $"Assigned to {card.Assignee.DisplayName}";
 }
