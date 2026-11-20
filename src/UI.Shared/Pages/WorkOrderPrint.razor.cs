@@ -75,6 +75,7 @@ public partial class WorkOrderPrint : AppComponentBase
         Status,
         Priority,
         Building,
+        Floor,
         RoomNumber,
         DueDate,
         Creator,
