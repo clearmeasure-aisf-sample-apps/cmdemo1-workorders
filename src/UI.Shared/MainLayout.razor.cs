@@ -27,7 +27,8 @@ public partial class MainLayout
         HelpLink,
         NotificationsButton,
         NotificationsBadge,
-        BackToTop
+        BackToTop,
+        FooterHelpLink
     }
 
     [Inject]
