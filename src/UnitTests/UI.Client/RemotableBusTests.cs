@@ -97,7 +97,7 @@ public class RemotableBusTests
         var stubGateway = new StubPublisherGateway();
         stubGateway.SetResponse<object>(null);
         var bus = new RemotableBus(stubMediator, stubGateway);
-        var request = new ForecastQuery();
+        var request = new HealthCheckRemotableRequest();
 
         Should.Throw<Exception>(() => bus.Send(request).Result);
     }

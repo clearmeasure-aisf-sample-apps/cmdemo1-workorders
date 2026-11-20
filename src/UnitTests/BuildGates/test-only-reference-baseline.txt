@@ -32,7 +32,6 @@ src/DataAccess/Handlers/EmployeeQueryHandler.cs :: EmployeeQueryHandler
 src/DataAccess/Handlers/EmployeeWorkLoadQueryHandler.cs :: EmployeeWorkLoadQueryHandler
 src/DataAccess/Handlers/EmployeeWorkLoadSummaryQueryHandler.cs :: EmployeeWorkLoadSummaryQueryHandler
 src/DataAccess/Handlers/FeatureFlagsQueryHandler.cs :: FeatureFlagsQueryHandler
-src/DataAccess/Handlers/ForecastQueryHandler.cs :: ForecastQueryHandler
 src/DataAccess/Handlers/NotificationsPanelQueryHandler.cs :: NotificationsPanelQueryHandler
 src/DataAccess/Handlers/RecentWorkOrdersQueryHandler.cs :: RecentWorkOrdersQueryHandler
 src/DataAccess/Handlers/SavedSearchViewHandler.cs :: SavedSearchViewHandler
@@ -86,16 +85,7 @@ src/UI/Api/Controllers/MetricsController.cs :: MetricsController
 src/UI/Api/Controllers/MetricsController.cs :: MetricsController.GetSummary()
 src/UI/Api/Controllers/PingController.cs :: PingController
 src/UI/Api/Controllers/TimeController.cs :: TimeController
-src/UI/Api/Controllers/TimestampConverterController.cs :: TimestampConverterController
-src/UI/Api/Controllers/ToolsBase64Controller.cs :: ToolsBase64Controller
-src/UI/Api/Controllers/ToolsCaseController.cs :: ToolsCaseController
 src/UI/Api/Controllers/ToolsDueDateCheckController.cs :: ToolsDueDateCheckController
-src/UI/Api/Controllers/ToolsGuidGeneratorController.cs :: ToolsGuidGeneratorController
-src/UI/Api/Controllers/ToolsHashController.cs :: ToolsHashController
-src/UI/Api/Controllers/ToolsRandomController.cs :: ToolsRandomController
-src/UI/Api/Controllers/ToolsSlugifyController.cs :: ToolsSlugifyController
-src/UI/Api/Controllers/ToolsUppercaseController.cs :: ToolsUppercaseController
-src/UI/Api/Controllers/ToolsWordCountController.cs :: ToolsWordCountController
 src/UI/Api/Controllers/ToolsWorkOrderStatusesController.cs :: ToolsWorkOrderStatusesController
 src/UI/Api/Controllers/VersionController.cs :: VersionController
 src/UI/Api/Controllers/WhatDoIHaveController.cs :: WhatDoIHaveController

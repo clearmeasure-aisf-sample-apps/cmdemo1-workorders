@@ -199,11 +199,6 @@
       "seconds": 0.2
     },
     {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.EchoApiAcceptanceTests",
-      "tests": 1,
-      "seconds": 20.0
-    },
-    {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.FeatureFlagsApiAcceptanceTests",
       "tests": 3,
       "seconds": 0.1

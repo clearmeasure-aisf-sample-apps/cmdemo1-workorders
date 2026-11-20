@@ -14,7 +14,7 @@ in `SKILL.md`).
 | GET | `/api/version` | No (always open) | Yes | 200 JSON / 304 | output-cached 10m |
 | GET | `/api/health`, `/api/health/detailed` | Yes | Yes | 200 JSON / 304 | |
 | GET | `/api/diagnostics` | Yes | Yes | 200 JSON / 304 | |
-| GET | `/api/v1.0/WeatherForecast` | Yes | Yes | 200 JSON / 304 | 5-item array |
+| GET | `/api/tools/work-order-statuses` | No (always open) | Yes | 200 JSON | JSON array of work order statuses |
 | POST | `/api/work-orders/bulk-import` | Yes | Yes | 200 JSON | multipart `file` (CSV); realistic write load |
 | POST | `/api/blazor-wasm-single-api` | Yes | **No** (no attribute) | 200 JSON-string | MediatR envelope; realistic DB read/write, un-throttled |
 

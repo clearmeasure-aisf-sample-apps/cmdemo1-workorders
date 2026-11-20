@@ -18,7 +18,7 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 [EnableRateLimiting(ApiRateLimiting.PolicyName)]
 public class EnvironmentStatusController : ControllerBase
 {
-    public const string RedactedValue = EchoController.RedactedValue;
+    public const string RedactedValue = "[REDACTED]";
     public const string RedactionProbeVariableName = "TEST_ENV_STATUS_SECRET";
 
     private static readonly string[] ReportedEnvironmentVariableNames =

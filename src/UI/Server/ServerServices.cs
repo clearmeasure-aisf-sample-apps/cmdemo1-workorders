@@ -82,10 +82,6 @@ public static class ServerServices
                 .Expire(TimeSpan.FromMinutes(10))
                 .SetVaryByQuery("*")
                 .SetVaryByHeader("Accept"));
-            options.AddPolicy(OutputCachePolicyNames.WeatherSample, policy => policy
-                .Expire(TimeSpan.FromSeconds(30))
-                .SetVaryByQuery("*")
-                .SetVaryByHeader("Accept"));
         });
         services.AddResponseCompression(options =>
         {

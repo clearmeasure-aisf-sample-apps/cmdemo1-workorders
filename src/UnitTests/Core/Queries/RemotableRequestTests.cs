@@ -17,8 +17,6 @@ public class RemotableRequestTests
     [Test]
     public void ShouldSerialize()
     {
-        AssertRemotable(new ForecastQuery());
-        AssertRemotable(new[] { ObjectMother.Faker<WeatherForecast>() });
         AssertRemotable(new HealthCheckRemotableRequest());
         AssertRemotable(HealthStatus.Degraded);
         AssertRemotable(ObjectMother.Faker<WorkOrderSpecificationQuery>());

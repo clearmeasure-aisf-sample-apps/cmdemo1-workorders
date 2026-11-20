@@ -23,18 +23,8 @@ internal static class WorkOrderFieldMessageRules
         "src/Database/Console/DatabaseConnectionStringBuilder.cs",
         // Acceptance/test-support endpoint parameter messages (TestTag, userName)
         "src/UI/Server/TestSupport/TestSupportEndpoints.cs",
-        // Anonymous tools API: required query/body field messages for random values
-        "src/UI/Api/Controllers/ToolsRandomController.cs",
-        // Anonymous tools API: required JSON text for slugify
-        "src/UI/Api/Controllers/ToolsSlugifyController.cs",
-        // Anonymous tools API: required JSON text for hash
-        "src/UI/Api/Controllers/ToolsHashController.cs",
         // Anonymous tools API: required date query for due-date check
         "src/UI/Api/Controllers/ToolsDueDateCheckController.cs",
-        // Anonymous tools API: required JSON text for case conversion
-        "src/UI/Api/Controllers/ToolsCaseController.cs",
-        // Anonymous tools API: required JSON text for base64
-        "src/UI/Api/Controllers/ToolsBase64Controller.cs",
         // Login form employee picker — not a work-order field rule
         "src/UI.Shared/Pages/Login.razor.cs",
         // CSV upload presence check before parse — not a field-length rule

@@ -15,7 +15,7 @@ load-testing false-finding: reporting the limiter *doing its job* as a defect.
 | Limit | **100 requests / 60 s** per client, 4 segments, `QueueLimit=0` (fail fast) | `src/UI/Server/ApiRateLimitingOptions.cs`, `appsettings.json` |
 | Partition key | `X-API-Key` header → else `User.Identity.Name` → else remote IP → else `anonymous` | `src/UI/Server/ApiRateLimitingExtensions.cs` |
 | Throttled response | **HTTP 429**, `text/plain`, headers `Retry-After`, `X-RateLimit-{Limit,Remaining,Reset}` | `src/UI/Server/RateLimiting/RateLimitingMiddleware.cs` |
-| Scope | endpoints with `[EnableRateLimiting]` under `/api` — Ping, Time, Version, Health, Diagnostics, WeatherForecast, bulk-import | (attribute-gated) |
+| Scope | endpoints with `[EnableRateLimiting]` under `/api` — Ping, Time, Version, Health, Diagnostics, work-order-statuses, due-date-check, bulk-import | (attribute-gated) |
 | **Not** limited | `/api/blazor-wasm-single-api` (no attribute), `/mcp`, gRPC | |
 | **Default state** | **DISABLED in Development**; enabled (100/60s) in base `appsettings.json` (prod/other) | `appsettings.Development.json` |
 
