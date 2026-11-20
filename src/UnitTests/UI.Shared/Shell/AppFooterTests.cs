@@ -255,6 +255,47 @@ public class AppFooterTests
     }
 
     [Test]
+    public async Task ShouldRenderFooterHelpLink_WithTextHrefTestIdAndAriaLabel()
+    {
+        await using var ctx = ShellLayoutContext.Create();
+        var layout = RenderLayout(ctx);
+
+        var link = layout.Find($"[data-testid='{nameof(MainLayout.Elements.FooterHelpLink)}']");
+        link.TagName.ShouldBe("A");
+        link.TextContent.Trim().ShouldBe("Help");
+        link.GetAttribute("href").ShouldBe("ai-agent");
+        link.GetAttribute("data-testid").ShouldBe(nameof(MainLayout.Elements.FooterHelpLink));
+        link.GetAttribute("aria-label").ShouldBe("Get help with the AI agent");
+        link.HasAttribute("target").ShouldBeFalse();
+        link.HasAttribute("tabindex").ShouldBeFalse();
+    }
+
+    [Test]
+    public async Task ShouldRenderFooterHelpLink_InFooterLeft_AfterFooterNote()
+    {
+        await using var ctx = ShellLayoutContext.Create();
+        var layout = RenderLayout(ctx);
+
+        var footer = layout.Find($"[data-testid='{nameof(MainLayout.Elements.CopyrightFooter)}']");
+        footer.QuerySelector($".footer-left [data-testid='{nameof(MainLayout.Elements.FooterHelpLink)}']").ShouldNotBeNull();
+
+        var footerLeft = footer.QuerySelector(".footer-left");
+        footerLeft.ShouldNotBeNull();
+        string.Join(' ', footerLeft.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            .ShouldEndWith("within one business day. · Help");
+    }
+
+    [Test]
+    public async Task ShouldRenderFooterHelpLink_WhenAuthenticated()
+    {
+        await using var ctx = ShellLayoutContext.Create(authenticateAsUser: "hsimpson");
+        var layout = RenderLayout(ctx);
+
+        var link = layout.Find($"[data-testid='{nameof(MainLayout.Elements.FooterHelpLink)}']");
+        link.GetAttribute("href").ShouldBe("ai-agent");
+    }
+
+    [Test]
     public async Task ShouldRenderTopAnchor_OnMainContainer()
     {
         await using var ctx = ShellLayoutContext.Create();
