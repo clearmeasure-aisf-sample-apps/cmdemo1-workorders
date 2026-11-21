@@ -27,7 +27,6 @@ internal static class HttpAllowListTypes
         "EmployeeWorkLoadQuery",
         "EmployeeWorkLoadSummaryQuery",
         "FeatureFlagsQuery",
-        "ForecastQuery",
         "HealthCheckRemotableRequest",
         "InProgressToAssignedCommand",
         "InProgressToCancelledCommand",

@@ -57,7 +57,7 @@ public class ApiKeyAuthenticationWebTests
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Add(ApiKeyConstants.HeaderName, "wrong");
 
-        var response = await client.GetAsync("/api/v1.0/WeatherForecast");
+        var response = await client.GetAsync("/api/diagnostics");
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }

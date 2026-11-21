@@ -6,9 +6,9 @@ namespace ClearMeasure.Bootcamp.UnitTests.Architecture;
 public class HttpAllowListTypesTests
 {
     [Test]
-    public void MasterNames_WhenListed_HasExactlyFortyThreeEntries()
+    public void MasterNames_WhenListed_HasExactlyFortyTwoEntries()
     {
-        HttpAllowListTypes.MasterNames.Count.ShouldBe(43);
+        HttpAllowListTypes.MasterNames.Count.ShouldBe(42);
     }
 
     [Test]

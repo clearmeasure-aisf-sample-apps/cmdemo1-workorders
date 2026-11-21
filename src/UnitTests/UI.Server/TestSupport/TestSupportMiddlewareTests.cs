@@ -14,7 +14,7 @@ public class TestSupportMiddlewareTests
         TestSupportMiddleware.IsTestSupportPath(path).ShouldBeTrue();
     }
 
-    [TestCase("/api/echo")]
+    [TestCase("/api/version")]
     [TestCase("/api/test-supportive")]
     [TestCase(null)]
     [TestCase("")]
