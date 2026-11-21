@@ -123,7 +123,7 @@
                 <div class="form-group">
                     <label for="@Elements.Building" class="form-label">Building</label>
                     <div>
-                        <InputText data-testid="@Elements.Building" id="@Elements.Building" @bind-Value="Model.Building" class="form-control input-text" maxlength="@WorkOrder.BuildingMaxLength" disabled="@Model.IsReadOnly"/>
+                        <InputText data-testid="@Elements.Building" id="@Elements.Building" @bind-Value="Model.Building" class="form-control input-text" maxlength="@WorkOrder.BuildingMaxLength" disabled="@Model.IsReadOnly" autocomplete="off"/>
                     </div>
                 </div>
 
