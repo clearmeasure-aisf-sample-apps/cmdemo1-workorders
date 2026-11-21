@@ -49,11 +49,7 @@ internal static class RelativeTimeFormatter
         return Ago(Math.Max(1, days / 30), "month");
     }
 
-    private static string Ago(int count, string unit)
-    {
-        var label = count == 1 ? unit : unit + "s";
-        return $"{count} {label} ago";
-    }
+    private static string Ago(int count, string unit) => $"{Pluralizer.Count(count, unit)} ago";
 
     private static DateTime ToUtc(DateTime created) =>
         created.Kind switch
