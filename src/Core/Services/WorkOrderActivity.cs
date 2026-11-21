@@ -11,12 +11,9 @@ namespace ClearMeasure.Bootcamp.Core.Services;
 public sealed record WorkOrderActivity(string Verb, DateTime WhenUtc)
 {
     /// <summary>
-    /// Gets the church calendar date (America/Chicago) of the event. Stored values come back with
-    /// <see cref="DateTimeKind.Unspecified"/>, so the value is treated as UTC.
+    /// Gets the church calendar date of the event; see <see cref="ChurchTimeZone.ChurchDate"/>.
     /// </summary>
-    public DateOnly ChurchDate =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
-            DateTime.SpecifyKind(WhenUtc, DateTimeKind.Utc), ChurchTimeZone.Chicago));
+    public DateOnly ChurchDate => ChurchTimeZone.ChurchDate(WhenUtc);
 
     /// <summary>
     /// Returns the latest of the order's completed, assigned and created dates, or null when it has
