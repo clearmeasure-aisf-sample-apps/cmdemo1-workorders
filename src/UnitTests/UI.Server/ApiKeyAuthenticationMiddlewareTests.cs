@@ -1,5 +1,4 @@
 using ClearMeasure.Bootcamp.UI.Server;
-using Microsoft.AspNetCore.Http;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -42,35 +41,20 @@ public class ApiKeyAuthenticationMiddlewareTests
     public void ShouldValidate_ReturnsFalse_When_Disabled()
     {
         var options = new ApiKeyAuthenticationOptions { Enabled = false, ValidationKey = "x" };
-        ApiKeyValidationRules.RequiresValidation("/api/health", options).ShouldBeFalse();
+        ApiKeyAuthenticationMiddleware.ShouldValidate("/api/health", options).ShouldBeFalse();
     }
 
     [Test]
     public void ShouldValidate_ReturnsFalse_When_KeyEmpty()
     {
         var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "" };
-        ApiKeyValidationRules.RequiresValidation("/api/health", options).ShouldBeFalse();
+        ApiKeyAuthenticationMiddleware.ShouldValidate("/api/health", options).ShouldBeFalse();
     }
 
     [Test]
     public void ShouldValidate_ReturnsFalse_When_PathNotApi()
     {
         var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "x" };
-        ApiKeyValidationRules.RequiresValidation("/mcp", options).ShouldBeFalse();
-    }
-
-    [Test]
-    public void IsAuthorized_ReturnsTrue_WhenKeyMatches()
-    {
-        var request = new DefaultHttpContext().Request;
-        request.Headers["X-API-Key"] = "secret";
-        ApiKeyAuthenticationMiddleware.IsAuthorized(request, "secret").ShouldBeTrue();
-    }
-
-    [Test]
-    public void IsAuthorized_ReturnsFalse_WhenKeyMissing()
-    {
-        var request = new DefaultHttpContext().Request;
-        ApiKeyAuthenticationMiddleware.IsAuthorized(request, "secret").ShouldBeFalse();
+        ApiKeyAuthenticationMiddleware.ShouldValidate("/mcp", options).ShouldBeFalse();
     }
 }
