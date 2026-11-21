@@ -12,7 +12,7 @@
         <div class="filters-grid">
             <div class="filter-group">
                 <label class="filter-label" for="@WorkOrderSearch.Elements.CreatorSelect">Creator</label>
-                <InputSelect id="@WorkOrderSearch.Elements.CreatorSelect" @bind-Value="Filters.Creator" @bind-Value:after="Changed" class="@SelectClass(Filters.Creator)">
+                <InputSelect id="@WorkOrderSearch.Elements.CreatorSelect" autocomplete="off" @bind-Value="Filters.Creator" @bind-Value:after="Changed" class="@SelectClass(Filters.Creator)">
                     <option value="">Anyone</option>
                     @foreach (var user in UserOptions)
                     {
@@ -23,7 +23,7 @@
 
             <div class="filter-group">
                 <label class="filter-label" for="@WorkOrderSearch.Elements.AssigneeSelect">Assignee</label>
-                <InputSelect id="@WorkOrderSearch.Elements.AssigneeSelect" @bind-Value="Filters.Assignee" @bind-Value:after="Changed" class="@SelectClass(AssigneeLocked ? null : Filters.Assignee)" disabled="@AssigneeLocked">
+                <InputSelect id="@WorkOrderSearch.Elements.AssigneeSelect" autocomplete="off" @bind-Value="Filters.Assignee" @bind-Value:after="Changed" class="@SelectClass(AssigneeLocked ? null : Filters.Assignee)" disabled="@AssigneeLocked">
                     <option value="">Anyone</option>
                     @foreach (var user in UserOptions)
                     {
@@ -34,7 +34,7 @@
 
             <div class="filter-group">
                 <label class="filter-label" for="@WorkOrderSearch.Elements.StatusSelect">Status</label>
-                <InputSelect id="@WorkOrderSearch.Elements.StatusSelect" @bind-Value="Filters.Status" @bind-Value:after="Changed" class="@SelectClass(Filters.Status)">
+                <InputSelect id="@WorkOrderSearch.Elements.StatusSelect" autocomplete="off" @bind-Value="Filters.Status" @bind-Value:after="Changed" class="@SelectClass(Filters.Status)">
                     <option value="">All statuses</option>
                     @foreach (var status in StatusOptions)
                     {
@@ -45,7 +45,7 @@
 
             <div class="filter-group">
                 <label class="filter-label" for="@WorkOrderSearch.Elements.PrioritySelect">Priority</label>
-                <InputSelect id="@WorkOrderSearch.Elements.PrioritySelect" @bind-Value="Filters.Priority" @bind-Value:after="Changed" class="@SelectClass(Filters.Priority)">
+                <InputSelect id="@WorkOrderSearch.Elements.PrioritySelect" autocomplete="off" @bind-Value="Filters.Priority" @bind-Value:after="Changed" class="@SelectClass(Filters.Priority)">
                     <option value="">All priorities</option>
                     @foreach (var priority in PriorityOptions)
                     {
@@ -56,7 +56,7 @@
 
             <div class="filter-group">
                 <label class="filter-label" for="@WorkOrderSearch.Elements.BuildingSelect">Building</label>
-                <InputSelect id="@WorkOrderSearch.Elements.BuildingSelect" @bind-Value="Filters.Building" @bind-Value:after="Changed" class="@SelectClass(Filters.Building)">
+                <InputSelect id="@WorkOrderSearch.Elements.BuildingSelect" autocomplete="off" @bind-Value="Filters.Building" @bind-Value:after="Changed" class="@SelectClass(Filters.Building)">
                     <option value="">All buildings</option>
                     @foreach (var building in BuildingOptions)
                     {
