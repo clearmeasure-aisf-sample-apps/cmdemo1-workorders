@@ -59,6 +59,13 @@ public class SlaHealthCompletionWindowTests
         start.ShouldBe(new DateTime(2026, 2, 14, 6, 0, 0));
         end.ShouldBe(new DateTime(2026, 2, 15, 6, 0, 0));
         (end - start).ShouldBe(TimeSpan.FromHours(24));
+    }
+
+    [Test]
+    public void Should_MapEndMinusOneTick_ToMonthEnd_When_SingleDayWindow()
+    {
+        var (_, end) = SlaHealth.CompletionWindow(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
+
         SlaHealth.ChurchDate(end.AddTicks(-1)).ShouldBe(new DateOnly(2026, 2, 14));
     }
 
