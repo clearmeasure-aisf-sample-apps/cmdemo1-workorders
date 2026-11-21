@@ -240,10 +240,10 @@ public class ChurchTimeZoneTests
     }
 
     [Test]
-    public void Should_ReturnPreviousDayLocalDate_When_StoredUtcIsBeforeChicagoMidnight()
+    public void Should_ReturnPreviousChurchDate_When_ChurchDateIsOneSecondBeforeChicagoMidnight()
     {
-        // 2026-01-15 05:30:00 UTC = 2026-01-14 23:30:00 CST (UTC-6 during standard time)
-        var storedUtc = new DateTime(2026, 1, 15, 5, 30, 0);
+        // 2026-01-15 05:59:59 UTC = 2026-01-14 23:59:59 CST (UTC-6 during standard time)
+        var storedUtc = new DateTime(2026, 1, 15, 5, 59, 59);
 
         var date = ChurchTimeZone.ChurchDate(storedUtc);
 
@@ -251,18 +251,18 @@ public class ChurchTimeZoneTests
     }
 
     [Test]
-    public void Should_ReturnSameDayLocalDate_When_StoredUtcIsAtChicagoMidnight()
+    public void Should_ReturnSameChurchDate_When_ChurchDateIsExactlyChicagoMidnightInDaylightTime()
     {
-        // 2026-01-15 06:00:00 UTC = 2026-01-15 00:00:00 CST (UTC-6 during standard time)
-        var storedUtc = new DateTime(2026, 1, 15, 6, 0, 0);
+        // 2026-07-15 05:00:00 UTC = 2026-07-15 00:00:00 CDT (UTC-5 during daylight saving)
+        var storedUtc = new DateTime(2026, 7, 15, 5, 0, 0);
 
         var date = ChurchTimeZone.ChurchDate(storedUtc);
 
-        date.ShouldBe(new DateOnly(2026, 1, 15));
+        date.ShouldBe(new DateOnly(2026, 7, 15));
     }
 
     [Test]
-    public void Should_ReturnSameLocalDate_When_StoredInstantIsUtcKind()
+    public void Should_ReturnSameChurchDate_When_ChurchDateInstantIsUtcKindInsteadOfUnspecified()
     {
         // The same instant declared with DateTimeKind.Utc must map to the same date as Unspecified
         var unspecified = ChurchTimeZone.ChurchDate(new DateTime(2026, 1, 15, 6, 0, 0));
@@ -273,24 +273,37 @@ public class ChurchTimeZoneTests
     }
 
     [Test]
-    public void Should_ReturnPreviousDayLocalDate_When_TimeIsBeforeDstEnd()
+    public void Should_ReturnPreviousChurchDate_When_ChurchDatePrecedesDstStart()
     {
-        // 2026-11-01 03:00:00 UTC = 2026-10-31 22:00:00 CDT (UTC-5, before DST ends at 07:00 UTC)
-        var storedUtc = new DateTime(2026, 11, 1, 3, 0, 0);
+        // 2026-03-08 05:30:00 UTC is 2026-03-07 23:30:00 CST (UTC-6): DST starts at 08:00 UTC.
+        // Reading the offset as UTC-5 would wrongly answer March 8.
+        var storedUtc = new DateTime(2026, 3, 8, 5, 30, 0);
 
         var date = ChurchTimeZone.ChurchDate(storedUtc);
 
-        date.ShouldBe(new DateOnly(2026, 10, 31));
+        date.ShouldBe(new DateOnly(2026, 3, 7));
     }
 
     [Test]
-    public void Should_ReturnSameDayLocalDate_When_TimeIsAfterDstStart()
+    public void Should_ReturnSameChurchDate_When_ChurchDatePrecedesDstEnd()
     {
-        // 2026-03-08 08:00:00 UTC = 2026-03-08 03:00:00 CDT (UTC-5, after DST starts at 07:00 UTC)
-        var storedUtc = new DateTime(2026, 3, 8, 8, 0, 0);
+        // 2026-11-01 05:30:00 UTC is 2026-11-01 00:30:00 CDT (UTC-5): DST ends at 07:00 UTC.
+        // Reading the offset as UTC-6 would wrongly answer October 31.
+        var storedUtc = new DateTime(2026, 11, 1, 5, 30, 0);
 
         var date = ChurchTimeZone.ChurchDate(storedUtc);
 
-        date.ShouldBe(new DateOnly(2026, 3, 8));
+        date.ShouldBe(new DateOnly(2026, 11, 1));
+    }
+
+    [Test]
+    public void Should_ReturnPreviousYearDate_When_ChurchDateIsNewYearUtcBeforeChicagoMidnight()
+    {
+        // 2026-01-01 05:30:00 UTC = 2025-12-31 23:30:00 CST (UTC-6 during standard time)
+        var storedUtc = new DateTime(2026, 1, 1, 5, 30, 0);
+
+        var date = ChurchTimeZone.ChurchDate(storedUtc);
+
+        date.ShouldBe(new DateOnly(2025, 12, 31));
     }
 }

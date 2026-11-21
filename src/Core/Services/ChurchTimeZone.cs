@@ -14,13 +14,13 @@ public static class ChurchTimeZone
     public static TimeZoneInfo Chicago { get; } = ResolveChicago();
 
     /// <summary>
-    /// Returns today's calendar date in America/Chicago for the given clock.
+    /// Returns today's calendar date in America/Chicago for the given clock, through
+    /// <see cref="ChurchDate"/>, the one place that converts a stored instant.
     /// </summary>
     public static DateOnly Today(TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
-        var local = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), Chicago);
-        return DateOnly.FromDateTime(local.DateTime);
+        return ChurchDate(timeProvider.GetUtcNow().UtcDateTime);
     }
 
     /// <summary>
@@ -34,9 +34,12 @@ public static class ChurchTimeZone
     }
 
     /// <summary>
-    /// Returns the church calendar date (America/Chicago) of a stored instant; persisted values are UTC and come back with `DateTimeKind.Unspecified`, so the value is treated as UTC.
+    /// Returns the church calendar date (America/Chicago) of a stored instant. Persisted values are
+    /// UTC but come back as <see cref="DateTimeKind.Unspecified"/>, so the value is read as UTC.
     /// </summary>
-    public static DateOnly ChurchDate(DateTime storedUtc) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc), Chicago));
+    public static DateOnly ChurchDate(DateTime storedUtc) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc), Chicago));
 
     private static TimeZoneInfo ResolveChicago() =>
         FindTimeZone(IanaId)
