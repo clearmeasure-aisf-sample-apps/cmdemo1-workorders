@@ -104,7 +104,10 @@ try {
     $evilSession = Join-Path $evilBundle 'session.key'
     $keyBytes = [byte[]]::new(32)
     [System.Security.Cryptography.RandomNumberGenerator]::Fill($keyBytes)
-    [System.IO.File]::WriteAllBytes($evilSession, $keyBytes)
+    # As in Invoke-Protect: OpenSSL's `file:` password read stops at the first
+    # 0x0A or 0x00 byte, so use a newline/NUL-free hex text key.
+    $hex = [BitConverter]::ToString($keyBytes).Replace('-', '').ToLowerInvariant()
+    [System.IO.File]::WriteAllText($evilSession, $hex, [System.Text.UTF8Encoding]::new($false))
     & openssl enc -aes-256-cbc -pbkdf2 -salt -pass file:$evilSession `
         -in $evilPlainTarGz -out (Join-Path $evilBundle 'payload.tar.gz.enc')
     Assert-True ($LASTEXITCODE -eq 0) 'encrypt evil tar'
