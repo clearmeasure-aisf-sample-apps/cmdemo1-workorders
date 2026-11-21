@@ -98,6 +98,13 @@ public sealed class RefactoringPullRequestSteps : IDisposable
         return RunScript("-WriteLineCountTable");
     }
 
+    /// <summary>Commits the pull request and runs the script with <c>-WritePlanSkeleton</c>.</summary>
+    public ScriptRun GeneratePlanSkeleton()
+    {
+        CommitPullRequest();
+        return RunScript("-WritePlanSkeleton");
+    }
+
     /// <summary>Commits the pull request and runs the script over it and its description.</summary>
     public ScriptRun RunRationaleCheck()
     {

@@ -25,6 +25,13 @@
 
 .EXAMPLE
     pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WriteLineCountTable
+
+.EXAMPLE
+    pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WritePlanSkeleton
+    Prints a paste-ready "## Refactoring plan" section for this branch (the touched size-baselined files, a
+    rationale table to fill in, Before/After diagrams that already name every added production type, and the
+    generated line-count table), or a note that no plan is needed. A failed check prints the same skeleton when the
+    body has no plan, so the author fixes the description in one edit.
 #>
 [CmdletBinding()]
 param(
@@ -34,7 +41,8 @@ param(
     [string] $RepoRoot = '',
     [string] $OversizedBaselinePath = 'src/UnitTests/BuildGates/size-nesting-baseline.txt',
     [string] $PlaybookPath = 'docs/refactoring-oversized-code.md',
-    [switch] $WriteLineCountTable
+    [switch] $WriteLineCountTable,
+    [switch] $WritePlanSkeleton
 )
 
 Set-StrictMode -Version Latest
@@ -52,7 +60,7 @@ $LineCountHeader = @(
 $TopLevelType = '(?m)^(?:(?:public|internal|file|sealed|abstract|static|partial|readonly|ref|unsafe)\s+)*(?:class|struct|record(?:\s+(?:class|struct))?)\s+(?<name>[A-Za-z_]\w*)'
 
 if (-not $RepoRoot) { $RepoRoot = (& git rev-parse --show-toplevel).Trim() }
-if (-not $WriteLineCountTable -and -not $PrBodyPath) { throw 'Pass -PrBodyPath, or -WriteLineCountTable to print the line-count table.' }
+if (-not $WriteLineCountTable -and -not $WritePlanSkeleton -and -not $PrBodyPath) { throw 'Pass -PrBodyPath, -WriteLineCountTable to print the line-count table, or -WritePlanSkeleton to print a paste-ready plan.' }
 $script:Failures = [System.Collections.Generic.List[string]]::new()
 
 function Invoke-Git([string[]] $Arguments) {
@@ -351,6 +359,50 @@ function Test-LineCounts([string[]] $Plan, [object[]] $Expected) {
     }
 }
 
+function Format-PlanSkeleton([string[]] $Touched, [object[]] $AddedTypes, [object[]] $LineCountRows) {
+    # A paste-ready "## Refactoring plan": headings, an empty rationale row to fill in, Before/After diagrams that
+    # already name every added production type, and the generated line-count table. The rationale row is left for the
+    # author on purpose (smell, move and reason are judgement); the rest is mechanical.
+    $typeNames = @($AddedTypes | ForEach-Object { $_.Type } | Sort-Object -Unique)
+    $firstType = if ($typeNames.Count -gt 0) { $typeNames[0] } else { '<NewType>' }
+    '## Refactoring plan'
+    ''
+    "Size-baselined file(s) changed: $($Touched -join ', ')"
+    ''
+    '### Refactoring rationale'
+    ''
+    '| Smell | Refactoring | New abstraction | Why |'
+    '|-------|-------------|-----------------|-----|'
+    "| <Smell from the playbook> | <Preferred move from the playbook> | $firstType | <at least $MinimumReasonWords words on why this move makes the code easier to change> |"
+    ''
+    '### Before and after'
+    ''
+    'Before'
+    ''
+    '```mermaid'
+    'classDiagram'
+    foreach ($file in $Touched) { "    class $(([IO.Path]::GetFileName($file) -split '\.')[0])" }
+    '```'
+    ''
+    'After'
+    ''
+    '```mermaid'
+    'classDiagram'
+    foreach ($file in $Touched) { "    class $(([IO.Path]::GetFileName($file) -split '\.')[0])" }
+    foreach ($name in $typeNames) { "    class $name" }
+    '```'
+    ''
+    '### Line counts'
+    ''
+    Format-LineCountTable $LineCountRows
+}
+
+function Write-StepSummary([string[]] $Lines) {
+    # GitHub Actions only: the failures and any skeleton on the run's summary page, where they are easy to copy.
+    if (-not $env:GITHUB_STEP_SUMMARY) { return }
+    Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value ($Lines -join "`n")
+}
+
 $changed = @(Invoke-Git @('diff', '--name-only', '--no-renames', $BaseRef, $HeadRef))
 $oversized = Get-OversizedFiles
 $touched = @($changed | Where-Object { $oversized -contains $_ })
@@ -359,6 +411,18 @@ if ($WriteLineCountTable) {
     Format-LineCountTable @(Get-LineCountRows $touched)
     exit 0
 }
+
+if ($WritePlanSkeleton) {
+    if ($touched.Count -eq 0) {
+        Write-Output 'No size-baselined file changed; no Refactoring plan required.'
+    }
+    else {
+        Format-PlanSkeleton $touched @(Get-AddedProductionTypes $changed) @(Get-LineCountRows $touched)
+    }
+    exit 0
+}
+
+$skeleton = @()
 
 Test-Ratchet
 
@@ -372,6 +436,11 @@ else {
     $plan = Get-Section (Get-BodyLines) 'Refactoring plan' 2
     if ($null -eq $plan) {
         Add-Failure "This pull request changes size-baselined file(s) ($touchedList) but its body has no '## Refactoring plan' section (rationale table, Before/After mermaid diagrams, line counts). See $PlaybookPath."
+        $skeleton = @(Format-PlanSkeleton $touched $addedTypes @(Get-LineCountRows $touched))
+        Write-Host 'Paste this into the pull request body, fill in the rationale row, and save (editing the body re-runs this check):'
+        Write-Host '----- BEGIN REFACTORING PLAN -----'
+        $skeleton | ForEach-Object { Write-Host $_ }
+        Write-Host '----- END REFACTORING PLAN -----'
     }
     else {
         Test-Rationale $plan $touchedList
@@ -383,6 +452,9 @@ else {
 
 if ($script:Failures.Count -gt 0) {
     Write-Host "$($script:Failures.Count) refactoring check(s) failed. Read $PlaybookPath."
+    $summary = @('## Refactoring rationale: what is missing', '') + @($script:Failures | ForEach-Object { "- $_" })
+    if ($skeleton.Count -gt 0) { $summary += @('', 'Paste this into the pull request body and fill in the rationale row:', '', '````markdown') + $skeleton + @('````') }
+    Write-StepSummary $summary
     exit 1
 }
 
