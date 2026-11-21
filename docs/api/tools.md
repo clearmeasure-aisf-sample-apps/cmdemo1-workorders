@@ -9,7 +9,7 @@ The sample text/utility tools, the echo endpoint and the WeatherForecast sample 
 Example:
 
 ```sh
-curl -X GET "http://localhost:5175/api/tools/due-date-check?date=2025-01-15"
+curl -X GET "https://localhost:7174/api/tools/due-date-check?date=2025-01-15"
 ```
 
 Response (200):
@@ -27,7 +27,7 @@ When `date` is missing or not in `YYYY-MM-DD` format, the endpoint returns a 400
 Example:
 
 ```sh
-curl -X GET "http://localhost:5175/api/tools/work-order-statuses"
+curl -X GET "https://localhost:7174/api/tools/work-order-statuses"
 ```
 
 Response (200):
