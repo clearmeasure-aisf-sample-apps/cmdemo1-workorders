@@ -211,7 +211,7 @@ When a work item's Technical Design section says **"The feature is fully impleme
 ### API-Layer-Only Features (Pure Utility Endpoints)
 
 For endpoints in `src/UI/Api/Controllers/` that have no Core/Domain/DataAccess changes:
-- Mirror the dual `[Route]` pattern: `"api/tools/<name>"` + `$"{ApiRoutes.VersionedApiPrefix}/tools/<name>"` (see `ToolsGuidGeneratorController`, `ToolsHashController`, `ToolsRandomController`).
+- Mirror the dual `[Route]` pattern: `"api/tools/<name>"` + `$"{ApiRoutes.VersionedApiPrefix}/tools/<name>"` (see `ToolsWorkOrderStatusesController`, `ToolsDueDateCheckController`).
 - Use `[ApiVersion("1.0")]`, `[AllowAnonymous]`, `[EnableRateLimiting(ApiRateLimiting.PolicyName)]`.
 - Return plain text via `ContentResult` with `ContentType = "text/plain; charset=utf-8"`.
 - Return structured errors via `Problem(detail: "...", statusCode: 400)`.

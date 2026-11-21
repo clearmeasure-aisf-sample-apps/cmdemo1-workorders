@@ -78,7 +78,7 @@ Work order state transitions: Draft → Assigned → InProgress → Complete, wi
 - **WorkOrderAttachment**: Id, WorkOrderId, FileName, ContentType, FileSize, UploadedById/UploadedBy (Employee), UploadedDate; attachment metadata
 - **EntityBase<T>**: Guid Id and identity equality; base for WorkOrder, Employee, Role, Team, Vendor and WorkOrderStatusChange. SavedSearchView and WorkOrderAttachment declare their own Id
 
-The entity/supporting-type inventory and associations are shown in `arch/arch-c4-class-domain-model.puml` (PNG/SVG) and `arch/arch-c4-class-domain-model.md`. Building is a nullable WorkOrder string, not an entity. Team membership is not a WorkOrder assignment; Vendor has no direct WorkOrder association. WeatherForecast is a DTO, and JSON converters, constants, messages, events and command/result records are not entities.
+The entity/supporting-type inventory and associations are shown in `arch/arch-c4-class-domain-model.puml` (PNG/SVG) and `arch/arch-c4-class-domain-model.md`. Building is a nullable WorkOrder string, not an entity. Team membership is not a WorkOrder assignment; Vendor has no direct WorkOrder association. JSON converters, constants, messages, events and command/result records are not entities.
 
 ## Database Migrations
 
@@ -158,23 +158,14 @@ Versions are centrally managed in `src/Directory.Packages.props` (no `Version` o
 
 ## API Tools Endpoints
 
-Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, no DB access:
+Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, no DB access. The sample text/utility tools, the echo endpoint and the weather-forecast sample were retired in #1819. The remaining tool endpoints:
 
 | Route | Method | Description |
 |-------|--------|-------------|
-| `/api/tools/hash` | POST | SHA-256 of `text` (UTF-8); optional MD5/SHA-1 via `includeMd5`/`includeSha1` flags |
-| `/api/tools/base64` | POST | Base64 encode/decode of `text` (UTF-8); `mode` `encode` (default) or `decode` |
-| `/api/tools/guid-generator` | POST | Generate 1–100 UUIDs; optional `count` query param |
-| `/api/tools/random` | GET | Generate plain-text random values; required `type` query param: `number`, `string` (12 alphanumeric characters), `uuid`, or `color` (`#RRGGBB`) |
-| `/api/tools/slugify` | POST | Convert `text` to URL slug (lowercase; non-alphanumeric runs become single `-`; at most 80 characters, never ending in `-`) |
-| `/api/tools/case` | POST | Convert JSON `text` to the case named by `to` (`upper`, `lower`, `title`, `kebab`, or `snake`); an unknown `to` returns 400 |
-| `/api/tools/timestamp-converter` | GET | Convert Unix seconds to/from ISO-8601; supply exactly one query param, `unix` or `iso`; returns Unix seconds, ISO-8601 UTC, and a human-readable UTC string |
 | `/api/tools/due-date-check` | GET | Return due-date urgency for required `date` query param (`YYYY-MM-DD`), relative to today in America/Chicago, assuming an open work order |
-| `/api/tools/word-count` | POST | Count whitespace-delimited words in JSON body field `text`; returns `{ "words": N, "characters": N, "lines": N }` |
-| `/api/tools/uppercase` | POST | Upper-case JSON `text` with invariant culture; empty or missing `text` returns `{ "text": "" }` |
 | `/api/tools/work-order-statuses` | GET | List work order statuses (`code`, `key`, `friendlyName`, `sortBy`) in sort order |
 
-All routes also available under the versioned prefix `/api/v1.0/tools/`.
+Both routes also available under the versioned prefix `/api/v1.0/tools/`.
 
 ## Feature Flags
 

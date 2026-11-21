@@ -19,7 +19,7 @@ The `.puml` is the class-diagram source for the checked-in PNG and SVG. The Merm
 - **WorkOrderPriority**: enum Low = 1, Medium = 2 (default), High = 3; stored as tinyint.
 - **DueDateUrgency**: non-persisted, read-time enum None = 0, DueToday = 1, Overdue = 2.
 
-There is no Building entity: `WorkOrder.Building` is a nullable string. Team members are employees, not work-order assignments, and Vendor is an independent directory with no direct WorkOrder association. Status history and attachment metadata link to WorkOrder by WorkOrderId; ChangedBy and UploadedBy are optional employee navigations. WeatherForecast is a DTO; JSON converters, constants, messages, events and command/result records are not entities.
+There is no Building entity: `WorkOrder.Building` is a nullable string. Team members are employees, not work-order assignments, and Vendor is an independent directory with no direct WorkOrder association. Status history and attachment metadata link to WorkOrder by WorkOrderId; ChangedBy and UploadedBy are optional employee navigations. JSON converters, constants, messages, events and command/result records are not entities.
 
 ```mermaid
 C4Component

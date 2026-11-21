@@ -357,15 +357,6 @@
       "longestArmSeconds": 0.1
     },
     {
-      "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.EchoApiAcceptanceTests",
-      "shard": 5,
-      "tests": 1,
-      "x64Seconds": 0.0,
-      "armSeconds": 0.0,
-      "longestX64Seconds": 0.0,
-      "longestArmSeconds": 0.0
-    },
-    {
       "name": "ClearMeasure.Bootcamp.AcceptanceTests.Api.FeatureFlagsApiAcceptanceTests",
       "shard": 5,
       "tests": 3,
