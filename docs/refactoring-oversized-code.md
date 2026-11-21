@@ -250,6 +250,13 @@ The script reads the **Smells** and **Preferred moves** tables of this file, so 
 move becomes accepted. Run it locally:
 
 ```powershell
+pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WritePlanSkeleton
 pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WriteLineCountTable
 pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -PrBodyPath pr-body.md
 ```
+
+`-WritePlanSkeleton` prints a paste-ready **Refactoring plan** for the branch before the pull request is opened: the
+touched size-baselined files, a rationale row to fill in, Before/After diagrams that already name every added
+production type, and the generated line-count table (or a note that no plan is needed). When the check fails because
+the body has no plan, it prints the same skeleton in the job log and on the run's summary page, so one edit of the
+description fixes it. Run the `-PrBodyPath` line on the body before `gh pr create` to pass on the first try.

@@ -3,6 +3,17 @@ Submitter checklist
 - [ ] Narrate status of the branch (feature complete, incremental build, etc)
 - [ ] You expect the approval checklist to be satisfied
 
+## Refactoring research
+
+<!--
+Every item (owner rule): before writing code, review the files you touch and their close collaborators for refactoring
+opportunities. List what you refactored in this change and what you deferred; file each deferred item as a follow-up
+enhancement issue and link it here.
+-->
+
+- Refactored:
+- Deferred (follow-up issues):
+
 ## Refactoring plan
 
 <!--
@@ -16,6 +27,10 @@ method the move introduced. Why: at least 8 words.
 
 Before and after: one ```mermaid pair per extracted concept cluster, classDiagram or flowchart. The line above each
 fence starts with "Before" or "After". Every type the pull request adds to production code is named in a diagram.
+
+Fastest path: paste the output of
+  pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WritePlanSkeleton
+and fill in the rationale row; it already names the touched files, the added types and the line counts.
 
 Line counts: generated, never typed. Paste the output of
   pwsh scripts/refactoring/Test-RefactoringRationale.ps1 -BaseRef origin/master -WriteLineCountTable

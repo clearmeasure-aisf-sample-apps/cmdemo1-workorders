@@ -54,7 +54,17 @@ public class RefactoringPlaybookTests
         template.ShouldContain("```mermaid");
         template.ShouldContain("### Line counts");
         template.ShouldContain("-WriteLineCountTable");
+        template.ShouldContain("-WritePlanSkeleton");
         template.ShouldContain(Playbook);
+    }
+
+    [Test]
+    public void ShouldAskForRefactoringResearch_WhenAPullRequestIsOpened()
+    {
+        var template = ReadRepositoryFile(".github/pull_request_template.md");
+
+        template.ShouldContain("## Refactoring research");
+        template.ShouldContain("Deferred (follow-up issues):");
     }
 
     [TestCase("AGENTS.md")]
