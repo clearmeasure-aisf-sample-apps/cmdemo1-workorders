@@ -6,7 +6,7 @@
 
     <span class="bulk-group">
         <label for="@Elements.BulkAssignSelect" class="visually-hidden">Assign selected to</label>
-        <select id="@Elements.BulkAssignSelect" data-testid="@Elements.BulkAssignSelect" class="bulk-select" @bind="_assignee">
+        <select id="@Elements.BulkAssignSelect" data-testid="@Elements.BulkAssignSelect" class="bulk-select" autocomplete="off" @bind="_assignee">
             <option value="">Assign to…</option>
             @foreach (var user in UserOptions)
             {
@@ -20,7 +20,7 @@
 
     <span class="bulk-group">
         <label for="@Elements.BulkChangeStatusSelect" class="visually-hidden">Change status of selected</label>
-        <select id="@Elements.BulkChangeStatusSelect" data-testid="@Elements.BulkChangeStatusSelect" class="bulk-select" @bind="_verb">
+        <select id="@Elements.BulkChangeStatusSelect" data-testid="@Elements.BulkChangeStatusSelect" class="bulk-select" autocomplete="off" @bind="_verb">
             <option value="">Change status…</option>
             @foreach (var verb in StatusOptions)
             {
