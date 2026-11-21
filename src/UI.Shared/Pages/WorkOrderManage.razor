@@ -212,6 +212,7 @@
                     <div class="form-group">
                         <label for="ShelveReason" class="form-label">Shelve reason <span class="required-indicator">*</span></label>
                         <InputText id="ShelveReason" data-testid="@Elements.ShelveReason"
+                                   autocomplete="off"
                                    @bind-Value="Model.ShelveReason"
                                    class="form-control input-text"
                                    maxlength="@InProgressToAssignedCommand.ReasonMaxLength" />
