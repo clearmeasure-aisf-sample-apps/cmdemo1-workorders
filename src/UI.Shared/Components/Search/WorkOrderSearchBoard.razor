@@ -14,7 +14,7 @@
                 </h3>
                 @if (column.Cards.Length == 0)
                 {
-                    <p class="board-column-empty" data-testid="@($"{WorkOrderSearch.Elements.BoardColumnEmpty}{key}")">No work orders</p>
+                    <p class="board-column-empty" role="status" data-testid="@($"{WorkOrderSearch.Elements.BoardColumnEmpty}{key}")">No work orders</p>
                 }
                 else
                 {
