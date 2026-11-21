@@ -8,8 +8,10 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 public static class UserDisplay
 {
     /// <summary>
-    /// Two-letter initials from first and last name; falls back to the first two letters of
-    /// <paramref name="fallbackName"/>, then "?".
+    /// Two-letter initials from first and last name; falls back to the first two parts of
+    /// <paramref name="fallbackName"/> split on <c>.</c>, <c>_</c>, <c>-</c> or space
+    /// (e.g., "homer.simpson" → "HS"). If fewer than two parts exist, the first two
+    /// letters/digits are used, then "?".
     /// </summary>
     public static string Initials(Employee? employee, string? fallbackName = null) =>
         HasFirstAndLastName(employee)
@@ -31,7 +33,29 @@ public static class UserDisplay
 
     private static string InitialsFromName(string? name)
     {
-        var letters = (name ?? string.Empty).Where(char.IsLetterOrDigit).Take(2).ToArray();
+        if (name == null)
+            return "?";
+
+        var parts = name.Split(new[] { '.', '_', '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+        {
+            var first = FirstLetterOrDigit(parts[0]);
+            var second = FirstLetterOrDigit(parts[1]);
+            if (first != null && second != null)
+                return $"{first}{second}";
+        }
+
+        var letters = name.Where(char.IsLetterOrDigit).Take(2).ToArray();
         return letters.Length == 0 ? "?" : new string(letters).ToUpperInvariant();
+    }
+
+    private static char? FirstLetterOrDigit(string part)
+    {
+        for (int i = 0; i < part.Length; i++)
+        {
+            if (char.IsLetterOrDigit(part[i]))
+                return char.ToUpperInvariant(part[i]);
+        }
+        return null;
     }
 }
