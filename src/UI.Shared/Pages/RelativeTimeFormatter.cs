@@ -46,6 +46,11 @@ internal static class RelativeTimeFormatter
             return Ago(days, "day");
         }
 
+        if (days >= 365)
+        {
+            return Ago(days / 365, "year");
+        }
+
         return Ago(Math.Max(1, days / 30), "month");
     }
 
