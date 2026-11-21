@@ -33,6 +33,11 @@ public static class ChurchTimeZone
         return today.AddDays(daysUntilSaturday);
     }
 
+    /// <summary>
+    /// Returns the church calendar date (America/Chicago) of a stored instant; persisted values are UTC and come back with `DateTimeKind.Unspecified`, so the value is treated as UTC.
+    /// </summary>
+    public static DateOnly ChurchDate(DateTime storedUtc) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc), Chicago));
+
     private static TimeZoneInfo ResolveChicago() =>
         FindTimeZone(IanaId)
         ?? FindTimeZone(WindowsId)

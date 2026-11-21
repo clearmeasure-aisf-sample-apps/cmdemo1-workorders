@@ -61,12 +61,9 @@ public class SlaHealth
     }
 
     /// <summary>
-    /// Gets the church calendar date (America/Chicago) of a completion time. Stored values are UTC and come back with
-    /// <see cref="DateTimeKind.Unspecified"/>, so the value is treated as UTC.
+    /// Gets the church calendar date of a stored completion time; see <see cref="ChurchTimeZone.ChurchDate"/>.
     /// </summary>
-    public static DateOnly ChurchDate(DateTime completedUtc) =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(
-            DateTime.SpecifyKind(completedUtc, DateTimeKind.Utc), ChurchTimeZone.Chicago));
+    public static DateOnly ChurchDate(DateTime completedUtc) => ChurchTimeZone.ChurchDate(completedUtc);
 
     /// <summary>
     /// Stored completion instants whose church calendar date falls in

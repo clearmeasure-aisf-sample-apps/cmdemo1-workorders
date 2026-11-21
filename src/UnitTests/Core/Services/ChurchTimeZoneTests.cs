@@ -238,4 +238,59 @@ public class ChurchTimeZoneTests
 
         today.ShouldBe(new DateOnly(2026, 6, 15));
     }
+
+    [Test]
+    public void Should_ReturnPreviousDayLocalDate_When_StoredUtcIsBeforeChicagoMidnight()
+    {
+        // 2026-01-15 05:30:00 UTC = 2026-01-14 23:30:00 CST (UTC-6 during standard time)
+        var storedUtc = new DateTime(2026, 1, 15, 5, 30, 0);
+
+        var date = ChurchTimeZone.ChurchDate(storedUtc);
+
+        date.ShouldBe(new DateOnly(2026, 1, 14));
+    }
+
+    [Test]
+    public void Should_ReturnSameDayLocalDate_When_StoredUtcIsAtChicagoMidnight()
+    {
+        // 2026-01-15 06:00:00 UTC = 2026-01-15 00:00:00 CST (UTC-6 during standard time)
+        var storedUtc = new DateTime(2026, 1, 15, 6, 0, 0);
+
+        var date = ChurchTimeZone.ChurchDate(storedUtc);
+
+        date.ShouldBe(new DateOnly(2026, 1, 15));
+    }
+
+    [Test]
+    public void Should_ReturnSameLocalDate_When_StoredInstantIsUtcKind()
+    {
+        // The same instant declared with DateTimeKind.Utc must map to the same date as Unspecified
+        var unspecified = ChurchTimeZone.ChurchDate(new DateTime(2026, 1, 15, 6, 0, 0));
+        var utc = ChurchTimeZone.ChurchDate(new DateTime(2026, 1, 15, 6, 0, 0, DateTimeKind.Utc));
+
+        utc.ShouldBe(unspecified);
+        utc.ShouldBe(new DateOnly(2026, 1, 15));
+    }
+
+    [Test]
+    public void Should_ReturnPreviousDayLocalDate_When_TimeIsBeforeDstEnd()
+    {
+        // 2026-11-01 03:00:00 UTC = 2026-10-31 22:00:00 CDT (UTC-5, before DST ends at 07:00 UTC)
+        var storedUtc = new DateTime(2026, 11, 1, 3, 0, 0);
+
+        var date = ChurchTimeZone.ChurchDate(storedUtc);
+
+        date.ShouldBe(new DateOnly(2026, 10, 31));
+    }
+
+    [Test]
+    public void Should_ReturnSameDayLocalDate_When_TimeIsAfterDstStart()
+    {
+        // 2026-03-08 08:00:00 UTC = 2026-03-08 03:00:00 CDT (UTC-5, after DST starts at 07:00 UTC)
+        var storedUtc = new DateTime(2026, 3, 8, 8, 0, 0);
+
+        var date = ChurchTimeZone.ChurchDate(storedUtc);
+
+        date.ShouldBe(new DateOnly(2026, 3, 8));
+    }
 }
