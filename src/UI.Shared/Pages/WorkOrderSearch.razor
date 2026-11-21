@@ -75,7 +75,7 @@
                 </div>
                 <div class="results-tools">
                     <label for="@Elements.SortSelect" class="visually-hidden">Sort results</label>
-                    <select id="@Elements.SortSelect" data-testid="@Elements.SortSelect" class="form-select sort-select" @onchange="HandleSortSelected">
+                    <select id="@Elements.SortSelect" data-testid="@Elements.SortSelect" class="form-select sort-select" autocomplete="off" @onchange="HandleSortSelected">
                         @foreach (var option in WorkOrderSearchSorter.Options)
                         {
                             <option value="@option.Value" selected="@(option.Value == SortValue)">@option.Text</option>
