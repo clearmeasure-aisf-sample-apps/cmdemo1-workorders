@@ -172,7 +172,7 @@ public class SlaHealthQueryHandlerTests
     private static async Task GivenPersistedAsync(DataContext context, Employee creator, params WorkOrder[] orders)
     {
         context.Add(creator);
-        context.AddRange(orders);
+        context.Set<WorkOrder>().AddRange(orders);
         await context.SaveChangesAsync();
     }
 
