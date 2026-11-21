@@ -41,9 +41,14 @@ internal static class RelativeTimeFormatter
     private static string DayOrMonth(TimeSpan elapsed)
     {
         var days = (int)elapsed.TotalDays;
-        if (days < 30)
+        if (days < 7)
         {
             return Ago(days, "day");
+        }
+
+        if (days < 30)
+        {
+            return Ago(days / 7, "week");
         }
 
         return Ago(Math.Max(1, days / 30), "month");
