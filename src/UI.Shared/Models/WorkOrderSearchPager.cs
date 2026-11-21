@@ -22,6 +22,9 @@ public sealed record SearchResultPage(WorkOrderSearchResultRow[] Rows, int Page,
     /// <summary>"N of M": rows on this page of the filtered total.</summary>
     public string CountText => string.Create(CultureInfo.InvariantCulture, $"{Rows.Length} of {Total}");
 
+    /// <summary>"Page N of M": which page is currently showing.</summary>
+    public string PageText => string.Create(CultureInfo.InvariantCulture, $"Page {Page} of {PageCount}");
+
     /// <summary>Page numbers 1..PageCount.</summary>
     public IEnumerable<int> PageNumbers => Enumerable.Range(1, PageCount);
 
