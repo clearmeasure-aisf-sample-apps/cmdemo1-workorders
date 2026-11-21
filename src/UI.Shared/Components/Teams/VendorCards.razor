@@ -31,13 +31,13 @@ else
                         @if (!string.IsNullOrWhiteSpace(vendor.EmailAddress))
                         {
                             <p class="vendor-email" data-testid="@($"{TeamsAndVendors.Elements.VendorEmail}{vendor.Id}")">
-                                <a href="mailto:@vendor.EmailAddress">@vendor.EmailAddress</a>
+                                <a href="mailto:@vendor.EmailAddress" aria-label="@($"Email {vendor.Name}: {vendor.EmailAddress}")">@vendor.EmailAddress</a>
                             </p>
                         }
                         @if (!string.IsNullOrWhiteSpace(vendor.PhoneNumber))
                         {
                             <p class="vendor-phone" data-testid="@($"{TeamsAndVendors.Elements.VendorPhone}{vendor.Id}")">
-                                <a href="@ToTelHref(vendor.PhoneNumber)">@vendor.PhoneNumber</a>
+                                <a href="@ToTelHref(vendor.PhoneNumber)" aria-label="@($"Call {vendor.Name}: {vendor.PhoneNumber}")">@vendor.PhoneNumber</a>
                             </p>
                         }
                     </div>
