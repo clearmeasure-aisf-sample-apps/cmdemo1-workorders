@@ -17,7 +17,7 @@ public sealed record SearchResultPage(WorkOrderSearchResultRow[] Rows, int Page,
     /// <summary>"Showing a–b of M work orders".</summary>
     public string RangeText => Total == 0
         ? "Showing 0 of 0 work orders"
-        : string.Create(CultureInfo.InvariantCulture, $"Showing {First}–{Last} of {Total} {(Total == 1 ? "work order" : "work orders")}");
+        : string.Create(CultureInfo.InvariantCulture, $"Showing {First}–{Last} of {Pluralizer.Count(Total, "work order")}");
 
     /// <summary>"N of M": rows on this page of the filtered total.</summary>
     public string CountText => string.Create(CultureInfo.InvariantCulture, $"{Rows.Length} of {Total}");

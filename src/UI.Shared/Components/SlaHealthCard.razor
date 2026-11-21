@@ -32,7 +32,7 @@
                      style="width: @($"{_health.CurrentMonthPercentage:F0}%")">
                 </div>
             </div>
-            <div class="sla-health-subtitle">@_health.CurrentMonthOrderCount work order@(_health.CurrentMonthOrderCount == 1 ? "" : "s")</div>
+            <div class="sla-health-subtitle">@Pluralizer.Count(_health.CurrentMonthOrderCount, "work order")</div>
         </div>
     }
 </div>
