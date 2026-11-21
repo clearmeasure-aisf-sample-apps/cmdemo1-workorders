@@ -577,6 +577,14 @@
 
 .search-page ::deep .board-card-assignee {
     display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.search-page ::deep .board-card-assignee-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .search-page ::deep .board-card-room {
