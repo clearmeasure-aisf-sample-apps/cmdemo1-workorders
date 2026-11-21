@@ -158,7 +158,7 @@ Versions are centrally managed in `src/Directory.Packages.props` (no `Version` o
 
 ## API Tools Endpoints
 
-Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, no DB access. The sample text/utility tools, the echo endpoint and the WeatherForecast sample were retired in #1819. The remaining tool endpoints:
+Utility endpoints in `src/UI/Api/Controllers/` — all anonymous, rate-limited, no DB access. The sample text/utility tools, the echo endpoint and the weather-forecast sample were retired in #1819. The remaining tool endpoints:
 
 | Route | Method | Description |
 |-------|--------|-------------|
