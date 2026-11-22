@@ -43,4 +43,4 @@ telemetry dashboard, rather than returning static or in-memory counts.
 - [Query](../../src/Core/Queries/WorkOrderCountByStatusQuery.cs)
 - [Handler](../../src/DataAccess/Handlers/WorkOrderCountByStatusQueryHandler.cs)
 - [Statuses](../../src/Core/Model/WorkOrderStatus.cs)
-- [API-key public paths](../../src/UI/Server/ApiKeyAuthenticationMiddleware.cs)
+- [API-key public paths](../../src/UI/Server/ApiPublicPathRules.cs)
