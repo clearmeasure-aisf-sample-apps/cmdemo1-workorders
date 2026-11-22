@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.Core.Queries;
 /// SLA health metrics for a month: the percentage of work orders completed on time (CompletedDate &lt;= DueDate).
 /// Null percentage when no qualifying orders exist (all orders either have no DueDate or aren't completed).
 /// </summary>
-public class SlaHealth
+public sealed class SlaHealth
 {
     /// <summary>Percentage of work orders completed on time this month (0–100), or null when no qualifying orders exist.</summary>
     public decimal? CurrentMonthPercentage { get; set; }

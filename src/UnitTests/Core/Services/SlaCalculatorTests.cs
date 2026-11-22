@@ -158,6 +158,25 @@ public class SlaCalculatorTests
         count.ShouldBe(3);
     }
 
+    [TestCase(1, 12)]
+    [TestCase(3, 38)]
+    [TestCase(5, 62)]
+    [TestCase(7, 88)]
+    public void Should_RoundMidpointPercentage_ToEven(int onTimeOfEight, int expectedPercentage)
+    {
+        var due = new DateOnly(2026, 5, 10);
+        var onTime = Enumerable.Range(0, onTimeOfEight)
+            .Select(_ => WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 9)).Build());
+        var late = Enumerable.Range(0, 8 - onTimeOfEight)
+            .Select(_ => WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 12)).Build());
+        var orders = onTime.Concat(late).ToList();
+
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(orders);
+
+        percentage.ShouldBe((decimal)expectedPercentage);
+        count.ShouldBe(8);
+    }
+
     [Test]
     public void Should_ComputeTrend_FromCalculatedPercentages()
     {

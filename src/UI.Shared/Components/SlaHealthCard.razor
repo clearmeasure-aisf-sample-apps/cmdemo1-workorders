@@ -15,15 +15,16 @@
     }
     else
     {
+        var trendText = SlaCalculator.TrendText(_health.CurrentMonthPercentage, _health.LastMonthPercentage);
         <div class="sla-health-content">
             <div class="sla-health-header">
                 <h3 class="sla-health-title">This Month</h3>
-                @if (!string.IsNullOrEmpty(_trendText))
+                @if (!string.IsNullOrEmpty(trendText))
                 {
-                    <span class="sla-health-trend" title="@_trendText">@_trendText</span>
+                    <span class="sla-health-trend" title="@trendText">@trendText</span>
                 }
             </div>
-            <div class="sla-health-value">@_health.CurrentMonthPercentage?.ToString("F0")%</div>
+            <div class="sla-health-value">@_health.CurrentMonthPercentage.Value.ToString("F0")%</div>
             <div class="sla-health-progress">
                 <div class="sla-health-bar" role="progressbar"
                      aria-label="Work orders meeting SLA this month"
@@ -39,7 +40,6 @@
 
 @code {
     private SlaHealth? _health;
-    private string? _trendText;
 
     private string CardStateClass => _health switch
     {
@@ -76,7 +76,6 @@
             Logger.LogWarning(ex, "SLA health metrics could not be loaded; card shows empty state.");
             _health = new SlaHealth();
         }
-        _trendText = SlaCalculator.TrendText(_health?.CurrentMonthPercentage, _health?.LastMonthPercentage);
         await InvokeAsync(StateHasChanged);
     }
 }
