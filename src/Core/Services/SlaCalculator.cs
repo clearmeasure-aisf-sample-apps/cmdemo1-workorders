@@ -61,7 +61,7 @@ public static class SlaCalculator
             return (null, 0);
         }
 
-        var onTimeCount = completionsList.Count(c => ChurchTimeZone.ChurchDate(c.CompletedDate) <= c.DueDate);
+        var onTimeCount = completionsList.Count(c => c.IsOnTime);
         var percentage = (decimal)onTimeCount / completionsList.Count * 100;
         return (Math.Round(percentage, 0, MidpointRounding.ToEven), completionsList.Count);
     }

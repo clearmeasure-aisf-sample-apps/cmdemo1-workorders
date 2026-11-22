@@ -57,5 +57,5 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
     }
 
     private static IEnumerable<SlaCompletion> CompletedIn(IEnumerable<SlaCompletion> completions, ChurchMonth month) =>
-        completions.Where(c => month.Contains(ChurchTimeZone.ChurchDate(c.CompletedDate)));
+        completions.Where(c => month.Contains(c.Completed));
 }
