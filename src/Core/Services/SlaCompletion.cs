@@ -1,9 +1,9 @@
 namespace ClearMeasure.Bootcamp.Core.Services;
 
 /// <summary>
-/// The due date and church-calendar completion date of one completed work order, the only inputs the SLA math needs.
-/// The church-calendar completion date is derived once, at construction, from the stored completion instant; the
-/// instant itself is not kept because nothing reads it after that.
+/// One completed work order reduced to what the SLA math needs: the church-calendar completion date and whether it
+/// was on time. Both are derived once, at construction, from the due date and the stored completion instant; the raw
+/// inputs are not kept because nothing reads them after that.
 /// </summary>
 public readonly record struct SlaCompletion
 {
@@ -12,14 +12,9 @@ public readonly record struct SlaCompletion
     /// </summary>
     public SlaCompletion(DateOnly dueDate, DateTime completedDate)
     {
-        DueDate = dueDate;
         Completed = ChurchTimeZone.ChurchDate(completedDate);
+        IsOnTime = Completed <= dueDate;
     }
-
-    /// <summary>
-    /// The church-calendar date the work order was due.
-    /// </summary>
-    public DateOnly DueDate { get; }
 
     /// <summary>
     /// The church-calendar date (America/Chicago) of the stored completion instant.
@@ -27,7 +22,7 @@ public readonly record struct SlaCompletion
     public DateOnly Completed { get; }
 
     /// <summary>
-    /// True when <see cref="Completed"/> is on or before <see cref="DueDate"/>.
+    /// True when <see cref="Completed"/> is on or before the due date.
     /// </summary>
-    public bool IsOnTime => Completed <= DueDate;
+    public bool IsOnTime { get; }
 }
