@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
@@ -75,7 +76,7 @@ public class SlaCalculatorTests
     [Test]
     public void Should_ReturnNullPercentage_When_ZeroOrders()
     {
-        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage([]);
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(Enumerable.Empty<WorkOrder>());
 
         percentage.ShouldBeNull();
         count.ShouldBe(0);
@@ -194,5 +195,66 @@ public class SlaCalculatorTests
 
         SlaCalculator.TrendText(current, last).ShouldBe("↑ up from 50%");
         SlaCalculator.TrendText(last, current).ShouldBe("↓ down from 100%");
+    }
+
+    [Test]
+    public void Should_ReturnNullPercentage_When_NoCompletions()
+    {
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(Enumerable.Empty<SlaCompletion>());
+
+        percentage.ShouldBeNull();
+        count.ShouldBe(0);
+    }
+
+    [Test]
+    public void Should_CountAsOnTime_When_CompletionOnDueDate()
+    {
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
+        [
+            new SlaCompletion(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 10, 23, 59, 0))
+        ]);
+
+        percentage.ShouldBe(100m);
+        count.ShouldBe(1);
+    }
+
+    [Test]
+    public void Should_CountAsLate_When_CompletionAfterDueDate()
+    {
+        var (percentage, _) = SlaCalculator.CalculateOnTimePercentage(
+        [
+            new SlaCompletion(new DateOnly(2026, 5, 10), new DateTime(2026, 5, 11, 5, 1, 0))
+        ]);
+
+        percentage.ShouldBe(0m);
+    }
+
+    [Test]
+    public void Should_CountAsOnTime_When_CompletionEveningLocal_NextDayUtc()
+    {
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
+        [
+            new SlaCompletion(new DateOnly(2026, 10, 15), new DateTime(2026, 10, 16, 1, 0, 0))
+        ]);
+
+        percentage.ShouldBe(100m);
+        count.ShouldBe(1);
+    }
+
+    [TestCase(3, 38)]
+    [TestCase(5, 62)]
+    public void Should_RoundMidpointPercentage_When_Completions(int onTimeOfEight, decimal expectedPercentage)
+    {
+        var due = new DateOnly(2026, 5, 10);
+        var onTime = Enumerable.Range(0, onTimeOfEight)
+            .Select(_ => new SlaCompletion(due, new DateTime(2026, 5, 9)));
+        var late = Enumerable.Range(0, 8 - onTimeOfEight)
+            .Select(_ => new SlaCompletion(due, new DateTime(2026, 5, 12)));
+        var completions = onTime.Concat(late).ToList();
+
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(completions);
+
+        percentage.ShouldBe(expectedPercentage);
+        count.ShouldBe(8);
     }
 }
