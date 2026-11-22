@@ -39,5 +39,8 @@ internal static class ApiPublicPathRules
             : string.Join('/', segments.Skip(1));
     }
 
+    internal static bool IsPublicApiPath(string pathValue) =>
+        TryGetLeafSegment(pathValue, out var leaf) && IsPublicLeaf(leaf);
+
     internal static bool IsPublicLeaf(string leaf) => PublicLeaves.Contains(leaf);
 }

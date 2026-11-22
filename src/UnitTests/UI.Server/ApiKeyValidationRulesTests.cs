@@ -28,4 +28,25 @@ public class ApiKeyValidationRulesTests
         var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
         ApiKeyValidationRules.RequiresValidation(path, options).ShouldBe(expectedValidation);
     }
+
+    [Test]
+    public void RequiresValidation_ReturnsFalse_When_Disabled()
+    {
+        var options = new ApiKeyAuthenticationOptions { Enabled = false, ValidationKey = "x" };
+        ApiKeyValidationRules.RequiresValidation("/api/health", options).ShouldBeFalse();
+    }
+
+    [Test]
+    public void RequiresValidation_ReturnsFalse_When_KeyEmpty()
+    {
+        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "" };
+        ApiKeyValidationRules.RequiresValidation("/api/health", options).ShouldBeFalse();
+    }
+
+    [Test]
+    public void RequiresValidation_ReturnsFalse_When_PathNotApi()
+    {
+        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "x" };
+        ApiKeyValidationRules.RequiresValidation("/mcp", options).ShouldBeFalse();
+    }
 }

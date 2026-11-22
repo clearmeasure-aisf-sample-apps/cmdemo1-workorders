@@ -10,7 +10,11 @@ internal static class ApiKeyValidationRules
         }
 
         return !string.IsNullOrEmpty(pathValue)
-               && ApiKeyAuthenticationMiddleware.IsApiPath(pathValue)
-               && !ApiKeyAuthenticationMiddleware.IsPublicVersionOrTimePath(pathValue);
+               && IsApiPath(pathValue)
+               && !ApiPublicPathRules.IsPublicApiPath(pathValue);
     }
+
+    private static bool IsApiPath(string pathValue) =>
+        pathValue.StartsWith("/api/", StringComparison.OrdinalIgnoreCase)
+        || pathValue.Equals("/api", StringComparison.OrdinalIgnoreCase);
 }

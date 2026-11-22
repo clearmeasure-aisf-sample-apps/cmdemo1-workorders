@@ -24,8 +24,29 @@ public class ApiPublicPathRulesTests
         ApiPublicPathRules.IsPublicLeaf(leaf).ShouldBe(expectedPublic);
     }
 
+    [TestCase("/api/version", true)]
+    [TestCase("/api/v1.0/version", true)]
+    [TestCase("/api/time", true)]
+    [TestCase("/api/v1.0/ping", true)]
+    [TestCase("/api/health", true)]
+    [TestCase("/api/health/detailed", true)]
+    [TestCase("/api/v1.0/health", true)]
+    [TestCase("/api/v1.0/health/detailed", true)]
+    [TestCase("/api/work-orders/status-counts", true)]
+    [TestCase("/api/v1.0/work-orders/status-counts", true)]
+    [TestCase("/api/work-orders/bulk-import", false)]
+    [TestCase("/api/status/environment", false)]
+    [TestCase("/api/v1.0/status/environment", false)]
+    [TestCase("/api/workorders", false)]
+    [TestCase("/mcp", false)]
+    public void IsPublicApiPath_ReturnsExpected(string path, bool expectedPublic)
+    {
+        ApiPublicPathRules.IsPublicApiPath(path).ShouldBe(expectedPublic);
+    }
+
     [TestCase("/api/version", "version")]
     [TestCase("/api/v1.0/time", "time")]
+    [TestCase("/api/health", "health")]
     [TestCase("/api/health/detailed", "health/detailed")]
     [TestCase("/api/v1.0/health/detailed", "health/detailed")]
     [TestCase("/api/work-orders/status-counts", "work-orders/status-counts")]
@@ -43,5 +64,18 @@ public class ApiPublicPathRulesTests
     {
         ApiPublicPathRules.TryGetLeafSegment(path, out var leaf).ShouldBeFalse();
         leaf.ShouldBeEmpty();
+    }
+
+    [TestCase("/api/health")]
+    [TestCase("/api/health/detailed")]
+    [TestCase("/api/v1.0/health")]
+    [TestCase("/api/v1.0/health/detailed")]
+    public void Should_SkipValidation_When_PathIsDetailedHealth(string path)
+    {
+        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
+        ApiPublicPathRules.TryGetLeafSegment(path, out var leaf).ShouldBeTrue(path);
+        ApiPublicPathRules.IsPublicLeaf(leaf).ShouldBeTrue(path);
+        ApiPublicPathRules.IsPublicApiPath(path).ShouldBeTrue(path);
+        ApiKeyValidationRules.RequiresValidation(path, options).ShouldBeFalse(path);
     }
 }
