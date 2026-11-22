@@ -19,9 +19,9 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
     {
         var currentMonth = ChurchMonth.Containing(ChurchTimeZone.Today(time));
         var lastMonth = currentMonth.Previous();
-        var orders = await CompletedWithDueDateAsync(lastMonth, currentMonth, cancellationToken);
-        var (currentPercentage, currentCount) = SlaCalculator.CalculateOnTimePercentage(CompletedIn(orders, currentMonth));
-        var (lastPercentage, lastCount) = SlaCalculator.CalculateOnTimePercentage(CompletedIn(orders, lastMonth));
+        var completions = await CompletedWithDueDateAsync(lastMonth, currentMonth, cancellationToken);
+        var (currentPercentage, currentCount) = SlaCalculator.CalculateOnTimePercentage(CompletedIn(completions, currentMonth));
+        var (lastPercentage, lastCount) = SlaCalculator.CalculateOnTimePercentage(CompletedIn(completions, lastMonth));
 
         return new SlaHealth
         {
@@ -33,10 +33,11 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
     }
 
     /// <summary>
-    /// Completed work orders with a due date whose church completion date falls in <paramref name="sinceMonth"/> through
-    /// <paramref name="throughMonth"/>, projected to the due and completed dates so creator and assignee are not joined.
+    /// The due and completion dates of completed work orders with a due date whose church completion date falls in
+    /// <paramref name="sinceMonth"/> through <paramref name="throughMonth"/>, projected in the query so creator and
+    /// assignee are not joined, mapped to <see cref="SlaCompletion"/>.
     /// </summary>
-    private async Task<List<WorkOrder>> CompletedWithDueDateAsync(
+    private async Task<List<SlaCompletion>> CompletedWithDueDateAsync(
         ChurchMonth sinceMonth,
         ChurchMonth throughMonth,
         CancellationToken cancellationToken)
@@ -52,14 +53,9 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
             .Select(wo => new { wo.DueDate, wo.CompletedDate })
             .ToListAsync(cancellationToken);
 
-        return rows.Select(row => new WorkOrder
-        {
-            DueDate = row.DueDate,
-            CompletedDate = row.CompletedDate,
-            Status = WorkOrderStatus.Complete
-        }).ToList();
+        return rows.Select(row => new SlaCompletion(row.DueDate!.Value, row.CompletedDate!.Value)).ToList();
     }
 
-    private static IEnumerable<WorkOrder> CompletedIn(IEnumerable<WorkOrder> orders, ChurchMonth month) =>
-        orders.Where(wo => wo.CompletedDate is { } completed && month.Contains(ChurchTimeZone.ChurchDate(completed)));
+    private static IEnumerable<SlaCompletion> CompletedIn(IEnumerable<SlaCompletion> completions, ChurchMonth month) =>
+        completions.Where(c => month.Contains(c.Completed));
 }
