@@ -162,7 +162,7 @@ public class SlaCalculatorTests
     [TestCase(3, 38)]
     [TestCase(5, 62)]
     [TestCase(7, 88)]
-    public void Should_RoundMidpointPercentage_ToEven(int onTimeOfEight, int expectedPercentage)
+    public void Should_RoundMidpointPercentage_ToEven(int onTimeOfEight, decimal expectedPercentage)
     {
         var due = new DateOnly(2026, 5, 10);
         var onTime = Enumerable.Range(0, onTimeOfEight)
@@ -173,7 +173,7 @@ public class SlaCalculatorTests
 
         var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(orders);
 
-        percentage.ShouldBe((decimal)expectedPercentage);
+        percentage.ShouldBe(expectedPercentage);
         count.ShouldBe(8);
     }
 
