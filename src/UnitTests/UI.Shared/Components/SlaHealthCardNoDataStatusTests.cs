@@ -20,7 +20,7 @@ public class SlaHealthCardNoDataStatusTests
         var ctx = CreateContext(new SlaHealth { CurrentMonthPercentage = null });
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await component.WaitForStateAsync(() => component.FindAll(".sla-health-loading").Count == 0);
 
         var noDataElement = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthNoData}']");
         noDataElement.ShouldNotBeNull();

@@ -20,28 +20,28 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         var currentMonth = ChurchMonth.Containing(ChurchTimeZone.Today(time));
         var lastMonth = currentMonth.Previous();
         var orders = await CompletedWithDueDateAsync(lastMonth, currentMonth, cancellationToken);
-        var currentMonthData = ComputeMonthSla(orders, currentMonth);
-        var lastMonthData = ComputeMonthSla(orders, lastMonth);
+        var (currentPercentage, currentCount) = SlaCalculator.CalculateOnTimePercentage(CompletedIn(orders, currentMonth));
+        var (lastPercentage, lastCount) = SlaCalculator.CalculateOnTimePercentage(CompletedIn(orders, lastMonth));
 
         return new SlaHealth
         {
-            CurrentMonthPercentage = currentMonthData.Percentage,
-            LastMonthPercentage = lastMonthData.Percentage,
-            CurrentMonthOrderCount = currentMonthData.TotalCount,
-            LastMonthOrderCount = lastMonthData.TotalCount
+            CurrentMonthPercentage = currentPercentage,
+            LastMonthPercentage = lastPercentage,
+            CurrentMonthOrderCount = currentCount,
+            LastMonthOrderCount = lastCount
         };
     }
 
     /// <summary>
-    /// Completed work orders with a due date whose church completion date falls in the two months, projected to the
-    /// due and completed dates so creator and assignee are not joined.
+    /// Completed work orders with a due date whose church completion date falls in <paramref name="sinceMonth"/> through
+    /// <paramref name="throughMonth"/>, projected to the due and completed dates so creator and assignee are not joined.
     /// </summary>
     private async Task<List<WorkOrder>> CompletedWithDueDateAsync(
-        ChurchMonth firstMonth,
-        ChurchMonth lastMonth,
+        ChurchMonth sinceMonth,
+        ChurchMonth throughMonth,
         CancellationToken cancellationToken)
     {
-        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(firstMonth.FirstDay, lastMonth.LastDay);
+        var (windowStart, windowEnd) = ChurchTimeZone.CompletionWindow(sinceMonth.FirstDay, throughMonth.LastDay);
         var rows = await context.Set<WorkOrder>()
             .AsNoTracking()
             .IgnoreAutoIncludes()
@@ -60,19 +60,6 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         }).ToList();
     }
 
-    private static MonthSlaData ComputeMonthSla(List<WorkOrder> orders, ChurchMonth month)
-    {
-        var monthOrders = orders
-            .Where(wo => month.Contains(SlaHealth.ChurchDate(wo.CompletedDate!.Value)))
-            .ToList();
-
-        var (percentage, totalCount) = SlaHealth.CalculateOnTimePercentage(monthOrders);
-        return new MonthSlaData { TotalCount = totalCount, Percentage = percentage };
-    }
-
-    private sealed class MonthSlaData
-    {
-        public decimal? Percentage { get; init; }
-        public int TotalCount { get; init; }
-    }
+    private static IEnumerable<WorkOrder> CompletedIn(IEnumerable<WorkOrder> orders, ChurchMonth month) =>
+        orders.Where(wo => wo.CompletedDate is { } completed && month.Contains(ChurchTimeZone.ChurchDate(completed)));
 }

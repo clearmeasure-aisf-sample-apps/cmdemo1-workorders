@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -38,8 +39,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(new SlaHealth { CurrentMonthPercentage = null });
         var component = ctx.Render<SlaHealthCard>();
 
-        // Wait for component to initialize
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var noDataElement = component.Find(".sla-health-no-data");
         noDataElement.ShouldNotBeNull();
@@ -60,7 +60,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var valueElement = component.Find(".sla-health-value");
         valueElement.ShouldNotBeNull();
@@ -81,7 +81,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var trendElement = component.Find(".sla-health-trend");
         trendElement.ShouldNotBeNull();
@@ -103,7 +103,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var progressBar = component.Find("[role='progressbar']");
         progressBar.ShouldNotBeNull();
@@ -128,7 +128,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var subtitle = component.Find(".sla-health-subtitle");
         subtitle.ShouldNotBeNull();
@@ -149,7 +149,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var subtitle = component.Find(".sla-health-subtitle");
         subtitle.TextContent.ShouldBe("1 work order");
@@ -198,7 +198,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var trendElement = component.Find(".sla-health-trend");
         trendElement.TextContent.ShouldBe("↓ down from 80%");
@@ -218,7 +218,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var trendElement = component.Find(".sla-health-trend");
         trendElement.TextContent.ShouldBe("— flat at 75%");
@@ -238,7 +238,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(health);
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var root = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']");
         var className = root.GetAttribute("class");
@@ -246,7 +246,7 @@ public class SlaHealthCardTests
         className.ShouldContain("sla-health-card--loaded");
         className.ShouldNotContain("sla-health-card--empty");
         component.Find(".sla-health-value").TextContent.ShouldBe("85%");
-        component.Find(".sla-health-trend").TextContent.ShouldBe(SlaHealth.TrendText(85m, 75m));
+        component.Find(".sla-health-trend").TextContent.ShouldBe(SlaCalculator.TrendText(85m, 75m));
         var bar = component.Find(".sla-health-bar");
         bar.GetAttribute("role").ShouldBe("progressbar");
         bar.GetAttribute("style").ShouldNotBeNull().ShouldContain("width: 85%");
@@ -258,7 +258,7 @@ public class SlaHealthCardTests
         var ctx = CreateContext(new SlaHealth { CurrentMonthPercentage = null });
         var component = ctx.Render<SlaHealthCard>();
 
-        await Task.Delay(100);
+        await WaitUntilLoadedAsync(component);
 
         var root = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']");
         var className = root.GetAttribute("class");
@@ -266,6 +266,20 @@ public class SlaHealthCardTests
         className.ShouldContain("sla-health-card--empty");
         className.ShouldNotContain("sla-health-card--loaded");
         component.Find(".sla-health-no-data").TextContent.ShouldBe("No data");
+        component.FindAll(".sla-health-value").Count.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ShouldRenderEmptyState_When_SlaHealthQueryThrows()
+    {
+        var ctx = CreateContext(throwOnSend: true);
+        var component = ctx.Render<SlaHealthCard>();
+
+        await WaitUntilLoadedAsync(component);
+
+        var root = component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthCard}']");
+        root.GetAttribute("class").ShouldNotBeNull().ShouldContain("sla-health-card--empty");
+        component.Find($"[data-testid='{SlaHealthCard.Elements.SlaHealthNoData}']").TextContent.ShouldBe("No data");
         component.FindAll(".sla-health-value").Count.ShouldBe(0);
     }
 
@@ -288,16 +302,19 @@ public class SlaHealthCardTests
         css.ShouldNotContain("var(--font-size-small)");
     }
 
-    private static BunitContext CreateContext(SlaHealth? health = null, Task? pending = null)
+    private static Task WaitUntilLoadedAsync(IRenderedComponent<SlaHealthCard> component) =>
+        component.WaitForStateAsync(() => component.FindAll(".sla-health-loading").Count == 0);
+
+    private static BunitContext CreateContext(SlaHealth? health = null, Task? pending = null, bool throwOnSend = false)
     {
         var ctx = new BunitContext();
         ctx.Services.AddLogging();
-        ctx.Services.AddSingleton<IBus>(new StubSlaHealthBus(health, pending));
+        ctx.Services.AddSingleton<IBus>(new StubSlaHealthBus(health, pending, throwOnSend));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         return ctx;
     }
 
-    private class StubSlaHealthBus(SlaHealth? health = null, Task? pending = null) : Bus(null!)
+    private class StubSlaHealthBus(SlaHealth? health = null, Task? pending = null, bool throwOnSend = false) : Bus(null!)
     {
         private readonly SlaHealth _health = health ?? new SlaHealth
         {
@@ -316,6 +333,11 @@ public class SlaHealthCardTests
 
             if (request is SlaHealthQuery)
             {
+                if (throwOnSend)
+                {
+                    throw new InvalidOperationException("SLA health query failed.");
+                }
+
                 return (TResponse)(object)_health;
             }
 

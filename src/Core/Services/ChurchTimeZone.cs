@@ -34,9 +34,32 @@ public static class ChurchTimeZone
     }
 
     /// <summary>
-    /// Returns the church calendar date (America/Chicago) of a stored instant; persisted values are UTC and come back with `DateTimeKind.Unspecified`, so the value is treated as UTC.
+    /// Returns the church calendar date (America/Chicago) of a stored instant; persisted values are UTC and come back
+    /// with `DateTimeKind.Unspecified`, so the value is treated as UTC.
     /// </summary>
-    public static DateOnly ChurchDate(DateTime storedUtc) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc), Chicago));
+    public static DateOnly ChurchDate(DateTime storedUtc)
+    {
+        var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(storedUtc, DateTimeKind.Utc), Chicago);
+        return DateOnly.FromDateTime(local);
+    }
+
+    /// <summary>
+    /// Stored completion instants whose church calendar date falls in
+    /// <paramref name="monthStart"/> through <paramref name="monthEnd"/>, inclusive.
+    /// Both ends are <see cref="DateTimeKind.Unspecified"/>, matching persisted
+    /// <c>CompletedDate</c> values, which <see cref="ChurchTimeZone.ChurchDate"/> reads as UTC.
+    /// </summary>
+    public static (DateTime StartInclusive, DateTime EndExclusive) CompletionWindow(DateOnly monthStart, DateOnly monthEnd)
+    {
+        return (StoredInstant(monthStart), StoredInstant(monthEnd.AddDays(1)));
+    }
+
+    private static DateTime StoredInstant(DateOnly churchDate)
+    {
+        var localMidnight = churchDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var utc = TimeZoneInfo.ConvertTimeToUtc(localMidnight, Chicago);
+        return DateTime.SpecifyKind(utc, DateTimeKind.Unspecified);
+    }
 
     private static TimeZoneInfo ResolveChicago() =>
         FindTimeZone(IanaId)
