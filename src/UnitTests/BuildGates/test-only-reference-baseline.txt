@@ -97,7 +97,6 @@ src/UI/Api/HealthReportBuilder.cs :: HealthReportBuilder.FromEntries(TimeProvide
 src/UI/Api/Pages/Error.cshtml.cs :: ErrorModel.OnGet()
 src/UI/Api/Pages/Error.cshtml.cs :: ErrorModel.ShowRequestId
 src/UI/Client/PublisherGateway.cs :: PublisherGateway.ApiRelativeUrlV1
-src/UI/Server/ApiKeyAuthenticationMiddleware.cs :: ApiKeyAuthenticationMiddleware.ShouldValidate(PathString,ApiKeyAuthenticationOptions)
 src/UI/Server/Controllers/FeatureDisabledProblemAttribute.cs :: FeatureDisabledProblemAttribute
 src/UI/Server/DetailedHealthReportProvider.cs :: DetailedHealthReportProvider.FromComponentStatuses(IEnumerable<KeyValuePair<string,HealthStatus>>,HealthStatus,TimeProvider)
 src/UI/Server/Handlers/DeploymentIdentityQueryHandler.cs :: DeploymentIdentityQueryHandler
