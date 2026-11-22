@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
@@ -246,7 +247,7 @@ public class SlaHealthCardTests
         className.ShouldContain("sla-health-card--loaded");
         className.ShouldNotContain("sla-health-card--empty");
         component.Find(".sla-health-value").TextContent.ShouldBe("85%");
-        component.Find(".sla-health-trend").TextContent.ShouldBe(SlaHealth.TrendText(85m, 75m));
+        component.Find(".sla-health-trend").TextContent.ShouldBe(SlaCalculator.TrendText(85m, 75m));
         var bar = component.Find(".sla-health-bar");
         bar.GetAttribute("role").ShouldBe("progressbar");
         bar.GetAttribute("style").ShouldNotBeNull().ShouldContain("width: 85%");

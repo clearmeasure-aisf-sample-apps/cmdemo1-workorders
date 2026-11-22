@@ -1,16 +1,16 @@
-using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
-namespace ClearMeasure.Bootcamp.UnitTests.Core.Queries;
+namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;
 
 [TestFixture]
-public class SlaHealthCalculationTests
+public class SlaCalculatorTests
 {
     [Test]
     public void Should_ReturnNullPercentage_When_NoQualifyingOrders()
     {
-        var result = SlaHealth.TrendText(null, null);
+        var result = SlaCalculator.TrendText(null, null);
 
         result.ShouldBeNull();
     }
@@ -18,7 +18,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnNullTrendText_When_CurrentMonthHasData_ButLastMonthDoesNot()
     {
-        var result = SlaHealth.TrendText(80m, null);
+        var result = SlaCalculator.TrendText(80m, null);
 
         result.ShouldBeNull();
     }
@@ -26,7 +26,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnTrendUp_When_CurrentPercentageGreaterThanLastMonth()
     {
-        var result = SlaHealth.TrendText(90m, 75m);
+        var result = SlaCalculator.TrendText(90m, 75m);
 
         result.ShouldBe("↑ up from 75%");
     }
@@ -34,7 +34,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnTrendDown_When_CurrentPercentageLessThanLastMonth()
     {
-        var result = SlaHealth.TrendText(60m, 80m);
+        var result = SlaCalculator.TrendText(60m, 80m);
 
         result.ShouldBe("↓ down from 80%");
     }
@@ -42,7 +42,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnTrendFlat_When_PercentagesEqual()
     {
-        var result = SlaHealth.TrendText(75m, 75m);
+        var result = SlaCalculator.TrendText(75m, 75m);
 
         result.ShouldBe("— flat at 75%");
     }
@@ -51,7 +51,7 @@ public class SlaHealthCalculationTests
     public void Should_RoundPercentageToWholeNumber()
     {
         // Test rounding with TrendText
-        var result = SlaHealth.TrendText(66.67m, 50m);
+        var result = SlaCalculator.TrendText(66.67m, 50m);
 
         result.ShouldBe("↑ up from 50%");
     }
@@ -59,7 +59,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_HandleZeroCurrentPercentage()
     {
-        var result = SlaHealth.TrendText(0m, 50m);
+        var result = SlaCalculator.TrendText(0m, 50m);
 
         result.ShouldBe("↓ down from 50%");
     }
@@ -67,7 +67,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_Handle100Percent()
     {
-        var result = SlaHealth.TrendText(100m, 90m);
+        var result = SlaCalculator.TrendText(100m, 90m);
 
         result.ShouldBe("↑ up from 90%");
     }
@@ -75,7 +75,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnNullPercentage_When_ZeroOrders()
     {
-        var (percentage, count) = SlaHealth.CalculateOnTimePercentage([]);
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage([]);
 
         percentage.ShouldBeNull();
         count.ShouldBe(0);
@@ -84,7 +84,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ExcludeOrders_When_NoDueDate()
     {
-        var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
         [
             WorkOrderBuilder.Create().CompletedAt(new DateTime(2026, 5, 10)).Build(),
             WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 5, 10))
@@ -98,7 +98,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_ReturnNullPercentage_When_AllOrdersHaveNoDueDate()
     {
-        var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
             [WorkOrderBuilder.Create().CompletedAt(new DateTime(2026, 5, 10)).Build()]);
 
         percentage.ShouldBeNull();
@@ -108,7 +108,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_CountAsOnTime_When_CompletedOnDueDate()
     {
-        var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
         [
             WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 5, 10))
                 .CompletedAt(new DateTime(2026, 5, 10, 23, 59, 0)).Build()
@@ -121,7 +121,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_CountAsLate_When_CompletedAfterDueDate()
     {
-        var (percentage, _) = SlaHealth.CalculateOnTimePercentage(
+        var (percentage, _) = SlaCalculator.CalculateOnTimePercentage(
         [
             WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 5, 10))
                 .CompletedAt(new DateTime(2026, 5, 11, 5, 1, 0)).Build()
@@ -133,7 +133,7 @@ public class SlaHealthCalculationTests
     [Test]
     public void Should_CountAsOnTime_When_CompletedEveningLocal_NextDayUtc()
     {
-        var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
         [
             WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 10, 15))
                 .CompletedAt(new DateTime(2026, 10, 16, 1, 0, 0)).Build()
@@ -144,18 +144,10 @@ public class SlaHealthCalculationTests
     }
 
     [Test]
-    public void Should_ReturnChurchDate_When_CompletedLateEveningLocal()
-    {
-        var result = SlaHealth.ChurchDate(new DateTime(2026, 11, 1, 3, 0, 0));
-
-        result.ShouldBe(new DateOnly(2026, 10, 31));
-    }
-
-    [Test]
     public void Should_RoundMixedPercentage_ToWholeNumber()
     {
         var due = new DateOnly(2026, 5, 10);
-        var (percentage, count) = SlaHealth.CalculateOnTimePercentage(
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
         [
             WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 9)).Build(),
             WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 10)).Build(),
@@ -167,39 +159,21 @@ public class SlaHealthCalculationTests
     }
 
     [Test]
-    public void Should_BoundCompletionWindow_ToTheChurchMonth()
-    {
-        var monthStart = new DateOnly(2026, 10, 1);
-        var monthEnd = new DateOnly(2026, 10, 31);
-        var (start, end) = SlaHealth.CompletionWindow(monthStart, monthEnd);
-
-        SlaHealth.ChurchDate(start).ShouldBe(monthStart);
-        SlaHealth.ChurchDate(start.AddTicks(-1)).ShouldBe(monthStart.AddDays(-1));
-        SlaHealth.ChurchDate(end.AddTicks(-1)).ShouldBe(monthEnd);
-        SlaHealth.ChurchDate(end).ShouldBe(monthEnd.AddDays(1));
-        start.Kind.ShouldBe(DateTimeKind.Unspecified);
-        end.Kind.ShouldBe(DateTimeKind.Unspecified);
-
-        var lateEveningUtc = new DateTime(2026, 11, 1, 3, 0, 0);
-        (lateEveningUtc >= start && lateEveningUtc < end).ShouldBeTrue();
-    }
-
-    [Test]
     public void Should_ComputeTrend_FromCalculatedPercentages()
     {
         var due = new DateOnly(2026, 5, 10);
-        var (current, _) = SlaHealth.CalculateOnTimePercentage(
+        var (current, _) = SlaCalculator.CalculateOnTimePercentage(
         [
             WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 9)).Build(),
             WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 10)).Build()
         ]);
-        var (last, _) = SlaHealth.CalculateOnTimePercentage(
+        var (last, _) = SlaCalculator.CalculateOnTimePercentage(
         [
             WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 9)).Build(),
             WorkOrderBuilder.Create().DueOn(due).CompletedAt(new DateTime(2026, 5, 12)).Build()
         ]);
 
-        SlaHealth.TrendText(current, last).ShouldBe("↑ up from 50%");
-        SlaHealth.TrendText(last, current).ShouldBe("↓ down from 100%");
+        SlaCalculator.TrendText(current, last).ShouldBe("↑ up from 50%");
+        SlaCalculator.TrendText(last, current).ShouldBe("↓ down from 100%");
     }
 }

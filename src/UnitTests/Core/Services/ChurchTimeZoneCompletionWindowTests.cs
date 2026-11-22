@@ -1,15 +1,15 @@
-using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using Shouldly;
 
-namespace ClearMeasure.Bootcamp.UnitTests.Core.Queries;
+namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;
 
 [TestFixture]
-public class SlaHealthCompletionWindowTests
+public class ChurchTimeZoneCompletionWindowTests
 {
     [Test]
     public void Should_ReturnUnspecifiedChurchMidnightBounds_When_NormalMonth()
     {
-        var (start, end) = SlaHealth.CompletionWindow(new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31));
+        var (start, end) = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31));
 
         start.ShouldBe(new DateTime(2026, 7, 1, 5, 0, 0));
         end.ShouldBe(new DateTime(2026, 8, 1, 5, 0, 0));
@@ -21,7 +21,7 @@ public class SlaHealthCompletionWindowTests
     [Test]
     public void Should_ShortenByOneHour_When_MarchSpansSpringForward()
     {
-        var (start, end) = SlaHealth.CompletionWindow(new DateOnly(2026, 3, 1), new DateOnly(2026, 3, 31));
+        var (start, end) = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 3, 1), new DateOnly(2026, 3, 31));
 
         start.ShouldBe(new DateTime(2026, 3, 1, 6, 0, 0));
         end.ShouldBe(new DateTime(2026, 4, 1, 5, 0, 0));
@@ -31,7 +31,7 @@ public class SlaHealthCompletionWindowTests
     [Test]
     public void Should_IncludeLastLocalSecondAndExcludeNextSecond_When_WindowEnd()
     {
-        var (start, end) = SlaHealth.CompletionWindow(new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31));
+        var (start, end) = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31));
 
         // Oct 31 23:59:59 CDT is the last local second of the window; Nov 1 05:00:00 UTC is the exclusive end.
         var lastLocalSecond = new DateTime(2026, 11, 1, 4, 59, 59);
@@ -44,7 +44,7 @@ public class SlaHealthCompletionWindowTests
     [Test]
     public void Should_LengthenByOneHour_When_NovemberSpansFallBack()
     {
-        var (start, end) = SlaHealth.CompletionWindow(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 30));
+        var (start, end) = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 30));
 
         start.ShouldBe(new DateTime(2026, 11, 1, 5, 0, 0));
         end.ShouldBe(new DateTime(2026, 12, 1, 6, 0, 0));
@@ -54,7 +54,7 @@ public class SlaHealthCompletionWindowTests
     [Test]
     public void Should_Return24HourWindow_When_MonthStartEqualsMonthEnd()
     {
-        var (start, end) = SlaHealth.CompletionWindow(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
+        var (start, end) = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
 
         start.ShouldBe(new DateTime(2026, 2, 14, 6, 0, 0));
         end.ShouldBe(new DateTime(2026, 2, 15, 6, 0, 0));
@@ -64,9 +64,9 @@ public class SlaHealthCompletionWindowTests
     [Test]
     public void Should_MapEndMinusOneTick_ToMonthEnd_When_SingleDayWindow()
     {
-        var (_, end) = SlaHealth.CompletionWindow(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
+        var (_, end) = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
 
-        SlaHealth.ChurchDate(end.AddTicks(-1)).ShouldBe(new DateOnly(2026, 2, 14));
+        ChurchTimeZone.ChurchDate(end.AddTicks(-1)).ShouldBe(new DateOnly(2026, 2, 14));
     }
 
     [Test]
@@ -74,7 +74,7 @@ public class SlaHealthCompletionWindowTests
     {
         // 05:30 UTC is 23:30 CST (UTC-06:00) the previous church day; the input is Unspecified,
         // the shape of persisted CompletedDate values.
-        SlaHealth.ChurchDate(new DateTime(2026, 1, 15, 5, 30, 0)).ShouldBe(new DateOnly(2026, 1, 14));
+        ChurchTimeZone.ChurchDate(new DateTime(2026, 1, 15, 5, 30, 0)).ShouldBe(new DateOnly(2026, 1, 14));
     }
 
     [Test]
@@ -82,6 +82,32 @@ public class SlaHealthCompletionWindowTests
     {
         // 06:00 UTC is exactly local midnight (CST, UTC-06:00) of the same church date; the input is
         // Unspecified, the shape of persisted CompletedDate values.
-        SlaHealth.ChurchDate(new DateTime(2026, 1, 15, 6, 0, 0)).ShouldBe(new DateOnly(2026, 1, 15));
+        ChurchTimeZone.ChurchDate(new DateTime(2026, 1, 15, 6, 0, 0)).ShouldBe(new DateOnly(2026, 1, 15));
+    }
+
+    [Test]
+    public void Should_BoundCompletionWindow_ToTheChurchMonth()
+    {
+        var monthStart = new DateOnly(2026, 10, 1);
+        var monthEnd = new DateOnly(2026, 10, 31);
+        var (start, end) = ChurchTimeZone.CompletionWindow(monthStart, monthEnd);
+
+        ChurchTimeZone.ChurchDate(start).ShouldBe(monthStart);
+        ChurchTimeZone.ChurchDate(start.AddTicks(-1)).ShouldBe(monthStart.AddDays(-1));
+        ChurchTimeZone.ChurchDate(end.AddTicks(-1)).ShouldBe(monthEnd);
+        ChurchTimeZone.ChurchDate(end).ShouldBe(monthEnd.AddDays(1));
+        start.Kind.ShouldBe(DateTimeKind.Unspecified);
+        end.Kind.ShouldBe(DateTimeKind.Unspecified);
+
+        var lateEveningUtc = new DateTime(2026, 11, 1, 3, 0, 0);
+        (lateEveningUtc >= start && lateEveningUtc < end).ShouldBeTrue();
+    }
+
+    [Test]
+    public void Should_ReturnChurchDate_When_CompletedLateEveningLocal()
+    {
+        var result = ChurchTimeZone.ChurchDate(new DateTime(2026, 11, 1, 3, 0, 0));
+
+        result.ShouldBe(new DateOnly(2026, 10, 31));
     }
 }

@@ -207,7 +207,7 @@ public class SlaHealthQueryHandlerTests
     {
         var currentMonth = ChurchMonth.Containing(today);
         var lastMonth = currentMonth.Previous();
-        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(lastMonth.FirstDay, currentMonth.LastDay);
+        var (windowStart, windowEnd) = ChurchTimeZone.CompletionWindow(lastMonth.FirstDay, currentMonth.LastDay);
         return (windowStart, windowEnd, windowStart.AddHours(1));
     }
 

@@ -76,7 +76,7 @@
             Logger.LogWarning(ex, "SLA health metrics could not be loaded; card shows empty state.");
             _health = new SlaHealth();
         }
-        _trendText = SlaHealth.TrendText(_health?.CurrentMonthPercentage, _health?.LastMonthPercentage);
+        _trendText = SlaCalculator.TrendText(_health?.CurrentMonthPercentage, _health?.LastMonthPercentage);
         await InvokeAsync(StateHasChanged);
     }
 }

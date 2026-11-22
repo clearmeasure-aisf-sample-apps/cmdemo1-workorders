@@ -41,7 +41,7 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         ChurchMonth lastMonth,
         CancellationToken cancellationToken)
     {
-        var (windowStart, windowEnd) = SlaHealth.CompletionWindow(firstMonth.FirstDay, lastMonth.LastDay);
+        var (windowStart, windowEnd) = ChurchTimeZone.CompletionWindow(firstMonth.FirstDay, lastMonth.LastDay);
         var rows = await context.Set<WorkOrder>()
             .AsNoTracking()
             .IgnoreAutoIncludes()
@@ -63,10 +63,10 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
     private static MonthSlaData ComputeMonthSla(List<WorkOrder> orders, ChurchMonth month)
     {
         var monthOrders = orders
-            .Where(wo => month.Contains(SlaHealth.ChurchDate(wo.CompletedDate!.Value)))
+            .Where(wo => month.Contains(ChurchTimeZone.ChurchDate(wo.CompletedDate!.Value)))
             .ToList();
 
-        var (percentage, totalCount) = SlaHealth.CalculateOnTimePercentage(monthOrders);
+        var (percentage, totalCount) = SlaCalculator.CalculateOnTimePercentage(monthOrders);
         return new MonthSlaData { TotalCount = totalCount, Percentage = percentage };
     }
 
