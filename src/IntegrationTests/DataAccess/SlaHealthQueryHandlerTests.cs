@@ -160,7 +160,9 @@ public class SlaHealthQueryHandlerTests
 
         var result = await WhenSlaQueriedThrough(context, clock);
 
-        ThenOneWindowQuery(context, result, window);
+        ThenWindowWasReadByOneCommand(context);
+        ThenWindowSqlFiltersOnCompletedDates(context);
+        ThenOnlyTheCompletedChurchMonthCounts(result);
     }
 
     /// <summary>Arranges a clock later than every stored date and the SLA tests' creator employee.</summary>
@@ -209,20 +211,26 @@ public class SlaHealthQueryHandlerTests
         return (windowStart, windowEnd, windowStart.AddHours(1));
     }
 
-    private static void ThenOneWindowQuery(
-        CountingDataContext context,
-        SlaHealth result,
-        (DateTime Start, DateTime End, DateTime Completed) window)
+    /// <summary>Asserts the two church months are answered by exactly one reader command.</summary>
+    private static void ThenWindowWasReadByOneCommand(CountingDataContext context)
     {
         context.Commands.ReaderCommands.ShouldBe(1, string.Join(Environment.NewLine, context.Commands.Texts));
         context.Commands.OtherCommands.ShouldBe(0);
+    }
+
+    /// <summary>Asserts the single command filters on the completed date range and joins nothing.</summary>
+    private static void ThenWindowSqlFiltersOnCompletedDates(CountingDataContext context)
+    {
         var sql = context.Commands.Texts.Single();
         sql.ShouldContain("CompletedDate");
         sql.ShouldContain(">=");
         sql.ShouldContain("<");
         sql.ShouldNotContain("JOIN");
-        window.Completed.ShouldBeGreaterThanOrEqualTo(window.Start);
-        window.Completed.ShouldBeLessThan(window.End);
+    }
+
+    /// <summary>Asserts the completion counts in the last church month and nothing counts in the current one.</summary>
+    private static void ThenOnlyTheCompletedChurchMonthCounts(SlaHealth result)
+    {
         result.LastMonthPercentage.ShouldBe(100m);
         result.LastMonthOrderCount.ShouldBe(1);
         result.CurrentMonthPercentage.ShouldBeNull();
