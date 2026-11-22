@@ -18,7 +18,6 @@ src/Database/Console/DatabaseRebuildSteps.cs
 src/IntegrationTests/DemoData/DemoEmployeeSeeder.cs
 src/IntegrationTests/TestSupport/QueryBudget.cs
 src/LlmGateway/LlmHealthCheckCache.cs
-src/UI.Shared/ApiHttpContracts.cs
 src/UI.Shared/Models/BreadcrumbResolver.cs
 src/UI.Shared/Models/DashboardStatusCards.cs
 src/UI.Shared/Models/StatusPillPresenter.cs
