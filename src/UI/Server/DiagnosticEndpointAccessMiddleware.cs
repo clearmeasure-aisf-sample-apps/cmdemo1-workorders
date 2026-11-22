@@ -29,7 +29,7 @@ internal static class DiagnosticEndpointAccessPipeline
             return;
         }
 
-        if (IsApiKeyConfigured(options))
+        if (options.IsConfigured)
         {
             await ChallengeOrContinueAsync(context, next, options.ValidationKey ?? string.Empty);
             return;
@@ -57,7 +57,4 @@ internal static class DiagnosticEndpointAccessPipeline
 
         await next(context);
     }
-
-    private static bool IsApiKeyConfigured(ApiKeyAuthenticationOptions options) =>
-        options.Enabled && !string.IsNullOrWhiteSpace(options.ValidationKey);
 }

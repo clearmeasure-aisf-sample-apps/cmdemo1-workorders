@@ -4,7 +4,7 @@ internal static class ApiKeyValidationRules
 {
     internal static bool RequiresValidation(string? pathValue, ApiKeyAuthenticationOptions options)
     {
-        if (!options.Enabled || string.IsNullOrWhiteSpace(options.ValidationKey))
+        if (!options.IsConfigured)
         {
             return false;
         }
