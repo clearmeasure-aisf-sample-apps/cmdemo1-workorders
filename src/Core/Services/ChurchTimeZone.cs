@@ -44,14 +44,14 @@ public static class ChurchTimeZone
     }
 
     /// <summary>
-    /// Stored completion instants whose church calendar date falls in
-    /// <paramref name="monthStart"/> through <paramref name="monthEnd"/>, inclusive.
-    /// Both ends are <see cref="DateTimeKind.Unspecified"/>, matching persisted
-    /// <c>CompletedDate</c> values, which <see cref="ChurchTimeZone.ChurchDate"/> reads as UTC.
+    /// Answers the stored completion instants whose church calendar date falls in
+    /// <paramref name="monthStart"/> through <paramref name="monthEnd"/>, as a
+    /// <see cref="ChurchInstantRange"/>. Both bounds are <see cref="DateTimeKind.Unspecified"/>, matching
+    /// persisted <c>CompletedDate</c> values, which <see cref="ChurchTimeZone.ChurchDate"/> reads as UTC.
     /// </summary>
-    public static (DateTime StartInclusive, DateTime EndExclusive) CompletionWindow(DateOnly monthStart, DateOnly monthEnd)
+    public static ChurchInstantRange CompletionWindow(DateOnly monthStart, DateOnly monthEnd)
     {
-        return (StoredInstant(monthStart), StoredInstant(monthEnd.AddDays(1)));
+        return new ChurchInstantRange(StoredInstant(monthStart), StoredInstant(monthEnd.AddDays(1)));
     }
 
     private static DateTime StoredInstant(DateOnly churchDate)

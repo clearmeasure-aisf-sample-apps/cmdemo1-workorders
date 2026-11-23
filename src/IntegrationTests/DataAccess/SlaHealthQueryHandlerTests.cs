@@ -152,7 +152,7 @@ public class SlaHealthQueryHandlerTests
         var (clock, creator) = GivenSlaCreator();
         var today = ChurchTimeZone.Today(clock);
         var window = GivenCompletionWindow(today);
-        var orders = SlaHealthSteps.BuildWindowOrders(creator, today, window.Start, window.Completed);
+        var orders = SlaHealthSteps.BuildWindowOrders(creator, today, window);
 
         await using var context = GivenCountedContext();
         await GivenPersistedAsync(context, creator, orders);
@@ -189,26 +189,24 @@ public class SlaHealthQueryHandlerTests
         return new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
     }
 
-    [TestCase("2026-01-15", "2025-12-01 06:00", "2026-02-01 06:00", "2025-12-01 07:00")]
-    [TestCase("2026-03-15", "2026-02-01 06:00", "2026-04-01 05:00", "2026-02-01 07:00")]
-    [TestCase("2026-11-09", "2026-10-01 05:00", "2026-12-01 06:00", "2026-10-01 06:00")]
-    [TestCase("2028-02-29", "2028-01-01 06:00", "2028-03-01 06:00", "2028-01-01 07:00")]
+    [TestCase("2026-01-15", "2025-12-01 06:00", "2026-02-01 06:00")]
+    [TestCase("2026-03-15", "2026-02-01 06:00", "2026-04-01 05:00")]
+    [TestCase("2026-11-09", "2026-10-01 05:00", "2026-12-01 06:00")]
+    [TestCase("2028-02-29", "2028-01-01 06:00", "2028-03-01 06:00")]
     public void ShouldSpanLastMonthThroughCurrentMonth_WhenTheCompletionWindowIsBuilt(
-        string today, string start, string end, string completed)
+        string today, string start, string end)
     {
         var window = GivenCompletionWindow(DateOnly.Parse(today, CultureInfo.InvariantCulture));
 
         window.Start.ShouldBe(DateTime.Parse(start, CultureInfo.InvariantCulture));
-        window.End.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
-        window.Completed.ShouldBe(DateTime.Parse(completed, CultureInfo.InvariantCulture));
+        window.EndExcluded.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
     }
 
-    private static (DateTime Start, DateTime End, DateTime Completed) GivenCompletionWindow(DateOnly today)
+    private static ChurchInstantRange GivenCompletionWindow(DateOnly today)
     {
         var currentMonth = ChurchMonth.Containing(today);
         var lastMonth = currentMonth.Previous();
-        var (windowStart, windowEnd) = ChurchTimeZone.CompletionWindow(lastMonth.FirstDay, currentMonth.LastDay);
-        return (windowStart, windowEnd, windowStart.AddHours(1));
+        return ChurchTimeZone.CompletionWindow(lastMonth.FirstDay, currentMonth.LastDay);
     }
 
     /// <summary>Asserts the two church months are answered by exactly one reader command.</summary>
