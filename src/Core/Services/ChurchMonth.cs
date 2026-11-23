@@ -14,4 +14,32 @@ public readonly record struct ChurchMonth(DateOnly FirstDay, DateOnly LastDay)
     public ChurchMonth Previous() => Containing(FirstDay.AddDays(-1));
 
     public bool Contains(DateOnly day) => day >= FirstDay && day <= LastDay;
+
+    /// <summary>
+    /// Stored completion instants whose church calendar date falls in
+    /// <paramref name="since"/> through <paramref name="through"/>, inclusive.
+    /// Both ends are <see cref="DateTimeKind.Unspecified"/>, matching persisted
+    /// <c>CompletedDate</c> values, which <see cref="ChurchTimeZone.ChurchDate"/> reads as UTC.
+    /// </summary>
+    public static (DateTime StartInclusive, DateTime EndExclusive) CompletionWindow(ChurchMonth since, ChurchMonth through)
+    {
+        return (StoredInstant(since.FirstDay), StoredInstant(through.LastDay.AddDays(1)));
+    }
+
+    /// <summary>
+    /// Stored completion instants whose church calendar date falls in
+    /// <paramref name="sinceMonth"/> through this month, inclusive.
+    /// Both ends are <see cref="DateTimeKind.Unspecified"/>.
+    /// </summary>
+    public (DateTime StartInclusive, DateTime EndExclusive) CompletionWindow(ChurchMonth sinceMonth)
+    {
+        return (StoredInstant(sinceMonth.FirstDay), StoredInstant(LastDay.AddDays(1)));
+    }
+
+    public static DateTime StoredInstant(DateOnly churchDate)
+    {
+        var localMidnight = churchDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        var utc = TimeZoneInfo.ConvertTimeToUtc(localMidnight, ChurchTimeZone.Chicago);
+        return DateTime.SpecifyKind(utc, DateTimeKind.Unspecified);
+    }
 }
