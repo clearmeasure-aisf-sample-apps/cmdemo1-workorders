@@ -277,9 +277,7 @@ public class ChurchTimeZoneTests
     {
         // 2026-03-08 05:30:00 UTC is 2026-03-07 23:30:00 CST (UTC-6): DST starts at 08:00 UTC.
         // Reading the offset as UTC-5 would wrongly answer March 8.
-        var storedUtc = new DateTime(2026, 3, 8, 5, 30, 0);
-
-        var date = ChurchTimeZone.ChurchDate(storedUtc);
+        var date = ChurchTimeZone.ChurchDate(new DateTime(2026, 3, 8, 5, 30, 0));
 
         date.ShouldBe(new DateOnly(2026, 3, 7));
     }
@@ -289,9 +287,7 @@ public class ChurchTimeZoneTests
     {
         // 2026-11-01 05:30:00 UTC is 2026-11-01 00:30:00 CDT (UTC-5): DST ends at 07:00 UTC.
         // Reading the offset as UTC-6 would wrongly answer October 31.
-        var storedUtc = new DateTime(2026, 11, 1, 5, 30, 0);
-
-        var date = ChurchTimeZone.ChurchDate(storedUtc);
+        var date = ChurchTimeZone.ChurchDate(new DateTime(2026, 11, 1, 5, 30, 0));
 
         date.ShouldBe(new DateOnly(2026, 11, 1));
     }
