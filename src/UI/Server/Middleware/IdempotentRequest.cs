@@ -11,8 +11,7 @@ internal sealed record IdempotentRequest(string Key, string CompositeKey)
 {
     public static bool ShouldInspect(HttpRequest request) =>
         (HttpMethods.IsPost(request.Method) || HttpMethods.IsPut(request.Method))
-        && (request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
-            || ApiRateLimitingExtensions.ShouldApplyToPath(request.Path));
+        && ApiRoutePolicy.IsRateLimitedPath(request.Path);
 
     public static string? ReadKey(HttpRequest request)
     {

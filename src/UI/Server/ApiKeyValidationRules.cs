@@ -9,12 +9,6 @@ internal static class ApiKeyValidationRules
             return false;
         }
 
-        return !string.IsNullOrEmpty(pathValue)
-               && IsApiPath(pathValue)
-               && !ApiPublicPathRules.IsPublicApiPath(pathValue);
+        return ApiRoutePolicy.IsApiPath(pathValue) && !ApiPublicPathRules.IsPublicApiPath(pathValue);
     }
-
-    private static bool IsApiPath(string pathValue) =>
-        pathValue.StartsWith("/api/", StringComparison.OrdinalIgnoreCase)
-        || pathValue.Equals("/api", StringComparison.OrdinalIgnoreCase);
 }

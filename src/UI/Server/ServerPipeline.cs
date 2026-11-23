@@ -76,7 +76,7 @@ public static class ServerPipeline
     private static void UseApiGuards(WebApplication app)
     {
         app.UseWhen(
-            context => ApiRateLimitingExtensions.ShouldApplyToPath(context.Request.Path),
+            context => ApiRoutePolicy.IsRateLimitedPath(context.Request.Path),
             branch => branch.UseRequestTimeouts());
         app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
         app.UseMiddleware<DiagnosticEndpointAccessMiddleware>();

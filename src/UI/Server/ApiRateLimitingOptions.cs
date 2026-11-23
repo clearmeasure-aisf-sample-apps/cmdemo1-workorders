@@ -1,7 +1,10 @@
+using ClearMeasure.Bootcamp.UI.Shared;
+
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// Configuration for sliding-window rate limiting on <c>/api/*</c> routes (including Blazor single-API endpoints).
+/// Configuration for sliding-window rate limiting; which routes it limits is decided by <see cref="ApiRoutePolicy"/>
+/// (the <c>/api</c> tree plus the Blazor single-API routes).
 /// </summary>
 public sealed class ApiRateLimitingOptions
 {
@@ -36,5 +39,5 @@ public sealed class ApiRateLimitingOptions
     /// Optional header for per-client key; when absent, user name or connection remote IP is used.
     /// </summary>
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- required for IOptions<T> configuration binding
-    public string ApiKeyHeaderName { get; set; } = "X-API-Key";
+    public string ApiKeyHeaderName { get; set; } = ApiKeyConstants.HeaderName;
 }
