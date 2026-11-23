@@ -28,6 +28,7 @@ public static class ChurchTimeZone
     /// </summary>
     public static DateOnly ComingSaturday(TimeProvider timeProvider)
     {
+        ArgumentNullException.ThrowIfNull(timeProvider);
         var today = Today(timeProvider);
         var daysUntilSaturday = ((int)DayOfWeek.Saturday - (int)today.DayOfWeek + 7) % 7;
         return today.AddDays(daysUntilSaturday);
