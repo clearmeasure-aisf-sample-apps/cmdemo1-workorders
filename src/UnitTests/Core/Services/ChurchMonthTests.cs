@@ -88,39 +88,20 @@ public class ChurchMonthTests
     }
 
     [Test]
-    public void ShouldIncludeLastSecondOfEndDate_WhenWindowEnds()
+    public void ShouldSpanMultipleMonths_WhenSinceMonthIsEarlier()
     {
         var october = ChurchMonth.Containing(new DateOnly(2026, 10, 15));
+        var december = ChurchMonth.Containing(new DateOnly(2026, 12, 15));
 
-        var (start, end) = october.CompletionWindow(october);
+        var (start, end) = december.CompletionWindow(october);
 
-        var lastLocalSecond = new DateTime(2026, 11, 1, 4, 59, 59);
-        (lastLocalSecond >= start && lastLocalSecond < end).ShouldBeTrue();
+        start.ShouldBe(new DateTime(2026, 10, 1, 5, 0, 0));
+        end.ShouldBe(new DateTime(2027, 1, 1, 6, 0, 0));
+        (end - start).ShouldBe(TimeSpan.FromDays(92) + TimeSpan.FromHours(1));
     }
 
     [Test]
-    public void ShouldExcludeFirstSecondOfNextDate_WhenWindowEnds()
-    {
-        var october = ChurchMonth.Containing(new DateOnly(2026, 10, 15));
-
-        var (start, end) = october.CompletionWindow(october);
-
-        var oneSecondLater = new DateTime(2026, 11, 1, 5, 0, 0);
-        (oneSecondLater >= start && oneSecondLater < end).ShouldBeFalse();
-    }
-
-    [Test]
-    public void ShouldSpanFullMonth_WhenMonthIsUsedAsBothStartAndEnd()
-    {
-        var february = ChurchMonth.Containing(new DateOnly(2026, 2, 14));
-        var (start, end) = february.CompletionWindow(february);
-        start.ShouldBe(new DateTime(2026, 2, 1, 6, 0, 0));
-        end.ShouldBe(new DateTime(2026, 3, 1, 6, 0, 0));
-        (end - start).ShouldBe(TimeSpan.FromDays(28));
-    }
-
-    [Test]
-    public void ShouldMapEndMinusOneTick_ToLastDayOfMonth()
+    public void ShouldMapEndMinusOneTickToLastDayOfMonth_WhenCompletionWindowIsBuilt()
     {
         var february = ChurchMonth.Containing(new DateOnly(2026, 2, 14));
         var (_, end) = february.CompletionWindow(february);
@@ -128,7 +109,7 @@ public class ChurchMonthTests
     }
 
     [Test]
-    public void ShouldBoundCompletionWindow_ToTheChurchMonth()
+    public void ShouldBoundCompletionWindowToChurchMonth_WhenCompletionWindowIsBuilt()
     {
         var october = ChurchMonth.Containing(new DateOnly(2026, 10, 15));
         var (start, end) = october.CompletionWindow(october);
@@ -139,6 +120,12 @@ public class ChurchMonthTests
         ChurchTimeZone.ChurchDate(end).ShouldBe(new DateOnly(2026, 11, 1));
         start.Kind.ShouldBe(DateTimeKind.Unspecified);
         end.Kind.ShouldBe(DateTimeKind.Unspecified);
+
+        var lastLocalSecond = new DateTime(2026, 11, 1, 4, 59, 59);
+        (lastLocalSecond >= start && lastLocalSecond < end).ShouldBeTrue();
+
+        var oneSecondLater = new DateTime(2026, 11, 1, 5, 0, 0);
+        (oneSecondLater >= start && oneSecondLater < end).ShouldBeFalse();
 
         var lateEveningUtc = new DateTime(2026, 11, 1, 3, 0, 0);
         (lateEveningUtc >= start && lateEveningUtc < end).ShouldBeTrue();

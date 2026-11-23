@@ -18,10 +18,18 @@ public readonly record struct ChurchMonth(DateOnly FirstDay, DateOnly LastDay)
     /// <summary>
     /// Stored completion instants whose church calendar date falls in
     /// <paramref name="sinceMonth"/> through this month, inclusive.
-    /// Both ends are <see cref="DateTimeKind.Unspecified"/>.
+    /// Used to query work orders completed across one or more church months
+    /// for SLA health reporting. Both ends are <see cref="DateTimeKind.Unspecified"/>.
     /// </summary>
     public (DateTime StartInclusive, DateTime EndExclusive) CompletionWindow(ChurchMonth sinceMonth)
     {
+        if (sinceMonth.FirstDay > LastDay)
+        {
+            throw new ArgumentException(
+                "The since month must be the same as or earlier than the receiver month.",
+                nameof(sinceMonth));
+        }
+
         return (StoredInstant(sinceMonth.FirstDay), StoredInstant(LastDay.AddDays(1)));
     }
 
