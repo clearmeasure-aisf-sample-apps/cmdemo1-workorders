@@ -18,7 +18,7 @@ public static class ApiRateLimitingExtensions
         services.Configure<ApiRateLimitingOptions>(configuration.GetSection(ApiRateLimitingOptions.SectionName));
         // Qualified with the type name on purpose: extension-method call sites never name this class, and the
         // TestOnlyReferenceScan gate reads a type named only by tests as production code kept for tests only.
-        services.AddSingleton<PartitionedRateLimiter<HttpContext>>(ApiRateLimitingExtensions.CreatePartitionedLimiter);
+        services.AddSingleton(ApiRateLimitingExtensions.CreatePartitionedLimiter);
         return services;
     }
 

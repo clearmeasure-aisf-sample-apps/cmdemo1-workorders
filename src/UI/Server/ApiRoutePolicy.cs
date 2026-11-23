@@ -47,7 +47,7 @@ internal static class ApiRoutePolicy
     /// True when the path is one of the Blazor single-API routes, compared case-insensitively.
     /// </summary>
     /// <param name="path">The request path.</param>
-    internal static bool IsBlazorSingleApiPath(PathString path) =>
+    private static bool IsBlazorSingleApiPath(PathString path) =>
         path.StartsWithSegments(BlazorSingleApiPath, StringComparison.OrdinalIgnoreCase)
         || path.StartsWithSegments(BlazorSingleApiPathV1, StringComparison.OrdinalIgnoreCase);
 
