@@ -23,6 +23,11 @@ public class ApiKeyValidationRulesTests
     [TestCase("/api/work-orders/bulk-import", true)]
     [TestCase("/api/status/environment", true)]
     [TestCase("/api/v1.0/status/environment", true)]
+    [TestCase("/api", true)]
+    [TestCase("/api/", true)]
+    [TestCase("/API/v1.0/diagnostics", true)]
+    [TestCase("/apifoo", false)]
+    [TestCase("/", false)]
     public void RequiresValidation_ReturnsExpected_When_PathAndOptions(string path, bool expectedValidation)
     {
         var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
@@ -41,6 +46,13 @@ public class ApiKeyValidationRulesTests
     {
         var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "" };
         ApiKeyValidationRules.RequiresValidation("/api/health", options).ShouldBeFalse();
+    }
+
+    [Test]
+    public void RequiresValidation_ReturnsFalse_When_PathEmpty()
+    {
+        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
+        ApiKeyValidationRules.RequiresValidation("", options).ShouldBeFalse();
     }
 
     [Test]

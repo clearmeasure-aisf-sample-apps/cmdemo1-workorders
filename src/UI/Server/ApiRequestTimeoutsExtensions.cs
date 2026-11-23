@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// Registers ASP.NET Core request timeout policies for API routes matched by <see cref="ApiRateLimitingExtensions.ShouldApplyToPath"/>.
+/// Registers ASP.NET Core request timeout policies for API routes matched by <see cref="ApiRoutePolicy.IsRateLimitedPath"/>.
 /// </summary>
 public static class ApiRequestTimeoutsExtensions
 {

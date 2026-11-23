@@ -39,5 +39,5 @@ public sealed class RateLimitingMiddleware(
     private static bool ShouldLimit(HttpContext context, ApiRateLimitingOptions options) =>
         RateLimitingMiddlewareRules.ShouldApply(context)
         && options.Enabled
-        && ApiRateLimitingExtensions.ShouldApplyToPath(context.Request.Path);
+        && ApiRoutePolicy.IsRateLimitedPath(context.Request.Path);
 }
