@@ -9,7 +9,8 @@ public class ChurchTimeZoneCompletionWindowTests
     [Test]
     public void Should_ReturnUnspecifiedChurchMidnightBounds_When_NormalMonth()
     {
-        var window = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31));
+        var july = new ChurchMonth(new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31));
+        var window = ChurchTimeZone.CompletionWindow(july, july);
 
         window.Start.ShouldBe(new DateTime(2026, 7, 1, 5, 0, 0));
         window.EndExcluded.ShouldBe(new DateTime(2026, 8, 1, 5, 0, 0));
@@ -21,7 +22,8 @@ public class ChurchTimeZoneCompletionWindowTests
     [Test]
     public void Should_ShortenByOneHour_When_MarchSpansSpringForward()
     {
-        var window = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 3, 1), new DateOnly(2026, 3, 31));
+        var march = new ChurchMonth(new DateOnly(2026, 3, 1), new DateOnly(2026, 3, 31));
+        var window = ChurchTimeZone.CompletionWindow(march, march);
 
         window.Start.ShouldBe(new DateTime(2026, 3, 1, 6, 0, 0));
         window.EndExcluded.ShouldBe(new DateTime(2026, 4, 1, 5, 0, 0));
@@ -31,7 +33,8 @@ public class ChurchTimeZoneCompletionWindowTests
     [Test]
     public void Should_IncludeLastLocalSecondAndExcludeNextSecond_When_WindowEnd()
     {
-        var window = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31));
+        var october = new ChurchMonth(new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31));
+        var window = ChurchTimeZone.CompletionWindow(october, october);
 
         // Oct 31 23:59:59 CDT is the last local second of the window; Nov 1 05:00:00 UTC is the exclusive end.
         var lastLocalSecond = new DateTime(2026, 11, 1, 4, 59, 59);
@@ -44,7 +47,8 @@ public class ChurchTimeZoneCompletionWindowTests
     [Test]
     public void Should_LengthenByOneHour_When_NovemberSpansFallBack()
     {
-        var window = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 30));
+        var november = new ChurchMonth(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 30));
+        var window = ChurchTimeZone.CompletionWindow(november, november);
 
         window.Start.ShouldBe(new DateTime(2026, 11, 1, 5, 0, 0));
         window.EndExcluded.ShouldBe(new DateTime(2026, 12, 1, 6, 0, 0));
@@ -54,7 +58,8 @@ public class ChurchTimeZoneCompletionWindowTests
     [Test]
     public void Should_Return24HourWindow_When_MonthStartEqualsMonthEnd()
     {
-        var window = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
+        var oneDay = new ChurchMonth(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
+        var window = ChurchTimeZone.CompletionWindow(oneDay, oneDay);
 
         window.Start.ShouldBe(new DateTime(2026, 2, 14, 6, 0, 0));
         window.EndExcluded.ShouldBe(new DateTime(2026, 2, 15, 6, 0, 0));
@@ -64,7 +69,8 @@ public class ChurchTimeZoneCompletionWindowTests
     [Test]
     public void Should_MapEndMinusOneTick_ToMonthEnd_When_SingleDayWindow()
     {
-        var window = ChurchTimeZone.CompletionWindow(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
+        var oneDay = new ChurchMonth(new DateOnly(2026, 2, 14), new DateOnly(2026, 2, 14));
+        var window = ChurchTimeZone.CompletionWindow(oneDay, oneDay);
 
         ChurchTimeZone.ChurchDate(window.EndExcluded.AddTicks(-1)).ShouldBe(new DateOnly(2026, 2, 14));
     }
@@ -90,7 +96,8 @@ public class ChurchTimeZoneCompletionWindowTests
     {
         var monthStart = new DateOnly(2026, 10, 1);
         var monthEnd = new DateOnly(2026, 10, 31);
-        var window = ChurchTimeZone.CompletionWindow(monthStart, monthEnd);
+        var october = new ChurchMonth(monthStart, monthEnd);
+        var window = ChurchTimeZone.CompletionWindow(october, october);
 
         ChurchTimeZone.ChurchDate(window.Start).ShouldBe(monthStart);
         ChurchTimeZone.ChurchDate(window.Start.AddTicks(-1)).ShouldBe(monthStart.AddDays(-1));
