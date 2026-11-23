@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Server;
+using ClearMeasure.Bootcamp.UI.Shared;
 using Microsoft.AspNetCore.Http;
 using Shouldly;
 
@@ -11,7 +12,7 @@ public class ApiKeyAuthenticationMiddlewareTests
     public void IsAuthorized_ReturnsTrue_WhenKeyMatches()
     {
         var request = new DefaultHttpContext().Request;
-        request.Headers["X-API-Key"] = "secret";
+        request.Headers[ApiKeyConstants.HeaderName] = "secret";
         ApiKeyAuthenticationMiddleware.IsAuthorized(request, "secret").ShouldBeTrue();
     }
 
