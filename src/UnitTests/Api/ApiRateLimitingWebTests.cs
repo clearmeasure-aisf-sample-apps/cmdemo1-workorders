@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
+using ClearMeasure.Bootcamp.UI.Shared;
 using Microsoft.AspNetCore.Hosting;
 using Shouldly;
 
@@ -17,7 +18,7 @@ public class ApiRateLimitingWebTests
             ["ApiRateLimiting:WindowSeconds"] = windowSeconds.ToString(NumberFormatInfo.InvariantInfo),
             ["ApiRateLimiting:SegmentsPerWindow"] = "2",
             ["ApiRateLimiting:QueueLimit"] = "0",
-            ["ApiRateLimiting:ApiKeyHeaderName"] = "X-API-Key"
+            ["ApiRateLimiting:ApiKeyHeaderName"] = ApiKeyConstants.HeaderName
         };
 
     [Test]
@@ -95,9 +96,9 @@ public class ApiRateLimitingWebTests
     {
         await using var factory = new TunableApiRateLimitWebApplicationFactory(StrictLimitSettings(1));
         using var a = factory.CreateClient();
-        a.DefaultRequestHeaders.Add("X-API-Key", "client-a");
+        a.DefaultRequestHeaders.Add(ApiKeyConstants.HeaderName, "client-a");
         using var b = factory.CreateClient();
-        b.DefaultRequestHeaders.Add("X-API-Key", "client-b");
+        b.DefaultRequestHeaders.Add(ApiKeyConstants.HeaderName, "client-b");
         (await a.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await b.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
     }

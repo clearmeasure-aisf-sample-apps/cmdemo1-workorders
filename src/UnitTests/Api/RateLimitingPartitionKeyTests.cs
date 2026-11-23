@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Server;
+using ClearMeasure.Bootcamp.UI.Shared;
 using Microsoft.AspNetCore.Http;
 using Shouldly;
 
@@ -11,8 +12,8 @@ public class RateLimitingPartitionKeyTests
     public void Should_UseApiKeyPartition_When_HeaderPresent()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["X-API-Key"] = "secret-1";
-        ApiRateLimitingExtensions.ResolvePartitionKey(ctx, "X-API-Key").ShouldBe("key:secret-1");
+        ctx.Request.Headers[ApiKeyConstants.HeaderName] = "secret-1";
+        ApiRateLimitingExtensions.ResolvePartitionKey(ctx, ApiKeyConstants.HeaderName).ShouldBe("key:secret-1");
     }
 
     [Test]
@@ -22,13 +23,13 @@ public class RateLimitingPartitionKeyTests
         {
             Connection = { RemoteIpAddress = System.Net.IPAddress.Parse("10.0.0.5") }
         };
-        ApiRateLimitingExtensions.ResolvePartitionKey(ctx, "X-API-Key").ShouldBe("ip:10.0.0.5");
+        ApiRateLimitingExtensions.ResolvePartitionKey(ctx, ApiKeyConstants.HeaderName).ShouldBe("ip:10.0.0.5");
     }
 
     [Test]
     public void Should_UseAnonymousPartition_When_NoIpAndNoKey()
     {
         var ctx = new DefaultHttpContext();
-        ApiRateLimitingExtensions.ResolvePartitionKey(ctx, "X-API-Key").ShouldBe("anonymous");
+        ApiRateLimitingExtensions.ResolvePartitionKey(ctx, ApiKeyConstants.HeaderName).ShouldBe("anonymous");
     }
 }

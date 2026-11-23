@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Server;
+using ClearMeasure.Bootcamp.UI.Shared;
 using Microsoft.AspNetCore.Http;
 using Shouldly;
 
@@ -50,7 +51,7 @@ public class ApiKeyAuthenticationPipelineTests
     [Test]
     public async Task Should_Return401_When_KeyIsWrong()
     {
-        var context = new DefaultHttpContext { Request = { Path = "/api/work-orders/bulk-import", Headers = { ["X-Api-Key"] = "wrong" } } };
+        var context = new DefaultHttpContext { Request = { Path = "/api/work-orders/bulk-import", Headers = { [ApiKeyConstants.HeaderName] = "wrong" } } };
         var nextCalls = 0;
 
         await ApiKeyAuthenticationPipeline.InvokeAsync(
@@ -70,7 +71,7 @@ public class ApiKeyAuthenticationPipelineTests
     [Test]
     public async Task Should_Return200_When_KeyMatches()
     {
-        var context = new DefaultHttpContext { Request = { Path = "/api/work-orders/bulk-import", Headers = { ["X-Api-Key"] = "secret" } } };
+        var context = new DefaultHttpContext { Request = { Path = "/api/work-orders/bulk-import", Headers = { [ApiKeyConstants.HeaderName] = "secret" } } };
         var nextCalls = 0;
 
         await ApiKeyAuthenticationPipeline.InvokeAsync(
