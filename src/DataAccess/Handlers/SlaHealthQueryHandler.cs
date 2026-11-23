@@ -42,7 +42,7 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         ChurchMonth throughMonth,
         CancellationToken cancellationToken)
     {
-        var (windowStart, windowEnd) = ChurchTimeZone.CompletionWindow(sinceMonth.FirstDay, throughMonth.LastDay);
+        var (windowStart, windowEnd) = throughMonth.CompletionWindow(sinceMonth);
         var rows = await context.Set<WorkOrder>()
             .AsNoTracking()
             .IgnoreAutoIncludes()
