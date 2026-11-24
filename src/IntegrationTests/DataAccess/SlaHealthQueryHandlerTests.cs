@@ -206,7 +206,7 @@ public class SlaHealthQueryHandlerTests
     {
         var currentMonth = ChurchMonth.Containing(today);
         var lastMonth = currentMonth.Previous();
-        return ChurchTimeZone.CompletionWindow(lastMonth, currentMonth);
+        return currentMonth.CompletionWindow(lastMonth);
     }
 
     /// <summary>Asserts the two church months are answered by exactly one reader command.</summary>

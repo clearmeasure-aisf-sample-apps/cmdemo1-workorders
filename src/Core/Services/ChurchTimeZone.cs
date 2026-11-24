@@ -43,26 +43,6 @@ public static class ChurchTimeZone
         return DateOnly.FromDateTime(local);
     }
 
-    /// <summary>
-    /// Answers the stored completion instants whose church calendar date falls in
-    /// <paramref name="sinceMonth"/> through <paramref name="throughMonth"/>, as a
-    /// <see cref="ChurchInstantRange"/>. Both bounds are <see cref="DateTimeKind.Unspecified"/>, matching
-    /// persisted <c>CompletedDate</c> values, which <see cref="ChurchTimeZone.ChurchDate"/> reads as UTC.
-    /// </summary>
-    public static ChurchInstantRange CompletionWindow(ChurchMonth sinceMonth, ChurchMonth throughMonth)
-    {
-        return new ChurchInstantRange(
-            StoredInstant(sinceMonth.FirstDay),
-            StoredInstant(throughMonth.LastDay.AddDays(1)));
-    }
-
-    private static DateTime StoredInstant(DateOnly churchDate)
-    {
-        var localMidnight = churchDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
-        var utc = TimeZoneInfo.ConvertTimeToUtc(localMidnight, Chicago);
-        return DateTime.SpecifyKind(utc, DateTimeKind.Unspecified);
-    }
-
     private static TimeZoneInfo ResolveChicago() =>
         FindTimeZone(IanaId)
         ?? FindTimeZone(WindowsId)
