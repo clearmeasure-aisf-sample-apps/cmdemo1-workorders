@@ -153,7 +153,7 @@ public class SlaHealthQueryHandlerTests
         var today = ChurchTimeZone.Today(clock);
         var window = GivenCompletionWindow(today);
         var inWindow = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
-            .WithNumber(TestData.Number()).DueOn(today).CompletedAt(window.Completed).Build();
+            .WithNumber(TestData.Number()).DueOn(today).CompletedAt(PointInside(window)).Build();
         var outsideWindow = WorkOrderBuilder.CompletedJustOutsideWindow(creator, window.Start, count: 12);
 
         await using var context = GivenCountedContext();
@@ -191,26 +191,36 @@ public class SlaHealthQueryHandlerTests
         return new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
     }
 
-    [TestCase("2026-01-15", "2025-12-01 06:00", "2026-02-01 06:00", "2025-12-01 07:00")]
-    [TestCase("2026-03-15", "2026-02-01 06:00", "2026-04-01 05:00", "2026-02-01 07:00")]
-    [TestCase("2026-11-09", "2026-10-01 05:00", "2026-12-01 06:00", "2026-10-01 06:00")]
-    [TestCase("2028-02-29", "2028-01-01 06:00", "2028-03-01 06:00", "2028-01-01 07:00")]
+    [TestCase("2026-01-15", "2025-12-01 06:00", "2026-02-01 06:00")]
+    [TestCase("2026-03-15", "2026-02-01 06:00", "2026-04-01 05:00")]
+    [TestCase("2026-11-09", "2026-10-01 05:00", "2026-12-01 06:00")]
+    [TestCase("2028-02-29", "2028-01-01 06:00", "2028-03-01 06:00")]
     public void ShouldSpanLastMonthThroughCurrentMonth_WhenTheCompletionWindowIsBuilt(
-        string today, string start, string end, string completed)
+        string today, string start, string end)
     {
         var window = GivenCompletionWindow(DateOnly.Parse(today, CultureInfo.InvariantCulture));
 
         window.Start.ShouldBe(DateTime.Parse(start, CultureInfo.InvariantCulture));
-        window.End.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
-        window.Completed.ShouldBe(DateTime.Parse(completed, CultureInfo.InvariantCulture));
+        window.EndExcluded.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
+        window.Contains(PointInside(window)).ShouldBeTrue();
     }
 
-    private static (DateTime Start, DateTime End, DateTime Completed) GivenCompletionWindow(DateOnly today)
+    private static ChurchInstantRange GivenCompletionWindow(DateOnly today)
     {
         var currentMonth = ChurchMonth.Containing(today);
         var lastMonth = currentMonth.Previous();
-        var (windowStart, windowEnd) = currentMonth.CompletionWindow(lastMonth);
-        return (windowStart, windowEnd, windowStart.AddHours(1));
+        return currentMonth.CompletionWindow(lastMonth);
+    }
+
+    /// <summary>
+    /// An instant guaranteed to be inside <paramref name="window"/>: a quarter of the way through it,
+    /// <c>window.Start + (window.EndExcluded - window.Start) / 4</c>, truncated to whole ticks (so it is
+    /// <paramref name="window"/>'s <c>Start</c> for a window narrower than four ticks). Test-only: names a completion
+    /// that must fall inside the window without hard-coding an offset such as one hour after its start.
+    /// </summary>
+    private static DateTime PointInside(ChurchInstantRange window)
+    {
+        return window.Start + TimeSpan.FromTicks((window.EndExcluded - window.Start).Ticks / 4);
     }
 
     /// <summary>Asserts the two church months are answered by exactly one reader command.</summary>
