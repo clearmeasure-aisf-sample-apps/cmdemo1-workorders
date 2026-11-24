@@ -11,7 +11,7 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests;
 public static class SelectOptionWait
 {
     /// <summary>Time allowed for the app to boot and load the option list under a parallel run.</summary>
-    public const float TimeoutMs = 90_000;
+    private const float TimeoutMs = 90_000;
 
     /// <summary>
     /// Waits for the option with <paramref name="value"/> in <paramref name="select"/>, whose test id is
