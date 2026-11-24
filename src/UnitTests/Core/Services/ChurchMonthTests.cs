@@ -54,13 +54,13 @@ public class ChurchMonthTests
     {
         var july = ChurchMonth.Containing(new DateOnly(2026, 7, 15));
 
-        var (start, end) = july.CompletionWindow(july);
+        var window = july.CompletionWindow(july);
 
-        start.ShouldBe(new DateTime(2026, 7, 1, 5, 0, 0));
-        end.ShouldBe(new DateTime(2026, 8, 1, 5, 0, 0));
-        start.Kind.ShouldBe(DateTimeKind.Unspecified);
-        end.Kind.ShouldBe(DateTimeKind.Unspecified);
-        (end - start).ShouldBe(TimeSpan.FromDays(31));
+        window.Start.ShouldBe(new DateTime(2026, 7, 1, 5, 0, 0));
+        window.EndExcluded.ShouldBe(new DateTime(2026, 8, 1, 5, 0, 0));
+        window.Start.Kind.ShouldBe(DateTimeKind.Unspecified);
+        window.EndExcluded.Kind.ShouldBe(DateTimeKind.Unspecified);
+        (window.EndExcluded - window.Start).ShouldBe(TimeSpan.FromDays(31));
     }
 
     [Test]
@@ -68,11 +68,11 @@ public class ChurchMonthTests
     {
         var march = ChurchMonth.Containing(new DateOnly(2026, 3, 15));
 
-        var (start, end) = march.CompletionWindow(march);
+        var window = march.CompletionWindow(march);
 
-        start.ShouldBe(new DateTime(2026, 3, 1, 6, 0, 0));
-        end.ShouldBe(new DateTime(2026, 4, 1, 5, 0, 0));
-        (end - start).ShouldBe(TimeSpan.FromDays(31) - TimeSpan.FromHours(1));
+        window.Start.ShouldBe(new DateTime(2026, 3, 1, 6, 0, 0));
+        window.EndExcluded.ShouldBe(new DateTime(2026, 4, 1, 5, 0, 0));
+        (window.EndExcluded - window.Start).ShouldBe(TimeSpan.FromDays(31) - TimeSpan.FromHours(1));
     }
 
     [Test]
@@ -80,11 +80,11 @@ public class ChurchMonthTests
     {
         var november = ChurchMonth.Containing(new DateOnly(2026, 11, 15));
 
-        var (start, end) = november.CompletionWindow(november);
+        var window = november.CompletionWindow(november);
 
-        start.ShouldBe(new DateTime(2026, 11, 1, 5, 0, 0));
-        end.ShouldBe(new DateTime(2026, 12, 1, 6, 0, 0));
-        (end - start).ShouldBe(TimeSpan.FromDays(30) + TimeSpan.FromHours(1));
+        window.Start.ShouldBe(new DateTime(2026, 11, 1, 5, 0, 0));
+        window.EndExcluded.ShouldBe(new DateTime(2026, 12, 1, 6, 0, 0));
+        (window.EndExcluded - window.Start).ShouldBe(TimeSpan.FromDays(30) + TimeSpan.FromHours(1));
     }
 
     [Test]
@@ -93,41 +93,41 @@ public class ChurchMonthTests
         var october = ChurchMonth.Containing(new DateOnly(2026, 10, 15));
         var december = ChurchMonth.Containing(new DateOnly(2026, 12, 15));
 
-        var (start, end) = december.CompletionWindow(october);
+        var window = december.CompletionWindow(october);
 
-        start.ShouldBe(new DateTime(2026, 10, 1, 5, 0, 0));
-        end.ShouldBe(new DateTime(2027, 1, 1, 6, 0, 0));
-        (end - start).ShouldBe(TimeSpan.FromDays(92) + TimeSpan.FromHours(1));
+        window.Start.ShouldBe(new DateTime(2026, 10, 1, 5, 0, 0));
+        window.EndExcluded.ShouldBe(new DateTime(2027, 1, 1, 6, 0, 0));
+        (window.EndExcluded - window.Start).ShouldBe(TimeSpan.FromDays(92) + TimeSpan.FromHours(1));
     }
 
     [Test]
     public void ShouldMapEndMinusOneTickToLastDayOfMonth_WhenCompletionWindowIsBuilt()
     {
         var february = ChurchMonth.Containing(new DateOnly(2026, 2, 14));
-        var (_, end) = february.CompletionWindow(february);
-        ChurchTimeZone.ChurchDate(end.AddTicks(-1)).ShouldBe(new DateOnly(2026, 2, 28));
+        var window = february.CompletionWindow(february);
+        ChurchTimeZone.ChurchDate(window.EndExcluded.AddTicks(-1)).ShouldBe(new DateOnly(2026, 2, 28));
     }
 
     [Test]
     public void ShouldBoundCompletionWindowToChurchMonth_WhenCompletionWindowIsBuilt()
     {
         var october = ChurchMonth.Containing(new DateOnly(2026, 10, 15));
-        var (start, end) = october.CompletionWindow(october);
+        var window = october.CompletionWindow(october);
 
-        ChurchTimeZone.ChurchDate(start).ShouldBe(new DateOnly(2026, 10, 1));
-        ChurchTimeZone.ChurchDate(start.AddTicks(-1)).ShouldBe(new DateOnly(2026, 9, 30));
-        ChurchTimeZone.ChurchDate(end.AddTicks(-1)).ShouldBe(new DateOnly(2026, 10, 31));
-        ChurchTimeZone.ChurchDate(end).ShouldBe(new DateOnly(2026, 11, 1));
-        start.Kind.ShouldBe(DateTimeKind.Unspecified);
-        end.Kind.ShouldBe(DateTimeKind.Unspecified);
+        ChurchTimeZone.ChurchDate(window.Start).ShouldBe(new DateOnly(2026, 10, 1));
+        ChurchTimeZone.ChurchDate(window.Start.AddTicks(-1)).ShouldBe(new DateOnly(2026, 9, 30));
+        ChurchTimeZone.ChurchDate(window.EndExcluded.AddTicks(-1)).ShouldBe(new DateOnly(2026, 10, 31));
+        ChurchTimeZone.ChurchDate(window.EndExcluded).ShouldBe(new DateOnly(2026, 11, 1));
+        window.Start.Kind.ShouldBe(DateTimeKind.Unspecified);
+        window.EndExcluded.Kind.ShouldBe(DateTimeKind.Unspecified);
 
         var lastLocalSecond = new DateTime(2026, 11, 1, 4, 59, 59);
-        (lastLocalSecond >= start && lastLocalSecond < end).ShouldBeTrue();
+        window.Contains(lastLocalSecond).ShouldBeTrue();
 
         var oneSecondLater = new DateTime(2026, 11, 1, 5, 0, 0);
-        (oneSecondLater >= start && oneSecondLater < end).ShouldBeFalse();
+        window.Contains(oneSecondLater).ShouldBeFalse();
 
         var lateEveningUtc = new DateTime(2026, 11, 1, 3, 0, 0);
-        (lateEveningUtc >= start && lateEveningUtc < end).ShouldBeTrue();
+        window.Contains(lateEveningUtc).ShouldBeTrue();
     }
 }

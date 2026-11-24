@@ -42,14 +42,14 @@ public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRe
         ChurchMonth throughMonth,
         CancellationToken cancellationToken)
     {
-        var (windowStart, windowEnd) = throughMonth.CompletionWindow(sinceMonth);
+        var window = throughMonth.CompletionWindow(sinceMonth);
         var rows = await context.Set<WorkOrder>()
             .AsNoTracking()
             .IgnoreAutoIncludes()
             .Where(wo => wo.Status == WorkOrderStatus.Complete
                 && wo.DueDate != null
-                && wo.CompletedDate >= windowStart
-                && wo.CompletedDate < windowEnd)
+                && wo.CompletedDate >= window.Start
+                && wo.CompletedDate < window.EndExcluded)
             .Select(wo => new { wo.DueDate, wo.CompletedDate })
             .ToListAsync(cancellationToken);
 
