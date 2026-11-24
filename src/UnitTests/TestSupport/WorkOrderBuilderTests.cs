@@ -91,4 +91,44 @@ public class WorkOrderBuilderTests
         orders[1].RoomNumber.ShouldBe("101");
         orders[1].DueDate.ShouldBe(new DateOnly(2000, 1, 1));
     }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    [TestCase(3)]
+    public void ShouldBuildCompletionsJustOutsideWindow_WhenCountedBackFromTheWindowStart(int daysBack)
+    {
+        var creator = EmployeeBuilder.Create("sam").WithFirstName("Sam").WithLastName("Stern").Build();
+        var windowStart = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var orders = WorkOrderBuilder.CompletedJustOutsideWindow(creator, windowStart, 3);
+
+        var expectedCompleted = windowStart.AddDays(-daysBack);
+        var order = orders[daysBack - 1];
+
+        order.CompletedDate.ShouldBe(expectedCompleted);
+        order.Status.ShouldBe(WorkOrderStatus.Complete);
+        order.DueDate.ShouldBe(DateOnly.FromDateTime(expectedCompleted));
+        order.Creator.ShouldBe(creator);
+        orders.Length.ShouldBe(3);
+        orders.All(o => o.DueDate.HasValue).ShouldBeTrue();
+        orders.Select(o => o.Number).ShouldBeUnique();
+    }
+
+    [Test]
+    public void ShouldBuildCompletionsJustOutsideWindow_WhenCountedBackFromTheWindowStart()
+    {
+        var creator = EmployeeBuilder.Create("creator").Build();
+        var windowStart = new DateTime(2026, 2, 1, 6, 0, 0, DateTimeKind.Unspecified);
+
+        var orders = WorkOrderBuilder.CompletedJustOutsideWindow(creator, windowStart, 3);
+
+        orders.Length.ShouldBe(3);
+        orders[0].CompletedDate.ShouldBe(windowStart.AddDays(-1));
+        orders[1].CompletedDate.ShouldBe(windowStart.AddDays(-2));
+        orders[2].CompletedDate.ShouldBe(windowStart.AddDays(-3));
+        orders.ShouldAllBe(o => o.Status == WorkOrderStatus.Complete);
+        orders.ShouldAllBe(o => o.DueDate != null);
+        orders.ShouldAllBe(o => o.Creator == creator);
+        orders.Select(o => o.Number).Distinct().Count().ShouldBe(3);
+    }
 }
