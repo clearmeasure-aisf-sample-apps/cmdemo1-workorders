@@ -200,6 +200,7 @@ public class SlaHealthQueryHandlerTests
 
         window.Start.ShouldBe(DateTime.Parse(start, CultureInfo.InvariantCulture));
         window.EndExcluded.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
+        window.Contains(SlaHealthSteps.PointInside(window)).ShouldBeTrue();
     }
 
     private static ChurchInstantRange GivenCompletionWindow(DateOnly today)
