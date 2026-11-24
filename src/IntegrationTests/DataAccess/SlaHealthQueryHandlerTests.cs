@@ -152,10 +152,12 @@ public class SlaHealthQueryHandlerTests
         var (clock, creator) = GivenSlaCreator();
         var today = ChurchTimeZone.Today(clock);
         var window = GivenCompletionWindow(today);
-        var orders = SlaHealthSteps.BuildWindowOrders(creator, today, window.Start, window.Completed);
+        var inWindow = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+            .WithNumber(TestData.Number()).DueOn(today).CompletedAt(window.Completed).Build();
+        var outsideWindow = WorkOrderBuilder.CompletedJustOutsideWindow(creator, window.Start, count: 12);
 
         await using var context = GivenCountedContext();
-        await GivenPersistedAsync(context, creator, orders);
+        await GivenPersistedAsync(context, creator, [inWindow, ..outsideWindow]);
         context.Commands.Reset();
 
         var result = await WhenSlaQueriedThrough(context, clock);

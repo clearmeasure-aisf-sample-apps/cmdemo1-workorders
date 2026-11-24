@@ -216,4 +216,21 @@ public sealed class WorkOrderBuilder
             .DueOn(even ? new DateOnly(2000, 1, 1) : null)
             .Build();
     }
+
+    /// <summary>
+    /// Catalog of <paramref name="count"/> complete work orders, one row per day counted back from
+    /// <paramref name="windowStartInclusive"/>: row <c>n</c> completes at
+    /// <c>windowStartInclusive.AddDays(-n)</c> and is due on its own completion day.
+    /// </summary>
+    public static WorkOrder[] CompletedJustOutsideWindow(Employee creator, DateTime windowStartInclusive, int count) =>
+        Enumerable.Range(1, count)
+            .Select(daysBack =>
+            {
+                var completed = windowStartInclusive.AddDays(-daysBack);
+                return For(creator, WorkOrderStatus.Complete)
+                    .CompletedAt(completed)
+                    .DueOn(DateOnly.FromDateTime(completed))
+                    .Build();
+            })
+            .ToArray();
 }

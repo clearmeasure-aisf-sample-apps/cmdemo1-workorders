@@ -91,4 +91,22 @@ public class WorkOrderBuilderTests
         orders[1].RoomNumber.ShouldBe("101");
         orders[1].DueDate.ShouldBe(new DateOnly(2000, 1, 1));
     }
+
+    [Test]
+    public void ShouldBuildCompletionsJustOutsideWindow_WhenCountedBackFromTheWindowStart()
+    {
+        var creator = EmployeeBuilder.Create("creator").Build();
+        var windowStart = new DateTime(2026, 2, 1, 6, 0, 0, DateTimeKind.Unspecified);
+
+        var orders = WorkOrderBuilder.CompletedJustOutsideWindow(creator, windowStart, 3);
+
+        orders.Length.ShouldBe(3);
+        orders[0].CompletedDate.ShouldBe(windowStart.AddDays(-1));
+        orders[1].CompletedDate.ShouldBe(windowStart.AddDays(-2));
+        orders[2].CompletedDate.ShouldBe(windowStart.AddDays(-3));
+        orders.ShouldAllBe(o => o.Status == WorkOrderStatus.Complete);
+        orders.ShouldAllBe(o => o.DueDate != null);
+        orders.ShouldAllBe(o => o.Creator == creator);
+        orders.Select(o => o.Number).Distinct().Count().ShouldBe(3);
+    }
 }
