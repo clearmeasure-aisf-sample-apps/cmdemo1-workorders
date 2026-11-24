@@ -92,28 +92,6 @@ public class WorkOrderBuilderTests
         orders[1].DueDate.ShouldBe(new DateOnly(2000, 1, 1));
     }
 
-    [TestCase(1)]
-    [TestCase(2)]
-    [TestCase(3)]
-    public void ShouldBuildCompletionsJustOutsideWindow_WhenCountedBackFromTheWindowStart(int daysBack)
-    {
-        var creator = EmployeeBuilder.Create("sam").WithFirstName("Sam").WithLastName("Stern").Build();
-        var windowStart = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        var orders = WorkOrderBuilder.CompletedJustOutsideWindow(creator, windowStart, 3);
-
-        var expectedCompleted = windowStart.AddDays(-daysBack);
-        var order = orders[daysBack - 1];
-
-        order.CompletedDate.ShouldBe(expectedCompleted);
-        order.Status.ShouldBe(WorkOrderStatus.Complete);
-        order.DueDate.ShouldBe(DateOnly.FromDateTime(expectedCompleted));
-        order.Creator.ShouldBe(creator);
-        orders.Length.ShouldBe(3);
-        orders.All(o => o.DueDate.HasValue).ShouldBeTrue();
-        orders.Select(o => o.Number).ShouldBeUnique();
-    }
-
     [Test]
     public void ShouldBuildCompletionsJustOutsideWindow_WhenCountedBackFromTheWindowStart()
     {
