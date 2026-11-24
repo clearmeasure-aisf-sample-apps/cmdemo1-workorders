@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.UnitTests.Acceptance;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.TestUsers;
@@ -18,8 +19,8 @@ public static class AcceptanceTestEmployees
     /// <summary>
     /// Adds an employee with the admin role whose user name carries <paramref name="testTag"/>.
     /// Used when <c>POST /api/test-support/employees</c> is not available (probe 404).
-    /// Last name defaults to <c>!{testTag}</c> so the employee sorts into the first
-    /// <see cref="EmployeeGetAllQuery.MaxTake"/> page of the login dropdown.
+    /// Last name defaults to <see cref="LoginDirectoryLastName.For"/> so the employee sorts into the first
+    /// <see cref="EmployeeGetAllQuery.MaxTake"/> page of the login dropdown, ahead of earlier runs' leftovers.
     /// </summary>
     public static Employee Add(string testTag, TestSupportEmployeeFields? fields = null)
     {
@@ -50,7 +51,7 @@ public static class AcceptanceTestEmployees
             employee.FirstName = fields.FirstName;
         }
 
-        employee.LastName = fields?.LastName ?? $"!{testTag}";
+        employee.LastName = fields?.LastName ?? LoginDirectoryLastName.For(testTag);
         if (fields?.MiddleName is not null)
         {
             employee.MiddleName = fields.MiddleName;

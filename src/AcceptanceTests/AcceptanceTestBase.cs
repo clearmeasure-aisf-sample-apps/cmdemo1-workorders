@@ -322,6 +322,10 @@ public abstract class AcceptanceTestBase
         await Expect(locator).ToHaveValueAsync(value ?? "");
     }
 
+    /// <summary>
+    /// Chooses <paramref name="value"/> in the select with test id <paramref name="elementTestId"/>, after
+    /// waiting for that option to render (<see cref="SelectOptionWait"/>).
+    /// </summary>
     protected async Task Select(string elementTestId, string? value)
     {
         var locator = Page.GetByTestId(elementTestId);
@@ -338,6 +342,11 @@ public abstract class AcceptanceTestBase
         }
 
         await Expect(locator).ToBeEditableAsync(new LocatorAssertionsToBeEditableOptions { Timeout = 30_000 });
+        if (!string.IsNullOrEmpty(value))
+        {
+            await SelectOptionWait.ForOptionAsync(locator, elementTestId, value);
+        }
+
         await locator.SelectOptionAsync(value ?? "");
     }
 
