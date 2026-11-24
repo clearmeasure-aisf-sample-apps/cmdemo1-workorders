@@ -152,10 +152,12 @@ public class SlaHealthQueryHandlerTests
         var (clock, creator) = GivenSlaCreator();
         var today = ChurchTimeZone.Today(clock);
         var window = GivenCompletionWindow(today);
-        var orders = SlaHealthSteps.BuildWindowOrders(creator, today, window);
+        var inWindow = WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+            .WithNumber(TestData.Number()).DueOn(today).CompletedAt(PointInside(window)).Build();
+        var outsideWindow = WorkOrderBuilder.CompletedJustOutsideWindow(creator, window.Start, count: 12);
 
         await using var context = GivenCountedContext();
-        await GivenPersistedAsync(context, creator, orders);
+        await GivenPersistedAsync(context, creator, [inWindow, ..outsideWindow]);
         context.Commands.Reset();
 
         var result = await WhenSlaQueriedThrough(context, clock);
@@ -200,7 +202,7 @@ public class SlaHealthQueryHandlerTests
 
         window.Start.ShouldBe(DateTime.Parse(start, CultureInfo.InvariantCulture));
         window.EndExcluded.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
-        window.Contains(SlaHealthSteps.PointInside(window)).ShouldBeTrue();
+        window.Contains(PointInside(window)).ShouldBeTrue();
     }
 
     private static ChurchInstantRange GivenCompletionWindow(DateOnly today)
@@ -208,6 +210,17 @@ public class SlaHealthQueryHandlerTests
         var currentMonth = ChurchMonth.Containing(today);
         var lastMonth = currentMonth.Previous();
         return currentMonth.CompletionWindow(lastMonth);
+    }
+
+    /// <summary>
+    /// An instant guaranteed to be inside <paramref name="window"/>: a quarter of the way through it,
+    /// <c>window.Start + (window.EndExcluded - window.Start) / 4</c>, truncated to whole ticks (so it is
+    /// <paramref name="window"/>'s <c>Start</c> for a window narrower than four ticks). Test-only: names a completion
+    /// that must fall inside the window without hard-coding an offset such as one hour after its start.
+    /// </summary>
+    private static DateTime PointInside(ChurchInstantRange window)
+    {
+        return window.Start + TimeSpan.FromTicks((window.EndExcluded - window.Start).Ticks / 4);
     }
 
     /// <summary>Asserts the two church months are answered by exactly one reader command.</summary>
