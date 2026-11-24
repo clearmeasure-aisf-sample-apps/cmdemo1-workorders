@@ -26,7 +26,7 @@ public class BrowserFixtureSetupFallbackTests
         factory.ShouldContain("AcceptanceTestEmployees.Add");
         provisioner.ShouldContain("HttpStatusCode.NotFound");
         employees.ShouldContain("TestHost.NewDbContext()");
-        employees.ShouldContain("!{testTag}");
+        employees.ShouldContain("LoginDirectoryLastName.For(testTag)");
         employees.ShouldContain("TestSupportEmployeeFields");
         employees.ShouldContain("ApplyOptionalNames");
         employees.ShouldContain("ApplyAdditionalCreateRoles");

@@ -2,6 +2,7 @@ using System.Text.Json;
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
+using ClearMeasure.Bootcamp.UnitTests.Acceptance;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.McpServer;
 
@@ -43,7 +44,7 @@ public class McpListWorkOrdersAcceptanceTests : McpAcceptanceTestBase
         SeedEmployeeAsync(new TestSupportEmployeeFields
         {
             FirstName = "List",
-            LastName = $"!{TestTag}{suffix}"
+            LastName = LoginDirectoryLastName.For(TestTag) + suffix
         });
 
     private McpListWorkOrderSeed BuildSeedNumbers(Employee creator, Employee assignee) =>

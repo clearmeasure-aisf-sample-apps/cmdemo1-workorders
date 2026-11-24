@@ -15,16 +15,12 @@ public class LoginTests : AuthAcceptanceTestBase
     /// <summary>
     /// The employee &lt;option&gt; elements are rendered only after the Blazor WASM app
     /// boots interactively and the employee list loads. a network-idle wait
-    /// does not guarantee that render has happened, so wait for the option itself.
-    /// Options live inside a closed &lt;select&gt; and therefore have no bounding box —
-    /// they are never "visible" to Playwright, so wait for Attached, not Visible.
+    /// does not guarantee that render has happened, so wait for the option itself
+    /// (<see cref="SelectOptionWait"/>, shared with <see cref="AcceptanceTestBase"/>.Select).
     /// </summary>
-    private static Task WaitForEmployeeOptionsRenderedAsync(ILocator employeeOption) =>
-        employeeOption.WaitForAsync(new LocatorWaitForOptions
-        {
-            State = WaitForSelectorState.Attached,
-            Timeout = 90_000
-        });
+    private Task WaitForEmployeeOptionAsync(string userName) =>
+        SelectOptionWait.ForOptionAsync(
+            Page.GetByTestId(nameof(Login.Elements.User)), nameof(Login.Elements.User), userName);
 
     [Test, Retry(2)]
     public async Task VerifySetup()
@@ -37,13 +33,13 @@ public class LoginTests : AuthAcceptanceTestBase
     [Test, Retry(2)]
     public async Task Should_DisplayUppercaseNames_InLoginDropdown()
     {
-        var first = await SeedDirectoryEmployeeAsync("Homer", $"!{TestTag}a");
-        var second = await SeedDirectoryEmployeeAsync("Ned", $"!{TestTag}b");
+        var first = await SeedDirectoryEmployeeAsync("Homer", DirectoryFirstLastName + "a");
+        var second = await SeedDirectoryEmployeeAsync("Ned", DirectoryFirstLastName + "b");
 
         await Page.GotoAsync("/login");
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
         var firstOption = userSelect.Locator($"option[value='{first.UserName}']");
-        await WaitForEmployeeOptionsRenderedAsync(firstOption);
+        await WaitForEmployeeOptionAsync(first.UserName);
 
         var placeholderOption = userSelect.Locator("option[value='']");
         await Expect(placeholderOption).ToHaveTextAsync("-- Select a parishioner or staff member --");
@@ -60,7 +56,7 @@ public class LoginTests : AuthAcceptanceTestBase
         await Page.GotoAsync("/login");
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
+        await WaitForEmployeeOptionAsync(employee.UserName);
 
         await Expect(userSelect).ToHaveAttributeAsync("id", nameof(Login.Elements.User));
         await Expect(Page.Locator($"label[for='{Login.Elements.User}']")).ToBeAttachedAsync();
@@ -73,7 +69,7 @@ public class LoginTests : AuthAcceptanceTestBase
         await Page.GotoAsync("/login");
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
+        await WaitForEmployeeOptionAsync(employee.UserName);
 
         await Expect(userSelect).ToHaveAttributeAsync("aria-describedby", "login-user-hint");
         await Expect(Page.Locator("#login-user-hint")).ToHaveTextAsync("Not listed? Ask the church office to add you.");
@@ -97,7 +93,7 @@ public class LoginTests : AuthAcceptanceTestBase
 
         var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
         var option = userSelect.Locator($"option[value='{employee.UserName}']");
-        await WaitForEmployeeOptionsRenderedAsync(option);
+        await WaitForEmployeeOptionAsync(employee.UserName);
         await Expect(option).ToHaveTextAsync(
             LoginDisplayNameFormatter.FormatForLoginDropdown($"{employee.FirstName} {employee.LastName}"));
 
@@ -116,8 +112,7 @@ public class LoginTests : AuthAcceptanceTestBase
         var employee = await SeedDirectoryEmployeeAsync("First", DirectoryFirstLastName, "Middle");
         await Page.GotoAsync("/login");
 
-        var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
+        await WaitForEmployeeOptionAsync(employee.UserName);
 
         await Select(nameof(Login.Elements.User), employee.UserName);
         await Click(nameof(Login.Elements.LoginButton));
@@ -414,8 +409,7 @@ public class LoginTests : AuthAcceptanceTestBase
         var employee = await SeedDirectoryEmployeeAsync();
         await Page.GotoAsync("/login");
 
-        var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{employee.UserName}']"));
+        await WaitForEmployeeOptionAsync(employee.UserName);
 
         var helperText = Page.Locator("small.form-text.text-muted");
         await Expect(helperText).ToBeVisibleAsync();
@@ -494,12 +488,9 @@ public class LoginTests : AuthAcceptanceTestBase
             new LocatorAssertionsToHaveTextOptions { Timeout = 60_000 });
     }
 
-    private async Task SelectDirectoryEmployeeAsync(string userName)
-    {
-        var userSelect = Page.GetByTestId(nameof(Login.Elements.User));
-        await WaitForEmployeeOptionsRenderedAsync(userSelect.Locator($"option[value='{userName}']"));
-        await Select(nameof(Login.Elements.User), userName);
-    }
+    /// <summary>Chooses <paramref name="userName"/> in the login User list; Select waits for its option first.</summary>
+    private Task SelectDirectoryEmployeeAsync(string userName) =>
+        Select(nameof(Login.Elements.User), userName);
 
     private async Task ExpectWelcomeAsync(string userName)
     {

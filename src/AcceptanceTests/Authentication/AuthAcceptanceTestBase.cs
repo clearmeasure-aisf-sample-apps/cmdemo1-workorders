@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.AcceptanceTests.Builders;
 using ClearMeasure.Bootcamp.AcceptanceTests.TestSupport;
+using ClearMeasure.Bootcamp.UnitTests.Acceptance;
 
 namespace ClearMeasure.Bootcamp.AcceptanceTests.Authentication;
 
@@ -10,9 +11,10 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests.Authentication;
 public abstract class AuthAcceptanceTestBase : AcceptanceApiTestBase
 {
     /// <summary>
-    /// Last name that sorts before A–Z so the seeded employee stays in the first EmployeeGetAll page.
+    /// Last name that sorts ahead of every other employee, earlier runs' leftovers included, so the seeded
+    /// employee stays in the first EmployeeGetAll page (<see cref="LoginDirectoryLastName"/>).
     /// </summary>
-    protected string DirectoryFirstLastName => $"!{TestTag}";
+    protected string DirectoryFirstLastName => LoginDirectoryLastName.For(TestTag);
 
     /// <summary>Creates an employee that appears in the login directory page.</summary>
     protected async Task<TestSupportEmployee> SeedDirectoryEmployeeAsync(

@@ -4,6 +4,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
+using ClearMeasure.Bootcamp.UnitTests.Acceptance;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -138,6 +139,29 @@ public class EmployeeQueryHandlerTests
             rehydrated.FirstName.ShouldBe("Mixed");
             rehydrated.LastName.ShouldBe("CaseName");
         }
+    }
+
+    [Test]
+    public async Task Should_ListNewestLoginDirectoryEmployeeFirst_AheadOfOlderRunsAndHexTaggedLeftovers()
+    {
+        var now = TimeProvider.System.GetUtcNow();
+        var leftover = EmployeeBuilder.Create(TestData.UserName("directory")).WithLastName("!00000000").Build();
+        var older = EmployeeBuilder.Create(TestData.UserName("directory"))
+            .WithLastName(LoginDirectoryLastName.Create("00000000", now.AddDays(-1))).Build();
+        var newest = EmployeeBuilder.Create(TestData.UserName("directory"))
+            .WithLastName(LoginDirectoryLastName.Create("ffffffff", now)).Build();
+        await using (var context = TestHost.GetRequiredService<DbContext>())
+        {
+            context.AddRange(leftover, older, newest);
+            await context.SaveChangesAsync();
+        }
+
+        var handler = new EmployeeQueryHandler(TestHost.GetRequiredService<DataContext>());
+        var ownIds = new[] { leftover.Id, older.Id, newest.Id };
+        var listed = (await handler.Handle(new EmployeeGetAllQuery()))
+            .Where(e => ownIds.Contains(e.Id)).Select(e => e.Id).ToArray();
+
+        listed.ShouldBe([newest.Id, older.Id, leftover.Id]);
     }
 
     [Test]
