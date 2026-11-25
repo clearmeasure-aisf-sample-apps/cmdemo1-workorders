@@ -57,6 +57,7 @@ Usual first-push failures:
 ## Hard rules (never without explicit approval)
 
 - Do NOT add NuGet packages or project references, change package versions, or change the .NET SDK version.
+  When approval is needed, say which package/reference and why.
 - Do NOT modify `.octopus/`, build scripts (`build.ps1`, `build.bat`, `build.sh`, `BuildFunctions.ps1`,
   `PrivateBuild.ps1`), or pipeline/workflow files.
 - Never weaken, skip or delete tests or gates to get green.
