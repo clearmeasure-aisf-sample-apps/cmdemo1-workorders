@@ -76,3 +76,23 @@ curl -sS "https://<host>/api/features/flags"
 Both flag routes use the API sliding-window rate limit (`ApiSlidingWindow`). The default limit is 100 requests per 60 seconds.
 
 `features/flags` is not a public API path. When API-key middleware is enabled and a validation key is configured, a request without a matching `X-Api-Key` header receives `401`.
+
+## Agent quick reference
+
+Moved from `CLAUDE.md`. Product flags are evaluated at runtime and enforced in one place, the MediatR bus.
+
+- **Names:** `src/Core/FeatureFlags/FeatureFlagNames.cs` (`ShowPriorityBadges`, `BuildingManagement`,
+  `VendorManagement`; `All` is the catalog). Add a flag there and give it a default in the `FeatureFlags` section of
+  `src/UI/Server/appsettings.json`.
+- **Values:** `RuntimeFeatureFlagEvaluator` (`src/DataAccess/FeatureFlags/`, behind `IFeatureFlagEvaluator`): Octopus
+  Feature Toggles via OpenFeature when `Octopus__FeatureFlags__ClientIdentifier` is set (slug = kebab-case name, or
+  the name) → `FeatureFlags:<Name>` config → **false**.
+- **Enforce:** `[RequiresFeature(FeatureFlagNames.X)]` on the request record. `FeatureFlagBehavior<,>`
+  (`src/UI.Shared/`) is registered with `AddOpenBehavior` in `UIServiceRegistry.cs` and `McpServiceRegistry.cs` and
+  throws `FeatureDisabledException`. `SingleApiController` (`[FeatureDisabledProblem]`) maps it to 403 problem
+  details; MCP (`FeatureDisabledToolFilter`) returns tool error text. **Do not check flags in handlers, controllers or
+  pages.**
+- **Read (UI hide only):** remotable `FeatureFlagsQuery` → `FeatureFlagsResult`. Blazor uses `IFeatureFlags` =
+  `BusFeatureFlags`.
+- `GET /api/features/flags` (also `/api/v1.0/features/flags`): `{ "FlagName": bool, ... }` for every catalog name.
+- Helper: `src/UI/Api/ConditionalGetEtag.cs`: reuse for any read-only GET that returns JSON.

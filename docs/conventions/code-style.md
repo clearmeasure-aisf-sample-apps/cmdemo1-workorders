@@ -1,6 +1,6 @@
 # Code Style Conventions
 
-Follow the existing C# conventions documented in `CLAUDE.md` and illustrated throughout `src/`.
+Follow the existing C# conventions documented in `AGENTS.md` and illustrated throughout `src/`.
 
 ## Naming
 

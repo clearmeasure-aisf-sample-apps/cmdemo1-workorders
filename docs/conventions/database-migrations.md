@@ -12,7 +12,7 @@ Update scripts are files in `src/Database/scripts/Update/`. [`UpdateDatabaseComm
 2. Name the new file with the next number: the highest existing number, plus one.
 3. Indent the SQL with tabs. `033_AddPriorityAndBuildingToWorkOrder.sql` is one script that already does this.
 
-`CLAUDE.md` and the cloud-agent instructions state the same three rules: location `src/Database/scripts/Update/`, name `###_Description.sql`, tabs for indentation. [Lab 04](../../labs/lab-04-database-migration.md) walks through listing the directory, incrementing the highest number, and using tabs.
+`AGENTS.md` states the same three rules: location `src/Database/scripts/Update/`, name `###_Description.sql`, tabs for indentation. [Lab 04](../../labs/lab-04-database-migration.md) walks through listing the directory, incrementing the highest number, and using tabs.
 
 ## Apply it locally
 
