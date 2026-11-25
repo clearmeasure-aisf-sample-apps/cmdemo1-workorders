@@ -22,7 +22,7 @@ This repo still documents and uses additional branch patterns. Do not assume a s
 |---|---|---|
 | `<tool>/<issue-number>-<column>` | Canonical for board-driven agents (this page) | `ibmbob/1234-in-progress` |
 | `feature/issue-{number}-{slug}` | AI Factory executor (`.bob/skills/ai-factory-executor`) | `feature/issue-6936-demo-issue-4` |
-| `{username}/{branch-description}` | General Copilot / contributor guidance (`.github/copilot-instructions.md`) | `jeffreypalermo/fix-work-order-status` |
+| `{username}/{branch-description}` | General agent / contributor guidance (`AGENTS.md`) | `jeffreypalermo/fix-work-order-status` |
 | `factory-worker/<issue-number>-<column>` | Factory worker sessions (the gateway's owner sessions) | `factory-worker/201-in-progress` |
 
 Prefer the pattern required by the factory or instructions that launched the session. When in doubt for a board-driven IBM Bob session, use `<tool>/<issue-number>-<column>`.
