@@ -112,16 +112,11 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
     private async Task AddAverageDaysToCloseAsync(WorkOrderReportsData data, IQueryable<WorkOrder> orders,
         CancellationToken cancellationToken)
     {
-        var completions = await WorkOrderQueryFilters.CompletedWithin(orders, CompletedWindowDays, time)
-            .Select(wo => new { wo.CreatedDate, wo.CompletedDate })
+        var spans = await WorkOrderQueryFilters.CompletionSpansWithin(orders, CompletedWindowDays, time)
             .ToListAsync(cancellationToken);
+        var statistics = new CompletionStatistics(spans);
 
-        var durations = completions
-            .Where(c => c.CreatedDate.HasValue && c.CompletedDate.HasValue)
-            .Select(c => (c.CompletedDate!.Value - c.CreatedDate!.Value).TotalDays)
-            .ToList();
-
-        data.CompletedLast30Days = completions.Count;
-        data.AverageDaysToClose = durations.Count == 0 ? null : durations.Average();
+        data.CompletedLast30Days = statistics.Count;
+        data.AverageDaysToClose = statistics.AverageDaysToClose;
     }
 }
