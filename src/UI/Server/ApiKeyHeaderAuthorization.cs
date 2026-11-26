@@ -8,7 +8,7 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 /// Reads the <c>X-Api-Key</c> request header and compares it to the expected key in constant
 /// time. Shared by every pipeline that authenticates via the header.
 /// </summary>
-internal sealed class ApiKeyHeaderAuthorization
+internal static class ApiKeyHeaderAuthorization
 {
     public static bool IsAuthorized(HttpRequest request, string expectedKey)
     {
