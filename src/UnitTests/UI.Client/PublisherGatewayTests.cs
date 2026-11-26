@@ -13,6 +13,13 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Client;
 public class PublisherGatewayTests
 {
     [Test]
+    public void ApiRelativeUrlV1_WhenRead_ShouldBeVersionedSingleApiRoute()
+    {
+        PublisherGateway.ApiRelativeUrlV1.ShouldBe("api/v1.0/blazor-wasm-single-api");
+        PublisherGateway.ApiRelativeUrlV1.ShouldBe(WebServiceApiRoutes.VersionedRelativeUrl);
+    }
+
+    [Test]
     public async Task Publish_WithRemotableRequest_WrapsInWebServiceMessageAndSendsToTopic()
     {
         var stubGateway = new StubPublisherGateway();

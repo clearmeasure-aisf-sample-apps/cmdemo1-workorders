@@ -16,7 +16,7 @@ public class PublisherGateway(HttpClient httpClient, IConfiguration? configurati
     /// <summary>
     /// Versioned URL using the current default API version in the path.
     /// </summary>
-    public const string ApiRelativeUrlV1 = "api/v1.0/" + WebServiceApiRoutes.AbstractPathSegment;
+    public const string ApiRelativeUrlV1 = WebServiceApiRoutes.VersionedRelativeUrl;
 
     public async Task<WebServiceMessage?> Publish(IRemotableRequest request)
     {
