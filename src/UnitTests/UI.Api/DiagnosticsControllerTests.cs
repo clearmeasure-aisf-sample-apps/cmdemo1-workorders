@@ -24,11 +24,6 @@ public class DiagnosticsControllerTests
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
-    private sealed class FixedUtcTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
-
     private sealed class StubBus(IReadOnlyDictionary<string, bool> flags) : IBus
     {
         public List<object> Requests { get; } = [];
@@ -62,8 +57,8 @@ public class DiagnosticsControllerTests
         bus.Requests.Single().ShouldBeOfType<FeatureFlagsQuery>();
     }
 
-    private static FixedUtcTimeProvider FixedClock() =>
-        new(new DateTimeOffset(2026, 4, 10, 15, 0, 0, TimeSpan.Zero));
+    private static TimeProvider FixedClock() =>
+        FixedUtcClock.At(new DateTimeOffset(2026, 4, 10, 15, 0, 0, TimeSpan.Zero));
 
     private static Dictionary<string, bool> RuntimeFeatureFlags() => new()
     {

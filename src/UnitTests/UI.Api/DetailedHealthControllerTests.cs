@@ -10,11 +10,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 [TestFixture]
 public class DetailedHealthControllerTests
 {
-    private sealed class FixedUtcTimeProvider(DateTime utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
-    }
-
     private sealed class StubDetailedHealthReportProvider(DetailedHealthReport report) : IDetailedHealthReportProvider
     {
         public Task<DetailedHealthReport> GetReportAsync(CancellationToken cancellationToken = default) =>
@@ -109,7 +104,7 @@ public class DetailedHealthControllerTests
     {
         var report = FixedReport(fixedTime);
         return new DetailedHealthController(
-            new FixedUtcTimeProvider(fixedTime),
+            ChurchClock.AtUtc(new DateTimeOffset(fixedTime, TimeSpan.Zero)),
             new StubDetailedHealthReportProvider(report))
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }

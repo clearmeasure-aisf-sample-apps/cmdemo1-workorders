@@ -15,8 +15,8 @@ public class TimeControllerTests
     public void Get_Should_ReturnPlainTextIso8601Utc_ForFixedClock()
     {
         var fixedUtc = new DateTime(2026, 3, 30, 12, 0, 0, DateTimeKind.Utc);
-        var stubTimeProvider = new StubFixedUtcTimeProvider(fixedUtc);
-        var controller = new TimeController(stubTimeProvider)
+        var clock = ChurchClock.AtUtc(new DateTimeOffset(fixedUtc, TimeSpan.Zero));
+        var controller = new TimeController(clock)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -37,12 +37,12 @@ public class TimeControllerTests
     public void Get_Should_Return304WithNoStore_When_IfNoneMatchMatchesEtag()
     {
         var fixedUtc = new DateTime(2026, 3, 30, 12, 0, 0, DateTimeKind.Utc);
-        var stubTimeProvider = new StubFixedUtcTimeProvider(fixedUtc);
+        var clock = ChurchClock.AtUtc(new DateTimeOffset(fixedUtc, TimeSpan.Zero));
         var expected = new DateTimeOffset(fixedUtc, TimeSpan.Zero).ToString("O", CultureInfo.InvariantCulture);
         var etag = ConditionalGetEtag.CreateWeakEtagForPlainText(expected);
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Headers.IfNoneMatch = etag.ToString();
-        var controller = new TimeController(stubTimeProvider)
+        var controller = new TimeController(clock)
         {
             ControllerContext = new ControllerContext { HttpContext = httpContext }
         };
@@ -54,8 +54,4 @@ public class TimeControllerTests
         controller.Response.Headers.ETag.ToString().ShouldBe(etag.ToString());
     }
 
-    private sealed class StubFixedUtcTimeProvider(DateTime utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
-    }
 }
