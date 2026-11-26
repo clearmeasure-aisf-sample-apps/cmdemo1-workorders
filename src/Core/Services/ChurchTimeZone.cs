@@ -14,6 +14,12 @@ public static class ChurchTimeZone
     public static TimeZoneInfo Chicago { get; } = ResolveChicago();
 
     /// <summary>
+    /// True when neither America/Chicago nor Central Standard Time could be found on this host and
+    /// <see cref="Chicago"/> fell back to UTC, so church calendar dates would be computed in UTC.
+    /// </summary>
+    public static bool IsFallback => Chicago.Id == TimeZoneInfo.Utc.Id;
+
+    /// <summary>
     /// Returns today's calendar date in America/Chicago for the given clock, through
     /// <see cref="ChurchDate"/>, the one place that converts a stored instant.
     /// </summary>

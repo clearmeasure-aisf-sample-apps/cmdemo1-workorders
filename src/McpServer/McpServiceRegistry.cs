@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
@@ -50,6 +51,7 @@ public class McpServiceRegistry : ServiceRegistry
         this.AddSingleton<IFeatureFlagEvaluator, RuntimeFeatureFlagEvaluator>();
         this.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
         this.AddSingleton(TimeProvider.System);
+        this.AddSingleton<ChurchCalendar>();
         // Non-IValidator DI handles (#1824) — build deferred validators without registering them as IValidator<T>.
         this.AddSingleton(sp => new CreateVendorCommandShapeRules(
             (CreateVendorCommandValidator)ActivatorUtilities.CreateInstance(sp, typeof(CreateVendorCommandValidator))));

@@ -64,5 +64,6 @@ public class UIClientServiceRegistry : ServiceRegistry
         this.AddScoped<IFeatureFlags, BusFeatureFlags>();
         this.AddTransient<WorkOrderBulkActionService>();
         this.AddSingleton(TimeProvider.System);
+        this.AddSingleton<ChurchCalendar>();
     }
 }
