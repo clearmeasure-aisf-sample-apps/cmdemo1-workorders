@@ -44,5 +44,5 @@ public sealed class ApiRateLimitingOptions
     /// Optional header for per-client key; when absent, user name or connection remote IP is used.
     /// </summary>
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- required for IOptions<T> configuration binding
-    public string ApiKeyHeaderName { get; set; } = ApiKeyConstants.HeaderName;
+    public string ApiKeyHeaderName { get; init; } = ApiKeyConstants.HeaderName;
 }
