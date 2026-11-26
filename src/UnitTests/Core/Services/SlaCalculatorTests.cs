@@ -1,6 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
-using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;
@@ -81,33 +80,9 @@ public class SlaCalculatorTests
     }
 
     [Test]
-    public void Should_ReturnNullPercentage_When_ZeroOrders()
+    public void Should_ReturnNullPercentage_When_ZeroCompletions()
     {
-        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(Enumerable.Empty<WorkOrder>());
-
-        percentage.ShouldBeNull();
-        count.ShouldBe(0);
-    }
-
-    [Test]
-    public void Should_ExcludeOrders_When_NoDueDate()
-    {
-        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
-        [
-            WorkOrderBuilder.Create().CompletedAt(new DateTime(2026, 5, 10)).Build(),
-            WorkOrderBuilder.Create().DueOn(new DateOnly(2026, 5, 10))
-                .CompletedAt(new DateTime(2026, 5, 11, 12, 0, 0)).Build()
-        ]);
-
-        percentage.ShouldBe(0m);
-        count.ShouldBe(1);
-    }
-
-    [Test]
-    public void Should_ReturnNullPercentage_When_AllOrdersHaveNoDueDate()
-    {
-        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(
-            [WorkOrderBuilder.Create().CompletedAt(new DateTime(2026, 5, 10)).Build()]);
+        var (percentage, count) = SlaCalculator.CalculateOnTimePercentage(Enumerable.Empty<SlaCompletion>());
 
         percentage.ShouldBeNull();
         count.ShouldBe(0);

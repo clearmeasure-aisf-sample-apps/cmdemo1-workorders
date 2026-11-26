@@ -29,25 +29,6 @@ public static class SlaCalculator
     }
 
     /// <summary>
-    /// Computes the on-time percentage (0–100, rounded to a whole number) for the given orders, after mapping each
-    /// order that has both a DueDate and a CompletedDate to <see cref="SlaCompletion"/> and delegating to
-    /// <see cref="CalculateOnTimePercentage(IEnumerable{SlaCompletion})"/>.
-    /// </summary>
-    public static (decimal? Percentage, int TotalCount) CalculateOnTimePercentage(IEnumerable<WorkOrder> orders)
-    {
-        var completions = new List<SlaCompletion>();
-        foreach (var order in orders)
-        {
-            if (order is { DueDate: { } due, CompletedDate: { } completed })
-            {
-                completions.Add(new SlaCompletion(due, completed));
-            }
-        }
-
-        return CalculateOnTimePercentage(completions);
-    }
-
-    /// <summary>
     /// Computes the on-time percentage (0–100, rounded to a whole number) from the due dates and stored completion
     /// instants of completed work orders, without the work orders themselves. On time means the church-local
     /// completion date is on or before the DueDate. Midpoints use banker's rounding (<see cref="MidpointRounding.ToEven"/>):
