@@ -13,7 +13,7 @@ internal static class ApiKeyAuthenticationPipeline
             return;
         }
 
-        if (!ApiKeyHeaderAuthorization.IsAuthorized(context.Request, options.ValidationKey ?? string.Empty))
+        if (!ApiKeyHeaderAuthorization.IsAuthorized(context.Request, options.RequiredValidationKey))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;

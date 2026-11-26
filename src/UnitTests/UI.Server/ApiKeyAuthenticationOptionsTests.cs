@@ -52,6 +52,16 @@ public class ApiKeyAuthenticationOptionsTests
         options.IsConfigured.ShouldBe(expected is not null);
     }
 
+    [TestCase("secret", "secret")]
+    [TestCase(null, "")]
+    [TestCase("", "")]
+    public void Should_ReturnRequiredValidationKey_When_Querying(string? validationKey, string expected)
+    {
+        var options = new ApiKeyAuthenticationOptions { ValidationKey = validationKey };
+
+        options.RequiredValidationKey.ShouldBe(expected);
+    }
+
     [TestCase("  secret  ", "secret")]
     [TestCase("", null)]
     [TestCase("   ", null)]

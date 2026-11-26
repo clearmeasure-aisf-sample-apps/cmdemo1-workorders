@@ -27,4 +27,10 @@ public sealed class ApiKeyAuthenticationOptions
     /// <c>/api/*</c> API-key gate and the <c>/_lamar</c> + <c>/_diagnostics</c> gate.
     /// </summary>
     public bool IsConfigured => Enabled && !string.IsNullOrWhiteSpace(ValidationKey);
+
+    /// <summary>
+    /// Non-null validation key for gate comparison. Valid only when <see cref="IsConfigured"/> is true;
+    /// otherwise returns an empty string that will never match any real header value.
+    /// </summary>
+    public string RequiredValidationKey => ValidationKey ?? string.Empty;
 }
