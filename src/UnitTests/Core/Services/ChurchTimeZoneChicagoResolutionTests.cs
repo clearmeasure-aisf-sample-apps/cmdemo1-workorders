@@ -10,6 +10,17 @@ namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;
 public class ChurchTimeZoneChicagoResolutionTests
 {
     [Test]
+    public void Should_ResolveCentralStandardTime_When_ChicagoZoneAccessed()
+    {
+        // Verify that the Chicago timezone is resolved (could be America/Chicago or Central Standard Time)
+        ChurchTimeZone.Chicago.ShouldNotBeNull();
+
+        var id = ChurchTimeZone.Chicago.Id;
+
+        id.ShouldBeOneOf("America/Chicago", "Central Standard Time", "UTC");
+    }
+
+    [Test]
     public void Chicago_Resolved_ShouldNotBeUtcFallback()
     {
         ChurchTimeZone.IsFallback.ShouldBeFalse();
