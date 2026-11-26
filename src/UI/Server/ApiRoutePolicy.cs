@@ -4,7 +4,8 @@ using ClearMeasure.Bootcamp.UI.Shared;
 namespace ClearMeasure.Bootcamp.UI.Server;
 
 /// <summary>
-/// The single answer to "is this an API path?" in this assembly. Consumed by the API-key gate and by the
+/// The single answer to "is this an API path?" in this assembly, and the API-key gate's question
+/// (<see cref="RequiresApiKey"/>) over a parsed <see cref="ApiPath"/>. Consumed by the API-key gate and by the
 /// API rate-limiting, timeout and idempotency gates, and the place where the two path sets are deliberately
 /// different: the API-key gate decides on the <c>/api</c> tree alone, while the rate-limiting, timeout and
 /// idempotency gates cover that tree plus the Blazor single-API routes, which are API traffic but are not
@@ -45,6 +46,16 @@ internal static class ApiRoutePolicy
     /// <param name="pathValue">The raw request path value.</param>
     internal static bool IsApiPath([NotNullWhen(true)] string? pathValue) =>
         RequestPathPrefix.IsUnder(pathValue, ApiPrefix);
+
+    /// <summary>
+    /// The API-key gate's Specification over <see cref="ApiPath"/>: true when the scheme is configured and the path
+    /// is under the <c>/api</c> tree but is not one of the anonymous public leaves. A null, empty or unrooted value
+    /// does not require an API key instead of throwing.
+    /// </summary>
+    /// <param name="pathValue">The raw request path value.</param>
+    /// <param name="options">The API-key options; an unconfigured scheme never requires a key.</param>
+    internal static bool RequiresApiKey(string? pathValue, ApiKeyAuthenticationOptions options) =>
+        options.IsConfigured && ApiPath.Parse(pathValue) is { IsApi: true, IsPublic: false };
 
     /// <summary>
     /// True when the path is one of the Blazor single-API routes, compared case-insensitively.

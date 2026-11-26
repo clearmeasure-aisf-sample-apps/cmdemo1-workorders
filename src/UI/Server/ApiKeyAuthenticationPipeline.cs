@@ -7,7 +7,7 @@ internal static class ApiKeyAuthenticationPipeline
         RequestDelegate next,
         ApiKeyAuthenticationOptions options)
     {
-        if (!ApiKeyValidationRules.RequiresValidation(context.Request.Path.Value, options))
+        if (!ApiRoutePolicy.RequiresApiKey(context.Request.Path.Value, options))
         {
             await next(context);
             return;

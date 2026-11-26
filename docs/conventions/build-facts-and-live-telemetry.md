@@ -34,7 +34,7 @@ CAP-077). Counted in-process, whether or not a telemetry exporter is configured:
 | Route | Method | Description |
 |---|---|---|
 | `/_telemetry` | GET | Rolling 60 s counts: requests (Front Door / direct / errors / p95), probes, SQL commands (during requests / background / p95), outgoing HTTP calls; and `process`: the vitals of the process. Anonymous, outside `/api`, `Access-Control-Allow-Origin: *`, `Cache-Control: no-store` |
-| `/api/work-orders/status-counts` | GET | Work-order count per status through `IBus` → `WorkOrderCountByStatusQuery` → EF Core: representative read traffic for the dashboard's traffic button. Anonymous (a public leaf in `ApiPublicPathRules`), not rate-limited, `no-store`. Also `/api/v1.0/work-orders/status-counts` |
+| `/api/work-orders/status-counts` | GET | Work-order count per status through `IBus` → `WorkOrderCountByStatusQuery` → EF Core: representative read traffic for the dashboard's traffic button. Anonymous (a public leaf in `ApiPath`), not rate-limited, `no-store`. Also `/api/v1.0/work-orders/status-counts` |
 
 **Code:** `src/UI/Server/LiveTelemetry/` (`AddLiveTelemetry`, `LiveTelemetryMiddleware`, `MapLiveTelemetry` in
 `ServerApplication`); `src/UI/Api/Controllers/WorkOrderStatusCountsController.cs`.
