@@ -24,6 +24,23 @@ public class RateLimitResponseWriterTests
     }
 
     [Test]
+    public async Task ShouldAdvertiseConfiguredLimitAndOneSecondRetry_WhenConfigIsZero()
+    {
+        var context = new DefaultHttpContext { Response = { Body = new MemoryStream() } };
+        var options = new ApiRateLimitingOptions { PermitLimit = 0, WindowSeconds = 0, QueueLimit = 0 };
+        var before = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        await RateLimitResponseWriter.WriteRateLimitedResponseAsync(context, options);
+
+        context.Response.StatusCode.ShouldBe(StatusCodes.Status429TooManyRequests);
+        context.Response.Headers.RetryAfter.ToString().ShouldBe("1");
+        context.Response.Headers[RateLimitingMiddleware.HeaderLimit].ToString().ShouldBe("0");
+        context.Response.Headers[RateLimitingMiddleware.HeaderRemaining].ToString().ShouldBe("0");
+        long.Parse(context.Response.Headers[RateLimitingMiddleware.HeaderReset].ToString())
+            .ShouldBeInRange(before + 1, DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 1);
+    }
+
+    [Test]
     public async Task ShouldExplainTheRefusal_WhenTheResponseHasNotStarted()
     {
         var context = new DefaultHttpContext { Response = { Body = new MemoryStream() } };

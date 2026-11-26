@@ -30,16 +30,9 @@ internal static class ApiRateLimitPartitioner
 
     private static RateLimitPartition<string> CreateSlidingWindowPartition(
         string partitionKey,
-        ApiRateLimitingOptions opts) =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey,
-            _ => new SlidingWindowRateLimiterOptions
-            {
-                PermitLimit = Math.Max(1, opts.PermitLimit),
-                Window = TimeSpan.FromSeconds(Math.Max(1, opts.WindowSeconds)),
-                SegmentsPerWindow = Math.Max(1, opts.SegmentsPerWindow),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = Math.Max(0, opts.QueueLimit),
-                AutoReplenishment = true
-            });
+        ApiRateLimitingOptions opts)
+    {
+        var rule = opts.ToSlidingWindowRule();
+        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey, _ => rule.ToLimiterOptions());
+    }
 }
