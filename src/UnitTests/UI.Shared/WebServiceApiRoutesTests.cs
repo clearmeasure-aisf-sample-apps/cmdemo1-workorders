@@ -17,4 +17,10 @@ public class WebServiceApiRoutesTests
     {
         WebServiceApiRoutes.LegacyRelativeUrl.ShouldBe("api/blazor-wasm-single-api");
     }
+
+    [Test]
+    public void ShouldPrefixVersionedUrlWithApiV1_When_Read()
+    {
+        WebServiceApiRoutes.VersionedRelativeUrl.ShouldBe("api/v1.0/blazor-wasm-single-api");
+    }
 }

@@ -14,4 +14,9 @@ public static class WebServiceApiRoutes
     /// Legacy unversioned URL path (no leading slash).
     /// </summary>
     public const string LegacyRelativeUrl = "api/" + AbstractPathSegment;
+
+    /// <summary>
+    /// Versioned URL path for API version 1.0, the versioned twin of <see cref="LegacyRelativeUrl"/> (no leading slash).
+    /// </summary>
+    public const string VersionedRelativeUrl = "api/v1.0/" + AbstractPathSegment;
 }

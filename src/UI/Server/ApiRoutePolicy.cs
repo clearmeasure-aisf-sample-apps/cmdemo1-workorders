@@ -25,8 +25,7 @@ internal static class ApiRoutePolicy
     /// <summary>
     /// The versioned Blazor single-API route, the v1.0 sibling of <see cref="BlazorSingleApiPath"/>.
     /// </summary>
-    private static readonly PathString BlazorSingleApiPathV1 =
-        new("/api/v1.0/" + WebServiceApiRoutes.AbstractPathSegment);
+    private static readonly PathString BlazorSingleApiPathV1 = new("/" + WebServiceApiRoutes.VersionedRelativeUrl);
 
     /// <summary>
     /// True when the path is under the <c>/api</c> tree, compared case-insensitively.
