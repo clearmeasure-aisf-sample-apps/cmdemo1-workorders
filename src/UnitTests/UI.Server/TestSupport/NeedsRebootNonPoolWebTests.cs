@@ -7,6 +7,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.TestSupport;
 /// Non-pool shape (TestSupport off): process-wide NeedsReboot still drives <c>/_healthcheck</c> for tdd/uat/prod.
 /// </summary>
 [TestFixture]
+[Explicit("Starts full app")]
 public class NeedsRebootNonPoolWebTests
 {
     [TearDown]

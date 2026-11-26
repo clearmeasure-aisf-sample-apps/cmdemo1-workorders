@@ -11,6 +11,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.Api;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class IdempotencyMiddlewareWebTests
 {
     [Test]

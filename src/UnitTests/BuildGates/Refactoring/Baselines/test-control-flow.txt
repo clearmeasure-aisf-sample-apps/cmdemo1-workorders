@@ -43,7 +43,6 @@ src/IntegrationTests/LlmGateway/WorkOrderChatHandlerTests.cs :: WorkOrderChatHan
 src/IntegrationTests/TestSupport/LlmTestAttributeTests.cs :: LlmTestAttributeTests.Execute_WhenInnerFailsThenPasses_RetriesAndPasses
 src/IntegrationTests/TestSupport/LlmTestAttributeTests.cs :: LlmTestAttributeTests.Execute_WhenInnerThrowsThenPasses_RetriesAndPasses
 src/UnitTests/Api/ApiRateLimitingWebTests.cs :: ApiRateLimitingWebTests.RateLimiting_BurstRequests_EnforcesLimit
-src/UnitTests/Api/ApiRateLimitingWebTests.cs :: ApiRateLimitingWebTests.RateLimiting_ConfigurationChange_AppliesNewLimits
 src/UnitTests/Api/ApiRateLimitingWebTests.cs :: ApiRateLimitingWebTests.RateLimiting_WhenDisabled_AllowsUnlimitedApiCalls
 src/UnitTests/Api/ApiRateLimitingWebTests.cs :: ApiRateLimitingWebTests.Should_NotRateLimit_When_PathIsNotApi
 src/UnitTests/BogusOverridesTests.cs :: BogusOverridesTests.ShouldClampGeneratedRoomNumberToTheFormEntryLimit

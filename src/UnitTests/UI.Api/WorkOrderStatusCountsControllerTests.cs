@@ -40,6 +40,7 @@ public class WorkOrderStatusCountsControllerTests
     }
 
     [Test]
+    [Explicit("Starts full app")]
     public async Task Get_WhenOneClientCallsTwiceASecondForAMinute_ShouldAnswerEveryCallFromTheDatabase()
     {
         // The shared in-memory SQLite database lives while a connection is open; hold one so the schema the

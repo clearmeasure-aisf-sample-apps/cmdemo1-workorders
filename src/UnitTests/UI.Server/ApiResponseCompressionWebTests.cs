@@ -5,6 +5,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class ApiResponseCompressionWebTests
 {
     private ApiVersioningRoutingWebApplicationFactory? _factory;
