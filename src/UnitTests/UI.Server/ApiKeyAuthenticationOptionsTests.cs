@@ -19,6 +19,14 @@ public class ApiKeyAuthenticationOptionsTests
     }
 
     [Test]
+    public void Should_ReportConfiguredOnlyForEnabled_When_UsingNamedOptionStates()
+    {
+        ApiKeyAuthenticationOptionsMother.Enabled().IsConfigured.ShouldBeTrue();
+        ApiKeyAuthenticationOptionsMother.Disabled().IsConfigured.ShouldBeFalse();
+        ApiKeyAuthenticationOptionsMother.EnabledWithBlankKey().IsConfigured.ShouldBeFalse();
+    }
+
+    [Test]
     public void Should_UseApiKeyAuthenticationSectionName()
     {
         ApiKeyAuthenticationOptions.SectionName.ShouldBe("ApiKeyAuthentication");

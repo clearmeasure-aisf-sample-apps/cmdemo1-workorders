@@ -22,7 +22,7 @@ public class ApiKeyAuthenticationPipelineTests
                 next.Response.StatusCode = StatusCodes.Status200OK;
                 return Task.CompletedTask;
             },
-            new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" });
+            ApiKeyAuthenticationOptionsMother.Enabled());
 
         nextCalls.ShouldBe(1);
         context.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);
@@ -42,7 +42,7 @@ public class ApiKeyAuthenticationPipelineTests
                 next.Response.StatusCode = StatusCodes.Status200OK;
                 return Task.CompletedTask;
             },
-            new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" });
+            ApiKeyAuthenticationOptionsMother.Enabled());
 
         nextCalls.ShouldBe(0);
         context.Response.StatusCode.ShouldBe(StatusCodes.Status401Unauthorized);
@@ -62,7 +62,7 @@ public class ApiKeyAuthenticationPipelineTests
                 next.Response.StatusCode = StatusCodes.Status200OK;
                 return Task.CompletedTask;
             },
-            new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" });
+            ApiKeyAuthenticationOptionsMother.Enabled());
 
         nextCalls.ShouldBe(0);
         context.Response.StatusCode.ShouldBe(StatusCodes.Status401Unauthorized);
@@ -71,7 +71,7 @@ public class ApiKeyAuthenticationPipelineTests
     [Test]
     public async Task Should_Return200_When_KeyMatches()
     {
-        var context = new DefaultHttpContext { Request = { Path = "/api/work-orders/bulk-import", Headers = { [ApiKeyConstants.HeaderName] = "secret" } } };
+        var context = new DefaultHttpContext { Request = { Path = "/api/work-orders/bulk-import", Headers = { [ApiKeyConstants.HeaderName] = ApiKeyAuthenticationOptionsMother.ValidationKey } } };
         var nextCalls = 0;
 
         await ApiKeyAuthenticationPipeline.InvokeAsync(
@@ -82,7 +82,7 @@ public class ApiKeyAuthenticationPipelineTests
                 next.Response.StatusCode = StatusCodes.Status200OK;
                 return Task.CompletedTask;
             },
-            new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" });
+            ApiKeyAuthenticationOptionsMother.Enabled());
 
         nextCalls.ShouldBe(1);
         context.Response.StatusCode.ShouldBe(StatusCodes.Status200OK);

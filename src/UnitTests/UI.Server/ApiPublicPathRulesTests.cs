@@ -72,7 +72,7 @@ public class ApiPublicPathRulesTests
     [TestCase("/api/v1.0/health/detailed")]
     public void Should_SkipValidation_When_PathIsDetailedHealth(string path)
     {
-        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
+        var options = ApiKeyAuthenticationOptionsMother.Enabled();
         ApiPublicPathRules.TryGetLeafSegment(path, out var leaf).ShouldBeTrue(path);
         ApiPublicPathRules.IsPublicLeaf(leaf).ShouldBeTrue(path);
         ApiPublicPathRules.IsPublicApiPath(path).ShouldBeTrue(path);
