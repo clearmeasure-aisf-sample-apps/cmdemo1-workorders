@@ -242,7 +242,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldFail_WhenDueDateIsBeforeToday()
     {
-        var clock = ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var today = ChurchTimeZone.Today(clock);
         var validator = new SaveDraftCommandValidator(clock);
         var command = CreateCommandWithDueDate(today.AddDays(-1));
@@ -256,7 +256,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldPass_WhenDueDateIsToday()
     {
-        var clock = ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var validator = new SaveDraftCommandValidator(clock);
         var command = CreateCommandWithDueDate(ChurchTimeZone.Today(clock));
 
@@ -266,7 +266,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldPass_WhenDueDateIsInTheFuture()
     {
-        var clock = ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var validator = new SaveDraftCommandValidator(clock);
         var command = CreateCommandWithDueDate(ChurchTimeZone.Today(clock).AddDays(2));
 
@@ -276,7 +276,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldPass_WhenDueDateIsNull()
     {
-        var validator = new SaveDraftCommandValidator(ChicagoNoonOn(2026, 8, 29));
+        var validator = new SaveDraftCommandValidator(ChurchClock.NoonUtcOn(2026, 8, 29));
         var command = CreateCommandWithDueDate(null);
 
         validator.TestValidate(command).IsValid.ShouldBeTrue();
@@ -285,7 +285,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldPass_WhenPastDueDateIsUnchanged()
     {
-        var clock = ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var past = ChurchTimeZone.Today(clock).AddDays(-5);
         var validator = new SaveDraftCommandValidator(clock);
         var command = CreateCommandWithDueDate(past) with { PreviousDueDate = past };
@@ -296,7 +296,7 @@ public class SaveDraftCommandValidatorTests
     [Test]
     public void ShouldFail_WhenPastDueDateChangesToAnotherPastDate()
     {
-        var clock = ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var today = ChurchTimeZone.Today(clock);
         var validator = new SaveDraftCommandValidator(clock);
         var command = CreateCommandWithDueDate(today.AddDays(-1)) with { PreviousDueDate = today.AddDays(-4) };
@@ -333,17 +333,5 @@ public class SaveDraftCommandValidatorTests
         var creator = new Employee("creator1", "Creator", "One", "creator1@example.com");
         var workOrder = new WorkOrder { Title = "T", DueDate = dueDate, Creator = creator };
         return new SaveDraftCommand(workOrder, creator);
-    }
-
-    private static FixedTimeProvider ChicagoNoonOn(int year, int month, int day)
-    {
-        var local = new DateTime(year, month, day, 12, 0, 0, DateTimeKind.Unspecified);
-        var utc = TimeZoneInfo.ConvertTimeToUtc(local, ChurchTimeZone.Chicago);
-        return new FixedTimeProvider(new DateTimeOffset(utc, TimeSpan.Zero));
-    }
-
-    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }
