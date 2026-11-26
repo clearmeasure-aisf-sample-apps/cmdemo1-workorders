@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +37,8 @@ public static class WorkOrderQuerySteps
     {
         var handler = new WorkOrderSearchHandler(
             TestHost.GetRequiredService<DataContext>(),
-            clock ?? TimeProvider.System);
+            clock ?? TimeProvider.System,
+            new ChurchCalendar(clock ?? TimeProvider.System));
         return await handler.Handle(specification);
     }
 

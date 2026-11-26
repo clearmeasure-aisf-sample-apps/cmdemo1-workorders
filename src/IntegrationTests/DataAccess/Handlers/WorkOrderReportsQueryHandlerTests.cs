@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
@@ -111,8 +112,8 @@ public class WorkOrderReportsQueryHandlerTests
         var clock = TestData.FutureClock();
         await GivenMatchingAverageAsync(clock);
 
-        var reportsHandler = new WorkOrderReportsQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
-        var searchHandler = new WorkOrderSearchSummaryQueryHandler(TestHost.GetRequiredService<DataContext>(), clock);
+        var reportsHandler = new WorkOrderReportsQueryHandler(TestHost.GetRequiredService<DataContext>(), clock, new ChurchCalendar(clock));
+        var searchHandler = new WorkOrderSearchSummaryQueryHandler(TestHost.GetRequiredService<DataContext>(), clock, new ChurchCalendar(clock));
         var reports = await reportsHandler.Handle(new WorkOrderReportsQuery());
         var search = await searchHandler.Handle(new WorkOrderSearchSummaryQuery(null));
 
@@ -233,7 +234,8 @@ public class WorkOrderReportsQueryHandlerTests
     private static async Task<WorkOrderReportsData> Handle(TimeProvider? clock = null)
     {
         var handler = new WorkOrderReportsQueryHandler(
-            TestHost.GetRequiredService<DataContext>(), clock ?? TestData.FixedClock(Now));
+            TestHost.GetRequiredService<DataContext>(), clock ?? TestData.FixedClock(Now),
+            new ChurchCalendar(clock ?? TestData.FixedClock(Now)));
         return await handler.Handle(new WorkOrderReportsQuery());
     }
 

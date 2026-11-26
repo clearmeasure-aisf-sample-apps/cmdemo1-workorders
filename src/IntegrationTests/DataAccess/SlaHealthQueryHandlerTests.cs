@@ -218,7 +218,7 @@ public class SlaHealthQueryHandlerTests
 
     private static Task<SlaHealth> WhenSlaQueriedThrough(DataContext context, TimeProvider clock)
     {
-        var handler = new SlaHealthQueryHandler(context, clock);
+        var handler = new SlaHealthQueryHandler(context, new ChurchCalendar(clock));
         return handler.Handle(new SlaHealthQuery());
     }
 

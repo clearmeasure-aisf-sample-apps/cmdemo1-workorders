@@ -99,7 +99,7 @@ public class WorkOrderCountByStatusQueryHandlerTests
         {
             var specification = new WorkOrderSpecificationQuery();
             specification.MatchStatus(status);
-            var found = await new WorkOrderSearchHandler(dataContext, TimeProvider.System).Handle(specification);
+            var found = await new WorkOrderSearchHandler(dataContext, TimeProvider.System, new ChurchCalendar(TimeProvider.System)).Handle(specification);
             counts[status.Key].ShouldBe(found.Length, status.Key);
         }
     }

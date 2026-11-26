@@ -13,11 +13,11 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// completed date. SLA = (on-time count / total count) * 100, where on-time means the church
 /// completion date is on or before the due date.
 /// </summary>
-public class SlaHealthQueryHandler(DataContext context, TimeProvider time) : IRequestHandler<SlaHealthQuery, SlaHealth>
+public class SlaHealthQueryHandler(DataContext context, ChurchCalendar calendar) : IRequestHandler<SlaHealthQuery, SlaHealth>
 {
     public async Task<SlaHealth> Handle(SlaHealthQuery request, CancellationToken cancellationToken = default)
     {
-        var currentMonth = ChurchMonth.Containing(ChurchTimeZone.Today(time));
+        var currentMonth = ChurchMonth.Containing(calendar.Today);
         var lastMonth = currentMonth.Previous();
         var completions = await CompletedWithDueDateAsync(lastMonth, currentMonth, cancellationToken);
         var (currentPercentage, currentCount) = SlaCalculator.CalculateOnTimePercentage(CompletedIn(completions, currentMonth));
