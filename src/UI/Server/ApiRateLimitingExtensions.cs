@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
 using Microsoft.Extensions.Options;
 
 // ReSharper disable UnusedMethodReturnValue.Global -- Qodana C6 (#9039): fluent
@@ -28,7 +29,7 @@ public static class ApiRateLimitingExtensions
         return PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         {
             var opts = monitor.CurrentValue;
-            if (!opts.Enabled || !ApiRoutePolicy.IsRateLimitedPath(httpContext.Request.Path))
+            if (!ApiRateLimitingDecision.LimiterAppliesTo(httpContext, opts))
             {
                 return RateLimitPartition.GetNoLimiter(string.Empty);
             }

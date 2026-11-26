@@ -19,7 +19,7 @@ public sealed class RateLimitingMiddleware(
     public async Task InvokeAsync(HttpContext context)
     {
         var options = optionsMonitor.CurrentValue;
-        if (!ShouldLimit(context, options))
+        if (!ApiRateLimitingDecision.AppliesTo(context, options))
         {
             await next(context);
             return;
@@ -35,9 +35,4 @@ public sealed class RateLimitingMiddleware(
         RateLimitResponseWriter.AddRateLimitHeaders(context, limiter, options);
         await next(context);
     }
-
-    private static bool ShouldLimit(HttpContext context, ApiRateLimitingOptions options) =>
-        RateLimitingMiddlewareRules.ShouldApply(context)
-        && options.Enabled
-        && ApiRoutePolicy.IsRateLimitedPath(context.Request.Path);
 }
