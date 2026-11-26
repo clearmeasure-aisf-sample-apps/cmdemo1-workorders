@@ -6,6 +6,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class DetailedHealthCheckEndpointIntegrationTests
 {
     private DetailedHealthWebApplicationFactory? _factory;

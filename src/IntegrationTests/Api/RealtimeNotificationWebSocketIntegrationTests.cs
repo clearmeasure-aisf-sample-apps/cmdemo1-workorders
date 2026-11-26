@@ -16,6 +16,7 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 /// and manual or browser-based checks when the Blazor client subscribes.
 /// </summary>
 [TestFixture]
+[Explicit("Starts full app")]
 public class RealtimeNotificationWebSocketIntegrationTests
 {
     private const string ConnectionCountPath = "/_test/realtime/connection-count";
