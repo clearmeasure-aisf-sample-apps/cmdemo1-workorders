@@ -65,7 +65,7 @@ public partial class Index : AppComponentBase, IListener<WorkOrderChangedEvent>
         var activity = WorkOrderActivity.Latest(order);
         var when = activity == null
             ? ""
-            : $"{activity.Verb} {activity.ChurchDate.ToString("MMM d, yyyy", CultureInfo.InvariantCulture)} · ";
+            : $"{WorkOrderActivityKindText.DisplayName(activity.Kind)} {activity.ChurchDate.ToString("MMM d, yyyy", CultureInfo.InvariantCulture)} · ";
         return when + order.Status.FriendlyName;
     }
 
