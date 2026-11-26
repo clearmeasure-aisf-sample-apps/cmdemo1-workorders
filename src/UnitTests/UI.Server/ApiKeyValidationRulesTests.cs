@@ -30,35 +30,35 @@ public class ApiKeyValidationRulesTests
     [TestCase("/", false)]
     public void RequiresValidation_ReturnsExpected_When_PathAndOptions(string path, bool expectedValidation)
     {
-        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
+        var options = ApiKeyAuthenticationOptionsMother.Enabled();
         ApiKeyValidationRules.RequiresValidation(path, options).ShouldBe(expectedValidation);
     }
 
     [Test]
     public void RequiresValidation_ReturnsFalse_When_Disabled()
     {
-        var options = new ApiKeyAuthenticationOptions { Enabled = false, ValidationKey = "x" };
+        var options = ApiKeyAuthenticationOptionsMother.Disabled();
         ApiKeyValidationRules.RequiresValidation("/api/health", options).ShouldBeFalse();
     }
 
     [Test]
     public void RequiresValidation_ReturnsFalse_When_KeyEmpty()
     {
-        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "" };
+        var options = ApiKeyAuthenticationOptionsMother.EnabledWithBlankKey();
         ApiKeyValidationRules.RequiresValidation("/api/health", options).ShouldBeFalse();
     }
 
     [Test]
     public void RequiresValidation_ReturnsFalse_When_PathEmpty()
     {
-        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "secret" };
+        var options = ApiKeyAuthenticationOptionsMother.Enabled();
         ApiKeyValidationRules.RequiresValidation("", options).ShouldBeFalse();
     }
 
     [Test]
     public void RequiresValidation_ReturnsFalse_When_PathNotApi()
     {
-        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = "x" };
+        var options = ApiKeyAuthenticationOptionsMother.Enabled();
         ApiKeyValidationRules.RequiresValidation("/mcp", options).ShouldBeFalse();
     }
 }
