@@ -1,3 +1,4 @@
+using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
 using ClearMeasure.Bootcamp.UI.Shared;
 
 namespace ClearMeasure.Bootcamp.UI.Server;
@@ -45,4 +46,9 @@ public sealed class ApiRateLimitingOptions
     /// </summary>
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- required for IOptions<T> configuration binding
     public string ApiKeyHeaderName { get; init; } = ApiKeyConstants.HeaderName;
+
+    /// <summary>
+    /// The normalized sliding-window rule for these settings, shared by the limiter and the rate-limit headers.
+    /// </summary>
+    internal SlidingWindowRule ToSlidingWindowRule() => new(PermitLimit, WindowSeconds, SegmentsPerWindow, QueueLimit);
 }
