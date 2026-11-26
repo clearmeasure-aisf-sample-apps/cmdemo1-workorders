@@ -6,6 +6,11 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 /// Configuration for sliding-window rate limiting; which routes it limits is decided by <see cref="ApiRoutePolicy"/>
 /// (the <c>/api</c> tree plus the Blazor single-API routes).
 /// </summary>
+/// <remarks>
+/// The <c>ApiRateLimiting</c> section of <c>appsettings.json</c> deliberately restates every default below: it is kept as
+/// explicit documentation of the shipped limiter configuration, not as an override. Keep the two in step (a unit test
+/// fails when they drift); environment files override only what differs (Development sets <c>Enabled</c> to false).
+/// </remarks>
 public sealed class ApiRateLimitingOptions
 {
     public const string SectionName = "ApiRateLimiting";
@@ -39,5 +44,5 @@ public sealed class ApiRateLimitingOptions
     /// Optional header for per-client key; when absent, user name or connection remote IP is used.
     /// </summary>
     // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Global -- required for IOptions<T> configuration binding
-    public string ApiKeyHeaderName { get; set; } = ApiKeyConstants.HeaderName;
+    public string ApiKeyHeaderName { get; init; } = ApiKeyConstants.HeaderName;
 }
