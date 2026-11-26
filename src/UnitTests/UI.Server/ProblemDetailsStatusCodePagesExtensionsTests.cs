@@ -30,6 +30,6 @@ public class ProblemDetailsStatusCodePagesExtensionsTests
     [TestCase("/", false)]
     public void IsMachineOriented_ReturnsExpected(string path, bool expected)
     {
-        ProblemDetailsPaths.IsMachineOriented(path).ShouldBe(expected);
+        ApiRoutePolicy.IsMachineClientPath(path).ShouldBe(expected);
     }
 }

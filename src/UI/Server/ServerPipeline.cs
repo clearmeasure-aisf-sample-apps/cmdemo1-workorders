@@ -42,7 +42,7 @@ public static class ServerPipeline
     private static void UseErrorHandling(WebApplication app)
     {
         app.UseWhen(
-            context => ProblemDetailsPaths.IsMachineOriented(context.Request.Path),
+            context => ApiRoutePolicy.IsMachineClientPath(context.Request.Path),
             branch => branch.UseExceptionHandler(new ExceptionHandlerOptions
             {
                 ExceptionHandler = context => ProblemDetailsExceptionHandler.HandleAsync(context, app.Environment)
@@ -140,7 +140,7 @@ public static class ServerPipeline
 
     internal static async Task FallbackToIndexHtml(HttpContext context)
     {
-        if (ProblemDetailsPaths.IsMachineOriented(context.Request.Path))
+        if (ApiRoutePolicy.IsMachineClientPath(context.Request.Path))
         {
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             return;

@@ -6,17 +6,12 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 /// </summary>
 public static class DiagnosticEndpointPaths
 {
-    /// <summary>True when the request targets a diagnostic controller route.</summary>
-    public static bool Matches(string? pathValue)
-    {
-        if (string.IsNullOrEmpty(pathValue))
-        {
-            return false;
-        }
+    private static readonly PathString LamarPath = new("/_lamar");
+    private static readonly PathString DiagnosticsPath = new("/_diagnostics");
 
-        return MatchesPrefix(pathValue, "/_lamar")
-               || MatchesPrefix(pathValue, "/_diagnostics");
-    }
+    /// <summary>True when the request targets a diagnostic controller route.</summary>
+    public static bool Matches(string? pathValue) =>
+        RequestPathPrefix.IsUnder(pathValue, LamarPath) || RequestPathPrefix.IsUnder(pathValue, DiagnosticsPath);
 
     /// <summary>
     /// When API-key authentication is not configured, diagnostic endpoints stay reachable only in
@@ -25,7 +20,4 @@ public static class DiagnosticEndpointPaths
     public static bool AllowsAnonymousWhenApiKeyOff(IHostEnvironment environment) =>
         environment.IsDevelopment() || environment.IsEnvironment("tdd");
 
-    private static bool MatchesPrefix(string pathValue, string prefix) =>
-        pathValue.Equals(prefix, StringComparison.OrdinalIgnoreCase)
-        || pathValue.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase);
 }
