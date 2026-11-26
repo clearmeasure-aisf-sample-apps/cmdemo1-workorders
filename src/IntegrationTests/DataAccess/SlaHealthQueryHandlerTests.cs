@@ -47,6 +47,43 @@ public class SlaHealthQueryHandlerTests
     }
 
     [Test]
+    public async Task Should_ExcludeOrders_Without_DueDate_From_MixedCompletions()
+    {
+        var (clock, creator) = GivenSlaCreator();
+        var today = ChurchTimeZone.Today(clock);
+        var noon = today.ToDateTime(new TimeOnly(12, 0));
+
+        await using var context = TestHost.NewDbContext();
+        await GivenPersistedAsync(context, creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .WithNumber(TestData.Number()).CompletedAt(noon).Build(),
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .WithNumber(TestData.Number()).DueOn(today.AddDays(-1)).CompletedAt(noon).Build());
+
+        var result = await WhenSlaQueriedThrough(context, clock);
+
+        result.CurrentMonthPercentage.ShouldBe(0m);
+        result.CurrentMonthOrderCount.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task Should_ReturnNullPercentageAndZeroCount_When_AllCompletedOrdersLackDueDate()
+    {
+        var (clock, creator) = GivenSlaCreator();
+        var noon = ChurchTimeZone.Today(clock).ToDateTime(new TimeOnly(12, 0));
+
+        await using var context = TestHost.NewDbContext();
+        await GivenPersistedAsync(context, creator,
+            WorkOrderBuilder.For(creator, WorkOrderStatus.Complete)
+                .WithNumber(TestData.Number()).CompletedAt(noon).Build());
+
+        var result = await WhenSlaQueriedThrough(context, clock);
+
+        result.CurrentMonthPercentage.ShouldBeNull();
+        result.CurrentMonthOrderCount.ShouldBe(0);
+    }
+
+    [Test]
     public async Task Should_CountOnTimeCompletion_When_CompletedDateEqualsOrBeforeDueDate()
     {
         var (clock, creator) = GivenSlaCreator();

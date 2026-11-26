@@ -1,5 +1,3 @@
-using ClearMeasure.Bootcamp.Core.Model;
-
 namespace ClearMeasure.Bootcamp.Core.Services;
 
 /// <summary>
@@ -26,25 +24,6 @@ public static class SlaCalculator
             _ => SlaTrend.Flat
         };
         return new SlaTrendComparison(trend, lastPercent);
-    }
-
-    /// <summary>
-    /// Computes the on-time percentage (0–100, rounded to a whole number) for the given orders, after mapping each
-    /// order that has both a DueDate and a CompletedDate to <see cref="SlaCompletion"/> and delegating to
-    /// <see cref="CalculateOnTimePercentage(IEnumerable{SlaCompletion})"/>.
-    /// </summary>
-    public static (decimal? Percentage, int TotalCount) CalculateOnTimePercentage(IEnumerable<WorkOrder> orders)
-    {
-        var completions = new List<SlaCompletion>();
-        foreach (var order in orders)
-        {
-            if (order is { DueDate: { } due, CompletedDate: { } completed })
-            {
-                completions.Add(new SlaCompletion(due, completed));
-            }
-        }
-
-        return CalculateOnTimePercentage(completions);
     }
 
     /// <summary>
