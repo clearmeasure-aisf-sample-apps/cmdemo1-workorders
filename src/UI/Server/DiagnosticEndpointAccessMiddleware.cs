@@ -49,7 +49,7 @@ internal static class DiagnosticEndpointAccessPipeline
         RequestDelegate next,
         string validationKey)
     {
-        if (!ApiKeyAuthenticationMiddleware.IsAuthorized(context.Request, validationKey))
+        if (!ApiKeyHeaderAuthorization.IsAuthorized(context.Request, validationKey))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
