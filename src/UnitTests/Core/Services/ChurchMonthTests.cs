@@ -100,6 +100,22 @@ public class ChurchMonthTests
         (window.EndExcluded - window.Start).ShouldBe(TimeSpan.FromDays(92) + TimeSpan.FromHours(1));
     }
 
+    [TestCase("2026-01-15", "2025-12-01 06:00", "2026-02-01 06:00")]
+    [TestCase("2026-03-15", "2026-02-01 06:00", "2026-04-01 05:00")]
+    [TestCase("2026-11-09", "2026-10-01 05:00", "2026-12-01 06:00")]
+    [TestCase("2028-02-29", "2028-01-01 06:00", "2028-03-01 06:00")]
+    public void ShouldSpanLastMonthThroughCurrentMonth_WhenTheCompletionWindowIsBuilt(
+        string today, string start, string end)
+    {
+        var currentMonth = ChurchMonth.Containing(DateOnly.Parse(today, CultureInfo.InvariantCulture));
+        var window = currentMonth.CompletionWindow(currentMonth.Previous());
+        var inside = window.Start + TimeSpan.FromTicks((window.EndExcluded - window.Start).Ticks / 4);
+
+        window.Start.ShouldBe(DateTime.Parse(start, CultureInfo.InvariantCulture));
+        window.EndExcluded.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
+        window.Contains(inside).ShouldBeTrue();
+    }
+
     [Test]
     public void ShouldMapEndMinusOneTickToLastDayOfMonth_WhenCompletionWindowIsBuilt()
     {
