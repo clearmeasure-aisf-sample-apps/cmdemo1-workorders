@@ -1,5 +1,3 @@
-using ClearMeasure.Bootcamp.Core.Model;
-
 namespace ClearMeasure.Bootcamp.Core.Services;
 
 /// <summary>
