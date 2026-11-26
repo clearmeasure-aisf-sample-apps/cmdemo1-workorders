@@ -19,7 +19,7 @@ public sealed class ApiKeyAuthenticationOptions
     public string? ValidationKey
     {
         get;
-        set => field = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        init => field = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     /// <summary>
