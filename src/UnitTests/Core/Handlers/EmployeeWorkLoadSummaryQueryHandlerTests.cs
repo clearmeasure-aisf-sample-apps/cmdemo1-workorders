@@ -20,13 +20,13 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
 
     private string _dbPath = null!;
     private CountingContext _context = null!;
-    private FixedClock _clock = null!;
+    private TimeProvider _clock = null!;
 
     [SetUp]
     public void SetUp()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"ewls_test_{Guid.NewGuid():N}.db");
-        _clock = new FixedClock(Now);
+        _clock = ChurchClock.AtUtc(Now);
         _context = new CountingContext(new FileDbConfig($"Data Source={_dbPath}"));
         _context.Database.EnsureCreated();
     }
@@ -242,8 +242,4 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         }
     }
 
-    private sealed class FixedClock(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
 }

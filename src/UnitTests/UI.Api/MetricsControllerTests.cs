@@ -19,11 +19,6 @@ public class MetricsControllerTests
         public void Increment() { }
     }
 
-    private sealed class FixedUtcTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
-
     [Test]
     public void GetSummary_Should_ReturnJson_WithRequiredFields_When_Called()
     {
@@ -73,7 +68,7 @@ public class MetricsControllerTests
 
     private static MetricsController CreateController(long totalRequests)
     {
-        var clock = new FixedUtcTimeProvider(new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero));
+        var clock = FixedUtcClock.At(new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero));
         return new MetricsController(clock, new StubRequestCounter(totalRequests))
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }

@@ -34,7 +34,7 @@ public class ToolsDueDateCheckControllerTests
         // Use a fixed clock so the test is deterministic (avoids midnight boundary flicker).
         var today = new DateOnly(2025, 6, 15);
         var fixedNow = new DateTimeOffset(2025, 6, 15, 12, 0, 0, TimeSpan.Zero);
-        var fixedClock = new FixedTimeProvider(fixedNow);
+        var fixedClock = FixedUtcClock.At(fixedNow);
         var controller = CreateController(fixedClock);
 
         var result = controller.Get(today.ToString("yyyy-MM-dd"));
@@ -85,12 +85,4 @@ public class ToolsDueDateCheckControllerTests
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
-}
-
-/// <summary>
-/// Stub <see cref="TimeProvider"/> that returns a fixed UTC instant for deterministic tests.
-/// </summary>
-file sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-{
-    public override DateTimeOffset GetUtcNow() => utcNow;
 }

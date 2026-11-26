@@ -12,15 +12,10 @@ public class MetricsSummaryBuilderTests
         public void Increment() => Total++;
     }
 
-    private sealed class FixedUtcTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
-
     [Test]
     public void Build_Should_ReturnUptimeAndRequestCount_When_StartAndCounterKnown()
     {
-        var clock = new FixedUtcTimeProvider(new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero));
+        var clock = FixedUtcClock.At(new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero));
         var start = new DateTimeOffset(2026, 8, 26, 11, 0, 0, TimeSpan.Zero);
         var counter = new StubRequestCounter(42);
 
