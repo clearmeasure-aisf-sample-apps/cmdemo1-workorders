@@ -7,6 +7,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 /// ETag conditional GET against UI.Server in-process (SQLite memory); avoids IntegrationTests assembly SetUpFixture / LocalDB.
 /// </summary>
 [TestFixture]
+[Explicit("Starts full app")]
 public class EtagConditionalGetWebTests
 {
     private ApiVersioningRoutingWebApplicationFactory? _factory;

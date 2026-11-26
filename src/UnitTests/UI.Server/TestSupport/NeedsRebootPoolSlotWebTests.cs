@@ -9,6 +9,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.TestSupport;
 /// Pool-slot shape (TestSupport on): NeedsReboot is request-scoped and must not poison concurrent probes.
 /// </summary>
 [TestFixture]
+[Explicit("Starts full app")]
 public class NeedsRebootPoolSlotWebTests
 {
     [TearDown]

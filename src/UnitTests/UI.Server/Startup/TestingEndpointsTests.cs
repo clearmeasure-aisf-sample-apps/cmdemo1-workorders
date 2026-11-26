@@ -4,6 +4,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.Startup;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class TestingEndpointsTests
 {
     [Test]

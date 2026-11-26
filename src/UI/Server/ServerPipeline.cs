@@ -138,7 +138,7 @@ public static class ServerPipeline
         typeof(ServerPipeline).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-    private static async Task FallbackToIndexHtml(HttpContext context)
+    internal static async Task FallbackToIndexHtml(HttpContext context)
     {
         if (ProblemDetailsPaths.IsMachineOriented(context.Request.Path))
         {

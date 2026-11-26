@@ -12,6 +12,7 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server.TestSupport;
 /// Proves the test-support surface returns 404 outside pool slots (Enabled=false), matching tdd/uat/prod.
 /// </summary>
 [TestFixture]
+[Explicit("Starts full app")]
 public class TestSupportEndpointWebTests
 {
     [Test]

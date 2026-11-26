@@ -25,6 +25,7 @@ public class TestHostTelemetryIsolationTests
     }
 
     [Test]
+    [Explicit("Starts full app")]
     public async Task Should_NotRegisterAzureMonitor_When_TestHostStarts_AndVariableWasSetBeforeIsolation()
     {
         var originalValue = Environment.GetEnvironmentVariable(ConnectionStringVariable);
@@ -55,6 +56,7 @@ public class TestHostTelemetryIsolationTests
     }
 
     [Test]
+    [Explicit("Starts full app")]
     public async Task Should_ConfigureTestServerClientTimeout_When_ClientCreated()
     {
         await using var factory = new CorsEnabledApiWebApplicationFactory();

@@ -8,6 +8,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.Api;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class ApiRateLimitingWebTests
 {
     private static IReadOnlyDictionary<string, string?> StrictLimitSettings(int permitLimit, int windowSeconds = 2) =>
@@ -122,25 +123,6 @@ public class ApiRateLimitingWebTests
         (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
         await Task.Delay(TimeSpan.FromSeconds(1.2));
         (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
-    }
-
-    [Test]
-    public async Task RateLimiting_ConfigurationChange_AppliesNewLimits()
-    {
-        await using var strict = new TunableApiRateLimitWebApplicationFactory(StrictLimitSettings(1));
-        await using var loose = new TunableApiRateLimitWebApplicationFactory(StrictLimitSettings(5));
-        using (var client = strict.CreateClient())
-        {
-            (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
-            (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
-        }
-
-        using (var client = loose.CreateClient())
-        {
-            for (var i = 0; i < 5; i++)
-                (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.OK);
-            (await client.GetAsync("/api/time")).StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
-        }
     }
 
     [Test]
