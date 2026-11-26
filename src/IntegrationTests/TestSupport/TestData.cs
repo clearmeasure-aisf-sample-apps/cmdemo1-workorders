@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
@@ -11,42 +12,22 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.TestSupport;
 /// </summary>
 public static class TestData
 {
-    private const string Base36 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private const int MaxNumberLength = 7;
-
     /// <summary>Eight hex characters, unique per call.</summary>
     public static string Tag()
     {
         return Guid.NewGuid().ToString("N")[..8];
     }
 
-    /// <summary>
-    /// A unique work order number of seven characters: the optional one-character prefix
-    /// followed by random uppercase base36 characters.
-    /// </summary>
+    /// <summary>A unique work order number; see <see cref="UniqueWorkOrderNumber.Next"/>.</summary>
     public static string Number(string prefix = "")
     {
-        if (prefix.Length > 1)
-        {
-            throw new ArgumentException("A work order number prefix is at most one character.", nameof(prefix));
-        }
-
-        return prefix + RandomBase36(MaxNumberLength - prefix.Length);
+        return UniqueWorkOrderNumber.Next(prefix);
     }
 
-    /// <summary>
-    /// <paramref name="count"/> unique work order numbers that share a random five-character stem
-    /// and end in 01, 02, ...; they sort ordinally in index order.
-    /// </summary>
+    /// <summary>A series of unique, ordinally sorted work order numbers; see <see cref="UniqueWorkOrderNumber.Series"/>.</summary>
     public static string[] NumberSeries(int count)
     {
-        if (count is < 1 or > 99)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count), count, "A number series has 1 to 99 numbers.");
-        }
-
-        var stem = RandomBase36(5);
-        return Enumerable.Range(1, count).Select(i => $"{stem}{i:00}").ToArray();
+        return UniqueWorkOrderNumber.Series(count);
     }
 
     /// <summary>A unique user name: <paramref name="prefix"/>, an underscore and a <see cref="Tag"/>.</summary>
@@ -98,17 +79,6 @@ public static class TestData
     public static TimeProvider FixedClock(DateTimeOffset utcNow)
     {
         return new FixedTimeProvider(utcNow);
-    }
-
-    private static string RandomBase36(int length)
-    {
-        return string.Create(length, 0, (span, _) =>
-        {
-            for (var i = 0; i < span.Length; i++)
-            {
-                span[i] = Base36[RandomNumberGenerator.GetInt32(Base36.Length)];
-            }
-        });
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider

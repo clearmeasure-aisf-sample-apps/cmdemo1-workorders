@@ -29,9 +29,7 @@ public sealed class WorkOrderBuilder
 
     /// <summary>Starts a builder for <paramref name="creator"/> in <paramref name="status"/> with a unique number.</summary>
     public static WorkOrderBuilder For(Employee creator, WorkOrderStatus status) =>
-        Create().WithNumber(UniqueNumber()).CreatedBy(creator).WithStatus(status);
-
-    private static string UniqueNumber() => Guid.NewGuid().ToString("N")[..7].ToUpperInvariant();
+        Create().WithNumber(UniqueWorkOrderNumber.Next()).CreatedBy(creator).WithStatus(status);
 
     /// <summary>Sets a fixed identity for remoting or equality assertions.</summary>
     public WorkOrderBuilder WithId(Guid id)
@@ -149,7 +147,7 @@ public sealed class WorkOrderBuilder
     /// <summary>Builds the work order.</summary>
     public WorkOrder Build()
     {
-        var number = _number ?? UniqueNumber();
+        var number = _number ?? UniqueWorkOrderNumber.Next();
         var order = new WorkOrder
         {
             Number = number,
