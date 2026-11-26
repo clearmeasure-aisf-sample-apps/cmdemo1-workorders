@@ -16,7 +16,7 @@ public class WorkOrderActivityTests
 
         var activity = WorkOrderActivity.Latest(order);
 
-        activity.ShouldBe(new WorkOrderActivity("Completed", Day.AddDays(2)));
+        activity.ShouldBe(new WorkOrderActivity(WorkOrderActivityKind.Completed, Day.AddDays(2)));
     }
 
     [Test]
@@ -26,7 +26,7 @@ public class WorkOrderActivityTests
 
         var activity = WorkOrderActivity.Latest(order);
 
-        activity.ShouldBe(new WorkOrderActivity("Assigned", Day.AddDays(3)));
+        activity.ShouldBe(new WorkOrderActivity(WorkOrderActivityKind.Assigned, Day.AddDays(3)));
     }
 
     [TestCase(true, true, false, "Completed")]
@@ -34,7 +34,7 @@ public class WorkOrderActivityTests
     [TestCase(true, false, true, "Completed")]
     [TestCase(true, true, true, "Completed")]
     public void Latest_PrefersCompletedThenAssigned_OnEqualDates(bool completed, bool assigned, bool created,
-        string expectedVerb)
+        string expectedDisplayName)
     {
         var order = new WorkOrder
         {
@@ -46,7 +46,7 @@ public class WorkOrderActivityTests
         var activity = WorkOrderActivity.Latest(order);
 
         activity.ShouldNotBeNull();
-        activity.Verb.ShouldBe(expectedVerb);
+        WorkOrderActivityKindText.DisplayName(activity.Kind).ShouldBe(expectedDisplayName);
         activity.WhenUtc.ShouldBe(Day);
     }
 
@@ -70,17 +70,33 @@ public class WorkOrderActivityTests
 
         var activity = WorkOrderActivity.Latest(order);
 
-        activity.ShouldBe(new WorkOrderActivity("Created", Day));
+        activity.ShouldBe(new WorkOrderActivity(WorkOrderActivityKind.Created, Day));
     }
 
     [Test]
     public void ChurchDate_ConvertsUnspecifiedKindAsUtc()
     {
-        var activity = new WorkOrderActivity("Completed",
+        var activity = new WorkOrderActivity(WorkOrderActivityKind.Completed,
             new DateTime(2026, 10, 14, 3, 0, 0, DateTimeKind.Unspecified));
 
         var churchDate = activity.ChurchDate;
 
         churchDate.ShouldBe(new DateOnly(2026, 10, 13));
+    }
+
+    [TestCase(WorkOrderActivityKind.Created, "Created")]
+    [TestCase(WorkOrderActivityKind.Assigned, "Assigned")]
+    [TestCase(WorkOrderActivityKind.Completed, "Completed")]
+    public void DisplayName_ReturnsPersonFacingEventName(WorkOrderActivityKind kind, string expected)
+    {
+        WorkOrderActivityKindText.DisplayName(kind).ShouldBe(expected);
+    }
+
+    [Test]
+    public void Kind_ValuesAreOrderedByPrecedence_LowestFirst()
+    {
+        // The tie-break is the enum itself: Completed over Assigned, Assigned over Created.
+        ((int)WorkOrderActivityKind.Created).ShouldBeLessThan((int)WorkOrderActivityKind.Assigned);
+        ((int)WorkOrderActivityKind.Assigned).ShouldBeLessThan((int)WorkOrderActivityKind.Completed);
     }
 }
