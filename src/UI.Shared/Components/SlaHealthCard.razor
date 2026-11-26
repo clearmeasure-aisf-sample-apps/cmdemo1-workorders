@@ -15,7 +15,7 @@
     }
     else
     {
-        var trendText = SlaCalculator.TrendText(_health.CurrentMonthPercentage, _health.LastMonthPercentage);
+        var trendText = SlaTrendFormatter.Format(SlaCalculator.Trend(_health.CurrentMonthPercentage, _health.LastMonthPercentage));
         <div class="sla-health-content">
             <div class="sla-health-header">
                 <h3 class="sla-health-title">This Month</h3>

@@ -3,28 +3,29 @@ using ClearMeasure.Bootcamp.Core.Model;
 namespace ClearMeasure.Bootcamp.Core.Services;
 
 /// <summary>
-/// The SLA math (on-time percentage and trend text) that belongs to no single entity.
+/// The SLA math (on-time percentage and month-over-month trend) that belongs to no single entity.
 /// </summary>
 public static class SlaCalculator
 {
     /// <summary>
-    /// Computes the trend text and aria-label relative to the last month. Returns "↑ up from X%", "↓ down from X%",
-    /// or "— flat at X%", or null if the last month has no data (no comparison possible).
+    /// Compares this month's percentage with last month's. Answers <see cref="SlaTrend.Up"/>, <see cref="SlaTrend.Down"/>
+    /// or <see cref="SlaTrend.Flat"/> with last month's percentage, or <see cref="SlaTrend.Unknown"/> (no percentage)
+    /// when either month has no data. Display text is the UI's concern.
     /// </summary>
-    public static string? TrendText(decimal? currentPercent, decimal? lastPercent)
+    public static SlaTrendComparison Trend(decimal? currentPercent, decimal? lastPercent)
     {
         if (lastPercent is null || currentPercent is null)
         {
-            return null;
+            return new SlaTrendComparison(SlaTrend.Unknown, null);
         }
 
-        var diff = currentPercent.Value - lastPercent.Value;
-        return diff.CompareTo(0) switch
+        var trend = currentPercent.Value.CompareTo(lastPercent.Value) switch
         {
-            > 0 => $"↑ up from {lastPercent:0}%",
-            < 0 => $"↓ down from {lastPercent:0}%",
-            _ => $"— flat at {lastPercent:0}%"
+            > 0 => SlaTrend.Up,
+            < 0 => SlaTrend.Down,
+            _ => SlaTrend.Flat
         };
+        return new SlaTrendComparison(trend, lastPercent);
     }
 
     /// <summary>
