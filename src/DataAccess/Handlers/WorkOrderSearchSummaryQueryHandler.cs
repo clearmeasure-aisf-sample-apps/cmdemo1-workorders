@@ -47,16 +47,12 @@ public class WorkOrderSearchSummaryQueryHandler(DataContext context, TimeProvide
     private async Task AddCompletionsAsync(WorkOrderSearchSummary summary, IQueryable<WorkOrder> orders,
         CancellationToken cancellationToken)
     {
-        var completions = await WorkOrderQueryFilters.CompletedWithin(orders, CompletedWindowDays, time)
-            .Select(wo => new { wo.CreatedDate, wo.CompletedDate })
+        var spans = await WorkOrderQueryFilters.CompletionSpansWithin(orders, CompletedWindowDays, time)
             .ToListAsync(cancellationToken);
-        var durations = completions
-            .Where(c => c.CreatedDate.HasValue && c.CompletedDate.HasValue)
-            .Select(c => (c.CompletedDate!.Value - c.CreatedDate!.Value).TotalDays)
-            .ToList();
+        var statistics = new CompletionStatistics(spans);
 
-        summary.CompletedLast30Days = completions.Count;
-        summary.AverageDaysToClose = durations.Count == 0 ? null : durations.Average();
+        summary.CompletedLast30Days = statistics.Count;
+        summary.AverageDaysToClose = statistics.AverageDaysToClose;
     }
 
     private async Task<Employee?> FindUserAsync(string? userName, CancellationToken cancellationToken) =>

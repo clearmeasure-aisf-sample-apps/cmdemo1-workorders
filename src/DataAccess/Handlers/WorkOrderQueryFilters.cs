@@ -49,6 +49,14 @@ internal static class WorkOrderQueryFilters
     public static IQueryable<WorkOrder> CompletedWithin(IQueryable<WorkOrder> query, int days, TimeProvider time) =>
         query.Where(WorkOrderSpecifications.CompletedWithin(days, time));
 
+    /// <summary>
+    /// The creation-to-completion spans of work orders completed within the last <paramref name="days"/> days,
+    /// projected in the query so creator and assignee are not joined.
+    /// </summary>
+    public static IQueryable<CompletionSpan> CompletionSpansWithin(IQueryable<WorkOrder> query, int days,
+        TimeProvider time) =>
+        CompletedWithin(query, days, time).Select(wo => new CompletionSpan(wo.CreatedDate, wo.CompletedDate));
+
     private static IQueryable<WorkOrder> ApplyBasics(
         IQueryable<WorkOrder> query,
         Employee? assignee,
