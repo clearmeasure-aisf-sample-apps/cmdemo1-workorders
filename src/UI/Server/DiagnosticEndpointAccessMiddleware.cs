@@ -31,7 +31,7 @@ internal static class DiagnosticEndpointAccessPipeline
 
         if (options.IsConfigured)
         {
-            await ChallengeOrContinueAsync(context, next, options.ValidationKey ?? string.Empty);
+            await ChallengeOrContinueAsync(context, next, options.RequiredValidationKey);
             return;
         }
 
