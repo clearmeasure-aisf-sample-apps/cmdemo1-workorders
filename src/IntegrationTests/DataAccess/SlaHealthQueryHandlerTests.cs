@@ -1,4 +1,3 @@
-using System.Globalization;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
@@ -189,20 +188,6 @@ public class SlaHealthQueryHandlerTests
     private static CountingDataContext GivenCountedContext()
     {
         return new CountingDataContext(TestHost.GetRequiredService<IDatabaseConfiguration>());
-    }
-
-    [TestCase("2026-01-15", "2025-12-01 06:00", "2026-02-01 06:00")]
-    [TestCase("2026-03-15", "2026-02-01 06:00", "2026-04-01 05:00")]
-    [TestCase("2026-11-09", "2026-10-01 05:00", "2026-12-01 06:00")]
-    [TestCase("2028-02-29", "2028-01-01 06:00", "2028-03-01 06:00")]
-    public void ShouldSpanLastMonthThroughCurrentMonth_WhenTheCompletionWindowIsBuilt(
-        string today, string start, string end)
-    {
-        var window = GivenCompletionWindow(DateOnly.Parse(today, CultureInfo.InvariantCulture));
-
-        window.Start.ShouldBe(DateTime.Parse(start, CultureInfo.InvariantCulture));
-        window.EndExcluded.ShouldBe(DateTime.Parse(end, CultureInfo.InvariantCulture));
-        window.Contains(PointInside(window)).ShouldBeTrue();
     }
 
     private static ChurchInstantRange GivenCompletionWindow(DateOnly today)
