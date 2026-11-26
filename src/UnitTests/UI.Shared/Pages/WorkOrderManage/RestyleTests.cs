@@ -48,7 +48,7 @@ public class RestyleTests
     [Test]
     public async Task ShouldRenderOverdueStatusPill_WhenDueDateIsPast()
     {
-        var clock = new WorkOrderManageFixedClock(new DateTimeOffset(2026, 6, 15, 18, 0, 0, TimeSpan.Zero));
+        var clock = FixedUtcClock.At(new DateTimeOffset(2026, 6, 15, 18, 0, 0, TimeSpan.Zero));
         var order = WorkOrderBuilder.Create()
             .WithId(Guid.NewGuid()).WithNumber("WO-OD").WithTitle("Overdue").WithDescription("Overdue")
             .WithStatus(WorkOrderStatus.Assigned).CreatedBy(Creator).CreatedAt(DateTime.UtcNow)
