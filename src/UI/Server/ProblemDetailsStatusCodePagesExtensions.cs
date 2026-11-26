@@ -6,7 +6,7 @@ namespace ClearMeasure.Bootcamp.UI.Server;
 internal static class ProblemDetailsStatusCodePagesExtensions
 {
     /// <summary>
-    /// For <c>/api</c> and <c>/mcp</c> requests, writes RFC 7807 bodies when the pipeline sets an error status without a body.
+    /// For machine client requests (<see cref="ApiRoutePolicy.IsMachineClientPath"/>), writes RFC 7807 bodies when the pipeline sets an error status without a body.
     /// </summary>
     internal static void UseMachineClientStatusCodeProblemDetails(this WebApplication app)
     {
@@ -18,7 +18,7 @@ internal static class ProblemDetailsStatusCodePagesExtensions
                 return;
             }
 
-            if (!ProblemDetailsPaths.IsMachineOriented(httpContext.Request.Path))
+            if (!ApiRoutePolicy.IsMachineClientPath(httpContext.Request.Path))
             {
                 await context.Next(httpContext);
                 return;
@@ -58,11 +58,4 @@ internal static class ProblemDetailsStatusCodePagesExtensions
             StatusCodes.Status400BadRequest => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
             _ => "https://tools.ietf.org/html/rfc7231#section-6.6.1"
         };
-}
-
-internal static class ProblemDetailsPaths
-{
-    internal static bool IsMachineOriented(PathString path) =>
-        path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
-        || path.StartsWithSegments("/mcp", StringComparison.OrdinalIgnoreCase);
 }

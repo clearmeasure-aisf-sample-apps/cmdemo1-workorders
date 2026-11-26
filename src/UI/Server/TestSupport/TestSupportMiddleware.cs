@@ -5,6 +5,8 @@ namespace ClearMeasure.Bootcamp.UI.Server.TestSupport;
 /// </summary>
 public sealed class TestSupportMiddleware(RequestDelegate next)
 {
+    private static readonly PathString TestSupportPath = new(TestSupportConstants.PathPrefix);
+
     /// <summary>Runs the gate for test-support paths, then continues the pipeline.</summary>
     public async Task InvokeAsync(HttpContext context, TestSupportOptions options)
     {
@@ -29,14 +31,6 @@ public sealed class TestSupportMiddleware(RequestDelegate next)
         await next(context);
     }
 
-    internal static bool IsTestSupportPath(string? pathValue)
-    {
-        if (string.IsNullOrEmpty(pathValue))
-        {
-            return false;
-        }
-
-        return pathValue.Equals(TestSupportConstants.PathPrefix, StringComparison.OrdinalIgnoreCase)
-               || pathValue.StartsWith(TestSupportConstants.PathPrefix + "/", StringComparison.OrdinalIgnoreCase);
-    }
+    internal static bool IsTestSupportPath(string? pathValue) =>
+        RequestPathPrefix.IsUnder(pathValue, TestSupportPath);
 }

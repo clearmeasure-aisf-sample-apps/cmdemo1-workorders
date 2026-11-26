@@ -47,4 +47,20 @@ public class ApiRoutePolicyTests
     {
         ApiRoutePolicy.IsRateLimitedPath(new PathString(path)).ShouldBe(expectedIsRateLimited);
     }
+
+    [TestCase("/api", true)]
+    [TestCase("/api/health", true)]
+    [TestCase("/API/v1.0/work-orders", true)]
+    [TestCase("/mcp", true)]
+    [TestCase("/mcp/messages", true)]
+    [TestCase("/MCP", true)]
+    [TestCase("/mcpx", false)]
+    [TestCase("/apifoo", false)]
+    [TestCase("/blazor-wasm-single-api", false)]
+    [TestCase("/_lamar", false)]
+    [TestCase("/", false)]
+    public void IsMachineClientPath_ReturnsExpected_When_PathGiven(string path, bool expectedIsMachineClient)
+    {
+        ApiRoutePolicy.IsMachineClientPath(new PathString(path)).ShouldBe(expectedIsMachineClient);
+    }
 }

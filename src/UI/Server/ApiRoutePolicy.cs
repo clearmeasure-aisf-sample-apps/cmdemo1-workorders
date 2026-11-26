@@ -18,6 +18,11 @@ internal static class ApiRoutePolicy
     private static readonly PathString ApiPrefix = new("/api");
 
     /// <summary>
+    /// The Model Context Protocol endpoint, a machine client route mounted outside <see cref="ApiPrefix"/>.
+    /// </summary>
+    private static readonly PathString McpPath = new("/mcp");
+
+    /// <summary>
     /// The legacy Blazor single-API route, mounted at the application root rather than under <see cref="ApiPrefix"/>.
     /// </summary>
     private static readonly PathString BlazorSingleApiPath = new("/" + WebServiceApiRoutes.LegacyRelativeUrl);
@@ -31,8 +36,7 @@ internal static class ApiRoutePolicy
     /// True when the path is under the <c>/api</c> tree, compared case-insensitively.
     /// </summary>
     /// <param name="path">The request path.</param>
-    internal static bool IsApiPath(PathString path) =>
-        path.StartsWithSegments(ApiPrefix, StringComparison.OrdinalIgnoreCase);
+    internal static bool IsApiPath(PathString path) => RequestPathPrefix.IsUnder(path, ApiPrefix);
 
     /// <summary>
     /// Adapter for callers holding the raw request path value rather than a <see cref="PathString"/>: a null,
@@ -40,19 +44,25 @@ internal static class ApiRoutePolicy
     /// </summary>
     /// <param name="pathValue">The raw request path value.</param>
     internal static bool IsApiPath([NotNullWhen(true)] string? pathValue) =>
-        !string.IsNullOrEmpty(pathValue) && pathValue.StartsWith('/') && IsApiPath(new PathString(pathValue));
+        RequestPathPrefix.IsUnder(pathValue, ApiPrefix);
 
     /// <summary>
     /// True when the path is one of the Blazor single-API routes, compared case-insensitively.
     /// </summary>
     /// <param name="path">The request path.</param>
     private static bool IsBlazorSingleApiPath(PathString path) =>
-        path.StartsWithSegments(BlazorSingleApiPath, StringComparison.OrdinalIgnoreCase)
-        || path.StartsWithSegments(BlazorSingleApiPathV1, StringComparison.OrdinalIgnoreCase);
+        RequestPathPrefix.IsUnder(path, BlazorSingleApiPath) || RequestPathPrefix.IsUnder(path, BlazorSingleApiPathV1);
 
     /// <summary>
     /// The <c>/api</c> tree plus the Blazor single-API routes named here - the set the rate limiter covers.
     /// </summary>
     /// <param name="path">The request path.</param>
     internal static bool IsRateLimitedPath(PathString path) => IsApiPath(path) || IsBlazorSingleApiPath(path);
+
+    /// <summary>
+    /// A machine client path: the <c>/api</c> tree or the <c>/mcp</c> endpoint. These requests get RFC 7807
+    /// ProblemDetails bodies for errors and a plain 404 instead of the Blazor <c>index.html</c> fallback.
+    /// </summary>
+    /// <param name="path">The request path.</param>
+    internal static bool IsMachineClientPath(PathString path) => IsApiPath(path) || RequestPathPrefix.IsUnder(path, McpPath);
 }
