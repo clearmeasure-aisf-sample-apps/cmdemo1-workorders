@@ -218,6 +218,7 @@ public class SignedInUserCharacterizationTests
         ctx.Services.AddSingleton<IUiBus>(uiBus);
         ctx.Services.AddSingleton(new WorkOrderBulkActionService(bus, uiBus));
         ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<ChurchCalendar>();
         ctx.Services.AddSingleton(new WorkOrderSearchState());
         ctx.Services.AddSingleton<IFeatureFlags>(new StubFeatureFlags());
         return ctx;
@@ -236,6 +237,7 @@ public class SignedInUserCharacterizationTests
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();
         ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<ChurchCalendar>();
         var customAuth = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         if (session.UserName != null)
         {

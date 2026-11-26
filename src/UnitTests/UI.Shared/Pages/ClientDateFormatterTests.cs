@@ -163,6 +163,7 @@ public class ClientDateFormatterTests
         ctx.Services.AddSingleton<IUiBus>(uiBus);
         ctx.Services.AddSingleton(new WorkOrderBulkActionService(bus, uiBus));
         ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<ChurchCalendar>();
         ctx.Services.AddSingleton(new WorkOrderSearchState());
         ctx.Services.AddSingleton<IFeatureFlags>(new StubFeatureFlags());
 
@@ -179,6 +180,7 @@ public class ClientDateFormatterTests
         ctx.Services.AddSingleton<IBus>(new ManageBus(order));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
         ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<ChurchCalendar>();
         ctx.Services.AddSingleton<IWorkOrderBuilder>(new StubWorkOrderBuilder());
         ctx.Services.AddSingleton<IUserSession>(new StubUserSession(Creator));
         ctx.Services.AddSingleton<ITranslationService>(new StubTranslationService());

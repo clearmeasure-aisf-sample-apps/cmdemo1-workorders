@@ -85,6 +85,7 @@ public sealed class WorkOrderSearchPageBuilder
         ctx.Services.AddSingleton<IUiBus>(uiBus);
         ctx.Services.AddSingleton(new WorkOrderBulkActionService(theBus, uiBus));
         ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<ChurchCalendar>();
         ctx.Services.AddSingleton(_searchState ?? new WorkOrderSearchState());
         ctx.Services.AddSingleton<IFeatureFlags>(_featureFlags ?? new StubFeatureFlags());
         RegisterAuth(ctx);

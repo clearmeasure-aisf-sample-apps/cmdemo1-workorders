@@ -212,6 +212,7 @@ public sealed class WorkOrderManagePageContext
         ctx.Services.AddSingleton<IBus>(Bus);
         ctx.Services.AddSingleton(_uiBus ?? new StubUiBus());
         ctx.Services.AddSingleton(_clock);
+        ctx.Services.AddSingleton(new ChurchCalendar(_clock));
         ctx.Services.AddSingleton<IWorkOrderBuilder>(_newOrder);
         ctx.Services.AddSingleton<IUserSession>(Session);
         ctx.Services.AddSingleton<ITranslationService>(_translation);

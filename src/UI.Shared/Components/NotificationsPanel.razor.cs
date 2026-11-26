@@ -24,7 +24,7 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
     private IJSRuntime Js { get; set; } = null!;
 
     [Inject]
-    private TimeProvider Clock { get; set; } = null!;
+    private ChurchCalendar Calendar { get; set; } = null!;
 
     private DotNetObjectReference<NotificationsPanel>? _dotNetRef;
     private NotificationsPanelScript? _script;
@@ -64,7 +64,7 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
         if (order.DueDate == null)
             return "none";
 
-        var today = ChurchTimeZone.Today(Clock);
+        var today = Calendar.Today;
         if (order.DueDate < today)
             return "overdue";
         if (order.DueDate == today)
@@ -77,7 +77,7 @@ public partial class NotificationsPanel : ComponentBase, IAsyncDisposable
         if (dueDate == null)
             return "No due date";
 
-        var today = ChurchTimeZone.Today(Clock);
+        var today = Calendar.Today;
         if (dueDate == today)
             return "Due today";
         if (dueDate < today)

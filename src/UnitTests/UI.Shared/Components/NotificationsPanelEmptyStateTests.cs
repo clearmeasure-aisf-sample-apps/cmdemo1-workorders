@@ -1,5 +1,6 @@
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -12,6 +13,7 @@ public class NotificationsPanelEmptyStateTests
     private static void SetupClockAndJs(BunitContext ctx)
     {
         ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton<ChurchCalendar>();
         var module = ctx.JSInterop.SetupModule(NotificationsPanelScript.ModulePath);
         module.SetupVoid("setupEscapeHandler", _ => true);
     }

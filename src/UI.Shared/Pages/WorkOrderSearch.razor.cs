@@ -32,6 +32,7 @@ public partial class WorkOrderSearch : AppComponentBase
     private bool _earlyAccessBanner;
 
     [Inject] public TimeProvider Clock { get; set; } = null!;
+    [Inject] private ChurchCalendar Calendar { get; set; } = null!;
     [Inject] private IFeatureFlags FeatureFlags { get; set; } = null!;
     [Inject] private WorkOrderSearchState SearchState { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
@@ -289,5 +290,5 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private Task DownloadCsvAsync(IEnumerable<WorkOrderSearchResultRow> rows) =>
         (_script ??= new SearchPageScript(Js)).DownloadCsvAsync(
-            WorkOrderCsvExporter.FileName(ChurchTimeZone.Today(Clock)), WorkOrderCsvExporter.ToCsv(rows));
+            WorkOrderCsvExporter.FileName(Calendar.Today), WorkOrderCsvExporter.ToCsv(rows));
 }
