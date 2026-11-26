@@ -13,7 +13,8 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// grouped by assignee; employees with no assigned work orders stay in the result with zeros.
 /// The predicates match <see cref="EmployeeWorkLoadQueryHandler"/>.
 /// </summary>
-public class EmployeeWorkLoadSummaryQueryHandler(DataContext context, TimeProvider timeProvider)
+public class EmployeeWorkLoadSummaryQueryHandler(DataContext context, TimeProvider timeProvider,
+    ChurchCalendar calendar)
     : IRequestHandler<EmployeeWorkLoadSummaryQuery, EmployeeWorkLoadSummary[]>
 {
     private const int CompletedWindowDays = 30;
@@ -69,7 +70,7 @@ public class EmployeeWorkLoadSummaryQueryHandler(DataContext context, TimeProvid
 
     private IQueryable<AssigneeLoad> AssigneeCounts()
     {
-        var today = ChurchTimeZone.Today(timeProvider);
+        var today = calendar.Today;
         return context.Set<WorkOrder>().AsNoTracking()
             .Where(workOrder => workOrder.Assignee != null)
             .Select(WorkOrderProjection.AssigneeLoadFlags(today, timeProvider, CompletedWindowDays))

@@ -11,7 +11,8 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// Load counts for one employee, using the same SQL-side flag projection as
 /// <see cref="EmployeeWorkLoadSummaryQueryHandler"/>.
 /// </summary>
-public class EmployeeWorkLoadQueryHandler(DataContext context, TimeProvider timeProvider)
+public class EmployeeWorkLoadQueryHandler(DataContext context, TimeProvider timeProvider,
+    ChurchCalendar calendar)
     : IRequestHandler<EmployeeWorkLoadQuery, EmployeeWorkLoad>
 {
     private const int CompletedWindowDays = 30;
@@ -21,7 +22,7 @@ public class EmployeeWorkLoadQueryHandler(DataContext context, TimeProvider time
         var employee = await context.Set<Employee>()
             .SingleAsync(emp => emp.UserName == request.EmployeeUserName, cancellationToken);
 
-        var today = ChurchTimeZone.Today(timeProvider);
+        var today = calendar.Today;
         var totals = await context.Set<WorkOrder>()
             .Where(wo => wo.Assignee != null && wo.Assignee.Id == employee.Id)
             .Select(WorkOrderProjection.AssigneeLoadFlags(today, timeProvider, CompletedWindowDays))

@@ -1,6 +1,7 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
 using ClearMeasure.Bootcamp.DataAccess.Mappings;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
@@ -86,7 +87,9 @@ public class BuildingRoomSummaryQueryHandlerTests
     private static void AssertSqlContainsGroupByJoinSum(string connectionString)
     {
         using var context = new DataContext(new StubDatabaseConfiguration(connectionString));
-        var sql = new BuildingRoomSummaryQueryHandler(context, TestData.FixedClock(Now)).CountsQuery().ToQueryString();
+        var clock = TestData.FixedClock(Now);
+        var sql = new BuildingRoomSummaryQueryHandler(context, clock, new ChurchCalendar(clock)).CountsQuery()
+            .ToQueryString();
 
         TestContext.Out.WriteLine($"-- {context.Database.ProviderName}{Environment.NewLine}{sql}");
         sql.ShouldContain("GROUP BY");
@@ -243,8 +246,9 @@ public class BuildingRoomSummaryQueryHandlerTests
 
     private static async Task<BuildingSummary[]> Handle()
     {
+        var clock = TestData.FixedClock(Now);
         var handler = new BuildingRoomSummaryQueryHandler(
-            TestHost.GetRequiredService<DataContext>(), TestData.FixedClock(Now));
+            TestHost.GetRequiredService<DataContext>(), clock, new ChurchCalendar(clock));
         return await handler.Handle(new BuildingRoomSummaryQuery());
     }
 

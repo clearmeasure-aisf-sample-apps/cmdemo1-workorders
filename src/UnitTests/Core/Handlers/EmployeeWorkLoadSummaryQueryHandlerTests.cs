@@ -50,7 +50,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         await GivenAssignableWorkloadAsync(today, since);
 
         _context.Commands.Reset();
-        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(_context, _clock)
+        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(_context, _clock, new ChurchCalendar(_clock))
             .Handle(new EmployeeWorkLoadSummaryQuery());
 
         ThenOneGroupedSql(_context.Commands);
@@ -130,7 +130,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
 
     private void ThenMatchesPerEmployee(EmployeeWorkLoadSummary[] summaries)
     {
-        var perEmployee = new EmployeeWorkLoadQueryHandler(_context, _clock);
+        var perEmployee = new EmployeeWorkLoadQueryHandler(_context, _clock, new ChurchCalendar(_clock));
         foreach (var summary in summaries)
         {
             var load = perEmployee.Handle(new EmployeeWorkLoadQuery(summary.Employee.UserName))
@@ -142,7 +142,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
     private void AssertGroupedSql(string connectionString)
     {
         using var context = new DataContext(new FileDbConfig(connectionString));
-        var sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock)
+        var sql = new EmployeeWorkLoadSummaryQueryHandler(context, _clock, new ChurchCalendar(_clock))
             .SummaryQuery()
             .ToQueryString();
 

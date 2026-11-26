@@ -16,7 +16,7 @@ public class NotificationsPanelQueryHandlerTests
     {
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var time = TestHost.GetRequiredService<TimeProvider>();
-        var handler = new NotificationsPanelQueryHandler(dataContext, time);
+        var handler = new NotificationsPanelQueryHandler(dataContext, time, new ChurchCalendar(time));
 
         var result = await handler.Handle(new NotificationsPanelQuery(null));
 
@@ -32,7 +32,7 @@ public class NotificationsPanelQueryHandlerTests
 
         var dataContext = TestHost.GetRequiredService<DataContext>();
         var time = TestHost.GetRequiredService<TimeProvider>();
-        var handler = new NotificationsPanelQueryHandler(dataContext, time);
+        var handler = new NotificationsPanelQueryHandler(dataContext, time, new ChurchCalendar(time));
 
         var result = await handler.Handle(new NotificationsPanelQuery(nonexistentUserUserName));
 
@@ -153,9 +153,9 @@ public class NotificationsPanelQueryHandlerTests
 
     private static Task<NotificationsSummary> WhenQueriedAsync(string userName)
     {
+        var time = TestHost.GetRequiredService<TimeProvider>();
         var handler = new NotificationsPanelQueryHandler(
-            TestHost.GetRequiredService<DataContext>(),
-            TestHost.GetRequiredService<TimeProvider>());
+            TestHost.GetRequiredService<DataContext>(), time, new ChurchCalendar(time));
         return handler.Handle(new NotificationsPanelQuery(userName));
     }
 }

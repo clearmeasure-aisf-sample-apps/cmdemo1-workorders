@@ -7,7 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 
-public class NotificationsPanelQueryHandler(DataContext context, TimeProvider time)
+/// <summary>
+/// Loads the notifications panel for one employee: open work orders due today or earlier (church-local
+/// date from <see cref="ChurchCalendar"/>), work orders assigned in the last seven days, and work orders
+/// they created whose status changed in the last seven days.
+/// </summary>
+public class NotificationsPanelQueryHandler(DataContext context, TimeProvider time, ChurchCalendar calendar)
     : IRequestHandler<NotificationsPanelQuery, NotificationsSummary>
 {
     public async Task<NotificationsSummary> Handle(
@@ -38,7 +43,7 @@ public class NotificationsPanelQueryHandler(DataContext context, TimeProvider ti
         Employee employee,
         CancellationToken cancellationToken)
     {
-        var today = ChurchTimeZone.Today(time);
+        var today = calendar.Today;
         var query = context.Set<WorkOrder>()
             .Where(wo => wo.Assignee == employee)
             .Where(WorkOrderSpecifications.Open)
