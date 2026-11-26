@@ -12,7 +12,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// All open counts exclude Complete and Cancelled statuses; completed counts use the same
 /// 30-day window and averaging logic as the search page's summary KPI.
 /// </summary>
-public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time)
+public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time, ChurchCalendar calendar)
     : IRequestHandler<WorkOrderReportsQuery, WorkOrderReportsData>
 {
     private const int CompletedWindowDays = 30;
@@ -22,7 +22,7 @@ public class WorkOrderReportsQueryHandler(DataContext context, TimeProvider time
         CancellationToken cancellationToken = default)
     {
         var orders = context.Set<WorkOrder>().AsNoTracking();
-        var today = ChurchTimeZone.Today(time);
+        var today = calendar.Today;
         var open = WorkOrderQueryFilters.OpenOnly(orders);
 
         var data = new WorkOrderReportsData

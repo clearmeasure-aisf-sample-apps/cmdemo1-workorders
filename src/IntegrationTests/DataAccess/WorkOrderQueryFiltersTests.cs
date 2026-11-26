@@ -45,7 +45,7 @@ public class WorkOrderQueryFiltersTests
         var query = new WorkOrderSpecificationQuery();
         query.MatchPriority(WorkOrderPriority.High);
 
-        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock)).ShouldBe(["1"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock, new ChurchCalendar(Clock))).ShouldBe(["1"]);
     }
 
     [Test]
@@ -61,7 +61,7 @@ public class WorkOrderQueryFiltersTests
         var query = new WorkOrderSpecificationQuery();
         query.MatchBuilding("Sanctuary");
 
-        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock)).ShouldBe(["1", "2"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock, new ChurchCalendar(Clock))).ShouldBe(["1", "2"]);
     }
 
     [Test]
@@ -78,7 +78,7 @@ public class WorkOrderQueryFiltersTests
         var query = new WorkOrderSpecificationQuery();
         query.MatchOpenOnly(true);
 
-        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock)).ShouldBe(["1", "2", "3"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock, new ChurchCalendar(Clock))).ShouldBe(["1", "2", "3"]);
     }
 
     [Test]
@@ -95,7 +95,7 @@ public class WorkOrderQueryFiltersTests
         var query = new WorkOrderSpecificationQuery();
         query.MatchCompletedWithinDays(30);
 
-        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock)).ShouldBe(["1"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, query, Clock, new ChurchCalendar(Clock))).ShouldBe(["1"]);
     }
 
     [Test]
@@ -112,11 +112,11 @@ public class WorkOrderQueryFiltersTests
             new WorkOrder { Number = "4", Title = null, RoomNumber = null, Creator = null }
         }.AsQueryable();
 
-        Numbers(WorkOrderQueryFilters.Apply(orders, Search("173b"), Clock)).ShouldBe(["38173BA"]);
-        Numbers(WorkOrderQueryFilters.Apply(orders, Search(" organ "), Clock)).ShouldBe(["1", "2"]);
-        Numbers(WorkOrderQueryFilters.Apply(orders, Search("WILLIE"), Clock)).ShouldBe(["3"]);
-        Numbers(WorkOrderQueryFilters.Apply(orders, Search("flanders"), Clock)).ShouldBe(["38173BA", "1", "2", "3"]);
-        Numbers(WorkOrderQueryFilters.Apply(orders, Search("   "), Clock)).Length.ShouldBe(5);
+        Numbers(WorkOrderQueryFilters.Apply(orders, Search("173b"), Clock, new ChurchCalendar(Clock))).ShouldBe(["38173BA"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, Search(" organ "), Clock, new ChurchCalendar(Clock))).ShouldBe(["1", "2"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, Search("WILLIE"), Clock, new ChurchCalendar(Clock))).ShouldBe(["3"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, Search("flanders"), Clock, new ChurchCalendar(Clock))).ShouldBe(["38173BA", "1", "2", "3"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, Search("   "), Clock, new ChurchCalendar(Clock))).Length.ShouldBe(5);
     }
 
     [Test]
@@ -132,7 +132,7 @@ public class WorkOrderQueryFiltersTests
         var query = new WorkOrderSpecificationQuery();
         query.MatchOverdueOnly(true);
 
-        Numbers(WorkOrderQueryFilters.Apply(orders, query, lateEveningUtc)).ShouldBe(["1"]);
+        Numbers(WorkOrderQueryFilters.Apply(orders, query, lateEveningUtc, new ChurchCalendar(lateEveningUtc))).ShouldBe(["1"]);
     }
 
     [Test]

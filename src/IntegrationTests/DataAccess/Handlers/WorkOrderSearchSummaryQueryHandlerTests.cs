@@ -192,7 +192,8 @@ public class WorkOrderSearchSummaryQueryHandlerTests
     private static async Task<WorkOrderSearchSummary> Handle(string? userName, TimeProvider? clock = null)
     {
         var handler = new WorkOrderSearchSummaryQueryHandler(
-            TestHost.GetRequiredService<DataContext>(), clock ?? TestData.FixedClock(Now));
+            TestHost.GetRequiredService<DataContext>(), clock ?? TestData.FixedClock(Now),
+            new ChurchCalendar(clock ?? TestData.FixedClock(Now)));
         return await handler.Handle(new WorkOrderSearchSummaryQuery(userName));
     }
 }

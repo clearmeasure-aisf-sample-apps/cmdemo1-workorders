@@ -19,11 +19,12 @@ internal static class WorkOrderQueryFilters
     public static IQueryable<WorkOrder> Apply(
         IQueryable<WorkOrder> query,
         WorkOrderSpecificationQuery specification,
-        TimeProvider time)
+        TimeProvider time,
+        ChurchCalendar calendar)
     {
         query = ApplyBasics(query, specification.Assignee, specification.Creator, specification.Status);
-        query = ApplyOverdue(query, specification.OverdueOnly, ChurchTimeZone.Today(time));
-        query = ApplyDueThisWeek(query, specification.DueThisWeekOnly, ChurchTimeZone.Today(time));
+        query = ApplyOverdue(query, specification.OverdueOnly, calendar.Today);
+        query = ApplyDueThisWeek(query, specification.DueThisWeekOnly, calendar.Today);
         query = ApplyPriority(query, specification.Priority);
         query = ApplyBuilding(query, specification.Building, specification.NoBuilding);
         query = ApplyRoom(query, specification.Room, specification.NoRoom);

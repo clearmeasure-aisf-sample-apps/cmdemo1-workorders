@@ -166,7 +166,7 @@ public sealed class QueryBudgetTests
         await context.SaveChangesAsync();
 
         using var budget = context.Begin();
-        var health = await new SlaHealthQueryHandler(context, clock).Handle(new SlaHealthQuery());
+        var health = await new SlaHealthQueryHandler(context, new ChurchCalendar(clock)).Handle(new SlaHealthQuery());
         health.CurrentMonthOrderCount.ShouldBeGreaterThanOrEqualTo(orderCount);
         return Budget(budget);
     }
@@ -178,7 +178,7 @@ public sealed class QueryBudgetTests
         await context.SaveChangesAsync();
 
         using var budget = context.Begin();
-        var data = await new WorkOrderReportsQueryHandler(context, clock).Handle(new WorkOrderReportsQuery());
+        var data = await new WorkOrderReportsQueryHandler(context, clock, new ChurchCalendar(clock)).Handle(new WorkOrderReportsQuery());
         data.CompletedPerWeek.Count.ShouldBe(8);
         return Budget(budget);
     }

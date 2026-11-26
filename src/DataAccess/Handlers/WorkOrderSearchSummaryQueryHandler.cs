@@ -11,7 +11,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// Computes the Work Order Search summary counts. Each count uses the same predicate as the filter
 /// its card applies, so a card's number equals the result total after the card is clicked.
 /// </summary>
-public class WorkOrderSearchSummaryQueryHandler(DataContext context, TimeProvider time)
+public class WorkOrderSearchSummaryQueryHandler(DataContext context, TimeProvider time, ChurchCalendar calendar)
     : IRequestHandler<WorkOrderSearchSummaryQuery, WorkOrderSearchSummary>
 {
     private const int CompletedWindowDays = 30;
@@ -21,7 +21,7 @@ public class WorkOrderSearchSummaryQueryHandler(DataContext context, TimeProvide
         CancellationToken cancellationToken = default)
     {
         var orders = context.Set<WorkOrder>().AsNoTracking();
-        var today = ChurchTimeZone.Today(time);
+        var today = calendar.Today;
         var openedSince = time.GetUtcNow().DateTime.AddDays(-OpenedWindowDays);
         var inProgress = WorkOrderStatus.InProgress;
         var open = WorkOrderQueryFilters.OpenOnly(orders);

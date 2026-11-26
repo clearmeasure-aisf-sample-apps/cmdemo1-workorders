@@ -219,7 +219,7 @@ public class BuildingRoomSummaryQueryHandlerTests
         var query = new WorkOrderSpecificationQuery();
         ApplyBuildingRoom(query, building, room);
         flag?.Invoke(query);
-        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TestData.FixedClock(Now));
+        var handler = new WorkOrderSearchHandler(TestHost.GetRequiredService<DataContext>(), TestData.FixedClock(Now), new ChurchCalendar(TestData.FixedClock(Now)));
         return (await handler.Handle(query)).Length;
     }
 
