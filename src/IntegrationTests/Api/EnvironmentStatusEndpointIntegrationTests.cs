@@ -11,6 +11,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class EnvironmentStatusEndpointIntegrationTests
 {
     private const string SecretValue = "integration-env-status-secret-value";

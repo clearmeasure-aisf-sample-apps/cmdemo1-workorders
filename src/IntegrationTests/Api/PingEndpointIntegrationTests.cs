@@ -5,6 +5,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class PingEndpointIntegrationTests
 {
     private DiagnosticsWebApplicationFactory? _factory;

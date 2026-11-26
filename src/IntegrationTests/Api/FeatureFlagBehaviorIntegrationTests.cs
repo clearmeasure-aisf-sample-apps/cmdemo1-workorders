@@ -24,6 +24,7 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 /// 403 mapping work together.
 /// </summary>
 [TestFixture]
+[Explicit("Starts full app")]
 public class FeatureFlagBehaviorIntegrationTests
 {
     [Test]

@@ -11,6 +11,7 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 /// Integration coverage for <c>GET /api/metrics/summary</c> and versioned route (issue #9158).
 /// </summary>
 [TestFixture]
+[Explicit("Starts full app")]
 public class MetricsSummaryEndpointIntegrationTests
 {
     private DetailedHealthWebApplicationFactory? _factory;

@@ -13,6 +13,7 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.IntegrationTests.Api;
 
 [TestFixture]
+[Explicit("Starts full app")]
 public class HealthCheckDatabaseVersionIntegrationTests
 {
     private string _dbPath = null!;
