@@ -13,9 +13,14 @@ public sealed class ApiKeyAuthenticationOptions
     public bool Enabled { get; init; }
 
     /// <summary>
-    /// Secret value callers must send in the <c>X-Api-Key</c> header. Whitespace is trimmed when reading configuration.
+    /// Secret value callers must send in the <c>X-Api-Key</c> header. Leading and trailing whitespace is trimmed on
+    /// assignment (configuration binding included); a null, empty or whitespace-only value is stored as <see langword="null"/>.
     /// </summary>
-    public string? ValidationKey { get; set; }
+    public string? ValidationKey
+    {
+        get;
+        init => field = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
 
     /// <summary>
     /// The single rule for whether the scheme is active: <see cref="Enabled"/> with a non-blank <see cref="ValidationKey"/>. Shared by the

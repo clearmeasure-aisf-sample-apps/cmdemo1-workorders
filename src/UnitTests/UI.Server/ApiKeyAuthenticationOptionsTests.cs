@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.UI.Server;
+using Microsoft.Extensions.Configuration;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
@@ -36,5 +37,38 @@ public class ApiKeyAuthenticationOptionsTests
     public void Should_NotBeConfigured_When_OptionsAreDefault()
     {
         new ApiKeyAuthenticationOptions().IsConfigured.ShouldBeFalse();
+    }
+
+    [TestCase("  secret  ", "secret")]
+    [TestCase("secret", "secret")]
+    [TestCase("", null)]
+    [TestCase("   ", null)]
+    [TestCase(null, null)]
+    public void Should_TrimValidationKeyAndStoreBlankAsNull_When_Assigned(string? assigned, string? expected)
+    {
+        var options = new ApiKeyAuthenticationOptions { Enabled = true, ValidationKey = assigned };
+
+        options.ValidationKey.ShouldBe(expected);
+        options.IsConfigured.ShouldBe(expected is not null);
+    }
+
+    [TestCase("  secret  ", "secret")]
+    [TestCase("", null)]
+    [TestCase("   ", null)]
+    public void Should_TrimValidationKey_When_BoundFromConfigurationSection(string bound, string? expected)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{ApiKeyAuthenticationOptions.SectionName}:Enabled"] = "true",
+                [$"{ApiKeyAuthenticationOptions.SectionName}:ValidationKey"] = bound
+            })
+            .Build();
+
+        var options = configuration.GetSection(ApiKeyAuthenticationOptions.SectionName).Get<ApiKeyAuthenticationOptions>();
+
+        options.ShouldNotBeNull();
+        options.Enabled.ShouldBeTrue();
+        options.ValidationKey.ShouldBe(expected);
     }
 }
