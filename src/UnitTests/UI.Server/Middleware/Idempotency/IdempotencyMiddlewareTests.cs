@@ -97,12 +97,17 @@ public class IdempotencyMiddlewareTests
 
     private static DefaultHttpContext Post(string path, string body, string? key)
     {
-        var context = new DefaultHttpContext { Response = { Body = new MemoryStream() } };
-        context.Request.Method = HttpMethods.Post;
-        context.Request.Path = path;
-        context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(body));
-        context.Request.Headers[IdempotencyConstants.HeaderName] = key;
-        return context;
+        return new DefaultHttpContext
+        {
+            Request =
+            {
+                Method = HttpMethods.Post,
+                Path = path,
+                Body = new MemoryStream(Encoding.UTF8.GetBytes(body)),
+                Headers = { [IdempotencyConstants.HeaderName] = key }
+            },
+            Response = { Body = new MemoryStream() }
+        };
     }
 
     private static string ResponseText(HttpContext context) =>

@@ -55,10 +55,12 @@ public class ServerPipelineFallbackTests
         var services = new ServiceCollection()
             .AddSingleton<IWebHostEnvironment>(new WebRootOnlyEnvironment { WebRootFileProvider = webRoot })
             .BuildServiceProvider();
-        var context = new DefaultHttpContext { RequestServices = services, Response = { Body = new MemoryStream() } };
-        context.Request.Method = HttpMethods.Get;
-        context.Request.Path = path;
-        return context;
+        return new DefaultHttpContext
+        {
+            RequestServices = services,
+            Request = { Method = HttpMethods.Get, Path = path },
+            Response = { Body = new MemoryStream() }
+        };
     }
 
     private sealed class WebRootOnlyEnvironment : IWebHostEnvironment
