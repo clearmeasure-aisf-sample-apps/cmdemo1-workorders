@@ -140,7 +140,7 @@ public sealed class QueryBudgetTests
         await context.SaveChangesAsync();
 
         using var budget = context.Begin();
-        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(context, clock)
+        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(context, clock, new ChurchCalendar(clock))
             .Handle(new EmployeeWorkLoadSummaryQuery());
         summaries.Length.ShouldBeGreaterThanOrEqualTo(employeeCount);
         return Budget(budget);
@@ -153,7 +153,7 @@ public sealed class QueryBudgetTests
         await context.SaveChangesAsync();
 
         using var budget = context.Begin();
-        var load = await new EmployeeWorkLoadQueryHandler(context, clock)
+        var load = await new EmployeeWorkLoadQueryHandler(context, clock, new ChurchCalendar(clock))
             .Handle(new EmployeeWorkLoadQuery(workerUserName));
         load.AssignedAndOpen.ShouldBe(assignedOrderCount);
         return Budget(budget);

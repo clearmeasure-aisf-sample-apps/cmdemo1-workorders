@@ -45,7 +45,8 @@ public class EmployeeWorkLoadQueryHandlerTests
 
     private static Task<EmployeeWorkLoad> WhenQueried(string userName)
     {
-        var handler = new EmployeeWorkLoadQueryHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System);
+        var handler = new EmployeeWorkLoadQueryHandler(TestHost.GetRequiredService<DataContext>(), TimeProvider.System,
+            new ChurchCalendar(TimeProvider.System));
         return handler.Handle(new EmployeeWorkLoadQuery(userName));
     }
 

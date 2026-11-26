@@ -68,7 +68,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
         QueryBudgetContext context, TimeProvider clock)
     {
         using var budget = context.Begin();
-        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(context, clock)
+        var summaries = await new EmployeeWorkLoadSummaryQueryHandler(context, clock, new ChurchCalendar(clock))
             .Handle(new EmployeeWorkLoadSummaryQuery());
 
         budget.ReaderCount.ShouldBe(1, budget.Describe());
@@ -113,7 +113,7 @@ public class EmployeeWorkLoadSummaryQueryHandlerTests
     private static void ThenMatchesPerEmployee(
         MatchContext match, EmployeeWorkLoadSummary workerSummary, EmployeeWorkLoadSummary idleSummary)
     {
-        var perEmployee = new EmployeeWorkLoadQueryHandler(match.Context, match.Clock);
+        var perEmployee = new EmployeeWorkLoadQueryHandler(match.Context, match.Clock, new ChurchCalendar(match.Clock));
         var workerLoad = perEmployee.Handle(new EmployeeWorkLoadQuery(match.Names.Worker)).GetAwaiter().GetResult();
         ThenLoadIs(workerSummary.Load, workerLoad);
         var idleLoad = perEmployee.Handle(new EmployeeWorkLoadQuery(match.Names.Idle)).GetAwaiter().GetResult();

@@ -13,7 +13,7 @@ namespace ClearMeasure.Bootcamp.DataAccess.Handlers;
 /// collation, the same as the Work Order Search filters), never compared in .NET, and the counts use
 /// the predicates of <see cref="WorkOrderQueryFilters"/> that the search and its summary cards use.
 /// </summary>
-public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider time)
+public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider time, ChurchCalendar calendar)
     : IRequestHandler<BuildingRoomSummaryQuery, BuildingSummary[]>
 {
     private const int CompletedWindowDays = 30;
@@ -54,7 +54,7 @@ public class BuildingRoomSummaryQueryHandler(DataContext context, TimeProvider t
     internal IQueryable<RoomCount> CountsQuery()
     {
         var rows = context.Set<WorkOrder>().AsNoTracking()
-            .Select(WorkOrderProjection.CountRow(ChurchTimeZone.Today(time), time, CompletedWindowDays));
+            .Select(WorkOrderProjection.CountRow(calendar.Today, time, CompletedWindowDays));
         var buildings = rows
             .GroupBy(r => r.Building)
             .Select(g => new { g.Key, Anchor = g.Min(r => r.Number) });
