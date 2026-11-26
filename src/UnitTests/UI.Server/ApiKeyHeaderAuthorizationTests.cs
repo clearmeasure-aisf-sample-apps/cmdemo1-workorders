@@ -6,20 +6,20 @@ using Shouldly;
 namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 
 [TestFixture]
-public class ApiKeyAuthenticationMiddlewareTests
+public class ApiKeyHeaderAuthorizationTests
 {
     [Test]
     public void IsAuthorized_ReturnsTrue_WhenKeyMatches()
     {
         var request = new DefaultHttpContext().Request;
         request.Headers[ApiKeyConstants.HeaderName] = "secret";
-        ApiKeyAuthenticationMiddleware.IsAuthorized(request, "secret").ShouldBeTrue();
+        ApiKeyHeaderAuthorization.IsAuthorized(request, "secret").ShouldBeTrue();
     }
 
     [Test]
     public void IsAuthorized_ReturnsFalse_WhenKeyMissing()
     {
         var request = new DefaultHttpContext().Request;
-        ApiKeyAuthenticationMiddleware.IsAuthorized(request, "secret").ShouldBeFalse();
+        ApiKeyHeaderAuthorization.IsAuthorized(request, "secret").ShouldBeFalse();
     }
 }
