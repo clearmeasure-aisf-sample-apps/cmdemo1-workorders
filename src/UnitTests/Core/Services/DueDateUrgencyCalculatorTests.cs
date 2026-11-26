@@ -11,7 +11,7 @@ public class DueDateUrgencyCalculatorTests
     public void Calculate_WhenDueDateNull_ReturnsNone()
     {
         var workOrder = new WorkOrder { Status = WorkOrderStatus.Assigned };
-        var clock = StubUtcClock.ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
 
         DueDateUrgencyCalculator.Calculate(workOrder, clock).ShouldBe(DueDateUrgency.None);
     }
@@ -19,14 +19,14 @@ public class DueDateUrgencyCalculatorTests
     [Test]
     public void Calculate_WhenOpenAndDueToday_ReturnsDueToday()
     {
-        var today = ChurchTimeZone.Today(StubUtcClock.ChicagoNoonOn(2026, 8, 29));
+        var today = ChurchTimeZone.Today(ChurchClock.NoonUtcOn(2026, 8, 29));
         var workOrder = new WorkOrder
         {
             Status = WorkOrderStatus.Assigned,
             DueDate = today
         };
 
-        var urgency = DueDateUrgencyCalculator.Calculate(workOrder, StubUtcClock.ChicagoNoonOn(2026, 8, 29));
+        var urgency = DueDateUrgencyCalculator.Calculate(workOrder, ChurchClock.NoonUtcOn(2026, 8, 29));
 
         urgency.ShouldBe(DueDateUrgency.DueToday);
     }
@@ -36,7 +36,7 @@ public class DueDateUrgencyCalculatorTests
     [TestCase("InProgress")]
     public void Calculate_WhenOpenAndPastDue_ReturnsOverdue(string statusKey)
     {
-        var clock = StubUtcClock.ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var workOrder = new WorkOrder
         {
             Status = WorkOrderStatus.FromKey(statusKey),
@@ -50,7 +50,7 @@ public class DueDateUrgencyCalculatorTests
     [TestCase("Cancelled")]
     public void Calculate_WhenTerminalStatus_ReturnsNoneEvenIfPastDue(string statusKey)
     {
-        var clock = StubUtcClock.ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var workOrder = new WorkOrder
         {
             Status = WorkOrderStatus.FromKey(statusKey),
@@ -63,7 +63,7 @@ public class DueDateUrgencyCalculatorTests
     [Test]
     public void Calculate_WhenOpenAndFutureDue_ReturnsNone()
     {
-        var clock = StubUtcClock.ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var workOrder = new WorkOrder
         {
             Status = WorkOrderStatus.Draft,
@@ -76,7 +76,7 @@ public class DueDateUrgencyCalculatorTests
     [Test]
     public void Calculate_WhenEditableDueDateChanges_UpdatesUrgency()
     {
-        var clock = StubUtcClock.ChicagoNoonOn(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
         var today = ChurchTimeZone.Today(clock);
 
         var futureUrgency = DueDateUrgencyCalculator.Calculate(

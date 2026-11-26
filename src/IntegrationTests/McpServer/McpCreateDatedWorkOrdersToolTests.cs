@@ -1,7 +1,7 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Model.StateCommands;
-using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests;
 using ClearMeasure.Bootcamp.McpServer.Tools;
 using ProductionWorkOrderTools = ClearMeasure.Bootcamp.McpServer.Tools.WorkOrderTools;
 using Microsoft.EntityFrameworkCore;
@@ -12,18 +12,13 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.McpServer;
 [TestFixture]
 public class McpCreateDatedWorkOrdersToolTests
 {
-    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
-
     [Test]
     public async Task CreateDatedWorkOrders_WithSaturdayCount_CreatesTen()
     {
         var (creatorUserName, assigneeUserName) = await SeedCreatorAndAssigneeAsync();
         var bus = TestHost.GetRequiredService<IBus>();
         // Saturday 2026-08-29 noon Chicago → UTC
-        var clock = ChicagoNoon(2026, 8, 29);
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
 
         var result = await ProductionWorkOrderTools.CreateDatedWorkOrders(
             bus,
@@ -151,7 +146,7 @@ public class McpCreateDatedWorkOrdersToolTests
     [Test]
     public void BuildComingSaturdays_ReturnsConsecutiveWeeks()
     {
-        var dates = DatedWorkOrderScheduling.BuildComingSaturdays(ChicagoNoon(2026, 8, 28), 3);
+        var dates = DatedWorkOrderScheduling.BuildComingSaturdays(ChurchClock.NoonUtcOn(2026, 8, 28), 3);
         dates.ShouldBe([
             new DateOnly(2026, 8, 29),
             new DateOnly(2026, 9, 5),
@@ -168,12 +163,5 @@ public class McpCreateDatedWorkOrdersToolTests
         context.Add(assignee);
         await context.SaveChangesAsync();
         return (creator.UserName, assignee.UserName);
-    }
-
-    private static FixedTimeProvider ChicagoNoon(int year, int month, int day)
-    {
-        var local = new DateTime(year, month, day, 12, 0, 0, DateTimeKind.Unspecified);
-        var utc = TimeZoneInfo.ConvertTimeToUtc(local, ChurchTimeZone.Chicago);
-        return new FixedTimeProvider(new DateTimeOffset(utc, TimeSpan.Zero));
     }
 }
