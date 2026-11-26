@@ -9,67 +9,75 @@ namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;
 public class SlaCalculatorTests
 {
     [Test]
-    public void Should_ReturnNullTrendText_When_BothPercentagesAreNull()
+    public void Should_ReturnUnknownTrend_When_BothPercentagesAreNull()
     {
-        var result = SlaCalculator.TrendText(null, null);
+        var result = SlaCalculator.Trend(null, null);
 
-        result.ShouldBeNull();
+        result.Trend.ShouldBe(SlaTrend.Unknown);
+        result.ComparedPercentage.ShouldBeNull();
     }
 
     [Test]
-    public void Should_ReturnNullTrendText_When_CurrentMonthHasData_ButLastMonthDoesNot()
+    public void Should_ReturnUnknownTrend_When_CurrentMonthHasData_ButLastMonthDoesNot()
     {
-        var result = SlaCalculator.TrendText(80m, null);
+        var result = SlaCalculator.Trend(80m, null);
 
-        result.ShouldBeNull();
+        result.Trend.ShouldBe(SlaTrend.Unknown);
+        result.ComparedPercentage.ShouldBeNull();
     }
 
     [Test]
     public void Should_ReturnTrendUp_When_CurrentPercentageGreaterThanLastMonth()
     {
-        var result = SlaCalculator.TrendText(90m, 75m);
+        var result = SlaCalculator.Trend(90m, 75m);
 
-        result.ShouldBe("↑ up from 75%");
+        result.Trend.ShouldBe(SlaTrend.Up);
+        result.ComparedPercentage.ShouldBe(75m);
     }
 
     [Test]
     public void Should_ReturnTrendDown_When_CurrentPercentageLessThanLastMonth()
     {
-        var result = SlaCalculator.TrendText(60m, 80m);
+        var result = SlaCalculator.Trend(60m, 80m);
 
-        result.ShouldBe("↓ down from 80%");
+        result.Trend.ShouldBe(SlaTrend.Down);
+        result.ComparedPercentage.ShouldBe(80m);
     }
 
     [Test]
     public void Should_ReturnTrendFlat_When_PercentagesEqual()
     {
-        var result = SlaCalculator.TrendText(75m, 75m);
+        var result = SlaCalculator.Trend(75m, 75m);
 
-        result.ShouldBe("— flat at 75%");
+        result.Trend.ShouldBe(SlaTrend.Flat);
+        result.ComparedPercentage.ShouldBe(75m);
     }
 
     [Test]
     public void Should_ReturnTrendUp_When_CurrentPercentageIsFractional()
     {
-        var result = SlaCalculator.TrendText(66.67m, 50m);
+        var result = SlaCalculator.Trend(66.67m, 50m);
 
-        result.ShouldBe("↑ up from 50%");
+        result.Trend.ShouldBe(SlaTrend.Up);
+        result.ComparedPercentage.ShouldBe(50m);
     }
 
     [Test]
     public void Should_ReturnTrendDown_When_CurrentPercentageIsZero()
     {
-        var result = SlaCalculator.TrendText(0m, 50m);
+        var result = SlaCalculator.Trend(0m, 50m);
 
-        result.ShouldBe("↓ down from 50%");
+        result.Trend.ShouldBe(SlaTrend.Down);
+        result.ComparedPercentage.ShouldBe(50m);
     }
 
     [Test]
     public void Should_ReturnTrendUp_When_CurrentPercentageIs100()
     {
-        var result = SlaCalculator.TrendText(100m, 90m);
+        var result = SlaCalculator.Trend(100m, 90m);
 
-        result.ShouldBe("↑ up from 90%");
+        result.Trend.ShouldBe(SlaTrend.Up);
+        result.ComparedPercentage.ShouldBe(90m);
     }
 
     [Test]
@@ -189,7 +197,7 @@ public class SlaCalculatorTests
             new SlaCompletion(due, new DateTime(2026, 5, 12))
         ]);
 
-        SlaCalculator.TrendText(current, last).ShouldBe("↑ up from 50%");
-        SlaCalculator.TrendText(last, current).ShouldBe("↓ down from 100%");
+        SlaCalculator.Trend(current, last).ShouldBe(new SlaTrendComparison(SlaTrend.Up, 50m));
+        SlaCalculator.Trend(last, current).ShouldBe(new SlaTrendComparison(SlaTrend.Down, 100m));
     }
 }
