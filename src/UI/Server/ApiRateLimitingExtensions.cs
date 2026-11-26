@@ -1,5 +1,4 @@
 using System.Threading.RateLimiting;
-using ClearMeasure.Bootcamp.UI.Server.RateLimiting;
 using Microsoft.Extensions.Options;
 
 // ReSharper disable UnusedMethodReturnValue.Global -- Qodana C6 (#9039): fluent
@@ -19,41 +18,7 @@ public static class ApiRateLimitingExtensions
         services.Configure<ApiRateLimitingOptions>(configuration.GetSection(ApiRateLimitingOptions.SectionName));
         // Qualified with the type name on purpose: extension-method call sites never name this class, and the
         // TestOnlyReferenceScan gate reads a type named only by tests as production code kept for tests only.
-        services.AddSingleton(ApiRateLimitingExtensions.CreatePartitionedLimiter);
+        services.AddSingleton(sp => ApiRateLimitPartitioner.CreateLimiter(sp.GetRequiredService<IOptionsMonitor<ApiRateLimitingOptions>>()));
         return services;
     }
-
-    private static PartitionedRateLimiter<HttpContext> CreatePartitionedLimiter(IServiceProvider sp)
-    {
-        var monitor = sp.GetRequiredService<IOptionsMonitor<ApiRateLimitingOptions>>();
-        return PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        {
-            var opts = monitor.CurrentValue;
-            if (!ApiRateLimitingDecision.LimiterAppliesTo(httpContext, opts))
-            {
-                return RateLimitPartition.GetNoLimiter(string.Empty);
-            }
-
-            var partitionKey = ResolvePartitionKey(httpContext, opts.ApiKeyHeaderName);
-            return CreateSlidingWindowPartition(partitionKey, opts);
-        });
-    }
-
-    private static RateLimitPartition<string> CreateSlidingWindowPartition(
-        string partitionKey,
-        ApiRateLimitingOptions opts) =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey,
-            _ => new SlidingWindowRateLimiterOptions
-            {
-                PermitLimit = Math.Max(1, opts.PermitLimit),
-                Window = TimeSpan.FromSeconds(Math.Max(1, opts.WindowSeconds)),
-                SegmentsPerWindow = Math.Max(1, opts.SegmentsPerWindow),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = Math.Max(0, opts.QueueLimit),
-                AutoReplenishment = true
-            });
-
-    internal static string ResolvePartitionKey(HttpContext httpContext, string apiKeyHeaderName) =>
-        ApiRateLimitPartitionResolver.Resolve(httpContext, apiKeyHeaderName);
 }
