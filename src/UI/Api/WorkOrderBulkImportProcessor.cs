@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Import;
 using ClearMeasure.Bootcamp.Core.Model;
@@ -12,6 +13,9 @@ namespace ClearMeasure.Bootcamp.UI.Api;
 /// </summary>
 internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGenerator numberGenerator)
 {
+    private static readonly string RequiredFieldsMessage =
+        $"{WorkOrderBulkImportColumns.Title}, {WorkOrderBulkImportColumns.Description}, and {WorkOrderBulkImportColumns.CreatorUsername} are required on each data row.";
+
     internal static string? ValidateUpload(IFormFile? file)
     {
         if (file == null || file.Length == 0)
@@ -63,52 +67,58 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
         Dictionary<string, Employee> creatorsByUsername,
         CancellationToken cancellationToken)
     {
-        var rowError = ValidateRow(row);
-        if (rowError != null)
+        if (!HasRequiredFields(row, out var creatorUsername))
         {
-            return new WorkOrderBulkImportRowResult(row.LineNumber, false, null, rowError);
+            return RowFailure(row, RequiredFieldsMessage);
         }
 
-        var creatorResult = await ResolveCreatorAsync(row, creatorsByUsername, cancellationToken);
-        if (creatorResult.Error != null)
+        if (row.Error != null)
         {
-            return new WorkOrderBulkImportRowResult(row.LineNumber, false, null, creatorResult.Error);
+            return RowFailure(row, row.Error);
         }
 
-        return await SaveDraftAsync(row, creatorResult.Creator!, cancellationToken);
+        var lookup = await ResolveCreatorAsync(creatorUsername, creatorsByUsername, cancellationToken);
+        if (!lookup.IsFound)
+        {
+            return RowFailure(row, lookup.Error);
+        }
+
+        return await SaveDraftAsync(row, lookup.Creator, cancellationToken);
     }
 
-    private static string? ValidateRow(WorkOrderBulkImportRow row) =>
-        HasRequiredFields(row)
-            ? row.Error
-            : $"{WorkOrderBulkImportColumns.Title}, {WorkOrderBulkImportColumns.Description}, and {WorkOrderBulkImportColumns.CreatorUsername} are required on each data row.";
+    private static WorkOrderBulkImportRowResult RowFailure(WorkOrderBulkImportRow row, string? error) =>
+        new(row.LineNumber, false, null, error);
 
-    private static bool HasRequiredFields(WorkOrderBulkImportRow row) =>
-        !string.IsNullOrWhiteSpace(row.Title)
-        && !string.IsNullOrWhiteSpace(row.Description)
-        && !string.IsNullOrWhiteSpace(row.CreatorUsername);
-
-    private async Task<(Employee? Creator, string? Error)> ResolveCreatorAsync(
+    private static bool HasRequiredFields(
         WorkOrderBulkImportRow row,
+        [NotNullWhen(true)] out string? creatorUsername)
+    {
+        creatorUsername = row.CreatorUsername;
+        return !string.IsNullOrWhiteSpace(row.Title)
+               && !string.IsNullOrWhiteSpace(row.Description)
+               && !string.IsNullOrWhiteSpace(creatorUsername);
+    }
+
+    private async Task<CreatorLookup> ResolveCreatorAsync(
+        string username,
         Dictionary<string, Employee> creatorsByUsername,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var username = row.CreatorUsername!;
         if (creatorsByUsername.TryGetValue(username, out var cached))
         {
-            return (cached, null);
+            return CreatorLookup.Found(cached);
         }
 
         try
         {
             var creator = await bus.Send(new EmployeeByUserNameQuery(username));
             creatorsByUsername[username] = creator;
-            return (creator, null);
+            return CreatorLookup.Found(creator);
         }
         catch (InvalidOperationException)
         {
-            return (null, $"Employee with username '{username}' was not found.");
+            return CreatorLookup.NotFound($"Employee with username '{username}' was not found.");
         }
     }
 
@@ -140,5 +150,18 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
         {
             return new WorkOrderBulkImportRowResult(row.LineNumber, false, null, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Outcome of resolving a row's creator: either the employee (<see cref="IsFound"/>) or a not-found error.
+    /// </summary>
+    private readonly record struct CreatorLookup(Employee? Creator, string? Error)
+    {
+        [MemberNotNullWhen(true, nameof(Creator))]
+        public bool IsFound => Creator is not null;
+
+        public static CreatorLookup Found(Employee creator) => new(creator, null);
+
+        public static CreatorLookup NotFound(string error) => new(null, error);
     }
 }
