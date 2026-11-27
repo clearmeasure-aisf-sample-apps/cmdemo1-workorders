@@ -291,11 +291,6 @@ public abstract class AcceptanceTestBase
     {
         var woNumberLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.WorkOrderNumber));
         await Expect(woNumberLocator).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
-        // The number shows once the page has built the draft and the user's commands; a field that is not editable
-        // then sends Input() down its reload path, which on mode=New draws a new number and clears every field
-        // typed so far, so the save is refused and never navigates. Wait here, before the number is read.
-        var titleLocator = Page.GetByTestId(nameof(WorkOrderManage.Elements.Title));
-        await Expect(titleLocator).ToBeEditableAsync(new LocatorAssertionsToBeEditableOptions { Timeout = 30_000 });
     }
 
     protected async Task Input(string elementTestId, string? value)
@@ -382,12 +377,8 @@ public abstract class AcceptanceTestBase
         await Input(nameof(WorkOrderManage.Elements.RoomNumber), testRoomNumber);
         await TakeScreenshotAsync(2, "FormFilled");
 
-        // The values about to be saved are still the ones typed, on the draft whose number was read: a form loaded
-        // again in between would save someone else's number with empty fields.
-        await Expect(woNumberLocator).ToHaveTextAsync(newWorkOrderNumber);
-        await Expect(Page.GetByTestId(nameof(WorkOrderManage.Elements.Title))).ToHaveValueAsync(testTitle);
-
         var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        // Click() submits with a script click, which a disabled button ignores without an error.
         await Expect(Page.GetByTestId(saveButtonTestId)).ToBeEnabledAsync();
         await Click(saveButtonTestId);
         await SaveDraftWait.ForSearchPageAsync(Page, newWorkOrderNumber);

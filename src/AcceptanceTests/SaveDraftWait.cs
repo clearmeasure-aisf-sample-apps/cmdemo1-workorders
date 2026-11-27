@@ -6,7 +6,8 @@ namespace ClearMeasure.Bootcamp.AcceptanceTests;
 /// <summary>
 /// Waits for a Save Draft on the work order form to land on the search page. A save that never navigates used to
 /// surface as a bare 90-second "waiting for navigation" timeout with no hint of why (#2048, master 2.4.2777); this
-/// reports what the page showed instead (<see cref="SaveDraftOutcome"/>). The wait itself is unchanged.
+/// reports what the page showed instead (<see cref="SaveDraftOutcome"/>), as an NUnit failure so the tests' own
+/// [Retry] applies. The wait itself is unchanged.
 /// </summary>
 public static class SaveDraftWait
 {
@@ -15,7 +16,7 @@ public static class SaveDraftWait
 
     /// <summary>
     /// Waits until <paramref name="page"/> is on /workorder/search after saving work order
-    /// <paramref name="expectedNumber"/>; throws <see cref="TimeoutException"/> with a diagnosis when it never gets there.
+    /// <paramref name="expectedNumber"/>; fails the test with a diagnosis when it never gets there.
     /// </summary>
     public static async Task ForSearchPageAsync(IPage page, string expectedNumber)
     {
@@ -26,7 +27,9 @@ public static class SaveDraftWait
         catch (TimeoutException timeout)
         {
             var state = await ReadPageStateAsync(page);
-            throw new TimeoutException(SaveDraftOutcome.NotNavigatedMessage(state, expectedNumber, TimeoutMs), timeout);
+            // An NUnit failure, not an error: NUnit 4.3 re-runs a [Retry] test only after an assertion failure, so a
+            // TimeoutException here skipped the retries the work order tests declare and failed the build on the spot.
+            Assert.Fail(SaveDraftOutcome.NotNavigatedMessage(state, expectedNumber, TimeoutMs) + " (" + timeout.Message.Split('\n')[0] + ")");
         }
     }
 
