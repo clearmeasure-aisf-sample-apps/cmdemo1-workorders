@@ -81,7 +81,7 @@ internal sealed class WorkOrderBulkImportProcessor(IBus bus, IWorkOrderNumberGen
     private static string? ValidateRow(WorkOrderBulkImportRow row) =>
         HasRequiredFields(row)
             ? row.Error
-            : "Title, Description, and CreatorUsername are required on each data row.";
+            : $"{WorkOrderBulkImportColumns.Title}, {WorkOrderBulkImportColumns.Description}, and {WorkOrderBulkImportColumns.CreatorUsername} are required on each data row.";
 
     private static bool HasRequiredFields(WorkOrderBulkImportRow row) =>
         !string.IsNullOrWhiteSpace(row.Title)
