@@ -90,8 +90,7 @@ public partial class Login : AppComponentBase
 
     private async Task AuthenticateAndNavigate()
     {
-        var selectedEmployee = _employees.FirstOrDefault(e => e.UserName == LoginModelValue.Username);
-        if (selectedEmployee != null)
+        if (await EmployeeExistsAsync(LoginModelValue.Username))
         {
             await UserSession.SignInAsync(LoginModelValue.Username);
             EventBus.Notify(new UserLoggedInEvent(LoginModelValue.Username));
@@ -101,6 +100,28 @@ public partial class Login : AppComponentBase
         else
         {
             _errorMessage = "Invalid employee selection";
+        }
+    }
+
+    /// <summary>
+    /// Returns true if the user name exists, checking the in-memory employee list first,
+    /// then falling back to <see cref="EmployeeByUserNameQuery"/> for users past the first page.
+    /// </summary>
+    private async Task<bool> EmployeeExistsAsync(string userName)
+    {
+        if (_employees.Any(e => e.UserName == userName))
+        {
+            return true;
+        }
+
+        try
+        {
+            var employee = await Bus.Send(new EmployeeByUserNameQuery(userName));
+            return employee != null;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
         }
     }
 

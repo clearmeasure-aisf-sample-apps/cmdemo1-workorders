@@ -142,4 +142,35 @@ public class LoginSignInNavigationTests
         component.Find("small.text-success").TextContent
             .ShouldBe("Welcome back, Mary Jo Simpson!");
     }
+
+    [Test]
+    public async Task Should_LoginAsTlovejoy_WhenTlovejoyIsNotInLoadedEmployees()
+    {
+        var page = LoginPageContext.Create().WithBus(new LoginOffPageEmployeeBus());
+        await using var ctx = page.Build();
+        var component = page.Render(ctx);
+
+        // Prove the bug condition: tlovejoy is absent from the loaded dropdown options.
+        component.FindAll("option")
+            .ShouldNotContain(o => o.GetAttribute("value") == "tlovejoy");
+
+        await LoginPageSteps.ClickLovejoyShortcutAsync(component);
+
+        page.Auth.IsAuthenticated().ShouldBeTrue();
+        page.Auth.GetUsername().ShouldBe("tlovejoy");
+    }
+
+    [Test]
+    public async Task Should_ShowInvalidEmployeeSelection_WhenUserNameDoesNotExist()
+    {
+        var page = LoginPageContext.Create().WithBus(new LoginOffPageEmployeeBus { FailAllLookups = true });
+        await using var ctx = page.Build();
+        var component = page.Render(ctx);
+
+        await LoginPageSteps.ClickLovejoyShortcutAsync(component);
+
+        component.Find("div.alert.alert-danger").TextContent
+            .ShouldBe("Invalid employee selection");
+        page.Auth.IsAuthenticated().ShouldBeFalse();
+    }
 }
