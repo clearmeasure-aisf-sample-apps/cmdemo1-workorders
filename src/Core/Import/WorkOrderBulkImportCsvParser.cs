@@ -9,8 +9,6 @@ namespace ClearMeasure.Bootcamp.Core.Import;
 /// </summary>
 public static class WorkOrderBulkImportCsvParser
 {
-    private static readonly string[] RequiredHeaders = ["Title", "Description", "CreatorUsername"];
-
     /// <summary>
     /// Parses the stream as UTF-8 (BOM allowed). Returns rows or an error message.
     /// </summary>
@@ -25,10 +23,10 @@ public static class WorkOrderBulkImportCsvParser
         }
 
         var header = CsvHeader.Parse(headerRecord);
-        if (header.FirstMissing(RequiredHeaders) is { } missingColumn)
+        if (header.FirstMissing(WorkOrderBulkImportColumns.Required) is { } missingColumn)
         {
             return WorkOrderBulkImportParseResult.Fail(
-                $"Missing required column \"{missingColumn}\". Expected header: Title, Description, CreatorUsername, RoomNumber (optional), Building (optional), Priority (optional), DueDate (optional).");
+                $"Missing required column \"{missingColumn}\". Expected header: {WorkOrderBulkImportColumns.ExpectedHeader}.");
         }
 
         return WorkOrderBulkImportParseResult.Ok(ParseRows(records, header, cancellationToken));
@@ -54,19 +52,19 @@ public static class WorkOrderBulkImportCsvParser
 
     private static WorkOrderBulkImportRow ParseRow(CsvHeader header, List<string> fields, int lineNumber)
     {
-        var building = header.Cell(fields, "Building");
-        var description = header.Cell(fields, "Description");
-        var priorityText = header.Cell(fields, "Priority");
-        var dueDateText = header.Cell(fields, "DueDate");
+        var building = header.Cell(fields, WorkOrderBulkImportColumns.Building);
+        var description = header.Cell(fields, WorkOrderBulkImportColumns.Description);
+        var priorityText = header.Cell(fields, WorkOrderBulkImportColumns.Priority);
+        var dueDateText = header.Cell(fields, WorkOrderBulkImportColumns.DueDate);
         var priority = ParsePriority(priorityText);
         var dueDate = ParseDueDate(dueDateText);
 
         return new WorkOrderBulkImportRow(
             lineNumber,
-            header.Cell(fields, "Title"),
+            header.Cell(fields, WorkOrderBulkImportColumns.Title),
             description,
-            header.Cell(fields, "CreatorUsername"),
-            header.Cell(fields, "RoomNumber"),
+            header.Cell(fields, WorkOrderBulkImportColumns.CreatorUsername),
+            header.Cell(fields, WorkOrderBulkImportColumns.RoomNumber),
             building,
             priority,
             dueDate,
