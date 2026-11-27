@@ -116,8 +116,8 @@ public partial class Login : AppComponentBase
 
         try
         {
-            var employee = await Bus.Send(new EmployeeByUserNameQuery(userName));
-            return employee != null;
+            await Bus.Send(new EmployeeByUserNameQuery(userName));
+            return true;
         }
         catch (InvalidOperationException)
         {
