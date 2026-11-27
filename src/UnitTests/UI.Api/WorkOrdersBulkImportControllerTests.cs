@@ -5,6 +5,7 @@ using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -163,6 +164,41 @@ public class WorkOrdersBulkImportControllerTests
         var payload = ok.Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
         payload.CreatedCount.ShouldBe(2);
         bus.EmployeeLookupCalls.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task ShouldReuseCreatorLookup_WhenUsernameCaseDiffersAcrossRows()
+    {
+        var creator = EmployeeBuilder.Create("u1").Build();
+        var bus = new StubBus { Employee = creator };
+        var controller = CreateController(bus);
+
+        var file = CreateFormFile("Title,Description,CreatorUsername\nT1,D1,u1\nT2,D2,U1\n");
+
+        var result = await controller.Post(file, CancellationToken.None);
+
+        var payload = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
+        payload.CreatedCount.ShouldBe(2);
+        bus.EmployeeLookupCalls.ShouldBe(1);
+        bus.SaveDraftCalls.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task ShouldReportExactNotFoundMessageOnEveryRow_WhenEmployeeMissing()
+    {
+        var bus = new StubBus { Employee = null };
+        var controller = CreateController(bus);
+
+        var file = CreateFormFile("Title,Description,CreatorUsername\nT1,D1,nobody\nT2,D2,nobody\n");
+
+        var result = await controller.Post(file, CancellationToken.None);
+
+        var payload = result.ShouldBeOfType<OkObjectResult>().Value.ShouldBeOfType<WorkOrderBulkImportResponse>();
+        payload.CreatedCount.ShouldBe(0);
+        payload.Results.Count.ShouldBe(2);
+        payload.Results.ShouldAllBe(r => !r.Success && r.Error == "Employee with username 'nobody' was not found.");
+        bus.EmployeeLookupCalls.ShouldBe(2);
+        bus.SaveDraftCalls.ShouldBe(0);
     }
 
     [Test]
