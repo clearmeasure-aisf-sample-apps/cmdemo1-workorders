@@ -22,7 +22,7 @@ public class CreatedRelativeTimeTests
         var page = WorkOrderManagePageContext.Create()
             .SignedInAs(creator)
             .Editing(order)
-            .WithClock(new WorkOrderManageFixedClock(now));
+            .WithClock(FixedUtcClock.At(now));
         await using var ctx = page.Build();
 
         var component = page.Render(ctx);
@@ -40,7 +40,7 @@ public class CreatedRelativeTimeTests
     [Test]
     public async Task WorkOrderManage_ShouldOmitRelativeTime_WhenCreatedDateIsNull()
     {
-        var clock = new WorkOrderManageFixedClock(new DateTimeOffset(2026, 6, 15, 15, 0, 0, TimeSpan.Zero));
+        var clock = FixedUtcClock.At(new DateTimeOffset(2026, 6, 15, 15, 0, 0, TimeSpan.Zero));
         var creator = WorkOrderManageSteps.Viewer();
         var order = WorkOrderBuilder.Create()
             .WithId(Guid.NewGuid()).WithNumber("WO-001").WithTitle("Test").WithDescription("Test")

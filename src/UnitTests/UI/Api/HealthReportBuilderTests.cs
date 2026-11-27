@@ -9,11 +9,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Api;
 [TestFixture]
 public class HealthReportBuilderTests
 {
-    private sealed class FixedUtcTimeProvider(DateTime utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
-    }
-
     [Test]
     public void HealthReportBuilder_FromEntries_Should_ReturnNonNullPayload()
     {
@@ -59,7 +54,7 @@ public class HealthReportBuilderTests
     {
         var fixedTime = new DateTime(2026, 3, 26, 12, 0, 0, DateTimeKind.Utc);
         var report = HealthReportBuilder.FromEntries(
-            new FixedUtcTimeProvider(fixedTime),
+            FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)),
             [new ComponentHealthEntry { Name = "X", Status = ComponentHealthStatus.Healthy }]);
 
         report.CheckedAtUtc.ShouldBe(fixedTime);

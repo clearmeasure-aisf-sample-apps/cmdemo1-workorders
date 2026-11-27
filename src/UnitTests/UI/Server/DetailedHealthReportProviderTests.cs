@@ -11,11 +11,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 [TestFixture]
 public class DetailedHealthReportProviderTests
 {
-    private sealed class FixedUtcTimeProvider(DateTime utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
-    }
-
     /// <summary>
     /// Live process memory is sampled once inside the provider and again by the test
     /// microseconds later. Any allocation — or a background GC — between the two samples
@@ -44,7 +39,7 @@ public class DetailedHealthReportProviderTests
         var detailed = DetailedHealthReportProvider.FromComponentStatuses(
             entries,
             HealthStatus.Unhealthy,
-            new FixedUtcTimeProvider(fixedTime));
+            FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
 
         detailed.CheckedAtUtc.ShouldBe(fixedTime);
         detailed.OverallStatus.ShouldBe(ComponentHealthStatus.Unhealthy);
@@ -67,7 +62,7 @@ public class DetailedHealthReportProviderTests
         var report = new HealthReport(entries, TimeSpan.FromMilliseconds(55));
 
         var detailed = DetailedHealthReportProvider.FromHealthReport(
-            report, new FixedUtcTimeProvider(fixedTime));
+            report, FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
 
         detailed.CheckedAtUtc.ShouldBe(fixedTime);
         detailed.OverallStatus.ShouldBe(ComponentHealthStatus.Degraded);
@@ -88,7 +83,7 @@ public class DetailedHealthReportProviderTests
         var fixedTime = new DateTime(2026, 4, 2, 9, 0, 0, DateTimeKind.Utc);
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<TimeProvider>(new FixedUtcTimeProvider(fixedTime));
+        services.AddSingleton(FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy("liveness"), tags: ["live"])
             .AddCheck("API", () => HealthCheckResult.Healthy("api ok"))
@@ -448,7 +443,7 @@ public class DetailedHealthReportProviderTests
         var report = new HealthReport(entries, TimeSpan.FromMilliseconds(42));
 
         var detailed = DetailedHealthReportProvider.FromHealthReport(
-            report, new FixedUtcTimeProvider(fixedTime));
+            report, FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
 
         detailed.Components.Count.ShouldBe(1);
         var component = detailed.Components[0];
@@ -478,7 +473,7 @@ public class DetailedHealthReportProviderTests
         var report = new HealthReport(entries, TimeSpan.FromMilliseconds(150));
 
         var detailed = DetailedHealthReportProvider.FromHealthReport(
-            report, new FixedUtcTimeProvider(fixedTime));
+            report, FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
 
         var component = detailed.Components[0];
         component.Status.ShouldBe(ComponentHealthStatus.Unhealthy);
@@ -510,7 +505,7 @@ public class DetailedHealthReportProviderTests
         var report = new HealthReport(entries, TimeSpan.FromMilliseconds(5000));
 
         var detailed = DetailedHealthReportProvider.FromHealthReport(
-            report, new FixedUtcTimeProvider(fixedTime));
+            report, FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
 
         var component = detailed.Components[0];
         component.Status.ShouldBe(ComponentHealthStatus.Degraded);
