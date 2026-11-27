@@ -170,7 +170,7 @@ public class DetailedHealthCheckResponseWriterTests
     {
         var fixedNow = new DateTimeOffset(2026, 7, 24, 5, 0, 0, TimeSpan.Zero);
         var services = new ServiceCollection();
-        services.AddSingleton<TimeProvider>(FixedUtcClock.At(fixedNow));
+        services.AddSingleton(FixedUtcClock.At(fixedNow));
         var context = new DefaultHttpContext
         {
             RequestServices = services.BuildServiceProvider(),

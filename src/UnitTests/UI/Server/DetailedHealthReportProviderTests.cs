@@ -83,7 +83,7 @@ public class DetailedHealthReportProviderTests
         var fixedTime = new DateTime(2026, 4, 2, 9, 0, 0, DateTimeKind.Utc);
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<TimeProvider>(FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
+        services.AddSingleton(FixedUtcClock.At(new DateTimeOffset(fixedTime, TimeSpan.Zero)));
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy("liveness"), tags: ["live"])
             .AddCheck("API", () => HealthCheckResult.Healthy("api ok"))
