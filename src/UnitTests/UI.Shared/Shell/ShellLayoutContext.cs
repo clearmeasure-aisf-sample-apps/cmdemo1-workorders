@@ -36,6 +36,7 @@ internal static class ShellLayoutContext
         ctx.Services.AddSingleton(ctx.JSInterop.JSRuntime);
         ctx.Services.AddSingleton<ThemePreferenceService>();
         ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         var customAuth = new CustomAuthenticationStateProvider(new StubUserSessionStore());
         if (authenticateAsUser != null)
             customAuth.Login(authenticateAsUser).GetAwaiter().GetResult();

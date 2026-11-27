@@ -378,8 +378,10 @@ public abstract class AcceptanceTestBase
         await TakeScreenshotAsync(2, "FormFilled");
 
         var saveButtonTestId = nameof(WorkOrderManage.Elements.CommandButton) + SaveDraftCommand.Name;
+        // Click() submits with a script click, which a disabled button ignores without an error.
+        await Expect(Page.GetByTestId(saveButtonTestId)).ToBeEnabledAsync();
         await Click(saveButtonTestId);
-        await Page.WaitForURLAsync("**/workorder/search", new PageWaitForURLOptions { Timeout = 90_000 });
+        await SaveDraftWait.ForSearchPageAsync(Page, newWorkOrderNumber);
         var searchTable = Page.Locator(".grid-data tbody");
         await searchTable.WaitForAsync(new LocatorWaitForOptions
         {

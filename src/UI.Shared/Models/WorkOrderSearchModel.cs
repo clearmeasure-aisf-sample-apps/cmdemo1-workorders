@@ -83,10 +83,10 @@ public class WorkOrderSearchResultRow
     public string? DueDateUrgencyText { get; init; }
     public DueDateUrgency Urgency { get; init; }
 
-    /// <summary>The row for <paramref name="workOrder"/>, with its due date and urgency as of <paramref name="clock"/>.</summary>
-    public static WorkOrderSearchResultRow For(WorkOrder workOrder, TimeProvider clock)
+    /// <summary>The row for <paramref name="workOrder"/>, with its due date and urgency as of <paramref name="calendar"/>.</summary>
+    public static WorkOrderSearchResultRow For(WorkOrder workOrder, ChurchCalendar calendar)
     {
-        var urgency = DueDateUrgencyCalculator.Calculate(workOrder, clock);
+        var urgency = DueDateUrgencyCalculator.Calculate(workOrder, calendar);
         return new WorkOrderSearchResultRow
         {
             WorkOrder = workOrder,

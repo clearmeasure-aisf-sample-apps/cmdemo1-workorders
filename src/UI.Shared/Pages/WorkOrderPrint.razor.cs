@@ -15,7 +15,7 @@ public partial class WorkOrderPrint : AppComponentBase
 
     [Parameter] public string? Number { get; set; }
 
-    [Inject] private TimeProvider Clock { get; set; } = null!;
+    [Inject] private ChurchCalendar Calendar { get; set; } = null!;
     [Inject] private IJSRuntime Js { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
@@ -61,7 +61,7 @@ public partial class WorkOrderPrint : AppComponentBase
             if (_workOrder?.DueDate is null) return "None";
             var text = _workOrder.DueDate.Value.ToString("yyyy-MM-dd");
             var urgency = DueDateUrgencyPresenter.ScreenReaderText(
-                DueDateUrgencyCalculator.Calculate(_workOrder, Clock));
+                DueDateUrgencyCalculator.Calculate(_workOrder, Calendar));
             return string.IsNullOrEmpty(urgency) ? text : $"{text} ({urgency})";
         }
     }

@@ -3,6 +3,7 @@ using ClearMeasure.Bootcamp.UI.Shared;
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Pages;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +32,7 @@ public class WorkOrderPrintAttachmentsTests
             CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
         };
         ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));

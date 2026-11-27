@@ -32,7 +32,7 @@ public class WorkOrderPrintTests
             CreatedDate = new DateTime(2025, 1, 15, 18, 30, 0, DateTimeKind.Utc),
         };
         ctx.Services.AddSingleton<IBus>(new StubBus(wo, [new WorkOrderAttachment { FileName = "roof.jpg" }]));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
@@ -61,7 +61,7 @@ public class WorkOrderPrintTests
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         var wo = new WorkOrder { Number = "WO-2", Title = "", Description = "", Instructions = "" };
         ctx.Services.AddSingleton<IBus>(new StubBus(wo));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-2"));
@@ -81,7 +81,7 @@ public class WorkOrderPrintTests
         var today = ChurchTimeZone.Today(TimeProvider.System);
         var wo = new WorkOrder { Number = "WO-3", Title = "Late", Status = WorkOrderStatus.Assigned, DueDate = today.AddDays(-1) };
         ctx.Services.AddSingleton<IBus>(new StubBus(wo));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-3"));
@@ -98,7 +98,7 @@ public class WorkOrderPrintTests
         var due = ChurchTimeZone.Today(TimeProvider.System).AddDays(10);
         var wo = new WorkOrder { Number = "WO-4", Title = "Later", Status = WorkOrderStatus.Assigned, DueDate = due };
         ctx.Services.AddSingleton<IBus>(new StubBus(wo));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-4"));
@@ -112,7 +112,7 @@ public class WorkOrderPrintTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         ctx.Services.AddSingleton<IBus>(new StubBus(null));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "NOPE"));
@@ -129,7 +129,7 @@ public class WorkOrderPrintTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         ctx.Services.AddSingleton<IBus>(new ThrowingBus());
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, number));
