@@ -15,13 +15,13 @@ public class NotificationsPanelTests
 {
     private static void SetupClockAndJs(BunitContext ctx)
     {
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         var module = ctx.JSInterop.SetupModule(NotificationsPanelScript.ModulePath);
         module.SetupVoid("setupEscapeHandler", _ => true);
     }
 
     private static void SetupClock(BunitContext ctx) =>
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
 
     private static DateOnly ChurchToday => ChurchTimeZone.Today(TimeProvider.System);
 

@@ -1,4 +1,5 @@
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Models;
 using Shouldly;
 
@@ -12,7 +13,8 @@ public class WorkOrderSearchResultRowTests
     {
         var workOrder = new WorkOrder { Number = "1", Status = WorkOrderStatus.Assigned, DueDate = new DateOnly(2026, 1, 5) };
 
-        var row = WorkOrderSearchResultRow.For(workOrder, new NoonOn(new DateTimeOffset(2026, 1, 9, 18, 0, 0, TimeSpan.Zero)));
+        var row = WorkOrderSearchResultRow.For(workOrder,
+            new ChurchCalendar(new NoonOn(new DateTimeOffset(2026, 1, 9, 18, 0, 0, TimeSpan.Zero))));
 
         row.Urgency.ShouldBe(DueDateUrgency.Overdue);
         row.DueDateDisplay.ShouldNotBeNullOrEmpty();
@@ -23,7 +25,7 @@ public class WorkOrderSearchResultRowTests
     {
         var workOrder = new WorkOrder { Number = "2", Status = WorkOrderStatus.Draft };
 
-        var row = WorkOrderSearchResultRow.For(workOrder, TimeProvider.System);
+        var row = WorkOrderSearchResultRow.For(workOrder, new ChurchCalendar(TimeProvider.System));
 
         row.Urgency.ShouldBe(DueDateUrgency.None);
         row.DueDateDisplay.ShouldBeNullOrEmpty();

@@ -22,7 +22,7 @@ public class WorkOrderPrintFloorTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         ctx.Services.AddSingleton<IBus>(new FloorBus("WO-1", "2"));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
@@ -37,7 +37,7 @@ public class WorkOrderPrintFloorTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         ctx.Services.AddSingleton<IBus>(new FloorBus("WO-1", null));
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "WO-1"));
