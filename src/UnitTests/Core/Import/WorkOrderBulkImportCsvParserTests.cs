@@ -216,4 +216,87 @@ public class WorkOrderBulkImportCsvParserTests
         result.Error.ShouldBe("Missing required column \"CreatorUsername\". Expected header: Title, Description, "
                               + "CreatorUsername, RoomNumber (optional), Building (optional), Priority (optional), DueDate (optional).");
     }
+
+    [TestCase("high", WorkOrderPriority.High)]
+    [TestCase("HIGH", WorkOrderPriority.High)]
+    [TestCase("Low", WorkOrderPriority.Low)]
+    [TestCase("mEdIuM", WorkOrderPriority.Medium)]
+    public void ShouldParsePriority_WhenNameCasingDiffers(string priority, WorkOrderPriority expected)
+    {
+        var result = ParseCsv($"Title,Description,CreatorUsername,Priority\nT,D,u,{priority}\n");
+
+        result.Rows[0].Priority.ShouldBe(expected);
+        result.Rows[0].Error.ShouldBeNull();
+    }
+
+    [TestCase("1")]
+    [TestCase("3")]
+    public void ShouldReportError_WhenPriorityIsNumericValueOfDefinedMember(string priority)
+    {
+        var result = ParseCsv($"Title,Description,CreatorUsername,Priority\nT,D,u,{priority}\n");
+
+        result.Rows[0].Priority.ShouldBeNull();
+        result.Rows[0].Error.ShouldBe($"Priority '{priority}' is not valid. Expected one of: Low, Medium, High.");
+    }
+
+    [Test]
+    public void ShouldParseRows_WhenHeaderIsReorderedDifferentlyCasedAndHasUnknownColumn()
+    {
+        var result = ParseCsv("creatorusername,Extra,TITLE,Description\nu1,ignored,T,D\n");
+
+        result.Success.ShouldBeTrue();
+        result.Rows.Count.ShouldBe(1);
+        result.Rows[0].Title.ShouldBe("T");
+        result.Rows[0].Description.ShouldBe("D");
+        result.Rows[0].CreatorUsername.ShouldBe("u1");
+        result.Rows[0].RoomNumber.ShouldBeNull();
+        result.Rows[0].Error.ShouldBeNull();
+    }
+
+    [Test]
+    public void ShouldParseHeader_WhenUtf8BomPrecedesIt()
+    {
+        var csv = Encoding.UTF8.GetBytes("Title,Description,CreatorUsername\nT,D,u\n");
+        using var ms = new MemoryStream([.. Encoding.UTF8.GetPreamble(), .. csv]);
+        var result = WorkOrderBulkImportCsvParser.Parse(ms);
+
+        result.Success.ShouldBeTrue();
+        result.Rows.Count.ShouldBe(1);
+        result.Rows[0].Title.ShouldBe("T");
+        result.Rows[0].CreatorUsername.ShouldBe("u");
+    }
+
+    private static readonly string TooLongBuilding = new('b', WorkOrder.BuildingMaxLength + 1);
+    private static readonly string TooLongDescription = new('d', WorkOrder.DescriptionMaxLength + 1);
+    private const string InvalidPriorityError = "Priority 'Urgent' is not valid. Expected one of: Low, Medium, High.";
+    private const string InvalidDueDateError = "DueDate '2026-13-01' is not a valid date (expected yyyy-MM-dd).";
+
+    private static IEnumerable<TestCaseData> RowsWithSeveralInvalidCells() =>
+    [
+        new TestCaseData(new[] { TooLongBuilding, TooLongDescription, "Urgent", "2026-13-01" }, WorkOrderFieldRules.BuildingMustBeAtMost),
+        new TestCaseData(new[] { "North Hall", TooLongDescription, "Urgent", "2026-13-01" }, WorkOrderFieldRules.DescriptionCannotExceed),
+        new TestCaseData(new[] { "North Hall", "ok", "Urgent", "2026-13-01" }, InvalidPriorityError),
+        new TestCaseData(new[] { "North Hall", "ok", "High", "2026-13-01" }, InvalidDueDateError),
+    ];
+
+    [TestCaseSource(nameof(RowsWithSeveralInvalidCells))]
+    public void ShouldReportOnlyFirstError_WhenSeveralCellsInvalidInBuildingDescriptionPriorityDueDateOrder(
+        string[] buildingDescriptionPriorityDueDate, string expectedError)
+    {
+        var cells = string.Join(',', Enumerable.Reverse(buildingDescriptionPriorityDueDate));
+
+        var result = ParseCsv($"Title,CreatorUsername,DueDate,Priority,Description,Building\nT,u,{cells}\n");
+
+        result.Rows[0].Error.ShouldBe(expectedError);
+    }
+
+    [Test]
+    public void ShouldReportLastPhysicalLineNumber_WhenRowFollowsMultilineQuotedRecord()
+    {
+        var result = ParseCsv("Title,Description,CreatorUsername\nA,\"Line one\nLine two\",u\nB,D,u\n");
+
+        result.Rows.Count.ShouldBe(2);
+        result.Rows[0].LineNumber.ShouldBe(3);
+        result.Rows[1].LineNumber.ShouldBe(4);
+    }
 }
