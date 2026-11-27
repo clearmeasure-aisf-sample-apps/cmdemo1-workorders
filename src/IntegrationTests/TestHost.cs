@@ -92,8 +92,7 @@ public static class TestHost
             .ConfigureServices(s =>
             {
                 s.AddTransient<IDatabaseConfiguration, TestDatabaseConfiguration>();
-                var stubTimeProvider = new StubTimeProvider(TestTime);
-                s.AddSingleton<TimeProvider>(stubTimeProvider);
+                s.AddSingleton(FixedUtcClock.At(TestTime));
                 s.AddScoped<IDistributedBus, DistributedBus>();
                 s.AddTransient<IToolProvider, InProcessToolProvider>();
             })
@@ -135,14 +134,6 @@ public static class TestHost
 
         host.Start();
         _host = host;
-    }
-
-    private class StubTimeProvider(DateTimeOffset testTime) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow()
-        {
-            return testTime;
-        }
     }
 
     /// <summary>
