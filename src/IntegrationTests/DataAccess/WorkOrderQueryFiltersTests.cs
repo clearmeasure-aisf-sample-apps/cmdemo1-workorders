@@ -2,6 +2,7 @@ using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.DataAccess.Handlers;
+using ClearMeasure.Bootcamp.UnitTests;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
@@ -9,7 +10,7 @@ namespace ClearMeasure.Bootcamp.IntegrationTests.DataAccess;
 [TestFixture]
 public class WorkOrderQueryFiltersTests
 {
-    private static readonly TimeProvider Clock = new FixedClock(new DateTimeOffset(2026, 10, 13, 18, 0, 0, TimeSpan.Zero));
+    private static readonly TimeProvider Clock = ChurchClock.AtUtc(new DateTimeOffset(2026, 10, 13, 18, 0, 0, TimeSpan.Zero));
 
     [Test]
     public void ShouldApplyAllFilters_WhenSpecificationPopulated()
@@ -122,7 +123,7 @@ public class WorkOrderQueryFiltersTests
     [Test]
     public void ShouldTreatOrderDueBeforeChurchTodayAsOverdue()
     {
-        var lateEveningUtc = new FixedClock(new DateTimeOffset(2026, 10, 14, 3, 0, 0, TimeSpan.Zero));
+        var lateEveningUtc = ChurchClock.AtUtc(new DateTimeOffset(2026, 10, 14, 3, 0, 0, TimeSpan.Zero));
         var orders = new[]
         {
             new WorkOrder { Number = "1", Status = WorkOrderStatus.InProgress, DueDate = new DateOnly(2026, 10, 12) },
@@ -138,7 +139,7 @@ public class WorkOrderQueryFiltersTests
     [Test]
     public void ShouldAgreeWithFilters_WhenPredicatesUsedAsExpressions()
     {
-        var lateEveningUtc = new FixedClock(new DateTimeOffset(2026, 10, 14, 3, 0, 0, TimeSpan.Zero));
+        var lateEveningUtc = ChurchClock.AtUtc(new DateTimeOffset(2026, 10, 14, 3, 0, 0, TimeSpan.Zero));
         var today = new DateOnly(2026, 10, 13);
         var now = lateEveningUtc.GetUtcNow().DateTime;
         var orders = new[]
@@ -190,9 +191,4 @@ public class WorkOrderQueryFiltersTests
     }
 
     private static string?[] Numbers(IQueryable<WorkOrder> query) => query.Select(o => o.Number).ToArray();
-
-    private sealed class FixedClock(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
 }

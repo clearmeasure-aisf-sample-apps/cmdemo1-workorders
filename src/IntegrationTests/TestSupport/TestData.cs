@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.UnitTests;
 using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 
@@ -78,14 +79,6 @@ public static class TestData
     /// <summary>A clock that always returns <paramref name="utcNow"/>.</summary>
     public static TimeProvider FixedClock(DateTimeOffset utcNow)
     {
-        return new FixedTimeProvider(utcNow);
-    }
-
-    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow()
-        {
-            return utcNow;
-        }
+        return FixedUtcClock.At(utcNow);
     }
 }
