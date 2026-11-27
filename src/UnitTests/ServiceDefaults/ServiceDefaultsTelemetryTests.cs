@@ -170,7 +170,7 @@ public class LocalTelemetryFileWriterTests
         var openFile = CreateJsonl(directory, "metrics_2026-01-05.jsonl", old);
         var textFile = CreateJsonl(directory, "notes.txt", old);
 
-        TelemetryFileMaintenance.DeleteFilesOlderThan(directory, 3, new StubTimeProvider(FixedNow), [openFile]);
+        TelemetryFileMaintenance.DeleteFilesOlderThan(directory, 3, FixedUtcClock.At(FixedNow), [openFile]);
 
         File.Exists(oldFile).ShouldBeFalse();
         File.Exists(recentFile).ShouldBeTrue();
@@ -184,7 +184,7 @@ public class LocalTelemetryFileWriterTests
         var directory = Path.Combine(CreateTempDirectory(), "missing");
 
         Should.NotThrow(() =>
-            TelemetryFileMaintenance.DeleteFilesOlderThan(directory, 3, new StubTimeProvider(FixedNow), []));
+            TelemetryFileMaintenance.DeleteFilesOlderThan(directory, 3, FixedUtcClock.At(FixedNow), []));
     }
 
     [Test]
@@ -233,7 +233,7 @@ public class LocalTelemetryFileWriterTests
     }
 
     private static LocalTelemetryFileWriter CreateFixedClockWriter(string directory, string? maxFileMegabytes) =>
-        new(CreateConfiguration(directory, maxFileMegabytes, null), new StubTimeProvider(FixedNow));
+        new(CreateConfiguration(directory, maxFileMegabytes, null), FixedUtcClock.At(FixedNow));
 
     private static StubConfiguration CreateConfiguration(string directory, string? maxFileMegabytes, string? retainDays) =>
         new(directory, new Dictionary<string, string?>
@@ -307,11 +307,6 @@ public class LocalTelemetryFileWriterTests
 
     private static ActivitySamplingResult SampleAllDataAndRecorded(ref ActivityCreationOptions<ActivityContext> _) =>
         ActivitySamplingResult.AllDataAndRecorded;
-
-    private sealed class StubTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
 }
 
 [TestFixture]

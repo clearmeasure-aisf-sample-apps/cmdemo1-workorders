@@ -9,12 +9,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Shared;
 [TestFixture]
 public class FunJeffreyCustomEventHealthCheckTests
 {
-    private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => now;
-        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
-    }
-
     [Test]
     public async Task CheckHealthAsync_WhenTraced_ShouldRecordJeffreyEventOnApplicationSource()
     {
@@ -25,7 +19,7 @@ public class FunJeffreyCustomEventHealthCheckTests
         listener.Sample = SampleAllData;
         listener.ActivityStopped = stopped.Add;
         ActivitySource.AddActivityListener(listener);
-        var healthCheck = new FunJeffreyCustomEventHealthCheck(new FixedTimeProvider(now),
+        var healthCheck = new FunJeffreyCustomEventHealthCheck(FixedUtcClock.At(now),
             NullLogger<FunJeffreyCustomEventHealthCheck>.Instance);
 
         var result = await healthCheck.CheckHealthAsync(new HealthCheckContext());

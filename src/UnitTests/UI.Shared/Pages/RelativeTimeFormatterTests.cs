@@ -110,10 +110,5 @@ public class RelativeTimeFormatterTests
         RelativeTimeFormatter.Format(created, Clock()).ShouldBe("3 days ago");
     }
 
-    private static TimeProvider Clock() => new FixedTimeProvider(Now);
-
-    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
+    private static TimeProvider Clock() => FixedUtcClock.At(Now);
 }

@@ -12,11 +12,6 @@ namespace ClearMeasure.Bootcamp.UnitTests.UI.Server;
 [TestFixture]
 public class DetailedHealthCheckResponseWriterTests
 {
-    private sealed class FixedUtcTimeProvider(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
-    }
-
     private static HealthReport CreateMinimalReport()
     {
         var entries = new Dictionary<string, HealthReportEntry>
@@ -175,7 +170,7 @@ public class DetailedHealthCheckResponseWriterTests
     {
         var fixedNow = new DateTimeOffset(2026, 7, 24, 5, 0, 0, TimeSpan.Zero);
         var services = new ServiceCollection();
-        services.AddSingleton<TimeProvider>(new FixedUtcTimeProvider(fixedNow));
+        services.AddSingleton<TimeProvider>(FixedUtcClock.At(fixedNow));
         var context = new DefaultHttpContext
         {
             RequestServices = services.BuildServiceProvider(),

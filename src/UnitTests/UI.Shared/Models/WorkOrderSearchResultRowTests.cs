@@ -12,7 +12,7 @@ public class WorkOrderSearchResultRowTests
     {
         var workOrder = new WorkOrder { Number = "1", Status = WorkOrderStatus.Assigned, DueDate = new DateOnly(2026, 1, 5) };
 
-        var row = WorkOrderSearchResultRow.For(workOrder, new NoonOn(new DateTimeOffset(2026, 1, 9, 18, 0, 0, TimeSpan.Zero)));
+        var row = WorkOrderSearchResultRow.For(workOrder, FixedUtcClock.At(new DateTimeOffset(2026, 1, 9, 18, 0, 0, TimeSpan.Zero)));
 
         row.Urgency.ShouldBe(DueDateUrgency.Overdue);
         row.DueDateDisplay.ShouldNotBeNullOrEmpty();
@@ -27,10 +27,5 @@ public class WorkOrderSearchResultRowTests
 
         row.Urgency.ShouldBe(DueDateUrgency.None);
         row.DueDateDisplay.ShouldBeNullOrEmpty();
-    }
-
-    private sealed class NoonOn(DateTimeOffset utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }
