@@ -10,7 +10,7 @@ namespace ClearMeasure.Bootcamp.UI.Shared.Models;
 public class WorkOrderManageModel : IValidatableObject
 {
     /// <summary>The form for <paramref name="workOrder"/>, with its dates shown in the church time zone.</summary>
-    public static WorkOrderManageModel For(EditMode mode, WorkOrder workOrder, TimeProvider clock) => new()
+    public static WorkOrderManageModel For(EditMode mode, WorkOrder workOrder, TimeProvider clock, ChurchCalendar calendar) => new()
     {
         WorkOrder = workOrder,
         Mode = mode,
@@ -28,7 +28,7 @@ public class WorkOrderManageModel : IValidatableObject
         CompletedDate = ClientDateFormatter.Format(workOrder.CompletedDate),
         DueDateInput = workOrder.DueDate,
         OriginalDueDate = workOrder.DueDate,
-        ChurchToday = ChurchTimeZone.Today(clock),
+        ChurchToday = calendar.Today,
         Priority = workOrder.Priority,
         Building = workOrder.Building,
         Floor = workOrder.Floor,

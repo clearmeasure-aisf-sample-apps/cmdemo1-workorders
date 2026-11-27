@@ -33,6 +33,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
     [Inject] public SpeechSynthesis SpeechSynthesis { get; set; } = null!;
     [Inject] public SpeechRecognition SpeechRecognition { get; set; } = null!;
     [Inject] public TimeProvider Clock { get; set; } = null!;
+    [Inject] public ChurchCalendar Calendar { get; set; } = null!;
 
     private DueDateUrgency CurrentDueDateUrgency =>
         _workOrder == null
@@ -92,7 +93,7 @@ public partial class WorkOrderManage : AppComponentBase, IAsyncDisposable
         _preferredLanguage = _currentUser.PreferredLanguage;
         var workOrder = await FindOrCreateWorkOrderAsync(CurrentMode, Id, _currentUser);
 
-        Model = WorkOrderManageModel.For(CurrentMode, workOrder, Clock);
+        Model = WorkOrderManageModel.For(CurrentMode, workOrder, Clock, Calendar);
         CommandButtons = new WorkOrderCommandButtons(_stateCommands.GetValidStateCommands(workOrder, _currentUser));
         Model.IsReadOnly = !CommandButtons.Any;
         _workOrder = workOrder;

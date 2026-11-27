@@ -1,5 +1,6 @@
 using ClearMeasure.Bootcamp.Core.Model;
 using ClearMeasure.Bootcamp.Core.Services;
+using ClearMeasure.Bootcamp.UnitTests.TestSupport;
 using Shouldly;
 
 namespace ClearMeasure.Bootcamp.UnitTests.Core.Services;
@@ -90,5 +91,33 @@ public class DueDateUrgencyCalculatorTests
 
         futureUrgency.ShouldBe(DueDateUrgency.None);
         todayUrgency.ShouldBe(DueDateUrgency.DueToday);
+    }
+
+    [Test]
+    public void Calculate_WhenChurchCalendarSupplied_UsesItsToday()
+    {
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
+        var calendar = new ChurchCalendar(clock);
+        var workOrder = WorkOrderBuilder.Create()
+            .WithStatus(WorkOrderStatus.Assigned)
+            .DueOn(calendar.Today.AddDays(-1))
+            .Build();
+
+        DueDateUrgencyCalculator.Calculate(workOrder, calendar).ShouldBe(DueDateUrgency.Overdue);
+    }
+
+    [Test]
+    public void Calculate_WhenChurchTodayGivenDirectly_UpdatesUrgency()
+    {
+        var clock = ChurchClock.NoonUtcOn(2026, 8, 29);
+        var today = ChurchTimeZone.Today(clock);
+
+        var futureUrgency = DueDateUrgencyCalculator.Calculate(today.AddDays(1), WorkOrderStatus.Draft, today);
+        var todayUrgency = DueDateUrgencyCalculator.Calculate(today, WorkOrderStatus.Draft, today);
+        var overdueUrgency = DueDateUrgencyCalculator.Calculate(today.AddDays(-1), WorkOrderStatus.Draft, today);
+
+        futureUrgency.ShouldBe(DueDateUrgency.None);
+        todayUrgency.ShouldBe(DueDateUrgency.DueToday);
+        overdueUrgency.ShouldBe(DueDateUrgency.Overdue);
     }
 }

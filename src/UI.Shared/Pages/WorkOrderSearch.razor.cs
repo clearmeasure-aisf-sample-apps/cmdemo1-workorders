@@ -31,7 +31,7 @@ public partial class WorkOrderSearch : AppComponentBase
     private bool _showPriorityBadges;
     private bool _earlyAccessBanner;
 
-    [Inject] public TimeProvider Clock { get; set; } = null!;
+    [Inject] public ChurchCalendar Calendar { get; set; } = null!;
     [Inject] private IFeatureFlags FeatureFlags { get; set; } = null!;
     [Inject] private WorkOrderSearchState SearchState { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
@@ -203,7 +203,7 @@ public partial class WorkOrderSearch : AppComponentBase
             return;
         }
 
-        _rawResults = workOrders.Select(workOrder => WorkOrderSearchResultRow.For(workOrder, Clock)).ToArray();
+        _rawResults = workOrders.Select(workOrder => WorkOrderSearchResultRow.For(workOrder, Calendar)).ToArray();
         Model.Results = WorkOrderSearchSorter.Sort(_rawResults, _state.Sort, _state.Descending);
         StateHasChanged();
     }
@@ -289,5 +289,5 @@ public partial class WorkOrderSearch : AppComponentBase
 
     private Task DownloadCsvAsync(IEnumerable<WorkOrderSearchResultRow> rows) =>
         (_script ??= new SearchPageScript(Js)).DownloadCsvAsync(
-            WorkOrderCsvExporter.FileName(ChurchTimeZone.Today(Clock)), WorkOrderCsvExporter.ToCsv(rows));
+            WorkOrderCsvExporter.FileName(Calendar.Today), WorkOrderCsvExporter.ToCsv(rows));
 }

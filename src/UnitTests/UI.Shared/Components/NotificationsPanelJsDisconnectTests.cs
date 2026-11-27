@@ -1,5 +1,6 @@
 using Bunit;
 using ClearMeasure.Bootcamp.Core.Queries;
+using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.UI.Shared.Components;
 using ClearMeasure.Bootcamp.UnitTests.UI.Shared.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +16,7 @@ public class NotificationsPanelJsDisconnectTests
     public async Task ShouldSurvive_WhenModuleImportDisconnectsDuringInit()
     {
         await using var ctx = new BunitContext();
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IJSRuntime>(new DisconnectingJsRuntime(failImport: true));
 
         var component = ctx.Render<NotificationsPanel>(p => p
@@ -29,7 +30,7 @@ public class NotificationsPanelJsDisconnectTests
     public async Task ShouldSurvive_WhenModuleDisposeDisconnects()
     {
         var ctx = new BunitContext();
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IJSRuntime>(new DisconnectingJsRuntime(failDispose: true));
         ctx.Render<NotificationsPanel>(p => p
             .Add(c => c.IsOpen, true)

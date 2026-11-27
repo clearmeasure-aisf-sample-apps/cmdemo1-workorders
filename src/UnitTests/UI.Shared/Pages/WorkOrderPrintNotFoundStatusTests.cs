@@ -21,7 +21,7 @@ public class WorkOrderPrintNotFoundStatusTests
         await using var ctx = new BunitContext();
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
         ctx.Services.AddSingleton<IBus>(new NullBus());
-        ctx.Services.AddSingleton(TimeProvider.System);
+        ctx.Services.AddSingleton(new ChurchCalendar(TimeProvider.System));
         ctx.Services.AddSingleton<IUiBus>(new StubUiBus());
 
         var c = ctx.Render<WorkOrderPrint>(p => p.Add(x => x.Number, "NOPE"));
