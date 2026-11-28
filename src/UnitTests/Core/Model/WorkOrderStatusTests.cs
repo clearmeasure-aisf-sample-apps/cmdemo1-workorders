@@ -298,6 +298,13 @@ public class WorkOrderStatusTests
     }
 
     [Test]
+    public void FromCode_ShouldThrow_WhenCodeIsNull()
+    {
+        var ex = Should.Throw<ArgumentNullException>(() => WorkOrderStatus.FromCode(null!));
+        ex.ParamName.ShouldBe("code");
+    }
+
+    [Test]
     public void FromKey_ShouldThrow_WhenKeyIsNull()
     {
         Should.Throw<ArgumentNullException>(() => WorkOrderStatus.FromKey(null));

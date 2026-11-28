@@ -95,8 +95,10 @@ public class WorkOrderStatus : IEquatable<WorkOrderStatus>
         return Code == "";
     }
 
-    public static WorkOrderStatus FromCode(string code)
+    public static WorkOrderStatus FromCode(string? code)
     {
+        ArgumentNullException.ThrowIfNull(code);
+
         // SQL Server nchar(3) can surface trailing pads; trim before Code match.
         var normalized = code.Trim();
         var items = GetAllItems();
