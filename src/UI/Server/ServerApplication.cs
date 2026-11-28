@@ -23,13 +23,18 @@ public static class ServerApplication
         Action<WebApplicationBuilder>? configureBuilder = null)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.WebHost.ConfigureKestrel(options =>
-            options.ConfigureEndpointDefaults(listenOptions => listenOptions.Protocols = HttpProtocols.Http1AndHttp2));
+        builder.WebHost.ConfigureKestrel(ConfigureKestrel);
         builder.AddServerServices();
         configureBuilder?.Invoke(builder);
         ServerMessagingEndpoint.Register(builder);
         var app = builder.Build();
         app.UseServerPipeline();
         return app;
+    }
+
+    private static void ConfigureKestrel(WebHostBuilderContext context, KestrelServerOptions options)
+    {
+        options.ConfigureEndpointDefaults(listenOptions => listenOptions.Protocols = HttpProtocols.Http1AndHttp2);
+        KestrelSlowlorisGuard.Apply(options.Limits, context.Configuration);
     }
 }
