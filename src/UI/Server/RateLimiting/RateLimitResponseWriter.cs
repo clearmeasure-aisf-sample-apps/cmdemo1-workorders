@@ -19,9 +19,12 @@ internal static class RateLimitResponseWriter
         WriteLimitHeaders(context, opts.ToSlidingWindowRule(), stats?.CurrentAvailablePermits ?? 0);
     }
 
-    internal static async Task WriteRateLimitedResponseAsync(HttpContext context, ApiRateLimitingOptions opts)
+    internal static Task WriteRateLimitedResponseAsync(HttpContext context, ApiRateLimitingOptions opts) =>
+        WriteRateLimitedResponseAsync(context, opts.ToSlidingWindowRule());
+
+    /// <summary>Writes the 429 with <c>Retry-After</c> and rate-limit headers for <paramref name="rule"/>.</summary>
+    internal static async Task WriteRateLimitedResponseAsync(HttpContext context, SlidingWindowRule rule)
     {
-        var rule = opts.ToSlidingWindowRule();
         context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         context.Response.Headers.RetryAfter = rule.WindowSeconds.ToString(NumberFormatInfo.InvariantInfo);
         WriteLimitHeaders(context, rule, availablePermits: 0);
