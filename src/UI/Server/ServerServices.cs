@@ -66,7 +66,7 @@ public static class ServerServices
         services.AddApiRequestTimeouts(configuration);
         services.Configure<ApiKeyAuthenticationOptions>(configuration.GetSection(ApiKeyAuthenticationOptions.SectionName));
         services.AddTestSupport();
-        services.AddRequestDecompression();
+        services.AddRequestDecompressionBombGuard(configuration);
         services.Configure<RequestBodyBufferingOptions>(configuration.GetSection(RequestBodyBufferingOptions.SectionName));
         services.AddServerCors(configuration);
     }
