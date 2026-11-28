@@ -127,7 +127,7 @@ public static class ServerPipeline
         app.MapHealthChecks("_healthcheck", new HealthCheckOptions
         {
             ResponseWriter = HealthCheckPlainTextResponseWriter.WriteAsync
-        });
+        }).CacheOutput(OutputCachePolicyNames.SimpleHealth);
         app.MapHealthChecks("_healthcheck/detailed", new HealthCheckOptions
         {
             ResponseWriter = DetailedHealthCheckResponseWriter.WriteAsync
