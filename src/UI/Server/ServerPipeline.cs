@@ -97,6 +97,7 @@ public static class ServerPipeline
         app.UseMiddleware<IdempotencyMiddleware>();
         app.UseMiddleware<WebServiceMessageValidationMiddleware>();
         app.UseMiddleware<RateLimitingMiddleware>();
+        app.UseMiddleware<LlmRequestThrottleMiddleware>();
         app.UseOutputCache();
     }
 
