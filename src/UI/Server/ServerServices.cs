@@ -5,7 +5,6 @@ using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer;
 using ClearMeasure.Bootcamp.McpServer.Resources;
 using ClearMeasure.Bootcamp.McpServer.Tools;
-using ClearMeasure.Bootcamp.UI.Api;
 using ClearMeasure.Bootcamp.UI.Api.Controllers;
 using ClearMeasure.Bootcamp.UI.Server.BuildFacts;
 using ClearMeasure.Bootcamp.UI.Server.LiveTelemetry;
@@ -73,14 +72,7 @@ public static class ServerServices
 
     private static void AddResponseCaching(IServiceCollection services)
     {
-        services.AddOutputCache(options =>
-        {
-            options.AddBasePolicy(policy => policy.NoCache());
-            options.AddPolicy(OutputCachePolicyNames.VersionMetadata, policy => policy
-                .Expire(TimeSpan.FromMinutes(10))
-                .SetVaryByQuery("*")
-                .SetVaryByHeader("Accept"));
-        });
+        services.AddOutputCache(HotPathOutputCacheGuard.AddPolicies);
         services.AddResponseCompression(options =>
         {
             options.EnableForHttps = true;

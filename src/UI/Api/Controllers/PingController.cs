@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
@@ -20,6 +21,7 @@ public class PingController : ControllerBase
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
+    [OutputCache(PolicyName = OutputCachePolicyNames.Ping)]
     public IActionResult Get()
     {
         Response.Headers["X-Content-Type-Options"] = "nosniff";
