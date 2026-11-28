@@ -10,7 +10,9 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 
 /// <summary>
-/// Accepts CSV uploads to create multiple draft work orders in one request.
+/// Accepts CSV uploads to create multiple draft work orders in one request. Uploads with more data rows than
+/// the <see cref="CsvImportRowLimitGuard"/> allows (default <see cref="CsvImportRowLimitGuard.Default"/>) are rejected with 400
+/// before any work order is created.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -19,8 +21,11 @@ namespace ClearMeasure.Bootcamp.UI.Api.Controllers;
 [EnableRateLimiting(ApiRateLimiting.PolicyName)]
 public sealed class WorkOrdersBulkImportController(
     IBus bus,
-    IWorkOrderNumberGenerator numberGenerator) : ControllerBase
+    IWorkOrderNumberGenerator numberGenerator,
+    CsvImportRowLimitGuard? rowLimit = null) : ControllerBase
 {
+    private readonly CsvImportRowLimitGuard _rowLimit = rowLimit ?? CsvImportRowLimitGuard.Default;
+
     /// <summary>
     /// Imports work orders from a CSV file. Form field name: <c>file</c>.
     /// Header row required: Title, Description, CreatorUsername, RoomNumber (optional).
@@ -40,7 +45,7 @@ public sealed class WorkOrdersBulkImportController(
         }
 
         await using var stream = file.OpenReadStream();
-        var parseResult = WorkOrderBulkImportCsvParser.Parse(stream, cancellationToken);
+        var parseResult = WorkOrderBulkImportCsvParser.Parse(stream, _rowLimit, cancellationToken);
         if (RowsProblem(parseResult) is { } rowsError)
         {
             return BadRequestProblem(rowsError);
