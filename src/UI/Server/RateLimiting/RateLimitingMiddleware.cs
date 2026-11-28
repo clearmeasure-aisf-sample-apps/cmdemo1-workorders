@@ -5,7 +5,8 @@ using Microsoft.Extensions.Options;
 namespace ClearMeasure.Bootcamp.UI.Server.RateLimiting;
 
 /// <summary>
-/// Enforces sliding-window limits for endpoints marked with <see cref="EnableRateLimitingAttribute"/>.
+/// Enforces sliding-window limits for endpoints marked with <see cref="EnableRateLimitingAttribute"/> and for the
+/// paths <see cref="PathBasedRateLimitGate"/> enforces without metadata (the Blazor single API and <c>/mcp</c>).
 /// </summary>
 public sealed class RateLimitingMiddleware(
     RequestDelegate next,

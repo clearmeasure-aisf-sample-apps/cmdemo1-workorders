@@ -61,7 +61,7 @@ internal static class ApiRoutePolicy
     /// True when the path is one of the Blazor single-API routes, compared case-insensitively.
     /// </summary>
     /// <param name="path">The request path.</param>
-    private static bool IsBlazorSingleApiPath(PathString path) =>
+    internal static bool IsBlazorSingleApiPath(PathString path) =>
         RequestPathPrefix.IsUnder(path, BlazorSingleApiPath) || RequestPathPrefix.IsUnder(path, BlazorSingleApiPathV1);
 
     /// <summary>
@@ -75,5 +75,11 @@ internal static class ApiRoutePolicy
     /// ProblemDetails bodies for errors and a plain 404 instead of the Blazor <c>index.html</c> fallback.
     /// </summary>
     /// <param name="path">The request path.</param>
-    internal static bool IsMachineClientPath(PathString path) => IsApiPath(path) || RequestPathPrefix.IsUnder(path, McpPath);
+    internal static bool IsMachineClientPath(PathString path) => IsApiPath(path) || IsMcpPath(path);
+
+    /// <summary>
+    /// True when the path is the <c>/mcp</c> endpoint or below it, compared case-insensitively.
+    /// </summary>
+    /// <param name="path">The request path.</param>
+    internal static bool IsMcpPath(PathString path) => RequestPathPrefix.IsUnder(path, McpPath);
 }
