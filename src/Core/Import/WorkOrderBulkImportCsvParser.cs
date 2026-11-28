@@ -10,9 +10,20 @@ namespace ClearMeasure.Bootcamp.Core.Import;
 public static class WorkOrderBulkImportCsvParser
 {
     /// <summary>
-    /// Parses the stream as UTF-8 (BOM allowed). Returns rows or an error message.
+    /// Parses the stream as UTF-8 (BOM allowed) with the default <see cref="CsvImportRowLimitGuard"/>.
+    /// Returns rows or an error message.
     /// </summary>
-    public static WorkOrderBulkImportParseResult Parse(Stream stream, CancellationToken cancellationToken = default)
+    public static WorkOrderBulkImportParseResult Parse(Stream stream, CancellationToken cancellationToken = default) =>
+        Parse(stream, CsvImportRowLimitGuard.Default, cancellationToken);
+
+    /// <summary>
+    /// Parses the stream as UTF-8 (BOM allowed). Returns rows, or an error message when the CSV is invalid or has
+    /// more data rows than <paramref name="rowLimit"/> allows (reading stops at the first row past the limit).
+    /// </summary>
+    public static WorkOrderBulkImportParseResult Parse(
+        Stream stream,
+        CsvImportRowLimitGuard rowLimit,
+        CancellationToken cancellationToken = default)
     {
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true,
             bufferSize: 4096, leaveOpen: true);
@@ -29,25 +40,33 @@ public static class WorkOrderBulkImportCsvParser
                 $"Missing required column \"{missingColumn}\". Expected header: {WorkOrderBulkImportColumns.ExpectedHeader}.");
         }
 
-        return WorkOrderBulkImportParseResult.Ok(ParseRows(records, header, cancellationToken));
+        return ParseRows(records, header, rowLimit, cancellationToken);
     }
 
-    private static List<WorkOrderBulkImportRow> ParseRows(
+    private static WorkOrderBulkImportParseResult ParseRows(
         CsvLogicalLineReader records,
         CsvHeader header,
+        CsvImportRowLimitGuard rowLimit,
         CancellationToken cancellationToken)
     {
         var rows = new List<WorkOrderBulkImportRow>();
         while (records.ReadRecord(cancellationToken) is { } record)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!string.IsNullOrWhiteSpace(record))
+            if (string.IsNullOrWhiteSpace(record))
             {
-                rows.Add(ParseRow(header, CsvFields.Split(record), records.LineNumber));
+                continue;
             }
+
+            if (!rowLimit.Allows(rows.Count + 1))
+            {
+                return WorkOrderBulkImportParseResult.Fail(rowLimit.OverLimitMessage);
+            }
+
+            rows.Add(ParseRow(header, CsvFields.Split(record), records.LineNumber));
         }
 
-        return rows;
+        return WorkOrderBulkImportParseResult.Ok(rows);
     }
 
     private static WorkOrderBulkImportRow ParseRow(CsvHeader header, List<string> fields, int lineNumber)

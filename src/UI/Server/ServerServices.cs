@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using ClearMeasure.Bootcamp.Core;
+using ClearMeasure.Bootcamp.Core.Import;
 using ClearMeasure.Bootcamp.DataAccess.Messaging;
 using ClearMeasure.Bootcamp.LlmGateway;
 using ClearMeasure.Bootcamp.McpServer;
@@ -56,7 +57,7 @@ public static class ServerServices
         builder.Services.Configure<LlmHealthCheckOptions>(builder.Configuration.GetSection("LlmHealthCheck"));
     }
 
-    /// <summary>Idempotency, rate limits, timeouts, API keys, body buffering, decompression and CORS.</summary>
+    /// <summary>Idempotency, rate limits, timeouts, API keys, body buffering, decompression, CORS and the CSV import row cap.</summary>
     private static void AddRequestProtections(IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<IdempotencyOptions>(configuration.GetSection(IdempotencyOptions.SectionName));
@@ -68,6 +69,15 @@ public static class ServerServices
         services.AddRequestDecompressionBombGuard(configuration);
         services.Configure<RequestBodyBufferingOptions>(configuration.GetSection(RequestBodyBufferingOptions.SectionName));
         services.AddServerCors(configuration);
+        AddCsvImportRowLimit(services, configuration);
+    }
+
+    /// <summary>Binds <see cref="CsvImportRowLimitOptions"/> and registers the bulk-import <see cref="CsvImportRowLimitGuard"/>.</summary>
+    private static void AddCsvImportRowLimit(IServiceCollection services, IConfiguration configuration)
+    {
+        var options = configuration.GetSection(CsvImportRowLimitOptions.SectionName).Get<CsvImportRowLimitOptions>()
+                      ?? new CsvImportRowLimitOptions();
+        services.AddSingleton(new CsvImportRowLimitGuard(options.MaxRows));
     }
 
     private static void AddResponseCaching(IServiceCollection services)
