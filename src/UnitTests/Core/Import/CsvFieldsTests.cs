@@ -13,12 +13,12 @@ public class CsvFieldsTests
         new("\"x, y\",z", new[] { "x, y", "z" }),
         new("\"say \"\"hi\"\"\",z", new[] { "say \"hi\"", "z" }),
         new("\"two\nlines\",z", new[] { "two\nlines", "z" }),
-        new("\"unclosed", new[] { "unclosed" }),
         new("ab\"c,d", new[] { "abc,d" }),
         new("a\"b,c\"d", new[] { "ab,cd" }),
         new("", new[] { "" }),
         new(",", new[] { "", "" }),
-        new("\"\",x", new[] { "", "x" })
+        new("\"\",x", new[] { "", "x" }),
+        new("\"unclosed", new[] { "unclosed" })
     ];
 
     [TestCaseSource(nameof(Records))]
