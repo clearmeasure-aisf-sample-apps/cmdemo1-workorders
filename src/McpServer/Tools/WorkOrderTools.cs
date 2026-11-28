@@ -16,7 +16,7 @@ namespace ClearMeasure.Bootcamp.McpServer.Tools;
 [McpServerToolType]
 public class WorkOrderTools
 {
-    [McpServerTool(Name = "list-work-orders"), Description("Lists all work orders, optionally filtered by status, creator username, and assignee username. Valid statuses: Draft, Assigned, InProgress, Complete.")]
+    [McpServerTool(Name = "list-work-orders"), Description("Lists work orders newest first, at most the server page cap (default 100) per call, optionally filtered by status, creator username, and assignee username. Valid statuses: Draft, Assigned, InProgress, Complete.")]
     public static async Task<string> ListWorkOrders(
         IBus bus,
         [Description("Optional status filter (Draft, Assigned, InProgress, Complete)")] string? status = null,

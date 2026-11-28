@@ -17,7 +17,9 @@ public class WorkOrderSearchHandler(DataContext context, TimeProvider time, Chur
         CancellationToken cancellationToken = default)
     {
         var filtered = WorkOrderQueryFilters.Apply(context.Set<WorkOrder>(), specification, time, calendar);
-        return await ApplyOrder(filtered, specification).ToArrayAsync(cancellationToken);
+        var ordered = ApplyOrder(filtered, specification);
+        var page = specification.Take is { } take ? ordered.Take(take) : ordered;
+        return await page.ToArrayAsync(cancellationToken);
     }
 
     private static IQueryable<WorkOrder> ApplyOrder(IQueryable<WorkOrder> query, WorkOrderSpecificationQuery specification)

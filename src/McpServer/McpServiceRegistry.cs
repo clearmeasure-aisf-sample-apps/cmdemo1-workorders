@@ -1,5 +1,7 @@
 using ClearMeasure.Bootcamp.Core;
 using ClearMeasure.Bootcamp.Core.FeatureFlags;
+using ClearMeasure.Bootcamp.Core.Model;
+using ClearMeasure.Bootcamp.Core.Queries;
 using ClearMeasure.Bootcamp.Core.Services;
 using ClearMeasure.Bootcamp.Core.Validation;
 using ClearMeasure.Bootcamp.DataAccess.FeatureFlags;
@@ -43,6 +45,7 @@ public class McpServiceRegistry : ServiceRegistry
             cfg.AddOpenBehavior(typeof(FeatureFlagBehavior<,>));
         });
         this.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<DataContext>());
+        this.AddTransient<IPipelineBehavior<WorkOrderSpecificationQuery, WorkOrder[]>, PaginationCapGuard>();
         this.AddTransient<IBus>(provider => new Bus(provider.GetRequiredService<IMediator>()));
     }
 

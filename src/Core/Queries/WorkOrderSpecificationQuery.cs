@@ -147,5 +147,11 @@ public record WorkOrderSpecificationQuery : IRequest<WorkOrder[]>, IRemotableReq
     /// <summary>When <see cref="OrderByDueDate"/> is true, latest due date first. Undated work orders stay last.</summary>
     public bool DueDateDescending { get; set; }
 
+    /// <summary>
+    /// Most rows to return, applied after ordering; null returns every match. Set by page-cap guards on hosts that
+    /// answer anonymous list calls (the MCP server).
+    /// </summary>
+    public int? Take { get; set; }
+
     public WorkOrderStatus? Status => StatusKey != null ? WorkOrderStatus.FromKey(StatusKey) : null;
 }
