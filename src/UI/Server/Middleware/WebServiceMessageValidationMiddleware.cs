@@ -92,7 +92,8 @@ public sealed class WebServiceMessageValidationMiddleware(
         return false;
     }
 
-    private static async Task<string> ReadRequestBodyAsync(HttpRequest request)
+    /// <summary>Reads the buffered request body and rewinds it so later middleware can read it again.</summary>
+    internal static async Task<string> ReadRequestBodyAsync(HttpRequest request)
     {
         request.EnableBuffering();
         using var reader = new StreamReader(request.Body, leaveOpen: true);
